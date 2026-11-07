@@ -1,6 +1,6 @@
 {
   "change": "0129-z10-p01-format-floor",
-  "revision": 1,
+  "revision": 2,
   "state": "review",
   "base": "d034aa09e6dcad450cd4e0942457f430dda43ece",
   "delta_base": "725653954",
@@ -161,8 +161,8 @@
         "bytes": 971
       },
       "after": {
-        "blob": "7ff8126f8557c59d79727c011940b4133a8bc4cf",
-        "sha256": "ef17acac9e33e467c2a8316b669af7e2394f33c90bdc216b5ec4768f95198703",
+        "blob": "79ddad2c97c6c8af23548830e42af15a6f19eb77",
+        "sha256": "c80c3ccffbc3eb2dab143188dd5ed9dc5a5d1f30858085c2849fe3835879c013",
         "bytes": 1042
       }
     },
@@ -189,9 +189,9 @@
         "bytes": 480295
       },
       "after": {
-        "blob": "1431361e8bbfb9a3a2b3d7aec8f7e4f9b8951528",
-        "sha256": "8192698612d009d9db86f79e0f59984bb368a8013a6f541f5910661228fa3920",
-        "bytes": 481455
+        "blob": "2c0d3338d87dd85535eff2c4ae59b538240382d1",
+        "sha256": "758835111b6394d1e128bf25bc583f243eb6eb076dc3ae18858fc1a50a0d2d3c",
+        "bytes": 481431
       }
     }
   ],
@@ -434,44 +434,193 @@
     {
       "path": "Platform/01-store/spec/01.3-store.norms.md",
       "req": "P/01.3-R006",
-      "normalization": "LF; strip trailing spaces; one final LF",
+      "boundary": "next req or same/older actual Markdown heading",
+      "normalization": "LF; strip trailing spaces; one final LF (unchanged prior kit convention)",
       "old_normalized_sha256": "b5b149af08939eaa00968d5985e5295ba4573a63d74e7096114d9339f6866a4c",
       "new_normalized_sha256": "8815be6dfd50589971e81cf1a1010d8ca0f4b2e5a73ff1792f8a8575e68e1f07",
       "old_bytes": 19253,
       "new_bytes": 19414,
-      "new_complete_unit": true
-    },
-    {
-      "path": "Platform/01-store/spec/01.3-store.norms.md",
-      "req": "P/01.3-R011",
-      "normalization": "LF; strip trailing spaces; one final LF",
-      "old_normalized_sha256": "f7c3c52c4e0840b2a88f6f58b83947df1b51a8c7c3bb505d1029c8ae95d162c2",
-      "new_normalized_sha256": "32897a745b4fd73c93e7e344b57311fdf784a4ac764449b9e5e2c22a96f028af",
-      "old_bytes": 4349,
-      "new_bytes": 4349,
-      "new_complete_unit": true
+      "new_complete_unit": true,
+      "old_coordinates": {
+        "start_utf8": 2378,
+        "end_utf8": 21632,
+        "start_line": 34,
+        "heading_level": 3
+      },
+      "new_coordinates": {
+        "start_utf8": 2378,
+        "end_utf8": 21793,
+        "start_line": 34,
+        "heading_level": 3
+      }
     },
     {
       "path": "Platform/01-store/spec/01.3-store.norms.md",
       "req": "P/01.3-R029",
-      "normalization": "LF; strip trailing spaces; one final LF",
+      "boundary": "next req or same/older actual Markdown heading",
+      "normalization": "LF; strip trailing spaces; one final LF (unchanged prior kit convention)",
       "old_normalized_sha256": "44f5aa1885e09f5ace2bd397c149de37f906fda6c8a9e44b5677fccebc2cdbbd",
       "new_normalized_sha256": "b777b9338c285f356932d4733a1b326876a4c1af628074a8c999e0032efeb299",
       "old_bytes": 4761,
       "new_bytes": 4853,
-      "new_complete_unit": true
+      "new_complete_unit": true,
+      "old_coordinates": {
+        "start_utf8": 43094,
+        "end_utf8": 47857,
+        "start_line": 358,
+        "heading_level": 2
+      },
+      "new_coordinates": {
+        "start_utf8": 43255,
+        "end_utf8": 48110,
+        "start_line": 361,
+        "heading_level": 2
+      }
+    }
+  ],
+  "history": "Revision1 four marker partitions is immutable history at2f; revision2 actual heading-aware req R006/R029 plus separately manifested derived blocks.",
+  "scope_and_limits": "exact18 normal child to d034; full bundle review only; no main/accepted/applied/source lesson readiness. Only new own narrow checks. Complete metadata self hashes/author commit and protected-tree proof live in external FREEZE.",
+  "derived_non_req_source_blocks": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "operation": "modify derived source block, not a req operation",
+      "subject": "operator Implementation decides item5",
+      "relation_to_actual_units": [
+        "P/01.3-R006",
+        "P/01.3-R029"
+      ],
+      "base_blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+      "result_blob": "68cf68ab06d00980ad68a7cc6f8187245c8c36c1",
+      "before": {
+        "start_utf8": 56469,
+        "end_utf8": 56824,
+        "line": 442,
+        "sha256": "6be3db87dcf097b7d0aed2a3887ed6532463d9193dfac14af25bbb23365be84f",
+        "text": "5. **the format mark and the profile `file://`**: the values `format` and `version` of its mark `FORMAT` and which versions of its format the build reads (N1.3 `format`); the on-disk format of the profile `file://`; the command by which a copy of N1.3 `copy` is taken from a store `file://` (the form of the copy is a norm) (the store pilot, A1, A2, A9).\n"
+      },
+      "after": {
+        "start_utf8": 56722,
+        "end_utf8": 57089,
+        "line": 445,
+        "sha256": "3fccc2c6957288f0749a3890f5f69a144db46bcad13321c52da89b7ecb3d9564",
+        "text": "5. **the format mark and the profile `file://`**: the values `format` and `version` of its mark `FORMAT` — the one current version that this build writes and reads (N1.3 `format`); the on-disk format of the profile `file://`; the command by which a copy of N1.3 `copy` is taken from a store `file://` (the form of the copy is a norm) (the store pilot, A1, A2, A9).\n"
+      }
     },
     {
       "path": "Platform/01-store/spec/01.3-store.norms.md",
-      "req": "P/01.3-R030",
-      "normalization": "LF; strip trailing spaces; one final LF",
-      "old_normalized_sha256": "49e81dd556ba18c094143ab7fcd25af1afe9e3cdb2e1f1ae1a6994af22da1b3e",
-      "new_normalized_sha256": "deeaf594ec0387eb1ef021261c74da4c10ca4ae9a8afacf2f62e6734e8b7b711",
-      "old_bytes": 16721,
-      "new_bytes": 16733,
-      "new_complete_unit": true
+      "operation": "modify derived source block, not a req operation",
+      "subject": "floor field table",
+      "relation_to_actual_units": [
+        "P/01.3-R006",
+        "P/01.3-R029"
+      ],
+      "base_blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+      "result_blob": "68cf68ab06d00980ad68a7cc6f8187245c8c36c1",
+      "before": {
+        "start_utf8": 30564,
+        "end_utf8": 30735,
+        "line": 253,
+        "sha256": "2ae841a823cd1987154a507618ce342e4a4251f4db8288b05c493c3452329d73",
+        "text": "| `floor` | integer; ≥ 0; ≤ 9007199254740991; the whole sign for the reader too (x-whole) | required |  | the lower bound of issue after a restore; generation << 32 |\n"
+      },
+      "after": {
+        "start_utf8": 30725,
+        "end_utf8": 30896,
+        "line": 256,
+        "sha256": "e15503cd23dcd7af81e2e3a9bc42403f1d49e5250a59fe6065ae1defafa4915a",
+        "text": "| `floor` | integer; ≥ 1; ≤ 9007194959773696; the whole sign for the reader too (x-whole) | required |  | the lower bound of issue after a restore; generation << 32 |\n"
+      }
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "operation": "modify derived source block, not a req operation",
+      "subject": "operator Implementation decides item5",
+      "relation_to_actual_units": [
+        "P/01.3-R006",
+        "P/01.3-R029"
+      ],
+      "base_blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+      "result_blob": "39791bd39f38b512db8ee472b0395453d6671ace",
+      "before": {
+        "start_utf8": 74634,
+        "end_utf8": 75108,
+        "line": 406,
+        "sha256": "ffa634563b5658b1503a0e56061791b882a4e91ced0ae503d92771cddbed35d4",
+        "text": "5. **метку формата и профиль `file://`**: значения `format` и `version` своей метки `FORMAT` и какие версии своего формата читает сборка (N1.3 `format`); формат на диске профиля `file://`; команду, которой с хранилища `file://` снимается копия N1.3 `copy` (форма копии — норма) (пилот хранилища, A1, A2, A9).\n"
+      },
+      "after": {
+        "start_utf8": 75279,
+        "end_utf8": 75771,
+        "line": 409,
+        "sha256": "8ac3b284973cb5f14cc1969a0287658bc91edfdf52d880acc7a0e7e9cbc4697c",
+        "text": "5. **метку формата и профиль `file://`**: значения `format` и `version` своей метки `FORMAT` — одна нынешняя версия, которую сборка пишет и читает (N1.3 `format`); формат на диске профиля `file://`; команду, которой с хранилища `file://` снимается копия N1.3 `copy` (форма копии — норма) (пилот хранилища, A1, A2, A9).\n"
+      }
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "operation": "modify derived source block, not a req operation",
+      "subject": "floor field table",
+      "relation_to_actual_units": [
+        "P/01.3-R006",
+        "P/01.3-R029"
+      ],
+      "base_blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+      "result_blob": "39791bd39f38b512db8ee472b0395453d6671ace",
+      "before": {
+        "start_utf8": 39950,
+        "end_utf8": 40145,
+        "line": 238,
+        "sha256": "d33b9e553c74e3a0270d5460807e07572cf0adf9a510444e582677de217d5bef",
+        "text": "| `floor` | целое; ≥ 0; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | the lower bound of issue after a restore; generation << 32 |\n"
+      },
+      "after": {
+        "start_utf8": 40377,
+        "end_utf8": 40572,
+        "line": 241,
+        "sha256": "bfe444209e0b883e4133d5dde620c50bec734c68d4a530e1da4d279efd4c409f",
+        "text": "| `floor` | целое; ≥ 1; ≤ 9007194959773696; целый знак и у читателя (x-whole) | обязателен |  | the lower bound of issue after a restore; generation << 32 |\n"
+      }
     }
   ],
-  "history": "history.md preserves original active policy bytes and original sources/hashes; no earlier archives/receipts are rewritten",
-  "scope_and_limits": "exact18 normal child to d034; full bundle review only; no main/accepted/applied/source lesson readiness. Only new own narrow checks. Complete metadata self hashes/author commit and protected-tree proof live in external FREEZE."
+  "metadata_child": {
+    "parent": "2f413bd265f73343a5fe2395e3c4e647e0e7eeab",
+    "paths": [
+      "decisions/changes/0129-z10-p01-format-floor/delta.md",
+      "decisions/changes/0129-z10-p01-format-floor/change.md",
+      "decisions/changes/0129-z10-p01-format-floor/source-map.json",
+      "decisions/changes/0129-z10-p01-format-floor/corpus-map.json",
+      "decisions/changes/0129-z10-p01-format-floor/preservation.json",
+      "decisions/changes/0129-z10-p01-format-floor/history.md",
+      "decisions/changes/registry.tsv",
+      "decisions/adr-norms.tsv"
+    ],
+    "activation_sha256": "472584f1ae42d81e0e87799c1ebb0a57bb29870d0afd576fd08fc96b9ee4d9c9",
+    "source9_unchanged": true,
+    "strict_unchanged_units": [
+      {
+        "req": "P/01.3-R011",
+        "before_start_line": 232,
+        "before_last_line": 242,
+        "heading_stop": "### Data families (built from the standard files)",
+        "strict_normalized_unchanged_sha256": "c2361ef318cae0a5603d65b93e16ba584cb1cd40b923d37c674ed385a5198fa0",
+        "declared_marker_partition_old_sha256": "f7c3c52c4e0840b2a88f6f58b83947df1b51a8c7c3bb505d1029c8ae95d162c2",
+        "declared_marker_partition_new_sha256": "32897a745b4fd73c93e7e344b57311fdf784a4ac764449b9e5e2c22a96f028af"
+      },
+      {
+        "req": "P/01.3-R030",
+        "before_start_line": 391,
+        "before_last_line": 393,
+        "heading_stop": "## N5 Acceptance",
+        "strict_normalized_unchanged_sha256": "ea1899168853352677b0faf7504a9a2c527e88aea4a58348b551631c1b60e0f8",
+        "declared_marker_partition_old_sha256": "49e81dd556ba18c094143ab7fcd25af1afe9e3cdb2e1f1ae1a6994af22da1b3e",
+        "declared_marker_partition_new_sha256": "deeaf594ec0387eb1ef021261c74da4c10ca4ae9a8afacf2f62e6734e8b7b711"
+      }
+    ],
+    "prior_metadata_revision": {
+      "source_commit": "2f413bd265f73343a5fe2395e3c4e647e0e7eeab",
+      "source_map_blob": "85f1582f20eba8fff5999ace1f10a9ed986c255c",
+      "delta_blob": "ff16d0919f506957aaa24f65e21d37c1c26c7399",
+      "immutable_external_freeze_sha256": "21a5fb7fd56701dae2f7a9fc84aa003e788403107e01e1b8a0dcf1756b72c9fc"
+    }
+  }
 }

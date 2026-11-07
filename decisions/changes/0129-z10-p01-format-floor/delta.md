@@ -1,8 +1,10 @@
-# Delta 0129-z10-p01-format-floor — one current FORMAT and concrete floor bounds
+# Delta 0129-z10-p01-format-floor — metadata revision2
 
-change: 0129-z10-p01-format-floor rev 1. Base d034aa09e6dcad450cd4e0942457f430dda43ece; lesson delta_base 725653954. Unit normalization: LF, strip trailing spaces, one final LF. Minimal MODIFIED set follows the existing anchored P01 source partitions; no new or replacement requirement IDs. This is a review bundle, not an applied delta.
+change: 0129-z10-p01-format-floor rev 2; base d034aa09e6dcad450cd4e0942457f430dda43ece; unchanged source component 2f413bd265f73343a5fe2395e3c4e647e0e7eeab. State review.
 
-Authority: ADR-0129 (23); SOURCE-A activation f935cd4ba9af3dc4be90527013a6760a89f5a692b3c4c3eeb9fc7c7602f87817 and exact mirror adjustment de4ba859f34da6e34063ecf69ea0de2c084196528cc978cc96abf4426ba3fb9a.
+This metadata-only child corrects ADR-0122 membership: two actual changed req units. Derived field-table/operator text is separately addressed in change.md/source-map.json, not assigned false req operations. No source body changed.
+
+Authority: SOURCE-A f935+de4b; boundary disposition0086a3d1d8665b4d435f2a297577ef0515772fba; metadata activation472584f1ae42d81e0e87799c1ebb0a57bb29870d0afd576fd08fc96b9ee4d9c9.
 
 ## ADDED
 
@@ -13,6 +15,8 @@ Authority: ADR-0129 (23); SOURCE-A activation f935cd4ba9af3dc4be90527013a6760a89
 ### `Platform/01-store/spec/01.3-store.norms.md` P/01.3-R006
 
 old-sha256: b5b149af08939eaa00968d5985e5295ba4573a63d74e7096114d9339f6866a4c
+
+new-sha256: 8815be6dfd50589971e81cf1a1010d8ca0f4b2e5a73ff1792f8a8575e68e1f07
 
 <!-- req: P/01.3-R006 -->
 ```yaml
@@ -163,60 +167,11 @@ repeat:    membership operations are repeatable: admit of an already admitted co
 
 Fixed `DOOR_*` and `RAFT_*` numeric limits are owned only by [runtime-constants.tsv](../forms/runtime-constants.tsv). The effective `-leader-wait` and connection-limit defaults are owned by [daemon-flags.tsv](../forms/daemon-flags.tsv).
 
-### `Platform/01-store/spec/01.3-store.norms.md` P/01.3-R011
-
-old-sha256: f7c3c52c4e0840b2a88f6f58b83947df1b51a8c7c3bb505d1029c8ae95d162c2
-
-<!-- req: P/01.3-R011 -->
-```yaml
-roles:        configstore, configstore-door (with -tls for group traffic and every non-loopback -api/-raft; local loopback box doors may run without -tls)
-raft:         on -raft only a leaf of the role configstore is accepted; a leaf of another role (configstore-door and others) — a refusal in
-              the handshake (TLS alert), the raft stream is not opened, as with doors that judge the client certificate in the handshake
-              (the role certificate contract); on -api — both roles of the daemon (C01-RAFT-DOOR-LEAF-01, the Architect's decision of 2026-10-30)
-counts:       the count of invalid rereads of revoked/crl.pem and of stale CRLs (the revoke contract) — lines of the daemon log, there are no
-              /metrics series (the list of N1.3 is closed; C01-TLS-COUNT-PLACE-01)
-```
-
-<!-- families:begin -->
-### Data families (built from the standard files)
-
-The form of the rows and objects that the chapter owns by the [catalog](../../common/data/catalog.tsv) is the JSON Schema 2020-12 of the family (ADR-0092). An instance of a row is `{key, row}`, of an object `{key, object}`; the key is the grammar of the column `key` of the catalog. The fields of `row` are the values of `items` after the [codec](../../common/data/codec.tsv): the writer checks the schema and its `$defs.writer`, the reader the schema (layer 3 — the words `x-*` of the schema). Unreadable — the row did not decode or did not pass the schema in the reader's mode; the outcome is by the table of outcomes of the family: the path is a prefix of the path of the refusal (empty — the whole row); with several paths of refusal the outcome of the least priority applies.
-
-#### `platform/epoch_floor` — row
-
-Schema — [`epoch_floor.schema.json`](../data/epoch_floor.schema.json), outcomes — [`epoch_floor.outcomes.tsv`](../data/epoch_floor.outcomes.tsv); form version 1; norm — P/01.3 N1.3 floor, P/03.2 N1.5.
-
-| Key | Type and bounds | Requirement | Lesson | Meaning |
-|---|---|---|---|---|
-| `floor` | integer; ≥ 1; ≤ 9007194959773696; the whole sign for the reader too (x-whole) | required |  | the lower bound of issue after a restore; generation << 32 |
-| `generation_at` | time (P/01.1 N0 «Time in a row») | required |  | the moment the floor was raised — the wall clock of the raiser at that moment, not the admission time of the log record (it may run ahead of clocks; C01-GENERATION-AT-WALL-01) |
-
-Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
-
-| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
-|---|---|---|---|---|---|
-| `/floor` | * | epoch issue: the issue is refused, the floor is not replaced by 0; lease confirmation: fenced; import, restore: the whole input is refused, nothing changes | 0 | row | P/03.2 N3 «take_epoch(id)», «confirm»; P/01.3 N1.3 import, N4 |
-| `/generation_at` | * | epoch issue and lease confirmation do not read the field — they issue and confirm by the floor; import, restore: the whole input is refused, nothing changes (the current behaviour of both implementations; the norm does not name the outcome) | 1 | field | P/01.3 N3 «recover the store» |
-| the whole row | `<s>worker` | the whole row is unreadable: epoch issue — the issue is refused, the floor is not replaced by 0; lease confirmation — fenced | 2 | row | P/03.2 N3 «take_epoch(id)», «confirm» |
-
-#### `platform/configstore-doors/<id>` — row
-
-Schema — [`configstore-doors.schema.json`](../data/configstore-doors.schema.json), outcomes — [`configstore-doors.outcomes.tsv`](../data/configstore-doors.outcomes.tsv); form version 1; norm — P/01.3 N1.3 door.
-
-| Key | Type and bounds | Requirement | Lesson | Meaning |
-|---|---|---|---|---|
-| `seen_at` | time (P/01.1 N0 «Time in a row») | required |  | the wall time of the last confirmation of the door (every 30 s) |
-
-Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
-
-| Path of refusal | Reader | Outcome | Priority | Unit | Norm |
-|---|---|---|---|---|---|
-| the whole row | `configstore-door` | the door row is unreadable — it does not count as a visible door (not in configstore_doors), the cause goes to the leader's log without the value (P1; V7 item 3, row 5) | 1 | row | P/01.3 N1.3 door |
-<!-- families:end -->
-
 ### `Platform/01-store/spec/01.3-store.norms.md` P/01.3-R029
 
 old-sha256: 44f5aa1885e09f5ace2bd397c149de37f906fda6c8a9e44b5677fccebc2cdbbd
+
+new-sha256: b777b9338c285f356932d4733a1b326876a4c1af628074a8c999e0032efeb299
 
 <!-- req: P/01.3-R029 -->
 The catalogue of these refusals — [`forms/refusals.tsv`](../forms/refusals.tsv) (ADR-0125): the form is the sole source of code, kind, fields, headers and log projection. The OpenAPI fault schemas and write-check order stay their owning forms; the causes, priority and caller actions below refer to stable refusal names, without duplicating the outcome cells.
@@ -249,88 +204,6 @@ The catalogue of these refusals — [`forms/refusals.tsv`](../forms/refusals.tsv
 - `recover_isolated`: `recover` without `-isolated` (N3 step 0; guess of stage C S02, the Architect's decision of 2026-10-23). Caller action: isolate the former group and the writers, repeat with `-isolated`.
 - `recover_upper`: `recover -upper N`: N is out of the flag form or below the computed upper. Caller action: check the bound; `-upper` only raises.
 - `recover_peers`: `recover -peers`: an element not `id@<raft host:port>/<api host:port>`, an empty element, a repeated id or no `-id` among them (N1.3 «Daemon flags» `-peers`; guess of stage C S03). Caller action: fix the list.
-
-### `Platform/01-store/spec/01.3-store.norms.md` P/01.3-R030
-
-old-sha256: 49e81dd556ba18c094143ab7fcd25af1afe9e3cdb2e1f1ae1a6994af22da1b3e
-
-<!-- req: P/01.3-R030 -->
----
-
-## N5 Acceptance
-
-The directory [`../acceptance/3/`](../acceptance/3/README.md): the stand store ([the common acceptance README](../../common/acceptance/README.md)) with the stand's rights file, its service doors, a copy and a foreign directory; sc. 07, 17, 18, 25–29, 31 — the store group stand (several daemons on the loopback, the common acceptance README «Store group stand»; formerly sc. 07 was a drill `@manual`; work rules (for people) § 4). The scenario numbers are the former numbers of the acceptance of M10/11.
-
-| № | Scenario | Norms |
-|---|---|---|
-| 04 | daemon metrics: `configstore_raft_term`, `configstore_raft_voters_expected` on `/metrics` of the store | N1.3 |
-| 07 | a group of three: the joining of a fourth — 409 even with `force`; a door without a vote: `Door`, a write with the same rights file, the row `seen_at`, the series `configstore_doors`, `-id` not the server of the leaf — code 2, a foreign door row — 403; a forwarded admin with a loaded rights file — 403 (A08); a door leaf on `-raft` — a refusal by the handshake (C01-RAFT-DOOR-LEAF-01) | N1.3 `join`, `door`, `metrics`, `refuse_start` |
-| 08 | a replay of `op: floor` with the same `id` after a store restart — the saved outcome (`again`); another floor with this `id` — 400; a floor not as an integer (`2.0e1`) — 400; a floor above the upper bound of N1.3 `floor.form`, including the greatest uint64 — 400; the upper bound itself is admissible (the pilot of data family schemas, D6) | N2, N1.3 floor |
-| 10 | a second store instance on a foreign directory: a non-empty one without `FORMAT` and one with a foreign mark — code 2, the directory is byte for byte the same (`@foreign store`) | N1.3 `format`, N4 |
-| 11 | copy: the input `inputs/copy-ok.jsonl` and the same without key order are transferred into a fresh directory, the rows read, the floor is raised; the `backup` copy of the stand store is transferred and carries the manifests (`@backup store`, `@import store`) | N1.3 `copy`, `import` |
-| 12 | copy: one input per each `copy` refusal — another `format`, `version`, an extra field of the header, no header, an extra and a missing field of a row, not JSON, not Row, a repeated key, `index` above the header, `unreadable`, a row key not by chapter 1.1 N1, `generation_at` of the floor not a time, a clock earlier than `generation_at` of the floor of the input — `import` is refused, not a single row is transferred | N1.3 `copy`, `import`, `floor`, N4 |
-| 14 | the `id` replay memory is not part of the copy: a write with `id` before `backup`, after `import` a replay of the same `id` — a new write without `again`, the next one — `again` (B10) | N1.3 `copy` |
-| 15 | service doors, steps 1–8: `join`/`leave` from a role socket — 403; a body larger than the effective `-max-body` — 413, also with a foreign method, earlier than 405; empty `raft`/`api` — 400; `HEAD` — 405 and 404 (B1–B4) | N2 |
-| 16 | a single member without `-api`: `/v1/status` — `state` `Leader`, `leader` empty, `members` — `{}` (C01-STATUS-MEMBERS-NOAPI) | N1.3 `-api`, `box`; N2 `GET /v1/status` |
-| 17 | sizes 2 and 4 — code 2; the `/metrics` series of the leader and a follower (A10); `leave`/`admit`, a repeat of membership operations; a restart of a follower and of the whole group — the versions are the same; a leader change — a read sees the last write; a cut-off follower (`@cut`) does not give an old version; a door and one voter — 503 | N1.3 `group`, `leave`, `repeat`, `leader_wait`, `door`; P/01.1 N3 |
-| 18 | `import` into a fresh group — the transferred rows keep the versions of the copy, `cas` by them passes, a repeat — a refusal; `recover` without `-isolated` and with a low `-upper` — a refusal, with `-isolated` — the floor above the upper of the epoch row; new members join | N1.3 `import`, `floor`, `admin_ops`; N3 «recover the store» |
-| 19 | the version after a daemon restart: the former row reads with the former version, two new writes — the versions are pairwise different (coverage audit P/01, A01) | P/01.1 N1 `index`; N1.3 `durability` |
-| 20 | a damage of a row bypassing the door (`@spoil row`): `{items: null, index, unreadable: true}`, a listing — the name and the version, `cas` by it replaces; the loss of the version (`@spoil row-index`) — 503 for a read and a listing (A05; C01-ROW-INDEX-LOST-01) | P/01.1 N2, «Implementation decides» item 5 |
-| 21 | the `id` replay memory (P/01.1 N3) holds at least two minutes: a replay after 121 s — the same `index` and `again` (A02; the sleep is the term of the norm) | P/01.1 N3 «Replay by identifier» |
-| 22 | a damaged row (`@spoil row`) for a guard and a delete: the guard `""` — 412 with its version, a guard by its version holds; a delete with `cas: ""` — 409 with its version, with `cas` by it — deleted (coverage audit P/01, second pass, G05) | P/01.1 N2 |
-| 23 | service doors: an extra field in `join`, `leave` and `op: floor` — 400, `floor` is not written; an `id` not in the member form in `join` and `leave` — 400 (G06) | N2 |
-| 24 | a wrong method at `/metrics`, `/v1/join`, `/v1/leave` — 405 (G06) | N2, N4 |
-| 25 | `/v1/status` of a door without a vote — `state` `Door`, `role` `door`, `term`, `commit`, `applied` — 0 (G06) | N2 `GET /v1/status`, N1.3 `door` |
-| 26 | the role `configstore-door`: its own row with `cas`, with an extra element of `items`, and its delete — 403, its own row in form — 200 (G06) | N1.3 `door` |
-| 27 | `import` into a fresh group where a live door has already written its row passes; `-index-base` below the greatest version of the copy — a refusal, nothing is transferred (G06; C01-IMPORT-DOOR-ROWS-01) | N1.3 `import`, N4 |
-| 28 | `recover -peers` without its own `-id`, without the `api` address, with a repeated `id` — a refusal; `-upper` above the computed one raises the floor: `100001 << 32` (G06) | N1.3 «Daemon flags» `-peers`, `-upper`, N4 |
-| 30 | a batch and a restart: the rows written and deleted by a batch read after `@restart store` with one version; a replay by `id` after the restart — `again`, not a single extra write (ADR-0094 B9) | N1.3 `batch`; P/01.1 N3 «write batch» |
-| 31 | a batch in a group: a door without a vote forwards it whole; the rows read on followers with one version, a replay by `id` through a voter and through the door — `again`; a stale `cas` — nothing is written; the role `configstore-door` does not write a batch — 403; after the death of the leader the batch is intact (ADR-0094 B9) | N1.3 `batch`, `door`; P/01.1 N3 «write batch» |
-| 29 | `import` of a copy whose floor has `generation_at` later than the clock (2100) — a refusal without `-force`, nothing is transferred; with `-force` — transferred (coverage audit P/01, second pass) | N1.3 `floor` `when`, «Daemon flags» `-force`, N4 |
-
-The inputs of sc. 11–12 are `inputs/*.jsonl` (JSON Lines copies in the form of N1.3 `copy`). A copy of one implementation restored by another is the compatibility matrix of ADR-0083 item 5 on the same directives, outside the acceptance of one implementation.
-
-`recover` — sc. 18 (the group stand; formerly the drill sc. 06 of the [system acceptance](../../common/acceptance/system/README.md)), step 9 of sc. 15 (`door.pass`) — step 1 of sc. 15 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md): they need writers and the issue of epochs (P/03.2) and the console.
-
----
-
-## Implementation decides
-
-Each implementation names in its description:
-
-1. **the raft transport secret** beyond mTLS, if there is one, and its rotation on revocation; the raft wire between members and the frame of `admin.sock`
-   (read-fence, admit, import) are internal to the implementation: a format with a name and a version, no new HTTP routes; the members of one
-   store cluster are one implementation, a mix of languages — only by clients through `configstore:///` (guess of stage C CL-01,
-   ADR-0087 addendum (12) item 7);
-2. **the durability of the store** (fsync, raft snapshots: threshold, interval, tail) — a teaching store MAY be non-durable, and this is said in its description (ADR-0070 item 4); a stand flag that turns the barriers off is in the «Stand» command, not in the environment (N1.3 `durability`);
-3. **the connection accounting of the daemon** and overrides of the limits by deployment, `-tuning` for slow networks; the normative defaults are N1.3;
-4. **how `backup` obtains a consistent state of a running daemon** (N2); the requirement on the copy is a norm of N2, not a choice.
-5. **the format mark and the profile `file://`**: the values `format` and `version` of its mark `FORMAT` — the one current version that this build writes and reads (N1.3 `format`); the on-disk format of the profile `file://`; the command by which a copy of N1.3 `copy` is taken from a store `file://` (the form of the copy is a norm) (the store pilot, A1, A2, A9).
-6. **mutual exclusion of runs** of `recover`, `restore`, `import` on one installation (a lock, a mark file) — the norm requires one attempt (N3 «Races: admittance and recovery transitions»), the way is a choice (guess of stage C S02).
-7. **the internal contract of `file://`** (item 5): the format of the profile `file://` is the implementation's own, not a public contract. Its description
-   and the library API are written in the implementation's repository by the owner of this chapter before the code: the physical layer and the command layer — conditional
-   `put`/`delete` with `guard`, the batch `batch`, CAS by version, `not_before`/`not_after`, outcomes and refusal words as at the store door (P/01.1 N1,
-   N4; without retelling the norms), with vectors from its own code. Other processes of the implementation (the installer, the worker) read only
-   the contract and the API; a mix of languages on `file://` is not supported — through `configstore:///` (guesses of stage C W03-E01a,
-   W03-SDK-FILE-COMMAND-01, ADR-0087 addendum (12) item 7).
-
----
-
-## Readiness checklist
-
-An implementation conforms to the chapter when every norm holds; the norm id `P/01.3-MM` is what decision deltas, findings and window records refer to (ADR-0080 addendum 6):
-
-- [ ] **P/01.3-01** the daemon: the flags of N1.3, the store of a box without raft (`box`) — sc. 04 and by reading, `members` without `-api` — `{}` (sc. 16), start refusals, sizes 1/3/5, joining and `-force`, `leave`/`admit`, the effective `-leader-wait` interval — sc. 07, 17 (the group stand); mTLS, sockets — by reading; the 503 branch «no leader for the effective `-leader-wait` interval» — sc. 17; ambiguous and unavailable with Retry-After at the connection limit — by reading N1.3/N4: the scenarios do not saturate connections and do not cut the leader's answer
-- [ ] **P/01.3-02** a door without a vote: without raft, the same rights, forwarding, the row `seen_at` by the own write of the role `configstore-door` (only this row), 503 without voters — sc. 07, 17 (the group stand); the door is not part of the quorum — sc. 17; `/v1/status` of the door (`role`, `term`, `commit`, `applied`) — sc. 25; its own row only by `put` without `cas` with one `seen_at`, a delete — 403 — sc. 26; an unreadable door row outside `configstore_doors` — by reading: the TSV request does not carry a fresh `seen_at`, and with an old `seen_at` a step will not tell an unreadable row from one that the implementation does not count by age (acceptance README)
-- [ ] **P/01.3-03** the epoch floor: upper and the generation formula by the clock with the example of N1.3, the replay memory of `floor` in the store, only upwards, only admin, `recover`/`restore`/`import` raise it before the first row — sc. 18 (the group stand; formerly drill 06 of the [system acceptance](../../common/acceptance/system/README.md)); the replay memory of `floor` after a restart, only upwards (the same and a smaller floor with a new id — 409), only admin (a role socket — 403) — sc. 08; `recover` without `-isolated` and with `-upper` below the computed one — a refusal before changes, `-upper` only raises upper — sc. 18 and by reading the CLI test of the implementation (guess of stage C S02); `-upper` above the computed one raises the floor, `-peers` out of form, without its own `-id`, with a repeat — a refusal — sc. 28; a clock earlier than `generation_at` of the floor of the input — a refusal without `-force` — sc. 12 steps 31–32, with `-force` — sc. 29
-- [ ] **P/01.3-04** `import`/`restore`: a fresh group, an immutable input, the base ≥ the greatest; a wrong input without changes, after the floor a partial transfer is possible, a replay of the same attempt — by reading; the reason — TSV does not reproduce the error of each row and the partial restoration after the floor; a fresh group with a door row and a base below the greatest version — sc. 27; a row key not by N1 and `generation_at` of the floor not a time — sc. 12 steps 27–30
-- [ ] **P/01.3-05** the daemon metrics of N1.3 — sc. 04 (two series); the series `_state`, `_elections_total`, `_index`, `_last_contact_seconds`, `_voters`, `_voters_expected` of the leader and a follower — sc. 17; the three alarms — checked by reading: the metrics test of the implementation (the subject — the list of N1.3); `configstore_doors` — the number of rows `platform/configstore-doors/<id>` that read in their own form, with `seen_at` not older than `DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY` — at a voter by its own replica and its own clock, a door without a vote has no series (C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01) — sc. 07 (the group stand) (the Architect's decision on the tails of the move of lesson 1)
-- [ ] **P/01.3-06** the mark `FORMAT`: a start refusal with code 2 on a foreign and on a non-empty unmarked directory, without changes — sc. 10; the first write of the mark into an empty directory, a start on its own one — sc. 08 step 2 (`@restart store`); the copy `copy` — one form for `backup` and `import`, a refusal of the input as a whole — sc. 11, 12; `restore` with the same form and a copy of another implementation — by reading and the matrix of ADR-0083 item 5; the daemon flags — a closed table, `-dir` and `-id` in a group are required, flat sockets, inherited by `FileDescriptorName` — by reading: the units and flags test of the implementation (the store pilot)
-- [ ] **P/01.3-07** service doors (reconciliation of python and go M10/6–11): the order «frame → route → identity → body», 413 earlier than 405, `join`/`leave` from a role socket — 403, empty `raft`/`api` — 400, `HEAD` — 405/404 — sc. 15; extra fields of `join`, `leave`, `op: floor` and a member `id` out of form — 400 — sc. 23; 405 at `/metrics`, `/v1/join`, `/v1/leave` — sc. 24; the floor is a JSON integer < 2^53: a float notation and the greatest uint64 — 400, 2^53 − 2^32 is admissible — sc. 08 steps 10–12 (review of stage B 1–2, item 8); the replay memory is not in the copy — sc. 14; `-max-value` > 0 — by reading: the flags test of the implementation (the stand does not set daemon flags)
-- [ ] **P/01.3-08** the life cycle (reconciliation of python and go M10/6–11): the `backup` target outside `-dir` — sc. 11 step 11 (`@backup store … in-data`); a repeat of a finished `import` — code ≠ 0, `recover` on a box — code 2 (N4) — by reading: the store CLI test of the implementation (the directives `@backup`/`@import` write the runner's file and each time a fresh directory, they do not give these cases)
-- [ ] **P/01.3-09** verification of the TLS peer by the daemon of N1.6: CN and SAN, one role `configstore` or `configstore-door`, the signature algorithms of the chain, trust of `ca.pem` and `ca.next.pem`, revocation by content without a restart — checked by reading: the tests of the implementation on a test CA (the subject — N1.6: without a certificate, a foreign CA, a revoked one, a foreign role, its own); the reason — the CA and file rights are not changed by HTTP-TSV
-- [ ] **P/01.3-10** the admission time in the log record and the snapshot, continuation from the snapshot, `admission_ahead` in `/v1/status` of the leader beyond `CLOCK_SKEW` (N1.3 `admission`) — checked by reading: the stand does not move the leader's clock and does not take a snapshot on demand
-- [ ] **P/01.3-11** a batch: one log record, application on all servers whole, forwarding by a door without a vote in one request, the role `configstore-door` does not write a batch — sc. 31 (the group stand); a restart and a replay by `id` — sc. 30; a power cut in the middle of a batch — by reading (P/01.1-31)
 
 ## REMOVED
 
