@@ -11,7 +11,7 @@
    "description": "the moment the page was assembled"
   },
   "events": {
-   "description": "the index rows of class alarm of all manifests of the catalogue, no more than ALARM_PAGE = 100, the newest (N1.10 events)",
+   "description": "the index rows of class alarm of all manifests of the catalogue, no more than ALARM_PAGE; reader and writer share it from $defs.writer, the newest (N1.10 events)",
    "type": "array",
    "items": {
     "description": "a page row — the form of the index row P/05 N1.3 (N1.10 event); other fields — the author's names",
@@ -90,6 +90,9 @@
   "to",
   "events",
   "truncated"
+ ],
+ "allOf": [
+  {"$ref": "#/$defs/writer"}
  ],
  "$defs": {
   "common.book_missing": {

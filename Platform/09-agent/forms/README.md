@@ -8,7 +8,7 @@ This English text is the source; ru/forms/README.md is its Russian translation f
 
 Neither DOMAIN_URL nor RELAY_URL set and nonempty is the existing configuration refusal before the turn or key birth. A https relay address requires RELAY_MEMBER. RELAY accepts absent/empty or exactly 1. Contextual TLS/listener validation remains in P/02.4: an operation-time unknown row or key is not a new startup refusal. DOMAIN_FOLDERS=chains selects chains; every other/absent value selects all, so its type is string, not a new closed enum.
 
-[runtime-constants.tsv](runtime-constants.tsv) declares 13 positive integer literals with the common header name,value,unit,norm,meaning. Units are s, count and bytes. These are not environment settings. BODY_LIMIT is the imported exact 16 MiB limit; formulas such as camera scheduling, relay age, kept_at rounding, and imported turn/token deadlines keep their own contracts.
+[runtime-constants.tsv](runtime-constants.tsv) declares 14 positive integer literals with the common header name,value,unit,norm,meaning. Units are s, count and bytes. These are not environment settings. BODY_LIMIT is the exact limit imported from the report reception contract; formulas such as camera scheduling, relay age, kept_at rounding, and imported turn/token deadlines keep their own contracts.
 
 ## Refusal catalogue
 
