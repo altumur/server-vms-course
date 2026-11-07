@@ -88,7 +88,7 @@ acceptance README):
   the cut, the window stays open another ≈ 6.7 s after the mend). The store did not answer — «still mine» (N3 «renew», N4 «slot renewal: the store did not answer»):
   the slot is the same (`holder`, `gen` 1, `released` false); after `@mend` — a renewal by the same holder
   (`until` changed, `gen` as before — not a new capture), the lease is confirmed (the heartbeat element has no `lease`, chapter 3.4
-  N1.1), the epoch of the unit has the same version and number (not released and not issued anew, N3 «lease_step()» step 4, «take_epoch»),
+  N1.1), the epoch of the unit has the same version and number (not released and not issued anew, N3 «lease_step()» step 4, «take_unit_epoch»),
   the placement is as before. Not checked in the TSV (depends on a choice of the implementation): the count `store_errors` — the deadline of waiting for an answer
   of the client and the repeats inside a logical call are decided by the implementation ([the store client contract](../../../common/contracts/store-client.md)
   `wait`; N1.6 «Network retries inside it»); the stand-in heartbeat `stood_in` — whether a step gets stuck longer than STALL 12.5 s also
@@ -202,12 +202,7 @@ N5 of the norms, including another box and the closing of the place writer.
 
 ## Checks outside TSV after run 25
 
-For unknown server keep the known BOX_ID/instance and the taken name, but do not set the server;
-in a separate manifest enable places.server_field and places.lease: strict. Read the heartbeat through the objects door or check
-the formation of the object by reading: server is present and equals "", server_unsaid contains the text of
-ADR-0029, all places are strict. A separate variant with a known server gives a non-empty server and does not
-contain server_unsaid. The substitution of BOX_ID instead of the server does not pass. The ordinary TSV sets srv-a
-and does not observe this branch.
+**Server admission outside TSV.** Keep the ordinary profile with SERVER_NAME=srv-a. Through the existing SDK/process startup path, check an empty value and one outside the grammar: the existing exit 2 precedes the presence lock, with no capture or heartbeat publication from that start. With the valid server, read the real heartbeat: server=srv-a, not BOX_ID/instance. The ordinary TSV continues to exercise the valid server; this reading obligation is not an executed extra process scenario.
 
 Check the comparison of @until on two consecutive answers: holder=old/gen="1", then
 holder=new/gen="2", with expect holder=$h2/gen="2". The first attempt does not keep $h2; the second
@@ -345,3 +340,5 @@ Waiting for an event is `@until`: sc. 01 step 4 waits for the first renewal afte
 | 34/7 | 50 s | absence: the foreign place is free, having stood without changes 45 + HOLD_SKEW = 50 s by the clock of the taker; together with 34/5 — 62 s: and the torn one is not taken after this deadline either |
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
+
+SDK boundary seams s19–s22 distinguish a readable maximum with generation_exhausted from unreadable existing gen above it: s21/s22 retain their original requests/raw bytes and no writes, with gen_readable=false. No new refusal word is introduced. s23–s26 separately cover epoch; s27–s30 keep the owner-defined floor and exact comparisons without int64 narrowing. CALL epoch=0 is confirmed absence, not a positive stored row.
