@@ -434,7 +434,7 @@ RESPONSE_COLUMNS = PLAIN_COLUMNS[:11] + ["response_schema"] + PLAIN_COLUMNS[11:]
 
 
 class PlainTable:
-    """Read closed columns for lessons without a local door (P/02 Refusal catalogue): chapter, row, name, surface, code, word, log, norm. kind/fields/headers are '-'; final prose columns imply no generated behavior."""
+    """Read common 15/16-column metadata and explicit field roles; owner identity selects schema paths, not an output variant."""
 
     def __init__(self, text, name="refusals.tsv"):
         self.name = name
