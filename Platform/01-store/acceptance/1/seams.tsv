@@ -1,9 +1,9 @@
 # Scenarios over the seams of the process (ADR-0125 addendum (4) item 7): the properties of the core that the checklist
 # of chapter 1.1 checks «by reading» (P/01.1-11, -15, -25, -26, -31) — run by the runner through the seam adapter.
 # Columns and expectations — those of scenarios.tsv (README of the acceptance); the names are unique with it.
-# Directives of the adapter (a step of its own, expect ok): @clock +N | -N — the clock of the core (Config.Now) shifts by N
-# seconds from this step, cumulatively (decimal fractions are retained, for example +0.25); at the first Open the clock is 2000000000; @reopen — Close() and Open(Config) on the
-# same DataDir with the same clock (a restart; the stage durable); @parallel K — the next one step runs K times at once,
+# Directives of the adapter (a step of its own, expect ok): @clock +N | -N — the controlled clock of the store shifts by N
+# seconds from this step, cumulatively (decimal fractions are retained, for example +0.25); at the first opening the clock is 2000000000; @reopen — close and open the store on the
+# same data directory with the same clock (a restart; the stage durable); @parallel K — the next one step runs K times at once,
 # its expect is «each <expect>» or «one <expect>; rest <expect>»: variables are bound only in «one», «rest» and «each» refer.
 # N: 0 or an integer without leading zeros, optionally a decimal point and 1–9 digits; no exponent.
 # scenario	step	request	expect
