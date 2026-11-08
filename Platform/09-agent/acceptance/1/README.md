@@ -45,123 +45,26 @@ The differences by scenario (from the READMEs of the source acceptances):
 
 - **Scenarios 01, 03, 06** (from the acceptance README of M11/12). The doors `holder`, `member`, `resource` and the directives `@domain`,
   `@start`/`@stop agent` — the dictionary of the «Domain stand».
-  - **01.** The member `m1` without changes: after `@domain` and 10 s of silence its generation stands, and the mark freshens within 30 s (more than
-    `MARK_REFRESH` and a pass). The indices of the rows `domain/member-list/<part>` and `domain/keys` at `m1` do not grow: the agent writes at home only
-    on a difference. There is no row `domain/agent`: it is written only on a signature failure or a too large whole. The observation window
-    opens only after the backup copy (chapter 8.8): step 2 waits for `BACKUP_EVERY` and a pass after `@domain` — the last
-    copy of the holder is made; steps 3–4 — `m1` (a keeper) has written at itself the same copy as the pointer `domain/keepers/m1`
-    of the holder; step 5 — its report with `domain/backup-taken` is accepted. Further the content of `m1` does not change, and `reported.rev`
-    stands. `@domain` does not wait for the copies at the keepers.
-  - **03.** The member key of `m1` is spoiled through `admin.sock` while the agent is stopped: the agent runs but does not sign — the row
-    `domain/agent` with a count, the member is `silent` within `LOST_AFTER`. The key is returned — `m1` is `ok` again. Steps 12–14 spoil the key on
-    the move, without `@stop agent`: the agent reads the key in every pass (N1.12 `key_read`) — the same count and `silent`; steps 15–19
-    return the key and restart the agent — the member is `ok`, there is no row of the past launch (N1.12 `at`; the reconciliation of M11, N1, N2).
-  - **06.** An edit of the topology and the grants of `m1` by the holder (the doors `holder`: chapter 8.3, chapter 8.4) — then the home rows at `m1`
-    are not rewritten for two agent passes, `as_of` of the grants copy is not freshened earlier than `FRESH_EVERY`.
 - **Scenarios 04, 07, 08** (from the acceptance README of M11/06). The catalogue `testsub` — `domain.edit: [start, labels]`, `domain.ref:
   name`. The doors `holder`, `member` and the directives `@domain`, `@cut`, `@mend`, `@clock` — the dictionary of the «Domain stand»; at the door
   `holder` the runner sets `Idempotency-Key` also for `PUT`/`DELETE`. `$id` is the id of the stored edit from the answer 202. The holder stores
   the edit (chapter 8.6), the agent of `m1` applies it (N1.5) after `@mend`; the condition `If-Match` of the units door — sc. 14 of the acceptance of
   [P/06.1](../../../06-console/acceptance/1/README.md). Sc. 08: `@clock m1 +90` — the agent clock outside the window of the units door
   `UNIT_WINDOW` 60 s ([the agent signature contract](../../../common/contracts/agent-signature.md)); step 10 returns the clock.
-- **Scenario 11** (from the acceptance README of M11/10; the Quint model of M11, scenario Q3). The stand with a signer also on `m1`: the doors
-  `holder`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` — the dictionary of the
-  «Domain stand». A revocation after the last backup copy does not revive after a move: the agent of a member merges `domain/revoked` of the answer
-  with its own row (RV, N1.4 `from_carry`), step 20 — 401.
 - **Scenarios 05, 14** (from the acceptance README of M11/11). The catalogue `testsub` with a declaration of the shared document:
   - `domain.shared: [step, marks, {rounds}]`;
   - `step` — `int` with `inherit: 1`;
   - `marks` — `list` with `inherit: []`, `merge: union`.
 
-  The doors `holder`, `member` and the directives `@domain`, `@on`, `@put object` — the dictionary of the «Domain stand». A document of the form of
-  [P/08.9 N1.2](../../../08-domain/spec/08.9-domain.norms.md) `document`, but signed by an unknown issuer
-  (`inputs/shared-doc-unknown-issuer.json`: `kid` `0000000000000000` is not in `issuing` of the set, `sig` — 64 bytes), the runner
-  puts as an object and a pointer bypassing the edit (C09-SHARED-ACCEPT-01; the Architect's decision 2026-10-29: the outcomes of the family `shared-docs` —
-  the holder does not send out what is unreadable): sc. 05 — with its sum: the holder sends the document, the member does not take it — `record`
-  refuses `unknown_issuer` (N3 «take the document» step 4), there is no row `domain/shared` at the member; the holder console — `record`
-  did not pass, the values without the domain (`from: manifest`, [P/06.7](../../../06-console/spec/06.7-console.norms.md) N1.14; a neighbour
-  on the stand). Sc. 14 — with a foreign sum: an object not with the `sha256` of the pointer — unreadable for the holder (the outcomes of `shared-docs`):
-  the holder console — 503 `unavailable`, the document is not sent to the member, there is no row `domain/shared` at the member. The refusal of the agent
-  «does not match the pointer» (N3 «take the document» step 3) the stand does not reach — the holder does not send such a document, and
-  the step has no separate function (a vector would require a new agent command): the sum check by the agent — by reading.
-- **Scenario 13** (from the acceptance README of M11/05). The catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common
-  acceptance README); on each cluster run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest
-  `testsub2` (with the training writer of contributions — [P/08.5](../../../08-domain/spec/08.5-domain.norms.md) N5) and the resource of its own
-  server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>` (its own ref at
-  each: a common `c1` would be disputed, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1` `{zone: z1,
-  server: srv-<cluster>}`. `console2` at `member` — the prefix `/testsub2`. The directive `@on m1 @sigkill t-1` kills
-  the contributing worker: its row does not go into the report by the slot term (N1.2 `liveness`), the book `rolls` at `m2` — without the record `t4`.
-  The book door (`GET /domain/testsub2/books/rolls`) — the cluster console (chapter P/06.7), the assembly — chapter 8.5: neighbours
-  on the stand.
 - **Scenarios 16–19** (the coverage audit of P/09, audit-kimi aee4369fb). The doors `holder`, `member`, `store`, `token` and the directives
   `@domain`, `@stop`/`@start agent`, `@on` (`@freeze`, `@thaw`, `@put object`) — the dictionary of the «Domain stand» and the common dictionary
   of directives; the freeze limit is 120 s.
-  - **16** (J01). The holder is a member (N1.5 `holder_self`): the unit `h1` is created by the console of `hold`, the edit with `?cluster=hold`
-    is stored in `domain/pending/hold` (202, `cluster: hold`), the agent of the holder applies it itself — the value at the unit of `hold`,
-    in the holder view the pending 0 and the outcome `performed` 200. `base` is the revision of the unit in the copy of `hold` at the holder (P/08.6 N1.4),
-    `If-Match` matches.
-  - **17** (J02). The local token door with a silent holder ([the local token
-    door contract](../../../common/contracts/local-token-door.md) `no_queue`, `TOKEN_WAIT` 10 s): the process `domain` on `hold`
-    is frozen (`@on hold @freeze domain`; there is one copy, the signer queue has nobody to pass to) — the connection is accepted, there is no
-    answer; the request of `m2` — 503 `unavailable` in one request (the door answers no later than `TOKEN_WAIT`, the runner waits for the answer longer).
-    After `@thaw` — again 200. The freeze is about `TOKEN_WAIT`, less than `LOST_AFTER` and `TURN_TERM` (45 s).
-  - **18** (J03). The copy of the emergency row (N1.4 `break_glass`): the password of `m1` is set by the holder — a copy at `m1`; the password of
-    `hold` is its own row, the agent of the holder does not write and does not delete it (`set_at` and the index are the former ones after two
-    passes and at the end). The holder row `domain/break-glass/m1` is spoiled through `admin.sock` (`set_at` not of the time form, `pwhash_secret` — `enc:v2` not by
-    the grammar: the row is unreadable by form, without relying on the parsing of the open secret): the holder sends `held` with the name `break_glass` (the outcomes of the family `domain/break-glass/<cluster>`, the reader `domain`), the copy of `m1` is the former one.
-    There is no removal door (the path has only GET and PUT), so the row is removed by `admin.sock`: there is no row — there is no field, the agent deletes the copy.
-  - **19** (J04). The keeper's agent (N1.9, N3 «check the backup copy» step 3): `m1` is the only keeper
-    (`BACKUP_HOLDERS`); while the agent is stopped the runner puts at it its own copy of term 99 — the object `domain/backup`
-    (`inputs/backup-foreign-term.json`, the form `backup.schema.json`; the signature of the form, which does not verify, is the business of `record` over
-    what is sent, its own copy the agent reads by form) and the row `domain/backup-taken` with its sum. The report carries the pair 99 —
-    the holder sends the document (the pointer ≠ the copy of the member, P/08.8 N1.5 `carry`), the agent refuses «older than the copy kept
-    here» with the pair of the pointer (`term` 1); the object and the row of the keeper are the former ones. Steps 1, 2 of N3 (a foreign sum, `record`) — by reading:
-    the holder signs and sums itself.
 
 ### Coverage audit of P/09, the second pass (Gemini)
 
 Sc. 20–25 (`audit-coverage-gemini` cc36de538, drafts G03, G04) — the same stand; the doors `holder`, `member`, `store`,
 `token` and the directives `@domain`, `@join`, `@stop`/`@start agent`, `@on` (`@put object`) — the dictionary of the «Domain stand». The rows
 bypassing the writer are put by the store door of the member through `admin.sock`, as in sc. 03 and 18.
-
-- **20** (G03). `join` at a member (N1.1 `same`, `another`): a repeated `@join m1` with the same `{pub, domain}` — `ok`, the row
-  `domain/root` and its index are the former ones. At `m2` (`@domain m1` does not accept and does not pin it) the runner puts `domain/root`
-  of the same root with the domain `other` — `@join m2` `refused`, the row and the index are the former ones. The refusal after a foreign root — sc. 02 step 10
-  of [the acceptance of chapter 8.3](../../../08-domain/acceptance/3/README.md); here it is checked that the row does not change in either case.
-- **21** (G03). The pair of the member key (N1.1 `pub`, C09-MEMBER-KEY-PAIR-01): while the agent is stopped `pub` of the row
-  `domain/member-key` at `m1` is replaced by the public key of the member `hold`. It is a point of the curve, the form of the row is right, `seed_secret`
-  is the former one and opens, but `pub` is not from the seed: the row is unreadable by the outcome of the family. The agent runs and does not sign: the row
-  `domain/agent` with the count `sign_failures_domain` (N1.12 `count`), the local token door answers 503
-  `unavailable` at once (N1.12 `key_unreadable`; the request is not carried to the holder, a placement is not needed), the member becomes `silent` within
-  `LOST_AFTER`. The key row is not born anew: the index is the former one (the outcome of the family at `domainagent`, N1.1 `born`). An agent
-  that would sign with the seed the holder would hear, and the member would stay `ok`. The count `sign_failures_console` is checked
-  by reading («Evidence outside the TSV»).
-- **22** (G04). The removal of the refusal of the shared document (N1.10 `member`, C09-SHARED-REFUSED-CLEANUP-01, -02). The document
-  of an unknown issuer, as in sc. 05, gets the refusal `unknown_issuer`. An edit of the holder with `base_rev` 1 passes:
-  the former document is readable for the holder, the form and the sum are right ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md)
-  N1.3 step 5). The holder signs the document rev 2, the member takes it, and the taken document removes the refusal with the pair (1, 1),
-  which is not newer than its own. Then the runner puts a refusal with the pair (1, 2), not newer than its own `domain/shared`: it is removed by the next
-  pass without a new document (the follow-through; step 1 of «take the document» — «nothing»). An unreadable refusal (`doc` not JSON) is removed
-  by the same follow-through: a comparison with the unreadable gives «differs» (P2). Its own `domain/shared` does not roll back.
-- **23** (G04). Unreadable home copies (N1.4 `home_write`, `member_copy`; N1.5 `member`; the outcomes of the families
-  `domain/member-list/<part>` — `G-53`, `domain/member-topology` — `G-54`, `domain/grants` — `G-51`, `domain/placed` — `G-58`). The agent is
-  the only writer: an answer against an unreadable row is «differs» for it, and it rewrites the row by CAS with the value of the
-  answer. The runner spoils four rows of `m1` (`doc` not JSON, `as_of` not a time, `rev` not an integer), and each returns to the
-  value bound before the spoiling (`$ml`, `$mt`, `$gd`). At `domain/placed` it is `rev` 2: 1 after `@domain`, 2 after the write of
-  the placement, as in sc. 01 of [the acceptance of chapter 8.6](../../../08-domain/acceptance/6/README.md). The holder sends `members`
-  because the agent without a readable copy does not send `members_rev` ([the report acceptance
-  contract](../../../common/contracts/accept.md) «The list of members to the one lagging behind»).
-- **24** (G04). An unreadable outcomes row `domain/outcomes` (N1.5 `apply`; the outcome of the family, `G-56` — an exception to the rule
-  of the only writer): the element `e-000000000001` is not an outcome object. The edit of the holder is stored (202), but the agent does not
-  perform it: it has nothing to check «an outcome with `kept_at = at` is already written» by. For three passes the unit is the former one, the holder has one
-  pending edit, the outcomes row is the former one — the agent does not rewrite it. The runner (the operator) fixes the row: `items: {}`, it cannot be deleted (`never` P/01.2 N1.3, `delete` under `domain/` is forbidden to `admin` too) — the edit is performed,
-  the outcome `performed` 200, the pending 0.
-- **25** (G04). An unreadable row of the agent queue `domain/agent-turn` (N1.13 `standby`, N3 «the agent turn» step 1; the outcome
-  of the family, `G-44`): while the agent of `m2` is stopped the row is `{bad: "1"}` (no `holder`, an extra field). The started agent
-  stays waiting. It sends no reports: the member is `silent` within `LOST_AFTER`, while an agent that took the queue would report in 5 s.
-  There is no CAS over an unreadable row: the row and the index are the former ones. The local token door works — the request of `m2` goes to
-  the holder and gets 200 (DOM-AGENT-TURN-02; the placement `c1` — as in sc. 17). After the row is fixed (`holder: ""` — the queue is given up; `delete` is forbidden, as in sc. 24) the agent takes the queue
-  (`holder` with `:`), and the member is `ok` again.
 
 ## Inputs `inputs/`
 
@@ -177,39 +80,6 @@ bypassing the writer are put by the store door of the member through `admin.sock
 
 The format is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
 `@time` — a time in a string (P/01.1 N0), `@not(…)` — not equal. In total 22 scenarios / 252 steps. Sc. 27 — ADR-0098 §4, there is no dry run by an implementation; steps 14–15 give the emergency row so that `sealed` opens without the grant fields too; step 19 `@sleep 7` is a check of absence: the agent pass 5 s and a margin, the copies are not erased, the indices are the same; a break between two writes of the agent, an old agent and a rollback — by reading: the stand does not interrupt a write and does not substitute the agent version.
-
-Sc. 15 `one-agent` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; P/09.1 N1.13, N3 «the agent turn»): two agents of the cluster `m1` (`@start agent m1 second` —
-a copy of «another server» with its own `AGENT_TOKEN_DIR`). Steps 3–6: one holds the queue (`$a1`), for two `TURN_RENEW` the holder is the
-same, the reports go. Steps 7–8: the local token door of the waiting one (`token m1#2`) carries the request to the holder — the answer is the same as at
-the active one (`$e`, `$r` — the refusal words of the holder, the request is not by placement; DOM-AGENT-TURN-02). Steps 9–12: SIGTERM of the active one —
-holder `""`, then the waiting one takes the queue (holder with `:` — an instance, `$a1` has already exited), the reports continue. Steps 13–19:
-SIGKILL of the active one — the queue is not given up: after 30 s the holder is the former one, after `TURN_TERM` 45 s — taken by the third copy. Step 20 —
-the member is `ok`.
-
-| № | Scenario | Steps | What |
-|---|---|---|---|
-| 01 | `quiet-member` | 13 | a quiet member: `reported.rev` stands, `received_at` freshens, the indices of `domain/member-list/<part>` and `domain/keys` at the member do not grow, there is no `domain/agent` |
-| 03 | `unreadable-member-key` | 19 | the member key is spoiled — `domain/agent` with a count, the member is `silent`; repaired — `ok`; spoiled on the move — the same count; a restart — there is no row of the past launch |
-| 04 | `conflict` | 9 | the edit is stored, the member changes the unit itself — the outcome 412 `conflict`, the value of the member is kept |
-| 05 | `unsigned-document` | 6 | a document of an unknown issuer bypassing the edit — `domain/shared-refused` `unknown_issuer`, there is no row `domain/shared`; the holder console — `from: manifest` (C09-SHARED-ACCEPT-01) |
-| 06 | `fresh-and-unchanged` | 10 | the home row without changes is not rewritten, `as_of` of the grants copy no more often than `FRESH_EVERY`; steps 9–10 — after 65 s `as_of` and the index of the row are the former ones: freshening to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19) |
-| 07 | `outcome-refused` | 7 | an edit that the member refused with 409 (`exists`) — the outcome `refused`, the pending 0 |
-| 08 | `unit-door-window` | 10 | the agent clock +90 — the member console 401, the outcome `refused` 401, the unit is not touched |
-| 11 | `revoked-not-revived` | 20 | a revocation after the last backup copy does not revive after a move — 401 |
-| 13 | `slot-liveness` | 5 | the contributing worker is killed — its row does not go into the report by the slot term, there is no record in the book |
-| 14 | `pointer-checksum` | 5 | a pointer with a foreign sum — the holder console 503 `unavailable`, the document is not sent to the member, there is no row `domain/shared` at the member; the refusal of the agent by the sum — by reading (C09-SHARED-ACCEPT-01) |
-| 15 | `one-agent` | 20 | two agents of `m1` — one holds the queue, for two `TURN_RENEW` the waiting one does not take it; the local token door of the waiting one answers as at the active one; SIGTERM of the active one — the waiting one takes the queue; SIGKILL — the queue is not given up before `TURN_TERM`, then taken by the third copy; the member is `ok` (DOM-AGENT-TURN-01, -02) |
-| 16 | `holder-self-edit` | 6 | an edit of a unit of the holder cluster (`?cluster=hold`) — the agent of the holder applies it itself: the value at `hold`, the pending 0, the outcome `performed` 200 (audit of P/09, J01) |
-| 17 | `token-wait` | 7 | the process `domain` is frozen — the local token door of `m2` 503 `unavailable` within `TOKEN_WAIT`; after the thaw — 200 (audit of P/09, J02) |
-| 18 | `break-glass-copy` | 13 | the copy of the emergency row at `m1` from the field `break_glass`; the holder row is unreadable — `held`, the copy is the former one; there is no row — the copy is deleted; its own row of `hold` is not touched by the agent (audit of P/09, J03) |
-| 19 | `backup-refused` | 9 | the keeper's own copy of term 99 — the sent document of term 1 is refused «older than the copy kept here», the object and `domain/backup-taken` are the former ones (audit of P/09, J04) |
-| 20 | `join-same-and-another` | 9 | a repeated `join` of the same root — `ok`, `domain/root` and the index are the former ones; another one is pinned — `refused`, the row is the former one (audit of P/09, the second pass, G03) |
-| 21 | `member-key-pair` | 11 | `pub` of the member key is not from `seed_secret` — the row is unreadable: `sign_failures_domain`, the local token door 503 `unavailable`, the member is `silent`, the row is not born anew (C09-MEMBER-KEY-PAIR-01; G03) |
-| 22 | `shared-refused-cleanup` | 12 | the taken document removes the refusal with a pair not newer than its own; a refusal not newer than its own `domain/shared` and an unreadable refusal are removed by the follow-through (C09-SHARED-REFUSED-CLEANUP-01, -02; G04) |
-| 23 | `unreadable-copies-heal` | 16 | the unreadable `domain/member-list/<part>`, `domain/member-topology`, `domain/grants`, `domain/placed` are rewritten by the holder's answer (G-51, G-53, G-54, G-58; G04) |
-| 24 | `unreadable-outcomes` | 12 | an unreadable `domain/outcomes` — the edit is not performed, the row is not rewritten; fixed — the outcome `performed` (G-56; G04) |
-| 25 | `unreadable-agent-turn` | 12 | an unreadable `domain/agent-turn` — the agent is waiting, the member is `silent`, the row is not rewritten, the local token door 200; fixed — the queue is taken, the member is `ok` (G-44; G04) |
-| 27 | `roles-copy` | 21 | the copy of `domain/roles` at `m1` by the holder grants: the disabled `bob` drops out of `assigned`, the session of `ann` — `view` through the role `ops`; the holder grants row is unreadable — the copies `domain/grants` and `domain/roles` are not erased, the indices are the former ones (ADR-0098 §4) |
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 

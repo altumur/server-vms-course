@@ -18,10 +18,7 @@ does not matter.
 
 **Output** — `families`: `{<id>: [<key>…]}`; the comparison is JSON by value, the order in an array matters.
 
-12 rows: one manifest (no keys — an empty list, sc. 06 step 2; a named key and keys under `prefix`); one `id` in two
-manifests — the union, the same answer with another order of the manifests, keys of only one side (each), of neither; a common
-`id` next to their own ones; a named key under `prefix` — once; `prefix` — by bytes; the order is ascending by UTF-8 bytes
-(ASCII and non-BMP: 😀 after ｚ, although in UTF-16 it would come earlier).
+12 rows.
 
 ## Run
 

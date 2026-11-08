@@ -21,8 +21,8 @@ Without a stand: the function of the implementation receives the input (the colu
 `field.type` or `merge`, with `merge: union` any of the three values not a list of strings, the value `group_by` not a list, no `domain`
 or `domain` without `value`, `unit` or `domain.value` `null` with `union`, an extra field, a field without `inherit`, not `document` and
 not `group_by` (C06-RESOLVE-ABSENT-INHERIT-91-01) — the full list is there; review analysis of
-stage B 8–10, № 22: M-18). There are four rows `@exit 2` in the table
-(`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); the other cases of code 2 are by reading (N5). The exit codes follow the principle of the «Domain stand» of the common acceptance
+stage B 8–10, № 22: M-18).
+The other cases of code 2 are by reading (N5). The exit codes follow the principle of the «Domain stand» of the common acceptance
 README («Command exit codes-vectors M11»: `field` and `domain` are the trusted input of the caller, code 2).
 
 ## Files
@@ -36,16 +36,6 @@ of the acceptance M11.
 
 The vectors were checked by the runs of the implementations of the acceptance M11/11 (run 41, reconciliation M11 09–12) and by the text of the norms; on a divergence
 the norm is right, the vector is corrected by the Specification.
-
-## Source log
-
-The rows of `corrections.tsv` of the acceptance M11/11 about sc. 03 (the paths and numbers are the former ones, they are resolved by
-`id-map.tsv` (historical record)):
-
-| date | sample | fix |
-|---|---|---|
-| 2026-10-19 | 03-resolve 11, 04-alarms 15 | the expectation @exit 2 (the dictionary M10/01, the Architect's decision on the reconciliation M11, H14): the form of a trusted input — code 2, for both implementations by the norm |
-| 2026-10-20 | the move | sc. 03 (11 steps) from M11/11 — the rows of this table (stage B; the plan of the move of lesson 8, § 3, appendix) |
 
 ## Vector wire
 

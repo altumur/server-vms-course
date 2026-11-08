@@ -39,3 +39,13 @@ scenario	step	request	expect
 15-shadow-and-executors	4	member m1 console POST /counters {"name": "c6"}	201
 15-shadow-and-executors	5	member m2 console POST /counters {"name": "c6"}	201
 15-shadow-and-executors	6	@until 120 holder GET /domain/shadow	200 {"counts": {"conflict": 0, "orphaned": 1, "unmanaged": 0}}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L33-40>
+# | № | Scenario | Steps | What |
+# |---|---|---|---|
+# | 04 | `cut-and-mend` | 5 | `@cut m1` — after LOST_AFTER `silent`, `complete: false`; `@mend` — `ok` again |
+# | 06 | `view-on-the-stand` | 8 | two units in two members, a search by ref, `?cluster=`, `no such member`; `contested` is empty; the shadow report — `unmanaged` 2, `may_write: false` |
+# | 07 | `view-unseen-and-silent` | 7 | after a restart of `domain` the members are `unseen`, then `ok`; a silent one is `silent` |
+# | 08 | `view-configured-and-stale` | 8 | a unit without a worker — `configured`, `unobserved`; the worker is killed — `stale` |
+# | 09 | `view-contested` | 5 | one ref in two members — `contested`, the unit is not in `units` |
+# | 15 | `shadow-and-executors` | 6 | an assignment with `copies`: the claims of the executors from `cluster` and `copies` are not a `conflict`; an assignment without a unit — `orphaned` after SHADOW_STALL |

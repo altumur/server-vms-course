@@ -72,3 +72,30 @@ scenario	step	request	expect
 14-grant-sub-rank	3	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[],\"missing_count\":0}", "t7": "{\"members\":[\"m1\"]}"}}
 14-grant-sub-rank	4	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "view", "sub": "testsub2", "scope": "*"}]}	200
 14-grant-sub-rank	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "sub": "testsub2", "scope": "*"}]}	400 {"error": "grant too wide", "field": "/lines/1"}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L39-55>
+# - Sc. 01 step 18 — the name of the book in the path is not decoded (`%72olls` is not `rolls`; the M11 reconciliation 05–08, B6).
+# - Sc. 01 steps 11–15 (`seal_reuse`, [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2 `seal_reuse`) compare not the generation number of `m1`, but the envelope
+#   `note_secret` of the contribution `t1` in two generations 12 s apart: the same envelope. A new generation in this time is possible — from
+#   `domain/backup-taken` of the backup copy of chapter 8.8 (`m1` is a keeper), — and the step does not depend on the moment of the copy.
+# - Sc. 01 steps 3–5, 10, 18 read the book door of the cluster console (the OpenAPI of lesson 6, chapter P/06.7) — a neighbour on the
+#   stand; steps 16–17 — the leaving of a member (chapter 8.3; the door of the domain console — lesson P/10) and the removal of the row of the former member (N1.3 `write`).
+# - Sc. 11 — the index of names of the book `notes` of `testsub2`: the contribution `t7` from `m1` with the recipient `m2`. The silence of `m1` (`@stop agent`,
+#   longer than `LOST_AFTER`) makes the index unknown: the creation of a person and a new grant row — 503, the removal of a row — not.
+# - Sc. 12 — a subject without a name (the neighbour chapter 8.4, N3 «reconciliation»; C08-GRANTS-ORPHAN-01): the grant `t7` (`view`) at `m2`, then the contribution `t7`
+#   is deleted (`DELETE /tallies/t7` on `m1`) — the index is known even without `t7`; the holder's reconciliation removes the row `t7`
+#   (step 7), and the person `t7` is created without the grants of the former subject (steps 8–9).
+# - Sc. 13 (the coverage audit of P/08, the second pass of Gemini, the draft G05 `e32df6f8b`) — the index is known (step 4): a new grant row with the subject `zed`, who
+#   is neither among the people nor in the indexes, — 400 `unknown subject` (N1.7 `checks`). The contribution `alice` in `notes` with the person `alice`
+#   (the reverse rule, N1.7 `reverse`): the key is in `view.books.testsub2/notes.person_names` and is not delivered to `m2`, although
+#   `alice` has the grant `view` there (the delivery condition is met). Step 9 waits for the delivery of `t7` — `m2` has the book; step 11 — two
+#   agent passes after it `alice` is absent. The silence of `m1` (steps 12–13) makes the index unknown, but a new row of a person
+#   (`alice` `edit`) does not wait for the index, and the former row `t7` is not checked — 200 (N1.7 `checks`; the M11 reconciliation, P5, P6).
+# <08.5-domain.norms.md N5 table rows>
+# N5 row 01: `rolls`: an account on `m1` with `to: [m2]` and `note_secret` — at `m2` in the book door a record without the secret, at `m1` there is no key; the row of `m2` and of the holder — the secret as an envelope of the ring, no value
+# N5 row 03: a silent contributor: `@cut` — its records are absent, `missing` `{member, why: silent}`
+# N5 row 05: a recipient outside the list — `view.books.undelivered`, nobody receives
+# N5 row 11: the index `notes` of `testsub2`; a person under the name of an element — 409; a grant wider than `view` — 400; delivery by a grant; a silent member — 503 on creation, removal does not wait (former sc. 05 of the acceptance of M11/09)
+# N5 row 12: a subject without a name: the contribution of `t7` is deleted, the index is without it — the reconciliation of the holder removes the grant `t7`; the person `t7` — without the grants of the former subject
+# N5 row 14: `grant too wide` for a row with `sub` — by rank (ADR-0097 §4; no dry run)
+# N5 row 13: the index is known: a subject neither a person nor a key — 400 `unknown subject`; a contribution under the name of a person — `person_names`, not delivered even with a grant; the index is unknown — the row of a person and the former row do not wait (coverage audit of P/08, the second pass of Gemini)

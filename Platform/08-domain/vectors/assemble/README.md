@@ -28,10 +28,9 @@ The input is N5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the 
 (`pick: all`), `members` is the list of members, `book_seal_seed` is the `seed_secret` of the book acceptance key (`book seal 1`,
 [the README of the package `domain-token`](../../../common/vectors/domain-token/README.md#keys) «Keys»), `copies` is the state and the objects of the copy
 of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule N1.3 `grant`. The secrets of the
-inputs are envelopes `x25519:v1` to `book seal 1` (in case 07 — to `book seal 2`: it does not open), `eph 1`, `nonce` 0…11
+inputs are envelopes `x25519:v1` to `book seal 1`, `eph 1`, `nonce` 0…11
 ([the domain envelopes contract](../../../common/contracts/domain-envelopes.md) «Envelope `x25519:v1`», the AAD is `[member, row key,
-item]` and the JSON Pointer of the secret). Case 12 is a secret in the member's ring envelope `enc:v2:`: the member did not open it, and the agent carried it as
-it is ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2) — the assembly gives `secret_unopened`.
+item]` and the JSON Pointer of the secret).
 
 The expectations depend on the bytes of the catalog manifests (the review analysis of stage A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) and
 `domain.names` of the manifest `testsub2` from the specification data:
@@ -50,20 +49,6 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | File | Input → expectation |
 |---|---|
 | [`cases.tsv`](cases.tsv), 23 rows: 22 computed, 1 `@exit 2` | `input` is the input of `assemble` as JSON text → `expect`: the rows `rows` (delivery only to the members from `to`, the order of `entries` by (member, item), `missing` with closed words, the key of a `unique` conflict and one not delivered by the grant — `"@absent"`, an opened secret in `value`) and `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` without `now` |
-
-| Cases | What it checks |
-|---|---|
-| 01, 09 | delivery by `to`, the holder is a receiver too; a receiver outside the list — `undelivered`, it gets nothing |
-| 02, 03 | a `unique` conflict — the key is absent at everyone; `all` — all contributions, the order by (member, item) |
-| 04, 05, 11, 13 | a spoiled input (no `key`, an empty `key`, unequal elements of one `key` at one member, including in two slots) — the whole contribution is removed; the form before the secrets |
-| 18, 19 | equal elements of one `key` at a member in two slots — one entry, the smallest `item`; equality after the opening of the secrets, the envelopes differ |
-| 06, 07, 12 | a secret is opened (`value` with the opened value); a foreign `book_seal`, a ring envelope not opened by the member — `secret_unopened` |
-| 08 | `unseen` contributes into `missing` too; `silent`, `never`, `no_copy` |
-| 10 | objects outside the `from` of the book are not read |
-| 14–16 | the names index `notes/` with `grant: view`: a grant row of the receiver — the key is delivered; no rows — only `""`; `grants: null` — the rule is not applied |
-| 17 | `grants` without `now` — `@exit 2` |
-| `to-all`, `star-in-plain-book`, `to-servers` (ADR-0113 addendum (8) item 4, (11) item 1) | a book with `to: "*"` — the head and the row of the key's section, the field `to` of the input is not read; `"*"` in the input of an ordinary book — the cost of a row per member is not returned; `to` `servers` — a camera receives nothing |
-| `13-missing-shown` (the analysis of stage 8) | `missing_count` — all, `missing` — the first 500, the class `server` first |
 
 The vectors are checked by an oracle against the text of the norms (N1.3, N3 «assembly of a book», N5; the opening of a secret — by reference X25519, HKDF-SHA256
 and AES-256-GCM by the domain envelopes contract; the acting grant row — [the right contract](../../../common/contracts/may.md)

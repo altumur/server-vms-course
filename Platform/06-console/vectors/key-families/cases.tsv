@@ -15,3 +15,9 @@ named-under-prefix-once	{"testsub":[{"id":"t","keys":["domain/testsub/t/a"],"pre
 prefix-is-bytes	{"testsub":[{"id":"t","prefix":"domain/testsub/t/"}]}	["domain/keys","domain/member-list","domain/testsub/t","domain/testsub/tx","domain/testsub/t/x"]	{"t":["domain/testsub/t/x"]}	under prefix — only the keys beginning with its bytes; t and tx without the named key do not enter
 byte-order-ascii	{"testsub":[{"id":"t","prefix":"domain/testsub/t/"}]}	["domain/keys","domain/member-list","domain/testsub/t/b","domain/testsub/t/a_1","domain/testsub/t/B","domain/testsub/t/a.1","domain/testsub/t/a-1"]	{"t":["domain/testsub/t/B","domain/testsub/t/a-1","domain/testsub/t/a.1","domain/testsub/t/a_1","domain/testsub/t/b"]}	ascending by bytes: B (0x42) < a-1 (0x2d) < a.1 (0x2e) < a_1 (0x5f) < b
 byte-order-utf8	{"testsub":[{"id":"t","prefix":"domain/testsub/t/"}]}	["domain/keys","domain/member-list","domain/testsub/t/😀","domain/testsub/t/ｚ","domain/testsub/t/é"]	{"t":["domain/testsub/t/é","domain/testsub/t/ｚ","domain/testsub/t/😀"]}	bytes of UTF-8, not UTF-16 code units: é (C3) < ｚ (EF) < 😀 (F0); in UTF-16 😀 (D83D) would come before ｚ
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L21-24>
+# 12 rows: one manifest (no keys — an empty list, sc. 06 step 2; a named key and keys under `prefix`); one `id` in two
+# manifests — the union, the same answer with another order of the manifests, keys of only one side (each), of neither; a common
+# `id` next to their own ones; a named key under `prefix` — once; `prefix` — by bytes; the order is ascending by UTF-8 bytes
+# (ASCII and non-BMP: 😀 after ｚ, although in UTF-16 it would come earlier).

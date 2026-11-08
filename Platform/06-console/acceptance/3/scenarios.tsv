@@ -5,3 +5,13 @@ scenario	step	request	expect
 03-open-session	3	DELETE /session	200 {"out": true}
 03-open-session	4	DELETE /session	200 @header Set-Cookie: ~w2c_token
 03-open-session	5	DELETE /session	200 @header Set-Cookie: ~w2c_glass
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L27-32>
+# Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
+# - **03/3–5** — the answer of `DELETE /session` carries two `Set-Cookie` headers (it removes the cookies `w2c_token` and `w2c_glass`, C34).
+#   The expectation `@header` looks for a substring in each value of a repeated header.
+#
+# Step 03/1 — `login_url` without `LOGIN_URL` is `/api/login` (reconciliation 2 of the clean room of M10, faa988b0); `server_time` is `@time`,
+# `timezone` is the default `UTC`: the stand does not set `TIMEZONE` (ADR-0094 B6).
+# <06.3-console.norms.md N5 table rows>
+# N5 row 03: the session of an open console: `GET /session` → `{open: true, server_time, timezone}`; `POST /session` → 400; `DELETE /session` → `{out: true}` and removes the cookies `w2c_token`, `w2c_glass`

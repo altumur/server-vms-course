@@ -28,28 +28,6 @@ The topology is empty until the step that writes it.
 The format is the dictionary of the «Stand» and the section «Domain stand» of the common acceptance README; the expectation is a subset of the fields. `$fp2` is the fingerprint
 of the stranger whom the holder learned of from a knock that came in a relay package.
 
-- Sc. 02 steps 11–14 (the mutation check 2026-10-18): the relay checks the member signature — with the agent clock 400 s
-  ahead the member behind the relay is `silent`, although the relay is alive; with the right clock — `ok` again.
-- Sc. 02 steps 15–21: under `@cut relay` `domain/reached` does not grow. Step 16 binds `$c` — `as_of` of the holder view right
-  after the cut; `ts` of the mark is the moment of the last answer of the holder (`domain_age` — N1.4 of the chapter; `fresh` — chapter 9.1), not
-  later than the cut, so step 21 compares `$t2` with `$c`, not with `$t1`: the former comparison of two reads caught the write, delayed by
-  FRESH_EVERY, of the last value before the cut (the reconciliation of M11 01–04, sc. 04/02 step 20 of the mix).
-
-- Sc. 05 `relay-moves` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; chapter 9.2 N1.1 `door`, P/09.1 N1.13): two relay agents (`@start agent relay
-  second`), `RELAY_URL` of the member `m2` — their doors in order; SIGTERM of the active relay agent — the waiting one takes the queue and
-  opens the door, the member goes by the next address, the reports through the relay continue.
-
-## Coverage audit of P/09, the second pass (Gemini)
-
-- Sc. 06 `token-through-relay` (`audit-coverage-gemini` cc36de538, draft G05; N1.1 `not_author`, N2 `POST
-  /api/tokens/<member>/…`; [the local token door contract](../../../common/contracts/local-token-door.md) `no_queue`).
-  The preparation is as in sc. 02, steps 1–7. The placement `c1` (`cluster: m1`, `origin: m2`) — as in sc. 01
-  of [the acceptance of chapter 8.7](../../../08-domain/acceptance/7/README.md). The request of the worker `m2` through the local door of its agent goes
-  through the relay door to the holder and gets 200. Under `@cut relay` the holder does not answer the relay: the relay
-  answers the member 502 `did not answer` or stays silent, and the local door of `m2` gives the worker 503 `unavailable`, not the 502
-  of the relay. After `@mend relay` — again 200. The bytes of the request at the relay door and the 502 itself — by reading: the runner does not call the relay
-  door.
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 | Sc./step | Sleep | Reason |

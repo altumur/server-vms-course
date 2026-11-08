@@ -39,3 +39,11 @@ resource-silent-young	{"profile":"resource","settle":30,"ttl":3600,"row":{"serve
 resource-silent-ttl	{"profile":"resource","settle":30,"ttl":3600,"row":{"server":"srv-a","volume":"data"},"row_age":3600,"resource_state":"silent"}	{"write_mark":null,"remove_row":true}	the resource row free-srv-a-data: the owner srv-a — silent, age 3600 ≥ ttl — remove by cas, no mark (C06-FREE-OWNER-33-01)
 resource-noanswer-young	{"profile":"resource","settle":30,"ttl":3600,"row":{"server":"srv-a","volume":"data"},"row_age":3599,"resource_state":"noanswer"}	{"write_mark":null,"remove_row":false}	the resource row free-srv-a-data: the owner srv-a — the store did not answer, age 3599 < ttl — do not remove (C06-FREE-OWNER-33-01)
 resource-noanswer-ttl	{"profile":"resource","settle":30,"ttl":3600,"row":{"server":"srv-a","volume":"data"},"row_age":3600,"resource_state":"noanswer"}	{"write_mark":null,"remove_row":false}	the resource row free-srv-a-data: the owner srv-a — the store did not answer, age 3600 ≥ ttl — do not remove (C06-FREE-OWNER-33-01)
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L32-37>
+# 38 rows: for `resource` — 10 (four states and no answer × the age 3599 and 3600 with `ttl` 3600: remove only `silent` ∧ ≥ `ttl`; C06-FREE-OWNER-33-01); for `fetched` — 28: `gone` to an absent unit (creation, the age 0, 29.999, 30 with `settle` 30, another `digest`), an unknown
+# read of the unit, an ordinary append without a mark (it is not removed by `ttl` alone; `fetched` and `settle`); the append deadline without a holder,
+# the boundary 3660 (`ttl` 3600 + `REAP_AFTER` 60) — 19 rows `expired-*` and `gone-after-expired`: the age 3659.999 — nothing, 3660, 3661,
+# 7200 — `expired`; `fetched` earlier — no mark, removal by its `settle`; `ttl` 0 and no key — no deadline; no unit — `gone`, not
+# `expired`; the read of the unit is not confirmed — nothing; the mark `gone` earlier and `expired` earlier — the second one is not written; `settle` of the mark
+# `expired` (0, 29.999, 30), another `digest`; a late `fetched` does not shift `settle`.

@@ -261,3 +261,63 @@ scenario	step	request	expect
 16-placement-versions	18	holder @header Idempotency-Key: p-r4 @header If-Match: 4 DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
 16-placement-versions	19	holder @header Idempotency-Key: p-r4 @header If-Match: 4 DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
 16-placement-versions	20	holder GET /domain/placement/testsub/c1	404
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <L81 fragment>
+# After `@domain` the counter is 1, not 0: sc. 01 step 2
+# <README.md L34-72>
+# | № | Scenario | Steps | What |
+# |---|---|---|---|
+# | 01 | `placement` | 19 | placement: empty; refusals 404/409/400; a write; the same — without a new `rev`; copies at `cluster` and at a member from `copies`, at an uninvolved one — none (the filter `records`); deletion — the copies are removed; a repeated deletion — 404; a copy at a member from `origin` |
+# | 02 | `edit-refusals` | 15 | edit: no unit with a full answer — 404; a field outside `domain.edit`, an empty body, a platform field — 400; a secret — 400; `?cluster=` not a member — 404; `contested` — 503; not found with a silent one — 503 |
+# | 03 | `kept-and-applied` | 17 | an edit to a switched-off member: 202 `kept`, a replay — the same id, another body — 422, `view.pending`; after the return — applied, outcomes `performed`, 0 waiting; the holder's copy with a new `start` — then `DELETE` of the edit door — outcome `performed`, the unit is gone |
+# | 05 | `kept-full` | 56 | 50 edits of one unit wait for a switched-off member, edit 51 — 409 `kept_full`; `view.pending` — 50 |
+# | 09 | `forms-of-edits` | 16 | forms (the M11 check 05–08): `POST` without `cluster` or with a number — 400; `<sub>` not from the catalog — 404; `DELETE` with a body — 400; placement `cluster: ""` — 400, `ref` with `/` — 400, `a%20b` — ref literally; `asked.path` of the kept edit — with `?cluster=<member>` |
+# | 10 | `executors` | 14 | the executors of placement (ADR-0091 addenda (12)–(19)): one ref at `m1` and `m2` without placement — `contested`; placement `{cluster: m1, copies: [m2]}` — the view is full, both units in `units`; `m1` switched off — an edit without `?cluster=` — 409 `executors` with `clusters`; with `?cluster=m1` — 202; the same key without `?cluster=` — an early replay at `m1`, 202 with the same id; placement `{cluster: m1, origin: m2}` — `m2` outside the executors, `contested` |
+# | 11 | `outcomes-limit` | 60 | the outcomes limit 50: the outcome of the first edit (`Idempotency-Key: h05-oldest`) is written; 50 edits to the switched-off `m1`, the return — 0 waiting, exactly 50 outcomes in the view, the first is displaced from the row `domain/outcomes/m1` |
+# | 12 | `post-kept` | 8 | a kept `POST`: 202 `kept`, `what` — `name,start` (the field `domain.ref`, without `cluster`), `asked.path` without a query; after the return of `m1` — the unit is created, outcome `performed` 201 |
+# | 13 | `waiting-delete` | 11 | a `DELETE` of a unit waits — a new edit of the same path (`PUT`, a second `DELETE`) — 409 `unit is being deleted`; after the return — the unit is gone |
+# | 14 | `garbled-placement` | 14 | an unreadable placement record: `PUT` writes over it with a new `rev`, `DELETE` deletes it; `DELETE` without a manifest — 404; an unreadable counter `domain/placement` — `PUT` and `DELETE` 503, nothing is written |
+# | 16 | `placement-versions` | 20 | the `index` of a record, `ETag`, `If-Match` by a number and by an index, 412 with `row`, no record — 412 for `PUT` and 404 for `DELETE`; a key replay, another body 422; the same content under a key and a replay — `ETag`; a replay of `DELETE` — the earlier answer |
+# | 15 | `garbled-pending` | 11 | an unreadable element of `domain/pending/m1`: the same key — 422, a fresh one — 202, the element is not touched, `seq` 2; an unreadable `seq` — 503, the row is as before |
+#
+# Sc. 09: step 14 sets `Idempotency-Key: a3-asked`, so the id of the edit is known in advance — `e-a5231d61506d`
+# (`sha256("m1" ‖ 0x00 ‖ "a3-asked")`, N1.4 id), and step 15 reads its `asked.path` in the row `domain/pending/m1`.
+#
+# Sc. 11: step 4 sets `Idempotency-Key: h05-oldest` — the id of the edit is `e-d43101de75c2` (`sha256("m1" ‖ 0x00 ‖ "h05-oldest")`,
+# N1.4 id); step 5 waits for its outcome in the view (0 waiting — the 50 next edits fit into `KEPT_LIMIT`). There are 51 outcomes in all: the first
+# is applied earlier than the others, its `at` (the agent's wall seconds) is the smallest, and the trimming «the latest 50 by (at, id) descending»
+# (N1.6) displaces exactly it. The outcome of an edit is both `performed` and `conflict` (412, if the `base` from the holder's copy lags behind the
+# applied value, N1.4 base): the steps judge the number of outcomes and the field `what`, not `result`.
+#
+# Sc. 12–15 (the coverage audit of P/08, the second pass of Gemini, the draft G06 `e32df6f8b`, rewritten): the keys `Idempotency-Key` are set by `@header`, the ids are known
+# in advance (N1.4 id): `g08-post` — `e-a56508c8a4e8`, `g08-garbled` — `e-2a8bdc8848eb`, `g08-fresh` — `e-747d2dcc4cc4`
+# (`sha256("m1" ‖ 0x00 ‖ <key>)`, the first 12 hex). Sc. 12 — a kept creation `POST` (N1.3 `kept`, N1.4 `what`, `asked`):
+# `asked.path` is `/domain/testsub/counters` without a query (step 4), the outcome is the status of the units door (201). Sc. 13 — a waiting `DELETE`
+# (N3 «accept an edit» step 4). Sc. 14 — the outcomes of `domain/placement/<sub>/<ref>` and `domain/placement` (G-35, G-36): a record
+# without the fields `origin`, `copies`, `reason`, `at`, `rev` is not of the form (without `copies` — unreadable, the M11 check, T2),
+# «the same content» with it is false — `rev` 3; the counter `{rev: "x"}` is unreadable — 503, `c3` is not written. `rev` after the start is 1 (the section
+# «Placement counter after the start»): the write 2, the overwrite 3, the deletion 4, `c2` — 5. Sc. 15 — the outcomes of `domain/pending/<member>`
+# (G-32, G-34): the element `e-2a8bdc8848eb` is not JSON — a replay of its key 422 (the key is not reused), an edit with a fresh key
+# — 202, the element is not touched; `seq` `"x"` — 503, nothing is written. `m1` is cut (`@cut`) — the edits wait.
+#
+# Not taken from the draft G06: an unreadable row `domain/outcomes/m1` at the acceptance of an edit (expectation 503) — the norm (G-31) does not
+# stop the acceptance: settle is not performed in this pass, the view `outcomes` is without the field; `view.pending.<member>: null` with
+# an unreadable `seq` — the norm gives `null` to a row unreadable as a whole, and the outcomes table does not distinguish the refusal path of a row without `seq` (`""` or `/seq`)
+# (by reading).
+# <README.md L82-84>
+# waits for `{"rev": 1, "records": {}}` (`@until`: the raise could come at the first answer to an agent), the first placement write is `rev` 2,
+# then one by one. The former expectations `rev 0` / the first write `rev 1` (the move of M11/06) are from before this decision
+# (C08-PLACEMENT-BUMP-ACCEPT-01, a question of c-go 2026-10-30).
+# <08.6-domain.norms.md N5 table rows>
+# N5 row 01: assignment: empty; refusals 404/409/400; a write; the same — without a new `rev`; copies at `cluster` and at the member from `copies`, at an uninvolved one — none; deletion — the copies are removed; a repeat of the deletion — 404
+# N5 row 02: edit: the refusals of chapter 8.1 N4 — no unit with a complete answer 404, `contested` 503, not found with a silent one 503; a field outside `domain.edit` and an empty body — 400
+# N5 row 03: an edit to a switched-off member: 202 `kept`, a repeat — the same id, another body — 422, `view.pending`; after the return — applied, the outcome `performed`, 0 waiting; `DELETE` of the edit door — the outcome `performed`, there is no unit
+# N5 row 05: limit: 50 waiting — edit 51 is 409 `kept_full`
+# N5 row 09: forms (reconciliation of M11 05–08): `POST` without `cluster` or with a number — 400; `<sub>` not from the catalogue — 404; `DELETE` with a body — 400; assignment `cluster: ""` — 400, `ref` with `/` — 400, `a%20b` — the ref literally; `asked.path` of a kept edit — with `?cluster=<member>`
+# N5 row 10: executors (ADR-0091 addendum (12)–(19)): one ref at two members without an assignment — `contested`; an assignment with `copies` — the view is complete, both units in `units`; an edit without `?cluster=` — 409 `executors` with `clusters`; with `?cluster=` — 202; the same key without `?cluster=` — an early repeat at one executor, 202 with the same id; a pair `cluster` + `origin` outside `copies` — `contested`
+# N5 row 11: the limit of outcomes (coverage audit of P/08): an outcome of an edit with a known id; 50 edits to a switched-off member, the return — 0 waiting, in the view exactly 50 outcomes, the first is evicted from the row `domain/outcomes/m1`
+# N5 row 12: a kept `POST`: 202 `kept`, `what` with the field `domain.ref` without `cluster`, `asked.path` without query; applied after the return, the outcome `performed` (coverage audit of P/08, the second pass of Gemini)
+# N5 row 13: a `DELETE` of a unit is waiting — a new edit of the same path 409 `unit is being deleted` (coverage audit of P/08, the second pass of Gemini)
+# N5 row 14: an unreadable assignment record — `PUT` over it with a new `rev`, `DELETE` deletes; an unreadable counter — 503 (G-35, G-36; coverage audit of P/08, the second pass of Gemini)
+# N5 row 15: an unreadable element of the kept edits — 422 to its own key, a fresh key 202; an unreadable `seq` — 503 (G-32, G-34; coverage audit of P/08, the second pass of Gemini)
+# N5 row 16: `16-placement-versions`: `index` of the record, `ETag`, `If-Match` by a number and by an index, 412 with `row`; a repeat of a key before the condition, another body 422; the same content under a key — `ETag` of the read record; a repeat of `DELETE` (ADR-0094 B3, B4)

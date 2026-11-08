@@ -17,41 +17,6 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
 «Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
 `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `TURN_TERM` 45 s.
 
-- **Scenario 04.** The second copy of the process `domain` on `hold` is a standby one: the login answers 503 `standby`. The first is stopped by
-  SIGTERM and gives up the queue — the second takes it at the next `TURN_RENEW` (one killed by SIGKILL would give it up only by `TURN_TERM`);
-  its login is 200, the reports of `m1` are accepted again, the view is full. `@until` repeats the login: it does not change rows (the token is not
-  stored). The path `TURN_TERM` is sc. 08, the refusal of the guard — by reading.
-- **Scenario 05.** `SERVERS_MAX`: the runner puts `domain/member-count` with `servers` 499 as a row
-  through `admin.sock`; the acceptance of `m1` gives member 500 — 200, the acceptance of `m2` — 409 `too many servers`. Both sides of the ceiling.
-
-- **Scenario 07** (the coverage audit of P/08, audit-kimi 1e9929d51). `ENTRY_MAX` over all Entries (N1.5 `every_entry`): the stand
-  is brought up by hand, like sc. 05 (`@domain` would accept `m1` itself); `domain/member-rows/<part>` is rewritten as a row through `admin.sock` —
-  the record `f01991` of the section of `m1` (3232) with a `by` of 1300 characters `x` (Entry 1336 bytes JCS > 1240; the field `by` is not limited by the form, the limit is a check of the
-  writer). The acceptance of `m1` — 409 «… would exceed 1240 bytes» (the name in the text is not compared: step 6 «admit a member» names
-  the accepted one, N1.5 — the member with the large Entry), `m1` is not written; the leaving of `f01991` (the record without it passes the check) — 200; the acceptance of
-  `m1` — 200.
-- **Scenario 08** (the coverage audit of P/08). The freshness of the queue (N1.7 `fresh_turn`): without agents, two copies of `domain`; the first
-  is frozen by `@on hold @freeze domain#1` (SIGSTOP; the freeze limit of 120 s is the dictionary of the «Stand»). After 20 s the second is still
-  standby: the last renewal of the first is no earlier than `TURN_RENEW` (10 s) before the freeze, and an unchanged version is no more than 30 s, with
-  a margin against `TURN_TERM` 45 s. Then the second takes the queue (`@until 60`: no later than 45 s from the first look at the version plus
-  the `TURN_RENEW` of its polling — about 65 s from the freeze in the worst case). After `@thaw` the door `signer` leads to the first copy
-  (alive, number 1) — 503 `standby` (`@until`: the norm does not limit the answer window of the door); the second answers 200. During the
-  freeze the door `signer` is not touched — a request to the frozen copy would hang.
-- **Scenario 09** (the coverage audit of P/08, the second pass of Gemini, the draft G11 `e32df6f8b`, rewritten). `ENTRY_MAX` over all Entries at the administrator's edit
-  `Entry.ca` (N1.5 `every_entry`): the stand is brought up by hand without the agent of `m1`; `domain/member-rows/<part>` is rewritten through `admin.sock`
-  — `hold` as before, `f01991` of 1336 bytes JCS (like sc. 07) and `m1` without a key (Entry `{by, how, since}` — of the form). `POST
-  /domain/members/m1/ca` — 409 «… would exceed 1240 bytes», `m1` has no `Entry.ca`. Then `f01991` with five `revoked_keys`
-  (`11…11`…`55…55`, 64 hex; Entry 392 bytes) — the same edit of `m1` passes and trims the `revoked_keys` of the foreign Entry to the four
-  last ones (N1.5 `revoked_keys`, `every_entry`).
-- **Scenario 10** (the coverage audit of P/08, the second pass of Gemini). An unreadable queue at the start (N3 «the turn of the domain process» step 1): `@stop domain`, the row
-  `domain/signer-turn` is rewritten through `admin.sock` not of the form (`{turn: "1"}` — no `holder`), `@start domain` —
-  the process is standby: the login 503 `standby` (`@until`: the process is coming up), the row is as before — it does not rewrite it.
-
-Not taken from the draft G11: `on_accept` with a large foreign Entry — not 409 (C08-CA-ENTRY-MAX-01) — the agent needs a TLS kit
-(`W2C_TLS_DIR`, the inputs of the acceptance of chapter 8.3), and the stand does not read the log `domain.member.ca.refused` (by reading); 503 `standby`
-at the other doors of the process without `domain/signer` (C08-TURN-WITHOUT-SIGNER-01) — the dictionary has no door of the process `domain` not on
-`hold` (`signer` is only `hold`); its answer on the merits is `POST /api/take`, sc. 16 of [the acceptance of chapter 8.8](../8/README.md).
-
 By reading: `whole too large` (N1.5), a holder `url` of several nodes and an unknown outcome of a write with the guard (N1.7),
 the price (N1.9).
 

@@ -36,24 +36,6 @@ The format is the dictionary of the «Stand» and the domain dictionary; the exp
 are checked for the ring envelope (`~enc:v2:`) and for the absence of the value of the secret (`!contains`); the log — by reading
 ([P/06.2](../../../06-console/spec/06.2-console.norms.md) N1.4).
 
-- Sc. 01 step 18 — the name of the book in the path is not decoded (`%72olls` is not `rolls`; the M11 reconciliation 05–08, B6).
-- Sc. 01 steps 11–15 (`seal_reuse`, [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2 `seal_reuse`) compare not the generation number of `m1`, but the envelope
-  `note_secret` of the contribution `t1` in two generations 12 s apart: the same envelope. A new generation in this time is possible — from
-  `domain/backup-taken` of the backup copy of chapter 8.8 (`m1` is a keeper), — and the step does not depend on the moment of the copy.
-- Sc. 01 steps 3–5, 10, 18 read the book door of the cluster console (the OpenAPI of lesson 6, chapter P/06.7) — a neighbour on the
-  stand; steps 16–17 — the leaving of a member (chapter 8.3; the door of the domain console — lesson P/10) and the removal of the row of the former member (N1.3 `write`).
-- Sc. 11 — the index of names of the book `notes` of `testsub2`: the contribution `t7` from `m1` with the recipient `m2`. The silence of `m1` (`@stop agent`,
-  longer than `LOST_AFTER`) makes the index unknown: the creation of a person and a new grant row — 503, the removal of a row — not.
-- Sc. 12 — a subject without a name (the neighbour chapter 8.4, N3 «reconciliation»; C08-GRANTS-ORPHAN-01): the grant `t7` (`view`) at `m2`, then the contribution `t7`
-  is deleted (`DELETE /tallies/t7` on `m1`) — the index is known even without `t7`; the holder's reconciliation removes the row `t7`
-  (step 7), and the person `t7` is created without the grants of the former subject (steps 8–9).
-- Sc. 13 (the coverage audit of P/08, the second pass of Gemini, the draft G05 `e32df6f8b`) — the index is known (step 4): a new grant row with the subject `zed`, who
-  is neither among the people nor in the indexes, — 400 `unknown subject` (N1.7 `checks`). The contribution `alice` in `notes` with the person `alice`
-  (the reverse rule, N1.7 `reverse`): the key is in `view.books.testsub2/notes.person_names` and is not delivered to `m2`, although
-  `alice` has the grant `view` there (the delivery condition is met). Step 9 waits for the delivery of `t7` — `m2` has the book; step 11 — two
-  agent passes after it `alice` is absent. The silence of `m1` (steps 12–13) makes the index unknown, but a new row of a person
-  (`alice` `edit`) does not wait for the index, and the former row `t7` is not checked — 200 (N1.7 `checks`; the M11 reconciliation, P5, P6).
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 | Sc./step | Sleep | Reason |

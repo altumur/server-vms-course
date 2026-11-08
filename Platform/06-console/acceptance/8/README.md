@@ -20,13 +20,6 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 
 - `$f`, `$g` and the like bind the folder id from the answer `201`. The scenario does not set the value of the id: the console chooses 128 random bits.
 - `$i`, `$j` bind `index`: they are compared only for equality. The `index` of the answer of `PUT` equals the index of the row in the store — sc. 02 steps 4–5.
-- Sc. 03 steps 11–14: the key `testsub/counters/<1007 bytes>` is exactly 1024 bytes: the unit row is representable, the membership key is longer than the limit — `400 bad member`. The neighbour at 989 bytes gives a membership key of exactly 1024 bytes and passes.
-- Sc. 04: a chain of eight folders — `FOLDERS_DEPTH_MAX`; the ninth — `too deep`. Steps 13–16: a tombstone of an ancestor in the middle of the chain.
-- Sc. 05 step 8: a write over a tombstone goes through the batch door, because `PUT` and `DELETE` of such a folder answer 404.
-- Sc. 09: the boundary `FOLDERS_PER_UNIT_MAX`: the eighth folder passes, the ninth — 400, the deletion of a unit at the boundary removes all eight.
-- Sc. 10 step 5: the store door removes the unit row bypassing the console door, as the controller does by `placement.ends`: `testsub` has no such deadline, so the scenario itself does the write, by the role `console`, as in sc. 19 of chapter 6.1. Until the pass of the reaper the member hangs; the scenario waits only for the end of the window, because the moment of the pass is not subject to the stand.
-- Sc. 11: a batch of a unit with a folder. Steps 6–7 and 12 — a refusal by `no chain`, `no membership`, `parent gone`; `$ip` is the index of the parent, `$t` is the index of its tombstone.
-- Sc. 12 steps 12–14: a row with an empty `name` is written by the store door by the role `console`, bypassing the folder door. A folder with this id is neither live nor dead: `garbled` in the list, 503 for a single one.
 
 ## What is checked by reading
 
@@ -38,25 +31,11 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 | an unconfirmed read: 503, the reaper removes nothing | a refusal of the store on the read of a particular key is needed |
 | a member from a second subsystem | `testsub2` holds `display.tree.group_by`, and `display.tree.folders` next to it is forbidden; the code is one, only the prefix of the reference differs |
 
-The plan of the rights scenarios, when the norm `may` is entered (a domain stand, `@person`, grants rows — as in [the acceptance of chapter 8.4](../../../08-domain/acceptance/4/README.md)):
-
-1. a person with `edit` on a unit without `admin`, the unit is in a folder: `DELETE` of the unit — 200, the folder is without it;
-2. the creation of a unit with a folder row without `admin` over the folder — 403, nothing is written;
-3. a write of a folder without `admin` over it — 403; with `admin` on `folder:<ancestor>` — 200;
-4. adding and removing a unit with `admin` over the folder, without `admin` on the unit — 403;
-5. deleting a folder with a role row `folder:` on a descendant without `admin` on `*` in `sub` of this row — 403.
-
 ## Static deletion profile and exact entity bytes (ADR-0127 C2)
 
 Before a folder-enabled profile is installed, use the existing P02.3 manifest put entry and effective Status.max_body/max_value, then its finite-profile validator before every installation write, including unchanged. The owned 13 form/arithmetic witnesses are Platform/02-installer/forms/finite-profile.cases.json; missing/H/multiplicity/provenance negatives need the Architect's separate judge and do not become passing from JSON Schema alone. The actual implementation's complete descriptors and mixed-packet coverage must be proved separately. Declare a sufficient existing body_limit/row_ceiling for the actual stand; no acceptance.yaml key is invented and AssemblyError is not an installer refusal.
 
 The 6 codec witnesses in ../../forms/deletion-body-witnesses.json count whole compact UTF-8 entities: 1048575/1048576/1048577, extra LF, alternative escaping and the own 1380972-byte counterexample. The padded cases use V=1048576 rather than default 524288; the sufficient whole-profile test is distinct from one favorable packet's size. Check actual emitted target/done/auxiliary requests and Content-Length or decoded chunk data when proving IO; HTTP framing is excluded. This source addition performs no such store/console run, changes no existing scenario/seam or native command, and does not introduce a mutation-time DELETE refusal.
-
-## Shared reader and writer bounds (Z-10)
-
-The family schemas apply their existing `$defs.writer` through root `allOf` for the reader as well: `folders.members` uses FOLDERS_MEMBERS_MAX, `memberof.folders` uses FOLDERS_PER_UNIT_MAX. The existing [family-read table](../../../common/vectors/family-read/06.tsv) has the six appended `06-z10-*` boundary cases, plus the preexisting `06-rights-8033` and `06-rights-8034` cases at nine memberships. The latter reader case changes only its expected verdict/paths/outcome and note by ADR-0129 addendum (12); its input and identity are unchanged.
-
-The exact folder boundary is accepted in both modes; one extra member is unreadable in reader mode. Eight memberships are accepted; nine use the existing whole-row unreadable outcomes. The old HTTP scenarios and their count are unchanged: no standalone reaper/installer run is claimed by this vector/source addition. Reads in R013/R014/R016/R018 use this same family check and their existing outcomes, without truncation or an extra transition/refusal. B1 and execution of P02 recovery remain open.
 
 
 ADR-0129(17): a unit deletion and explicit folder/memberof rows in the same batch must agree on the deletion consequences. A retained deleted unit or restoring membership gives existing 400 no membership with field at the conflicting writes row before any target mutation. Consistent explicit rows are used once; missing automatic consequences, their full size and guards remain ordinary. No silent body rewrite or full-folder traversal is permitted. The separate Z10 over-limit unreadable branches remain unchanged.

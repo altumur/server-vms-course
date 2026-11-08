@@ -30,15 +30,6 @@ a margin. At the door `holder` the runner sets `Idempotency-Key` on `PUT` too (s
 
 The format is the dictionary of the «Stand» and the domain dictionary; the expectation is a subset of fields.
 
-| № | Scenario | Steps | What |
-|---|---|---|---|
-| 04 | `cut-and-mend` | 5 | `@cut m1` — after LOST_AFTER `silent`, `complete: false`; `@mend` — `ok` again |
-| 06 | `view-on-the-stand` | 8 | two units in two members, a search by ref, `?cluster=`, `no such member`; `contested` is empty; the shadow report — `unmanaged` 2, `may_write: false` |
-| 07 | `view-unseen-and-silent` | 7 | after a restart of `domain` the members are `unseen`, then `ok`; a silent one is `silent` |
-| 08 | `view-configured-and-stale` | 8 | a unit without a worker — `configured`, `unobserved`; the worker is killed — `stale` |
-| 09 | `view-contested` | 5 | one ref in two members — `contested`, the unit is not in `units` |
-| 15 | `shadow-and-executors` | 6 | an assignment with `copies`: the claims of the executors from `cluster` and `copies` are not a `conflict`; an assignment without a unit — `orphaned` after SHADOW_STALL |
-
 Scenarios 06–09 repeat on the stand scenarios 01–05 of the acceptance of M11/01 (the vectors `view`): real reports of agents in
 `domain/members/<member>/reports/<rev>` and the holder's view.
 

@@ -38,23 +38,6 @@ installation is `{recovery}` in the instance directory.
 opens the relay door (`RELAY=1`, `{relay_port}`); the directives `@domain <clusters>`, `@start agent <cluster> via
 relay`, `@stop agent`. The topology is empty until the step that writes it.
 
-**Scenarios 20–22** (the coverage audit of P/08, audit-kimi 1e9929d51) — the view fields of chapter 8.1 on the stand:
-- sc. 20 — `trust` and `topology` of the view ([chapter 8.1](../../spec/08.1-domain.norms.md) N1.2a, N1.6a): before the topology is written —
-  exactly `{rev: 0, star: [], via: {}}`; `trust.rev` is the same `rev` of the set as `reports.<member>.keys_rev` after `@domain`
-  (the readiness of `@domain` — each member holds the holder's set); the written topology is seen in the view by the next pass
-  (`@until`). `m2` in `via` is not a relay — there are no refusals of N1.2; the direct report of `m1` is the second road (N1.3a).
-- sc. 21 — `relay_refused` (N1.6a): the mark of `m1` at the holder is spoiled (`@stop domain`, then `@on hold @spoil object` — the writer of the
-  mark is stopped, — `@start domain`), and each packet of `relay` with `m1` gets `refused` «unavailable» (N3
-  «the holder on POST /api/relay» step 2) — the record of the relay in the view is stable; a topology without `via` — the relay learns from the answer
-  `relay_for: []`, the next packet is empty and accepted — the record is removed. The field `relay_refused` in the form of the view is optional, therefore step
-  11 accepts `{}` or the absence of the field (`@oneof`); there is no key `relay` in any branch.
-- sc. 22 — the mark `domain/members/m1/reported` with `rev` 2^53 (9007199254740992, one above `pos53`), put past the
-  writer while the agent `m1` is stopped: the member is `silent`, the view is incomplete by the field (`complete: false`). The strict reading — the mark is not by the
-  form ([the outcomes of the family](../../data/member-reported.outcomes.tsv): there is no copy, the member is `silent`); the non-strict one — there is no generation
-  `reports/9007199254740992` and the `sha256` is foreign (chapter 8.1 N3 step 2) — the same `silent`. `@until 10`: the mark of `m1` is
-  younger than `MARK_REFRESH` + `REPORT_EVERY` at the moment of the stop, and before LOST_AFTER (45 s) the silence by the term does not come —
-  `silent` is given only by the substitution.
-
 **Scenario 04** (from the acceptance README of M11/08): the agent `m1` is given the TLS directory `inputs/kit-m1-one/` (only `ca.pem`
 of the centre A), then `inputs/kit-m1-two/` (`ca.pem` A and `ca.next.pem` B), then the variable is removed (`@env m1
 W2C_TLS_DIR=…`, `@env m1 W2C_TLS_DIR`; the value `inputs/…` is a path from this directory). The doors of the stand do not speak TLS: the agent
@@ -65,16 +48,6 @@ a change of the centres at the member is rewritten by its next report. Steps 14�
 `tls_ca`: the fingerprints are not removed. How the runner passes the environment and restarts the console and the agent of the cluster with the variable
 (`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md), `@env` and
 «Forwarding environment» (the review analysis of stage B 8–10, № 22: `M-16`).
-
-**Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
-N1.2b, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). The process `domain` is stopped (step 2), so that the pass of
-the holder does not rewrite the view; in its place the view `inputs/view-member-list-ghost.json` is put: only `hold`, there is no field `knocking` (step 3). Step 4 shows that the domain console reads this view. Step 5: `members` is the
-doc of the rows `domain/member-rows/<part>` (`hold`, `m1`, `m2`), not the view; there is no field `knocking` in the read view —
-`knocking: []`.
-
-**Scenario 17** (from the acceptance README of M11/12): the agent `m1` holds the row of its own section — the holder's answer is without `members`. An edit of `ca` changes this row — the copy
-at `m1` is with it (the row came once), then the answer is again without `members`. The runner goes as the person `root`
-(lesson P/08, chapter 8.4); the expectation of `@carry` is `ok <JSON>`, a subset of fields.
 
 ## Inputs `inputs/`
 
@@ -97,48 +70,13 @@ The format is the dictionary of the «Stand» of the common acceptance README an
 binds from `knocking` and substitutes into the admission: so the stand repeats what a person does, comparing the fingerprint with the log of
 the agent; `$kr` (sc. 20) is the `rev` of the set from `trust` of the view; `$k` (sc. 29) is the private key of the batch from the answer of `POST /domain/batches`, the runner gives it to the command `join` by the directive `@join m2 batch=b1 $k`. In total 21 scenarios / 218 steps.
 
-**Sc. 29 — the admission batch** (ADR-0113 addendum (2)–(4); P/08.3 N1.1b; the contract of the admission of a report «The batch knock»; P/09.1 N1.1 `join` `batch`). `@domain m1` admits `hold` and `m1`, the agent `m2` is not started. Step 3 — a live batch with the same name — 409. Step 4 — `join` on `m2` with the batch: the row `domain/join` `{class: camera, batch}`. Step 6 — the box is admitted without a person: `Entry` with `class: camera` and `batch`, there is no knock. Step 7 — the exclusion: the fingerprint goes into `refused` of the batch. Steps 8–10 — the same token does not bring the box back: the knock with `batch` lies and waits for a person for two agent passes. Steps 11–12 — the revocation of the batch, the row with `revoked: true` and `used: 1`. Step 13 — a person admits the knock by the fingerprint: the revocation and `refused` close only the admission by the batch. By reading: the exhaustion of `n` and the revocation against a new box (on the stand there is one free box `m2`, `join` is create-once), the term `until`, the overflow of `refused`, the relay `via`, the `state` of the copy.
-
-Sc. 18 (C08-G06): the door `signer` sends to the process `domain` the packet `POST /api/relay/m9` with `{"relayed": {}}` without a signature — `m9`
-is not a member: 404 before the check of the signature and without a knock (P/08.3 N2, the order of the row `POST /api/relay`).
-
 The stand does not cause the loss of the holder's memory (409 `rebase`): it is checked by the vectors `accept` and by reading the contract of the admission of a report.
-
-The mutation check 2026-10-18 (the analysis of run 41, «Mutations»): scenario 14 — a knock of a stranger without a valid signature (the clock of the
-agent 400 s ahead, outside `MEMBER_WINDOW`) does not get into `knocking`, with a valid one it does (N2: the signature by the key from the body,
-401 — without a knock).
 
 Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `BACKUP_EVERY`): the member `m1` is a keeper, and
 `domain/backup-taken` in its report gives its own generation at any moment of the run. Therefore step 5 waits at `m1` for the object itself
 `testsub/snapshot/w-1` (the placement `c3`), steps 6–9 — two changes of the mark of the report round `sent_at`, bound after the snapshot
 (two agent passes: one change may belong to a round that was in flight), and only step 10 takes the last generation: in
 it the snapshot is there for any number of generations between them (a generation carries all objects of the member, N1.3).
-
-**Scenarios 23–28** (23–26 — the coverage audit of P/08, the second pass of Gemini, the draft G03 `e32df6f8b`, rewritten; 27 — ADR-0094 B3, B4; 28 — C08-STOLEN-KEY-ENTRY-01):
-- sc. 23 — a repeat of the admission (N3 «admit a member» step 1, D20): the stand is brought up by hand, as sc. 01; step 5 also waits for the `key`
-  of the holder in the list — further the list does not rewrite itself, and the `rev` after the admission (`$r1`) does not change. The same fingerprint —
-  200 without a write (the same `rev`, step 9 reads it again); another one — 409 «… was admitted with another key: have it leave first»;
-  `m2` without an agent does not knock — 404.
-- sc. 24 — `POST /domain/members/<member>/ca` (N1.6 `admin`): a list not in ascending order is written in ascending order; the same
-  list again — a new write (`rev` grows). The agent `m1` has no TLS kit — `on_accept` does not rewrite the edit.
-- sc. 25 — the removal of the centre and of a route by an edit of the topology (N1.2 `centre`, `put_order`): `centre: ""` and `via: {"m1": ""}`
-  remove the centre and the route; `centre: null` — too.
-- sc. 26 — the row `domain/topology` is spoiled past the door (`doc` is not JSON): `PUT` — 503 `unavailable`, the row is the former one (the edit is
-  partial and against `base_rev`, it cannot be executed without reading; C08-TOPOLOGY-PUT-UNREADABLE-01), `GET` — 503 too (P/10 N1.2c).
-- sc. 27 — the versions and the replay memory of the edit doors ([chapter 8.0](../../spec/08.0-domain.norms.md) N1.9). The clusters `hold`, `m1`, `m2`.
-  There is no row `domain/topology` yet: the condition — 412 with `revision: 0`, and the first write carries `base_rev: 0` (steps 3–5). The condition is judged before the content (step 7), the form — before reading (step 9),
-  `If-Match` with `base_rev`: different ones and the index next to it — 400, equal ones — a write (steps 10–12). The index of the former version no longer fits (step 13), the current one fits (steps 14, 15).
-  Step 17 repeats step 16 with the former `If-Match`: without the memory this would be a 412 of one's own write; step 22 gives the saved 412 with `revision: 4`, although the row is already at 5.
-  Step 24: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/topology" ‖ 0x00 ‖ "t-r1")`; `body` is judged by a substring: the order of the fields of the body is the implementation's.
-  Steps 27–31 — `If-Match` by the row `domain/member-rows/<part>`: `$m` is the `rev` of the list, the number depends on the course of `@domain`. Step 30: a non-member — 404 before the condition; step 31: the admission judges the condition first.
-  The stand does not bind the value of `ETag`: it judges the quotes of the header, and the index — through `If-Match` from the store row.
-- sc. 28 — a machine came back after a theft (N3 «admit a member» steps 1, 4, 6; the contract of the admission of a report `forget`; C08-STOLEN-KEY-ENTRY-01): `stolen` is not caused on the stand, the record of `m1` without `key` is seeded by `admin.sock`. Step 3: the key of the agent is in `revoked_keys` — the knock is kept, the admission 409. Step 6: `revoked_keys` holds a foreign key, therefore the key of the agent plays the new key of the machine — the admission 200, `revoked_keys` remained, the knock is removed. Not run by an implementation.
-
-Not taken from the draft G03: 503 of step 0 of «admit a member» with an unreadable `domain/view` — the view object is rewritten by the pass of
-the holder once in `VIEW_EVERY` (3 s), the stand will not hold the spoiling window (a race, by reading; with `domain` stopped there is no door);
-the refusal of the agent door with an unreadable `domain/revoked` (C08-CARRY-UNREADABLE-01) —
-`@carry` sees only the answer 200, and `silent` after LOST_AFTER does not tell the cause (by reading). The expectation of the draft `star: []`
-after `centre: ""` without `star` in the body is wrong: a field not given is the former one, a star without a centre — 409.
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 

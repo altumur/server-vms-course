@@ -467,7 +467,7 @@ silent_after: обязательное конечное положительно
 
 ```yaml
 alarms:    вход — N3 alarms; вывод {events, members, complete, sentence}
-exit:      0 — вычислено; 2 — вход не по форме (строки alarms-15, alarms-17…23, alarms-31…37 — @exit 2: lost_after, имя члена, page без
+exit:      0 — вычислено; 2 — вход не по форме (lost_after, имя члена, page без
            last_report, sent_at null у члена с отчётом, history с cut_before null, свидетель без ts, reported вместе с last_report,
            лишнее поле, отсутствующий или неверный silent_after в обеих формах члена; прочие случаи — чтением; страница [], from > to, строка без id — 0 unreadable, строки alarms-24…26); коды выхода — по принципу «Стенда домена» общего README приёмки («Коды выхода команд-векторов»: 2 — форма доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке M11, H14).
            Не по форме у alarms: имя члена не по грамматике члена, lost_after не > 0, silent_after отсутствует или не конечное положительное число (boolean и null — не числа), history или свидетель не по форме P/08.9 N1.9
@@ -480,22 +480,22 @@ exit:      0 — вычислено; 2 — вход не по форме (стр
 
 | № | Сценарий | Нормы |
 |---|---|---|
-| 02 | стенд: агент `m2` выключен — в доставке `silent`, строка тревоги `silent` в `/domain/alarms`; окно не по грамматике и `since > until` — 400; вернулся — взял документ | N1.8; шаги 04, 09 (доставка) — N1.2f; шаг 11 (подпись агента у `/events` консоли члена) — сосед на стенде |
-| 05 | стенд: страница держателя — `/`, модуль, `/manifest`, `/mounts`, `/session` с `server_time`, `timezone` | N1.7 |
-| 06 | `no-domain-here` (аудит покрытия P/10, K01): домен не установлен — сторожевая `open`, вида нет; `GET /domain`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/shared`, `/domain/testsub/counters` — 404 `no domain here` | N1.2a, N1.2b, N1.2c, N1.2f; N4 |
-| 07 | `view-unreadable` (аудит покрытия P/10, K01): процесс `domain` остановлен, вид испорчен — 503 `unavailable`, не 404, у `GET /domain`, `/domain/members`, `/domain/testsub/counters`, `/domain/shared`; тень испорчена — 503 у `/domain/shadow` | N1.2a, N1.2b, N1.2f; N4 |
-| 08 | `pass-process-down` (аудит покрытия P/10, K02): процесс `domain` остановлен — правка и дверь людей (и `GET`) — 502 `did not answer`, своя дверь чтения отвечает; после возврата та же правка — `rev: 1` | N1.3 `pass`, N1.3a; N4 |
-| 09 | `pass-process-silent` (аудит покрытия P/10, K03): процесс `domain` заморожен (`@freeze`) — правка — 502 `did not answer`; после `@thaw` — `rev: 1` | N1.3 `pass`; N4 |
-| 10 | `read-doors-head-and-query` (второй проход, G02): `HEAD /domain`, `/domain/topology` — 200 без тела; `?cluster=` пуст или дважды — 400; нет манифеста, `rows` не его — 404 | N1.2, N1.2a; N4 |
-| 11 | `topology-placement-unreadable` (G02): `domain/topology`, счётчик `domain/placement`, запись назначения не по форме — 503 `unavailable`, не `rev 0` и не 404; прежний счётчик — 200; записи или манифеста нет — 404 | N1.2c, N1.2d; N4 |
-| 12 | `shared-and-members-unreadable` (G02): указатель `domain/shared` не по форме — 503, не `doc: null`; строка `domain/member-rows/<part>` не по форме — 503 у `/domain/members` и всей двери `/domain/alarms` | N1.2b, N1.2f, N3 `alarms`; N4 |
-| 13 | `alarms-query-lexemes` (G03): `since`/`until` не по грамматике `time` (`1e3`, `-1`, `+1`, « 1», `1_000`, `1e10`) — 400 `refused`; `since` дважды — 400; `%31` — принят | N1.8 `door`; N4 |
-| 14 | `alarms-mark-unreadable` (G03): метка `reported` испорчена — дверь 200, член `unreadable` без `known_until`, `silent_since` | N3 `alarms` |
-| 15 | `dot-segments-and-x-user` (G04): без токена сегмент `.`/`.%2E` — 404 `not a domain route`, не 401; пришедший `X-User` снят — 401, `/session` анонимная; с токеном — личность из токена, гранты в `/session` | N2, N1.4, N1.5; N4 |
-| 16 | `gate-rows-unreadable` (G04): `domain/disabled`, `domain/revoked`, `domain/grants/domain`, `domain/keys` не по форме — 503 `unavailable`, не 401/403; прежнее значение — снова 200 | N1.5; N4 |
-| 17 | `read-versions` (ADR-0094 B4): `ETag` дверей одной строки; `index` записей и `versions` грантов равны индексу хранилища; `If-Match`, `Idempotency-Key` и `ETag` идут через консоль кластера и консоль домена | N1.2; договор пересылки `pass`, `answer`; P/08.0 N1.9 |
-| 18 | `kept-door`: `GET /domain/<sub>/kept/<имя>`: маска `*_secret` вглубь и `enc:`, семья и необъявленное — 404, у консоли члена пересылка; без личности 401, незритель 403 и на необъявленном: право раньше 404 | N1.2a; P/06.2 N1.4 |
-| 19 | `relay-door`: `GET /domain/relays/<ретранслятор>`: имена за ретранслятором без ключей, ретранслятор без членов — пусто, не член — 404, незритель — 403 и на необъявленном: право раньше 404, у консоли члена пересылка, без личности 401 | N1.2a; P/08.3 N1.2 |
+| 02 | `02-silent-member` | N1.8; шаги 04, 09 (доставка) — N1.2f; шаг 11 (подпись агента у `/events` консоли члена) — сосед на стенде |
+| 05 | `05-the-holders-page` | N1.7 |
+| 06 | `06-no-domain-here` | N1.2a, N1.2b, N1.2c, N1.2f; N4 |
+| 07 | `07-view-unreadable` | N1.2a, N1.2b, N1.2f; N4 |
+| 08 | `08-pass-process-down` | N1.3 `pass`, N1.3a; N4 |
+| 09 | `09-pass-process-silent` | N1.3 `pass`; N4 |
+| 10 | `10-read-doors-head-and-query` | N1.2, N1.2a; N4 |
+| 11 | `11-topology-placement-unreadable` | N1.2c, N1.2d; N4 |
+| 12 | `12-shared-and-members-unreadable` | N1.2b, N1.2f, N3 `alarms`; N4 |
+| 13 | `13-alarms-query-lexemes` | N1.8 `door`; N4 |
+| 14 | `14-alarms-mark-unreadable` | N3 `alarms` |
+| 15 | `15-dot-segments-and-x-user` | N2, N1.4, N1.5; N4 |
+| 16 | `16-gate-rows-unreadable` | N1.5; N4 |
+| 17 | `17-read-versions` | N1.2; договор пересылки `pass`, `answer`; P/08.0 N1.9 |
+| 18 | `18-kept-door` | N1.2a; P/06.2 N1.4 |
+| 19 | `19-relay-door` | N1.2a; P/08.3 N1.2 |
 
 Двери урока на стенде глав урока P/08 — соседи на стенде (правило «сценарий — главе своего исхода, соседи — на стенде»,
 ADR-0083 доп. (13)):
