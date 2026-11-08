@@ -147,15 +147,25 @@ class OptionalP06Fields(unittest.TestCase):
     """Independent actual source/OpenAPI roles; rendering only creates the subject."""
     def setUp(self):
         import yaml
-        import gen_refusals
         from types import SimpleNamespace
         from unittest.mock import patch
-        self.yaml, self.gen = yaml, gen_refusals
+        # Import only the pinned producer as subject; expected values still come from raw Source.
+        import importlib.util
+        producer = Path(os.environ['NORMGEN_PRODUCER_ROOT']) / 'tools/normgen/gen_refusals.py'
+        spec = importlib.util.spec_from_file_location('pinned_refusal_subject', producer)
+        subject = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(subject)
+        self.yaml, self.gen = yaml, subject
+        build_env = patch.dict(ENV, GOFLAGS=ENV.get('GOFLAGS', '') + ' -buildvcs=false')
+        build_env.start()
+        self.addCleanup(build_env.stop)
         self.tmp = tempfile.TemporaryDirectory(prefix='p06-refusal-fields-')
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name)
         self.form = self.home / 'refusals.tsv'
-        self.api = self.home / 'api.yaml'
+        # Canonical owner/base plus Source dependency closure. Never fall back in the producer.
+        shutil.copytree(ROOT / 'Platform', self.home / 'Platform')
+        self.api = self.home / 'Platform/06-console/spec/06-console.api.openapi.yaml'
         source = ROOT / 'Platform/06-console/forms/refusals.tsv'
         self.rows = list(csv.DictReader((line for line in source.read_text().split('\n')
                                         if line and not line.startswith('#')), delimiter='\t'))
@@ -192,12 +202,19 @@ class OptionalP06Fields(unittest.TestCase):
         return next(row for row in self.rows if row['name'] == self.name)
 
     def wanted(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('owned_optional_role_oracle', HERE / 'refusal_judge.py')
+        oracle = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(oracle)
         row = self.selected()
+        schema = oracle.SourceSchemas(self.api).schema(row['response_schema'])
+        if row['fields'] == '-':
+            return [], []  # No direct projection; full schema/reference closure was still checked above.
         fields = row['fields'].split(',')
         names, optional = [v.rstrip('?') for v in fields], [v[:-1] for v in fields if v.endswith('?')]
-        schema = self.doc['components']['schemas'][row['response_schema']]
         self.assertLessEqual(set(names), set(schema['properties']))
-        self.assertEqual(set(names) - set(optional), set(schema['required']))
+        self.assertLessEqual(set(schema['required']), set(names) - set(optional))
+        self.assertFalse(set(optional) & set(schema['required']))
         return names, optional
 
     def compile_readback(self, source):
@@ -252,7 +269,7 @@ func main(){json.NewEncoder(os.Stdout).Encode(map[string]any{"rows":refusals.All
 
     def test_role_mismatches_malformed_duplicates_and_surfaces_refuse(self):
         original = self.selected()['fields']
-        for fields in ('detail,error,supervision', 'detail?,error,supervision?', 'error,supervision?', 'detail,supervision?',
+        for fields in ('detail?,error,supervision?', 'error,supervision?', 'detail,supervision?',
                        'detail,error,supervision??', 'detail,error,?', 'detail,error,sup?ervision',
                        'detail,error,supervision?,supervision', 'detail,error,supervision,supervision?',
                        'detail,error,unknown?', 'detail,,error,supervision?'):
@@ -284,6 +301,384 @@ func main(){json.NewEncoder(os.Stdout).Encode(map[string]any{"rows":refusals.All
             self.assertNotEqual(changed, original)
             got = self.compile_readback(changed)
             self.assertNotEqual((got['Fields'], got.get('OptionalFields') or []), (fields, optional))
+
+    def test_form_required_schema_optional_is_valid(self):
+        self.selected()['fields'] = 'detail,error,supervision'
+        self.write()
+        fields, optional = self.wanted()
+        got = self.compile_readback(self.gen.render(self.form)['refusals.go'])
+        self.assertEqual(got['Fields'], fields)
+        self.assertEqual(got.get('OptionalFields') or [], optional)
+
+    def test_dash_keeps_composed_schema_and_validates_missing_targets(self):
+        self.selected()['fields'] = '-'
+        self.write()
+        original = self.api.read_text()
+        marker = '    VerifyUnavailable:\n'
+        start = original.index(marker)
+        end = original.index('    ManifestSource:\n', start)
+        # Full-resource composition remains valid without inventing direct fields.
+        composed = marker + '      allOf:\n      - $ref: "#/components/schemas/Unavailable"\n'
+        self.api.write_text(original[:start] + composed + original[end:])
+        self.assertEqual(self.wanted(), ([], []))
+        got = self.compile_readback(self.gen.render(self.form)['refusals.go'])
+        self.assertEqual(got['Fields'] or [], [])
+        self.api.write_text(original[:start] + composed.replace('/Unavailable', '/MissingTarget') + original[end:])
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def test_external_ref_follows_each_resource_base(self):
+        self.selected()['fields'] = 'detail,error,supervision?'
+        self.write()
+        original = self.api.read_text()
+        start = original.index('    VerifyUnavailable:\n')
+        end = original.index('    ManifestSource:\n', start)
+        data = self.home / 'Platform/common/data'
+        (data / 'judge-role.schema.json').write_text(json.dumps({'$ref':'judge-target.schema.json#/$defs/Answer'}))
+        target = data / 'judge-target.schema.json'
+        target.write_text(json.dumps({'$defs': {'Answer': self.doc['components']['schemas']['VerifyUnavailable']}}))
+        alias = '    VerifyUnavailable:\n      $ref: "../../common/data/judge-role.schema.json"\n'
+        self.api.write_text(original[:start] + alias + original[end:])
+        fields, optional = self.wanted()
+        got = self.compile_readback(self.gen.render(self.form)['refusals.go'])
+        self.assertEqual((got['Fields'], got.get('OptionalFields') or []), (fields, optional))
+        target.unlink()
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def test_dash_external_ref_still_checks_full_target(self):
+        self.selected()['fields'] = '-'
+        self.write()
+        original = self.api.read_text()
+        start = original.index('    VerifyUnavailable:\n')
+        end = original.index('    ManifestSource:\n', start)
+        alias = '    VerifyUnavailable:\n      $ref: "../../common/data/judge-absent.schema.json"\n'
+        self.api.write_text(original[:start] + alias + original[end:])
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def test_new_norm_role_negative_controls(self):
+        original = self.selected()['fields']
+        for fields in ('detail?,error,supervision?', 'error,supervision?', 'detail,supervision?',
+                       'detail,error,supervision??', 'detail,error,?', 'detail,error,sup?ervision',
+                       'detail,error,supervision?,supervision', 'detail,error,supervision,supervision?',
+                       'detail,error,unknown?', 'detail,,error,supervision?'):
+            self.selected()['fields'] = fields
+            self.write()
+            with self.subTest(fields=fields), self.assertRaises(self.gen.GenError):
+                self.gen.render(self.form)
+        self.selected()['fields'] = original
+        for surface in ('call', 'cli', 'start', 'process', 'peer'):
+            self.selected()['surface'] = surface
+            self.write()
+            with self.subTest(surface=surface), self.assertRaises(self.gen.GenError):
+                self.gen.render(self.form)
+        self.selected()['surface'] = 'http'
+        self.selected()['response_schema'] = '-'
+        self.write()
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def test_independent_source_roles_and_external_perhop_base(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('owned_independent_refusal_oracle', HERE / 'refusal_judge.py')
+        oracle = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(oracle)
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        def read():
+            with patch.object(oracle, 'L', SimpleNamespace(openapi=self.api)):
+                return oracle.read_plain_source(self.form)
+        actual = read()
+        self.assertEqual(len(actual), len(self.rows))
+        # A form-required schema-optional property is valid for the independent oracle too.
+        self.selected()['fields'] = 'detail,error,supervision'
+        self.write()
+        self.assertEqual(next(r for r in read() if r['name'] == self.name)['_optional'], [])
+        for bad in ('detail?,error,supervision?', 'error,supervision?', 'detail,error,unknown?'):
+            self.selected()['fields'] = bad
+            self.write()
+            with self.subTest(fields=bad), self.assertRaises(oracle.CheckingError):
+                read()
+        self.selected()['fields'] = 'detail,error,supervision?'
+        self.write()
+        original = self.api.read_text()
+        start = original.index('    VerifyUnavailable:\n')
+        end = original.index('    ManifestSource:\n', start)
+        data = self.home / 'Platform/common/data'
+        (data / 'judge-role.schema.json').write_text(json.dumps({'$ref':'judge-target.schema.json#/$defs/Answer'}))
+        target = data / 'judge-target.schema.json'
+        target.write_text(json.dumps({'$defs': {'Answer': self.doc['components']['schemas']['VerifyUnavailable']}}))
+        alias = '    VerifyUnavailable:\n      $ref: "../../common/data/judge-role.schema.json"\n'
+        self.api.write_text(original[:start] + alias + original[end:])
+        self.assertEqual(len(read()), len(self.rows))
+        # No direct projection still validates both reference hops and the actual target.
+        self.selected()['fields'] = '-'
+        with self.form.open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=self.names, delimiter='\t', lineterminator='\n')
+            writer.writeheader()
+            writer.writerows(self.rows)
+        self.assertEqual(len(read()), len(self.rows))
+        target.write_text(json.dumps({'$defs': {'Wrong': {}}}))
+        with self.assertRaises(oracle.CheckingError):
+            read()
+        target.unlink()
+        with self.assertRaises(oracle.CheckingError):
+            read()
+
+    def test_independent_ref_owner_and_target_position_guards(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('owned_refusal_owner_oracle', HERE / 'refusal_judge.py')
+        oracle = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(oracle)
+        reader = oracle.SourceSchemas(self.api)
+        base = self.api.resolve()
+        # Positive target first; forbidden targets never become semantic disagreement.
+        node, _, _ = reader.target('#/components/schemas/VerifyUnavailable', base)
+        self.assertEqual(node['required'], ['detail', 'error'])
+        for ref in ('#/components/schemas/VerifyUnavailable/required',
+                    '../../../../outside.schema.json',
+                    '../../09-agent/spec/09-agent.api.openapi.yaml#/components/schemas/AgentRefusal',
+                    '06-console.api.openapi.yaml#/components/schemas/VerifyUnavailable'):
+            with self.subTest(ref=ref), self.assertRaises(oracle.CheckingError):
+                reader.target(ref, base)
+        data = self.home / 'Platform/common/data'
+        hop = data / 'judge-owner.schema.json'
+        hop.write_text(json.dumps({'$ref': '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/VerifyUnavailable'}))
+        with self.assertRaises(oracle.CheckingError):
+            reader.closure(reader.load(hop), hop.resolve())
+
+    def test_dash_rejects_malformed_full_schema_independently(self):
+        import importlib.util
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        spec = importlib.util.spec_from_file_location('owned_fullschema_oracle', HERE / 'refusal_judge.py')
+        oracle = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(oracle)
+        self.selected()['fields'] = '-'
+        self.write()
+        with patch.object(oracle, 'L', SimpleNamespace(openapi=self.api)):
+            self.assertEqual(len(oracle.read_plain_source(self.form)), len(self.rows))
+            original = self.api.read_text()
+            start = original.index('    VerifyUnavailable:\n')
+            end = original.index('    ManifestSource:\n', start)
+            section = original[start:end]
+            self.assertEqual(section.count('required: [detail, error]'), 1)
+            self.api.write_text(original[:start] + section.replace('required: [detail, error]', 'required: detail') + original[end:])
+            with self.assertRaises(oracle.CheckingError):
+                oracle.read_plain_source(self.form)
+        with self.assertRaises(self.gen.GenError):
+            self.gen.render(self.form)
+
+    def _oracle_boundary_begin(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('owned_boundary_oracle', HERE / 'refusal_judge.py')
+        self._boundary_m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self._boundary_m)
+        self._boundary_versions = {self.api: [self.api.read_bytes()]}
+        self._boundary_normal = self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable')
+        self.assertEqual(self._boundary_normal['required'], ['detail', 'error'])
+
+    def _oracle_boundary_file(self, path, value):
+        path = Path(path)
+        history = self._boundary_versions.setdefault(path, [path.read_bytes() if path.is_file() else None])
+        if value is None:
+            path.unlink()
+            history.append(None)
+        else:
+            raw = value if isinstance(value, bytes) else json.dumps(value, ensure_ascii=False).encode()
+            path.write_bytes(raw)
+            history.append(raw)
+        return path
+
+    def _oracle_boundary_set(self, schema):
+        start = self.api_text.index('    VerifyUnavailable:\n')
+        end = self.api_text.index('    ManifestSource:\n', start)
+        self._oracle_boundary_file(self.api, (self.api_text[:start] + '    VerifyUnavailable: ' +
+                                  json.dumps(schema, ensure_ascii=False) + '\n' + self.api_text[end:]).encode())
+
+    def _oracle_boundary_observe(self, name, action, error=False, wanted=None):
+        import datetime
+        import hashlib
+        home = Path(os.environ['ORACLE_BOUNDARY_EVIDENCE']) / os.environ.get('BOUNDARY_ATTEMPT', 'before') / self._testMethodName / name
+        home.mkdir(parents=True)
+        identities = {}
+        for i, (path, versions) in enumerate(self._boundary_versions.items()):
+            identities[str(path.relative_to(self.home))] = []
+            for n, raw in enumerate(versions):
+                entry = {'exists': raw is not None}
+                if raw is not None:
+                    filename = f'input-{i}-version-{n}'
+                    (home / filename).write_bytes(raw)
+                    entry.update(file=filename, sha256=hashlib.sha256(raw).hexdigest())
+                identities[str(path.relative_to(self.home))].append(entry)
+        record = {'test': self.id(), 'name': name, 'expected_CheckingError': error,
+                  'start': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'inputs': identities,
+                  'Source_pin': '03df76f29457d46ffa8a89d9e1f66ab9b9383b29', 'semantic_kills': 0}
+        record['fixture_home'] = str(self.home)
+        record['main_resource'] = str(self.api)
+        record['action_default_arguments'] = [repr(value) for value in (action.__defaults__ or ())]
+        record['admitted_raw_identities_before_reuse'] = {}
+        for cell in action.__closure__ or ():
+            value = cell.cell_contents
+            if isinstance(value, self._boundary_m.SourceSchemas):
+                record['admitted_raw_identities_before_reuse'].update(
+                    {str(path): identity for path, identity in value.raw_identities.items()})
+        (home / 'before.json').write_text(json.dumps(record, indent=2) + '\n')
+        try:
+            try:
+                value = action()
+            except Exception as exc:
+                record['exception'] = {'type': type(exc).__name__, 'message': str(exc)}
+                if not error:
+                    raise
+                self.assertIsInstance(exc, self._boundary_m.CheckingError)
+            else:
+                record['returned'] = repr(value)
+                self.assertFalse(error, 'oracle accepted a forbidden, invalid, or changed resource')
+                if wanted is not None:
+                    self.assertEqual(value, wanted)
+            record['status'] = 'PASS'
+        except BaseException as exc:
+            record['status'] = 'CHECK_FAILURE'
+            record['failure'] = repr(exc)
+            raise
+        finally:
+            record['end'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            (home / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
+
+    def test_oracle_boundary_enclosing_schema(self):
+        self._oracle_boundary_begin()
+        path = self.home / 'Platform/common/data/boundary-outer.schema.json'
+        cases = [('outer-required-string', {'required': 'Leaf', 'properties': {'Leaf': {'type': 'string'}}}),
+                 ('unselected-missing-ref', {'properties': {'Leaf': {'type': 'string'}, 'Other': {'$ref': '#/$defs/Missing'}}}),
+                 ('unselected-forbidden-ref', {'properties': {'Leaf': {'type': 'string'}, 'Other': {'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/ResourceError'}}})]
+        for name, outer in cases:
+            with self.subTest(name=name):
+                self._oracle_boundary_file(path, {'$defs': {'Outer': outer}})
+                self._oracle_boundary_set({'$ref': '../../common/data/boundary-outer.schema.json#/$defs/Outer/properties/Leaf'})
+                self._oracle_boundary_observe(name, lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+
+    def test_oracle_boundary_openapi_enclosing_schema(self):
+        self._oracle_boundary_begin()
+        path = self.home / 'Platform/05-resource/spec/05-resource.api.openapi.yaml'
+        import yaml
+        document = yaml.safe_load(path.read_text())
+        document['components']['schemas']['Outer'] = {'required': 'Leaf', 'properties': {'Leaf': True}}
+        self._oracle_boundary_file(path, json.dumps(document, ensure_ascii=True).encode())
+        self._oracle_boundary_set({'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Outer/properties/Leaf'})
+        self._oracle_boundary_observe('openapi-outer-required-string', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+
+    def test_oracle_boundary_uri_matching_files(self):
+        self._oracle_boundary_begin()
+        from urllib.parse import quote
+        data = self.home / 'Platform/common/data'
+        plain = self._oracle_boundary_file(data / 'absolute.schema.json', True)
+        references = [('absolute-existing', str(plain)), ('encoded-absolute-existing', quote(str(plain), safe=''))]
+        for name, file, ref in [('bad-percent-path', 'bad%ZZ.schema.json', 'bad%ZZ.schema.json'),
+                                ('bad-utf8-path', '\ufffd.schema.json', '%FF.schema.json'),
+                                ('encoded-backslash-path', 'back' + chr(92) + 'slash.schema.json', 'back%5Cslash.schema.json')]:
+            self._oracle_boundary_file(data / file, True)
+            references.append((name, '../../common/data/' + ref))
+        self._oracle_boundary_file(data / 'fragment.schema.json', {'$defs': {'bad%ZZ': True, '\ufffd': True}})
+        references += [('bad-percent-pointer', '../../common/data/fragment.schema.json#/$defs/bad%ZZ'),
+                       ('bad-utf8-pointer', '../../common/data/fragment.schema.json#/$defs/%FF')]
+        for name, ref in references:
+            with self.subTest(name=name):
+                reader = self._boundary_m.SourceSchemas(self.api)
+                self._oracle_boundary_observe(name, lambda ref=ref: reader.target(ref, self.api), error=True)
+        self._oracle_boundary_file(data / '\u03bb.schema.json', {'$defs': {'\u540d/leaf~': {'type': 'string'}}})
+        ref = '../../common/data/' + quote('\u03bb.schema.json') + '#/$defs/' + quote('\u540d~1leaf~0')
+        self._oracle_boundary_file(data / 'unicode-hop.schema.json', {'$ref': ref.rsplit('/', 1)[0].split('/data/', 1)[1] + '/' + ref.rsplit('/', 1)[1]})
+        self._oracle_boundary_set({'$ref': '../../common/data/unicode-hop.schema.json'})
+        self._oracle_boundary_observe('valid-encoded-unicode-perhop', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted={'type': 'string'})
+
+    def test_oracle_boundary_admitted_cache_identity(self):
+        self._oracle_boundary_begin()
+        original = self.api.read_bytes()
+        external = self.home / 'Platform/common/data/cache.schema.json'
+        for name in ('main-change', 'main-remove', 'external-change', 'external-remove', 'admitted-external-remove-main-query'):
+            with self.subTest(name=name):
+                self._oracle_boundary_file(self.api, original)
+                self._oracle_boundary_file(external, {'type': 'string'})
+                reader = self._boundary_m.SourceSchemas(self.api)
+                reader.schema('VerifyUnavailable')
+                reader.target('../../common/data/cache.schema.json', self.api)
+                import hashlib
+                self.assertIn(self.api, reader.raw_identities)
+                self.assertEqual(reader.raw_identities[external]['sha256'], hashlib.sha256(external.read_bytes()).hexdigest())
+                if name.startswith('main-'):
+                    self._oracle_boundary_file(self.api, None if name.endswith('remove') else b'{}')
+                    action = lambda: reader.schema('VerifyUnavailable')
+                else:
+                    self._oracle_boundary_file(external, {'type': 'number'} if name=='external-change' else None)
+                    action = (lambda: reader.schema('VerifyUnavailable')) if name.startswith('admitted-') else (lambda: reader.target('../../common/data/cache.schema.json', self.api))
+                try:
+                    self._oracle_boundary_observe(name, action, error=True)
+                finally:
+                    self._oracle_boundary_file(self.api, original)
+
+    def test_oracle_boundary_yaml_json_values(self):
+        self._oracle_boundary_begin()
+        start = self.api_text.index('    VerifyUnavailable:\n')
+        end = self.api_text.index('    ManifestSource:\n', start)
+        section = '    VerifyUnavailable:\n      default: on\n      examples: [2026-11-08]\n      properties:\n        on: {type: string}\n'
+        self._oracle_boundary_file(self.api, (self.api_text[:start] + section + self.api_text[end:]).encode())
+        with self.subTest(name='yaml12-on-date'):
+            self._oracle_boundary_observe('yaml12-on-date', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'),
+                                          wanted={'default': 'on', 'examples': ['2026-11-08'], 'properties': {'on': {'type': 'string'}}})
+        for name, value in [('yaml-nonfinite', '      default: .nan\n'), ('yaml-binary', '      default: !!binary YQ==\n')]:
+            with self.subTest(name=name):
+                self._oracle_boundary_file(self.api, (self.api_text[:start] + '    VerifyUnavailable:\n' + value + self.api_text[end:]).encode())
+                self._oracle_boundary_observe(name, lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+        path = self.home / 'Platform/common/data/nonfinite.schema.json'
+        self._oracle_boundary_file(path, b'{"default":1e999}')
+        self._oracle_boundary_set({'$ref': '../../common/data/nonfinite.schema.json'})
+        self._oracle_boundary_observe('json-overflow', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+
+    def test_oracle_boundary_chain_separation(self):
+        self._oracle_boundary_begin()
+        data = self.home / 'Platform/common/data'
+        a = {'$defs': {'scalar': {'type': 'string'}}, 'properties': {'other': {'$ref': 'b.schema.json#/$defs/scalar'}}}
+        b = {'$defs': {'scalar': {'type': 'number'}}, 'properties': {'other': {'$ref': 'a.schema.json#/$defs/scalar'}}}
+        self._oracle_boundary_file(data / 'a.schema.json', a)
+        self._oracle_boundary_file(data / 'b.schema.json', b)
+        self._oracle_boundary_set({'$ref': '../../common/data/a.schema.json'})
+        self._oracle_boundary_observe('legal-disjoint-cross-refs', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted=a)
+        self._oracle_boundary_file(data / 'a.schema.json', {'$defs': {'scalar': True}, 'properties': {'other': {'$ref': 'b.schema.json#/$defs/return'}}})
+        self._oracle_boundary_file(data / 'b.schema.json', {'$defs': {'return': {'$ref': 'a.schema.json#/$defs/scalar'}}})
+        self._oracle_boundary_observe('true-returning-file-chain', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+        local = {'type': 'object', 'properties': {'next': {'$ref': '#'}}}
+        self._oracle_boundary_file(data / 'a.schema.json', local)
+        self._oracle_boundary_observe('local-recursion', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted=local)
+        self._oracle_boundary_set({'default': {'$ref': '../../missing.schema.json'}, 'examples': [{'$ref': 'https://example.invalid/a'}]})
+        self._oracle_boundary_observe('opaque-annotation-ref-data', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'),
+                                      wanted={'default': {'$ref': '../../missing.schema.json'}, 'examples': [{'$ref': 'https://example.invalid/a'}]})
+
+    def test_oracle_boundary_uri_io_type_errors(self):
+        self._oracle_boundary_begin()
+        bad = self.home / 'Platform/common/data/invalid-utf8.schema.json'
+        self._oracle_boundary_file(bad, b'\xff')
+        reader = self._boundary_m.SourceSchemas(self.api)
+        cases = [('nontext-ref-guarded', lambda: reader.target(None, self.api)),
+                 ('malformed-uri', lambda: reader.target('http://[', self.api)),
+                 ('invalid-utf8-resource', lambda: reader.target('../../common/data/invalid-utf8.schema.json', self.api)),
+                 ('nonpath-base', lambda: reader.target('#/components/schemas/VerifyUnavailable', None)),
+                 ('nonpath-load', lambda: reader.load(None))]
+        for name, action in cases:
+            with self.subTest(name=name):
+                self._oracle_boundary_observe(name, action, error=True)
+
+    def test_oracle_boundary_unselected_null_schema(self):
+        self._oracle_boundary_begin()
+        import yaml
+        path = self.home / 'Platform/05-resource/spec/05-resource.api.openapi.yaml'
+        document = yaml.safe_load(path.read_text())
+        document['components']['schemas']['BoundaryUnused'] = None
+        document['components']['schemas']['BoundaryLeaf'] = True
+        self._oracle_boundary_file(path, json.dumps(document, ensure_ascii=True).encode())
+        self._oracle_boundary_set({'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/BoundaryLeaf'})
+        self._oracle_boundary_observe('unselected-null-schema', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
 
 if __name__ == "__main__":
     unittest.main()

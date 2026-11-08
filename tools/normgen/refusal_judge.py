@@ -215,32 +215,514 @@ import (
 	"%s/refusals"
 )
 
-func main() { _ = json.NewEncoder(os.Stdout).Encode(refusals.All) }
+func main() {
+    rows := append([]*refusals.Spec{}, refusals.All...)
+    _ = json.NewEncoder(os.Stdout).Encode(struct {
+        Version int `json:"version"`
+        Declared int `json:"declared"`
+        Completed int `json:"completed"`
+        Rows []*refusals.Spec `json:"rows"`
+    }{1, len(refusals.All), len(rows), rows})
+}
 '''
 RUN_EXIT = re.compile(r"^exit (0|[1-9][0-9]*)(;|$)")
 
 
+
+PLAIN_COLUMNS = ("chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller").split()
+RESPONSE_COLUMNS = PLAIN_COLUMNS[:11] + ["response_schema"] + PLAIN_COLUMNS[11:]
+
+
+class SourceSchemas:
+    """Independent physical-resource admission and declaration-local schema reference chains."""
+    _MAPS = ('properties', 'patternProperties', '$defs', 'dependentSchemas')
+    _LISTS = ('allOf', 'anyOf', 'oneOf', 'prefixItems')
+    _SINGLES = ('items', 'additionalProperties', 'unevaluatedProperties', 'not', 'if', 'then', 'else',
+                'contains', 'propertyNames', 'unevaluatedItems', 'contentSchema', 'x-line-schema')
+
+    def __init__(self, path):
+        try:
+            import importlib.util
+            import hashlib
+            import yaml
+            from jsonschema import Draft202012Validator, SchemaError
+            scripts = ROOT / 'skills/lesson-spec/scripts'
+            parser = scripts / 'check_spec.py'
+            spec = importlib.util.spec_from_file_location('refusal_source_check_spec', parser)
+            grammar = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(grammar)
+            except SystemExit as exc:
+                raise CheckingError(f'cannot load canonical Source YAML parser: {exc}') from exc
+            self.yaml, self.loader, self.object_edges = yaml, grammar.UniqueLoader, grammar.OBJECT_EDGES
+            self.dependencies = {'path': str(parser), 'sha256': hashlib.sha256(parser.read_bytes()).hexdigest(),
+                                 'loader': 'check_spec.UniqueLoader', 'positions': 'check_spec.OBJECT_EDGES'}
+            self.validator, self.schema_error = Draft202012Validator, SchemaError
+            self.main = Path(path).absolute()
+            self.platform = next((p for p in self.main.parents if p.name == 'Platform'), None)
+            if self.platform is None:
+                raise CheckingError('schema owner must be inside Platform')
+            self.cache, self.raw_identities, self.validated = {}, {}, set()
+            self._typed, self._roots, self._edges = {}, {}, {}
+            self._indexed, self._admitted, self._graph_checked = set(), set(), set()
+            self._depth = 0
+            self.doc = self.load(self.main)
+        except CheckingError:
+            raise
+        except (OSError, UnicodeError, ValueError, TypeError, AttributeError, ImportError, RecursionError) as exc:
+            raise CheckingError(f'cannot admit Source schemas: {exc}') from exc
+
+    def _operation(self):
+        from contextlib import contextmanager
+        @contextmanager
+        def guard():
+            outer = self._depth == 0
+            self._depth += 1
+            try:
+                if outer:
+                    self._verified = set()
+                    self._verify()
+                yield
+                if outer:
+                    self._verify()
+            except CheckingError:
+                raise
+            except (OSError, UnicodeError, ValueError, TypeError, AttributeError, KeyError, IndexError,
+                    RecursionError) as exc:
+                raise CheckingError(f'invalid or unavailable Source resource: {exc}') from exc
+            finally:
+                self._depth -= 1
+        return guard()
+
+    def _snapshot(self, path):
+        import hashlib
+        import stat
+        path = Path(path).absolute()
+        a = path.stat()
+        if not stat.S_ISREG(a.st_mode):
+            raise CheckingError(f'not a regular Source resource: {path}')
+        raw = path.read_bytes()
+        b = path.stat()
+        fields = lambda s: (s.st_dev, s.st_ino, s.st_mode, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+        if fields(a) != fields(b):
+            raise CheckingError(f'Source resource changed during read: {path}')
+        identity = {'physical': str(path.resolve()), 'stat': fields(b), 'sha256': hashlib.sha256(raw).hexdigest()}
+        return raw, identity
+
+    def _verify(self):
+        # Reuse never trusts an admitted parsed value after any resource changed or disappeared.
+        for path, prior in self.raw_identities.items():
+            _, now = self._snapshot(path)
+            if now != prior:
+                raise CheckingError(f'admitted Source resource changed: {path}')
+            self._verified.add(path)
+
+    def _inside(self, path):
+        import os
+        declared = Path(os.path.abspath(path))
+        try:
+            lexical = declared.relative_to(self.platform).parts
+            physical = declared.resolve().relative_to(self.platform.resolve()).parts
+        except ValueError as exc:
+            raise CheckingError('schema reference escapes Platform') from exc
+        owner = lambda parts: parts[0] if len(parts) >= 2 and (parts[0] == 'common' or
+                               re.fullmatch(r'[0-9]{2}-[a-z][a-z-]*', parts[0])) else None
+        if owner(lexical) is None or owner(lexical) != owner(physical):
+            raise CheckingError('schema reference changes physical owner')
+        return declared, lexical, physical
+
+    def _raw(self, path):
+        path, _, _ = self._inside(path)
+        raw, identity = self._snapshot(path)
+        if path in self.raw_identities and self.raw_identities[path] != identity:
+            raise CheckingError(f'admitted Source resource changed: {path}')
+        self.raw_identities.setdefault(path, identity)
+        self._verified.add(path)
+        return raw
+
+    @staticmethod
+    def _json_value(value, active=()):
+        import math
+        if value is None or type(value) in (bool, int):
+            return
+        if type(value) is str:
+            value.encode('utf-8', 'strict')
+            return
+        if type(value) is float:
+            if not math.isfinite(value):
+                raise CheckingError('nonfinite Source value')
+            return
+        if type(value) not in (dict, list) or id(value) in active:
+            raise CheckingError('non-JSON or cyclic Source value')
+        active = active + (id(value),)
+        if type(value) is dict:
+            for key, child in value.items():
+                if type(key) is not str:
+                    raise CheckingError('nontext Source mapping key')
+                key.encode('utf-8', 'strict')
+                SourceSchemas._json_value(child, active)
+        else:
+            for child in value:
+                SourceSchemas._json_value(child, active)
+
+    def _load(self, path):
+        declared, _, _ = self._inside(path)
+        physical = declared.resolve()
+        if declared in self._verified and physical in self.cache:
+            return self.cache[physical]
+        raw = self._raw(declared)
+        if physical not in self.cache:
+            text = raw.decode('utf-8', 'strict')
+            try:
+                document = (json.loads(text, object_pairs_hook=_pairs, parse_constant=_constant)
+                            if physical.name.endswith('.json') else self.yaml.load(text, Loader=self.loader))
+            except self.yaml.YAMLError as exc:
+                raise CheckingError(f'malformed Source YAML: {exc}') from exc
+            self._json_value(document)
+            self.cache[physical] = document
+        return self.cache[physical]
+
+    def load(self, path):
+        with self._operation():
+            document = self._load(path)
+            self._admit_all()
+            return document
+
+    def _validate(self, node):
+        if id(node) not in self.validated:
+            try:
+                self.validator.check_schema(node)
+            except self.schema_error as exc:
+                raise CheckingError(f'malformed full response schema: {exc.message}') from exc
+            self.validated.add(id(node))
+
+    def validate(self, node):
+        with self._operation():
+            self._json_value(node)
+            self._validate(node)
+
+    @staticmethod
+    def _token(value):
+        return str(value).replace('~', '~0').replace('/', '~1')
+
+    def _children(self, node, pointer):
+        if type(node) is not dict:
+            return
+        for keyword in self._MAPS:
+            if keyword in node:
+                if type(node[keyword]) is not dict:
+                    raise CheckingError('malformed schema map')
+                for key, child in node[keyword].items():
+                    yield pointer + '/' + keyword + '/' + self._token(key), child
+        for keyword in self._LISTS:
+            if keyword in node:
+                if type(node[keyword]) is not list:
+                    raise CheckingError('malformed schema composition')
+                for index, child in enumerate(node[keyword]):
+                    yield pointer + '/' + keyword + '/' + str(index), child
+        for keyword in self._SINGLES:
+            if keyword in node:
+                yield pointer + '/' + keyword, node[keyword]
+
+    def _index(self, path):
+        if path in self._indexed:
+            return
+        doc = self._load(path)
+        self._typed[path], self._roots[path] = {}, []
+        def schema(node, at):
+            if type(node) not in (dict, bool):
+                raise CheckingError('malformed Schema Object')
+            self._validate(node)  # Includes typed x-line-schema children; never annotation payloads.
+            self._typed[path][at] = node
+            for pointer, child in self._children(node, at):
+                schema(child, pointer)
+        def objects(node, kind, at):
+            if node is None and kind != 'schema':
+                return
+            if kind == 'schema':
+                self._roots[path].append(at)
+                schema(node, at)
+            elif kind.startswith('[]'):
+                if type(node) is not list:
+                    raise CheckingError('malformed Source object sequence')
+                for i, child in enumerate(node):
+                    objects(child, kind[2:], at + '/' + str(i))
+            elif kind.startswith('*'):
+                if type(node) is not dict:
+                    raise CheckingError('malformed Source object map')
+                for key, child in node.items():
+                    objects(child, kind[1:], at + '/' + self._token(key))
+            else:
+                if type(node) is not dict:
+                    raise CheckingError('malformed Source OpenAPI object')
+                if kind in ('paths', 'responses', 'callback'):
+                    child_kind = {'paths': 'path', 'responses': 'response', 'callback': 'path'}[kind]
+                    for key, child in node.items():
+                        if not key.startswith('x-') and key != '$ref':
+                            objects(child, child_kind, at + '/' + self._token(key))
+                else:
+                    for key, child_kind in self.object_edges.get(kind, {}).items():
+                        if key in node:
+                            objects(node[key], child_kind, at + '/' + self._token(key))
+        if path.name.endswith('.schema.json'):
+            self._roots[path].append('')
+            schema(doc, '')
+        else:
+            objects(doc, 'document', '')
+        self._indexed.add(path)
+
+    @staticmethod
+    def _uri(ref):
+        from urllib.parse import urlsplit, unquote
+        if type(ref) is not str or not ref or re.search(r'[\x00-\x20\\]', ref) or re.search(r'%(?![0-9a-fA-F]{2})', ref):
+            raise CheckingError('invalid relative schema URI')
+        ref.encode('utf-8', 'strict')
+        uri = urlsplit(ref)
+        if uri.scheme or uri.netloc or uri.query or '?' in ref.split('#', 1)[0]:
+            raise CheckingError('nonlocal schema reference')
+        file = unquote(uri.path, encoding='utf-8', errors='strict')
+        pointer = unquote(uri.fragment, encoding='utf-8', errors='strict')
+        (file + pointer).encode('utf-8', 'strict')
+        if file.startswith('/') or '\\' in file or '\x00' in file or (pointer and not pointer.startswith('/')):
+            raise CheckingError('expected relative path and JSON Pointer')
+        if re.search(r'~(?![01])', pointer):
+            raise CheckingError('malformed JSON pointer escape')
+        return file, pointer
+
+    def _late(self, base, origin, owner):
+        if not origin or not origin.startswith('/paths/'):
+            return False
+        tokens = origin.split('/')
+        path_key = tokens[2].replace('~1', '/').replace('~0', '~')
+        declaration = self.cache[base]['paths'][path_key]
+        source_owner = base.relative_to(self.platform.resolve()).parts[0]
+        match = re.match(r'(?:Chapter|Глава) ([0-9]+)\.([0-9]+)(?![0-9.])', str(declaration.get('description', '')))
+        if not match or int(match[1]) != int(source_owner[:2]):
+            return False
+        norm = base.parent / f'{source_owner[:2]}.{int(match[2])}-{source_owner[3:]}.norms.md'
+        if not norm.is_file():
+            return False
+        head = '\n'.join(self._raw(norm).decode('utf-8', 'strict').splitlines()[:12])
+        numbers = r'([0-9]+(?:(?:, | and )[0-9]+)*)'
+        late = (re.search(r'A chapter of the late layer: lessons? ' + numbers + r' introduce(?:s)? it', head) or
+                re.search(r'A chapter of the late layer: introduced by lessons? ' + numbers, head) or
+                re.search(r'Глава позднего слоя: ввод(?:ит|ят) урок(?:и)? ([0-9]+(?:(?:, | и )[0-9]+)*)', head))
+        return bool(late and int(owner[:2]) in {int(n) for n in re.findall(r'[0-9]+', late[1])})
+
+    def _edge(self, ref, base, origin=None):
+        import os
+        file, pointer = self._uri(ref)
+        base = Path(base).resolve()
+        self._load(base)
+        path = Path(os.path.abspath(base.parent / file)) if file else base
+        declared, lexical, physical = self._inside(path)
+        target = declared.resolve()
+        if file:
+            standalone = path.name.endswith('.schema.json')
+            if not (standalone or path.name.endswith('.openapi.yaml')):
+                raise CheckingError('unsupported schema resource')
+            if standalone and (len(lexical) != 3 or lexical[1] != 'data' or len(physical) != 3 or physical[1] != 'data'):
+                raise CheckingError('standalone schema outside owner data directory')
+            if target == base:
+                raise CheckingError('same-resource reference must be a local pointer')
+            source_owner = base.relative_to(self.platform.resolve()).parts[0]
+            owner = physical[0]
+            if source_owner == 'common' and owner != 'common':
+                raise CheckingError('common schema cannot refer to a lesson owner')
+            if source_owner != 'common' and owner != 'common':
+                if not (standalone and owner == source_owner) and int(owner[:2]) >= int(source_owner[:2]):
+                    if owner == source_owner or not self._late(base, origin, owner):
+                        raise CheckingError('schema declaration lacks reference rights to this owner')
+        self._index(target)  # Full physical declaration validity, not just the selected leaf.
+        if pointer not in self._typed[target]:
+            raise CheckingError(f'reference target is not a declared Schema Object: {ref}')
+        return self._typed[target][pointer], target, pointer
+
+    def _walk_chain(self, base, pointer, active=(), files=()):
+        key = (base, pointer)
+        if key in active:
+            return  # A legal local recursive schema does not re-enter a foreign resource.
+        node = self._typed[base][pointer]
+        active = active + (key,)
+        if type(node) is dict and '$ref' in node:
+            _, target, at = self._edges[key]
+            if target != base and target in files + (base,):
+                raise CheckingError('cross-resource schema reference cycle')
+            self._walk_chain(target, at, active, files + (base,) if target != base else files)
+        for at, _ in self._children(node, pointer):
+            self._walk_chain(base, at, active, files)
+
+    def _admit_all(self):
+        # Physical scans start independently; they never inherit the caller's reference chain.
+        while True:
+            remaining = set(self.cache) - self._admitted
+            if not remaining:
+                break
+            base = sorted(remaining)[0]
+            self._index(base)
+            for pointer, node in list(self._typed[base].items()):
+                if type(node) is dict and '$ref' in node:
+                    self._edges[(base, pointer)] = self._edge(node['$ref'], base, pointer)
+            self._admitted.add(base)
+        if self._graph_checked != self._admitted:
+            for base in sorted(self._admitted):
+                for pointer in self._roots[base]:
+                    self._walk_chain(base, pointer)
+            self._graph_checked = set(self._admitted)
+
+    def target(self, ref, base):
+        with self._operation():
+            node, path, pointer = self._edge(ref, base)
+            self._admit_all()
+            return node, path, pointer
+
+    def closure(self, node, base, active=(), files=()):
+        with self._operation():
+            base = Path(base).resolve()
+            self._load(base)
+            self._admit_all()
+            self._json_value(node)
+            self._validate(node)
+            if type(node) is bool:
+                return
+            positions = [at for at, value in self._typed[base].items() if value is node]
+            if not positions:
+                raise CheckingError('schema lacks a declaration position')
+            self._walk_chain(base, positions[0], active, files)
+
+    def schema(self, name):
+        with self._operation():
+            self._load(self.main)
+            self._admit_all()
+            base = self.main.resolve()
+            pointer = '/components/schemas/' + self._token(name)
+            if pointer not in self._typed[base]:
+                raise CheckingError(f'unknown response schema {name}')
+            node, seen = self._typed[base][pointer], set()
+            annotations = {'$ref', 'title', 'description', '$comment', 'default', 'examples', 'deprecated', 'readOnly', 'writeOnly'}
+            while type(node) is dict and '$ref' in node and not set(node) - annotations:
+                key = (base, pointer)
+                if key in seen:
+                    raise CheckingError('cyclic response schema alias')
+                seen.add(key)
+                node, base, pointer = self._edges[key]
+            return node
+
+
+def read_plain_source(path=None):
+    path = TABLE if path is None else Path(path)
+    lines = [x for x in path.read_text(encoding='utf-8').splitlines() if x and not x.startswith('#')]
+    columns = lines[0].split('\t') if lines else []
+    if columns not in (PLAIN_COLUMNS, RESPONSE_COLUMNS) or len(lines) < 2:
+        raise CheckingError('missing/unknown plain catalogue columns or zero rows')
+    rows, seen = [], set()
+    schemas = SourceSchemas(L.openapi) if columns == RESPONSE_COLUMNS else None
+    for line in lines[1:]:
+        cells = line.split('\t')
+        if len(cells) != len(columns) or any(not cell for cell in cells):
+            raise CheckingError('malformed plain catalogue row')
+        r = dict(zip(columns, cells))
+        if (not re.fullmatch(r'[a-z][a-z0-9_]*', r['name']) or r['name'] in seen or
+                not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?', r['chapter']) or
+                not re.fullmatch(r'[1-9][0-9]*', r['row']) or r['kind'] != '-'):
+            raise CheckingError('malformed/duplicate source identity or kind')
+        seen.add(r['name'])
+        surface, code = r['surface'], r['code']
+        if surface not in ('call', 'cli', 'start', 'process', 'peer') + (('http',) if schemas else ()):
+            raise CheckingError('unknown source surface')
+        if code != '-' and not ((surface != 'peer' and re.fullmatch(r'exit (?:0|[1-9][0-9]*|!0)', code))
+                                or (surface in ('call', 'peer', 'http') and re.fullmatch(r'[1-5][0-9]{2}', code))):
+            raise CheckingError('malformed source code')
+        names, optional = [], []
+        for token in ([] if r['fields'] == '-' else r['fields'].split(',')):
+            match = re.fullmatch(r'([a-z][a-z0-9_]*)(\??)', token.strip())
+            if match is None or match[1] in names or surface not in ('http', 'peer'):
+                raise CheckingError('malformed/duplicate/out-of-context source field')
+            names.append(match[1])
+            if match[2]:
+                if not schemas or surface != 'http' or r['response_schema'] == '-':
+                    raise CheckingError('optional source field without response schema')
+                optional.append(match[1])
+        if schemas and r['response_schema'] != '-':
+            if surface != 'http':
+                raise CheckingError('response schema outside http')
+            schema = schemas.schema(r['response_schema'])  # Always validate full closure, even fields=-.
+            if r['fields'] != '-':
+                if type(schema) is not dict or '$ref' in schema or type(schema.get('properties')) is not dict:
+                    raise CheckingError('explicit fields lack direct schema properties')
+                required = schema.get('required', [])
+                if (type(required) is not list or any(type(x) is not str for x in required) or
+                        len(set(required)) != len(required) or not set(required) <= set(names) - set(optional) or
+                        not set(names) <= set(schema['properties'])):
+                    raise CheckingError('source schema/form field roles disagree')
+        if r['headers'] != '-':
+            if surface not in ('peer', 'http'):
+                raise CheckingError('headers outside response context')
+            for header in r['headers'].split(';'):
+                if not re.fullmatch(r'\s*[A-Za-z][A-Za-z0-9-]*: \S.*?\s*', header):
+                    raise CheckingError('malformed source header')
+        r['_fields'], r['_optional'] = names, optional
+        rows.append(r)
+    return rows
+
+
+def read_plain_report(raw, rows):
+    try:
+        if type(raw) is bytes:
+            raw = raw.decode('utf-8', 'strict')
+        raw.encode('utf-8', 'strict')
+        report = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_constant)
+    except (UnicodeError, ValueError, AttributeError) as exc:
+        raise CheckingError(f'invalid private plain report: {exc}') from exc
+    _shape(report, ('version', 'declared', 'completed', 'rows'))
+    if (type(report['version']) is not int or report['version'] != 1 or
+            type(report['declared']) is not int or report['declared'] <= 0 or
+            type(report['completed']) is not int or report['completed'] != report['declared'] or
+            type(report['rows']) is not list or len(report['rows']) != report['declared']):
+        raise CheckingError('incomplete/zero private plain catalogue observation')
+    keys = 'Chapter Row Name Surface Exit AnyNonZero Status Word Log Words Norm Fields Headers Named WordCell'.split()
+    if 'response_schema' in rows[0]:
+        keys.append('Response')
+    if any(r['_optional'] for r in rows):
+        keys.append('OptionalFields')
+    seen = set()
+    for row in report['rows']:
+        _shape(row, keys)
+        for key in ('Row', 'Exit', 'Status'):
+            if type(row[key]) is not int:
+                raise CheckingError('mistyped plain report integer')
+        if type(row['AnyNonZero']) is not bool:
+            raise CheckingError('mistyped plain report boolean')
+        for key in ('Chapter', 'Name', 'Surface', 'Word', 'WordCell', 'Norm') + (('Response',) if 'Response' in keys else ()):
+            _text(row[key])
+        if row['Name'] in seen:
+            raise CheckingError('duplicate observed catalogue name')
+        seen.add(row['Name'])
+        for key in ('Log', 'Words', 'Fields', 'Named') + (('OptionalFields',) if 'OptionalFields' in keys else ()):
+            _strings(row[key])
+        if row['Headers'] is not None and type(row['Headers']) is not list:
+            raise CheckingError('mistyped plain report headers')
+        for header in row['Headers'] or []:
+            if type(header) is not list or len(header) != 2:
+                raise CheckingError('malformed plain report header pair')
+            for value in header:
+                _text(value)
+    return report['rows']
+
+
 def plain(a):
-    """For non-HTTP P/02, compare independently reread closed catalog columns with the package; each nonzero RUN exit expectation must match that code or exit !0."""
-    lines = [x for x in TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
-    if len(lines) < 2:
-        raise ValueError("the refusal source has no catalogue rows")
-    cols = lines[0].split("\t")
-    if len(cols) != len(set(cols)) or any(len(x.split("\t")) != len(cols) for x in lines[1:]):
-        raise ValueError("duplicate columns or malformed refusal source row")
-    rows = [dict(zip(cols, x.split("\t"))) for x in lines[1:]]
+    """Compare the Source-selected plain layout with a complete compiled catalogue."""
+    rows = read_plain_source()  # Complete Source oracle before invoking/reading the subject.
     with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
         hdir = Path(work) / "harness"
         hdir.mkdir()
         (hdir / "main.go").write_text(PLAIN_HARNESS % L.go_module, encoding="utf-8")
         (hdir / "go.mod").write_text(f"module normgen/refusalharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
                                      f"replace {L.go_module} => {Path(a.module_dir).resolve()}\n", encoding="utf-8")
-        done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, text=True, timeout=300)
-        if done.returncode:
-            raise ValueError(f"the harness failed: {done.stderr.strip()}")
-        got = json.loads(done.stdout)
-        if type(got) is not list:
-            raise ValueError("the harness did not return a catalogue array")
+        done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, timeout=300)
+        if done.returncode != 0 or done.stderr:
+            raise CheckingError(f"the harness failed: exit={done.returncode}, stderr={done.stderr!r}")
+        got = read_plain_report(done.stdout, rows)
     results = []
 
     def check(name, why):
@@ -254,6 +736,7 @@ def plain(a):
     for r in rows:
         g = by.get(r["name"])
         if not g:
+            check(f"catalogue {r['name']}", "the complete compiled catalogue has no such row")
             continue
         code = r["code"]
         exit_, anyc, status = -1, code == "exit !0", 0
@@ -264,30 +747,18 @@ def plain(a):
         logs = [] if r["log"] == "-" else [x.strip() for x in re.findall(r"«[^«»]*»|[^,«»]+", r["log"]) if x.strip()]
         names = [x for x in logs if not x.startswith("«")]
         words = [x[1:-1] for x in logs if x.startswith("«")]
-        want_word, want_any = ("" if r["word"] == "-" else r["word"]), []
-        if L.key != "02-installer":                     # P/03+: word retains the source cell; quoted tokens are a projection.
-            toks = re.findall(r"`([^`]+)`", r["word"])
-            plain_cell = re.sub(r"`[^`]+`|,|\s", "", r["word"]) == ""
-            want_word, want_any = "", []
-            if toks and plain_cell:
-                want_word, want_any = (toks[0], []) if len(toks) == 1 else ("", toks)
-        want_fields, want_optional = [], []
-        for token in [] if r["fields"] == "-" else r["fields"].split(","):
-            field = re.fullmatch(r"([a-z][a-z0-9_]*)(\??)", token.strip())
-            if field is None or field[1] in want_fields:
-                raise ValueError(f"{r['name']}: malformed or duplicate field token")
-            if field[2] and not (L.key == "06-console" and r["surface"] == "http"
-                                 and r.get("response_schema", "-") != "-"):
-                raise ValueError(f"{r['name']}: optional field outside the P/06 response context")
-            want_fields.append(field[1])
-            if field[2]:
-                want_optional.append(field[1])
+        toks = re.findall(r"`([^`]+)`", r["word"])
+        plain_cell = re.sub(r"`[^`]+`|,|\s", "", r["word"]) == ""
+        want_word, want_any = "", []
+        if toks and plain_cell:
+            want_word, want_any = (toks[0], []) if len(toks) == 1 else ("", toks)
+        want_fields, want_optional = r["_fields"], r["_optional"]
         want_headers = [] if r["headers"] == "-" else [[x.strip() for x in h.split(": ", 1)] for h in r["headers"].split(";")]
         diffs = [k for k, ok in (("chapter", g["Chapter"] == r["chapter"]), ("row", g["Row"] == int(r["row"])),
                                  ("surface", g["Surface"] == r["surface"]), ("exit", g["Exit"] == exit_),
                                  ("any", g["AnyNonZero"] == anyc), ("status", g["Status"] == status),
                                  ("word", g["Word"] == want_word), ("named", (g.get("Named") or []) == want_any),
-                                 ("word_cell", L.key == "02-installer" or g.get("WordCell") == r["word"]),
+                                 ("word_cell", g["WordCell"] == r["word"]),
                                  ("fields", (g.get("Fields") or []) == want_fields),
                                  ("optional_fields", (g.get("OptionalFields") or []) == want_optional),
                                  ("headers", (g.get("Headers") or []) == want_headers),
@@ -339,10 +810,10 @@ def main(argv=None):
     except (OSError, ValueError) as exc:
         print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
         return 2
-    if "word" in head.split("\t"):                         # Non-HTTP lesson catalog (P/02).
+    if "word" in head.split("\t"):                         # Actual plain/response column layout.
         try:
             return plain(a)
-        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        except (CheckingError, OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError) as exc:
             print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
             return 2
     try:
