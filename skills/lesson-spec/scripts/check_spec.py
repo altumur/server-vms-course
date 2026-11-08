@@ -228,6 +228,73 @@ VARIANTS_CHAPTER = ("P/02", "5/")                     # variants/ — форма
 REQ_ANCHOR = re.compile(r"<!-- (?:req: P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3}|removed: P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3} by ADR-[0-9]{4}) -->")   # P/NN-RNNN — урок одной главой (как check_forms.REQ)
 
 
+def _template_marker_source(text):
+    """Mask only the two literal brace tokens recognized as inline code by CommonMark."""
+    from markdown_it.rules_inline.backticks import backtick
+    from markdown_it.rules_inline.image import image
+
+    parser = MarkdownIt("commonmark")
+    source = text
+
+    def normalized(state):
+        nonlocal source
+        source = state.src
+
+    def positioned(rule, kind):
+        def apply(state, silent):
+            start, count = state.pos, len(state.tokens)
+            matched = rule(state, silent)
+            if matched and not silent and len(state.tokens) > count:
+                token = state.tokens[-1]
+                if token.type == kind and (kind == "image" or token.content in ("{{", "}}")):
+                    token.meta["template_source_span"] = (start, state.pos)
+            return matched
+        return apply
+
+    parser.core.ruler.after("normalize", "template_source_positions", normalized)
+    parser.inline.ruler.at("backticks", positioned(backtick, "code_inline"))
+    parser.inline.ruler.at("image", positioned(image, "image"))
+    try:
+        tokens = parser.parse(text)
+    except ValueError:
+        return text                         # The unchanged link pass reports the parser error; exempt nothing.
+    masked = list(source)
+    lines = source.split("\n")
+    starts, offset = [], 0
+    for line in lines:
+        starts.append(offset)
+        offset += len(line) + 1
+    for inline in tokens:
+        if inline.type != "inline" or inline.map is None:
+            continue
+
+        def positions(children, base=0):
+            for child in children or []:
+                span = child.meta.get("template_source_span")
+                if span is None:
+                    continue
+                begin, end = span
+                if child.type == "code_inline":
+                    yield from (base + i for i in range(begin, end) if inline.content[base + i] in "{}")
+                elif child.type == "image":
+                    # CommonMark parses the image label's children from the text immediately after ![.
+                    yield from positions(child.children, base + begin + 2)
+
+        marked, offset = set(positions(inline.children)), 0
+        for number, line in enumerate(inline.content.split("\n"), inline.map[0]):
+            body = line.strip(" \t")
+            if body and number < len(lines):
+                at = lines[number].find(body)
+                # Container prefixes/heading syntax are outside this literal line slice. Never guess an alignment.
+                if at >= 0 and at == lines[number].rfind(body):
+                    left = len(line) - len(line.lstrip(" \t"))
+                    for position in marked:
+                        if offset + left <= position < offset + left + len(body):
+                            masked[starts[number] + at + position - offset - left] = " "
+            offset += len(line) + 1
+    return "".join(masked)
+
+
 def markdown_links(tokens):
     for token in tokens:
         if token.type == "link_open":
@@ -1268,7 +1335,7 @@ class Check:
             return None
 
     def markdown(self, path, text):
-        if re.search(r"\{\{.*?\}\}", text, re.S):
+        if re.search(r"\{\{.*?\}\}", _template_marker_source(text), re.S):
             self.error(path, "unfilled template marker {{...}}")
         try:
             for target in markdown_links(MarkdownIt("commonmark").parse(text)):
