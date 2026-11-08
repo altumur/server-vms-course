@@ -31,7 +31,7 @@ Evidence физически вне source: `/Users/murat/w2c/cammeta-status/spec
 - `en_mirror.compare`:7 изменённых EN/RU пар,0 сообщений, exit0.
 - `en_mirror.strict(..., count_steps=True)`: все разделы тех же7 пар,0 сообщений, exit0. Прежние заголовки/якоря/IDs сохранены; добавлены V/11.1-08…10, V/11.7-10, V/11.9-06, V/11.10-06, V/11.12-04 без перенумерации.
 - Ссылки/якоря:159 неплатформенных локальных целей,0 ошибок, exit0. Платформенные ссылки проверены полным check_spec только по PIN3d8.
-- Scope/byte audit:14 ожидаемых VMS текстовых файлов;18 protected paths unchanged, exit0. V10, V11.11–13, API/shell/manifest/data/harness/vectors/acceptance, Source/Platform/tools/skills байтами прежние. Все старые fenced blocks11.9/10, семь working answer steps11.9, nine-tool set и read-tool definitions11.10 сохранены;11.12 вне нового раздела/checklist идентична. Числовые уставки и working wire не менялись.
+- Scope/byte audit:14 ожидаемых VMS текстовых файлов;18 protected paths unchanged, exit0. V10, V11.11 и V11.13 (EN/RU), API/shell/manifest/data/harness/vectors/acceptance, Source/Platform/tools/skills байтами прежние. Все старые fenced blocks11.9/10, семь working answer steps11.9, nine-tool set и read-tool definitions11.10 сохранены;11.12 вне нового раздела/checklist идентична. Числовые уставки и working wire не менялись.
 - `git diff --check`, cached check и staged boundary — exit0 перед фиксацией; hooks/range/pre-push выполняются штатно, без обхода.
 
 Полная команда (Python3.12.15, pinned uv requirements):
@@ -98,3 +98,5 @@ Authority snapshot SHA256 `3352ee131b9485b5ab20c1bfd414f93ba595a80c7e860ad87ee3e
 ### Что дальше
 
 «Консоль» — согласовать fork/contract patch со стабильным каталогом и typed answer.learn; после этого отдельный разрешённый перепин. Входы приёмки/пакеты/включение обучения — только отдельно открытый шаг5 ADR-VMS-0004 и ADR-VMS-0003. Старое обязательство отдельной вкладки заменено утверждённым same-tab правилом в этой норм-доле. Туры/подготовленные главы об ассистенте — у «Консоли», не написаны обходом scope. Независимого нормативного ревью, runtime/SUT/model/генерационных запусков здесь нет; авторские структурные проверки не доказывают исполнимость будущего договора или изоляцию браузера.
+
+Содержательная доля зафиксирована `ef4c8478b`: все проверенные нормативные байты после полного прогона сохранены. Staged boundary, pre-commit/commit-msg hooks и range `c8eafc05626112db4c2003b416f762055deaef65..ef4c8478b --tree` — exit0; fetch origin main выполнен перед публикацией. Следующий коммит уточняет только эту квитанцию и точный охват byte identity V11.11/V11.13; рабочие блоки V11.12 прежние, сам файл дополнен N1.5.
