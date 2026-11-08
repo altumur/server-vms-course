@@ -824,3 +824,9 @@ scenario	step	request	expect
 # N5 row 19: `19-table-feed` (M10/10 sc. 11): a change of `feed` at the table door: without a secret and with an empty one — 400 «anew», the address as before, the same address — 201; `ftp://` — `bad_url`; null at a string field — 400; the key `-0.5` → `c1-0-2`; the name earlier than a field, the key earlier than an undeclared field; the target `over` does not read — 409 `garbled`
 # <06.1 N5 paragraph>
 # Sc. 15 steps 7–8 — the words of 404 (T26), steps 11–13 — another method at the bytes door 405 (T9), `If-Match` is not read; sc. 16 steps 1, 3 — the words of the ceilings (T24, T25); sc. 17 steps 11–12 — the table journal (T21; step 10 — `@start resource`, review of stage B 6–7, № 22). Checked by reading (reconciliation of python and go M10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# There are no sleeps. Waiting for an event is `@until`: sc. 17 step 11 waits for the log row `shelf.declared` after `@start resource`.
+#

@@ -26,16 +26,6 @@ The format is the dictionary of the «Stand» of the common acceptance README an
 
 In total 6 scenarios / 56 steps.
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-Waiting for an event is `@until`: sc. 04 steps 3 (the second copy is standby), 7 (the second took the queue after the SIGTERM
-of the first), 8 (a new report of `m1` is accepted), 9 (the view is full); sc. 05 step 6 (both members knock); sc. 07 step 5 (`m1` knocks);
-sc. 08 steps 4, 9, 11 (standby, the taking of the queue, standby after the thaw). Sleeps:
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 08/7 | 20 s | absence: the frozen copy holds the queue while its version is younger than `TURN_TERM` by the clock of the second — the second does not take the queue earlier (step 8 — 503 `standby`); 20 s is less than `TURN_TERM` − `TURN_RENEW` (35 s) with a margin for the steps |
-
 ## Kit seams
 
 [5 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

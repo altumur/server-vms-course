@@ -57,11 +57,3 @@ a variable (`@env`) — «Implementation decides» item 2 of the chapter.
 
 The format is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of fields. In total 10
 scenarios / 106 steps.
-
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 15/2 | 35 s | time before an action: the domain has gone quiet — after the admission of members the next backup copy is not earlier than `BACKUP_EVERY` 30 s, it is brought by the pass of the agent 5 s; `$r` is the last copy (the silence is not to be observed: «no more copies will arrive» is an absence) |
-
-The scenarios of the chapter have no other sleeps.

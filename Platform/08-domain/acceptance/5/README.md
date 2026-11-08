@@ -36,15 +36,6 @@ The format is the dictionary of the «Stand» and the domain dictionary; the exp
 are checked for the ring envelope (`~enc:v2:`) and for the absence of the value of the secret (`!contains`); the log — by reading
 ([P/06.2](../../../06-console/spec/06.2-console.norms.md) N1.4).
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 01/13 | 12 s | absence: the envelope `note_secret` is not resealed in the next generations — two agent passes (`REPORT_EVERY` 5 s); there may be no new generation at all (above), therefore not `@until` |
-| 13/10 | 12 s | absence: the key `alice` (the name of a person) is not delivered to `m2` — two agent passes (`REPORT_EVERY` 5 s) after the delivery of the book with `t7` (step 9) |
-
-The other waits for an event are `@until` by a sign.
-
 ## Kit seams
 
 [2 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

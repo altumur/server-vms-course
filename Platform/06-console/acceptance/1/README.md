@@ -144,7 +144,3 @@ The deadlines of the slot (the first look of the judge, until with shifts) are t
 By reading, check the term of completed HTTP<500 of not less than a day and the conservative recovery of the observation; the TSV is short and does not observe a day. (NameOnAnotherBox and the alarm `worker.name_taken` are the acceptance of chapter P/03.2.)
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-There are no sleeps. Waiting for an event is `@until`: sc. 17 step 11 waits for the log row `shelf.declared` after `@start resource`.

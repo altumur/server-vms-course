@@ -19,9 +19,6 @@ The doors `holder`, `holder@<cluster>`, `member`, `signer` and the directives `@
 the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
 - **Scenario 02.**
-  - The grant is issued to the human `ann`, who is created first (chapter 8.4: the subject of a grant is a human). An edit of the grants changes
-    the state; `@sleep 45` — `BACKUP_EVERY` and the pass of the keeper's agent, and `$r` already names the backup with this
-    edit.
   - `@stop domain` switches the holder off, `@start domain on m1` brings up an empty signer on `m1`, `@move m1` moves
     by the installation file.
   - `@start domain` returns `hold`: its agent brings the term record 2, the process yields. Step 13 waits (`@until`) for its forgotten keys — a look at
@@ -42,21 +39,6 @@ the package [`follow`](../../../09-agent/vectors/follow/README.md).
 The format is the dictionary of the «Domain stand»; the directives `@move` are `<code> <JSON>`.
 
 In total 13 scenarios / 122 steps. Sc. 18 — ADR-0098 §5, there is no dry run by an implementation.
-
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-Waiting for an event is `@until`: sc. 02 step 13, sc. 09 step 7, sc. 12 step 8 wait for the displaced process to have forgotten the keys
-(`domain/signer` `forgotten`, N1.6 `forget` — unconditionally at the moment of yielding); sc. 13 step 3 — for a view without `frozen_for`.
-The remaining sleeps:
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 09/2, 10/2 | 35 s | time before an action: the domain went quiet — after the acceptance of the members the next backup is not earlier than `BACKUP_EVERY` 30 s, it is brought by the agent's pass 5 s; `$r` is the last copy (silence is not observed: «there will be no more copies» is an absence) |
-| 18/6 | 45 s | like 02/4: a copy with roles and the rows `role:` — not earlier than `BACKUP_EVERY` and the agent's pass |
-| 18/13 | 7 s | a check of absence: the first pass of the new holder did not remove the rows `role:` (the length — like 13/9 of acceptance 8.4: a pass of 3 s and a margin) |
-| 02/4 | 45 s | time before an action: a copy with the grants edit — not earlier than `BACKUP_EVERY` 30 s from the previous one, the holder's pass 3 s and the keeper agent's 5 s, a margin |
-| 08/3, 14/3 | 6 s | absence: a forged record does not displace the holder — the check of the record at each pass of the holder (`VIEW_EVERY` 3 s), two passes |
-| 10/10 | 40 s | time before an action: a copy of term 2 with the user `bob` — not earlier than `BACKUP_EVERY` 30 s from the first copy of the term, the passes of the holder and the agent |
 
 ## Kit seams
 

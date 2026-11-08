@@ -99,3 +99,15 @@ scenario	step	request	expect
 # N5 row 08: the turn freshness: the first copy of `domain` is frozen (`@freeze`) — for 20 s the second waits (`TURN_TERM` has not expired), then takes the turn and answers; the unfrozen first one — 503 `standby`, not 200 next to the new active one
 # N5 row 09: `ENTRY_MAX` over all Entry at an edit of `Entry.ca` by the administrator: a foreign Entry of 1336 bytes — `POST /domain/members/<member>/ca` 409; a foreign one with five `revoked_keys` — the edit passes and cuts them to the four latest (coverage audit of P/08, the second pass of Gemini)
 # N5 row 10: an unreadable `domain/signer-turn` at start — the process is standby (503 `standby`), it does not rewrite the row (coverage audit of P/08, the second pass of Gemini)
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# Waiting for an event is `@until`: sc. 04 steps 3 (the second copy is standby), 7 (the second took the queue after the SIGTERM
+# of the first), 8 (a new report of `m1` is accepted), 9 (the view is full); sc. 05 step 6 (both members knock); sc. 07 step 5 (`m1` knocks);
+# sc. 08 steps 4, 9, 11 (standby, the taking of the queue, standby after the thaw). Sleeps:
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 08/7 | 20 s | absence: the frozen copy holds the queue while its version is younger than `TURN_TERM` by the clock of the second — the second does not take the queue earlier (step 8 — 503 `standby`); 20 s is less than `TURN_TERM` − `TURN_RENEW` (35 s) with a margin for the steps |
+#

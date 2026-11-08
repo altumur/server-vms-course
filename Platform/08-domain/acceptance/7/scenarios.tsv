@@ -86,3 +86,9 @@ scenario	step	request	expect
 # N5 row 05: stand: an assignment record without `copies` in the holder's store — `tally` 403 `assignment_unreadable` (coverage audit of P/08, second pass by Gemini)
 # N5 row 06: stand: `domain/topology` does not read — `tally` (a scope without topology) 200, `probe` (`poll_home`) 503 `unavailable` (coverage audit of P/08, second pass by Gemini)
 # N5 row 07: stand: the kind `vault` with `keep` — `jti` is constant for a target; the word `revoked` not equal to the `jti` of the row — an ordinary request; equal — `jti` into `domain/revoked`, a new `jti`, the former token is refused; the word at a kind without `keep` — 400; `DELETE /domain/issued` revokes the target, a repeat — 404 (ADR-0110 addendum (10)–(16); roadmap 4.5)
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# There are no sleeps. The member's clock is moved by `@clock` (sc. 02 steps 9, 11).
+#

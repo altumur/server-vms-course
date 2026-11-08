@@ -434,3 +434,13 @@ scenario	step	request	expect
 # N5 row 32: a pass of the second kind without a worker (ADR-0094 B1): the refusal by the form `refusals`, a path outside the routes and the comparison by whole segments; a dead ticket on the read door and the write door — 401 and no write, an open route does not read the ticket; the series `passed_calls_total` at zero and only for the second kind
 # N5 row 33: a write only by a ticket (ADR-0119 addendum (10), (11)): a session at the unit rows, at tables with the word and at batch rows — `403 writes via`, the whole batch, before the row is read; a table without the word is open, reading does not change
 # N5 row 29: the batch door and the counter (ADR-0094 B9): `numeric` is created by a batch together with the row `<s>/next_id`, the next `POST` takes the next number; without the counter row, `n` not the largest, the counter without a creation — 400 `bad_id`; a stale `cas` of the counter — 412, a tombstone of the counter — 400
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <06.5 N5 line «the gate at the static files»>
+# `302` and `401` — sc. 18 of the acceptance of [chapter 6.7](../acceptance/7/README.md), `403` — by reading
+# <README, section «Sleeps» (verbatim)>
+# ### Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 16/6, 13/6 | 5 s | time before an action: two writes of the door row by the role `resource` are spaced by the clock of the console — the row is fresh, while the heartbeat is spoiled (`unreachable`, `resource_state` of the observation contract) |
+#

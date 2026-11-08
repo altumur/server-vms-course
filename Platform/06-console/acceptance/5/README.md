@@ -92,12 +92,6 @@ the processes, resets the store and the variables.
   that the reader accepts and the writer does not write; the outcome is the same.
 - **The deadline of 90 s** of sc. 14 is the waiting limit of exactly this stand; after `@sigkill` the heartbeat seen earlier is used.
 
-### Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 16/6, 13/6 | 5 s | time before an action: two writes of the door row by the role `resource` are spaced by the clock of the console — the row is fresh, while the heartbeat is spoiled (`unreachable`, `resource_state` of the observation contract) |
-
 ## Full form and reproducibility
 
 A subset of expect does not replace the check of the full HTTP form of [the contract of the lesson](../../spec/06-console.api.openapi.yaml): check the mandatory fields, types, Content-Type, special headers and the absence of a body for HEAD/204. In expectation lines `$name` is first bound only after a successful match of the whole answer; the following uses compare, and requests use only values already bound. A failed attempt of @until does not change the variables. @until repeats a read until the given local deadline, not a mutation; after it expires — FAIL with the last answer. @any admits any value of a present field, @absent requires absence; they do not replace the types of the full schema. A JSON object is compared by subset (`{}` at any level is exactly an empty object: the dictionary of the common README, ACC-EMPTY-OBJECT-01), an array by length and order. Raw HTML/text is compared as UTF-8 bytes with the given substring, it is not parsed as JSON.

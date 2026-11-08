@@ -78,21 +78,6 @@ Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `
 (two agent passes: one change may belong to a round that was in flight), and only step 10 takes the last generation: in
 it the snapshot is there for any number of generations between them (a generation carries all objects of the member, N1.3).
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-A wait for an event is `@until`: sc. 03 steps 6–9 wait for two report rounds after the snapshot (`sent_at` changed twice; by `rev`
-the generation cannot be told — the review of stage B 1–2, item 1); sc. 17 steps 2 and 8 — for the list of members at `m1`; sc. 20 step 5, sc. 21
-steps 5, 9, 11, sc. 22 step 4 — for the next pass of the view (`VIEW_EVERY` 3 s). The remaining sleeps:
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 03/2 | 20 s | time before an action: the reports after `@domain` have calmed down — `$r1` and step 3 read one generation (silence is not observed) |
-| 03/14 | 20 s | time before an action: the silence of the reports before binding `$r3` — step 16 waits for a repeated sending of the same generation; the counter `c3` is created with `step: 0` (step 4): the training handler writes `n` into `status` of the pulse (P/03.4 N1.1), and the comparison of a contribution excludes only `ts` (P/09.1 N1.2 `change`) — a ticking counter would lawfully give a new generation every round (C08-REPORT-STEADY-COUNTER-01) |
-| 04/15 | 12 s | absence: without the directory `W2C_TLS_DIR` the field `ca` of the member is not removed — two agent passes (`REPORT_EVERY` 5 s) |
-| 05/3 | 60 s | the domain is complete and absence: the clock of `m1` 100 s behind does not make it silent within the term (not one event — `@until` would pass before the first report with this clock) |
-| 14/5 | 10 s | absence: a knock without a valid signature is not admitted — the agent knocks once in `REPORT_EVERY` 5 s, two passes |
-| 17/3, 17/9 | 10 s | time before an action, the round is not observable: `@carry` reads the answer of the same round — the holder learns from the next report of `m1` that its list is fresh (`REPORT_EVERY` 5 s and a pass); steps 2 and 8 wait for the list at `m1` (`@until`) |
-
 ## Evidence outside the TSV
 
 Checked by reading (the norm of the chapter, N5): the CAS of the admission of a member, a failure between the writes of a generation, of `delta` and of the mark, `sign_failures`

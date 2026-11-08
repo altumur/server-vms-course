@@ -61,11 +61,6 @@ and the section «Domain stand»: a subset of the fields, `~` — a substring, `
 
 The subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the required fields, the types, the Content-Type.
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-There are no sleeps: the waits for events — `@until` by a sign (sc. 02 steps 04, 05, 09, 10; sc. 07 step 3; the readiness of the process `domain` —
-sc. 08 step 7, sc. 09 step 5; the raise of the placement counter at start — sc. 11 step 2; the topology at the console of `m1` — sc. 17 step 14).
-
 ## Forwarding credential seams
 
 [seams.tsv](seams.tsv) uses `scenario step request expect`, literal TAB, and the CALL/JSON grammar of [P/02](../../02-installer/forms/README.md). `CALL console-forward-credentials <JSON>` is an acceptance adapter over the ordinary gate, HTTP forwarding and writer admission, not a new product API or native vectors command. P/06.7 uses the same port. Each case has a fresh temporary root, valid catalogue, confirmed holder, readable rows, current turn, ordinary keys/signatures, independent real sessions for persons `a` and `b`, and the grants needed by the selected valid operation. The adapter obtains tokens and cookie proof through the ordinary code. It does not supply a successful gate result or echo an expectation.

@@ -177,3 +177,27 @@ scenario	step	request	expect
 # N5 row 16: stand: `POST /api/take` at the holder — 409 before the body; at a signer without keys the body not in form — 400 (C08-TURN-WITHOUT-SIGNER-01; the coverage audit of P/08, Gemini's second pass)
 # N5 row 17: stand: a move onto `m1` deletes its row `domain/users/*` that is not in the copy (C08-RESTORE-EXACT-01; the coverage audit of P/08, Gemini's second pass)
 # N5 row 18: stand: an emergency move with roles and groups — the roles, groups, assignments and rows `role:` are in place, the first pass of the new holder does not remove them (ADR-0098 §5; there is no dry run); a planned handover and an interrupted deletion of a role — by reading: the stand does not interrupt `DELETE`, the handover goes by the same families of `state`
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <08.8 N5 line>
+# sc. 03 step 6 — 200
+#   with `why` at any outcome of the choice of the copy;
+# <README, sc. 02 grant and sleep>
+#   - The grant is issued to the human `ann`, who is created first (chapter 8.4: the subject of a grant is a human). An edit of the grants changes
+#     the state; `@sleep 45` — `BACKUP_EVERY` and the pass of the keeper's agent, and `$r` already names the backup with this
+#     edit.
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# Waiting for an event is `@until`: sc. 02 step 13, sc. 09 step 7, sc. 12 step 8 wait for the displaced process to have forgotten the keys
+# (`domain/signer` `forgotten`, N1.6 `forget` — unconditionally at the moment of yielding); sc. 13 step 3 — for a view without `frozen_for`.
+# The remaining sleeps:
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 09/2, 10/2 | 35 s | time before an action: the domain went quiet — after the acceptance of the members the next backup is not earlier than `BACKUP_EVERY` 30 s, it is brought by the agent's pass 5 s; `$r` is the last copy (silence is not observed: «there will be no more copies» is an absence) |
+# | 18/6 | 45 s | like 02/4: a copy with roles and the rows `role:` — not earlier than `BACKUP_EVERY` and the agent's pass |
+# | 18/13 | 7 s | a check of absence: the first pass of the new holder did not remove the rows `role:` (the length — like 13/9 of acceptance 8.4: a pass of 3 s and a margin) |
+# | 02/4 | 45 s | time before an action: a copy with the grants edit — not earlier than `BACKUP_EVERY` 30 s from the previous one, the holder's pass 3 s and the keeper agent's 5 s, a margin |
+# | 08/3, 14/3 | 6 s | absence: a forged record does not displace the holder — the check of the record at each pass of the holder (`VIEW_EVERY` 3 s), two passes |
+# | 10/10 | 40 s | time before an action: a copy of term 2 with the user `bob` — not earlier than `BACKUP_EVERY` 30 s from the first copy of the term, the passes of the holder and the agent |
+#

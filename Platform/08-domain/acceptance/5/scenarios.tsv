@@ -99,3 +99,14 @@ scenario	step	request	expect
 # N5 row 12: a subject without a name: the contribution of `t7` is deleted, the index is without it — the reconciliation of the holder removes the grant `t7`; the person `t7` — without the grants of the former subject
 # N5 row 14: `grant too wide` for a row with `sub` — by rank (ADR-0097 §4; no dry run)
 # N5 row 13: the index is known: a subject neither a person nor a key — 400 `unknown subject`; a contribution under the name of a person — `person_names`, not delivered even with a grant; the index is unknown — the row of a person and the former row do not wait (coverage audit of P/08, the second pass of Gemini)
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 01/13 | 12 s | absence: the envelope `note_secret` is not resealed in the next generations — two agent passes (`REPORT_EVERY` 5 s); there may be no new generation at all (above), therefore not `@until` |
+# | 13/10 | 12 s | absence: the key `alice` (the name of a person) is not delivered to `m2` — two agent passes (`REPORT_EVERY` 5 s) after the delivery of the book with `t7` (step 9) |
+#
+# The other waits for an event are `@until` by a sign.
+#

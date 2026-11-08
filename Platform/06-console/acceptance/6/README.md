@@ -87,12 +87,6 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
 `hb-w-1-pending-fraction.json`, `hb-w-1-pending-minus-zero.json`, `hb-w-1-pending-2p63.json`, `hb-w-1-schema-fraction.json`,
 `hb-w-1-build-number.json` (sc. 12; from the acceptance of M10/10, the registry row e31e5c28).
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Freshness»), only then the server is not «heard» and `may_confirm_gone` can be `true` (N3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
-(the assignment by a pass of the controller), 10 step 8 (the journal in the index of the resource), 11 step 3 (the heartbeat of the resource in `processes`), 12
-steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–24 — `@put object`; analysis of the review of stage B 6–7, № 21, № 22), 13 steps 2, 15, 16 (a live resource, the decommission journal in the index of the resource), 16 step 3 (`/servers` by the labels row).
-
 ## Scenario boundaries
 
 Sc. 01–07 — one instance, the state is not reset between them. Before sc. 08–16 the runner stops the processes,

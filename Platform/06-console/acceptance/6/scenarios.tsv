@@ -310,3 +310,11 @@ scenario	step	request	expect
 # <06.6 N5 paragraph fragment>
 # Sc. 08 step 6 — a version without an upper bound of the form (409, not 400); sc. 10 steps 8–10 — the drain journal (no `drain.cleared`;
 # reconciliation of python and go M10/6–11, T22).
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Freshness»), only then the server is not «heard» and `may_confirm_gone` can be `true` (N3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
+# (the assignment by a pass of the controller), 10 step 8 (the journal in the index of the resource), 11 step 3 (the heartbeat of the resource in `processes`), 12
+# steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–24 — `@put object`; analysis of the review of stage B 6–7, № 21, № 22), 13 steps 2, 15, 16 (a live resource, the decommission journal in the index of the resource), 16 step 3 (`/servers` by the labels row).
+#

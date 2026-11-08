@@ -1132,6 +1132,41 @@
    ],
    "status": "moved-to-norm",
    "note": "ADR-0133 addendum (4) item 3 pass; the README (rule class) goes to M, the table keeps the same comment. Commit e2463d20b."
+  },
+  {
+   "class": "timing-boundary",
+   "definition": "The SHADOW_STALL count has run out only when the time is strictly greater than SHADOW_STALL: at exactly SHADOW_STALL no stalled or orphaned finding yet",
+   "sources": [
+    "Platform/08-domain/vectors/view/cases.tsv (rows 20-*, 21-*, 06-*)",
+    "Platform/08-domain/spec/08.1-domain.norms.md N5 table (former What column)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+     "section": "N1.6 SHADOW_STALL",
+     "needle": "the count has run out — the time is strictly greater than SHADOW_STALL",
+     "req": "P/08.1-R010"
+    }
+   ],
+   "status": "moved-to-norm",
+   "note": "Architect's answer 1, 2026-11-08: 'orphaned' already said «longer than», lagging/stalled did not."
+  },
+  {
+   "class": "serialization",
+   "definition": "Counted deletion-request body serialization: comma/colon separators without spaces, non-ASCII as UTF-8 bytes, no NaN/Infinity, no BOM, no LF other than an actually sent one",
+   "sources": [
+    "Platform/06-console/forms/deletion-body-witnesses.json (field serializer)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.8-console.norms.md",
+     "section": "N1 FOLDER_ROW_MAX paragraph",
+     "needle": "The counted serialization has comma and colon separators",
+     "req": null
+    }
+   ],
+   "status": "moved-to-norm",
+   "note": "Architect's answer 3. The limit stays named: B (actual Status.max_body), no number copied."
   }
  ],
  "checked_classes": [

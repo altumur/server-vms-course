@@ -28,12 +28,6 @@ The topology is empty until the step that writes it.
 The format is the dictionary of the «Stand» and the section «Domain stand» of the common acceptance README; the expectation is a subset of the fields. `$fp2` is the fingerprint
 of the stranger whom the holder learned of from a knock that came in a relay package.
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 02/17 + 02/19 | 70 + 15 s | absence: under `@cut relay` `domain/reached` does not grow; a new value would be written no later than `FRESH_EVERY` (chapter 9.1, `fresh`) after an answer by another road, and another road would open after `ROAD_QUIET` 15 s ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) N1.3a) and the agent pass 5 s — no less than 80 s in all |
-
 ## Kit assistance seams
 
 [seams.tsv](seams.tsv) provides 10 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.

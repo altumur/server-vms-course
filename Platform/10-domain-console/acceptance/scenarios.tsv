@@ -249,3 +249,10 @@ scenario	step	request	expect
 # N5 row 17: `read-versions` (ADR-0094 B4): `ETag` of the doors of one row; `index` of the records and `versions` of the grants equal the index of the store; `If-Match`, `Idempotency-Key` and `ETag` go through the cluster console and the domain console
 # N5 row 18: `kept-door`: `GET /domain/<sub>/kept/<name>`: the mask `*_secret` in depth and `enc:`, a family and the undeclared — 404, forwarding at the member console; without an identity 401, a non-viewer 403 also on the undeclared: the right before 404
 # N5 row 19: `relay-door`: `GET /domain/relays/<relay>`: the names behind the relay without keys, a relay without members — empty, not a member — 404, a non-viewer — 403 also on the undeclared: the right before 404, forwarding at the member console, without an identity 401
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# There are no sleeps: the waits for events — `@until` by a sign (sc. 02 steps 04, 05, 09, 10; sc. 07 step 3; the readiness of the process `domain` —
+# sc. 08 step 7, sc. 09 step 5; the raise of the placement counter at start — sc. 11 step 2; the topology at the console of `m1` — sc. 17 step 14).
+#

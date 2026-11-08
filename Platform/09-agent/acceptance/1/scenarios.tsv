@@ -410,3 +410,27 @@ scenario	step	request	expect
 # N5 row 24: `unreadable-outcomes`: an unreadable `domain/outcomes` — the edit of the answer is not executed, the row is not overwritten; the operator removed the row — the outcome `performed`
 # N5 row 25: `unreadable-agent-turn`: an unreadable `domain/agent-turn` — the agent is standby: there are no reports (`silent`), there is no CAS over the row, the local token door works; the row is corrected (`holder: ""`, `delete` under `domain/` is forbidden, to `admin` too) — the turn is taken, the member `ok`
 # N5 row 27: `roles-copy` (ADR-0098 §4; there is no dry run): the table of roles in the copy `domain/roles` only with the roles of this member, without the disabled ones; a disabled one with a direct row: `doc_sha256` is the fingerprint of `doc` after the filter, the right through the role acts (`/session`); an unreadable row of grants at the holder — `held`, the member's copy is intact
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, sc. 27>
+# Sc. 27 — ADR-0098 §4, there is no dry run by an implementation; steps 14–15 give the emergency row so that `sealed` opens without the grant fields too; step 19 `@sleep 7` is a check of absence: the agent pass 5 s and a margin, the copies are not erased, the indices are the same; a break between two writes of the agent, an old agent and a rollback — by reading: the stand does not interrupt a write and does not substitute the agent version.
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# Waiting for an event — `@until`: sc. 01 step 9 waits for the next report of the same generation (`received_at` changed, `rev` the
+# same). The remaining sleeps (from the READMEs of the acceptances of M11/12 and M11/10):
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 01/2 | 35 s | time before an action: the first backup copy and its keepers after `@domain` — `BACKUP_EVERY` 30 s and the agent pass 5 s |
+# | 01/5 | 10 s | time before an action: the member went quiet after the write of `domain/backup-taken` — two agent passes |
+# | 06/6 | 10 s | absence: fresh copies with the same content are not rewritten — a rewrite would be in the nearest agent pass (5 s), two passes; `as_of` is freshened no more often than `FRESH_EVERY` 60 s |
+# | 06/9 | 65 s | absence: longer than `FRESH_EVERY` — the freshening of `as_of` in memory has already happened, but it is not in the row: to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19; the whole hour — by reading) |
+# | 11/6 | 65 s | time before an action: two windows of `BACKUP_EVERY` after the revocation — the copy with `bob` (step 9) is made at once, not after a window |
+# | 11/10 | 6 s | time before an action: the copy with `bob` — in the nearest pass of the holder (3 s) with a margin |
+# | 15/4 | 25 s | absence: for two `TURN_RENEW` (10 s) the waiting one does not take a fresh queue — the holder is the former one (step 5) |
+# | 15/16 | 30 s | absence: the killed active one has not given up the queue, and it is not taken earlier than `TURN_TERM` 45 s from the last renewal (the renewal — no later than 10 s before SIGKILL: 30 < 35) |
+# | 18/6 | 10 s | absence: the agent of the holder does not write and does not delete its own row `domain/break-glass/hold` — a write or a deletion would be in the nearest agent pass (5 s) after the holder's answer; two passes |
+# | 18/9 | 10 s | absence: the copy of `m1` is not touched with an unreadable holder row (`held`) — a deletion would be in the nearest agent pass (5 s); two passes |
+# | 24/6 | 15 s | absence: with an unreadable `domain/outcomes` the agent does not perform the edit — the performance would be in the nearest agent pass (5 s) after the issue by the holder; three passes, and the holder view (`VIEW_EVERY` 3 s) manages to show the pending edit |
+# | 27/19 | 7 s | absence: the copies `domain/grants` and `domain/roles` are not touched with an unreadable holder row — an erasure would be in the nearest agent pass (5 s) with a margin |
+#
