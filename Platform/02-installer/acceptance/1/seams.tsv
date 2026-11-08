@@ -1,5 +1,5 @@
 # P/02.1 pure core seams (ADR-0125 addendum (4) item 7): loading is pure, no partial catalogue or retained state after refusal.
-# CALL shapes and @parallel are defined by forms/README.md; this file is for kit stagetests, not the acceptance runner.
+# CALL shapes and @parallel are defined by forms/README.md; the runner executes this file through the seam adapter, it is not a scenarios.tsv process scenario.
 # Inputs are literal owned manifest bytes; no store, implicit catalogue or implementation-specific error shape is required.
 # scenario	step	request	expect
 s1-load-isolation	1	CALL load {"source":"seama.subsystem.yaml","text":"name: seama\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/probe/worker}\n"}	{"verdict":"ok","name":"seama"}
