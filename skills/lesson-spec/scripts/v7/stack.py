@@ -410,7 +410,7 @@ class PyCel:
 NUM = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?")
 INT = re.compile(r"-?(0|[1-9][0-9]*)")
 DEC = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")
-TIME = {"writer": re.compile(r"(0|[1-9][0-9]*)(\.[0-9]{1,3})?"), "reader": re.compile(r"(0|[1-9][0-9]*)(\.[0-9]+)?")}
+TIME = {"writer": re.compile(r"(0|[1-9][0-9]*)(\.[0-9]{1,3})?"), "reader": re.compile(r"(0|[1-9][0-9]*)(\.[0-9]{1,3})?")}
 INT_MAX = 2 ** 53 - 1
 
 
@@ -623,7 +623,7 @@ class Family:
         if isinstance(v, (LexInt, LexFloat)):
             return TIME[mode].fullmatch(v.lex) is not None and math.isfinite(float(v.lex))
         if isinstance(v, (int, float)):
-            return math.isfinite(v) and v >= 0 and (mode == "reader" or round(v, 3) == v)
+            return math.isfinite(v) and v >= 0 and round(v, 3) == v
         return isinstance(v, str) and TIME[mode].fullmatch(v) is not None
 
     # ---- проход

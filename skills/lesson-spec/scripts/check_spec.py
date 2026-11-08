@@ -168,9 +168,18 @@ def references(document, external=None, place=lambda where: where, *, root_kind=
     with it a cross-file $ref goes to `external(ref, position, kind)`, which returns the target document,
     fragment, position formatter and its own external resolver. The latter keeps nested relative refs based
     on their referring resource. `root_kind="schema"` walks a standalone JSON Schema, not an OpenAPI document."""
-    seen = set()
+    seen, active = set(), []
 
     def walk(node, kind, doc, where, here, resolve):
+        if not isinstance(node, (dict, list)) or (id(node), kind) in seen:
+            return
+        active.append((here(where), id(doc)))
+        try:
+            yield from visit(node, kind, doc, where, here, resolve)
+        finally:
+            active.pop()
+
+    def visit(node, kind, doc, where, here, resolve):
         if not isinstance(node, (dict, list)) or (id(node), kind) in seen:
             return
         seen.add((id(node), kind))
@@ -207,8 +216,16 @@ def references(document, external=None, place=lambda where: where, *, root_kind=
                 target = pointer(target_doc, fragment)
             except (KeyError, IndexError, TypeError, ValueError) as exc:
                 raise ValueError(f"unresolved/unsupported $ref {ref!r} at {at}: {exc}") from exc
+            canonical_fragment = "#" + unquote(fragment.removeprefix("#"), errors="strict")
+            target_at = target_here(canonical_fragment)
+            chain = [name for name, _ in active]
+            if target_at in chain:
+                first = chain.index(target_at)
+                closed = active[first:] + [(target_at, id(target_doc))]
+                if len({identity for _, identity in closed}) > 1:
+                    raise ValueError("cycle of cross-file $ref: " + " → ".join(name for name, _ in closed))
             yield ref
-            yield from walk(target, kind, target_doc, fragment, target_here, target_resolve)
+            yield from walk(target, kind, target_doc, canonical_fragment, target_here, target_resolve)
         if kind in {"paths", "responses", "callback"}:
             child = {"paths": "path", "responses": "response", "callback": "path"}[kind]
             for key, value in node.items():
@@ -1503,7 +1520,8 @@ class Check:
 
     # A cross-file $ref between Platform contracts (decision on the lesson 6 transfer plan, В7): a relative
     # <path>.openapi.yaml#<JSON Pointer> inside Platform/, to the contract of a lesson with a smaller number or to a
-    # common contract (Platform/common/); a common contract refers to common contracts only. No cycles between files.
+    # common contract (Platform/common/); a common contract refers to common contracts only. A closed ref chain through another resource is forbidden;
+    # returning to a different pointer of the same file is valid.
     # A later lesson L only from a door of a late-layer chapter that L introduces (decision on commit 10, chapter 6.7):
     # the $ref sits under paths/<door> whose description starts «Глава N.K», and the header of N.K-….norms.md says
     # «Глава позднего слоя: вводит урок L» (or «вводят уроки L1 и L2»); such a chapter is read after 8–10 (step 15).
@@ -1552,11 +1570,12 @@ class Check:
                                  f"door under paths/ of a late-layer chapter that lesson {lesson} introduces)")
         if not target.is_file():
             raise ValueError(f"file not found: {self.name(target)}")
-        if target in self.loading:
-            chain = self.loading[self.loading.index(target):] + [target]
-            raise ValueError("cycle of cross-file $ref: " + " → ".join(str(self.name(p)) for p in chain))
+        # A target already being checked has a parsed document in its cache.
+        # Read that resource without scheduling its whole-file check again;
+        # references() detects an actual closed URI+pointer chain.
+        in_progress = target in self.loading
         if standalone:
-            if not self.schema_document(target):
+            if not in_progress and not self.schema_document(target):
                 raise ValueError(f"the target JSON Schema {self.name(target)} has errors (reported for that file)")
             document = self.schema_documents[target][0]
             fragment = "#" + url.fragment
@@ -1565,7 +1584,7 @@ class Check:
                 raise ValueError("the JSON Pointer target is not a Schema object or boolean")
             Draft202012Validator.check_schema(value)
         else:
-            if not self.contract(target):
+            if not in_progress and not self.contract(target):
                 raise ValueError(f"the target contract {self.name(target)} has errors (reported for that file)")
             document = self.contracts[target][0]
             fragment = "#" + url.fragment

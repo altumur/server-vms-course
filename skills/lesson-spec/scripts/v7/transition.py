@@ -6,6 +6,7 @@
     python -m v7.transition --root ДЕРЕВО --who           (дерево В7: столбец who пакета family-read заново по каталогу)
     python -m v7.transition --root ДЕРЕВО --add-row BASE TEXT NOTE   (дерево В7: строки family-read по образцу, исход — стек)
     python -m v7.transition --root ДЕРЕВО --tables 08,09  (дерево В7: недостающие таблицы family-read, исход — стек)
+    python -m v7.transition --root ДЕРЕВО --refresh-p08-current LEDGER.json  (published P08 rule migration; no subject judge)
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
@@ -613,11 +614,16 @@ def main(argv=None):
     ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
     ap.add_argument("--keys", action="store_true", help="только столбец key пакета family-read на месте (дерево В7)")
     ap.add_argument("--who", action="store_true", help="только столбец who пакета family-read на месте (дерево В7)")
+    ap.add_argument("--refresh-p08-current", metavar="LEDGER", help="migrate existing P08 family cases by current public rules; record every changed cell")
     ap.add_argument("--tables", help="недостающие таблицы family-read уроков (через запятую) на дереве В7")
     ap.add_argument("--add-row", nargs=3, metavar=("BASE", "TEXT", "NOTE"),
                     help="строки family-read по образцу BASE: текст TEXT, заметка NOTE, исход — стек В7 (дерево В7)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
+    if a.refresh_p08_current:
+        from v7.family_refresh import refresh
+        print("family-read current P08:", refresh(root, a.refresh_p08_current))
+        return
     if a.keys:
         print("family-read key rows:", family_keys(root))
         return
