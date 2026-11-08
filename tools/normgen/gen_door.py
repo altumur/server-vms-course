@@ -802,10 +802,12 @@ switch op {
                    + "}\nreturn \"Op(\" + strconv.Itoa(int(op)) + \")\"\n}\n")
 
     # Routing refusals.
+    needs404 = [op for op in spec.ops if op.method != "HEAD" or any(r.schemas for r in op.responses.values())]
     not_found = {(tuple(op.responses[404].schemas), op.responses[404].media)
-                 for op in spec.ops if op.method != "HEAD" and 404 in op.responses}
-    if len(not_found) != 1:
-        raise GenError(f"{spec.name}: one shared non-HEAD 404 must be declared (the answer for an unknown path)")
+                 for op in needs404 if 404 in op.responses}
+    if len(not_found) != 1 or any(404 not in op.responses for op in needs404):
+        raise GenError(f"{spec.name}: every non-HEAD or body-bearing HEAD operation must declare the same 404 "
+                       "(the answer for an unknown path)")
     nf_schemas, nf_media = next(iter(not_found))
     nf_schemas = expand(list(nf_schemas))
     if len(nf_schemas) != 1:
