@@ -1,4 +1,4 @@
-# P/04 function seams (ADR-0125 addendum (4) item 7, addendum (5)). These are seam scenarios run through the seam adapter, not process scenarios.
+# P/04 function seams (ADR-0125 addendum (4) item 7, addendum (5)). The runner executes this file through the seam adapter; these are not process scenarios.
 # CALL ports and fixture completion are in ../forms/README.md. Every case uses the actual controller functions and records store/object effects.
 # One fresh controller per scenario; scripts are client replies/events, never canned answers from expect. Complete valid background before the targeted intervention.
 # scenario	step	request	expect

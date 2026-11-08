@@ -1,4 +1,4 @@
-# P/02 command/file and rollout-poll seams (ADR-0125 addendum (4) item 7). Grammar: forms/README.md.
+# P/02 command/file and rollout-poll seams (ADR-0125 addendum (4) item 7). Grammar: forms/README.md. The runner executes this file through the seam adapter.
 # Owned temporary roots only. Exact return codes are tested only where normed; CALL command normalizes the specified zero/nonzero outcome.
 # s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk (P/02.4 N1.9 «Walk»).
 # Layout directories of a scenario: forms/README.md. No real key, host install, service manager or deployment is used.

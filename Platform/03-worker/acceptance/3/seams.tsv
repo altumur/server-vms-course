@@ -1,5 +1,5 @@
 # SDK seams of P/03.3 (ADR-0125 addendum (4) item 7, addendum (5)).
-# These are seam scenarios run through the seam adapter, not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# The runner executes this file through the seam adapter; these are not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
 # Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
 # scenario	step	request	expect
 s1-revision-same-epoch	1	CALL worker-reconcile {"current":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":1,"epoch":8},"desired":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":2},"lease":"confirmed","assignment_confirmed":true}	{"epoch_issues":0,"stop_restarting":[true],"start_epochs":[8],"observed_revision":2}

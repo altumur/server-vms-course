@@ -1,5 +1,5 @@
 # SDK seams of P/03.5 (ADR-0125 addendum (4) item 7, addendum (5)).
-# These are seam scenarios run through the seam adapter, not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# The runner executes this file through the seam adapter; these are not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
 # Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
 # scenario	step	request	expect
 s1-sealed-unit-no-epoch	1	CALL worker-open-unit {"id":"t1","key":"testsub2/tallies/t1","row":{"revision":3,"feed_secret":"enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE"},"ring":null}	{"epoch_issues":0,"start_calls":0,"status":{"id":"t1","phase":"sealed","revision":3},"absent_status_fields":["epoch","observed_revision"],"plaintext_in_heartbeat_or_log":false}

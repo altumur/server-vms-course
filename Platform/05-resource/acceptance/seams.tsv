@@ -1,4 +1,4 @@
-# CALL seams of P/05; setup and native normalization: forms/README.md.
+# CALL seams of P/05; setup and native normalization: forms/README.md. The runner executes this file through the seam adapter.
 # scenario	step	request	expect
 s01-written-equal-clock	1	CALL resource-object-write {"clock":[100,100],"same_bytes":true}	{"written":[100,100.001]}
 s02-write-after-tombstone	1	CALL resource-object-write {"clock":[50],"tombstone":{"written":100,"peers":[],"acked":[]}}	{"written":[100.001],"tombstone_at_reply":false}

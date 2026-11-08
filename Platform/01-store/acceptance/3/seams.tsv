@@ -1,4 +1,4 @@
-# Review P/01 under ADR-0120; ordinary implementation, controlled startup/I/O. Protocol: README.
+# Review P/01 under ADR-0120; ordinary implementation, controlled startup/I/O. Protocol: README. The runner executes this file through the seam adapter.
 # scenario	step	request	expect
 s7-loopback-api-no-tls	1	CALL store-start-flags {"api":"loopback","raft":"absent","join":"absent","tls":false}	{"config_accepted":true}
 s8-loopback-join-needs-tls	1	CALL store-start-flags {"api":"loopback","raft":"loopback","join":"loopback","tls":false}	{"config_accepted":false,"exit":2,"network_setup_calls":0}
