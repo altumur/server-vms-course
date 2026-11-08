@@ -16,6 +16,7 @@ sys.path.insert(0, str(HERE))
 import common_vectors  # noqa: E402
 import vector_consumers  # noqa: E402
 import lesson  # noqa: E402
+import machine_source
 from gen_checks import go_str, gofmt  # noqa: E402
 
 L = lesson.CURRENT
@@ -1410,7 +1411,7 @@ def lesson_consumers(root):
         raise GenError(str(exc)) from None
 
 
-def build(root=ROOT):
+def _build(root=ROOT):
     """Return ({output-relative path: bytes}, [(package/table/line, status)] inventory)."""
     if L.key == "06-console":
         import wire_vectors
@@ -1548,6 +1549,19 @@ def build(root=ROOT):
     return files, inv
 
 
+def build(root=ROOT):
+    files, inventory = _build(root)
+    root = Path(root)
+    decls, _ = plan(root)
+    inputs = [read_table(root, d)[1] for d in decls]
+    inputs += [p for p in (root / common_vectors.CONSUMERS, root / vector_consumers.LESSONS,
+                           root / "Platform/common/vectors/wire.tsv") if p.is_file()]
+    own = [name for name in files if name.startswith("go/vectoradapter/") and not name.endswith("/vectoradapter.go")]
+    files = machine_source.go_files(files, generator=__file__, sources=inputs, root=root, editable=own,
+            code_paths=[name for name in files if name.startswith("go/")])
+    return files, inventory
+
+
 def generate(root=ROOT, out=DEFAULT_OUT):
     files, inv = build(root)
     out = Path(out)
@@ -1595,7 +1609,7 @@ def provenance():
     def entries(paths):
         return [entry(p) for p in dict.fromkeys(p for src in paths for p in
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
-    generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
+    generators = [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))]
     decls, known = plan(ROOT)
     turn_sources = ([ROOT / "Platform/common/vectors/turn/README.md", ROOT / "Platform/common/contracts/turn.md"]
                     if any(d["package"] == "common/turn" for d in decls) else [])

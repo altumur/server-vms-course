@@ -19,6 +19,7 @@ from gen_checks import (FN_TYPES, GenError, Module, Parser, compile_expr, go_fn_
                         go_function, go_str, gofmt, prims_present, camel)
 
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
+import machine_source
 L = lesson.CURRENT
 DEFAULT_TABLE = L.form("daemon-flags.tsv")
 DEFAULT_OUT = L.out
@@ -964,7 +965,8 @@ def render(table_path=DEFAULT_TABLE):
     consts = table_path.parent / CONSTANTS_FORM
     if consts.is_file():
         files["constants.go"] = gofmt(constants_go(consts, consts.relative_to(ROOT).as_posix()))
-    return files
+    sources = [table_path, *(src for _, src in COPIES)] + [p for p in (cmds_path, consts) if p.is_file()]
+    return machine_source.go_files(files, generator=__file__, sources=sources, root=ROOT)
 
 
 def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
@@ -1003,7 +1005,7 @@ def provenance():
         return {"path": str(path.relative_to(ROOT)), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
     def forms(paths):
         return [entry(p) for p in dict.fromkeys(p for src in paths for p in tsv_input.source_files(src, root=ROOT))]
-    generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
+    generators = [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))]
     cmds = DEFAULT_TABLE.parent / COMMANDS_FORM
     if cmds.is_file():                                 # Lesson commands (P/02): both forms, cmdflag_judge.
         return {"form": forms([DEFAULT_TABLE, cmds]), "generator": entry(Path(__file__).resolve()), "generators": generators,

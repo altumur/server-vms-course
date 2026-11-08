@@ -21,7 +21,8 @@ keys = {"<sub>/heartbeats/<name>" if g.KEY_GRAMMARS.is_file() else "<sub>/heartb
 fams = [f for nn in ("03", "05") for f in g.families(nn) if f["key"] in keys]
 assert g.DOC_MODE and {f["key"] for f in fams} == keys
 generated = g.gofmt(g.go_module(fams, "03+P/05"))
-runtime = g.RUNTIME_DOC.read_text(encoding="utf-8")
+runtime = g.machine_source.go_files({"runtime.go": g.RUNTIME_DOC.read_text(encoding="utf-8")},
+        generator=g.HERE / "contracts/gen/gen_heartbeat.py", sources=(g.RUNTIME_DOC,), root=g.ROOT)["runtime.go"]
 def package(text):
     return text.replace("\\npackage families\\n", "\\npackage heartbeat\\n", 1).replace("// Package families", "// Package heartbeat")
 print(json.dumps({"families.go": package(generated), "runtime.go": package(runtime)}))
@@ -46,7 +47,7 @@ fams = [f for nn in ("03", "05") for f in g.families(nn) if f["key"] in keys]
 paths = [g.CATALOG] + g.grammar_sources()
 if g.OUTCOME_UNITS.is_file():
     paths.append(g.OUTCOME_UNITS)
-paths += [g.RUNTIME_DOC, g.HERE / "gen_families.py", g.HERE / "gen_checks.py", g.HERE / "tsv_input.py"]
+paths += [g.RUNTIME_DOC, g.HERE / "machine_source.py", g.HERE / "gen_families.py", g.HERE / "gen_checks.py", g.HERE / "tsv_input.py"]
 paths += [p for f in fams for p in f["sources"] if p is not None]
 paths = [p for src in paths for p in
          (g.tsv_input.source_files(src, root=g.ROOT) if src.suffix == ".tsv" else [src])]

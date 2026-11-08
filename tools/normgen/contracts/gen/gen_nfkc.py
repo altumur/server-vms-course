@@ -2,11 +2,16 @@
 compatibility decompositions, the canonical combining classes and the primary composites (the address contract A4
 names NFKC by the tables of Unicode 15.0.0). Writes contracts/go/nfkc_tables.go; the judge test_contracts.py checks
 that the file is fresh and that NFKC of the package equals unicodedata.normalize("NFKC")."""
+import hashlib
 import shutil
 import subprocess
 import sys
 import unicodedata
 from pathlib import Path
+
+NORMGEN = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(NORMGEN))
+import machine_source  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "go/nfkc_tables.go"
 SB, SC = 0xAC00, 11172
@@ -41,7 +46,9 @@ def render():
     w += [f"\t{{0x{a:X}, 0x{b:X}}}: 0x{c:X}," for a, b, c in comp]
     w += ["}", ""]
     gofmt = shutil.which("gofmt") or "/opt/go1.22.10/bin/gofmt"
-    return subprocess.run([gofmt], input="\n".join(w), capture_output=True, text=True, check=True).stdout
+    generator = "tools/normgen/contracts/gen/gen_nfkc.py"
+    header = machine_source.identity_header(generator, [(generator, hashlib.sha256(Path(__file__).read_bytes()).hexdigest())])
+    return subprocess.run([gofmt], input=machine_source.go_source("\n".join(w), header=header), capture_output=True, text=True, check=True).stdout
 
 
 def main():

@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gate  # noqa: E402 -- shared gate parser (Codex review C4)
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
+import machine_source
 import tsv_input  # noqa: E402 — physical source rows and one outer decode
 L = lesson.CURRENT
 
@@ -327,6 +328,12 @@ def build(root=ROOT, stages_text=None, transitional=TRANSITIONAL):
            "step\tstage\ttest\tstatus\trace\treason"]
     inv += ["\t".join(r) for r in inventory]
     files["go/stagetests/inventory.tsv"] = "\n".join(inv) + "\n"
+    inputs = [root / stages_rel, root / L.rel / "forms/refusals.tsv", root / L.rel / "spec" / L.openapi.name]
+    inputs += sorted((root / L.rel / "acceptance").glob("*/scenarios.tsv"))
+    inputs += sorted((root / L.rel / "acceptance").glob("*/seams.tsv"))
+    own = [name for name in files if name in ("go/coreadapter/open.go", "go/coreadapter/seams.go")]
+    files = machine_source.go_files(files, generator=__file__, sources=inputs, root=root, editable=own,
+            code_paths=[name for name in files if name.startswith("go/")])
     return files, inventory
 
 

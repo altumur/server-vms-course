@@ -18,6 +18,7 @@ ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import gate  # noqa: E402
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
+import machine_source
 from gen_checks import go_str, gofmt  # noqa: E402
 
 L = lesson.CURRENT
@@ -436,6 +437,12 @@ def build(root=ROOT):
             files.update(gen_policy_machines.build(root))
         except gen_policy_machines.GenError as exc:
             raise GenError(str(exc)) from None
+    root = Path(root)
+    inputs = [root / L.rel / "forms/stages.tsv", root / L.rel / "forms/README.md"]
+    inputs += sorted((root / L.rel / "acceptance").rglob("*.tsv"))
+    own = [name for name in files if name.startswith("go/lessonadapter/") and name != "go/lessonadapter/lessonadapter.go"]
+    files = machine_source.go_files(files, generator=__file__, sources=inputs, root=root, editable=own,
+            code_paths=[name for name in files if name.startswith("go/")])
     return files, inventory
 
 
@@ -1557,7 +1564,7 @@ def provenance():
     forms = list(dict.fromkeys(p for src in forms if Path(src).is_file() for p in
                               (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
     return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(p) for p in handwritten], "judge": entry(JUDGE)}
 
 

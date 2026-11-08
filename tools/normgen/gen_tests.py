@@ -22,6 +22,7 @@ import gate  # noqa: E402 -- shared gate parser (Codex review C4)
 import vector_consumers
 import common_vectors  # noqa: E402 -- common lesson vectors (ADR-0125 addendum(5), item 5)
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
+import machine_source
 import tsv_input  # noqa: E402 — source transport inputs in P/01 provenance
 L = lesson.CURRENT
 
@@ -755,7 +756,9 @@ def render(root=ROOT):
         common(root, files)
     except common_vectors.CommonError as exc:
         raise GenError(str(exc)) from None
-    return files
+    return machine_source.go_files(files, generator=__file__, sources=sources("vectors", root), root=root,
+            editable=[name for name in files if name.startswith("go/vectoradapter/") or name in ("go/coreadapter/open.go", "go/coreadapter/seams.go")],
+            code_paths=[name for name in files if name.startswith("go/")])
 
 
 def common(root, files):
@@ -950,7 +953,7 @@ def sources(part, root=ROOT):
         for name, table in common_vectors.composition(L.key, root):
             directory = root / "Platform/common/vectors" / name
             paths.append(directory / table)
-            paths.extend(directory / f for f in common_vectors.DECLS[name]["files"])
+            paths.extend(root / rel for rel in common_vectors.DECLS[name]["files"].values())
     elif part == "stagetests":
         paths.append(root / L.rel / "forms/refusals.tsv")
         paths.append(root / L.rel / "spec" / L.openapi.name)

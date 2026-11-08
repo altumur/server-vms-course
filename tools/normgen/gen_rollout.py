@@ -13,6 +13,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402
+import machine_source
 from gen_checks import go_str, gofmt  # noqa: E402
 
 L = lesson.CURRENT
@@ -123,6 +124,7 @@ def build(root=ROOT):
     lines = ["# Inventory of the rollout-poll trace tests (gen_rollout.py): every assertion of the traces — translated or excluded.",
              "assertion\tstatus\treason"] + ["\t".join(r) for r in inv]
     files["go/rollouttests/inventory.tsv"] = "\n".join(lines) + "\n"
+    files = machine_source.go_files(files, generator=__file__, sources=(Path(root) / L.rel / TRACES,), root=root)
     return files, total, len(inv) - total
 
 
@@ -230,7 +232,7 @@ def provenance():
     forms.append(Path(ROOT) / L.rel / "forms/rollout-poll.machine.yaml")
     return {"form": [entry(p) for p in dict.fromkeys(forms)],
             "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))],
             "handwritten": [], "judge": entry(JUDGE)}
 
 

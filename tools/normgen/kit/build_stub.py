@@ -58,7 +58,8 @@ def stub_source():
             raise build_kit.KitError(f"stub/main.go: expected {count} {name} blocks")
         if name not in ops:
             src = block.sub("", src)
-    return src
+    return build_kit.gen_core.gofmt(build_kit.machine_source.go_files({"main.go": src},
+            generator=__file__, sources=(HERE / "stub/main.go", build_kit.OPENAPI), root=build_kit.ROOT)["main.go"])
 
 
 def build(dst, spec=None, go_build=False):

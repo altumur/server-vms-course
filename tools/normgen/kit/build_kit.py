@@ -29,6 +29,7 @@ import gen_checks  # noqa: E402 -- writecheck freshness
 import gen_door  # noqa: E402 -- door freshness
 import gen_launch  # noqa: E402 -- launch part
 import gen_core  # noqa: E402 -- core part
+import machine_source  # noqa: E402
 import gen_versioned_doors  # noqa: E402 -- P/08 metadata in the existing core part
 import gen_families  # noqa: E402 -- families part
 import gen_row_writes  # noqa: E402 — P03-only pure constructor overlay in the families part
@@ -108,6 +109,31 @@ def checked_outputs():
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def machine_delivery(name, data, origin, component, source, *, editable=False):
+    """Normalize explicit SDK code only, before comparing editable seed bytes.
+
+    Source public probes and third-party vendor are copies, never template code.
+    The stable prepared-output label is resolved to its actual prepared carrier.
+    """
+    if origin == "vendored" or component == "publicprobes" or Path(name).suffix not in (".go", ".py"):
+        return data
+    prefix = f"tools/normgen/out/{L.slug}/"
+    source_path = L.out / source[len(prefix):] if source.startswith(prefix) else ROOT / source
+    if not source_path.is_file():
+        raise KitError(f"code source identity is absent: {source}")
+    language = "go" if name.endswith(".go") else "python"
+    header = machine_source.identity_header("tools/normgen/kit/build_kit.py",
+            [(source, sha256(source_path.read_bytes()))], language=language, editable=editable)
+    text = data.decode("utf-8")
+    if language == "go":
+        anchors = None
+        if component in ("core", "launch") and L.key == lesson.DEFAULT:
+            anchors = {a for p in (gen_core.NORMS, gen_core.NORMS_12, gen_core.NORMS_13)
+                       for _, _, rows in gen_core.sections(p.read_text(encoding="utf-8")) for a, _ in rows}
+        return gen_core.gofmt(machine_source.go_source(text, header=header, anchor_ids=anchors)).encode("utf-8")
+    return machine_source.python_source(text, header=header).encode("utf-8")
 
 
 def lines(data):
@@ -238,6 +264,8 @@ def provenance(parts, files, judged):
                          "output": output(*component)}
             if "generators" in t:
                 out[part]["generators"] = [entry(f) for f in t["generators"]]
+        generators = out[part].get("generators", []) + [entry(NORMGEN / "machine_source.py"), entry(Path(__file__))]
+        out[part]["generators"] = list({e["path"]: e for e in generators}.values())
         out[part]["judged"] = judged.get(part)
     return out
 
@@ -465,8 +493,10 @@ def build(dst, module, parts=(), judged=None, seed=None, *, delivery="internal")
     files = []
     taken, kept, refreshed = seed_rule(dst, seed)
 
-    def put(rel_dir, name, data, origin, component, source):
+    def put(rel_dir, name, data, origin, component, source, *, editable=False, normalized=False):
         target = Path(os.path.normpath(internal / rel_dir / name))      # ../cmd/vectors sits alongside internal/.
+        if not normalized:
+            data = machine_delivery(name, data, origin, component, source, editable=editable)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
@@ -527,9 +557,11 @@ def build(dst, module, parts=(), judged=None, seed=None, *, delivery="internal")
             continue                    # The core part's open.go already returns its core.
         if (sub, name) in loader_wired:
             data, origin, component = loader_wired[sub, name], "generated", "loader"   # Scaffold wired to manifest.
+        if own:
+            data = machine_delivery(name, data, origin, component, source, editable=True)
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # Preserve the implementation adapter.
-        put(sub, name, data, origin, component, source)
+        put(sub, name, data, origin, component, source, editable=own, normalized=own)
         if own:
             files[-1]["editable"] = True
     if openapi_sha:
@@ -546,15 +578,19 @@ def build(dst, module, parts=(), judged=None, seed=None, *, delivery="internal")
     for sub, name, data, origin, source in rollout_files:
         put(sub, name, data, origin, "rollout-poll", source)
     for part, (sub, name, data, origin, source, own) in machine_files:
+        if own:
+            data = machine_delivery(name, data, origin, part, source, editable=True)
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # Machine actions and procedures belong to the implementation.
-        put(sub, name, data, origin, part, source)
+        put(sub, name, data, origin, part, source, editable=own, normalized=own)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in admin_files:
+        if own:
+            data = machine_delivery(name, data, origin, "admin", source, editable=True)
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # Preserve implementation subcommands.
-        put(sub, name, data, origin, "admin", source)
+        put(sub, name, data, origin, "admin", source, editable=own, normalized=own)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in box_files:
@@ -581,15 +617,19 @@ def build(dst, module, parts=(), judged=None, seed=None, *, delivery="internal")
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in launch_files:
+        if own:
+            data = machine_delivery(name, data, origin, "launch", source, editable=True)
         if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # Preserve implementation main.go and frame.
-        put(sub, name, data, origin, "launch", source)
+        put(sub, name, data, origin, "launch", source, editable=own, normalized=own)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in core_files:
+        if own:
+            data = machine_delivery(name, data, origin, "core", source, editable=True)
         if own and taken(internal / sub / name, data):
             continue                    # Preserve the implementation core.
-        put(sub, name, data, origin, "core", source)
+        put(sub, name, data, origin, "core", source, editable=own, normalized=own)
         if own:
             files[-1]["editable"] = True
     for name, data, source in probe_files:

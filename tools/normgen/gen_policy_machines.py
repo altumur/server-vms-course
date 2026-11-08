@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 import lesson
+import machine_source
 
 from gen_checks import go_str, gofmt
 
@@ -428,7 +429,9 @@ def build(root=ROOT):
     template = (HERE / "policyrt/traces_test.go.txt").read_text(encoding="utf-8")
     files["go/workerpolicy/traces_test.go"] = gofmt(template.replace("//TRACES", ",\n".join(traces) + ","))
     files["go/workerpolicy/inventory.tsv"] = "\n".join(inventory) + "\n"
-    return files
+    sources = [*(root / LESSON / "forms" / f"{part}.{suffix}" for part in PARTS for suffix in ("machine.yaml", "traces.tsv")),
+               *sorted(RUNTIME.glob("*.go")), HERE / "policyrt/traces_test.go.txt"]
+    return machine_source.go_files(files, generator=__file__, sources=sources, root=root)
 
 
 def module_files(module, root=ROOT):

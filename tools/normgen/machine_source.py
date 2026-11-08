@@ -184,7 +184,7 @@ def python_source(text, *, header=""):
     return "".join(result)
 
 
-def go_files(files, *, generator, sources, root, editable=(), anchor_ids=None):
+def go_files(files, *, generator, sources, root, editable=(), anchor_ids=None, code_paths=None):
     """Normalize an explicit code map after producers have used private selectors.
 
     Data entries in mixed maps are retained byte-for-byte.  Callers name actual
@@ -198,8 +198,9 @@ def go_files(files, *, generator, sources, root, editable=(), anchor_ids=None):
               for p in dict.fromkeys(Path(p).resolve() for p in [generator, *sources])]
     result = {}
     editable = frozenset(editable)
+    code_paths = None if code_paths is None else frozenset(code_paths)
     for name, data in files.items():
-        if not name.endswith('.go'):
+        if not name.endswith('.go') or (code_paths is not None and name not in code_paths):
             result[name] = data
             continue
         binary = isinstance(data, bytes)

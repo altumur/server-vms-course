@@ -14,6 +14,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402
+import machine_source
 from gen_checks import GenError as _CelError, Parser, go_str, gofmt  # noqa: E402
 
 L = lesson.CURRENT
@@ -626,6 +627,8 @@ def build(part, root=ROOT):
     for s in m.from_states:
         inv.append("\t".join(["-", s, s, "no match: wait", "-", str(sum(1 for c in cs if c[0] == s and c[2] is None))]))
     files[f"go/{m.pkg}/inventory.tsv"] = "\n".join(inv) + "\n"
+    files = machine_source.go_files(files, generator=__file__, sources=(Path(root) / m.rel,), root=root,
+            editable=[name for name in files if name.startswith(f"go/{m.pkg}impl/")])
     return m, cs, files
 
 
@@ -674,7 +677,7 @@ def provenance(part):
     forms = tsv_input.source_files(machine_forms()[part], root=ROOT) + [L.form("README.md")]
     return {"form": [entry(p) for p in dict.fromkeys(forms)],
             "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(HERE / "gen_checks.py")], "judge": entry(JUDGE)}
 
 
