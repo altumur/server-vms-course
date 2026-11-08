@@ -605,8 +605,8 @@ def full_english_errors(root, prefixes=None):
 
     for path in english_sources(root, prefixes):
         name = path.relative_to(root).as_posix()
-        if name in check_cyrillic.DEFERRED_FILES:
-            problem = check_cyrillic.deferred_file_error(root, name)
+        if name in check_cyrillic.EXACT_SOURCE_FILES:
+            problem = check_cyrillic.exact_source_file_error(root, name)
             if problem:
                 errors.append((path, problem))
             continue

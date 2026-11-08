@@ -348,21 +348,22 @@ class FullEnglishSource(unittest.TestCase):
                 path.write_text("Ж\n")
             self.assertEqual(en_mirror.full_english_errors(root), [])
 
-    def test_deferred_vms_map_requires_exact_bytes_and_a_regular_file(self):
+    def test_named_vms_carrier_requires_exact_bytes_and_a_regular_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            path = root / "VMS/common/id-map.tsv"
+            path = root / "VMS/11-backend/consolem.openapi.json"
             path.parent.mkdir(parents=True)
-            data = (ROOT / "VMS/common/id-map.tsv").read_bytes()
+            from vms_platform_pin import _git
+            data = _git(ROOT, "show", "c8eafc05626112db4c2003b416f762055deaef65:VMS/11-backend/consolem.openapi.json")
             path.write_bytes(data)
-            self.assertEqual(en_mirror.full_english_errors(root), [])
+            self.assertEqual(en_mirror.full_english_errors(root, ("VMS/11-backend/",)), [])
             path.write_bytes(data + b"\n")
-            self.assertTrue(any("deferred historical bytes differ" in e for _, e in en_mirror.full_english_errors(root)))
+            self.assertTrue(any("exact source carrier SHA256 mismatch" in e for _, e in en_mirror.full_english_errors(root, ("VMS/11-backend/",))))
             path.unlink()
             outside = root / "outside.tsv"
             outside.write_bytes(data)
             path.symlink_to(outside)
-            self.assertTrue(any("without symlinks" in e for _, e in en_mirror.full_english_errors(root)))
+            self.assertTrue(any("without symlinks" in e for _, e in en_mirror.full_english_errors(root, ("VMS/11-backend/",))))
     def test_moved_documents_use_only_platform_homes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

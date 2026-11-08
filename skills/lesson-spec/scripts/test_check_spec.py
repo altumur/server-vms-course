@@ -1902,7 +1902,8 @@ class VmsModuleTests(unittest.TestCase):
             "09\t09-deploy\tРазвёртывание\t-\tnot translated\n", encoding="utf-8")
         (self.root / "VMS/common/data/catalog.tsv").write_text(
             "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\tplace\n", encoding="utf-8")
-        (self.root / "VMS/common/id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n", encoding="utf-8")
+        (self.root / "decisions/history/vms").mkdir(parents=True, exist_ok=True)
+        (self.root / "decisions/history/vms/id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n", encoding="utf-8")
         (self.root / "Source/vms").mkdir(parents=True)
         (self.root / "Source/vms/a.py").write_bytes(b"x = 1\n")
         (self.root / "tools/vms-boundary").mkdir(parents=True)
@@ -1933,13 +1934,13 @@ class VmsModuleTests(unittest.TestCase):
             path.write_text(original.replace("not translated", status))
             self.assertTrue(any("status is one of" in e for e in self.errors()), status)
 
-    def test_idmap_stays_required_at_its_sole_original_path(self):
-        old = self.root / "VMS/common/id-map.tsv"
-        copy = self.root / "decisions/history/vms/id-map.tsv"
-        copy.parent.mkdir(parents=True)
+    def test_history_idmap_is_required_without_active_fallback(self):
+        old = self.root / "decisions/history/vms/id-map.tsv"
+        copy = self.root / "VMS/common/id-map.tsv"
+        copy.parent.mkdir(parents=True, exist_ok=True)
         copy.write_bytes(old.read_bytes())
         old.unlink()
-        self.assertTrue(any("VMS/common/id-map.tsv: missing" in e for e in self.errors()))
+        self.assertTrue(any("decisions/history/vms/id-map.tsv: missing" in e for e in self.errors()))
 
     def test_manifest_outside_its_lesson(self):
         (self.root / "VMS/09-deploy/rec.subsystem.yaml").write_text("name: rec\n", encoding="utf-8")
@@ -1950,7 +1951,8 @@ class VmsModuleTests(unittest.TestCase):
         self.assertTrue(any("no manifest VMS/01-cam/cam.subsystem.yaml" in e for e in self.errors()))
 
     def test_tables_need_their_headers(self):
-        (self.root / "VMS/common/id-map.tsv").write_text("a\tb\tc\td\te\n", encoding="utf-8")
+        (self.root / "decisions/history/vms").mkdir(parents=True, exist_ok=True)
+        (self.root / "decisions/history/vms/id-map.tsv").write_text("a\tb\tc\td\te\n", encoding="utf-8")
         self.assertTrue(any("id-map.tsv" in e and "header" in e for e in self.errors()))
 
     def test_frozen_witness_bytes(self):
@@ -1967,7 +1969,7 @@ class VmsModuleTests(unittest.TestCase):
 
 class VmsLessonTests(unittest.TestCase):
     """A lesson of the VMS module (ADR-0090 доп. (2)): VMS/NN-<имя>/NN-<имя>.md checked like a Platform lesson with ids
-    V/NN.K-MM, its row in VMS/common/lessons.tsv, id-map VMS/common/id-map.tsv and stub chapters waiting for a request."""
+    V/NN.K-MM, its row in VMS/common/lessons.tsv, id-map decisions/history/vms/id-map.tsv and stub chapters waiting for a request."""
 
     STUB = ("**Статус: ждёт решения запроса** [`запрос`](../../../decisions/inbox/2026-10-23-запрос-vms-x.md)\n\n" +
             "\n".join(f"## Н{i} Section" for i in range(6)) + "\n## Решает реализация\n## Чеклист готовности\n")
@@ -1979,7 +1981,8 @@ class VmsLessonTests(unittest.TestCase):
         (self.root / "VMS/common").mkdir(parents=True)
         (self.root / "VMS/common/lessons.tsv").write_text(
             "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\t-\tnot translated\n", encoding="utf-8")
-        (self.root / "VMS/common/id-map.tsv").write_text(
+        (self.root / "decisions/history/vms").mkdir(parents=True, exist_ok=True)
+        (self.root / "decisions/history/vms/id-map.tsv").write_text(
             "old\tnew\tchapter\tsubject\tnote\nМ10B/01 ш.1\tV/01.1-01\t1.1\tкамера\t-\n", encoding="utf-8")
         (self.root / "decisions/inbox").mkdir(parents=True)
         (self.root / "decisions/inbox/2026-10-23-запрос-vms-x.md").write_text("# Запрос\n", encoding="utf-8")
@@ -2031,7 +2034,8 @@ class VmsLessonTests(unittest.TestCase):
     def test_stale_stub(self):
         (self.spec / "01.2-cam.norms.md").write_text(self.STUB + "- [ ] **V/01.2-01** Норма — проверяется чтением\n",
                                                      encoding="utf-8")
-        (self.root / "VMS/common/id-map.tsv").write_text(
+        (self.root / "decisions/history/vms").mkdir(parents=True, exist_ok=True)
+        (self.root / "decisions/history/vms/id-map.tsv").write_text(
             "old\tnew\tchapter\tsubject\tnote\nМ10B/01 ш.1\tV/01.1-01\t1.1\tкамера\t-\n"
             "М10B/01 ш.2\tV/01.2-01\t1.2\tдержатель\t-\n", encoding="utf-8")
         self.assertTrue(any("stale stub" in e for e in self.errors()), self.errors())
