@@ -1,4 +1,4 @@
-# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-old-document-unconfirmed	1	CALL domain-shared-edit {"old_document":"read_unconfirmed"}	{"status":503,"pointer_writes":0}
 s02-shared-secret-refused	1	CALL domain-shared-edit {"new_document":"contains_secret"}	{"status":400,"pointer_writes":0}

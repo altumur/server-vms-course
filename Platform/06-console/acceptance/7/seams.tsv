@@ -1,4 +1,4 @@
-# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-forward-one-hop	1	CALL console-forward {"target":"another_cluster","via":"already_forwarded","request":"valid"}	{"status":400,"forward_calls":0}
 s02-clusters-unreadable	1	CALL console-forward {"target":"another_cluster","via":"absent","clusters":"malformed","membership":"section_absent"}	{"status":503,"forward_calls":0}

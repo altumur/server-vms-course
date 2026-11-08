@@ -1,4 +1,4 @@
-# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-body-limit-before-signature	1	CALL domain-token-issue {"body":"one_byte_above_operation_limit"}	{"status":413,"signatures":0,"issued_writes":0}
 s02-revocations-unconfirmed	1	CALL domain-token-issue {"revoked":"read_unconfirmed"}	{"status":503,"issued_writes":0}

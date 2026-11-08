@@ -1,4 +1,4 @@
-# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-replay-after-lost-answer	1	CALL domain-versioned-edit {"fault":"answer_lost_after_batch","retry":"same_key_old_if_match"}	{"status":200,"target_writes":1,"claim_target_atomic":true,"replay_body_equal":true,"replay_etag_equal":true}
 s02-unconfirmed-claim	1	CALL domain-versioned-edit {"claim":"read_unconfirmed"}	{"status":503,"target_writes":0,"claim_writes":0}

@@ -1,4 +1,4 @@
-# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-schema-live-unknown-build	1	CALL console-schema-raise {"stored_version":1,"wanted_version":"2","own_build":2,"live_process_build":"unknown"}	{"status":409,"schema_writes":0}
 s02-schema-read-unconfirmed	1	CALL console-schema-raise {"stored_version":"unconfirmed","wanted_version":"2","own_build":2}	{"status":503,"schema_writes":0}
