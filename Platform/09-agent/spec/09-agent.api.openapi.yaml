@@ -278,7 +278,7 @@ components:
   schemas:
     RelayRefusal:
       type: object
-      required: [error]
+      required: [error, detail]
       additionalProperties: false
       description: 'A refusal of the relay door (P/09.2 N2): the status and reason are normative; detail — the words of the implementation, except the texts
         of 403 and 503, which the norm names. reason — a word of the report intake contract (not_a_publication, same_sent_at, rebase,
