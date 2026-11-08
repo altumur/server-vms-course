@@ -577,8 +577,12 @@ class SchemaSection:
         rec({k: v for k, v in w.items() if k != "$defs"}, "", ())
         if not rows:
             return contextual
-        out = [self.t("Только у писателя (`$defs.writer`):", "Only at the writer (`$defs.writer`):"), "",
-               self.t("| Ключ | Ещё и |", "| Key | Also |"), "|---|---|"]
+        shared = any(isinstance(part, dict) and part.get("$ref") == "#/$defs/writer"
+                     for part in self.doc.get("allOf", []))
+        heading = (self.t("Пределы читателя и писателя (`$defs.writer`, применены корневым `allOf`):",
+                          "Reader and writer bounds (`$defs.writer`, applied by root `allOf`):")
+                   if shared else self.t("Только у писателя (`$defs.writer`):", "Only at the writer (`$defs.writer`):"))
+        out = [heading, "", self.t("| Ключ | Ещё и |", "| Key | Also |"), "|---|---|"]
         out += ["| `%s` | %s |" % (code_cell(p), cell(x)) for p, x in rows]
         return out + [""] + contextual
 
