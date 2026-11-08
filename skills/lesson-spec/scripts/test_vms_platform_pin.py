@@ -373,5 +373,86 @@ paths:
             self.view("refused-export-ignore", candidate=candidate)
 
 
+class VmsEvidencePaths(unittest.TestCase):
+    """Filesystem-only report setup controls; no course lessons or VMS check run."""
+    def setUp(self):
+        self.work = Path(tempfile.mkdtemp(prefix="vms-evidence-path-control-")).resolve()
+        self.source = self.work / "source"
+        self.source.mkdir()
+        self.physical = self.work / "physical-temp"
+        self.physical.mkdir()
+        self.alias = self.work / "temp-alias"
+        self.alias.symlink_to(self.physical, target_is_directory=True)
+
+    def args(self, evidence=None):
+        import check_spec
+        args = check_spec.arguments().parse_args(["--root", str(self.source), "--scope", "vms"])
+        args.vms_evidence = evidence
+        return args
+
+    def run_report(self, args):
+        import check_spec
+        from contextlib import ExitStack
+        from vms_platform_pin import PlatformPin
+        def materialize(root, owner, destination, **kwargs):
+            destination.mkdir()
+            return {"fixture_only": True}
+        with ExitStack() as stack:
+            stack.enter_context(patch("vms_platform_pin.read_pin", return_value=PlatformPin("1" * 40, "2" * 64)))
+            stack.enter_context(patch("vms_platform_pin.verify_owner_pin"))
+            stack.enter_context(patch("vms_platform_pin.materialize_vms_view", side_effect=materialize))
+            phase = stack.enter_context(patch.object(check_spec, "_vms_phase", side_effect=lambda a, view, n: check_spec.Check(view)))
+            stack.enter_context(redirect_stdout(StringIO()))
+            report = check_spec._vms_reports(args, [])
+        phase.assert_called_once()
+        self.assertEqual(report["canonical_status"], "PASS")
+        return report
+
+    def test_default_generated_temp_under_symlink_parent_reaches_report_phase(self):
+        generated = Path(tempfile.mkdtemp(prefix="generated-", dir=self.alias))
+        self.assertNotEqual(generated.parent.absolute(), generated.parent.resolve())
+        with patch("tempfile.mkdtemp", return_value=str(generated)) as create:
+            report = self.run_report(self.args())
+        create.assert_called_once_with(prefix="check-spec-vms-")
+        self.assertEqual(Path(report["phases"][0]["view"]).parent, generated.resolve())
+        self.assertEqual(report, json.loads((generated.resolve() / "report.json").read_text()))
+
+    def test_explicit_symlink_parent_is_rejected_without_canonicalizing(self):
+        import check_spec
+        evidence = self.alias / "explicit-evidence"
+        with patch("tempfile.mkdtemp") as create, patch.object(check_spec, "_vms_phase") as phase:
+            with self.assertRaisesRegex(PinError, "without symlink parents"):
+                check_spec._vms_reports(self.args(evidence), [])
+        create.assert_not_called()
+        phase.assert_not_called()
+        self.assertFalse(evidence.exists())
+
+    def test_explicit_source_root_and_descendant_are_rejected(self):
+        import check_spec
+        for evidence in (self.source, self.source / "evidence"):
+            with self.subTest(path=evidence), patch("tempfile.mkdtemp") as create:
+                with self.assertRaisesRegex(PinError, "outside source"):
+                    check_spec._vms_reports(self.args(evidence), [])
+                create.assert_not_called()
+        self.assertEqual(list(self.source.iterdir()), [])
+
+    def test_default_generated_temp_inside_source_is_still_rejected(self):
+        import check_spec
+        generated = self.source / "generated"
+        generated.mkdir()
+        with patch("tempfile.mkdtemp", return_value=str(generated)):
+            with self.assertRaisesRegex(PinError, "outside source"):
+                check_spec._vms_reports(self.args(), [])
+        self.assertFalse((generated / "report.json").exists())
+
+    def test_explicit_fresh_canonical_directory_preserves_report_behavior(self):
+        evidence = self.physical / "explicit-evidence"
+        with patch("tempfile.mkdtemp") as create:
+            report = self.run_report(self.args(evidence))
+        create.assert_not_called()
+        self.assertEqual(Path(report["phases"][0]["view"]).parent, evidence)
+        self.assertTrue((evidence / "report.json").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

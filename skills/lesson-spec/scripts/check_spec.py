@@ -3521,7 +3521,7 @@ def _vms_reports(args, names):
     import traceback
     from vms_platform_pin import PinError, read_pin, verify_owner_pin, materialize_vms_view, _git
     root = args.root.resolve()
-    evidence = args.vms_evidence.absolute() if args.vms_evidence else Path(tempfile.mkdtemp(prefix="check-spec-vms-"))
+    evidence = args.vms_evidence.absolute() if args.vms_evidence else Path(tempfile.mkdtemp(prefix="check-spec-vms-")).resolve()
     if evidence == root or root in evidence.parents or evidence.parent.resolve() != evidence.parent.absolute():
         raise PinError("VMS evidence must be outside source without symlink parents")
     if args.vms_evidence:
