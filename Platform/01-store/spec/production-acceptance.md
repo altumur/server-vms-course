@@ -117,6 +117,14 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 | Temporary `backup` file after failure, cancellation and a killed run | P/01.3 R018 | qualified fault binding |
 | Age of the `id` memory from the first application on the admission-time clock | P/01.1 R141 | D7 `clock` binding |
 
+### Clocks in a group
+
+ADR-0130 Addendum (15) item 8 and Addendum (11): this is the public scope of a D7 [`clock` binding](../../common/acceptance/README.md#d7-test-side-evidence-bindings) in a store group. It adds no field, route, flag, directive or number, and it is not a qualification.
+
+A node is addressed by its stable daemon `-id` in the topology of the case (P/01.3 N1.3). Leader and follower are observed changing roles (`leader_id` of `/v1/status`), not addresses. One `clock` provider controls the explicitly listed consuming wall-clock domains of the case, each named by the `-id` of its node; a domain that is not listed is not controlled. The independent monotonic baseline of the observer is not shifted. Offsets use the seconds of the wall stamps of the chapter, and no skew allowance is added.
+
+The checks of P/01.1 R013 are the actual spread between the clocks beyond `CLOCK_SKEW`, a common shift and return, and the non-decrease of admission time. The probes also need a leader change, a Raft snapshot, the equality of admission time, and a replay held after `not_after` before the first application. Writer and client clocks belong to the scope only when the selected workload actually uses them; live P/03, P/04 or new N−1 stands are not assumed. Until the public case payload and a qualified provider exist, a dependent check stays `MissingBinding`/`NOTEXEC`.
+
 ## Evidence and outcomes
 
 Separate actual protocol output/state/replay from test-only instrumentation. Qualify each storage/clock/progress/fault binding independently with activated-stage receipts and negative controls; do not infer physical durability from ordinary process restart or SIGKILL. Complete recoverable bytes must be proved before judging the R144 ambiguous_barrier branch. Compare whole batch/id state, and admission metadata separately. An absent binding is not proof that an implementation is wrong or successful.
