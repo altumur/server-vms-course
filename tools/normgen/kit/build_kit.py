@@ -782,10 +782,11 @@ original sealing source into `internal/contracts/delivery_predicates.go`, with t
 The manifest records the original input SHA and exact definition spans/hashes separately from the delivered file.
 Retained keys, record and agent-signature code uses `b64Canonical`; values code uses `LooksSealed`.
 
-The ordinary generated YOURS `SlotName`, `Sealing` and `ValuesByType` vectoradapter scaffolds keep their existing
-signatures and unimplemented errors. Implement them in their editable files; the closed contracts adapters do not
-replace them. Other covered vector adapters continue to call retained contracts. Vectors, expectations and command
-inventory remain present; an unimplemented adapter does not report success.
+Where assigned by the lesson, ordinary generated YOURS `SlotName`, `Sealing` and `ValuesByType` vectoradapter
+scaffolds keep their existing signatures and unimplemented errors; the closed contracts adapters do not replace
+them. The delivered vector inventory below determines the lesson's targets; no unassigned scaffolds are added.
+Other covered vector adapters continue to call retained contracts. Vectors, expectations and command inventory
+remain present; an unimplemented adapter does not report success.
 """
 
 KIT_MODEL_MD = """
@@ -1102,8 +1103,9 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         context = {"kind": "export", "course_commit": course, "export_commit": sha}
         if delivery == "model-launch":
             context["source_pin"] = delivery_identity(stage, context)["source_commit"]
+        delivery_arg = f",delivery={delivery!r}" if delivery != "internal" else ""
         creator = ("import os,sys;sys.path.insert(0,'kit');import build_kit as k;"
-                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r},delivery={delivery!r});"
+                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r}{delivery_arg});"
                    "print(os.environ[k.lesson.OUTPUT_RECEIPT_ENV])")
         done = subprocess.run([sys.executable, "-c", creator], cwd=gens, env=env, capture_output=True, text=True)
         if done.returncode:
