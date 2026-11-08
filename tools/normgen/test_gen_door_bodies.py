@@ -1219,7 +1219,44 @@ class SourceSchemaReader:
             raise CheckingError("mistyped actual binding table") from exc
         if set(actual) != set(expected) or any(type(name) is not str for name in actual.values()):
             raise CheckingError("incomplete/extra actual body bindings")
-        return [(name, *expected[key]) for key, name in actual.items()]
+        bindings = [(name, *expected[key]) for key, name in actual.items()]
+        # Priority routes have a separate path-schema table. Its route/name
+        # identities bind exact Source slots; emitted definition names are opaque.
+        path_sources = {}
+        for record in declarations:
+            if "x-route-priority" not in record["item"]:
+                continue
+            merged, declared = {}, set()
+            for node, file, pointer in record["parameters"]:
+                prm, base, ptr = self.resolve_object(file, pointer, "parameter")
+                if prm.get("in") == "path":
+                    if type(prm.get("name")) is not str or not prm["name"] or "schema" not in prm:
+                        raise CheckingError("incomplete source path parameter")
+                    level = (file, pointer.rsplit("/parameters/", 1)[0], prm["name"])
+                    if level in declared:
+                        raise CheckingError("ambiguous source path parameter declaration")
+                    declared.add(level)
+                    merged[prm["name"]] = (base, ptr + "/schema")
+            for name, coordinate in merged.items():
+                path_sources.setdefault((record["route"], name), set()).add(coordinate)
+        path_tables = re.findall(r"\bvar\s+pathSchemas\s*=", bodies)
+        if path_sources or path_tables:
+            if len(path_tables) != 1:
+                raise CheckingError("missing/duplicate actual path-schema table")
+            path_table = self.literal_table(bodies, "pathSchemas")
+            path_actual = {}
+            for route, values in path_table.items():
+                if (type(route) is not str or type(values) is not dict or not values or
+                        any(type(name) is not str or not name or type(value) is not str or not value
+                            for name, value in values.items())):
+                    raise CheckingError("mistyped/empty actual path-schema binding")
+                for name, value in values.items():
+                    path_actual[route, name] = value
+            if set(path_actual) != set(path_sources):
+                raise CheckingError("missing/extra actual path-schema binding")
+            for key, name in path_actual.items():
+                bindings.extend((name, *coordinate) for coordinate in sorted(path_sources[key]))
+        return bindings
 
 
 # Synthetic schemas make keywords observable: the lesson's open Unit makes unevaluatedProperties redundant
@@ -2034,6 +2071,138 @@ class SourceSchemaReaderControls(unittest.TestCase):
         self.assertTrue(reader.compare({"opaque-root": {"type": "integer", "minimum": 1}}, cases, bindings))
         with self.assertRaises(CheckingError):
             reader.compare({"other-root": {"type": "integer"}}, [("other-root", 1)], bindings)
+
+
+    def path_parameter_fixture(self, external=False, override=False, unsafe=False):
+        target = {"type": "string", "pattern": "^[a-z]{2}$"}
+        if unsafe:
+            target.update(default={"$ref": "https://not-source.invalid/default"},
+                          examples=[{"$ref": "../../99-missing/schema.json"}])
+        parameter = {"name": "digest", "in": "path", "required": True, "schema": target}
+        if unsafe:
+            parameter["example"] = {"$ref": "https://not-source.invalid/parameter"}
+        item = {"x-route-priority": 1, "parameters": [parameter],
+                "get": {"responses": {"200": {"description": "ok"}}}}
+        route = "/blobs/{digest}"
+        if external:
+            self.schema({"type": "string", "pattern": "^[a-z]{2}$"}, owner="common", name="digest")
+            parameter["schema"] = {"$ref": "../data/digest.schema.json"}
+            self.api("common", components={"parameters": {"Digest": parameter}})
+            item["parameters"] = [{"$ref": "../../common/contracts/shared.api.openapi.yaml#/components/parameters/Digest"}]
+        if override:
+            item["get"]["parameters"] = [{"name": "digest", "in": "path", "required": True,
+                                             "schema": {"type": "integer", "minimum": 2}}]
+        spec = self.api(owner="05-resource", schemas={}, paths={route: item})
+        module = self.root / "actual-path-go"
+        (module / "apidoor").mkdir(parents=True)
+        (module / "apidoor/routes.go").write_text('var ops = map[string]Op{\n"/blobs/{digest} GET": OpBlob,\n}\n')
+        text = ('var requestSchemas = map[Op]map[string]string{}\n'
+                'var responseSchemas = map[Op]map[string]map[string]string{}\n'
+                'var pathSchemas = map[string]map[string]string{\n'
+                '"/blobs/{digest}": {"digest": "opaque-path-root"},\n}\n')
+        (module / "apidoor/bodies.go").write_text(text)
+        return SourceSchemaReader(self.root, spec), module, text, target
+
+    def test_34_path_parameter_binds_exact_slot_without_a_definition_name_convention(self):
+        reader, module, _, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        self.assertEqual(bindings, [("opaque-path-root", reader.source,
+            "/paths/~1blobs~1{digest}/parameters/0/schema")])
+        cases = [("opaque-path-root", value) for value in ("ab", "a", "ABC", 2)]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        self.assertTrue(reader.compare({"opaque-path-root": {"type": "string"}}, cases, bindings))
+
+    def test_35_path_parameter_missing_extra_duplicate_type_and_wrong_bindings_fail(self):
+        reader, module, text, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-path-root", value) for value in ("ab", "a")]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        row = '"/blobs/{digest}": {"digest": "opaque-path-root"},'
+        mutants = [text.replace(row, ''), text.replace(row, row + '\n' + row),
+                   text.replace('"digest": "opaque-path-root"', '"other": "opaque-path-root"'),
+                   text.replace('"/blobs/{digest}":', '"/other/{digest}":'),
+                   text.replace('"opaque-path-root"', 'true'),
+                   text.replace('"opaque-path-root"', '""'),
+                   text.replace('{"digest": "opaque-path-root"}', '{}'),
+                   text.replace('{"digest": "opaque-path-root"}', '"opaque-path-root"'),
+                   text.replace('pathSchemas', 'notPathSchemas'), text + text,
+                   text.replace('"digest": "opaque-path-root"',
+                                '"digest": "opaque-path-root", "extra": "opaque-path-root"')]
+        for mutant in mutants:
+            with self.subTest(mutant=mutant):
+                self.assertNotEqual(mutant, text)
+                (module / "apidoor/bodies.go").write_text(mutant)
+                with self.assertRaises(CheckingError):
+                    reader.output_bindings(module)
+        (module / "apidoor/bodies.go").write_text(text.replace('"opaque-path-root"', '"wrong-root"'))
+        wrong = reader.output_bindings(module)
+        with self.assertRaises(CheckingError):
+            reader.compare({"opaque-path-root": schema}, cases, wrong)
+        (module / "apidoor/bodies.go").write_text(text)
+        with self.assertRaises(CheckingError):
+            reader.compare({"opaque-path-root": schema, "unbound": {}}, cases + [("unbound", {})], bindings)
+
+    def test_36_path_parameter_reference_preserves_owner_and_each_uri_base(self):
+        reader, module, _, _ = self.path_parameter_fixture(external=True)
+        bindings = reader.output_bindings(module)
+        common = self.root / "Platform/common/contracts/shared.api.openapi.yaml"
+        self.assertEqual(bindings, [("opaque-path-root", common, "/components/parameters/Digest/schema")])
+        target = self.root / "Platform/common/data/digest.schema.json"
+        cases = [("opaque-path-root", value) for value in ("ab", "a", 1)]
+        self.assertEqual(reader.compare({"opaque-path-root": {"type": "string", "pattern": "^[a-z]{2}$"}},
+                                        cases, bindings), [])
+        self.assertIn(target, reader.provenance)
+        # An external future owner is not made legal by a parameter/table binding.
+        changed = common.read_text().replace('../data/digest.schema.json',
+                                            '../../10-domain-console/data/digest.schema.json')
+        common.write_text(changed)
+        self.schema({"type": "string"}, owner="10-domain-console", name="digest")
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, reader.source)
+
+    def test_37_operation_path_parameter_override_uses_its_own_source_coordinate(self):
+        reader, module, _, _ = self.path_parameter_fixture(override=True)
+        bindings = reader.output_bindings(module)
+        self.assertEqual(bindings, [("opaque-path-root", reader.source,
+            "/paths/~1blobs~1{digest}/get/parameters/0/schema")])
+        cases = [("opaque-path-root", value) for value in (2, 1, "ab")]
+        self.assertEqual(reader.compare({"opaque-path-root": {"type": "integer", "minimum": 2}},
+                                        cases, bindings), [])
+        self.assertTrue(reader.compare({"opaque-path-root": {"type": "string", "pattern": "^[a-z]{2}$"}},
+                                       cases, bindings))
+
+    def test_38_path_parameter_examples_and_defaults_remain_instance_data(self):
+        reader, module, _, schema = self.path_parameter_fixture(unsafe=True)
+        self.assertFalse(reader.edges)
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-path-root", value) for value in ("ab", "a", {"$ref": "https://instance.invalid"})]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        # The identical unsafe reference in an actual Schema Object is refused.
+        spec = self.api(owner="05-resource", schemas={"Root": {"$ref": "https://not-source.invalid/schema"}})
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, spec)
+
+
+    def test_39_missing_or_ambiguous_source_path_declarations_are_errors(self):
+        reader, module, _, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        self.assertEqual(reader.compare({"opaque-path-root": schema},
+                         [("opaque-path-root", "ab"), ("opaque-path-root", "a")], bindings), [])
+        original = reader.document(reader.source)
+        for variant in ("missing-parameter", "missing-schema", "duplicate", "wrong-name"):
+            doc = copy.deepcopy(original)
+            parameters = doc["paths"]["/blobs/{digest}"]["parameters"]
+            if variant == "missing-parameter":
+                parameters.clear()
+            elif variant == "missing-schema":
+                del parameters[0]["schema"]
+            elif variant == "duplicate":
+                parameters.append(copy.deepcopy(parameters[0]))
+            else:
+                parameters[0]["name"] = "other"
+            self.write(str(reader.source.relative_to(self.root)), doc, yaml=True)
+            with self.subTest(variant=variant), self.assertRaises(CheckingError):
+                SourceSchemaReader(self.root, reader.source).output_bindings(module)
 
 
     def test_33_existing_ndjson_line_schema_is_a_typed_source_edge(self):
