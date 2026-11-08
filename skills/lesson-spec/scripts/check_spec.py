@@ -2921,7 +2921,8 @@ class Check:
         self.tsv(log, 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
                      "en",                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
-                     "seams.tsv"}              # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
+                     "seams.tsv",                # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
+                     "sleeps.cases.md"}          # judge-only Markdown document, not an executable format
         legacy = acceptance == self.root / LEGACY_VERDICTS.parent
         if legacy:
             supported.add("spec_verdicts")
@@ -2947,8 +2948,13 @@ class Check:
                     own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
-                elif item.name not in ("cases", "puts", "en", "spec_verdicts") and not item.is_file():
+                elif item.name not in ("cases", "puts", "en", "spec_verdicts") and \
+                        (not item.is_file() or (item.name == "sleeps.cases.md" and item.is_symlink())):
                     self.error(item, "acceptance table/document must be a file")
+                elif item.name == "sleeps.cases.md":
+                    document = self.read(item)
+                    if document is not None:
+                        self.markdown(item, document)
         except OSError as exc:
             self.error(acceptance, str(exc))
         formats = 0
