@@ -89,8 +89,15 @@ POSITIONAL_SOURCES = {
 }
 
 
-def wire_headers(root):
+def _source_scopes(source_scopes):
+    if source_scopes is not None and (not source_scopes or any(s not in {"Platform", "VMS"} for s in source_scopes)):
+        raise ValueError("cell-json source scopes must be nonempty module homes")
+    return ("Platform", "VMS") if source_scopes is None else tuple(source_scopes)
+
+
+def wire_headers(root, *, source_scopes=None):
     """Existing wire bindings and the scenario form name positional columns."""
+    modules = _source_scopes(source_scopes)
     wire = Path(root) / "Platform/common/vectors/wire.tsv"
     lines = ([line.split("\t") for line in wire.read_bytes().decode("utf-8").split("\n")
               if line and not line.startswith("#")] if wire.is_file() else [])
@@ -106,7 +113,7 @@ def wire_headers(root):
         result[path] = value
     # The existing acceptance form already fixes these columns. It permits its
     # traditional comment header and an ordinary header; neither is a data row.
-    for module in ("Platform", "VMS"):
+    for module in modules:
         for path in (Path(root) / module).glob("*/acceptance/**/scenarios.tsv"):
             columns = ["scenario", "step", "request", "expect"]
             first = next((line.split("\t") for line in path.read_bytes().decode("utf-8").split("\n")
@@ -119,16 +126,20 @@ def wire_headers(root):
     return result
 
 
-def errors(root, paths):
+def errors(root, paths, *, source_scopes=None):
     """Validate declarations and a complete bijection with the byte proof table."""
     root = Path(root)
+    modules = _source_scopes(source_scopes)
+    selected = lambda name: source_scopes is None or name.split("/", 1)[0] in modules
     found = []
     actual = {}
     try:
-        forms = wire_headers(root)
+        forms = wire_headers(root, source_scopes=source_scopes)
     except ValueError as exc:
         return [(root / "Platform/common/vectors/wire.tsv", str(exc))]
     for path in paths:
+        if not selected(path.relative_to(root).as_posix()):
+            raise ValueError("cell-json input outside explicit module scopes")
         text = path.read_bytes().decode("utf-8", errors="surrogateescape")
         columns, positional = forms.get(path.relative_to(root), (None, False))
         names, rows, problems = table(text, columns, positional)
@@ -152,11 +163,19 @@ def errors(root, paths):
             found.append((manifest, f"line {number}: invalid cell-json proof width"))
             continue
         key = tuple(cells[:3])
+        if source_scopes is not None and (not cells[0] or "\\" in cells[0]
+                or any(part in {"", ".", ".."} for part in cells[0].split("/"))):
+            found.append((manifest, f"line {number}: unsafe cell-json proof table path"))
+            continue
+        if source_scopes is not None and (not re.fullmatch(r"[1-9][0-9]*", cells[1]) or not NAME.fullmatch(cells[2])):
+            found.append((manifest, f"line {number}: invalid cell-json proof cell identity"))
+            continue
         if key in covered:
             found.append((manifest, f"line {number}: duplicate cell-json proof cell"))
         covered.add(key)
         before, decoded = cells[3:]
-        if not re.fullmatch(r"[0-9a-f]{64}", before) or before != decoded or actual.get(key) != decoded:
+        if (not re.fullmatch(r"[0-9a-f]{64}", before) or before != decoded
+                or selected(cells[0]) and actual.get(key) != decoded):
             found.append((manifest, f"line {number}: cell-json before/decoded SHA256 mismatch or undeclared cell"))
     for key in sorted(actual.keys() - covered):
         found.append((manifest, f"missing cell-json byte proof for {key}"))

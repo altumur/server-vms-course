@@ -228,15 +228,24 @@ def localization_text(text):
     return "\n".join(output), errors
 
 
-def scan(root, *, export=None):
+def _source_selection(source_scopes):
+    if source_scopes is None:
+        return lambda name: True
+    if not source_scopes or any(scope not in SCOPES for scope in source_scopes):
+        raise ValueError("explicit source scopes must be nonempty canonical source homes")
+    return lambda name: any(name == scope or name.startswith(scope + "/") for scope in source_scopes)
+
+
+def scan(root, *, export=None, source_scopes=None):
     export = export_mode(root, export)
+    selected = _source_selection(source_scopes)
     counts, errors, stats = {}, [], Counter(cyrillic_scanned_files=0, cyrillic_non_utf8=0, cyrillic_export=int(export))
     try:
         names = source_files(root, export=export)
     except OSError as exc:
         return counts, [f"Cyrillic inventory: {exc}"], stats
     for name in names:
-        if mirror(name):
+        if not selected(name) or mirror(name):
             continue
         path = root / name
         if name in DEFERRED_FILES:
@@ -269,13 +278,18 @@ def scan(root, *, export=None):
     return counts, errors, stats
 
 
-def check(root, debt_path=DEBT, *, shrink=False, declare_ready=(), export=None):
+def check(root, debt_path=DEBT, *, shrink=False, declare_ready=(), export=None, source_scopes=None):
+    if source_scopes is not None and (shrink or declare_ready):
+        raise ValueError("scoped Cyrillic checks are read-only; debt writes require the whole source")
+    selected = _source_selection(source_scopes)
     root, debt_path = Path(root).resolve(), Path(debt_path)
     export = export_mode(root, export)
     debt, ready, errors = load_debt(debt_path, export=export)
     if export:
         errors.extend(export_marker_errors(root))
-    counts, scan_errors, stats = scan(root, export=export)
+    debt = {name: count for name, count in debt.items() if selected(name)}
+    ready = {unit for unit in ready if selected(unit)}
+    counts, scan_errors, stats = scan(root, export=export, source_scopes=source_scopes)
     errors.extend(scan_errors)
     for unit in sorted(ready | set(declare_ready)):
         if not safe_name(unit, export=export) or mirror(unit + "/_") or not (root / unit).is_dir() or (root / unit).resolve() != root / unit:
