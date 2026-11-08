@@ -10,9 +10,48 @@ Functional scenarios, compilation and an engineering Raft group run do not estab
 
 ## Qualified inputs
 
-Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. Agree finite positive phase/drain, cache/eligible-GC, lock/output/cancellation and orderly-stop budgets for that envelope. The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.
+Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet: agree finite positive values for them before a dependent case runs. The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.
 
 The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.
+
+## First approved budgets
+
+ADR-0130 Addendum (9) approves these values as the first P/01 budgets. They are reviewed after the first real candidate on a new export. This section is their only source; other text uses the names.
+
+They are acceptance thresholds for the envelope below. They are not implementation constants, flags, profile fields or protocol values. Each is an upper bound on the observed result; this contract sets no lower bound. The implementation still declares its own finite positive intervals under P/01.1-R147. Basis `norm` means the value already exists in the canon; `judgement` means it was chosen from product goals and approved by that Addendum.
+
+| Workload | Value | Source |
+|---|---|---|
+| `WORKLOAD_ROWS` | 4096 rows | ADR-0113, ordinary size |
+| `WORKLOAD_ORDINARY` | 72 MiB; mean row about 18 KiB | ADR-0113, ordinary size |
+| `WORKLOAD_WORST` | 2 GiB | ADR-0113, worst size |
+
+The largest row is the `-max-value` default and the connection limits are the `-max-conns`, `-api-conns` and `-api-per-address` defaults of [daemon-flags.tsv](../forms/daemon-flags.tsv). The sustained write rate is `REPORT_RATE` of the [P/08 form](../../08-domain/forms/runtime-constants.tsv), in writes per second.
+
+| Name | Upper bound | Observed result | Case | Basis |
+|---|---|---|---|---|
+| `BUDGET_OVERFLOW_REFUSAL` | 1 s | Complete `503` with `Retry-After: 1` to a connection above a connection limit | probe `01-connections` | form `norm`; time `judgement` |
+| `BUDGET_IDLE` | 60 s | Wait for the first request byte | RUN-T03 | `judgement` |
+| `BUDGET_HEADERS` | 10 s | Absolute header phase | RUN-T03 | `judgement` |
+| `BUDGET_BODY` | 30 s | Absolute body phase | RUN-T03 | `judgement` |
+| `BUDGET_DRAIN` | 5 s and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |
+| lock wait | the `-leader-wait` value, then `unavailable` | Wait for the mutation lock | RUN-L02, probe `03-lock-wait` | `norm` |
+| `BUDGET_WRITE_P99` | 250 ms | Write latency p99 at `REPORT_RATE` | RUN-W01 | `judgement` |
+| `BUDGET_WRITE_GROWTH` | factor 2 | Write cost at `WORKLOAD_WORST` against `WORKLOAD_ORDINARY` | RUN-W01 | `judgement` |
+| `BUDGET_WRITE_BYTES` | 5 body sizes | `store_write_bytes` per operation | RUN-W01 | `judgement` |
+| `BUDGET_IMPORT_ORDINARY` | 30 s | Import of `WORKLOAD_ORDINARY` | RUN-W02 | `judgement` |
+| `BUDGET_IMPORT_WORST` | 15 min | Import of `WORKLOAD_WORST` | RUN-W02 | `judgement` |
+| `BUDGET_IMPORT_GROWTH` | factor 13 | Import time for ten times the rows | RUN-W02 | `judgement` |
+| `BUDGET_MEMORY_ORDINARY` | 512 MiB | Process memory at `WORKLOAD_ORDINARY` | RUN-W04 | `judgement` |
+| `BUDGET_MEMORY_WORST` | 4 GiB | Process memory at `WORKLOAD_WORST` | RUN-W04 | `judgement` |
+| `BUDGET_BACKUP_ORDINARY` | 30 s | Backup of `WORKLOAD_ORDINARY` | RUN-H01 | `judgement` |
+| `BUDGET_BACKUP_WORST` | 10 min | Backup of `WORKLOAD_WORST` | RUN-H01 | `judgement` |
+| `BUDGET_BACKUP_STALL` | factor 2 | Read and write p99 with a stalled backup sink against no stalled sink | RUN-L02 | `judgement` |
+| `BUDGET_STOP` | 15 s | `graceful_stop_elapsed` | RUN-L03 | limit `norm`; margin `judgement` |
+
+Barrier outcomes, data directory ownership and framing have no numeric budget: their outcome is judged.
+
+The environment and the method are not budgets. The first budgets were set for a container with 12 usable cores, 32 GiB RAM and ext4 storage. Every run records its actual disk, background load and load at the moment of measurement. `BUDGET_WRITE_P99` is measured in a quiet interval with no other probes running. Warm-up, duration and sampling are the recorded experimental method of the run and add no threshold.
 
 ## Case groups
 
