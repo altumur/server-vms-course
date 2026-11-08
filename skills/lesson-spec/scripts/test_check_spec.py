@@ -315,6 +315,72 @@ components:
         self.lesson.write_text("# Example\n" + marker + "\n")
         self.assertTrue(self.check().errors)
 
+    def test_literal_brace_code_profile_sentence(self):
+        sentence = ("A template may use only the names available to that particular command. "
+                    "There is no union of all stand values available to every command. "
+                    "An unknown name, field lookup, conversion or format specifier is a format error. "
+                    "Literal braces are `{{` and `}}`.")
+        self.lesson.write_text("# Example\n\n" + sentence + "\n")
+        self.assertEqual(self.check().errors, [])
+
+    def test_literal_brace_code_commonmark_normalization_and_containers(self):
+        (self.spec / "diagram.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        examples = ["`{{`", "`}}`", "`{{` and `}}`", "``{{`` and ``}}``",
+                    "`` {{ `` and `` }} ``", "` {{ ` and ` }} `",
+                    "` {{\n` and ` }}\n`", "` {{\r\n` and ` }}\r\n`",
+                    "**`{{`** and [`}}`](spec/01-example.norms.md)",
+                    "> `{{` and `}}`", "- `{{` and `}}`", "## `{{` and `}}`",
+                    "`{{` and `}}`\n----------------",
+                    "> ` {{\n> ` and ` }}\n> `", "1. ` {{\n   ` and ` }}\n   `",
+                    "![`{{` and `}}`](spec/diagram.svg)",
+                    "![outer ![`{{` and `}}`](spec/diagram.svg)](spec/diagram.svg)"]
+        for example in examples:
+            with self.subTest(markdown=repr(example)):
+                self.lesson.write_text("# Example\n\n" + example + "\n", newline="")
+                self.assertEqual(self.check().errors, [])
+
+    def test_template_marker_diagnostic_survives_all_code_contexts(self):
+        examples = ["{{TITLE}}", "## {{TITLE}}", "`{{TITLE}}`", "``{{TITLE}}``",
+                    "```yaml\nvalue: {{TITLE}}\n```", "~~~\n{{TITLE}}\n~~~",
+                    "    {{TITLE}}", "{{\nTITLE\n}}", "`{{\nTITLE\n}}`",
+                    "```\n{{\nTITLE\n}}\n```"]
+        for example in examples:
+            with self.subTest(markdown=repr(example)):
+                self.lesson.write_text("# Example\n\n" + example + "\n")
+                self.assertTrue(any("unfilled template marker {{...}}" in e for e in self.check().errors))
+
+    def test_malformed_and_block_brace_pseudospans_keep_marker_diagnostic(self):
+        examples = ["`{{ and }}", "``{{` and `}}``", "`{{`` and ``}}`",
+                    r"\`{{\` and \`}}\`", "```\n`{{` and `}}`\n```",
+                    "~~~\n`` {{ `` and `` }} ``\n~~~", "    `{{` and `}}`",
+                    "`{{` and `}}`\n\n```\n`{{` and `}}`\n```",
+                    "`{{` and `}}`\n\n    `{{` and `}}`",
+                    "`{{` and `}}`; [x](<https://example.test/`{{`-`}}`>)",
+                    "![`{{` and `}}`](<https://example.test/`{{`-`}}`>)"]
+        for example in examples:
+            with self.subTest(markdown=repr(example)):
+                self.lesson.write_text("# Example\n\n" + example + "\n")
+                self.assertTrue(any("unfilled template marker {{...}}" in e for e in self.check().errors))
+
+    def test_literal_brace_exemption_requires_entire_normalized_code_token(self):
+        examples = ["`{{}}`", "`x{{` and `}}x`", "` {{  ` and `  }} `",
+                    "`\t{{\t` and `\t}}\t`", "`{{\n` and `}}\n`",
+                    "``{{` `` and `` `}}``", "`\u00a0{{\u00a0` and `\u00a0}}\u00a0`"]
+        for example in examples:
+            with self.subTest(markdown=repr(example)):
+                self.lesson.write_text("# Example\n\n" + example + "\n")
+                self.assertTrue(any("unfilled template marker {{...}}" in e for e in self.check().errors))
+
+    def test_real_marker_beside_literal_braces_keeps_marker_diagnostic(self):
+        examples = ["`{{` and `}}`; {{TITLE}}", "{{TITLE}}; `{{` and `}}`",
+                    "`{{` and `}}`\n\n{{\nTITLE\n}}",
+                    "`{{` and `}}`\n\n```\n{{TITLE}}\n```",
+                    "`{{` and `}}`; `{{TITLE}}", "`{{` and `}}`; ``{{TITLE}}`"]
+        for example in examples:
+            with self.subTest(markdown=repr(example)):
+                self.lesson.write_text("# Example\n\n" + example + "\n")
+                self.assertTrue(any("unfilled template marker {{...}}" in e for e in self.check().errors))
+
     def test_reference_links_all_forms(self):
         for use in ["[Norms][canon]", "[canon][]", "[canon]"]:
             for target, valid in [("spec/01-example.norms.md", True), ("spec/missing.md", False)]:
