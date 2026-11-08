@@ -12,7 +12,7 @@ Functional scenarios, compilation and an engineering Raft group run do not estab
 
 Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet. Each of them, like the budgets of [P/01.3](01.3-store.norms.md) R035 and R036, is a finite positive budget declared by the implementation, and the probe of a dependent case receives its value as input from the environment (ADR-0130 Addendum (5) item 3). The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.
 
-The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. The age is measured by admission time (R141). GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.
+The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. The age runs from the first application on the admission-time clock (R141). GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.
 
 ## First approved budgets
 
@@ -115,7 +115,7 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 | Replay-processing limit | P/01.3 R035 | overload input from the environment |
 | `admin.sock` limit when the ordinary limits are exhausted | P/01.3 R008 | connection exhaustion from the environment |
 | Temporary `backup` file after failure, cancellation and a killed run | P/01.3 R018 | qualified fault binding |
-| Age of the `id` memory by admission time | P/01.1 R141 | D7 `clock` binding |
+| Age of the `id` memory from the first application on the admission-time clock | P/01.1 R141 | D7 `clock` binding |
 
 ## Evidence and outcomes
 
