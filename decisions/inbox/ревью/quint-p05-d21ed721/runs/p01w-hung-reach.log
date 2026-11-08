@@ -1,0 +1,3 @@
+quint verify cfg/p01w-hung-reach.qnt --main=cfg_p01w_hung_reach --invariant=wit_hung --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (4098ms).
+error: found a counterexample

@@ -1,0 +1,2 @@
+quint verify cfg/r07-defer-back-correct.qnt --main=cfg_r07_defer_back_correct --invariant=inv_noEarly --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (692ms).

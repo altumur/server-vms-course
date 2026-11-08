@@ -1,0 +1,3 @@
+quint verify cfg/rm1-strict.qnt --main=cfg_rm1_strict --invariant=inv_s50 --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (197ms).
+error: found a counterexample

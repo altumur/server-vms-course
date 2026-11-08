@@ -1,0 +1,3 @@
+quint verify cfg/p01a-hang-nobudget.qnt --main=cfg_p01a_hang_nobudget --invariant=inv_passBounded --max-steps=16 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (4557ms).
+error: found a counterexample

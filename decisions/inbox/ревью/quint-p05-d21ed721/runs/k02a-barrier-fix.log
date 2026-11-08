@@ -1,0 +1,2 @@
+quint verify cfg/k02a-barrier-fix.qnt --main=cfg_k02a_barrier_fix --invariant=inv_ackDurable --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (3420ms).

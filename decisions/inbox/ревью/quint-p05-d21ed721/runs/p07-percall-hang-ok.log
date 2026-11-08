@@ -1,0 +1,3 @@
+quint verify cfg/p07-percall-hang-ok.qnt --main=cfg_p07_percall_hang_ok --invariant=inv_passBounded --max-steps=26 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (17222ms).
+error: found a counterexample

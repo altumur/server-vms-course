@@ -1,0 +1,3 @@
+quint verify cfg/p08w-stepbudget-completes.qnt --main=cfg_p08w_stepbudget_completes --invariant=wit_completedPass --max-steps=30 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (8770ms).
+error: found a counterexample

@@ -1,0 +1,2 @@
+quint verify cfg/p11a-m1-refuse-notcounted.qnt --main=cfg_p11a_m1_refuse_notcounted --invariant=inv_behindCopied --max-steps=20 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5018ms).

@@ -1,0 +1,3 @@
+quint verify cfg/r05b-defer-forward-s50.qnt --main=cfg_r05b_defer_forward_s50 --invariant=inv_s50 --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (209ms).
+error: found a counterexample

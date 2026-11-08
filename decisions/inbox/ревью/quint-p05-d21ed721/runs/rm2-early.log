@@ -1,0 +1,3 @@
+quint verify cfg/rm2-early.qnt --main=cfg_rm2_early --invariant=inv_s49 --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (195ms).
+error: found a counterexample

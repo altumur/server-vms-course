@@ -1,0 +1,3 @@
+quint verify cfg/p06-slow-success.qnt --main=cfg_p06_slow_success --invariant=inv_passBounded --max-steps=24 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (4896ms).
+error: found a counterexample

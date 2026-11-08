@@ -1,0 +1,3 @@
+quint verify cfg/s01b-rules-conflict-strict.qnt --main=cfg_s01b_rules_conflict_strict --invariant=inv_rulesAgreeStrict --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (204ms).
+error: found a counterexample

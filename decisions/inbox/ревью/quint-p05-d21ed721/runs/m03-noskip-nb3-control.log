@@ -1,0 +1,2 @@
+quint verify cfg/m03-noskip-nb3-control.qnt --main=cfg_m03_noskip_nb3_control --invariant=inv_passBounded --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5006ms).

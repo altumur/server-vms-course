@@ -1,0 +1,3 @@
+quint verify cfg/t04-jitter-mut-gap.qnt --main=cfg_t04_jitter_mut_gap --invariant=inv_gapPreserved --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3519ms).
+error: found a counterexample

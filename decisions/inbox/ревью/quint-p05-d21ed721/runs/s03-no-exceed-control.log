@@ -1,0 +1,2 @@
+quint verify cfg/s03-no-exceed-control.qnt --main=cfg_s03_no_exceed_control --invariant=inv_rulesAgree --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (218ms).

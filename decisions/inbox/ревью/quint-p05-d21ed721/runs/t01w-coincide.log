@@ -1,0 +1,3 @@
+quint verify cfg/t01w-coincide.qnt --main=cfg_t01w_coincide --invariant=wit_coincide --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3565ms).
+error: found a counterexample

@@ -1,0 +1,11 @@
+id	module	invariant	expect	actual	cause	resolution
+r01a-letter-nojump-q6	p05_retain	inv_noEarly	holds	error	Единый файл с 70 конфигурациями: запрос к Apalache превысил предел длины JSON-строки (20 МБ).	Конфигурации разделены по одному файлу на запуск (cfg/*.qnt); тот же запуск повторён: совпал.
+r01b-letter-nojump-s50	p05_retain	inv_s50	holds	error	То же.	То же.
+r01c-letter-nojump-s49	p05_retain	inv_s49	holds	error	То же.	То же.
+r01w1-removed	p05_retain	wit_removed	violated	error	То же.	То же.
+r01w2-boundary-eq	p05_retain	wit_boundaryEq	violated	error	То же.	То же.
+r01w3-below	p05_retain	wit_retainBelow	violated	error	То же.	То же.
+r04-letter-qualified-eps	p05_retain	inv_noEarly	holds	violated	Среда допускала многократные скачки +1 с за трассу: два скачка дают раннее удаление на 2 с при допуске 1 с. Это дефект постановки контроля (квалификация должна ограничивать суммарное расхождение, а не единичный скачок), не опровержение.	Контроль разделён: r04a — один скачок за трассу (MAX_JUMPS=1), ожидание holds; r04b — без предела числа скачков, ожидание violated.
+rm2-early (первая версия)	p05_retain	inv_s49	violated	holds	Шаг времени был либо 1 с, либо сразу к границе срока: состояние «граница − 1 с» при 8 шагах недостижимо, мутант не проверялся по сути.	В tick добавлен прямой шаг на границу − 1 с; все запуски p05_retain повторены на исправленной модели.
+r03c-letter-back-no-append-control (первая версия)	p05_retain	inv_noEarlyNetZero	holds	violated	Инвариант брал сумму скачков в текущем состоянии, а не в момент удаления: ранний сброс при net=+600 и последующий скачок −600 давали net=0 после удаления.	Инвариант переписан на rmNet — сумму скачков в момент удаления; запуски p05_retain повторены.
+r03c-letter-back-no-append-control (12 шагов)	p05_retain	inv_noEarlyNetZero	holds	timeout (570 с)	Перебор с целочисленной суммой скачков на 12 шагах не уложился во время; нарушения не найдено.	Глубина снижена до 8 шагов (последовательность откат/возврат/тик/закрытие/retain укладывается в 6); запуск повторён.

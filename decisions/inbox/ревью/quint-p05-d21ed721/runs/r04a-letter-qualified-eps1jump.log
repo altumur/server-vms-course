@@ -1,0 +1,2 @@
+quint verify cfg/r04a-letter-qualified-eps1jump.qnt --main=cfg_r04a_letter_qualified_eps1jump --invariant=inv_noEarly --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (1501ms).

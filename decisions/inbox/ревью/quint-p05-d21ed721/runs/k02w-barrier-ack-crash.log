@@ -1,0 +1,3 @@
+quint verify cfg/k02w-barrier-ack-crash.qnt --main=cfg_k02w_barrier_ack_crash --invariant=wit_ackThenCrash --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3333ms).
+error: found a counterexample

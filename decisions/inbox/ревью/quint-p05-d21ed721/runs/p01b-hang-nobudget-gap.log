@@ -1,0 +1,3 @@
+quint verify cfg/p01b-hang-nobudget-gap.qnt --main=cfg_p01b_hang_nobudget_gap --invariant=inv_retainGap --max-steps=16 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (4518ms).
+error: found a counterexample

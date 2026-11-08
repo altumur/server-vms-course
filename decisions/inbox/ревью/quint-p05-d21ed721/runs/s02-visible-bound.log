@@ -1,0 +1,2 @@
+quint verify cfg/s02-visible-bound.qnt --main=cfg_s02_visible_bound --invariant=inv_visible --max-steps=16 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (356ms).

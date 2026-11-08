@@ -1,0 +1,3 @@
+quint verify cfg/p09w-healthy-twopasses.qnt --main=cfg_p09w_healthy_twopasses --invariant=wit_twoPasses --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (5484ms).
+error: found a counterexample

@@ -1,0 +1,2 @@
+quint verify cfg/r05a-defer-forward-q6.qnt --main=cfg_r05a_defer_forward_q6 --invariant=inv_noEarly --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (524ms).

@@ -1,0 +1,2 @@
+quint verify cfg/p02b-budget-expfail-gap.qnt --main=cfg_p02b_budget_expfail_gap --invariant=inv_retainGap --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5456ms).

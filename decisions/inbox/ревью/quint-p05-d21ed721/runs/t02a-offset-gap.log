@@ -1,0 +1,2 @@
+quint verify cfg/t02a-offset-gap.qnt --main=cfg_t02a_offset_gap --invariant=inv_gapPreserved --max-steps=16 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (4873ms).

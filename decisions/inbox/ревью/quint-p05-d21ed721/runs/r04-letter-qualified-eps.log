@@ -1,0 +1,3 @@
+quint verify cfg/r04-letter-qualified-eps.qnt --main=cfg_r04_letter_qualified_eps --invariant=inv_noEarly --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3447ms).
+error: found a counterexample

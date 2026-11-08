@@ -1,0 +1,3 @@
+quint verify cfg/r06w-defer-seam-removes.qnt --main=cfg_r06w_defer_seam_removes --invariant=wit_removedAfterTerm --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (197ms).
+error: found a counterexample

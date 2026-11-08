@@ -1,0 +1,2 @@
+quint verify cfg/p08a-stepbudget-fix.qnt --main=cfg_p08a_stepbudget_fix --invariant=inv_passBounded --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (516348ms).

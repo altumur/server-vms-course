@@ -1,0 +1,3 @@
+quint verify cfg/s02m-hb-blocked.qnt --main=cfg_s02m_hb_blocked --invariant=inv_visible --max-steps=16 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (171ms).
+error: reached a deadlock

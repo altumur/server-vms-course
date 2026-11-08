@@ -1,0 +1,3 @@
+quint verify cfg/r03-letter-back-then-correct.qnt --main=cfg_r03_letter_back_then_correct --invariant=inv_noEarlyNetZero --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (356ms).
+error: found a counterexample

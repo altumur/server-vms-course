@@ -1,0 +1,2 @@
+quint verify cfg/p12-m1-head2-control.qnt --main=cfg_p12_m1_head2_control --invariant=inv_behindCopied --max-steps=20 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5003ms).

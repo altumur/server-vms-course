@@ -1,0 +1,3 @@
+quint verify cfg/r08-watermark-not-enough.qnt --main=cfg_r08_watermark_not_enough --invariant=inv_noEarly --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (219ms).
+error: found a counterexample

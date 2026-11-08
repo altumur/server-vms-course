@@ -1,0 +1,3 @@
+quint verify cfg/k05-tomb-first-mut.qnt --main=cfg_k05_tomb_first_mut --invariant=inv_noResurrect --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3346ms).
+error: found a counterexample

@@ -1,0 +1,3 @@
+quint run cfg/sim02-m1-long.qnt --main=cfg_sim02_m1_long --invariant=inv_behindCopied --max-steps=400 --max-samples=2000 --backend=rust --verbosity=1
+[ok] No violation found (800ms at 2500 traces/second).
+Use --seed=0xc7bcfd3590883647 --backend=rust to reproduce.

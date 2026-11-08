@@ -1,0 +1,2 @@
+quint verify cfg/t01a-together.qnt --main=cfg_t01a_together --invariant=inv_alwaysTogether --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (3741ms).

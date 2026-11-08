@@ -1,0 +1,2 @@
+quint verify cfg/r01a-letter-nojump-q6.qnt --main=cfg_r01a_letter_nojump_q6 --invariant=inv_noEarly --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (452ms).

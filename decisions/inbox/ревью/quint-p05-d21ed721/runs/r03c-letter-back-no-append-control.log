@@ -1,0 +1,2 @@
+quint verify cfg/r03c-letter-back-no-append-control.qnt --main=cfg_r03c_letter_back_no_append_control --invariant=inv_noEarlyNetZero --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (1319ms).

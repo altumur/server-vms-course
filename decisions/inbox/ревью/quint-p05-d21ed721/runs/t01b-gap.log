@@ -1,0 +1,2 @@
+quint verify cfg/t01b-gap.qnt --main=cfg_t01b_gap --invariant=inv_gapPreserved --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (3749ms).

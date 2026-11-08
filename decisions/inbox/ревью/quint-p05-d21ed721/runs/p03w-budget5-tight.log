@@ -1,0 +1,3 @@
+quint verify cfg/p03w-budget5-tight.qnt --main=cfg_p03w_budget5_tight --invariant=wit_tight --max-steps=20 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (4723ms).
+error: found a counterexample

@@ -1,0 +1,3 @@
+quint verify cfg/k04w1-rewrite-done.qnt --main=cfg_k04w1_rewrite_done --invariant=wit_rewriteDone --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3311ms).
+error: found a counterexample

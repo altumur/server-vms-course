@@ -1,0 +1,3 @@
+quint verify cfg/t02w-offset.qnt --main=cfg_t02w_offset --invariant=wit_nonzeroGap --max-steps=12 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3571ms).
+error: found a counterexample

@@ -1,0 +1,3 @@
+quint verify cfg/p11w-m1-completed.qnt --main=cfg_p11w_m1_completed --invariant=wit_completedPass --max-steps=20 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (5804ms).
+error: found a counterexample

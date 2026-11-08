@@ -1,0 +1,3 @@
+quint verify cfg/rm3-defer-no-mono.qnt --main=cfg_rm3_defer_no_mono --invariant=inv_noEarly --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (193ms).
+error: found a counterexample

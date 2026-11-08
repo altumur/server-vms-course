@@ -1,0 +1,2 @@
+quint verify cfg/r01b-letter-nojump-s50.qnt --main=cfg_r01b_letter_nojump_s50 --invariant=inv_s50 --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (369ms).

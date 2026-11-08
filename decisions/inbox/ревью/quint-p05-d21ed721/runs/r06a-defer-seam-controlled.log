@@ -1,0 +1,2 @@
+quint verify cfg/r06a-defer-seam-controlled.qnt --main=cfg_r06a_defer_seam_controlled --invariant=inv_s50 --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (458ms).

@@ -1,0 +1,2 @@
+quint verify cfg/p09a-healthy-bound0.qnt --main=cfg_p09a_healthy_bound0 --invariant=inv_passBounded --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5527ms).

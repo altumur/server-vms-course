@@ -1,0 +1,2 @@
+quint verify cfg/p02a-budget-expfail.qnt --main=cfg_p02a_budget_expfail --invariant=inv_passBounded --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5567ms).

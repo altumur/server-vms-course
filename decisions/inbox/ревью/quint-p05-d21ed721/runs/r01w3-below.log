@@ -1,0 +1,3 @@
+quint verify cfg/r01w3-below.qnt --main=cfg_r01w3_below --invariant=wit_retainBelow --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (232ms).
+error: found a counterexample

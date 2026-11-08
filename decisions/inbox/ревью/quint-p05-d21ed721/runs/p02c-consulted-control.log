@@ -1,0 +1,2 @@
+quint verify cfg/p02c-consulted-control.qnt --main=cfg_p02c_consulted_control --invariant=inv_consulted --max-steps=34 --server-endpoint=localhost:8833 --verbosity=1
+[ok] No violation found (5517ms).

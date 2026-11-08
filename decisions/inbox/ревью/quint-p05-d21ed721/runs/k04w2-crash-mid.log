@@ -1,0 +1,3 @@
+quint verify cfg/k04w2-crash-mid.qnt --main=cfg_k04w2_crash_mid --invariant=wit_crashMid --max-steps=8 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (3358ms).
+error: found a counterexample

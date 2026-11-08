@@ -1,0 +1,3 @@
+quint verify cfg/r05w-defer-removes-after-term.qnt --main=cfg_r05w_defer_removes_after_term --invariant=wit_removedAfterTerm --max-steps=10 --server-endpoint=localhost:8833 --verbosity=1
+[violation] Found an issue (205ms).
+error: found a counterexample
