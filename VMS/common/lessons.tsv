@@ -1,5 +1,6 @@
 # Lessons of the VMS module (ADR-0090 addendum (2)): the number is the owner's address (V/NN), the directory — NN-<name>; subsystem — the name of the
 # lesson's manifest (<sub>.subsystem.yaml in its directory) or '-'; status — translated | not translated.
+# status records transfer into the module's specification form; it is not a declaration of English-source readiness.
 # lesson	dir	title	subsystem	status
 01	01-cam	Camera	cam	translated
 02	02-rec	Recording	rec	translated
