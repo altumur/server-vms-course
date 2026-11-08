@@ -856,6 +856,8 @@ the application 405 ResourceError (N4); `/buckets/{sub}/{unit}` — exactly two 
 `/buckets/../objects`, `/buckets/testsub%2Fc1` — 404 without a body; the bodies of `PUT` are bytes, JSON is not parsed (reconciliation of python and go M10/6–11,
 E9, E10, E17, E30, E31, E36).
 
+The shared P/01.1 R050 drain counts raw HTTP-stream bytes and its absolute monotonic interval starts after the complete refusal has been sent; chunked discard does not wait for a terminal chunk. This parsing reference does not replace the resource's own timeout outcomes or budgets with P/01 input-phase refusals, and adds no common response deadline to resource streams.
+
 <!-- req: P/05-R042 -->
 
 ResourceDenied (`error=refused`, detail,

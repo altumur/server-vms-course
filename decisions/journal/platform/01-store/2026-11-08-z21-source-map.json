@@ -1,0 +1,1957 @@
+{
+  "base": "2a63643ff3f338972dda9ec32231089ad38e66ea",
+  "authority": "c13201be303ca0807632493473b4d75ab344463d",
+  "required_text_receipt": "6cd2a8e3ed71c53c042d9fb440d4a81bee95675cb12c0d763adaf10bee2286ed",
+  "state": "review; Source component, not runtime/accepted/applied/GATE",
+  "Source": [
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "operation": "MODIFIED",
+      "before_blob": "317dd515b35e77d57d1d0f69ee513c138817e0d7",
+      "after_blob": "872091430e3bcc69c89dbd24dda6eefaa84aa770",
+      "before_sha256": "2682c026fac7428f9c4f11917f43d8d3619725e33cd3503ebdbec3de755ea341",
+      "after_sha256": "ef4947af041dddba2a7382f0c35dc33acb1d1c20aa1118c5d16513e6c2ae944f",
+      "before_bytes": 19534,
+      "after_bytes": 20030,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            154,
+            153
+          ],
+          "after_LF": [
+            154,
+            157
+          ],
+          "before_CP": [
+            19256,
+            19256
+          ],
+          "before_UTF8": [
+            19534,
+            19534
+          ],
+          "after_CP": [
+            19256,
+            19752
+          ],
+          "after_UTF8": [
+            19534,
+            20030
+          ],
+          "before": "",
+          "after": "\n## Production qualification coverage\n\nThe [production acceptance contract](../../spec/production-acceptance.md) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "operation": "MODIFIED",
+      "before_blob": "c51bad1b703d17b5156eea7f93f5b9abe618b118",
+      "after_blob": "c8d1b63663671aa8120783a4122c87bf50378900",
+      "before_sha256": "b4931333d04f1cb1a2fed638ea382e8e48e521877058b568ea874948a620cbbd",
+      "after_sha256": "e44e43d6898bb327f6e17b53f498602d556b3946cf7134380655e9371919b471",
+      "before_bytes": 27470,
+      "after_bytes": 27966,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            215,
+            214
+          ],
+          "after_LF": [
+            215,
+            218
+          ],
+          "before_CP": [
+            27126,
+            27126
+          ],
+          "before_UTF8": [
+            27470,
+            27470
+          ],
+          "after_CP": [
+            27126,
+            27622
+          ],
+          "after_UTF8": [
+            27470,
+            27966
+          ],
+          "before": "",
+          "after": "\n## Production qualification coverage\n\nThe [production acceptance contract](../../spec/production-acceptance.md) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "operation": "ADDED",
+      "before_blob": null,
+      "after_blob": "c4b61b4a09d5da0d42d8334281d9685e34f7c705",
+      "before_sha256": null,
+      "after_sha256": "e6ffac4f7f77c3b21c25712465d8127c52dd26b6c9124a26204562aa6aa9e10a",
+      "before_bytes": 0,
+      "after_bytes": 13297,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            1,
+            0
+          ],
+          "after_LF": [
+            1,
+            63
+          ],
+          "before_CP": [
+            0,
+            0
+          ],
+          "before_UTF8": [
+            0,
+            0
+          ],
+          "after_CP": [
+            0,
+            13297
+          ],
+          "after_UTF8": [
+            0,
+            13297
+          ],
+          "before": "",
+          "after": "# Production qualification of the store\n\nThis English text is the canonical `spec/production-acceptance.md`; the Russian text is a derived translation for people, not in the export.\n\n## Norms and execution boundary\n\nThe owners are [P/01.1](01.1-store.norms.md) (input phases, replay, persistence cost and stage-qualified outcomes), [P/01.3](01.3-store.norms.md) (copy, immutable output and stop), the [HTTP contract](01-store.api.openapi.yaml) and [refusal catalogue](../forms/refusals.tsv). This contract assigns acceptance; it adds no platform route beyond that API, no operational flag, no profile2/assembly1 field and no adapter DSL.\n\nFunctional scenarios, compilation and an engineering Raft group run do not establish production qualification. Each applicable group below requires independent observations on the same identified candidate under a declared, agreed workload/resource envelope. Missing input, finite budget or qualified binding is blocked/NotExecuted for the dependent group; inactive fault/latch injection is an instrumentation error. A timeout of the judge, forced kill, producer counter, EIO text or library return is not PASS. No candidate execution is claimed by publishing this document.\n\n## Qualified inputs\n\nBefore measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. Agree finite positive phase/drain, cache/eligible-GC, lock/output/cancellation and orderly-stop budgets for that envelope. The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.\n\nThe R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.\n\n## Case groups\n\n| Id | Initial state and load/fault | Required observation | Binding and negative controls |\n|---|---|---|---|\n| RUN-W01 | Fixed-size writes at different stored-row cardinalities; account foreground, background and checkpoint cycles. | Incremental persistence; no rewrite of the unchanged full store per application. Barriers remain enabled. | Qualified storage-byte/syscall/heap observer; full-snapshot-per-write and false-counter negative controls. |\n| RUN-W02 | Whole immutable copy into a fresh target; invalid last row and duplicate key retain the same valid prefix. | Complete validation precedes publication; exact versions/floor retained; no repeated processed-prefix rewrite. Indexed O(N log N) is allowed. | Declared import and storage observer; partial-publication and replacement-version negative controls. |\n| RUN-W03 | Retained successful id, constant business-row count, distinct later successful id applications; exact age/count edges, cache pressure and reopen. | While either R141 condition is unmet, same answer/again and no new apply/version. Equality at the age minimum is ineligible for forgetting. After both, minimum-retention checks permit either lawful retention or forgetting. | Qualified clock/application-count and public replay oracle; age-only/count-only/never-applied request controls. |\n| RUN-W04 | Constant rows, varied unique-id rate/replay access; qualified RAM/cache and eligible-GC envelope. | RAM eviction preserves required durable indexed ids; eligible backlog is collected within its finite qualified budget. File size need not shrink immediately. | Independent memory/index/replay observation; unbounded map, false gauge and required-id deletion controls. |\n| RUN-T01 | Valid POST headers announce a body above the configured limit; withhold the body until the full refusal is received, then continue sending. | Complete refusal before bounded raw drain/close; no business effect or applied id. Compare a separate valid request. | Duplex paced client and declared drain budget; read-before-reply, incomplete-refusal and harness-kill controls. |\n| RUN-T02 | Rejected continuing chunked body, never-final chunk, trickle and pipelined next request; malformed framing is a separate precedence control. | Full refusal, finite raw discard and close; no wait for a terminal chunk, second response or pipelined execution. | Raw-stream byte/time observer; half-close alone is insufficient, trickle-reset and inactive-latch controls. |\n| RUN-T03 | No-byte accepted connection; partial request line; slow headers; complete headers establishing a body with NO first body byte; body/chunk trickle; separate EOF control. | Use the exact phase starts of R147. Absolute deadlines do not reset. Before supported complete line close silently; after it pre-execution timeout is 400 BadRequestFault/Connection: close. R054 EOF remains silent/no effect/no id. | Declared positive phase budgets and calibrated monotonic observations; first-body-byte start and per-byte-reset mutants. |\n| RUN-L01 | Race atomic two-row updates with a copy; record previous destination bytes/mode and inject output failure. | One-index copy with exact versions/no half batch; writer sorts keys by UTF-8 bytes, import accepts any order; failed output preserves previous published file. | Independent copy/atomic-pair and file-publication observations; list-plus-separate-GET, version-loss and partial-file controls. |\n| RUN-L02 | Confirm immutable snapshot pin/output start, then stall the sink; concurrent ordinary get/put, cancellation and release. | Blocking output is outside the mutation lock; score that trace independently from a lawful bounded 503. Snapshot stays immutable and releases on every exit. | Qualified sink/lock/progress latch; global-lock streaming, leak and unactivated-latch controls. |\n| RUN-L03 | Confirmed stalled backup; separately identify admitted/unadmitted work; SIGTERM under actual manager deadline and measured teardown margin. | Stop admission, bound/cancel external I/O, classify admitted outcomes, release resources and stop within the declared bound. Forced kill or Raft Shutdown return is not graceful success. | Qualified stop/admission/resource observer and real manager configuration; deadlock, false graceful-kill and Raft-only controls. |\n| RUN-F01 | Independently proven pre-effect storage fault, known prior business rows/versions and fresh id; retry after clear and reopen. | Unavailable; prior business rows, issued versions and applied-id entry unchanged. Separate allowed admission metadata; no requirement to decrement an internal reservation counter. | Qualified fault stage/no-effect proof and public state; false stage, inactive injection and occupied-id controls. |\n| RUN-F02 | Medium activity with an unknown recoverable result; no complete-record premise; same-id retry and qualified reopen. | Ambiguous, no false success/definite absence. Recovered state follows the fault model and whole-operation invariants; rolling back RAM is not proof. | Qualified medium model, not an EIO string or ordinary SIGKILL; false-unavailable/rollback controls. |\n| RUN-F03 | Prove complete recoverable operation bytes before a barrier error; keep failure for one same-id replay, then clear and replay, including reopen. | Whole published operation and matching id; repeated barrier error remains ambiguous; successful replay returns first answer/again and no new version. | Independent complete-record/barrier receipts; unconditional rollback, new-version replay and Raft-Barrier-as-fsync controls. |\n| RUN-F04 | Two-row batch/id in each F01/F02/F03 stage; separate admitted-refusal/replay metadata control. | Batch and applied id recover whole or are absent whole. Admission advance is not a business mutation; no new status field is assumed. | Independent batch oracle and actual admission observer if supplied; half batch/id-only and false metadata-failure controls. |\n| RUN-H01 | Declared backup/import CLI, existing destination and independent complete copy parser. | CLI success, JSONL form, consistent versions, 0600 and atomic publication; opaque CLI alone does not prove HTTP transport. CLI stdout stays diagnostic. | Artifact/import/public-state oracle; truncated artifact, stdout-as-JSON and opaque-transport controls. |\n| RUN-H02 | Independent raw HTTP GET /v1/copy on admin and ordinary role sockets; fragmented CL/chunked success, concurrent atomic pairs, wrong method/path and framing precedence. | One 200 application/x-ndjson with complete framing/consistent artifact; exact role 403 before snapshot; 405/Allow GET, HEAD bodyless; other path 404. No private prelude or EOF-only success. | Independent HTTP+JSONL oracle; no producer client as its own judge, no list-plus-GET snapshot or 403 or 404 widening. |\n| RUN-H03 | Previous published copy; pre-header snapshot refusal and failures after 200: short CL, missing terminal chunk, EOF, cancel, stalled sink and shutdown. | Before headers use owned failures incl 503 UnavailableFault; after 200 only incomplete close, no second fault/final success. CLI validates full artifact/framing and preserves previous file on any incomplete result. | Independent stream/file/cancellation evidence; false 200 success, second JSON fault and partial-file publication controls. |\n\n## Measurement definitions\n\n| Name | Definition |\n|---|---|\n| `store_write_bytes` | Actual successful store data/log/checkpoint bytes; count rewrites again, separate HTTP/log/backup bytes and device amplification. |\n| `store_read_bytes` | Actual read bytes by lookup/replay/checkpoint/import phase; report cache policy, not physical-device bytes by inference. |\n| `durability_barrier_attempts` | Storage barrier attempts/success/errors by operation/checkpoint, including publication directories; Raft Barrier is not fsync. |\n| `logical_apply_count` | Confirmed business applications separated from admission metadata and id replay; versions compared as opaque exact strings. |\n| `replay_storage_counts` | Separate required/ineligible, eligible, RAM-resident and reclaimed records; crosscheck with public replay. |\n| `mutation_lock_hold_wait` | Monotonic hold/wait of the stated mutation-lock domain, separately from Raft/internal locks; no function-name oracle. |\n| `backup_progress` | Confirmed pin/output-start/sink-block/cancel/release order and delivered bytes; a latch receipt excludes startup delay. |\n| `graceful_stop_elapsed` | Confirmed stop delivery to orderly exit and resource release; record manager escalation/forced kill separately. |\n| `early_refusal_timeline` | Complete client refusal receipt, continuing send, raw drain bytes, absolute interval, close and independent healthy progress. |\n| `fault_stage_receipt` | Independent activation/effect/barrier and recoverable-or-unknown classification, tied to public state/id/reopen. |\n| `copy_transport_evidence` | Independent HTTP headers/framing/completion plus whole JSONL grammar, atomic publication and prior-file preservation. |\n\n## Evidence and outcomes\n\nSeparate actual protocol output/state/replay from test-only instrumentation. Qualify each storage/clock/progress/fault binding independently with activated-stage receipts and negative controls; do not infer physical durability from ordinary process restart or SIGKILL. Complete recoverable bytes must be proved before judging the R144 ambiguous_barrier branch. Compare whole batch/id state, and admission metadata separately. An absent binding is not proof that an implementation is wrong or successful.\n\nRecord raw input/output/status/signal/timeout, monotonic phase and activation order, full case/identity inventory including failures, resource cleanup and reopen observations. Report normative mismatch, instrumentation error, blocked/NotExecuted and successful measured scope separately; no silent skip or weaker expected result. Raw-copy controls include correct ordinary-role GET403 before snapshot, unsupported-method 405/Allow GET and bodyless HEAD, complete CL/chunked, missing first body byte, missing terminal chunk, short CL, after 200 no second fault, and preservation of the previous published file. These are controlled fixtures and future candidate obligations, not an executed SUT or a new private platform protocol.\n\n## Related parsing and scope\n\nP/05 keeps its ResourceError/ResourceDenied and body/time outcomes; P/06 parsing is owned by [gate-and-pass](../../common/contracts/gate-and-pass.md). They share R050 response-before-raw-drain, not P/01 timeout response codes or a replacement budget for forwarding, pass or stream responses. The engineering group stage remains available independently of missing production qualification inputs, with its applicable/unexecuted production groups and normative pin recorded.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "operation": "MODIFIED",
+      "before_blob": "30fba6085f48b450ac9279beadb659d8425615a2",
+      "after_blob": "9b5a671deb0872b15dd0b617ed426390f9a38271",
+      "before_sha256": "3476b866b4709d4f0161db34086d6baf6c970d54adb2b6f37412dd2001a941c1",
+      "after_sha256": "0abeac4e41bdd35ed0aa8b3dc25e1f39b34d9d76aed0546e50e0b48959637066",
+      "before_bytes": 5402,
+      "after_bytes": 5732,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            27,
+            26
+          ],
+          "after_LF": [
+            27,
+            27
+          ],
+          "before_CP": [
+            2660,
+            2660
+          ],
+          "before_UTF8": [
+            2712,
+            2712
+          ],
+          "after_CP": [
+            2660,
+            2768
+          ],
+          "after_UTF8": [
+            2712,
+            2820
+          ],
+          "before": "",
+          "after": "1.1\t17\tinput_timeout\thttp\t400\tbadrequest\t-\tConnection: close\t-\tP/01.1 N2.1 input phase deadlines; P/01.1 N4\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            68,
+            67
+          ],
+          "after_LF": [
+            69,
+            71
+          ],
+          "before_CP": [
+            5338,
+            5338
+          ],
+          "before_UTF8": [
+            5402,
+            5402
+          ],
+          "after_CP": [
+            5446,
+            5668
+          ],
+          "after_UTF8": [
+            5510,
+            5732
+          ],
+          "before": "",
+          "after": "1.3\t29\tcopy_method\thttp\t405\tbadrequest\t-\tAllow: GET\t-\tP/01.3 N2 HTTP copy\n1.3\t30\tcopy_admin_only\thttp\t403\tforbidden\t-\t-\t-\tP/01.3 N2 HTTP copy\n1.3\t31\tcopy_snapshot_unavailable\thttp\t503\tunavailable\t-\t-\t-\tP/01.3 N2 HTTP copy\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "operation": "MODIFIED",
+      "before_blob": "9038fb38ad54d1aec87c82b3fe714edca080c71d",
+      "after_blob": "f7d320fd294defd6846cf59baf56a2dccbc5036c",
+      "before_sha256": "869d965dba6fcb8b338f00691aa45da39ce7e8ae24c4a438eccb04777dbe20a8",
+      "after_sha256": "13c8a761368775b4e8cb3a4a5febcb75d6ac9cb7844358c3cc60d54ae65ab30c",
+      "before_bytes": 5631,
+      "after_bytes": 5924,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            16,
+            15
+          ],
+          "after_LF": [
+            16,
+            17
+          ],
+          "before_CP": [
+            2001,
+            2001
+          ],
+          "before_UTF8": [
+            2045,
+            2045
+          ],
+          "after_CP": [
+            2001,
+            2294
+          ],
+          "after_UTF8": [
+            2045,
+            2338
+          ],
+          "before": "",
+          "after": "# Functional gates and engineering group preparation are separate from production qualification: spec/production-acceptance.md.\n# Its independent qualified workload, finite budgets and storage/time/fault/stream observations are not inferred from these gates; absent bindings stay NotExecuted.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "operation": "MODIFIED",
+      "before_blob": "f8f945b242e04163967a5d350c06f8d2042d66b7",
+      "after_blob": "50ba8dd284f5fc53117dc027ce592ca71593ca6d",
+      "before_sha256": "2b61befc74345ab98fda291ac7d6edeb55ece3313fe2c6deabd0277e54f15cf9",
+      "after_sha256": "ea15f9a026ffd61ab9ab83048c38c2a5428be1a401175790b543b227a2397770",
+      "before_bytes": 8382,
+      "after_bytes": 8641,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            69,
+            69
+          ],
+          "after_LF": [
+            69,
+            69
+          ],
+          "before_CP": [
+            6360,
+            6419
+          ],
+          "before_UTF8": [
+            6412,
+            6473
+          ],
+          "after_CP": [
+            6360,
+            6680
+          ],
+          "after_UTF8": [
+            6412,
+            6732
+          ],
+          "before": "| SIGTERM | a stop; `TimeoutStopSec` 20–30 | P/02.4 N1.1 |\n",
+          "after": "| SIGTERM | stop admission, bound/cancel I/O, classify admitted work and release resources within the declared orderly-stop budget below the actual manager deadline; no automatic budget from an example | [P/01.3 Snapshot output and orderly stop](spec/01.3-store.norms.md#snapshot-output-and-orderly-stop); P/02.4 N1.1 |\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "operation": "MODIFIED",
+      "before_blob": "47749d58ba6637d269705bef690e6bd43f69156e",
+      "after_blob": "0a8cbaf1a1849ca31b5e63b849625607e002c862",
+      "before_sha256": "803b6e83866318d55adc14b8f8bbbdc917eeac28ec82538d9716ab2f0a4b8a1f",
+      "after_sha256": "2322b8bb309b5929429bcef997c35d44647dd840fbb3f30724d727323ea90e64",
+      "before_bytes": 28160,
+      "after_bytes": 28926,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            154,
+            153
+          ],
+          "after_LF": [
+            154,
+            157
+          ],
+          "before_CP": [
+            17610,
+            17610
+          ],
+          "before_UTF8": [
+            28160,
+            28160
+          ],
+          "after_CP": [
+            17610,
+            18062
+          ],
+          "after_UTF8": [
+            28160,
+            28926
+          ],
+          "before": "",
+          "after": "\n## Покрытие боевой квалификации\n\n[Договор производственной приёмки](../../spec/production-acceptance.md) отдельно от этих функциональных сценариев назначает группы нагрузки, сроков фаз, копии/остановки, стадий сбоя и HTTP-копии. Боевой результат требует объявленных бюджетов, независимой активации и полных наблюдений. Прежние TSV-входы/ожидания и применимость обычного/group стенда сохранены; нет привязки или бюджета — blocked/NotExecuted, не PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "operation": "MODIFIED",
+      "before_blob": "16e0562b8fce7b5104929f73228510370ec35430",
+      "after_blob": "283949c6ab9dad6c87cf1de7632900e3fef2f658",
+      "before_sha256": "134f23e9ead8051427055eba12c45147fbf6c09b9e5da719fb5f8d330a4257d1",
+      "after_sha256": "513d132a314f623e28ccbab57d05391cb150e57decf7a548b69b9aec12de2131",
+      "before_bytes": 36767,
+      "after_bytes": 37533,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            216,
+            215
+          ],
+          "after_LF": [
+            216,
+            219
+          ],
+          "before_CP": [
+            24128,
+            24128
+          ],
+          "before_UTF8": [
+            36767,
+            36767
+          ],
+          "after_CP": [
+            24128,
+            24580
+          ],
+          "after_UTF8": [
+            36767,
+            37533
+          ],
+          "before": "",
+          "after": "\n## Покрытие боевой квалификации\n\n[Договор производственной приёмки](../../spec/production-acceptance.md) отдельно от этих функциональных сценариев назначает группы нагрузки, сроков фаз, копии/остановки, стадий сбоя и HTTP-копии. Боевой результат требует объявленных бюджетов, независимой активации и полных наблюдений. Прежние TSV-входы/ожидания и применимость обычного/group стенда сохранены; нет привязки или бюджета — blocked/NotExecuted, не PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/production-acceptance.md",
+      "operation": "ADDED",
+      "before_blob": null,
+      "after_blob": "bf0e72f4a7c4294c10e4af7b73389e40df04f437",
+      "before_sha256": null,
+      "after_sha256": "4177ec6c89fa8daa6ffdfd146affe64b45634282a03d5b52902ecd1c51ab3b6c",
+      "before_bytes": 0,
+      "after_bytes": 21889,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            1,
+            0
+          ],
+          "after_LF": [
+            1,
+            63
+          ],
+          "before_CP": [
+            0,
+            0
+          ],
+          "before_UTF8": [
+            0,
+            0
+          ],
+          "after_CP": [
+            0,
+            13049
+          ],
+          "after_UTF8": [
+            0,
+            21889
+          ],
+          "before": "",
+          "after": "# Боевая квалификация хранилища\n\nЭтот русский текст — производный от `spec/production-acceptance.md`, руками не правится; для человека, в выгрузку не входит.\n\n## Нормы и граница исполнения\n\nВладельцы — [P/01.1](01.1-store.norms.md) (фазы ввода, повторы, стоимость сохранения и стадийные исходы), [P/01.3](01.3-store.norms.md) (копия, неизменяемый вывод и остановка), [HTTP-контракт](../../spec/01-store.api.openapi.yaml) и [каталог отказов](../../forms/refusals.tsv). Договор назначает приёмку; не добавляет маршрута вне API, рабочего флага, поля profile2/assembly1 или DSL адаптера.\n\nФункциональные сценарии, компиляция и инженерный Raft group-прогон не доказывают боевую квалификацию. Каждая применимая группа ниже требует независимых наблюдений одного закреплённого кандидата при объявленных согласованных нагрузке/ресурсах. Нет входа, конечного бюджета или квалифицированной привязки — blocked/NotExecuted зависимой группы; неактивная инъекция сбоя/защёлки — ошибка инструмента. Тайм-аут судьи, kill, счётчик производителя, текст EIO или возврат библиотеки не PASS. Публикация документа не утверждает исполнение кандидата.\n\n## Квалифицированные входы\n\nДо измерения записать точные Source/implementation/runner/profile/artifact/fixture/library/compiler, вызов и режим долговечности. Объявить число строк нагрузки, частоту/смесь операций, размеры key/items/body, локальность повторов, checkpoint, параллельность и входные байты; записать относящиеся к опыту CPU, RAM, storage/filesystem/mount/cache. Для области согласовать конечные положительные бюджеты фаз/слива, кеша/допустимой сборки, замка/вывода/отмены и штатной остановки. Бюджет остановки ниже фактического срока менеджера с измеренным запасом завершения. Разрешение монотонных часов/планировщик калибруются отдельно и не увеличивают срок протокола. Одних утверждений кандидата недостаточно. Неизвестные значения не становятся выдуманными универсальными умолчаниями.\n\nМинимум R141 — строго больше ID_REPLAY_MIN_AGE И не меньше ID_REPLAY_MIN_RECORDS поздних применённых записей с идентификатором из [runtime-constants.tsv](../../forms/runtime-constants.tsv); это не верхняя граница RAM/id. Проверять две границы независимо отдельными успешными поздними применениями; не выдумывать счёт по непринятым запросам, принятым отказам или повторам. GC конечна только при квалифицированных нагрузке/бюджете. Логическое освобождение не равно немедленному уменьшению файла.\n\n## Группы случаев\n\n| Id | Начальное состояние и нагрузка/сбой | Требуемое наблюдение | Привязка и отрицательные контроли |\n|---|---|---|---|\n| RUN-W01 | Записи фиксированного размера при разном числе строк; учесть foreground, background и циклы checkpoint. | Инкрементальное сохранение; нет полного переписывания неизменённого хранилища на каждом применении. Барьеры включены. | Квалифицированный наблюдатель байтов/syscall/heap; отрицательные контроли полного снимка на запись и ложного счётчика. |\n| RUN-W02 | Целая неизменяемая копия в свежую цель; неверная последняя строка и повтор ключа сохраняют тот же верный префикс. | Полная проверка до публикации; точные версии/floor; нет повторного переписывания обработанного префикса. Допустимо O(N log N). | Объявленный import и наблюдатель хранилища; отрицательные контроли частичной публикации и замены версий. |\n| RUN-W03 | Сохранённый успешный id, постоянное число бизнес-строк, отдельные поздние успешные id-применения; точные границы возраста/счёта, давление кеша и reopen. | Пока не выполнено хотя бы одно условие R141 — тот же ответ/again и нет нового применения/версии. Равенство минимальному возрасту не разрешает забыть. После обоих проверка минимума допускает законное хранение или забывание. | Квалифицированные часы/счёт применений и публичный повтор; контроли только возраста/только счёта/неприменённых запросов. |\n| RUN-W04 | Постоянные строки, разная частота новых id/повторов; квалифицированная область RAM/кеша и сборки допустимых записей. | Вытеснение RAM сохраняет обязательные id в долговечном индексе; допустимый backlog собран за конечный квалифицированный бюджет. Файл не обязан сразу уменьшиться. | Независимые память/индекс/повтор; контроли безграничной map, ложного gauge и удаления обязательного id. |\n| RUN-T01 | Верные POST-заголовки объявляют тело выше настроенного предела; удержать тело до получения полного отказа, затем продолжать отправку. | Полный отказ до ограниченного сырого слива/закрытия; нет бизнес-эффекта или применённого id. Отдельный верный запрос. | Дуплексный управляемый клиент и бюджет слива; контроли чтения до ответа, неполного отказа и убийства раннером. |\n| RUN-T02 | Отвергнутое продолжающееся chunked-тело, отсутствие финальной части, trickle и следующий pipeline-запрос; неверный framing — отдельный контроль приоритета. | Полный отказ, конечный сырой слив и закрытие; нет ожидания финальной части, второго ответа или исполнения pipeline. | Наблюдатель сырых байтов/времени; одного half-close мало, контроли сброса срока trickle и неактивной защёлки. |\n| RUN-T03 | Соединение без байтов; неполная строка; медленные заголовки; полные заголовки с телом БЕЗ первого байта тела; trickle тела/частей; отдельный EOF. | Точные начала фаз R147. Абсолютные сроки не сбрасываются. До полной поддерживаемой строки — молча закрыть; после неё тайм-аут до исполнения — 400 BadRequestFault/Connection: close. R054 EOF остаётся без ответа/эффекта/id. | Объявленные положительные бюджеты фаз и монотонные наблюдения; мутанты начала с первого байта тела и сброса по каждому байту. |\n| RUN-L01 | Гонка атомарных двухстрочных изменений с копией; прежние байты/режим файла и отказ вывода. | Копия одного индекса, точные версии/нет половины пакета; writer сортирует UTF-8-байтами, import принимает любой порядок; отказ сохраняет прежний файл. | Независимые копия/атомарная пара и публикация файла; контроли list+отдельных GET, потери версий и частичного файла. |\n| RUN-L02 | Подтвердить удержание снимка/начало вывода, затем остановить получателя; параллельные get/put, отмена и освобождение. | Блокирующий вывод вне замка изменений; его трасса оценивается отдельно от допустимого ограниченного 503. Снимок неизменяем и освобождается при каждом выходе. | Квалифицированная защёлка получателя/замка/прогресса; контроли вывода под общим замком, утечки и неактивной защёлки. |\n| RUN-L03 | Подтверждённо зависший backup; отдельно принятая/непринятая работа; SIGTERM при фактическом сроке менеджера и измеренном запасе. | Прекратить приём, ограничить/отменить I/O, классифицировать исходы, освободить ресурсы и остановиться за объявленный срок. Убийство или возврат Raft Shutdown не штатный успех. | Квалифицированные остановка/приём/ресурсы и реальные настройки менеджера; контроли deadlock, ложной штатности kill и одного Raft. |\n| RUN-F01 | Независимо доказанный сбой до эффекта, прежние бизнес-строки/версии и свежий id; повтор после снятия и reopen. | Unavailable; прежние бизнес-строки, выданные версии и запись применённого id неизменны. Отдельно допустимые admission-метаданные; внутренний резервный счётчик не обязан уменьшаться. | Квалифицированная стадия/доказательство отсутствия эффекта и публичное состояние; контроли ложной стадии, неактивной инъекции и занятого id. |\n| RUN-F02 | Активность носителя с неизвестным восстановимым результатом; предпосылки полной записи нет; повтор того же id и квалифицированный reopen. | Ambiguous, без ложного успеха/определённого отсутствия. Восстановление по модели сбоя и целостности операции; откат RAM не доказательство. | Квалифицированная модель носителя, не строка EIO или обычный SIGKILL; контроли ложного unavailable/отката. |\n| RUN-F03 | Доказать полные восстанавливаемые байты операции до ошибки барьера; сохранить ошибку для одного повтора id, снять и повторить, включая reopen. | Целая опубликованная операция и согласованный id; повторный отказ барьера остаётся ambiguous; успешный повтор — первый ответ/again и без новой версии. | Независимые полная запись/барьер; контроли общего отката, новой версии и Raft Barrier вместо fsync. |\n| RUN-F04 | Двухстрочный пакет/id в каждой стадии F01/F02/F03; отдельный контроль метаданных принятого отказа/повтора. | Пакет и применённый id восстанавливаются целиком или отсутствуют целиком. Admission-advance не бизнес-изменение; нового status-поля нет. | Независимый пакет и реальный observer admission, если дан; контроли половины пакета/id без пакета и ложного отказа метаданных. |\n| RUN-H01 | Объявленные backup/import CLI, прежний файл и независимый полный parser copy. | Успех CLI, JSONL, согласованные версии, 0600 и атомарная публикация; непрозрачный CLI не доказывает HTTP. CLI stdout — диагностика. | Артефакт/import/публичное состояние; контроли усечённого файла, stdout как JSON и непрозрачного транспорта. |\n| RUN-H02 | Независимый сырой GET /v1/copy на admin/обычном сокете роли; фрагментированные CL/chunked, атомарные пары, неверные метод/путь и приоритет framing. | Один 200 application/x-ndjson, завершённый framing/согласованный артефакт; точно role 403 до снимка; 405/Allow GET, HEAD без тела; иной путь 404. Нет частного пролога или успеха по EOF. | Независимый HTTP+JSONL; клиент производителя не свой судья, нет list+GET вместо снимка или расширения до 403 или 404 при отказе. |\n| RUN-H03 | Прежняя опубликованная копия; отказ снимка до заголовков и после 200: короткий CL, нет финальной части, EOF, отмена, зависший получатель и остановка. | До заголовков прежние отказы, в том числе 503 UnavailableFault; после 200 лишь неполное закрытие, без второго отказа/финального успеха. CLI проверяет весь артефакт/framing, неполный результат сохраняет прежний файл. | Независимые поток/файл/отмена; контроли ложного успеха 200, второго JSON-отказа и публикации частичного файла. |\n\n## Определения измерений\n\n| Name | Определение |\n|---|---|\n| `store_write_bytes` | Фактические успешные байты data/log/checkpoint; повторные записи считаются снова, HTTP/log/backup и усиление устройства отдельно. |\n| `store_read_bytes` | Фактические прочитанные байты lookup/replay/checkpoint/import; назвать кеш, не выводить физические чтения устройства. |\n| `durability_barrier_attempts` | Попытки/успехи/ошибки барьеров хранения по операции/checkpoint, включая каталоги публикации; Raft Barrier не fsync. |\n| `logical_apply_count` | Подтверждённые бизнес-применения отдельно от admission и повтора id; версии сравниваются точными непрозрачными строками. |\n| `replay_storage_counts` | Отдельно обязательные/недопустимые к удалению, допустимые, RAM и собранные записи; сверка публичным повтором. |\n| `mutation_lock_hold_wait` | Монотонное владение/ожидание названной области замка изменений, отдельно от Raft/внутренних; имя функции не судья. |\n| `backup_progress` | Подтверждённые pin/output-start/sink-block/cancel/release и байты; квитанция защёлки исключает задержку старта. |\n| `graceful_stop_elapsed` | От подтверждённой остановки до штатного выхода и освобождения; эскалация менеджера/kill отдельно. |\n| `early_refusal_timeline` | Полный отказ у клиента, продолжающаяся отправка, сырые байты слива, абсолютный интервал, закрытие и независимый прогресс. |\n| `fault_stage_receipt` | Независимые активация/эффект/барьер и восстановимый-либо-неизвестный исход, связанные с публичными state/id/reopen. |\n| `copy_transport_evidence` | Независимые HTTP headers/framing/completion плюс вся грамматика JSONL, атомарная публикация и сохранение прежнего файла. |\n\n## Доказательства и исходы\n\nОтделять фактические протокол/state/replay от тестовых привязок. Каждую storage/clock/progress/fault-привязку квалифицировать независимо квитанциями активированной стадии и отрицательными контролями; обычный restart или SIGKILL не доказывает физическую долговечность. Полные восстанавливаемые байты доказываются до оценки ambiguous_barrier R144. Состояние пакета/id сравнивается целиком, admission-метаданные отдельно. Отсутствующая привязка не доказывает ни дефект, ни успех реализации.\n\nЗаписать сырые input/output/status/signal/timeout, монотонные фазы и порядок активации, полную опись случаев/идентичностей вместе с отказами, очистку ресурсов и reopen. Разделять нарушение нормы, ошибку инструмента, blocked/NotExecuted и успешную измеренную область; без молчаливого skip или ослабления ожидания. Сырые copy-контроли включают корректный GET обычной роли403 до снимка, неподдерживаемый метод 405/Allow GET и HEAD без тела, полный CL/chunked, отсутствие первого байта тела, отсутствие финальной части, короткий CL, отсутствие второго отказа после 200 и сохранение прежнего файла. Это контролируемые fixtures и обязанности будущего кандидата, не исполненный SUT или новый частный протокол платформы.\n\n## Связанный разбор и область\n\nP/05 сохраняет ResourceError/ResourceDenied и собственные исходы тела/времени; разбор P/06 задаёт [gate-and-pass](../../../common/ru/contracts/gate-and-pass.md). Общим остаётся R050 ответ-до-сырого-слива, а не коды тайм-аута P/01 или замена бюджетов ответов forwarding, pass и stream. Инженерный group доступен независимо от отсутствующих входов боевой квалификации, с записью применимых/неисполненных групп и пина норм.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "operation": "MODIFIED",
+      "before_blob": "36ea007ad038b3868f6ac7b22fbb85fc6872f80d",
+      "after_blob": "82aae873f9b5259fd082b2cfc5cde6300c3c54c6",
+      "before_sha256": "1db96a4776051d14514054f6b27a4c0bf93d543d550b0c2e3815fcdbb9c3eaf3",
+      "after_sha256": "0b38f6b39fcc2fb4907b6ec730867b4f14158ad15868fe8b5bbf8b99b3e1e4bc",
+      "before_bytes": 10975,
+      "after_bytes": 11446,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            69,
+            69
+          ],
+          "after_LF": [
+            69,
+            69
+          ],
+          "before_CP": [
+            6026,
+            6088
+          ],
+          "before_UTF8": [
+            8414,
+            8487
+          ],
+          "after_CP": [
+            6026,
+            6350
+          ],
+          "after_UTF8": [
+            8414,
+            8958
+          ],
+          "before": "| SIGTERM | остановка; `TimeoutStopSec` 20–30 | P/02.4 N1.1 |\n",
+          "after": "| SIGTERM | прекратить приём, ограничить/отменить I/O, классифицировать принятую работу и освободить ресурсы за объявленный срок штатной остановки ниже фактического срока менеджера; пример не задаёт бюджет | [P/01.3 Вывод снимка и штатная остановка](spec/01.3-store.norms.md#вывод-снимка-и-штатная-остановка); P/02.4 N1.1 |\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01-store.README.md",
+      "operation": "MODIFIED",
+      "before_blob": "11af4e40f49b4bb6c05ebea5fca8a8dfcf2be9d7",
+      "after_blob": "8d7fc012ed541224f5f1fe5a1f6e0863f5c32f0a",
+      "before_sha256": "0468caa3b95703969d02b651982d72312520b810191b4658ad43b86b9548d30d",
+      "after_sha256": "4192f7a67af98c3f4ad520da34f56e1380378cd29dae3786cdf59c37cff3bd6b",
+      "before_bytes": 25935,
+      "after_bytes": 26671,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            60,
+            60
+          ],
+          "after_LF": [
+            60,
+            60
+          ],
+          "before_CP": [
+            6712,
+            6846
+          ],
+          "before_UTF8": [
+            10828,
+            11057
+          ],
+          "after_CP": [
+            6712,
+            6846
+          ],
+          "after_UTF8": [
+            10828,
+            11057
+          ],
+          "before": "6. Пройти чеклист главы 1.1 (P/01.1-01…31); у пунктов «проверяется чтением» указать в описании реализации, где в коде это обеспечено.\n",
+          "after": "6. Пройти чеклист главы 1.1 (P/01.1-01…32); у пунктов «проверяется чтением» указать в описании реализации, где в коде это обеспечено.\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            143,
+            143
+          ],
+          "after_LF": [
+            143,
+            143
+          ],
+          "before_CP": [
+            14899,
+            15024
+          ],
+          "before_UTF8": [
+            24147,
+            24343
+          ],
+          "after_CP": [
+            14899,
+            15024
+          ],
+          "after_UTF8": [
+            24147,
+            24343
+          ],
+          "before": "- [ ] каждый пункт чеклистов P/01.1-01…31, P/01.2-01…09, P/01.3-01…11 либо закрыт сценарием, либо в описании указано место в\n",
+          "after": "- [ ] каждый пункт чеклистов P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 либо закрыт сценарием, либо в описании указано место в\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            158,
+            157
+          ],
+          "after_LF": [
+            158,
+            161
+          ],
+          "before_CP": [
+            16008,
+            16008
+          ],
+          "before_UTF8": [
+            25935,
+            25935
+          ],
+          "after_CP": [
+            16008,
+            16438
+          ],
+          "after_UTF8": [
+            25935,
+            26671
+          ],
+          "before": "",
+          "after": "\n## Боевая квалификация\n\nЧитать [производственную приёмку](production-acceptance.md) вместе с нормами. Функциональные gates и инженерный этап group не доказывают боевую квалификацию. Назвать объявленные нагрузку/ресурсы и конечные бюджеты, затем привязать независимые наблюдения хранилища/времени/сбоя/потока. Нет входа или возможности — blocked/NotExecuted; декларация не создаёт поля профиля, порта платформы или runtime-флага.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "d2ee84e0e24ec21c64824e9862702fdbe78d31fb",
+      "after_blob": "b166e8f5140ac60f46c0de3a3a37b8d7488332ef",
+      "before_sha256": "8fe156c0a1dce55a70796c0e36777d011c014ff5a2cf1d891c087e42f6a5f990",
+      "after_sha256": "32a25e800a2ffdda40d58ddf2ec2eef2b12ded0d61e466c9c3927f1ade472008",
+      "before_bytes": 109396,
+      "after_bytes": 118366,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            253,
+            257
+          ],
+          "after_LF": [
+            253,
+            253
+          ],
+          "before_CP": [
+            20832,
+            21511
+          ],
+          "before_UTF8": [
+            31635,
+            32746
+          ],
+          "after_CP": [
+            20832,
+            21761
+          ],
+          "after_UTF8": [
+            31635,
+            33236
+          ],
+          "before": "- **Ранний отказ.** Дверь, которая отказывает до чтения всего тела (`Content-Length` больше предела — `413`; любой иной\n  отказ до тела), отправляет полный ответ с `Connection: close`, затем читает и отбрасывает присланное, не разбирая, до\n  заявленной длины, но не больше объёма и не дольше срока слива, и только после этого закрывает соединение: клиент,\n  который ещё шлёт тело, получает ответ, а не сброс соединения. Правило одно для всех HTTP-дверей модуля (консоль —\n  [P/06.5](../../../06-console/ru/spec/06.5-console.norms.md) N2 «Разбор запроса консоли», дверь байтов — P/06.1 N2, дверь ресурса — P/05 N2 «Разбор запроса»); объём и срок слива — п. 9 «Решает реализация».\n",
+          "after": "- **Ранний отказ.** До чтения всего тела дверь ДОЛЖНА сначала отправить полный отказ с `Connection: close`, затем отбрасывать сырые байты HTTP-потока без разбора и исполнения отвергнутого тела, затем закрыть соединение. Слив прекращается на заявленной длине тела, если framing задаёт длину, либо раньше при достижении объявленного предела сырых байтов или абсолютного монотонного срока слива. Интервал слива начинается после отправки полного отказа; входные байты его не продлевают. Для завершения слива chunked отправитель не обязан прислать завершающую часть. После отказа второй запрос или ответ-отказ не исполняется и не добавляется. Объём и срок слива объявлены в п. 9 «Решает реализация». Общее правило ответа до слива действует также у консоли ([P/06.5](../../../06-console/ru/spec/06.5-console.norms.md)), её двери байтов (P/06.1) и ресурса (P/05); собственные исходы разбора и бюджеты ответа/потока сохраняют владельцы.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            279,
+            278
+          ],
+          "after_LF": [
+            275,
+            276
+          ],
+          "before_CP": [
+            23954,
+            23954
+          ],
+          "before_UTF8": [
+            36480,
+            36480
+          ],
+          "after_CP": [
+            24204,
+            25318
+          ],
+          "after_UTF8": [
+            36970,
+            38937
+          ],
+          "before": "",
+          "after": "- **Сроки фаз ввода.** Реализация ДОЛЖНА объявить конечные положительные интервалы простоя, заголовков, тела и слива отказа по монотонным часам. Простой начинается при принятии соединения или завершении предыдущего ответа. Абсолютный срок заголовков начинается с первого байта строки запроса. Абсолютный срок тела начинается после полного разбора заголовков, установившего наличие тела, даже если не пришло ни одного байта тела. Медленная подача НЕ ДОЛЖНА продлевать абсолютный срок; дополнительный интервал бездействия объявляется отдельно. До корректной полной строки запроса с поддерживаемой HTTP-версией срок ввода закрывает соединение без выдуманного ответа. После такой строки тайм-аут ввода до исполнения даёт `400 BadRequestFault` с `Connection: close`, если ответ не начат; операция, бизнес-запись и запись применённого id не создаются. Начатый ответ не получает второй отказ. Это правило не заменяет R054: EOF или оборванное тело по-прежнему не получает ответа, не исполняется и не занимает id. Бюджеты фаз относятся ко входу P/01, а не к общему сроку ответов forwarding, pass или stream других уроков.\n\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            469,
+            468
+          ],
+          "after_LF": [
+            467,
+            468
+          ],
+          "before_CP": [
+            43232,
+            43232
+          ],
+          "before_UTF8": [
+            68062,
+            68062
+          ],
+          "after_CP": [
+            44596,
+            45308
+          ],
+          "after_UTF8": [
+            70519,
+            71839
+          ],
+          "before": "",
+          "after": "Для боевой квалификации ограниченный кеш RAM ДОЛЖЕН сохранять доступ к каждой ещё обязательной записи повтора через долговечный индекс. Вытеснение кеша НЕ ДОЛЖНО забывать недопустимый к удалению id. В квалифицированной объявленной нагрузке допустимые к удалению записи ДОЛЖНЫ собираться за объявленный конечный бюджет. Этот бюджет не ослабляет ни одно минимальное условие. Логическое освобождение индекса и повторное использование места не обещают немедленного уменьшения файла или роста свободного места файловой системы. Нехватка памяти не добавляет внешнего отказа и не превращает неопределённую запись в заведомо отсутствующую. Явно названный учебный режим без долговечности отличен от боевой квалификации.\n\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            470,
+            469
+          ],
+          "after_LF": [
+            470,
+            473
+          ],
+          "before_CP": [
+            43484,
+            43484
+          ],
+          "before_UTF8": [
+            68489,
+            68489
+          ],
+          "after_CP": [
+            45560,
+            46400
+          ],
+          "after_UTF8": [
+            72266,
+            73800
+          ],
+          "before": "",
+          "after": "\n### Стоимость сохранения\n\nДля боевой квалификации сохранение обычной записи фиксированного размера ДОЛЖНО быть инкрементальным: каждое применение НЕ ДОЛЖНО сериализовать или переписывать неизменённое хранилище целиком. Работа checkpoint учитывается отдельно и в общей амортизированной стоимости; фоновый поток её не скрывает. Импорт проверяет весь неизменяемый вход до публикации, затем строит состояние без повторного переписывания уже обработанного префикса. Допустимы индексированное построение или сортировка O(N log N); конкретный WAL, движок или алгоритм консенсуса не предписан. Входные байты и число сохранённых строк измеряются отдельно. Версии, floor, фазы переноса и барьеры долговечности сохраняются. Реализация объявляет модель стоимости и квалифицированные нагрузку/ресурсы; универсального числового потолка правило не даёт.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            493,
+            492
+          ],
+          "after_LF": [
+            497,
+            499
+          ],
+          "before_CP": [
+            48501,
+            48501
+          ],
+          "before_UTF8": [
+            76357,
+            76357
+          ],
+          "after_CP": [
+            51417,
+            52327
+          ],
+          "after_UTF8": [
+            81668,
+            83262
+          ],
+          "before": "",
+          "after": "- `input_timeout`: истёк срок фазы ввода после корректной поддерживаемой строки запроса и до исполнения (N2.1). Действие вызывающего: исправить подачу или объявленную область ввода; применённый id или бизнес-эффект не выводятся.\n\nДоказанный отказ хранилища до эффекта сохраняет прежние бизнес-строки, выданные версии и записи применённых id. Неизвестный исход носителя остаётся `ambiguous`; откат одной RAM не доказывает отсутствие эффекта после восстановления. В `ambiguous_barrier` при полной восстанавливаемой записи уже на носителе публикуется целая операция с согласованной записью id. Повтор довершает нужные барьеры и возвращает первый ответ с `again`, без новой версии; очередной отказ барьера остаётся `ambiguous`. Пакет и его применённый id восстанавливаются целиком либо отсутствуют целиком. Допустимые изменения last-admission при принятых отказах/повторах проверяются отдельно от бизнес-эффектов.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            576,
+            575
+          ],
+          "after_LF": [
+            583,
+            584
+          ],
+          "before_CP": [
+            58358,
+            58358
+          ],
+          "before_UTF8": [
+            92000,
+            92000
+          ],
+          "after_CP": [
+            62184,
+            62487
+          ],
+          "after_UTF8": [
+            98905,
+            99414
+          ],
+          "before": "",
+          "after": "Боевая квалификация дополнительно использует [договор производственной приёмки](production-acceptance.md): независимые наблюдения нагрузки, времени, хранилища/сбоя и снимка/вывода отделены от функциональных TSV-gates. Нет бюджета или привязки — `blocked`/`NotExecuted`, а не успешный боевой результат.\n\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            584,
+            584
+          ],
+          "after_LF": [
+            593,
+            593
+          ],
+          "before_CP": [
+            60022,
+            60077
+          ],
+          "before_UTF8": [
+            94866,
+            94958
+          ],
+          "after_CP": [
+            64151,
+            64376
+          ],
+          "after_UTF8": [
+            102280,
+            102686
+          ],
+          "before": "6. **срок и объём памяти повторов** сверх минимума N3;\n",
+          "after": "6. **хранилище повторов**: ограниченный кеш RAM, долговечный индекс, минимум хранения N3 и конечный бюджет сборки допустимых к удалению записей при квалифицированной нагрузке; учебный режим без долговечности назван отдельно;\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            587,
+            587
+          ],
+          "after_LF": [
+            596,
+            596
+          ],
+          "before_CP": [
+            60659,
+            61116
+          ],
+          "before_UTF8": [
+            95839,
+            96532
+          ],
+          "after_CP": [
+            64958,
+            65676
+          ],
+          "after_UTF8": [
+            103567,
+            104741
+          ],
+          "before": "9. **пределы разбора запроса**: длина строки запроса HTTP (в байтах, без завершающего CRLF); превышение — `400 badrequest` по N2.1; длина строки размера куска chunked с расширениями (без CRLF) — превышение — ошибка рамки: `400 badrequest` и закрытие соединения (C01-CHUNK-LINE-LIMIT-01); объём и срок слива после раннего отказа (N2.1). Предел заголовков (`HEADER_BYTES`) и глубина JSON (`JSON_DEPTH`) — нормы N2.1, не выбор (сверка python и go 2026-10-18);\n",
+          "after": "9. **пределы разбора запроса**: длина строки запроса HTTP (в байтах, без завершающего CRLF); превышение — `400 badrequest` по N2.1; длина строки размера куска chunked с расширениями (без CRLF) — превышение — ошибка рамки: `400 badrequest` и закрытие соединения (C01-CHUNK-LINE-LIMIT-01); объём и срок слива после раннего отказа (N2.1). Предел заголовков (`HEADER_BYTES`) и глубина JSON (`JSON_DEPTH`) — нормы N2.1, не выбор (сверка python и go 2026-10-18); Конечные положительные монотонные бюджеты простоя/заголовков/тела/слива и точные начала задаёт N2.1; до квалификации реализация объявляет значения и отдельный таймер бездействия, если он есть. Измерительная погрешность отдельна и не увеличивает срок протокола.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            627,
+            626
+          ],
+          "after_LF": [
+            636,
+            637
+          ],
+          "before_CP": [
+            69329,
+            69329
+          ],
+          "before_UTF8": [
+            109396,
+            109396
+          ],
+          "after_CP": [
+            73889,
+            74347
+          ],
+          "after_UTF8": [
+            117605,
+            118366
+          ],
+          "before": "",
+          "after": "\n- [ ] **P/01.1-32** инкрементальная стоимость записи/импорта, обязательное хранение повтора против ограниченного кеша и конечной сборки допустимых записей, квалифицированные нагрузка/ресурсы и независимые наблюдения — [производственная приёмка](production-acceptance.md), RUN-W01–RUN-W04; сроки фаз/слив — RUN-T01–RUN-T03; стадийные строки/id/admission и повтор барьера — RUN-F01–RUN-F04. Функциональные gates или неисполненные привязки пункт не закрывают.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "9d0bb6e6872a382933f242e6365c840d1f60cdad",
+      "after_blob": "d8b1943f8cd820a981ea1b59010235398eb82658",
+      "before_sha256": "d308d074d5d7a6298c4257cdea248ab5801f4c25542ef3573d50f9df3bddd41d",
+      "after_sha256": "f84e94e90ec13eedffc4ac8042a1f1396d8dd0112e6ce0ec03bf44d3bbdf811b",
+      "before_bytes": 85201,
+      "after_bytes": 92569,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            283,
+            283
+          ],
+          "after_LF": [
+            283,
+            283
+          ],
+          "before_CP": [
+            32544,
+            33921
+          ],
+          "before_UTF8": [
+            47396,
+            49490
+          ],
+          "after_CP": [
+            32544,
+            34096
+          ],
+          "after_UTF8": [
+            47396,
+            49775
+          ],
+          "before": "Идентификатор участника — 1–128 ASCII-символов: первый буква/цифра, дальше буквы/цифры/`_`/`.`/`-`. Это профиль входов данного урока. Разбор запроса служебных дверей — глава 1.1 N2.1 (query, JSON тела, путь байт в байт, HTTP, ранний отказ); отступления ниже. Порядок проверок: рамка (framing, действующий предел `-max-body` — 413) → маршрут и метод (404, 405) → личность (403) → тело и состав (400, 409): лишнее тело больше предела у чужого метода — 413 раньше 404/405 (сверка python и go M10/6–11, B3). `HEAD` служебным дверям не метод: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` и `/v1/rights` — 404 по владельцам — главам 1.1 и 1.2 (обе реализации, совпало без нормы). Тела служебных POST — один объект JSON; unknown fields отвергаются; тот же действующий предел чтения `-max-body`, фактический счёт байтов, лишний JSON/framing/обрыв — 400, превышение — 413, время чтения ограничено реализацией. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` главы 1.1. Для собственных status/join/leave/write/metrics 503 — `UnavailableFault` до отправки, `AmbiguousFault` после отправки изменения; при пределе соединений — `UnavailableFault` с `Retry-After: 1` (глава 1.1 N4). После неизвестного join/leave оператор читает status; автоматического доказательства успеха из таймаута нет. Пол сохраняет память повторов главы 1.1.\n",
+          "after": "Идентификатор участника — 1–128 ASCII-символов: первый буква/цифра, дальше буквы/цифры/`_`/`.`/`-`. Это профиль входов данного урока. Разбор запроса служебных дверей — глава 1.1 N2.1 (query, JSON тела, путь байт в байт, HTTP, ранний отказ); отступления ниже. Порядок проверок: рамка (framing, действующий предел `-max-body` — 413) → маршрут и метод (404, 405) → личность (403) → тело и состав (400, 409): лишнее тело больше предела у чужого метода — 413 раньше 404/405 (сверка python и go M10/6–11, B3). `HEAD` служебным дверям не метод: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` и `/v1/rights` — 404 по владельцам — главам 1.1 и 1.2 (обе реализации, совпало без нормы). Тела служебных POST — один объект JSON; unknown fields отвергаются; тот же действующий предел чтения `-max-body`, фактический счёт байтов, лишний JSON или обнаруженное нарушение framing — 400, превышение — 413. EOF до полного framed-тела сохраняет P/01.1 R054: нет ответа, исполнения и занятого id. Тайм-ауты ввода следуют P/01.1 R147, включая срок тела от полных заголовков, не от первого байта тела. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` главы 1.1. Для собственных status/join/leave/write/metrics 503 — `UnavailableFault` до отправки, `AmbiguousFault` после отправки изменения; при пределе соединений — `UnavailableFault` с `Retry-After: 1` (глава 1.1 N4). После неизвестного join/leave оператор читает status; автоматического доказательства успеха из таймаута нет. Пол сохраняет память повторов главы 1.1.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            286,
+            285
+          ],
+          "after_LF": [
+            286,
+            289
+          ],
+          "before_CP": [
+            34751,
+            34751
+          ],
+          "before_UTF8": [
+            50898,
+            50898
+          ],
+          "after_CP": [
+            34926,
+            36665
+          ],
+          "after_UTF8": [
+            51183,
+            53976
+          ],
+          "before": "",
+          "after": "\n**HTTP-копия.** `GET /v1/copy` доступен только через `admin.sock`; заголовок роли или сетевое перенаправление не дают административного доступа. Корректный GET на обычном сокете роли возвращает точно `403 ForbiddenFault` до открытия или передачи снимка. Порядок R017 framing → route/method → identity сохраняется. Успех — один `200` с `Content-Type: application/x-ndjson`: прежний UTF-8/LF `w2c-configstore-copy`, version 1, на одном согласованном индексе, без частного пролога. Нужен точный `Content-Length` или корректный завершённый chunked; закрытие соединения само по себе не успешный framing. Неподдерживаемый метод этого пути — `405 BadRequestFault` с `Allow: GET`; HEAD без тела. Иной путь сохраняет прежний `404`. До успешных заголовков недоступный согласованный снимок или истёкшее ожидание — `503 UnavailableFault`; ошибки запроса и доступа сохраняют прежние формы. Это чтение не порождает `AmbiguousFault` записи.\n\nПосле заголовков `200` ошибка только закрывает поток: нельзя отправлять второй JSON-отказ, финальную нулевую часть после отказа chunked-вывода или ложный полный ответ Content-Length. Завершение не обозначается до полного артефакта. CLI backup проверяет завершение HTTP и всю прежнюю грамматику copy, пишет временный файл `0600` и переименовывает лишь после успеха; отказ/отмена сохраняет прежний опубликованный файл. Допустимые unreadable-строки копии и отдельный отказ import/restore на таком входе прежние. Нового HTTP import/restore или совместимого частного copy-протокола нет. Остальные внутренние named/versioned read-fence/admit/import frames разрешены п. 1 «Решает реализация»; эта HTTP-операция — узкое исключение для передачи самой copy. CLI stdout остаётся диагностикой, не машинным JSON-контрактом.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            322,
+            321
+          ],
+          "after_LF": [
+            326,
+            331
+          ],
+          "before_CP": [
+            38031,
+            38031
+          ],
+          "before_UTF8": [
+            56455,
+            56455
+          ],
+          "after_CP": [
+            39945,
+            41253
+          ],
+          "after_UTF8": [
+            59533,
+            61875
+          ],
+          "before": "",
+          "after": "### Вывод снимка и штатная остановка\n\nКопия ДОЛЖНА удерживать одну неизменяемую версию состояния. Блокирующий внешний вывод ДОЛЖЕН идти вне замка, сериализующего обычные изменения. Реализация объявляет конечные сроки ожидания замка, вывода, отмены и штатной остановки; зависший получатель НЕ ДОЛЖЕН удерживать замок изменений до конца передачи. Успех, отказ и отмена освобождают владение снимком и транспортом. Независимая операция может сохранить прежний ограниченный отказ до эффекта; один такой ответ не доказывает правильную область замка.\n\nПри остановке прекращается приём новой работы, внешний I/O отменяется или ограничивается, принятая работа разрешается либо классифицируется прежними определёнными/ambiguous исходами. Снимки, соединения и слушатели освобождаются за объявленный срок штатной остановки. Этот срок ДОЛЖЕН быть ниже фактического срока управляющего процесса с отдельно измеренным запасом завершения. Прежний пример менеджера — не бюджет Go Shutdown; принудительное убийство — не штатный успех. Raft Barrier не доказывает барьер долговечности хранилища, а возврат Raft Shutdown — завершение всей работы платформы. Полная проверка входа import, точные версии и фазы floor/прогресса сохраняются; построение следует [стоимости сохранения P/01.1](01.1-store.norms.md#стоимость-сохранения).\n\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            326,
+            326
+          ],
+          "after_LF": [
+            336,
+            336
+          ],
+          "before_CP": [
+            38375,
+            38583
+          ],
+          "before_UTF8": [
+            57018,
+            57359
+          ],
+          "after_CP": [
+            41597,
+            41882
+          ],
+          "after_UTF8": [
+            62438,
+            62895
+          ],
+          "before": "- `service_body_form`: служебный HTTP: неизвестные поля, не объект/не JSON, лишний JSON, плохой framing/обрыв/таймаут чтения, недопустимое поле. Действие вызывающего: исправить вход; побочного изменения нет.\n",
+          "after": "- `service_body_form`: служебный HTTP: неизвестные поля, не объект/не JSON, лишний JSON, обнаруженное нарушение framing или недопустимое поле. EOF/обрыв следует R054 без HTTP-отказа; тайм-аут фазы ввода — `input_timeout`. Действие вызывающего: исправить вход; побочного изменения нет.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            354,
+            353
+          ],
+          "after_LF": [
+            364,
+            367
+          ],
+          "before_CP": [
+            42625,
+            42625
+          ],
+          "before_UTF8": [
+            63437,
+            63437
+          ],
+          "after_CP": [
+            45924,
+            46385
+          ],
+          "after_UTF8": [
+            68973,
+            69746
+          ],
+          "before": "",
+          "after": "- `copy_method`: неподдерживаемый метод /v1/copy. Действие вызывающего: GET; HEAD остаётся без тела.\n- `copy_admin_only`: копия через обычный сокет роли или перенаправление. Действие вызывающего: разрешённый локальный admin-сокет; заголовок доступа не даёт.\n- `copy_snapshot_unavailable`: согласованная копия не получена до успешных заголовков за объявленное ожидание. Действие вызывающего: повторить чтение при доступности; неопределённого исхода записи нет.\n\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            400,
+            400
+          ],
+          "after_LF": [
+            414,
+            414
+          ],
+          "before_CP": [
+            49357,
+            49481
+          ],
+          "before_UTF8": [
+            73334,
+            73530
+          ],
+          "after_CP": [
+            53117,
+            53317
+          ],
+          "after_UTF8": [
+            79643,
+            79963
+          ],
+          "before": "   (read-fence, admit, import) — внутренние у реализации: формат с именем и версией, новых маршрутов HTTP нет; члены одного\n",
+          "after": "   (read-fence, admit, import) остаются внутренним делом реализации: формат с именем и версией, новых HTTP-маршрутов нет. Передача самой copy использует явно объявленный GET /v1/copy N2; члены одного\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            433,
+            432
+          ],
+          "after_LF": [
+            447,
+            449
+          ],
+          "before_CP": [
+            57009,
+            57009
+          ],
+          "before_UTF8": [
+            85201,
+            85201
+          ],
+          "after_CP": [
+            60845,
+            61439
+          ],
+          "after_UTF8": [
+            91634,
+            92569
+          ],
+          "before": "",
+          "after": "\n- [ ] **P/01.3-12** HTTP-копия только admin, role403 до снимка, method405/Allow GET и HEAD без тела, завершённый Content-Length/chunked и отсутствие ложного завершения/второго отказа — [производственная приёмка](production-acceptance.md), RUN-H01–RUN-H03; прежний опубликованный файл сохраняется при отказе.\n- [ ] **P/01.3-13** неизменяемый снимок/вывод вне замка изменений, конечная отмена/остановка ниже фактического срока менеджера и квалифицированные независимые наблюдения — [производственная приёмка](production-acceptance.md), RUN-L01–RUN-L03; отсутствие привязок или бюджетов не PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.README.md",
+      "operation": "MODIFIED",
+      "before_blob": "5b5c08352acbb39d16b1626ffe97527253f4d4da",
+      "after_blob": "db057a377fe800dafc67aeeb93c1246b2cbcdacb",
+      "before_sha256": "c20a5b05ba03814eeb6ae359faa14e74625ef2404fad4ff789aebffaf31b8ca3",
+      "after_sha256": "2f0033e4429b728a79ed810d7593a097f0815b1faf1c2b67f517e5181fa7b68d",
+      "before_bytes": 18095,
+      "after_bytes": 18545,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            61,
+            61
+          ],
+          "after_LF": [
+            61,
+            61
+          ],
+          "before_CP": [
+            7575,
+            7745
+          ],
+          "before_UTF8": [
+            7607,
+            7781
+          ],
+          "after_CP": [
+            7575,
+            7745
+          ],
+          "after_UTF8": [
+            7607,
+            7781
+          ],
+          "before": "6. Go through the checklist of chapter 1.1 (P/01.1-01…31); for the items «checked by reading», state in the implementation description where in the code this is ensured.\n",
+          "after": "6. Go through the checklist of chapter 1.1 (P/01.1-01…32); for the items «checked by reading», state in the implementation description where in the code this is ensured.\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            144,
+            144
+          ],
+          "after_LF": [
+            144,
+            144
+          ],
+          "before_CP": [
+            16611,
+            16761
+          ],
+          "before_UTF8": [
+            16717,
+            16873
+          ],
+          "after_CP": [
+            16611,
+            16761
+          ],
+          "after_UTF8": [
+            16717,
+            16873
+          ],
+          "before": "- [ ] each item of the checklists P/01.1-01…31, P/01.2-01…09, P/01.3-01…11 is either closed by a scenario, or the description states the place in the\n",
+          "after": "- [ ] each item of the checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 is either closed by a scenario, or the description states the place in the\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            159,
+            158
+          ],
+          "after_LF": [
+            159,
+            162
+          ],
+          "before_CP": [
+            17975,
+            17975
+          ],
+          "before_UTF8": [
+            18095,
+            18095
+          ],
+          "after_CP": [
+            17975,
+            18425
+          ],
+          "after_UTF8": [
+            18095,
+            18545
+          ],
+          "before": "",
+          "after": "\n## Production qualification\n\nRead [production acceptance](production-acceptance.md) with the norms. Functional gates and the engineering group stage do not establish production qualification. State the declared workload/resources and finite budgets, then bind independent storage/time/fault/stream observations. Missing input or capability remains blocked/NotExecuted; no profile field, platform port or runtime flag is created by this declaration.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "operation": "MODIFIED",
+      "before_blob": "6fbb6e329927fab4eb38d330ef74ebaf3bc2ac67",
+      "after_blob": "7149a6fa1d615cd04b3ddabdfdbcec0dc974b3b9",
+      "before_sha256": "fcae210de91b44b21cc344bd4c274ffa3c6227b605f0ff744cecb729959164e3",
+      "after_sha256": "7a03ef4bff99881fcb90beb599600de35467cf4145b7ced14f466c588fadb74e",
+      "before_bytes": 31181,
+      "after_bytes": 34727,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            278,
+            277
+          ],
+          "after_LF": [
+            278,
+            343
+          ],
+          "before_CP": [
+            10601,
+            10601
+          ],
+          "before_UTF8": [
+            10637,
+            10637
+          ],
+          "after_CP": [
+            10601,
+            14147
+          ],
+          "after_UTF8": [
+            10637,
+            14183
+          ],
+          "before": "",
+          "after": "  /v1/copy:\n    get:\n      summary: Read one consistent copy through the local admin socket only\n      description: >-\n        P/01.3 HTTP copy. Check framing, route/method and identity in that order.\n        A correct GET on an ordinary role socket is 403 before opening or exposing\n        a snapshot; role headers and network forwarding grant no admin access.\n        The successful body is the existing UTF-8/LF JSONL copy version1 at one index,\n        not a single JSON object. Complete exact Content-Length or valid chunked\n        framing is required; EOF-only framing is not successful completion.\n        After 200 a failure closes the stream without a second fault or false final\n        zero chunk. HEAD is unsupported: 405 with Allow GET and no body.\n        Internal read-fence/admit/import frames remain implementation-private.\n      responses:\n        '200':\n          description: The whole consistent copy; success is signalled only after its complete artifact and HTTP framing\n          headers:\n            Content-Length:\n              schema: {type: string, pattern: '^(?:[0-9]+)$'}\n              description: Exact entity-body byte length; use this or valid completed chunked, not both\n            Transfer-Encoding:\n              schema: {type: string, pattern: '^(?:[Cc][Hh][Uu][Nn][Kk][Ee][Dd])$'}\n              description: Alternative to Content-Length; send the terminal zero chunk only on successful complete output\n          content:\n            application/x-ndjson:\n              schema:\n                type: string\n                description: Existing w2c-configstore-copy version1 UTF-8/LF header and rows, one consistent index, keys in UTF-8-byte order\n        '400': {$ref: '#/components/responses/BadRequest'}\n        '403': {$ref: '#/components/responses/Forbidden'}\n        '404': {$ref: '#/components/responses/NoRoute'}\n        '405':\n          description: Unsupported method on this known path; BadRequestFault, body omitted for HEAD\n          headers:\n            Allow: {required: true, schema: {type: string, const: GET}}\n          content:\n            application/json:\n              schema: {$ref: '#/components/schemas/BadRequestFault'}\n        '413':\n          description: Existing effective body-limit refusal before the copy operation\n          content:\n            application/json:\n              schema: {$ref: '#/components/schemas/BodyTooLargeFault'}\n        '503':\n          description: Unavailable consistent snapshot or expired wait before successful headers; no write AmbiguousFault\n          content:\n            application/json:\n              schema: {$ref: '#/components/schemas/UnavailableFault'}\n          headers:\n            Retry-After:\n              schema: {type: integer, const: 1}\n              description: Only for the existing unavailable connection-limit cause; absent for snapshot or wait failure\n    head:\n      summary: Unsupported copy method; always bodyless\n      description: Framing precedes the method check; this declares no successful HEAD copy operation\n      responses:\n        '400': {description: BadRequestFault status without a body}\n        '405':\n          description: Method not supported; no body\n          headers:\n            Allow: {required: true, schema: {type: string, const: GET}}\n        '413': {description: Existing body-limit refusal status without a body}\n        '503':\n          description: Existing connection-limit refusal status without a body\n          headers:\n            Retry-After: {schema: {type: integer, const: 1}}\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "2375adc37f4af9889d2d8538288ffca080526e11",
+      "after_blob": "350c18128044a6a184a4dd63ab0a5cda8cb2f2bf",
+      "before_sha256": "2b5ce1f73fdbf269581465430a2a9104c4247ac3912cddc8e4f3d75b9b74b9b3",
+      "after_sha256": "4aa06829af595137c6bb10130b542ff00e6971301f66ca26d24d3a57bf17907e",
+      "before_bytes": 80443,
+      "after_bytes": 85471,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            354,
+            360
+          ],
+          "after_LF": [
+            354,
+            354
+          ],
+          "before_CP": [
+            24374,
+            25154
+          ],
+          "before_UTF8": [
+            24599,
+            25393
+          ],
+          "after_CP": [
+            24374,
+            25325
+          ],
+          "after_UTF8": [
+            24599,
+            25552
+          ],
+          "before": "- **Early refusal.** When a door refuses before reading the whole body (`Content-Length` larger than the limit — `413`;\n  any other refusal before the body), the door MUST send the full answer with `Connection: close`, then read and discard\n  what was sent, without parsing, up to the declared length but no more than the drain volume and no longer than the drain\n  time, and only then close the connection: a client that is still sending the body gets the answer, not a connection\n  reset. The rule is one for all HTTP doors of the module (console —\n  [P/06.5](../../06-console/spec/06.5-console.norms.md) N2 «Console request parsing», the byte door — P/06.1 N2, the\n  resource door — P/05 N2 «Request parsing»); the drain volume and time are item 9 of «Implementation decides».\n",
+          "after": "- **Early refusal.** Before reading the whole body, the door MUST send the complete refusal with `Connection: close` first, then discard raw HTTP-stream bytes without parsing or executing the rejected body, then close. Discard stops at the declared body length when framing supplies one, or earlier at the declared raw-byte limit or absolute monotonic drain deadline. The drain interval starts after the complete refusal has been sent; incoming bytes do not extend it. A chunked sender need not send a terminal chunk for discard to finish. A second request or fault response is not executed or added after this refusal. The drain volume and time are declared in item 9 of «Implementation decides». This shared refusal-before-drain rule also applies at the console ([P/06.5](../../06-console/spec/06.5-console.norms.md)), its bytes door (P/06.1) and the resource (P/05); their own parsing outcomes and response/stream budgets remain with their owners.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            392,
+            391
+          ],
+          "after_LF": [
+            386,
+            388
+          ],
+          "before_CP": [
+            27896,
+            27896
+          ],
+          "before_UTF8": [
+            28169,
+            28169
+          ],
+          "after_CP": [
+            28067,
+            29284
+          ],
+          "after_UTF8": [
+            28328,
+            29545
+          ],
+          "before": "",
+          "after": "\n<!-- req: P/01.1-R147 -->\n- **Input phase deadlines.** The implementation MUST declare finite positive idle, header, body and refusal-drain intervals, measured by monotonic time. Idle starts when a connection is accepted or the previous response completes. The absolute header deadline starts at the first byte of the request line. The absolute body deadline starts after complete headers have been parsed and establish a body, even if no body byte ever arrives. A slow trickle MUST NOT extend an absolute deadline; any additional inactivity interval is declared separately. Before a correct complete request line with a supported HTTP version exists, an input deadline closes the connection without an invented response. After that line, an input timeout before execution returns `400 BadRequestFault` with `Connection: close` if no response has started; no operation, business write or applied-id record is made. A started response gets no second fault. This timeout rule does not replace R054: EOF or a truncated body still receives no answer, is not executed and does not occupy an id. The phase budgets describe P/01 input, not a common deadline for forwarding, pass or stream responses owned by other lessons.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            739,
+            738
+          ],
+          "after_LF": [
+            736,
+            737
+          ],
+          "before_CP": [
+            50732,
+            50732
+          ],
+          "before_UTF8": [
+            51147,
+            51147
+          ],
+          "after_CP": [
+            52120,
+            52809
+          ],
+          "after_UTF8": [
+            52523,
+            53212
+          ],
+          "before": "",
+          "after": "For production qualification a bounded RAM cache MUST retain access to every still-required replay record through a durable indexed store. Cache eviction MUST NOT forget an ineligible id. Under the qualified declared workload, eligible records MUST be collected within the declared finite collection budget. This budget does not weaken either minimum condition. Logical index reclamation and space reuse do not promise an immediate file-size or filesystem-free-space decrease. Memory pressure adds no external refusal and does not turn an uncertain write into a definitely absent one. The teaching store's explicitly named non-durable mode remains distinct from production qualification.\n\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            741,
+            740
+          ],
+          "after_LF": [
+            740,
+            744
+          ],
+          "before_CP": [
+            51020,
+            51020
+          ],
+          "before_UTF8": [
+            51437,
+            51437
+          ],
+          "after_CP": [
+            53097,
+            53973
+          ],
+          "after_UTF8": [
+            53502,
+            54378
+          ],
+          "before": "",
+          "after": "\n### Persistence cost\n\n<!-- req: P/01.1-R148 -->\nFor production qualification persistence of an ordinary fixed-size write MUST be incremental: each application MUST NOT serialize or rewrite the whole unchanged row store. Checkpoint work is accounted separately and in the amortized total; a background thread does not hide it. Import checks the entire immutable input before publication, then builds the state without repeatedly rewriting the already processed prefix. Indexed construction or sorting in O(N log N) is allowed; no particular WAL, engine or consensus algorithm is prescribed. Input bytes and stored-row cardinality are measured separately. Existing versions, the floor, transfer phases and durability barriers are preserved. The implementation declares its cost model and the qualified workload/resources; no universal numeric ceiling is supplied by this rule.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            766,
+            765
+          ],
+          "after_LF": [
+            770,
+            772
+          ],
+          "before_CP": [
+            56484,
+            56484
+          ],
+          "before_UTF8": [
+            56951,
+            56951
+          ],
+          "after_CP": [
+            59437,
+            60337
+          ],
+          "after_UTF8": [
+            59892,
+            60792
+          ],
+          "before": "",
+          "after": "- `input_timeout`: an input phase expires after a correct supported request line and before execution (N2.1). Caller action: correct the pacing or declared input envelope; no applied id or business effect is inferred.\n\nA definite pre-effect storage refusal preserves prior business rows, issued versions and applied-id records. An unknown medium outcome stays `ambiguous`; rolling back RAM alone does not prove no effect after recovery. For `ambiguous_barrier` with a complete recoverable record already on the medium, publish the whole operation with its matching id record. Replay completes the required barriers and returns the first answer with `again`, without a new version; another barrier failure remains `ambiguous`. A batch and its applied id recover whole or are absent whole. Legitimate last-admission changes under admitted refusals/replays are checked separately from business effects.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            850,
+            849
+          ],
+          "after_LF": [
+            857,
+            858
+          ],
+          "before_CP": [
+            67379,
+            67379
+          ],
+          "before_UTF8": [
+            68032,
+            68032
+          ],
+          "after_CP": [
+            71232,
+            71556
+          ],
+          "after_UTF8": [
+            71873,
+            72197
+          ],
+          "before": "",
+          "after": "Production qualification additionally uses the [production acceptance contract](production-acceptance.md): the independent workload, time, storage/fault and snapshot/output observations are separate from the functional TSV gates. Missing budgets or bindings are `blocked`/`NotExecuted`, not a successful production result.\n\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            858,
+            858
+          ],
+          "after_LF": [
+            867,
+            867
+          ],
+          "before_CP": [
+            69198,
+            69276
+          ],
+          "before_UTF8": [
+            69867,
+            69945
+          ],
+          "after_CP": [
+            73375,
+            73598
+          ],
+          "after_UTF8": [
+            74032,
+            74255
+          ],
+          "before": "6. **the lifetime and volume of the replay memory** beyond the minimum of N3;\n",
+          "after": "6. **the replay storage**: its bounded RAM cache, durable index, the retention minimum of N3 and the finite eligible-record collection budget under the qualified workload; the teaching non-durable mode is named separately;\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            861,
+            861
+          ],
+          "after_LF": [
+            870,
+            870
+          ],
+          "before_CP": [
+            69919,
+            70450
+          ],
+          "before_UTF8": [
+            70598,
+            71131
+          ],
+          "after_CP": [
+            74241,
+            75045
+          ],
+          "after_UTF8": [
+            74908,
+            75714
+          ],
+          "before": "9. **the request parsing limits**: the length of the HTTP request line (in bytes, without the final CRLF); exceeding it is `400 badrequest` by N2.1; the length of a chunk-size line of chunked with extensions (without CRLF) — exceeding it is a framing error: `400 badrequest` and the connection closed (C01-CHUNK-LINE-LIMIT-01); the drain volume and time after an early refusal (N2.1). The header limit (`HEADER_BYTES`) and the JSON depth (`JSON_DEPTH`) are norms of N2.1, not a choice (reconciliation of python and go 2026-10-18);\n",
+          "after": "9. **the request parsing limits**: the length of the HTTP request line (in bytes, without the final CRLF); exceeding it is `400 badrequest` by N2.1; the length of a chunk-size line of chunked with extensions (without CRLF) — exceeding it is a framing error: `400 badrequest` and the connection closed (C01-CHUNK-LINE-LIMIT-01); the drain volume and time after an early refusal (N2.1). The header limit (`HEADER_BYTES`) and the JSON depth (`JSON_DEPTH`) are norms of N2.1, not a choice (reconciliation of python and go 2026-10-18); The finite positive monotonic idle/header/body/drain budgets and their exact start events are N2.1; the implementation declares their values and any separate inactivity timer before qualification. Measurement allowance is separate and does not enlarge a protocol deadline.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            901,
+            900
+          ],
+          "after_LF": [
+            910,
+            911
+          ],
+          "before_CP": [
+            79548,
+            79548
+          ],
+          "before_UTF8": [
+            80443,
+            80443
+          ],
+          "after_CP": [
+            84143,
+            84576
+          ],
+          "after_UTF8": [
+            85026,
+            85471
+          ],
+          "before": "",
+          "after": "\n- [ ] **P/01.1-32** incremental write/import cost, required replay retention versus bounded cache and finite eligible GC, with qualified workload/resources and independent observations — [production acceptance](production-acceptance.md), RUN-W01–RUN-W04; phase deadlines/drain — RUN-T01–RUN-T03; stage-qualified rows/id/admission and barrier replay — RUN-F01–RUN-F04. Functional gates or unexecuted bindings do not close this item.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "b47a2f025ef46fd272e26100ea2a31099e27338e",
+      "after_blob": "2b5c8c11df1111fb90aceca08a57ee0d65866623",
+      "before_sha256": "1af25acb3155a5c87914fe2022ca1c64ee3292eb0d83673bfc58b7cd3f280390",
+      "after_sha256": "46fff127d27cb1936e18c7f2adafa36531fec29a09de6d0c0689d812d298aacc",
+      "before_bytes": 64579,
+      "after_bytes": 69159,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            304,
+            304
+          ],
+          "after_LF": [
+            304,
+            304
+          ],
+          "before_CP": [
+            36266,
+            37816
+          ],
+          "before_UTF8": [
+            36719,
+            38299
+          ],
+          "after_CP": [
+            36266,
+            37991
+          ],
+          "after_UTF8": [
+            36719,
+            38474
+          ],
+          "before": "A member identifier is 1–128 ASCII characters: the first a letter/digit, then letters/digits/`_`/`.`/`-`. This is the input profile of this lesson. The request parsing of the service doors is chapter 1.1 N2.1 (query, the JSON of the body, the path byte for byte, HTTP, early refusal); deviations are below. The order of checks: the frame (framing, the effective `-max-body` limit — 413) → route and method (404, 405) → identity (403) → body and membership (400, 409): an extra body larger than the limit with a foreign method — 413 earlier than 404/405 (reconciliation of python and go M10/6–11, B3). `HEAD` is not a method of the service doors: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` and `/v1/rights` — 404 by their owners, chapters 1.1 and 1.2 (both implementations, agreed without a norm). The bodies of service POSTs are one JSON object; unknown fields are rejected; the read limit is the same effective `-max-body`, counting actual entity bytes, extra JSON/framing/truncation — 400, exceeding — 413, the read time is limited by the implementation. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` of chapter 1.1. For own status/join/leave/write/metrics 503 is `UnavailableFault` before sending, `AmbiguousFault` after sending a change; at the connection limit — `UnavailableFault` with `Retry-After: 1` (chapter 1.1 N4). After an unknown join/leave the operator reads status; there is no automatic proof of success from a timeout. The floor keeps the replay memory of chapter 1.1.\n",
+          "after": "A member identifier is 1–128 ASCII characters: the first a letter/digit, then letters/digits/`_`/`.`/`-`. This is the input profile of this lesson. The request parsing of the service doors is chapter 1.1 N2.1 (query, the JSON of the body, the path byte for byte, HTTP, early refusal); deviations are below. The order of checks: the frame (framing, the effective `-max-body` limit — 413) → route and method (404, 405) → identity (403) → body and membership (400, 409): an extra body larger than the limit with a foreign method — 413 earlier than 404/405 (reconciliation of python and go M10/6–11, B3). `HEAD` is not a method of the service doors: `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics` — 405, `/v1/write` and `/v1/rights` — 404 by their owners, chapters 1.1 and 1.2 (both implementations, agreed without a norm). The bodies of service POSTs are one JSON object; unknown fields are rejected; the read limit is the same effective `-max-body`, counting actual entity bytes, extra JSON or a detected framing violation — 400, exceeding — 413. EOF before a complete framed body keeps P/01.1 R054: no reply, no execution and no occupied id. Input timeouts follow P/01.1 R147, including a body deadline from complete headers, not from the first body byte. 400/404/405 — `BadRequestFault`, 403 — `ForbiddenFault`, 413 — `BodyTooLargeFault` of chapter 1.1. For own status/join/leave/write/metrics 503 is `UnavailableFault` before sending, `AmbiguousFault` after sending a change; at the connection limit — `UnavailableFault` with `Retry-After: 1` (chapter 1.1 N4). After an unknown join/leave the operator reads status; there is no automatic proof of success from a timeout. The floor keeps the replay memory of chapter 1.1.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            308,
+            307
+          ],
+          "after_LF": [
+            308,
+            312
+          ],
+          "before_CP": [
+            38760,
+            38760
+          ],
+          "before_UTF8": [
+            39253,
+            39253
+          ],
+          "after_CP": [
+            38935,
+            40798
+          ],
+          "after_UTF8": [
+            39428,
+            41297
+          ],
+          "before": "",
+          "after": "\n<!-- req: P/01.3-R033 -->\n**HTTP copy.** `GET /v1/copy` is available only through `admin.sock`; a role header or network forwarding grants no administrative access. A correct GET on an ordinary role socket returns exactly `403 ForbiddenFault` before opening or exposing a snapshot. The R017 order framing → route/method → identity still applies. Success is one `200` with `Content-Type: application/x-ndjson`: the existing UTF-8/LF `w2c-configstore-copy`, version 1, at one consistent index, without a private prelude. An exact `Content-Length` or valid completed chunked transfer is required; connection close alone is not successful framing. An unsupported method on this path is `405 BadRequestFault` with `Allow: GET`; HEAD has no body. A different path keeps the existing `404`. Before successful headers an unavailable consistent snapshot or expired wait is `503 UnavailableFault`; request and access failures keep their own existing forms. This read does not produce a write's `AmbiguousFault`.\n\nAfter `200` headers a failure only closes the stream: do not send a second JSON fault, a final zero chunk after failed chunked output, or a false complete Content-Length response. Completion is not signalled before the whole artifact. The backup CLI validates both HTTP completion and the whole existing copy grammar, writes a `0600` temporary file and renames only after success; failure/cancellation preserves the previous published file. Allowed unreadable copy rows and the separate import/restore refusal on such input remain unchanged. There is no new HTTP import/restore or compatible private copy alias. Other internal named/versioned read-fence/admit/import frames remain allowed by «Implementation decides» item 1; this HTTP operation is the narrow exception for the copy transfer itself. CLI stdout remains diagnostic, not a machine JSON contract.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            356,
+            355
+          ],
+          "after_LF": [
+            361,
+            367
+          ],
+          "before_CP": [
+            42551,
+            42551
+          ],
+          "before_UTF8": [
+            43078,
+            43078
+          ],
+          "after_CP": [
+            44589,
+            45932
+          ],
+          "after_UTF8": [
+            45122,
+            46465
+          ],
+          "before": "",
+          "after": "### Snapshot output and orderly stop\n\n<!-- req: P/01.3-R034 -->\nA copy MUST pin one immutable version of the state. Blocking external output MUST run outside the lock that serializes ordinary mutations. The implementation declares finite bounds for lock wait, output, cancellation and orderly stop; a stalled receiver MUST NOT retain the mutation lock until transmission finishes. Success, failure and cancellation release snapshot and transport ownership. An unrelated operation may keep its existing bounded pre-effect refusal; that response alone does not prove correct lock scope.\n\nOn stop, cease admitting new work, cancel or bound external I/O, and resolve or classify admitted work by its existing definite/ambiguous outcomes. Retire owned snapshots, connections and listeners within the declared orderly-stop bound. This bound MUST fit below the actual service-manager stop deadline with a separately measured teardown margin. The manager's old example is not a Go Shutdown budget; forced kill is not orderly success. Raft Barrier is not evidence of a storage durability barrier, and a Raft Shutdown return is not proof that the platform has drained its work. Import's complete-input check, exact versions and floor/progress phases remain unchanged; construction obeys [P/01.1 Persistence cost](01.1-store.norms.md#persistence-cost).\n\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            361,
+            361
+          ],
+          "after_LF": [
+            373,
+            373
+          ],
+          "before_CP": [
+            42954,
+            43158
+          ],
+          "before_UTF8": [
+            43483,
+            43687
+          ],
+          "after_CP": [
+            46335,
+            46627
+          ],
+          "after_UTF8": [
+            46870,
+            47162
+          ],
+          "before": "- `service_body_form`: service HTTP: unknown fields, not an object/not JSON, extra JSON, bad framing/truncation/read timeout, an inadmissible field. Caller action: fix the input; there is no side change.\n",
+          "after": "- `service_body_form`: service HTTP: unknown fields, not an object/not JSON, extra JSON, a detected framing violation or an inadmissible field. EOF/truncation follows R054 without an HTTP refusal; input-phase timeout is `input_timeout`. Caller action: fix the input; there is no side change.\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            390,
+            389
+          ],
+          "after_LF": [
+            402,
+            405
+          ],
+          "before_CP": [
+            47313,
+            47313
+          ],
+          "before_UTF8": [
+            47856,
+            47856
+          ],
+          "after_CP": [
+            50782,
+            51234
+          ],
+          "after_UTF8": [
+            51331,
+            51783
+          ],
+          "before": "",
+          "after": "\n- `copy_method`: unsupported method at /v1/copy. Caller action: use GET; HEAD remains bodyless.\n- `copy_admin_only`: copy requested through an ordinary role socket or forwarding. Caller action: use the authorized local admin socket; no header grants it.\n- `copy_snapshot_unavailable`: a consistent copy cannot be obtained before successful headers within the declared wait. Caller action: retry the read when available; no write outcome is ambiguous.\n"
+        },
+        {
+          "operation": "replace",
+          "before_LF": [
+            436,
+            436
+          ],
+          "after_LF": [
+            452,
+            452
+          ],
+          "before_CP": [
+            54905,
+            55047
+          ],
+          "before_UTF8": [
+            55581,
+            55723
+          ],
+          "after_CP": [
+            58826,
+            59045
+          ],
+          "after_UTF8": [
+            59508,
+            59727
+          ],
+          "before": "   (read-fence, admit, import) are internal to the implementation: a format with a name and a version, no new HTTP routes; the members of one\n",
+          "after": "   (read-fence, admit, import) remain internal to the implementation: a format with a name and a version, no new HTTP routes. The copy transfer itself uses the explicitly declared GET /v1/copy of N2; the members of one\n"
+        },
+        {
+          "operation": "insert",
+          "before_LF": [
+            469,
+            468
+          ],
+          "after_LF": [
+            485,
+            487
+          ],
+          "before_CP": [
+            63732,
+            63732
+          ],
+          "before_UTF8": [
+            64579,
+            64579
+          ],
+          "after_CP": [
+            67730,
+            68298
+          ],
+          "after_UTF8": [
+            68583,
+            69159
+          ],
+          "before": "",
+          "after": "\n- [ ] **P/01.3-12** admin-only HTTP copy, role403 before snapshot, method405/Allow GET and bodyless HEAD, completed Content-Length/chunked and no false completion or second fault — [production acceptance](production-acceptance.md), RUN-H01–RUN-H03; prior published file survives failure.\n- [ ] **P/01.3-13** immutable snapshot/output outside mutation lock, finite cancellation/stop below the actual manager deadline and qualified independent observations — [production acceptance](production-acceptance.md), RUN-L01–RUN-L03; missing bindings or budgets are not PASS.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "6cfc02a3b09f9cc4134cf0414e1aa7ddc1e81c6a",
+      "after_blob": "086d5b0ead2ecf9e7a7b943ffdc96b3e7e21aaca",
+      "before_sha256": "bbbb306649f35e8d546afd3c26feb2d77d038954b8b81a1bffcbefe45bc0d670",
+      "after_sha256": "d0ee5152cfad53e644e76480e01fc939d2a96b3e0d36a7362bb5a26388b5f2b2",
+      "before_bytes": 162663,
+      "after_bytes": 163231,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            777,
+            776
+          ],
+          "after_LF": [
+            777,
+            778
+          ],
+          "before_CP": [
+            82753,
+            82753
+          ],
+          "before_UTF8": [
+            110932,
+            110932
+          ],
+          "after_CP": [
+            82753,
+            83075
+          ],
+          "after_UTF8": [
+            110932,
+            111500
+          ],
+          "before": "",
+          "after": "Общий слив P/01.1 R050 считает сырые байты HTTP-потока; абсолютный монотонный интервал начинается после отправки полного отказа, слив chunked не ждёт завершающей части. Ссылка разбора не заменяет собственные исходы или бюджеты тайм-аута ресурса отказами фаз ввода P/01 и не добавляет общего срока ответа потокам ресурса.\n\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "operation": "MODIFIED",
+      "before_blob": "715c5c397c4229bfbdeeea8136f4361e58068326",
+      "after_blob": "3a27d3494c458d0fb193a64f59fd57b3c27b1bfd",
+      "before_sha256": "1fdca0553dc1d3f518de22c3128af90ed192564f9e3d2b7cbf4dc6e9b160328a",
+      "after_sha256": "f55aaf0a9f97fe52f15e3c01f7e8b009483c87e8530a91b663bdb6c9545bccf6",
+      "before_bytes": 129750,
+      "after_bytes": 130123,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "insert",
+          "before_LF": [
+            859,
+            858
+          ],
+          "after_LF": [
+            859,
+            860
+          ],
+          "before_CP": [
+            88066,
+            88066
+          ],
+          "before_UTF8": [
+            89433,
+            89433
+          ],
+          "after_CP": [
+            88066,
+            88439
+          ],
+          "after_UTF8": [
+            89433,
+            89806
+          ],
+          "before": "",
+          "after": "The shared P/01.1 R050 drain counts raw HTTP-stream bytes and its absolute monotonic interval starts after the complete refusal has been sent; chunked discard does not wait for a terminal chunk. This parsing reference does not replace the resource's own timeout outcomes or budgets with P/01 input-phase refusals, and adds no common response deadline to resource streams.\n\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/common/contracts/gate-and-pass.md",
+      "operation": "MODIFIED",
+      "before_blob": "cf9933ebb84566b4832c3eb77798329e8a3f72c6",
+      "after_blob": "231ac57650f5f38ff3cde2807c249164371ef690",
+      "before_sha256": "4a9d4e854b688c3a9adf8b025ef6e5f69bdd7373fefae76d7cde863db151c6b2",
+      "after_sha256": "eeca1da110705505399c2d557241ffd90e57707ba51c6bc78be480fbb1dd5bd7",
+      "before_bytes": 83455,
+      "after_bytes": 83576,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            275,
+            279
+          ],
+          "after_LF": [
+            275,
+            275
+          ],
+          "before_CP": [
+            32673,
+            33439
+          ],
+          "before_UTF8": [
+            33274,
+            34054
+          ],
+          "after_CP": [
+            32673,
+            33574
+          ],
+          "after_UTF8": [
+            33274,
+            34175
+          ],
+          "before": "**Early refusal.** A door that refuses before reading the whole body (`Content-Length` greater than the limit — `413`; any other\n  refusal before the body) sends the full answer with `Connection: close`, then reads and discards what is sent, without parsing, up to\n  the declared length, but no more than the volume and no longer than the drain term, and only after that closes the connection: a client\n  that still sends the body gets the answer, not a connection reset. The rule is one for all HTTP doors of the module (the console —\n  [P/06.5](../../06-console/spec/06.5-console.norms.md) N2 «Console request parsing», the bytes door — P/06.1 N2, the resource door — P/05 N2 «Query parsing»); the volume and the drain term are item 9 of «Implementation decides».\n",
+          "after": "**Early refusal.** Follow P/01.1 R050: send the complete refusal with `Connection: close` first, then discard raw HTTP-stream bytes without parsing/execution, bounded by the declared length when framing supplies one, the declared raw-byte limit and the absolute monotonic drain deadline. The interval starts after the complete refusal is sent; a trickle does not extend it and chunked discard does not wait for a terminal chunk. Then close; add no second refusal or executed pipelined request. The console ([P/06.5](../../06-console/spec/06.5-console.norms.md)), its bytes door (P/06.1) and the resource (P/05) keep their own outcomes and declared limits. This reference does not copy P/01 input-timeout responses/budgets onto them: console slow-body `408` and BODY_WAIT from headers remain owned here; forwarding, pass and stream response budgets are not replaced by a common P/01 response deadline.\n"
+        }
+      ]
+    },
+    {
+      "path": "Platform/common/ru/contracts/gate-and-pass.md",
+      "operation": "MODIFIED",
+      "before_blob": "fa4acaf86c5a41739954181dce3797f7fb5199a4",
+      "after_blob": "45bfab781d31ad49a13123bfdc6014d21ef41952",
+      "before_sha256": "6956c05186cb34b70691de46dff31bfaa016b7ea0f915767dda43b5aae97021f",
+      "after_sha256": "82e519fde537bc479aa3964054800036395f094e151bd17df0334963718797ed",
+      "before_bytes": 107850,
+      "after_bytes": 108157,
+      "mode": "100644",
+      "blocks": [
+        {
+          "operation": "replace",
+          "before_LF": [
+            275,
+            279
+          ],
+          "after_LF": [
+            275,
+            275
+          ],
+          "before_CP": [
+            29394,
+            30071
+          ],
+          "before_UTF8": [
+            42676,
+            43785
+          ],
+          "after_CP": [
+            29394,
+            30255
+          ],
+          "after_UTF8": [
+            42676,
+            44092
+          ],
+          "before": "**Ранний отказ.** Дверь, которая отказывает до чтения всего тела (`Content-Length` больше предела — `413`; любой иной\n  отказ до тела), отправляет полный ответ с `Connection: close`, затем читает и отбрасывает присланное, не разбирая, до\n  заявленной длины, но не больше объёма и не дольше срока слива, и только после этого закрывает соединение: клиент,\n  который ещё шлёт тело, получает ответ, а не сброс соединения. Правило одно для всех HTTP-дверей модуля (консоль —\n  [P/06.5](../../../06-console/ru/spec/06.5-console.norms.md) N2 «Разбор запроса консоли», дверь байтов — P/06.1 N2, дверь ресурса — P/05 N2 «Разбор запроса»); объём и срок слива — п. 9 «Решает реализация».\n",
+          "after": "**Ранний отказ.** Следовать P/01.1 R050: сначала полный отказ с `Connection: close`, затем слив сырых байтов HTTP-потока без разбора/исполнения, ограниченный заявленной длиной, если framing её задаёт, объявленным пределом сырых байтов и абсолютным монотонным сроком слива. Интервал начинается после отправки полного отказа; медленная подача его не продлевает, а слив chunked не ждёт завершающей части. Затем закрытие; нет второго отказа или исполнения запроса из pipeline. Консоль ([P/06.5](../../../06-console/ru/spec/06.5-console.norms.md)), её дверь байтов (P/06.1) и ресурс (P/05) сохраняют свои исходы и объявленные пределы. Ссылка не переносит на них исходы/бюджеты тайм-аута ввода P/01: медленное тело консоли `408` и BODY_WAIT после заголовков сохраняют владельца здесь; бюджеты ответов forwarding, pass и stream не заменяются общим сроком ответа P/01.\n"
+        }
+      ]
+    }
+  ],
+  "requirement_unit_operations": [
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "id": "P/01.1-R050",
+      "old_sha256": "c219fd7926c119e0732fd79b37ed546c6c40201984bb566df43ee9ff81d39ef6"
+    },
+    {
+      "operation": "ADDED",
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "id": "P/01.1-R147",
+      "old_sha256": null
+    },
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "id": "P/01.1-R141",
+      "old_sha256": "26638392aa1c567493c7a171d6d49c47be79b9e013c68c2a7a15712368fc0e03"
+    },
+    {
+      "operation": "ADDED",
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "id": "P/01.1-R148",
+      "old_sha256": null
+    },
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "id": "P/01.1-R144",
+      "old_sha256": "2fff20f4a1f529b73deb075789b1155efa6cc0eb228d086d96ea156ad2f71ed4"
+    },
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "id": "P/01.3-R017",
+      "old_sha256": "f6fbd7af864b3448115212f228cd039fc4b85ae4ba4002f1ef53032249e6963f"
+    },
+    {
+      "operation": "ADDED",
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "id": "P/01.3-R033",
+      "old_sha256": null
+    },
+    {
+      "operation": "ADDED",
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "id": "P/01.3-R034",
+      "old_sha256": null
+    },
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "id": "P/01.3-R029",
+      "old_sha256": "44f5aa1885e09f5ace2bd397c149de37f906fda6c8a9e44b5677fccebc2cdbbd"
+    },
+    {
+      "operation": "MODIFIED",
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "id": "P/05-R041",
+      "old_sha256": "ee70e929ed99c3ade6d0475ff1019fad55908d7ce4a2cd549bc4278b13956726"
+    }
+  ],
+  "unit_counts": [
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "before_units": 146,
+      "after_units": 148,
+      "unmodified_units": 143
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "before_units": 32,
+      "after_units": 34,
+      "unmodified_units": 30
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "before_units": 57,
+      "after_units": 57,
+      "unmodified_units": 56
+    }
+  ],
+  "initial_declaration": {
+    "external": "/home/pilot/spec103/z21-D1-D7-source-c13201be-20261108/SOURCE-BEFORE-EDIT-DECLARATION.json",
+    "sha256": "d95444332e757bca5839f5e17d63819b68259da9738b0215737cba64466df4b6",
+    "superseded_carrier": "New production doc in existing spec/ layout; initial declaration/followups remain immutable"
+  },
+  "followups": [
+    "SOURCE-LAYOUT-MIRROR-FOLLOWUP.json",
+    "MIRROR-EXACT2-FIX.json",
+    "SERVICE-EOF-ALIGNMENT.json"
+  ],
+  "related_map": {
+    "P01": "changed EN/RU norms, API, lifecycle, instruction, stage note and refusal catalogue; all existing command/write forms and data corpora preserved",
+    "P05": "changed shared raw-drain reference only; own error/time and stream budgets preserved",
+    "P06": "changed canonical gate-and-pass parsing mirror; 06.1/06.5 delegation remains valid without duplicated edits; BODY_WAIT408 preserved",
+    "P02": "actual service-manager deadline referenced only; example not a new Shutdown number; installer schema/flags untouched",
+    "P03/P04/P07-P10": "no new response deadline or budget; forwarding/pass/stream owners and all current sources untouched",
+    "common/store-client": "generic client/Cmd unchanged; copy is admin HTTP of P01.3, no implicit generic client extension",
+    "Source/VMS/tools/skills/old ce8KIT/41": "unchanged; no implementation or old evidence replay"
+  },
+  "runtime_cases": {
+    "groups": 17,
+    "measurement_definitions": 11,
+    "executed": 0,
+    "quantitative_budgets": null,
+    "actual_instrumentation_provider": "UNKNOWN; qualified bindings required, not supplied by Source",
+    "runner_candidate_reported": "9481acb95b990dda46e0fdf65b7315aef5ad3bf4;32distinctfixturecontrols reported by runner, not Spec executions",
+    "runner_initial_reported": "ab92cd99e581fe3b80949f353e94d030331adb54; initial30fixture controls, immutable"
+  }
+}

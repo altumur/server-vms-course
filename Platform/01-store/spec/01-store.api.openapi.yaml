@@ -275,6 +275,72 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Leave'
+  /v1/copy:
+    get:
+      summary: Read one consistent copy through the local admin socket only
+      description: >-
+        P/01.3 HTTP copy. Check framing, route/method and identity in that order.
+        A correct GET on an ordinary role socket is 403 before opening or exposing
+        a snapshot; role headers and network forwarding grant no admin access.
+        The successful body is the existing UTF-8/LF JSONL copy version1 at one index,
+        not a single JSON object. Complete exact Content-Length or valid chunked
+        framing is required; EOF-only framing is not successful completion.
+        After 200 a failure closes the stream without a second fault or false final
+        zero chunk. HEAD is unsupported: 405 with Allow GET and no body.
+        Internal read-fence/admit/import frames remain implementation-private.
+      responses:
+        '200':
+          description: The whole consistent copy; success is signalled only after its complete artifact and HTTP framing
+          headers:
+            Content-Length:
+              schema: {type: string, pattern: '^(?:[0-9]+)$'}
+              description: Exact entity-body byte length; use this or valid completed chunked, not both
+            Transfer-Encoding:
+              schema: {type: string, pattern: '^(?:[Cc][Hh][Uu][Nn][Kk][Ee][Dd])$'}
+              description: Alternative to Content-Length; send the terminal zero chunk only on successful complete output
+          content:
+            application/x-ndjson:
+              schema:
+                type: string
+                description: Existing w2c-configstore-copy version1 UTF-8/LF header and rows, one consistent index, keys in UTF-8-byte order
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NoRoute'}
+        '405':
+          description: Unsupported method on this known path; BadRequestFault, body omitted for HEAD
+          headers:
+            Allow: {required: true, schema: {type: string, const: GET}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BadRequestFault'}
+        '413':
+          description: Existing effective body-limit refusal before the copy operation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyTooLargeFault'}
+        '503':
+          description: Unavailable consistent snapshot or expired wait before successful headers; no write AmbiguousFault
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UnavailableFault'}
+          headers:
+            Retry-After:
+              schema: {type: integer, const: 1}
+              description: Only for the existing unavailable connection-limit cause; absent for snapshot or wait failure
+    head:
+      summary: Unsupported copy method; always bodyless
+      description: Framing precedes the method check; this declares no successful HEAD copy operation
+      responses:
+        '400': {description: BadRequestFault status without a body}
+        '405':
+          description: Method not supported; no body
+          headers:
+            Allow: {required: true, schema: {type: string, const: GET}}
+        '413': {description: Existing body-limit refusal status without a body}
+        '503':
+          description: Existing connection-limit refusal status without a body
+          headers:
+            Retry-After: {schema: {type: integer, const: 1}}
   /metrics:
     get:
       summary: Daemon metrics

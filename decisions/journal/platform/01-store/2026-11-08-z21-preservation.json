@@ -1,0 +1,65 @@
+{
+  "base": "2a63643ff3f338972dda9ec32231089ad38e66ea",
+  "protected": [
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "blob": "54a936e06939ef4e23fd14c6b134d4987d560e3a",
+      "sha256": "0bb59d5b17f30a6bbb4eb6267987712b5b20d7158d8f0fd718269329cb068ee4",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "blob": "f478b56ef35a93685c1711444762922e6a432f26",
+      "sha256": "bca631d4f0e702d65da5e573c9908acee0519666d57c0db5cdb2f7cf94325932",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv",
+      "blob": "b8b8a4394eaba11a20543ea06b12a354e1bdfabe",
+      "sha256": "23c626ef5251ac5048074039122b67e48a56c0da066233649aa24aae784b6777",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv",
+      "blob": "0669e9b7d26bf1c45a7fec78752e32793e5cf05e",
+      "sha256": "eb28949ae665ea166fc8ff4f163190410cab068f6179878665ed04cff7cc02a3",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+      "blob": "a561e2d1f7092d4a0d9381010ddfc4bf76bafb6d",
+      "sha256": "a60cbcd2c429cc6464daa228320097ce6d15d26253239e34602f6fd1bf31bcde",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "blob": "29116434233cd64c6a573cea3d7cbfc944a961de",
+      "sha256": "f1d156863dea69514c33b5b115012a523c63347131b010ea85d2657ed5e1be80",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/scenarios.tsv",
+      "blob": "70af98ad5f8f3c7996623b962cd3c9a02efbe58e",
+      "sha256": "722911eadc7e98cb7b7664f7c272afcf00ae42a0086eeff866bc32705997464b",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "blob": "019a5e23838480e2ab8a4c1a2a77b2da49ca278c",
+      "sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+      "byte_exact": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/seams.tsv",
+      "blob": "86f3e1506faa278b3c85f156b3e8910ae03b3223",
+      "sha256": "bc1c97d467361ee3445284566cbc7283c863cb764bad92974458b9927b497a80",
+      "byte_exact": true
+    }
+  ],
+  "new_checklist_history": "Only three appended - (new) rows in the existing id-map grammar, old prefix exact",
+  "old_API": "Removing only /v1/copy leaves the complete parsed API tree equal to base; all old schema/path trees preserved",
+  "old_requirement_ids": "No removals or renumbering. Four new req ids147/148 and033/034. R054 unit is byte-exact.",
+  "refusals": "All old rows byte exact after removing four new names; same HTTP fault kinds, no new external class",
+  "budgets": "No numeric deadline/cache/GC/manager budget or runtime option added; R141 constants unchanged",
+  "limits": "Own Source carrier/mirror/metadata checks do not attest actual candidate durability, power loss, workload, group, SUT or production acceptance."
+}
