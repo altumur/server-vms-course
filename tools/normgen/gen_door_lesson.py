@@ -844,7 +844,7 @@ _P06_HEADS = (
 
 
 def _p06_reference(docs, ref, base):
-    file, _, pointer = ref.partition("#")
+    file, pointer = docs._uri(ref)
     target = (Path(base).parent / file).resolve() if file else Path(base).resolve()
     try:
         source = str(Path(base).relative_to(docs.p06_root))
@@ -852,6 +852,29 @@ def _p06_reference(docs, ref, base):
     except ValueError:
         raise GenError(f"P06 reference escapes source root: {ref}") from None
     docs.p06_references.add(source + " " + ref + " -> " + target + "#" + pointer)
+
+
+def _p06_dependencies(docs):
+    """Collect the full typed source closure, separately from projection caches."""
+    pending, documents = [docs.main], {}
+    while pending:
+        base = pending.pop()
+        if base in documents:
+            continue
+        document = docs.load(base)
+        documents[base] = document
+        meta = docs._meta[base]
+        for origin in sorted(meta["schemas"] | set(meta["objects"])):
+            node = docs._pointer(document, origin)
+            if not isinstance(node, dict) or "$ref" not in node:
+                continue
+            schema = origin in meta["schemas"]
+            _, target = docs.resolve(node["$ref"], base, schema=schema, origin=origin)
+            if not schema:
+                docs.deref(node, base, origin=origin)
+            _p06_reference(docs, node["$ref"], base)
+            pending.append(target)
+    return documents
 
 
 class _P06Bundle(Bundle):
@@ -923,6 +946,7 @@ def _p06_build(root):
     components = (docs.doc.get("components") or {}).get("pathItems") or {}
     if set(components) != set(_P06_COMPONENTS):
         raise GenError("P06 requires exactly the six published S08 components.pathItems; no legacy fallback")
+    documents = _p06_dependencies(docs)
     view_path = root / "Platform/02-installer/spec/02.2-installer.view.schema.json"
     try:
         view = json.loads(view_path.read_text(encoding="utf-8"))
@@ -994,7 +1018,7 @@ def _p06_build(root):
                          "source": str(spec.relative_to(root)) + pointer + "/" + m,
                          "base": str(Path(op_base).relative_to(root)), "levels": levels,
                          "security": op.get("security", docs.doc.get("security", [])), "server_nodes": server_nodes,
-                         "p06_refs": docs.p06_references, "p06_documents": docs.cache, "p06_root": root}
+                         "p06_refs": docs.p06_references, "p06_documents": documents, "p06_root": root}
             ops.append(operation)
             path_ops.append(operation)
             by_pm[f"{path} {m.upper()}"] = name
