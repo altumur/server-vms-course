@@ -154,12 +154,7 @@ of the caller (P/08.8 N1.6; P/09.1 N3 «follow», «take the document»).
 
 ## Vectors
 
-The package [`record`](../vectors/record/README.md) (analysis of review of stage A 8–10, № 13): `shared.tsv` — 8 lines of the kind «shared
-document» (REC-G01); `cases.tsv` — 47 lines: 10 of the kind «members row» (`record-member-row-*`), 1 of a term record with `key`, 7 by C08-BACKUP-JSON-99 (`raw` of the backup document: the bytes `ff7b` — `/3s=`, 0 bytes — `""`, a JSON out of form « [ 1.00 ] » — its bytes; an object in form — into `objects`; without padding, base64url and a key both in `objects` and in `raw` — `not_a_record`), 1 by C137-SCHEMA-TIME-01 (`until` beyond binary64 — code 2), 3 by REC-TRUSTED-TIME73 (the time `until` of the trusted set by the canon of P/01.1 N0: a string of the record is accepted, −1 and «1e9» — code 2), 4 by REC-G02 (nesting 64/65 of the text `doc`, of the row and of `keys`), 3 by REC-G01 (term 1 with `restored_from`, `domain` as a number, `kid` not hex), 1 by Z-10 (excess fractional precision of trusted-key until — the existing form refusal) and 17 — the inputs of the command `record`
-of the acceptance of M11/10 (sc. 05) without a change of bytes: three kinds of document, a foreign domain, a revoked and an unknown issuer,
-`kid` ≠ `issuer`, a substitution, forms and types; one line is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); the scenario and the inputs were removed by the move
-of lesson 8 — the table is the only source of these cases. The form of the function and the exit codes of the command are a copy of
-[P/08.8](../../08-domain/spec/08.8-domain.norms.md) N5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
+The package [`record`](../vectors/record/README.md) includes `shared.tsv` with 8 rows and `cases.tsv` with 47 rows. It covers the declared document kinds, trusted input, backup raw fields, Time and nesting boundaries. The detailed named case inputs and answer associations remain judge-only in the package. The function form and native exit meanings below are the existing copy of [P/08.8](../../08-domain/spec/08.8-domain.norms.md) N5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 record:    input {keys: <the set document>, row: {doc}}; output {result: ok, term, holder} | {result: refused, reason}

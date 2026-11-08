@@ -146,7 +146,7 @@ lines_in:       the function gets only lines of lines in the form of P/08.4 N1.3
                 is at the caller, code 2 is at the function
 ```
 
-Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
+Which input is out of form (the `grants` lines are a trusted input) — [the native input form](may-input.md#may) (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) N5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Exit codes of vector commands»: 2 — the form
@@ -200,9 +200,5 @@ From M11/9 N4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcome 
 
 ## Vectors
 
-The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of M11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
-`may-24` (the Architect's decision of 2026-10-20; the README of the package);
-one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
-source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate
-contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
+The package [`may`](../vectors/may/README.md) contains 126 rows covering grants, roles, tiers, folder scopes, target judgement and the input form, including 24 inputs of the former M11/9 acceptance (sc. 07). There is also `covers.tsv` with 19 rows of the function `covers(scope, ref, row)` of the gate ([the gate contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10). The governing function and input-form rules determine outcomes; the detailed named case inputs and answer associations remain judge-only in the package.
 

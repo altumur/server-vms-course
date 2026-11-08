@@ -17,70 +17,11 @@ decision of 2026-10-20, ADR-0083 addendum (14) item 17): the table is the only s
 
 ## Form of the input of the command `may`
 
-The input is one JSON object (the column `input`); the function and its steps are [the right contract](../../contracts/may.md) «The function `may`».
-The form was moved here from [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) N5 `exit` together with the choices of the log
-(the guesses of stage C MAY-G01/G02, the Architect's decision of 2026-10-23): a common algorithm is a common form.
-
-```yaml
-input:     a JSON object; eight fields are required: grants, as_of, disabled, user, glass, cap, unit, now; optional are sub, roles,
-           unread, iat, anywhere, as_role (ADR-0097–ADR-0100, ADR-0105, ADR-0110; no field — null, for unread — []); fields beyond them are not read (not a refusal)
-grants:    null | exactly {lines: [line…]}
-line:      exactly {subject, cap, sub?, scope, until, by} — a trusted input (a copy already parsed by P/08.4 N1.3): a line not of the
-           form is an input not of the form, code 2, not a skip
-  subject: by the form of P/08.4 doc.lines[].subject — non-empty, 1–64 characters without whitespace (White_Space Unicode 15.0.0),
-           control characters and : | ( ) " /, not break-glass; subject "" is an input not of the form, code 2 (the guess of stage C MAY-G03, the Architect's decision of 2026-10-23);
-           or role: and a name of the same grammar, except admin (ADR-0098 §2, ADR-0100 §1)
-  cap:     none | view | edit | admin; none — only at a role line (ADR-0099 §1)
-  sub:     a manifest name [a-z][a-z0-9_-]{0,31} (P/02.1); platform passes the same grammar
-  scope:   "*" | "unit:<sub>/<id>" | "labels:<label>[,<label>…]" | "folder:<id>"; at a role line labels: is not of the form (ADR-0099 §1);
-           the <id> of a folder is 32 lowercase hex digits (P/06.8 N1.1); <sub> is a manifest name [a-z][a-z0-9_-]{0,31} (P/02.1),
-           <id> is by the row check contract «Identifier and field constraints» named (`unit:testsub/a,b` — 2),
-           a label is by the labels alphabet contract
-  until:   a time — 0 or a non-negative JSON number by the current P/01.1 N0 Time reader, with the writer's same three-digit fraction bound;
-           without rounding or truncation by the reader; its value is finite in
-           binary64, as now and as_of: it does not fit — an input not of the form, code 2, before parsing glass (MAY-UNTIL-D8-01, the Architect's decision of 2026-10-25)
-  by:      a string
-as_of:     null | a finite JSON number
-disabled:  [string…]
-user:      a string without lone surrogates; "" is of the form (step 8: deny no_grant, code 0)
-glass:     true | false
-cap:       view | edit | admin
-unit:      null | "*" | "any" | exactly {sub, id, labels, about?, chains?}: sub, id — strings (the id of the door unit is not checked by the grammar:
-           `"a,b"` — code 0), labels — [string…]; about — exactly {sub, id, labels, chains?} of the same form or "unknown"
-chains:    [[string…]…] | "unknown"; no field — the same as "unknown"
-now:       a finite JSON number
-sub:       a string by the grammar of a manifest name | null
-roles:     null | "unreadable" | {<name>: [exactly {role, until, at}…]}: role — a string; until and at — a time, as the until of a line
-unread:    "all" | [exactly {role, sub?}…]: role and sub — strings
-iat:       a finite JSON number | null
-repeats:   repeats in disabled, labels, lines and in the labels of a scope labels: are not a form error
-order:     the whole form is checked before steps 1–2 (glass, disabled): an input not of the form — code 2 even at glass: true
-exit:      0 — computed (the output is the right contract output); 2 — an input not of the form (P/08.4 N5 exit)
-```
-
-Examples of code 2 (P/08.4 N5): `until` as a string, a line without `by`, `lines` not a list, an unknown `cap`, `labels` as a string, a surrogate
-in `user`, `as_of` as a string, no `now`, `glass` not `true | false`, `disabled` not a list, `about` not an object and not `"unknown"`, an extra field
-of a line of `lines`, of `unit` or of `about`; `sub` not by the grammar; `chains` not a list; `roles` not a table; `none` at a direct line; `labels:` and `role:admin` at a role line; the `cap` of the input `none`.
+The normative input form and its native exit meanings are defined in [the common native input form](../../contracts/may-input.md#may). Case inputs and answer associations below remain judge-only.
 
 ## `covers`
 
-Whether one grant scope covers the door unit ([the gate contract](../../contracts/gate-and-pass.md) `scope`; step 7 of the function
-`may` — by the scope; C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26). The file [`covers.tsv`](covers.tsv), the same
-file rules as `cases.tsv`.
-
-```yaml
-input:   {scope, ref, row}
-  scope: "*" | "unit:<sub>/<id>" | "labels:<label>[,<label>…]" | "folder:<id>" — the grammar of a grant line (above); otherwise — code 2
-  ref:   exactly {sub, id} — the unit named in the path or ?unit=; a folder as the object of a write — {sub: platform, id: <folder id>}
-  row:   exactly {labels: [<label>…], about?: {sub, id, labels, chains?}, chains?} — the unit row as read (labels — the field
-         declared in unit.fields; none — []); chains — as at the input of may; "@unreadable" — the row is unreadable or the read is not confirmed
-output:  true | false (stdout JSON); code 2 — an input not of the form
-rule:    "*" — true; unit:<s>/<i> = ref — true by the name, not reading the row; otherwise unit:<s>/<i> — true when row is readable and
-         row.about = (s, i); labels:L — true when row is readable and all labels of L are at about if about exists, otherwise at row;
-         folder:<id> — true when row is readable, the chains are known and id is in a chain of row or of row.about;
-         row "@unreadable" and chains "unknown" — a grant by labels, on an about-unit and folder: do not cover (not 503);
-         ref.sub = platform — unit: and labels: do not cover
-```
+The normative input, output and coverage rule are defined in [the common covers form](../../contracts/may-input.md#covers).
 
 19 rows. Tiers 1–4 and the choice of the first non-empty one are judged by the role group, not by one scope, so they are in [`cases.tsv`](cases.tsv) (may-62…may-92), not here. The first 9: `unit:` by the name at an unreadable row — `true`; `labels:` and a grant on an about-unit at an unreadable one — `false`; `*` at
 an unreadable one — `true`; at a readable one — the labels at the row itself, the labels at about, a grant on an about-unit — `true`, `unit:` of a foreign

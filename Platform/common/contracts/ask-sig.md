@@ -68,7 +68,5 @@ From M11/10 N4: the words of `ask-sig`: `missing`, `bad_time`, `skew`, `bad_sign
 
 ## Vectors
 
-The package [`ask-sig`](../vectors/ask-sig/README.md) (analysis of the review of stage A 8–10, № 13): 27 rows — 12 inputs of the command `ask-sig`
-of the acceptance of M11/10 (sc. 07) without a change of bytes; one of them is an input out of form (`@exit 2`; analysis of the review of stage B 8–10, № 22); row 13 — the field `member` at the top level, `@exit 2` (question 2 of the same analysis). The scenario and the inputs were removed
-by the move of lesson 8 — the table is the only source of these cases. Rows 14–26 — `move`, row 27 — `backup` with an extra `body_sha256`.
+The package [`ask-sig`](../vectors/ask-sig/README.md) (analysis of the review of stage A 8–10, № 13) contains 27 rows, including 12 inputs of the former M11/10 acceptance (sc. 07), and the move, backup and input-form boundaries. The function form, its closed fields and native exit meanings are defined above. Detailed case inputs and answer associations remain judge-only in the package.
 

@@ -92,5 +92,5 @@ From M11/8 N4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `ex
 
 ## Vectors
 
-The package [`peer`](../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of M11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
+The package [`peer`](../vectors/peer/README.md) contains 31 rows, including 25 inputs of the former M11/8 acceptance (sc. 06). Its later cases cover certificate path order and the address, name and input-form boundaries. The function steps and refusal vocabulary above govern the result; detailed case inputs and answer associations remain judge-only in the package.
 
