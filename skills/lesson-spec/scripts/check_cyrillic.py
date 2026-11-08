@@ -25,7 +25,7 @@ SCOPES = ("Platform", "VMS", "tools/normgen")
 # decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md.
 # Each SHA binds the whole raw file, not a Cyrillic budget or a path pattern.
 EXACT_SOURCE_FILES = {
-    'VMS/11-backend/README.md': '2d77a4666410b1121226bdfd49e00c843bb15424d4d03800b62b438671fffd81',
+    'VMS/11-backend/README.md': 'bdcdc26457b7e01a22f3e260be61933b9b80dfe45f8f31b5f56e33baa481b91c',
     'VMS/11-backend/acceptance/4/README.md': 'e5bfada38fd0b2db93b925c1398466c45bad46355137ac89c7363a5367154ee6',
     'VMS/11-backend/acceptance/4/scenarios.tsv': 'c7f7c12b7c7d7f376fbf929731432f259220333cbbef234ec7028e1009a1cbfe',
     'VMS/11-backend/acceptance/8/README.md': '954504f48ef6d17b6446819701be91c60f4288da21a84e1d77ca8c1fbd724217',
@@ -46,7 +46,7 @@ EXACT_SOURCE_FILES = {
     'VMS/11-backend/spec/11.3-backend.norms.md': '06dc4d60dc6a75ee3c9ec766cf42307b5a85684ec3f5e75a7f0c6350af9c1853',
     'VMS/11-backend/spec/11.4-backend.norms.md': 'a1082d07605891af5f6ed86eff0edd99455e0c474b21c6dfd59b94947dc6cd53',
     'VMS/11-backend/spec/11.6-backend.norms.md': 'c7312623acd199b743387731ca17601e3a491b7a086b25037ca744177c4232b9',
-    'VMS/11-backend/spec/11.7-backend.norms.md': '23e9ccc6b3bfb70ab839d9f16d9b7d4a19ee1911e41be0f5c56c7d53e51f4807',
+    'VMS/11-backend/spec/11.7-backend.norms.md': 'bfe95b2d1435aa127667bdf524ef848085c21c84e61f36c1cdb54cc566e4844b',
     'VMS/11-backend/spec/11.8-backend.norms.md': '8d99bcb4bab50805b69e16b09d09893f3d4c3bf414d34a6e32daa33aa9713513',
     'VMS/11-backend/vectors/plan-check/README.md': 'ea5d2eb3ffea9cc7f58e6d604a56f1f9cb5aa68264f236e07567a6e57ca9253b',
     'VMS/11-backend/vectors/plan-check/cases.json': '08f03de9e08482e1393cba4a9fd81a17cc8015d23edaf43c691ab368c728ae27',

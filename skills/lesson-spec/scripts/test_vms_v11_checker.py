@@ -6,10 +6,13 @@ import unittest
 from unittest.mock import patch
 
 import check_cyrillic
-from check_spec import Check, IDMAP_FIELDS, VMS_CATALOG_FIELDS, VMS_IDMAP
+from check_spec import Check, IDMAP, IDMAP_FIELDS, VMS_CATALOG_FIELDS, VMS_IDMAP
 from vms_platform_pin import _git
 
 SOURCE_COMMIT = "c8eafc05626112db4c2003b416f762055deaef65"
+# Carriers the owner of the VMS Source re-approved with the learn norms, 2026-11-08.
+LEARN_COMMIT = "48e001457141d1dee22b3757bc844e56c3dd9ee0"
+LEARN_CARRIERS = {"VMS/11-backend/README.md", "VMS/11-backend/spec/11.7-backend.norms.md"}
 SOURCE_METADATA = "decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md"
 
 
@@ -47,6 +50,24 @@ class V11Readers(unittest.TestCase):
         self.assertEqual(rows[0][1]["new"], "V/11.1-01")
         self.assertEqual(check.errors, [])
 
+    def added_after_move(self, value, table=VMS_IDMAP):
+        rows = [(2, {"old": "М12A-01", "new": "V/11.1-01"}), (3, {"old": "V/11.1-05", "new": "V/11.1-07"})]
+        check = Check(self.root)
+        with patch.object(check, "id_map_rows", return_value=rows):
+            check.id_map_chapter(Path("norms.md"), "V/11.1", {"V/11.1-01", "V/11.1-07", value}, table)
+        return [e for e in check.errors if value in e and "column new" in e]
+
+    def test_id_added_after_the_last_mapped_number_needs_no_map_row(self):
+        self.assertEqual(self.added_after_move("V/11.1-08"), [])
+        self.assertEqual(self.added_after_move("V/11.1-10"), [])
+
+    def test_renumbering_and_former_ids_still_need_the_map(self):
+        self.assertTrue(self.added_after_move("V/11.1-03"))  # not after the last mapped number
+        self.assertTrue(self.added_after_move("V/11.1-05"))  # in the column old
+
+    def test_platform_map_keeps_the_strict_rule(self):
+        self.assertTrue(self.added_after_move("V/11.1-08", IDMAP))
+
     def test_v11_journals_use_moved_history_without_old_path_fallback(self):
         for chapter in ("4", "8"):
             with self.subTest(chapter=chapter):
@@ -75,7 +96,8 @@ class V11ExactCarriers(unittest.TestCase):
         metadata = _git(root, "show", SOURCE_COMMIT + ":" + SOURCE_METADATA).decode()
         cls.named = {name for name in re.findall(
             r"^\| `([^`]+)` \| (?:literal_data|pinned_upstream_bytes) \| [0-9]+ \|$", metadata, re.M)}
-        cls.data = {name: _git(root, "show", SOURCE_COMMIT + ":" + name) for name in sorted(cls.named)}
+        cls.data = {name: _git(root, "show", (LEARN_COMMIT if name in LEARN_CARRIERS else SOURCE_COMMIT) + ":" + name)
+                    for name in sorted(cls.named)}
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="v11-checker-carriers-")
