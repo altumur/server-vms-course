@@ -4,7 +4,9 @@ Run with the pinned lesson-spec Python; only Platform public source is read.
 """
 import json
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,6 +19,37 @@ def family(name, kind="row"):
 
 
 class CurrentFamilyControls(unittest.TestCase):
+    def test_refresh_ledger_collision_before_read_and_external_neighbor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            course = home / "course"
+            table = course / spec.FAMILY_READ / "08.tsv"
+            table.parent.mkdir(parents=True)
+            table.write_text("\t".join(spec.FR_HEADER) + "\n" + "\t".join(
+                ["unchanged", "other/family", "other/family", "row", "writer", "[]", "{}", "ok", "[]", "[]", "base"]) + "\n")
+            witnesses = [course / "Source/witness", course / "VMS/PLATFORM_PIN"]
+            for path in witnesses:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"unchanged witness")
+            alias = home / "outside-alias.json"
+            alias.symlink_to(table)
+            originals = {path: path.read_bytes() for path in [table, *witnesses]}
+            with patch.object(family_refresh, "source_rules") as source:
+                for ledger in [table, *witnesses, course / "tools/proof.json", alias]:
+                    with self.subTest(ledger=ledger), self.assertRaisesRegex(ValueError, "outside the course root"):
+                        family_refresh.refresh(course, ledger)
+                source.assert_not_called()
+            self.assertEqual({path: path.read_bytes() for path in originals}, originals)
+            proof = home / "fresh-external-proof.json"
+            with patch.object(family_refresh, "source_rules", return_value=({}, 2000, {})):
+                result = family_refresh.refresh(course, proof)
+            self.assertEqual(result["changed"], 0)
+            self.assertEqual({path: path.read_bytes() for path in originals}, originals)
+            ledger = json.loads(proof.read_text())
+            self.assertEqual(ledger["rows_before"], 1)
+            self.assertEqual(ledger["rows_after"], 1)
+            self.assertEqual(ledger["old_sha256"], ledger["new_sha256"])
+
     def test_time_row_and_nested_json_lexemes(self):
         row = family("01-store/data/epoch_floor.schema.json")
         grants = family("08-domain/data/grants.schema.json")

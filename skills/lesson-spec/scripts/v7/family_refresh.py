@@ -125,6 +125,12 @@ def refresh(root, ledger):
     """Write only 08.tsv, after validating sources; keep a complete per-cell ledger."""
     from v7.transition import tsv, write_tsv
     root = Path(root).resolve()
+    ledger_path = Path(ledger).absolute()
+    ledger_target = ledger_path.resolve()
+    if ledger_path.is_relative_to(root) or ledger_target.is_relative_to(root):
+        raise ValueError("family-read proof ledger must be outside the course root")
+    if not ledger_target.parent.is_dir():
+        raise ValueError("family-read proof ledger parent directory must exist")
     sources, maximum, revision_outcomes = source_rules(root)
     path = root / spec.FAMILY_READ / "08.tsv"
     old = path.read_bytes()
@@ -162,5 +168,5 @@ def refresh(root, ledger):
              "rows_after": len(built), "roster_sha256": hashlib.sha256("\n".join(r["case"] for r in rows).encode()).hexdigest(),
              "old_sha256": hashlib.sha256(old).hexdigest(), "new_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
              "changes": changed}
-    Path(ledger).write_text(json.dumps(proof, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    ledger_target.write_text(json.dumps(proof, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"rows": len(rows), "changed": len(changed), "ledger": str(ledger)}
