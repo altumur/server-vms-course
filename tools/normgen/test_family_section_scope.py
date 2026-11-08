@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(os.environ.get("FAMILY_SECTION_SOURCE_ROOT", ROOT))
+P09_SOURCE = Path(os.environ.get("FAMILY_SECTION_P09_SOURCE_ROOT", SOURCE))
 sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
 from v7.section import SchemaSection
 
@@ -41,6 +42,25 @@ class FamilySectionScopeTests(unittest.TestCase):
             doc = source_doc(name)
             self.assertIn({"$ref": "#/$defs/writer"}, doc["allOf"])
             self.assertEqual(doc["$defs"]["writer"]["properties"][field]["maxItems"], maximum)
+            writer_only = copy.deepcopy(doc)
+            del writer_only["allOf"]
+            for lang in ("en", "ru"):
+                with self.subTest(source=name, lang=lang):
+                    got = body(doc, lang, template)
+                    self.assertEqual(got[0], SHARED[lang])
+                    self.assertEqual(got[1:], body(writer_only, lang, template)[1:])
+
+    def test_01_published_p09_shared_writer_scope(self):
+        # Immutable Source5a26 P09.1 domain/outcomes and domain/alarms apply
+        # their entire writer profiles at the root: 500 names and 100 events.
+        for name, template in (("outcomes", "domain/outcomes"), ("alarms", "domain/alarms")):
+            doc = json.loads((P09_SOURCE / "Platform/09-agent/data" / (name + ".schema.json")).read_text())
+            self.assertIn({"$ref": "#/$defs/writer"}, doc["allOf"])
+            writer = doc["$defs"]["writer"]
+            if name == "outcomes":
+                self.assertEqual(writer["maxProperties"], 500)
+            else:
+                self.assertEqual(writer["properties"]["events"]["maxItems"], 100)
             writer_only = copy.deepcopy(doc)
             del writer_only["allOf"]
             for lang in ("en", "ru"):
