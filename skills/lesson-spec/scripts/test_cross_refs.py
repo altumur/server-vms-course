@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import yaml
 
-from check_spec import Check
+from check_spec import Check, validate
 
 EVENT = "../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Event"
 
@@ -165,9 +165,40 @@ class CrossRefTests(unittest.TestCase):
             "B": {"type": "array", "items": {"$ref": "a.openapi.yaml#/components/schemas/A"}}}))
         self.write("06-console/spec/06-console.api.openapi.yaml", contract(
             {"$ref": "../../common/contracts/a.openapi.yaml#/components/schemas/A"}))
-        result = self.assert_error("cycle of cross-file $ref: Platform/common/contracts/a.openapi.yaml → "
-                                   "Platform/common/contracts/b.openapi.yaml → Platform/common/contracts/a.openapi.yaml")
+        result = self.assert_error("cycle of cross-file $ref:")
+        self.assert_error("a.openapi.yaml:#/components/schemas/A", result)
+        self.assert_error("b.openapi.yaml:#/components/schemas/B", result)
         self.assert_error("has errors", result)
+
+    def test_cross_file_cycle_normalizes_uri_fragment_escapes(self):
+        self.write("common/contracts/a.openapi.yaml", contract(components={
+            "A": {"$ref": "b.openapi.yaml#/%63omponents/schemas/%42"}}))
+        self.write("common/contracts/b.openapi.yaml", contract(components={
+            "B": {"$ref": "a.openapi.yaml#/%63omponents/schemas/%41"}}))
+        self.write("06-console/spec/06-console.api.openapi.yaml", contract(
+            {"$ref": "../../common/contracts/a.openapi.yaml#/%63omponents/schemas/%41"}))
+        result = self.assert_error("cycle of cross-file $ref:")
+        self.assert_error("a.openapi.yaml:#/components/schemas/A", result)
+        self.assert_error("b.openapi.yaml:#/components/schemas/B", result)
+
+    def test_reciprocal_files_with_different_pointers_are_not_a_cycle(self):
+        a = self.write("common/contracts/a.openapi.yaml", contract(components={
+            "A": {"$ref": "b.openapi.yaml#/components/schemas/B"},
+            "Leaf": {"type": "string"}}))
+        b = self.write("common/contracts/b.openapi.yaml", contract(components={
+            "B": {"$ref": "a.openapi.yaml#/components/schemas/Leaf"}}))
+        self.write("06-console/spec/06-console.api.openapi.yaml", contract(
+            {"$ref": "../../common/contracts/a.openapi.yaml#/components/schemas/A"}))
+        with patch("check_spec.validate", wraps=validate) as validator:
+            result = self.check(self.console)
+            result.contract(a)
+            result.contract(b)
+        self.assertEqual(result.errors, [])
+        checked = [call.args[1] for call in validator.call_args_list]
+        self.assertEqual(checked.count(a), 1)
+        self.assertEqual(checked.count(b), 1)
+        self.assertEqual(checked.count(self.console), 1)
+        self.assertEqual(result.stats["openapi_cross_refs"], 3)
 
     def test_own_file_by_path(self):
         self.write("06-console/spec/06-console.api.openapi.yaml", contract(
