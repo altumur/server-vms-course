@@ -815,6 +815,31 @@
   },
   "writer": {
    "x-max-names": 0
+  },
+  "person_writer": {
+    "type": "object",
+    "properties": {
+      "at": {
+        "$ref": "#/$defs/common.time",
+        "x-codec": [
+          "time"
+        ]
+      },
+      "done": {
+        "type": "boolean",
+        "x-codec": [
+          "boolean"
+        ]
+      }
+    },
+    "required": [
+      "at"
+    ],
+    "additionalProperties": false
+  },
+  "role_writer": {
+    "type": "object",
+    "const": {}
   }
  }
 }

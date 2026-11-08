@@ -2,6 +2,23 @@
 
 This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). Forms express the existing norms under ADR-0125 addendum (5).
 
+## Catalogue-bound HTTP contract
+
+The [OpenAPI](../spec/06-console.api.openapi.yaml) declares the catalogue-dependent PathItems as the standard `components.pathItems` below. Their bindings use only the loaded catalogue already accepted by the [P/02 loader](../../02-installer/spec/02.1-installer.norms.md) and served at [process start](../../02-installer/spec/02.3-installer.norms.md). Component names, proof maps and example values of `servers` do not admit a route or a subsystem.
+
+| Standard PathItem | Existing catalogue source |
+|---|---|
+| `UnitsCollection`, `UnitItem` | `unit.rows` of the chosen subsystem |
+| `TableCollection`, `TableItem` | each declared entry of `tables` of that subsystem, with its existing field and service rules |
+| `PassRoot` | the existing `door.pass` list or its `routes`; retain its kind and the declared `wait`, `stream`, `calls` and `refusals` |
+| `ConsoleFile` | each complete literal name in `console.files`, including every path segment |
+
+Specialize each applicable component for those actual catalogue entries: short routes only for the selected `CONSOLE_ROOT`, and explicitly named subsystem routes for the root and mounted subsystems. A file has only its existing explicitly named subsystem route. A component alone is not a reachable door. Use the existing catalogue, not an additional binding file, proof map or new input grammar.
+
+A specialization removes only `in: path` parameters already replaced with catalogue literals, at both PathItem and operation levels. Keep every remaining parameter and its decoding, headers, query, body, requiredness, response, security condition and reference base. A literal subsystem is present in the path once: use the existing origin context without adding the same subsystem again through `servers`. Neither a server-variable example nor a parameter name chooses a catalogue class. The logical operation keeps its source provenance and adapter identity; a changed traversal order does not rename it.
+
+`ConsoleFile` matches the whole declared finite filename. `PassRoot` keeps the existing admitted prefix and unbounded raw remainder and query, for both kinds of pass; this remainder is not a one-segment OpenAPI parameter. The existing `door.routes` route/id remainder and the domain-at operations remain owned by their current procedures, even when a parameter is called `rows`. Path priority, method selection, ambiguity, no fallback, refusal order, rights and all existing limits remain unchanged. This representation does not add an operation, URI, alias, permission or runtime option.
+
 ## Inputs and constants
 
 [daemon-flags.tsv](daemon-flags.tsv) is the P/01 header `flag type default default_text required commands bad norm`. `$NAME` is environment, not a CLI flag. The process is console. `cleanup-window` is only the logical invocation name of the implementation-chosen sweep command; its actual executable/name remains P/06.1 Implementation decides. The sole CLI flag here is its existing `--writers-stopped`. Parsed fields do not waive catalogue, kit, role, server/box, alias, ring-placement, timezone or active-listener checks from the cited contracts. Inactive callback configuration and an unreadable configured ring are judged at their normative activation/operation, not relabelled as new startup failures. Malformed CLUSTERS is operation-unreadable, not an empty list or a new startup refusal.
