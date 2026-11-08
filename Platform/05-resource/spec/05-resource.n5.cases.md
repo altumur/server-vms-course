@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/spec/05-resource.n5
 
 These case descriptions and their outcomes are judge-only data. The canonical normative chapter is [`05-resource.norms.md`](05-resource.norms.md). Generic rules and explicitly retained normative examples remain there.
 
-<!-- case-coverage-block-1 -->
+### Case block 1
 
 | № | Scenario | Norms |
 |---|---|---|
@@ -44,9 +44,9 @@ These case descriptions and their outcomes are judge-only data. The canonical no
 | 44 | `44-objects-door-family`: `objects.door` of the manifest — `testsub2/tickets/t1` (`@put object` from `inputs/`) — `GET` 200 and in the listing; `testsub/tickets/t1` without `objects` in the manifest — 403 (G01) | N1.1 `door`; N2; N4 |
 | 45 | `45-gone-door`: the tombstone `.gone/<object-key>` (`@put object` from `inputs/`) — outside the ordinary listing, `prefix=.gone/` and `GET` of the body — reading, `PUT` — 405; an older copy — 409, there is no key; a newer one — 204 with the source `written`, the tombstone is removed by the same action (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «deleted later»; [the tombstone contract](../../common/contracts/tombstone.md) `listing`, `rewrite` |
 
-<!-- case-coverage-block-2 -->
+### Case block 2
 
 
-The additional source seams s63–s67 in [acceptance/seams.tsv](../acceptance/seams.tsv) use the existing synchronous ports: completed relieve in the band; actual candidate selection at 144/145 and calendar fallback; independent peer retry boundaries. The unchanged process scenario41 observes only its listed early state; pass_started plus a fixed sleep does not prove relieve completion. A seam declaration is not implementation execution.
+The additional source seams s63–s67 in [acceptance/seams.tsv](../acceptance/seams.tsv) use the existing synchronous ports: completed relieve in the band; actual candidate selection at 144/145 and calendar fallback; independent peer retry boundaries. The unchanged process scenario 41 observes only its listed early state; pass_started plus a fixed sleep does not prove relieve completion. A seam declaration is not implementation execution.
 
 End of judge-only N5 case coverage.

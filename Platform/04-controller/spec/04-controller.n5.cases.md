@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/spec/04-controller.
 
 These case descriptions and their outcomes are judge-only data. The canonical normative chapter is [`04-controller.norms.md`](04-controller.norms.md). Generic rules and explicitly retained normative examples remain there.
 
-<!-- case-coverage-block-1 -->
+### Case block 1
 
 | № | Scenario | Norms |
 |---|---|---|
@@ -46,7 +46,7 @@ These case descriptions and their outcomes are judge-only data. The canonical no
 | 43 | home is the holder of the place: two shelves of one server; the holder of the second appeared — the unit moves to it from a worker of the same server; a new unit goes to the holder of its shelf, although another worker of the server has more free room (C04-HOME-PLACE-HOLDER-01) | N1.3 `home`; N3 «choose», «pass()» step 7, HOME_BUDGET |
 | 44 | home on a place without a server: a shelf without `server`, no holder — no home, the unit is at a worker of another server; the holder appeared — it moves to it (C04-HOME-PLACE-HOLDER-01) | N1.3 `home`; N3 «pass()» step 7, HOME_BUDGET |
 
-<!-- case-coverage-block-2 -->
+### Case block 2
 
 **ADR-0127 review obligations.** The 50 CALL seams retain the former 33 and add 17 review witnesses. M1 s34/s35 cover a known server with resource state unknown and no fresh worker: with assignments move, without assignments release. C1 s36/s37 compose top-number selection, wanted-place protection and the P/02 script stop plan; C3 s38 keeps an expired manual row stored while excluding it from waiting/weight/growth and the shrink timer. C2 s39-s45 observe bounded complete decommission, restart, new-holder guards and final-marker refusal/unknown; s46/s47 independently reject reserved unit.rows/table names through the regular loader, without changing P02 corpus 947 or canonical 220; s48-s50 reject semantically damaged progress before mutation. All are the existing controller-pass/fate ports, with actual IO observations defined in the forms README, not new commands or kit parts.
 
