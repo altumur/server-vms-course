@@ -262,7 +262,7 @@ var (
 	reDec  = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]+)?$`)
 	reTime = map[Mode]*regexp.Regexp{
 		Writer: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`),
-		Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`),
+		Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`),
 	}
 	intMax = big.NewInt(1<<53 - 1)
 )
@@ -491,18 +491,24 @@ func (p *Prop) check(v value, mode Mode) bool {
 func isTime(v value, mode Mode) bool {
 	switch v.kind {
 	case 's':
-		return reTime[mode].MatchString(v.s)
+		if !reTime[mode].MatchString(v.s) {
+			return false
+		}
+		f, _ := strconv.ParseFloat(v.s, 64)
+		return !math.IsInf(f, 0)
 	case 'i':
-		return v.huge == 0 && v.i.Sign() >= 0
+		if v.huge != 0 || v.i.Sign() < 0 {
+			return false
+		}
+		f, _ := new(big.Float).SetInt(v.i).Float64()
+		return !math.IsInf(f, 0)
 	case 'f':
 		if math.IsInf(v.f, 0) || math.IsNaN(v.f) || v.f < 0 {
 			return false
 		}
-		if mode == Reader {
-			return true
-		}
-		r, _ := strconv.ParseFloat(strconv.FormatFloat(v.f, 'f', 3, 64), 64)
-		return r == v.f
+		// A decoded number has no original lexeme. Check its lossless decimal
+		// form without rounding or changing the assigned binary64 value.
+		return reTime[mode].MatchString(plainDecimal(v.f))
 	}
 	return false
 }

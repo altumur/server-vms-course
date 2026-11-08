@@ -1293,7 +1293,7 @@ var (
 	reDec  = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]+)?$`)
 	reTime = map[Mode]*regexp.Regexp{
 		Writer: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`),
-		Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`),
+		Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`),
 	}
 	intMax = big.NewInt(1<<53 - 1)
 )
@@ -1526,9 +1526,15 @@ func isTime(v any, mode Mode) bool {
 		if math.IsInf(f, 0) || math.IsNaN(f) || f < 0 {
 			return false
 		}
-		return mode == Reader || math.Round(f*1000)/1000 == f
+		// A decoded number has no original lexeme. Its lossless decimal form
+		// avoids rounding and overflow from scaling a finite value by 1000.
+		return reTime[mode].MatchString(plainDecimal(f))
 	case string:
-		return reTime[mode].MatchString(x)
+		if !reTime[mode].MatchString(x) {
+			return false
+		}
+		f, _ := strconv.ParseFloat(x, 64)
+		return !math.IsInf(f, 0)
 	}
 	return false
 }
