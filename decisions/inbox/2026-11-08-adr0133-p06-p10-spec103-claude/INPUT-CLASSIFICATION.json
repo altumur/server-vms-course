@@ -3,7 +3,7 @@
  "adr": "ADR-0133 addendum (4) items 2–3; INPUT-CLASSIFICATION-SUPPLEMENT 2026-11-08",
  "owner": "spec103-claude",
  "scope": "P06–P10 Source (not ru/)",
- "pin": "d8d9acfee35241580352571edd15b2f5dda12883",
+ "pin": "0e1a7e9ffa7ba45889ada8dd3c67b54257ea7e0c",
  "note": "Inbox material for SRC; not a source text and not exported to M. blob = Git blob at pin after the split; a class names what was found before the split, after_split what goes to M. moved_to names the judge-only table that now carries the text (J-only; not to be repeated in M).",
  "classification_rule": "rule: only protocol/form/order, names and counts of cases allowed; case: only case answers, no rule absent from a norm; mixed: both — split before export. An expected answer is the literal outcome tied to a named case/step; stated rules with a scenario pointer stay.",
  "counts": {
@@ -170,7 +170,7 @@
   {
    "path": "Platform/06-console/acceptance/4/README.md",
    "blob_before": "3f5ade9bcd01402b18d12ac23715115ba6c2ec69",
-   "blob": "fe188c2a13b0ddd5fca93e699a5b848d6215b617",
+   "blob": "514d6b66e6abd0681fca9b0e04fc92676e8d1a3c",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -213,7 +213,7 @@
   {
    "path": "Platform/06-console/acceptance/5/README.md",
    "blob_before": "9e6130e15baf1f72d4cc5160d57339f7b0b1c824",
-   "blob": "6cd67196cd54735a892ad9713e00aee94e60a084",
+   "blob": "a1f258a3c30a1e3292c8a45c6b50e8557ae74f0d",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -1213,7 +1213,7 @@
    },
    {
     "path": "Platform/06-console/acceptance/4/scenarios.tsv",
-    "blob": "4106a367c3f9c3aebedbe9866c0fa23d7fcf21a1",
+    "blob": "61f2bd10cfa3d0de57a5a074963f6c6f1a259b50",
     "kind": "acceptance table or fixture"
    },
    {
@@ -1373,7 +1373,7 @@
    },
    {
     "path": "Platform/06-console/acceptance/5/scenarios.tsv",
-    "blob": "da1818cdc4fb504112a74d3c13be75b4c8115f82",
+    "blob": "417b62ad8ad607ba02ceba1580c571e984459c85",
     "kind": "acceptance table or fixture"
    },
    {
