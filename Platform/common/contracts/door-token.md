@@ -53,6 +53,8 @@ token:      door1.<kid>.<claims>.<sig> — exactly four parts separated by «.»
             holds (the vectors key_small_order, sig_r_small_order) (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)
 ```
 
+On issue, `claims.routes` preserves the order of the selected routes in the manifest's `door.routes`.
+
 The parts `claims` and `sig` are strict base64url without «=» (the alphabet `A–Z a–z 0–9 - _`, without «=» and other characters; the unused trailing bits of the last character are zeros); a part not
 by this grammar is a check refusal (the Architect's decision of 2026-10-20, the vectors door-token). A non-zero trailing bit is a refusal too, although a non-strict
 decoder would give the same bytes (the Architect's decision of 2026-10-20, the vectors door-token). The issuer is to write the claims as JCS bytes;
