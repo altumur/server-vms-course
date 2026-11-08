@@ -341,9 +341,18 @@ class SourceSchemaReader:
         self.docs, self.provenance = {}, {}
         self.kinds, self.children, self.locations = {}, {}, {}
         self.edges, self.visited, self.active = {}, set(), set()
+        self.guarded_visits = set()
         self.parameters = {}
         self.document(self.source)
-        self._walk(self.source, "", "schema" if self.is_json(self.source) else "document", (self.source,))
+        # Validate every physical resource, but keep each resource inventory separate
+        # from the logical reference chain. A -> B's scalar and an unrelated B -> A
+        # declaration are not a recursive reference. Actual chains still retain the
+        # file-cycle guard in _reference, before any visited/cache shortcut.
+        checked_resources = set()
+        while pending := [file for file in self.docs if file not in checked_resources]:
+            file = pending[0]
+            checked_resources.add(file)
+            self._walk(file, "", "schema" if self.is_json(file) else "document", (file,))
 
     @staticmethod
     def escape(token):
@@ -639,14 +648,15 @@ class SourceSchemaReader:
             raise CheckingError("physical reference target changed after reading")
         self.edges[identity] = (target, fragment)
         next_chain = chain + (target,) if target != source else chain
-        if target != source:
-            self._walk(target, "", "schema" if self.is_json(target) else "document", next_chain)
+        # __init__ inventories the complete target resource under its own root.
+        # _walk follows this exact fragment under next_chain before that inventory.
         return target, fragment, next_chain
 
     def _walk(self, path, pointer, kind, chain):
         node = self.at(path, pointer, kind)
         key = (path, pointer, kind)
-        if key in self.active or key in self.visited:
+        guard = (key, chain)
+        if key in self.active or guard in self.guarded_visits:
             return
         self.active.add(key)
         if kind == "schema":
@@ -658,6 +668,7 @@ class SourceSchemaReader:
             self._walk(path, child, child_kind, chain)
         self.active.remove(key)
         self.visited.add(key)
+        self.guarded_visits.add(guard)
 
     @staticmethod
     def _check_schema(node):
@@ -1102,6 +1113,19 @@ class SourceSchemaReader:
             if set(items) != set(standard):
                 raise CheckingError("missing/extra standard source PathItem")
             slots += [(route, "/components/pathItems/" + name, name) for name, route in standard.items()]
+        elif self.owner(self.source) in (8, 10):
+            # The owner contracts declare finite catalogue templates outside paths.
+            # These source addresses and routes belong to P08.6/P10 N1.3; no
+            # producer-selected catalogue or generated definition supplies them.
+            prefix = "Pass" if self.owner(self.source) == 10 else ""
+            standard = {prefix + "TableEditCollection": "/domain/{sub}/{table}",
+                        prefix + "TableEditItem": "/domain/{sub}/{table}/{name}"}
+            items = doc.get("components", {}).get("pathItems", {})
+            if items:
+                if type(items) is not dict or set(items) != set(standard):
+                    raise CheckingError("missing/extra catalogue table source PathItem")
+                slots += [(route, "/components/pathItems/" + name, name)
+                          for name, route in standard.items()]
         out, seen = [], set()
         for route, declaration, component in slots:
             item, file, pointer = self.resolve_object(self.source, declaration, "path")
@@ -2103,6 +2127,73 @@ class SourceSchemaReaderControls(unittest.TestCase):
         norm = self.root / "Platform/06-console/spec/06.7-console.norms.md"
         norm.write_text("# P/06.7\n\n**A chapter of the late layer: lessons 8 and 10 introduce it**\n", encoding="utf-8")
         return source, ref
+
+    def test_48_independent_physical_resources_do_not_create_a_reference_cycle(self):
+        self.schema({"type": "object", "$defs": {"Leaf": {"type": "integer"}},
+                     "properties": {"value": {"$ref": "other.schema.json#/$defs/Leaf"}}})
+        other = self.schema({"type": "object", "$defs": {"Leaf": {"type": "string"}},
+                             "properties": {"value": {"$ref": "target.schema.json#/$defs/Leaf"}}}, name="other")
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        a = reader.validator_at(reader.source, "/components/schemas/Root")
+        b = reader.validator_at(other, "")
+        self.assertTrue(a.is_valid({"value": "text"}))
+        self.assertFalse(a.is_valid({"value": 7}))
+        self.assertTrue(b.is_valid({"value": 7}))
+        self.assertFalse(b.is_valid({"value": "text"}))
+        self.assertEqual(len(reader.provenance), 3)
+
+    def test_49_actual_cross_resource_reference_chain_still_fails(self):
+        self.schema({"$defs": {"Leaf": {"$ref": "other.schema.json#/$defs/Leaf"}},
+                     "$ref": "#/$defs/Leaf"})
+        self.schema({"$defs": {"Leaf": {"$ref": "target.schema.json#/$defs/Leaf"}}}, name="other")
+        with self.assertRaisesRegex(CheckingError, "cross-file reference cycle"):
+            self.reader({"$ref": "../data/target.schema.json"})
+
+    def test_50_unrequested_resource_positions_still_receive_owner_guards(self):
+        self.schema({"type": "integer"}, owner="09-agent")
+        self.schema({"$defs": {"Leaf": {"type": "string"},
+                               "Unused": {"$ref": "../../09-agent/data/target.schema.json"}}}, name="other")
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            self.reader({"$ref": "../data/other.schema.json#/$defs/Leaf"})
+
+    def test_51_table_pathitems_are_source_declarations_at_both_owners(self):
+        for owner, prefix in (("08-domain", ""), ("10-domain-console", "Pass")):
+            with self.subTest(owner=owner):
+                items = {prefix + "TableEditCollection": {"post": {"operationId": "create",
+                             "responses": {"202": {"description": "kept"}}}},
+                         prefix + "TableEditItem": {"delete": {"operationId": "remove",
+                             "responses": {"202": {"description": "kept"}}}}}
+                source = self.api(owner=owner, components={"pathItems": items})
+                reader = SourceSchemaReader(self.root, source)
+                rows = reader.operation_declarations()
+                self.assertEqual([(r["route"], r["method"], r["component"], r["declaration"]) for r in rows], [
+                    ("/domain/{sub}/{table}", "post", prefix + "TableEditCollection",
+                     "/components/pathItems/" + prefix + "TableEditCollection/post"),
+                    ("/domain/{sub}/{table}/{name}", "delete", prefix + "TableEditItem",
+                     "/components/pathItems/" + prefix + "TableEditItem/delete")])
+                for changed in ({prefix + "TableEditCollection": items[prefix + "TableEditCollection"]},
+                                dict(items, Unknown={"get": {"responses": {"200": {"description": "wrong"}}}})):
+                    self.api(owner=owner, components={"pathItems": changed})
+                    with self.assertRaisesRegex(CheckingError, "catalogue table source PathItem"):
+                        SourceSchemaReader(self.root, source).operation_declarations()
+
+    def test_52_cross_file_openapi_chain_reaches_the_cycle_guard(self):
+        source = self.api(components={"pathItems": {"Loop": {
+            "$ref": "../../06-console/spec/06-console.api.openapi.yaml#/paths/~1late"}}})
+        self.api(owner="06-console", paths={"/late": {
+            "description": "Chapter 6.7 N1.13",
+            "$ref": "../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/Loop"}})
+        (self.root / "Platform/06-console/spec/06.7-console.norms.md").write_text(
+            "# P/06.7\n\n**A chapter of the late layer: lessons 8 and 10 introduce it**\n")
+        with self.assertRaisesRegex(CheckingError, "cross-file reference cycle"):
+            SourceSchemaReader(self.root, source)
+
+    def test_53_cached_target_keeps_each_actual_reference_file_chain(self):
+        self.schema({"$defs": {"Entry": {"$ref": "other.schema.json#/$defs/Leaf"}}})
+        self.schema({"$defs": {"Leaf": {"type": "string"},
+                               "Unused": {"$ref": "target.schema.json#/$defs/Entry"}}}, name="other")
+        with self.assertRaisesRegex(CheckingError, "cross-file reference cycle"):
+            self.reader({"$ref": "../data/target.schema.json#/$defs/Entry"})
 
     def test_00_actual_four_positions_without_document_or_cache_injection(self):
         """Read accepted FORMAT4a4687 files and their contract; not current P08 coverage."""

@@ -63,6 +63,8 @@ class Model:
                         record["path_checks"][prm["name"]] = check
                 p["ops"][record["method"].upper()] = [str(v) for v in operation["responses"]]
                 p["all405"] = p["all405"] and "405" in p["ops"][record["method"].upper()]
+            self.domain_context = (_given_domain_table_context() if any(
+                p["component"] in _DOMAIN_TABLE_COMPONENTS for p in self.paths) else None)
             self.routes = _source_route_instances(self) if self.context else None
         except SourceError as exc:
             raise CheckingError(f"independent source reader failed: {exc}") from exc
@@ -111,6 +113,20 @@ class Model:
     def templates(self):
         # Preserve logical templates for the original probes/mutant applicability machinery.
         for p in self.paths:
+            if p.get("component") in _DOMAIN_TABLE_COMPONENTS:
+                context = _validate_context(self.domain_context)
+                for view in context["views"]:
+                    tables = view.get("domain", {}).get("edit_tables", {})
+                    if type(tables) is not dict:
+                        raise CheckingError("domain.edit_tables must be a declared map")
+                    for table in tables:
+                        if type(table) is not str or not table:
+                            raise CheckingError("invalid declared domain table")
+                        captures = {"sub": view["name"], "table": table}
+                        segs = [captures.get(s[1:-1], s) if s.startswith("{") else s for s in p["segs"]]
+                        ranks = {i: 1 for i, s in enumerate(p["segs"]) if s in ("{sub}", "{table}")}
+                        yield dict(p, source_bound=captures, source_ranks=ranks), segs, False
+                continue
             yield p, p["segs"], False
             if p["prefixed"]:
                 yield p, ["{sub}"] + p["segs"], True
@@ -140,7 +156,7 @@ class Model:
         for p, tsegs, pre in self.templates():
             if len(tsegs) != len(segs):
                 continue
-            params, good = {}, True
+            params, good = dict(p.get("source_bound", {})), True
             for i, (t, v) in enumerate(zip(tsegs, segs)):
                 m = re.fullmatch(r"\{(.+)\}", t)
                 if not m:
@@ -158,7 +174,7 @@ class Model:
                 hits.append((p, tsegs, pre, params))
         if not hits:
             return ("err", 404)
-        ranks = lambda h: [self.rank(s) for s in h[1]]
+        ranks = lambda h: [h[0].get("source_ranks", {}).get(i, self.rank(s)) for i, s in enumerate(h[1])]
         best = [h for h in hits if ranks(h) == max(map(ranks, hits))]
         if len({h[0]["path"] for h in best}) != 1:
             return ("err", 0)
@@ -167,6 +183,12 @@ class Model:
         return ("op", p["path"], m, params, pre) if m in p["ops"] else ("err", 405 if p["all405"] else 404)
 
     def sample(self, p, name):
+        if p.get("component") in _DOMAIN_TABLE_COMPONENTS and name in ("sub", "table"):
+            for view in _validate_context(self.domain_context)["views"]:
+                tables = view.get("domain", {}).get("edit_tables", {})
+                if tables:
+                    return view["name"] if name == "sub" else sorted(tables)[0]
+            return None
         if self.context:
             views = self.context["views"]
             root = next(v for v in views if v["name"] == self.context["root"])
@@ -353,7 +375,7 @@ def run(mod, probes):
     return read_report(probes, done)
 
 
-_S08_FROZEN = [('tools/normgen/test_gen_door_lesson.py', 'Model.ok', 'd30ff78ba38cd35e4704e96b4c4a471983dcd93f58bdd3bd1b31a5cb3e4fa564'), ('tools/normgen/test_gen_door_lesson.py', 'disagree', 'e332c31849a603cf3267e7f26766f78087508602934d6a78bd97e5912d43134a'), ('tools/normgen/test_gen_door_lesson.py', 'read_report', 'cb491146085c53d1c54dbbbb205eb8739a50de31fa37d5a52a4cadab00f64653'), ('tools/normgen/test_gen_door_lesson.py', 'run', '765f0a9c0955d8fbd66d5fa678b5fc889dda8d1cbf862d78bb79423d962f3719'), ('tools/normgen/test_gen_door_lesson.py', 'probes', 'ba1cbe48467a83537190e53471f3083d9ad99c5ecb56ad04525706d599e054b4'), ('tools/normgen/test_gen_door_lesson.py', 'expected', '8a7c489e4c7f64ccd774eeafc8363b10a6709322c5b4c82b11c1e6726ba3f436'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.tearDownClass', '8d5eaa86110ac5b69b246e646fa16610d1cb4ff1e0e709b303fa64e2ea627c73'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_fresh', '0def318142f4126edad897de20f31b2e7be0ad5d53e9cbbb2e1085d8523fa9c3'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_ops', '7513d4f9b2c01407ab78e75b2fad4fcbe47dfb2e62377e027b403b7a88929f44'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.setUp', '243d4b1de620f93e8726636f5b37c2cf3808b1f12cf2ab763512c590a3dcea90'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.frames', 'c51e647f03a714a6e297a06b38b47c4d86483587f8b7301c105e7064de6b2872'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.report', '45bcc4fe9ba187a14a1dec38c13efffae2200c02adfde8e9309ce3bb7dfd8330'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.module', '2cefa7609ef259b4241571b1f563a32414de56e4896749e3db9c490793c163a6'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_complete_positive', '69a1adb7188c3d5624a8331348ef9020df6cb11515e36e7f186ae4bfae9dba83'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_zero_input_before_preparation', 'b981d674c0993fbd745976f83b1d359f11ea2ddfae7591660c5698fdd91b52cf'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_zero_short_extra_reports', 'edc73043908283bd93981e7b9c0ade08caa858ae3429327addae364c695d173d'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_frame_identities', '1e04b3b22392d226483547d9b9295bdb7e5fa5cc28e397491f2f1e2730025c3c'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_frame_shapes', 'e30c793ec298e6acb71a2e9423139f19d3a90577ca5c87437f232b93f18aaa46'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_typed_shapes', '69d57e83743ff63f93a3ff42741e6286862cd317225c5178af7827d4eeeb5b52'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_valid_wrong_values_are_semantic', 'e67ee9781a8f7c571481e5aa0cf068e9c56a28828acadeda396fce160d8ca4ff'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_strict_json', '08d8b9e2641378dfd976f1ebdf16d26819c95cfcb60ba1d5d3b30d23e38f40a7'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_preparation_errors', 'c06720649b14a9b970f6d3e58d381070bb222c9e60a2fd80df67e9a77186efce'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_start_errors', 'b276fb771296e054dedf32ad53e48b55c67d414695879b2d6edac4c00dfc1047'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_compile_nonzero_even_with_complete_output', 'bc051dd1578f9e0b7b894694ff3debda3f1b46e362b17a8c85645c40dfebe0f8'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_terminal_errors_are_not_semantic', '62234b0db2ea9a63b36042554ee343c28665f2fd16f1f46ea56d2ffc7e900f83'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_generation_errors', '77db9cfcb9e71e70d4aeeab95de73baa628ba476bcf48517bed196ae20651d2e'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_mutant_errors_propagate', '2dd0a81f1b0002b36ffa2c9a22824b4b1bcdc5e1c49b31cf7b89ca51c272bf73'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_correct_mutant_survives', '2b36bac03767f6e28c4e74ef15a10871ba86636f8af930e29a2e33eff7c276de'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_named_semantic_mismatch', '38858b50a03a5d4e6d120b32ab82bdeb10a026b2d78db354d5127a464f7c2dcb'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_mutation_applicability', 'a8428bc4a8af3f09e285a9ebb5276774a244cc3ccf78868904ed9ed1e1bedf5e'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_unicode_and_terminal_lf_neighbours', 'd2d17b21cfa730eebc9ebf7c34643196d581ddd22f80f4a4bb53b6b511fdca29'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.setUp', 'a08776372f2c76ab4234953a60b000b0a508a5c3d66fefd4dce09d42166e5eb9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_00_schema_map_array_and_escaped_pointer_neighbours', 'd88e1ac61b649ba6716602321b77393cf76534a397b9298ad48547ac021654c9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_01_bad_array_indices_escapes_and_fragments_are_errors', 'e0cfd45e125fac2d9e1c4df6b2dc5a59f19c0bcff026277eaaf6c9cdb214d75a'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_02_literal_ref_values_are_data_even_when_the_uri_is_unsafe', 'e8f4c5c32d5e6d6dce5c0d9c16a1611ead840b786e2e1ff79ff1eb33a9ca9f53'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_03_schema_of_a_property_named_ref_is_still_traversed', '9e6c18982b501b3b02ed5487ecdbb1e3788d1efe5832424d2e0bd5ffdd5a592e'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_04_schema_ref_siblings_keep_their_own_constraints', 'd0f012514e622bb700d169ef038487a9c57f12fd75513a2d813e859d182f23d1'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_05_schema_shaped_literal_data_is_not_a_schema_target', '85959f3eaecff2252da6f33a1c259ed3ec8a34ba39e49f48b1569e16f63da8e0'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_06_json_cannot_replace_parameter_response_or_pathitem', '3535e8090b1146ff3cf6e1afcb2345b236aa617cdbe300865f11698e8b7dccb9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_07_openapi_object_kind_and_whole_document_are_preserved', '2438ec0e227077bfdbb7b5ca0282857bb11ef475f4703f3468ab753f0cf4eabc'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_08_local_parameter_reference_and_json_schema_parameter', '638e20e81c05571bbbe2e6dccf79465c77b2a18ffb82da05b303c299f5a69684'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_09_parameter_aliases_keep_both_operation_declarations', '21a31f8748e60f0ae8554c9ce16039fd71ea70cf6aa09fabd8bb6b275c03afa4'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_10_missing_parameter_context_cannot_guess_a_source', '8af45e00b5ba752432b1ba9b0d81d95eaba4b96bd1462a512df64d1d834e5ab3'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_11_extensions_are_opaque_until_a_typed_reference_enters_them', 'cc618ed3a0173d90c6663c5eab7490602f9cd5b6e667f63959c2b8d4cae5cb67'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_12_equal_nonalias_values_do_not_share_late_permissions', 'a052af1b013317fc1d792902a1e6171fee4a8c67f1856db96a379f866a282d8b'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_13_independent_schema_errors_are_not_false_verdicts', 'b5f36d918307eb7138c1e49410c8dcfa36babd4ae5acc6dc099ce8ad33d75da9'), ('tools/normgen/test_gen_door_bodies.py', 'bundle_of', '8db3f43ea61522c367ecb36dcb65ee80397041a99801d325d6e16a9ed36c7913'), ('tools/normgen/test_gen_door_bodies.py', 'tables_of', '5ace0b6d5dbd23762aae9b31c1e32049684e1e7c7877ccbec440bcdb77779913'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.__init__', '052c893a67f821371c804d5918ba0631ff7ae34f949c1ce45d2327f8a43d6864'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.node', '69b19c2977d4e341664ef3e3abd1312e7ab89c70367375d98c1c5f1b342559b1'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.strings', '13c0bb438192967ea00caabd189f67e57702129b5070f0a59990d8e7a5204abd'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.pattern_samples', 'c4980773cacbb59bbfb128355eb3f12786ab4f43f5aedeadff99647a34ef8221'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.values', '65202fbcc93c17fca9bf6608fff8ae183713385bedd3e4e0b19513e098b9aee5'), ('tools/normgen/test_gen_door_bodies.py', 'response_object', 'd1e241d8f495b5d0649845731259a2381ece976779c5f1df3919125a4606c067'), ('tools/normgen/test_gen_door_bodies.py', 'response_constant', '065f123bf5639066d98614357058c68bf24a5b9dab5ecb8aee39f26e8161dce9'), ('tools/normgen/test_gen_door_bodies.py', 'checked_values', '88d175a13a52247cdf7ce2844cd39214826f41f130af8be21d56ce04d58368ac'), ('tools/normgen/test_gen_door_bodies.py', 'read_report', 'b4f5fa0d454c7c1f59e9f1927c5ac671687d2f67584faafa77221aaadf1df1bc'), ('tools/normgen/test_gen_door_bodies.py', 'go_process', 'f3c0e8e0f0e08180159b0325bdfeaa9fa6e76fffcc8382a43c34b72859cfd2a1'), ('tools/normgen/test_gen_door_bodies.py', 'disagree', '61b1ee0795c020b267f56474278a9205b7f2448fd428fa2ec9b5348a2be2cdf7'), ('tools/normgen/test_gen_door_bodies.py', 'run_go', 'a9ad04b8395fb093f0cf1170afec957cc8d4eb8151b66a6e5033f9ddf1d0c59f'), ('tools/normgen/test_gen_door_bodies.py', 'oracle', 'ea203d89f7935b8b226acc863269699d6557d1b70b5ffd8156a8f69dca66fe15'), ('tools/normgen/test_gen_door_bodies.py', 'cases_for', '8dd99fd435f7f6e4fe6b5041179b3876f00dbfd2c484affd8f6854fee5affd53'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.__init__', '592a3a2a952360a549364b5dd353e00a423da3e432c50529cb8dc7e46b4c96d7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.escape', '79cd3c02d29cc2d7a031e51460c691d7168a0af4795b0f3146302c3c30dc68c3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.fragment', 'a371552c315c6a968cdddbfdd77d94cd65b090a557a9eea50b74d39f3876baa1'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.physical', '24468af12453b3da75229cfd227152c9a162db9f5a4b8161774fdfaf932759d3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.owner', 'df0ee85ee7ad5f64c1fe417cccfab37d2bfc6c554778c787a0460cb318a21ec5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.is_json', '8d5fcf5f23cd79945ef14a313b6104172aadc46492e42ae05f42da693c4c69f2'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._json_pairs', 'af6e2d306f2c8a38067fd340d65834395270f13b781e9dd1a783c14f8b8e37b8'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._constant', 'ee428586fb18afc9c887a452bad240765a70945414a1dd824f5a744659cd37a5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._json_tree', 'e9d0c4f9a2ca48a67dff5a2e5686bd024e1125fd91f6fbb9117afc4b9de7559a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.document', '8207901d03b8375b34e2693c42295b282ec6b8360fb22da6923a829777cd103b'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._index', '087d9d97d4c42b02a87945f732f2effcb5bb5d8ad3efb82a10612fc1af08353f'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.value', '510c0a472b390b53da57421c8c704d2c93be3ad36994808341d5100b1e880686'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.at', 'f0e751c401b5bfb6595b78c1b16867d3a9dbc6d41590f1b5aca52d0ec471625a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._late', '499029179a8d4fef6acfb1d8ae8149d1aaefcacb24280069493f786d2c486fb7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._reference', '5474f79828bcb50c7a91b96527653310371a61e883149b150ffbf5f2f27615ea'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._walk', '5456ecfaeb05d41be0895e650b92e6cd3ad296ff80067d1bf63f7900b4000aa7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._check_schema', 'e898f10ee2802794b49c19b19a88b630c221871fb6ba9e4b81f49e9c991079b4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.uri', '0edb5200fe6bd7b4129ae5027fca3783e9cd9073d5661573bfc5f5c2bcb10136'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.validator_at', 'd5449f798ac3bca87b37b05d55beeb1a2b301ad05a2f462a2281d17fff25c1e1'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._locations', 'bec3ce82178bddc85dc081f41b7a5490216281ae554b6f86dc0e7c26ae308a9a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.resolve_object', 'e73e59cc3ba1fd35e7b800dc4f2e983c4cf5eb6e3c5ec8bb964913e2fa80eec7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.schema_type_node', '2b5bfba7bcf2afa9ac7c4781a5a51cb7d3fc38367170eaa6c500ce7af93a893f'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.parameter_validator', '4681bde317733cea1e1024134f55adbb67691cac1fdb278297b62ffbd4622ace'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.validators', 'dbbb7df1a48481cfc00de1c99a7ab6f85da54e6fb8fbd4b9f10a284a2607d61a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.canonical', 'ff12c99b7e7f4948c7c44d4c378df4ca75bfd50acd25fdb013e52406228ce907'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.bundle_origins', '6bdc3284c97a231219ced7ea6b8d8bc168c94b78d62ce2a60007ef8966a40714'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.compare', '56383840167be9ecb03432206bc8a76e2c4204c1ee6e69a22e261bbeba8d08b7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.literal_table', '1557a382d5b269fb066dfb787edcdf925ddbe148cb740a97a0bfac23ed72459a'), ('tools/normgen/test_gen_door_bodies.py', 'synth_module', '64ae86253f1b6bf57f26669f75be849f8cad3c43efe37c7d9a046775230e2fa0'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.setUpClass', 'ed892c5250d188f88505bfbb9e9aa096fa6236d40d3125ad8ef67c6b8d6fe73b'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.tearDownClass', '8d5eaa86110ac5b69b246e646fa16610d1cb4ff1e0e709b303fa64e2ea627c73'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_fresh', '6f3dc13378496cac3eac49ccef22b73cb557f84dbaa43aa0844f2647fc01eaa7'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_bundle_equals_source', 'e29e57de500f40cd14e9e82f96d7e9e32f1406d199c6ecbac1fc67454b0cd978'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_validate_against_oracle', 'b02e5db2587916d8a758baae56aea98949577740de732e23d0d1b3a75cb2cdaa'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_synthetic', 'd2b233e7ea6355391a1bd66c7de9886ccb8a9872f7bded86481b9c806de939d2'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_api', 'e76aef33a1ff16967ec25a842ca540df41523d8cca77a301dc93a515c780c82a'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_mutants', '177bc38a47a3ec1465aaa5f8d71ed0a3e2e053eaec64252fc715e23cfdddfaab'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.setUp', '37bcb7bf356ed51d6454bd0d87beeb5e3069f66f9c6fc6f30ede6c7f400a14b0'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.report', 'e3a3be0c3b53b960bab71546c1accadc1230e57290306ba3171bf7d6ea0fa0d4'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.frames', 'ba5a70d83498634c35c3178f555e6cc9beedc90f2024075d5177e69e0dfafe6b'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_complete_equal_values_keep_distinct_input_identities', 'b26db0270bf07d88bed449cec9c48126812aa484843aa93b1126ea527a48d876'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_reports_require_nonempty_complete_ordered_identity', '9a10744d9b4d618d1cc3b596c9698685ce45ecb3c24caec2dadec7a17afaf1ab'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_process_and_preparation_errors_are_checking_errors', 'da84666ce1f5dbcc405eaff9581131dbca56cec10577f44df8e0f162e804e0d1'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_complete_report_is_checked_before_the_oracle', '549836272bf4455e1ba46968e86f634cb07a87d26e76abf21dde5f64dbd2e764'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.mutant_case', '2c67dbcb8f006484196a5de00f9a6c2e9bd4cffac71f226cccea8ec820020765'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_mutant_loop_does_not_absorb_checking_errors', '377e109d7fa3bb10946fe92a864ce525a3534d2c48ec1e90316c521e63203001'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_a_complete_correct_mutant_report_remains_a_survivor', 'd1866bcfa04d9a7743225bc475512d7f10a5d019a3b5c0b6fa0510ac1d88930e'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.setUp', '43c4e3b70754207a0bad316052b3094aab9249eb1bd4440e15f16f349959c0a3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.write', '2563171e8aa5e88f808f0cd835fdc99bd1651e4aec18570e177e9029cfffc14d'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.api', '22c13256041e07c9da199c2b6751c6533e7e701136e4c8d218609c34953c894c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.schema', '683d9ad93dfacb25764d07809cbf59fbc1ef2c1e46ab5b466fb2bd4bba4bf9a4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.reader', '81ae5c93b9d3f023c656f436ae986b138b14fce261e182a7b3ca5ad8b242124c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.late', '216340f60c8e1de28e666bd2bcd6c1e1630dad7f0cac1840f25c331f4feb6d74'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_00_actual_four_positions_without_document_or_cache_injection', '32c9c2b64400cdc3ef0ed21e7bebff40d0501b44bfde341f918569ee5a6d3050'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_01_actual_p10_reference_bearing_aliases_keep_each_coordinate', 'ce1bfc62d9844095b2caa16bbd3bcc69ca50958dd62d4ef5fc34ade0204bf44b'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_02_root_json_and_transitive_local_source', '4b7694bc2aab331f91e0ce4df6c439526581e3d00977afb41453bf4f6accd73d'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_03_boolean_schemas_are_not_scalar_errors', '2b24cb97d17090646f872d126e1caa2fc3fd667a2398f4d1b86205a6f88c1d89'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_04_early_p10_to_current_p09_pointer', '620e1a890b74ebf8065c68d8806df420de9ba85383f849a66c6d48dd7b3f1cd3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_05_exact_late_door_before_negative_neighbours', '407b3678435bfc679f4f2eb12a0484e997514fa515e4de4578e62f5f1b2498d5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_06_missing_chapter_and_wrong_declared_target', '88d0be27c46d30d7fea3ba07ac47ac0f86541e4c4cca9b1e424382f9d9e86ba8'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_07_alias_under_door_and_components_does_not_inherit_permission', '53f0d0748248e926d4a11054529c719af27b975fe850446c9a83b359d9047e85'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_08_real_cache_fill_does_not_authorize_later_declaration', '3c23dfb62c008df9b057733edfb4aed3b4e1c31daa544212b0dff09bb4d3b7cd'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_09_standalone_json_has_no_inherited_late_door', '56c9e9ede4b94f067e659563e25cf2a7505d030d1584d79a91514b8c693dfb13'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_10_legal_reference_aliases_preserve_both_source_positions', 'ebba288eab0c14519cee2ce4093581ee3eef47fb02263429ca24a1b46ca57d58'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_11_cyclic_alias_structure_is_a_checking_error', '447b57369ae49f9e4c6709dcc75183f16136a02755eb9bf18b99e96d8e35cabc'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_12_common_cannot_read_a_lesson', '5968e2398a6e32c7ce9b2fc525a81898f83d4a1f6f4ada38bc43b0b2db620f68'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_13_relative_base_is_the_actual_declaration_resource', '17e117c6cf2015e99addea60f92a4a5ca83c7d579d639a30d868d79a69f4b38c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_14_network_absolute_query_and_missing_resources_are_errors', 'a21b524631bea6b8a6b65d9363ffc8fdc7f6d17cb6cf20b00e9d01a300ffa78c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_15_physical_boundary_and_real_owner_follow_symlinks', 'ac4322b89509df643798cadbbadfaa75069978574079007f08b16e44110a6fb4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_16_cross_file_cycle_differs_from_local_recursion', '546eb1094bcec4d0de18916d0cf8abf2091bb4d6c5cf3e35cd7c60162a1c90f9'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_17_malformed_duplicate_nonfinite_and_scalar_json', 'ad8a656210f5c4fdd2f1308ed4f09bf146a755af87c9f3ed2462f9f1289e1ce2'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_18_schema_dialect_and_base_are_not_silently_changed', '78df18f87a7a3c88fe1952aea7ebe89868278d43b882bf5f59737bf3dfbf371a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_19_source_cache_is_not_healed_after_input_changes', 'cab982fec0d61a8ca991476b8b054912c041d8043a5c8942630b44b21a2711d3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_20_actual_dotted_definition_is_covered_not_skipped', 'bbb43a3a9f96a7bff2af09363f4f70ca2afb82d2ca4b11b601d00cf8138cbbcc'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_21_unmapped_ambiguous_and_empty_comparisons_are_errors', '4ba3bbbb3fced759716775c069acf2a029dfdf6f35c4fae3f07698e5f4305a43'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_22_proven_alias_origins_retain_every_coordinate', '67cdeffc37ba205d479c06a0fa457b7437b89409e6d59fd603962064d05bcc26'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_23_actual_metadata_tables_are_strict_and_are_not_the_oracle', 'e3c140a12cf04f1670205ebed8f3c41613734d212cc7aae406ddb80499c629ff'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_24_binding_table_completeness_and_source_operation_identity', '2bb1fac29f67fc313efc755839af28a5deea7327f39ea322f59975bc21629042'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_25_ref_sibling_constraints_belong_to_the_declaration_not_its_target', '2fa2df47f9735aa971f839de2fa529533b2209dfe2f53fd7cd2ddb64035a8dcb')]
+_S08_FROZEN = [('tools/normgen/test_gen_door_lesson.py', 'Model.ok', 'd30ff78ba38cd35e4704e96b4c4a471983dcd93f58bdd3bd1b31a5cb3e4fa564'), ('tools/normgen/test_gen_door_lesson.py', 'disagree', 'e332c31849a603cf3267e7f26766f78087508602934d6a78bd97e5912d43134a'), ('tools/normgen/test_gen_door_lesson.py', 'read_report', 'cb491146085c53d1c54dbbbb205eb8739a50de31fa37d5a52a4cadab00f64653'), ('tools/normgen/test_gen_door_lesson.py', 'run', '765f0a9c0955d8fbd66d5fa678b5fc889dda8d1cbf862d78bb79423d962f3719'), ('tools/normgen/test_gen_door_lesson.py', 'probes', 'ba1cbe48467a83537190e53471f3083d9ad99c5ecb56ad04525706d599e054b4'), ('tools/normgen/test_gen_door_lesson.py', 'expected', '8a7c489e4c7f64ccd774eeafc8363b10a6709322c5b4c82b11c1e6726ba3f436'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.tearDownClass', '8d5eaa86110ac5b69b246e646fa16610d1cb4ff1e0e709b303fa64e2ea627c73'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_fresh', '0def318142f4126edad897de20f31b2e7be0ad5d53e9cbbb2e1085d8523fa9c3'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_ops', '7513d4f9b2c01407ab78e75b2fad4fcbe47dfb2e62377e027b403b7a88929f44'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.setUp', '243d4b1de620f93e8726636f5b37c2cf3808b1f12cf2ab763512c590a3dcea90'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.frames', 'c51e647f03a714a6e297a06b38b47c4d86483587f8b7301c105e7064de6b2872'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.report', '45bcc4fe9ba187a14a1dec38c13efffae2200c02adfde8e9309ce3bb7dfd8330'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.module', '2cefa7609ef259b4241571b1f563a32414de56e4896749e3db9c490793c163a6'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_complete_positive', '69a1adb7188c3d5624a8331348ef9020df6cb11515e36e7f186ae4bfae9dba83'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_zero_input_before_preparation', 'b981d674c0993fbd745976f83b1d359f11ea2ddfae7591660c5698fdd91b52cf'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_zero_short_extra_reports', 'edc73043908283bd93981e7b9c0ade08caa858ae3429327addae364c695d173d'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_frame_identities', '1e04b3b22392d226483547d9b9295bdb7e5fa5cc28e397491f2f1e2730025c3c'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_frame_shapes', 'e30c793ec298e6acb71a2e9423139f19d3a90577ca5c87437f232b93f18aaa46'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_typed_shapes', '69d57e83743ff63f93a3ff42741e6286862cd317225c5178af7827d4eeeb5b52'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_valid_wrong_values_are_semantic', 'e67ee9781a8f7c571481e5aa0cf068e9c56a28828acadeda396fce160d8ca4ff'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_strict_json', '08d8b9e2641378dfd976f1ebdf16d26819c95cfcb60ba1d5d3b30d23e38f40a7'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_preparation_errors', 'c06720649b14a9b970f6d3e58d381070bb222c9e60a2fd80df67e9a77186efce'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_start_errors', 'b276fb771296e054dedf32ad53e48b55c67d414695879b2d6edac4c00dfc1047'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_compile_nonzero_even_with_complete_output', 'bc051dd1578f9e0b7b894694ff3debda3f1b46e362b17a8c85645c40dfebe0f8'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_terminal_errors_are_not_semantic', '62234b0db2ea9a63b36042554ee343c28665f2fd16f1f46ea56d2ffc7e900f83'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_generation_errors', '77db9cfcb9e71e70d4aeeab95de73baa628ba476bcf48517bed196ae20651d2e'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_mutant_errors_propagate', '2dd0a81f1b0002b36ffa2c9a22824b4b1bcdc5e1c49b31cf7b89ca51c272bf73'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_correct_mutant_survives', '2b36bac03767f6e28c4e74ef15a10871ba86636f8af930e29a2e33eff7c276de'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_named_semantic_mismatch', '38858b50a03a5d4e6d120b32ab82bdeb10a026b2d78db354d5127a464f7c2dcb'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_mutation_applicability', 'a8428bc4a8af3f09e285a9ebb5276774a244cc3ccf78868904ed9ed1e1bedf5e'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_unicode_and_terminal_lf_neighbours', 'd2d17b21cfa730eebc9ebf7c34643196d581ddd22f80f4a4bb53b6b511fdca29'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.setUp', 'a08776372f2c76ab4234953a60b000b0a508a5c3d66fefd4dce09d42166e5eb9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_00_schema_map_array_and_escaped_pointer_neighbours', 'd88e1ac61b649ba6716602321b77393cf76534a397b9298ad48547ac021654c9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_01_bad_array_indices_escapes_and_fragments_are_errors', 'e0cfd45e125fac2d9e1c4df6b2dc5a59f19c0bcff026277eaaf6c9cdb214d75a'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_02_literal_ref_values_are_data_even_when_the_uri_is_unsafe', 'e8f4c5c32d5e6d6dce5c0d9c16a1611ead840b786e2e1ff79ff1eb33a9ca9f53'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_03_schema_of_a_property_named_ref_is_still_traversed', '9e6c18982b501b3b02ed5487ecdbb1e3788d1efe5832424d2e0bd5ffdd5a592e'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_04_schema_ref_siblings_keep_their_own_constraints', 'd0f012514e622bb700d169ef038487a9c57f12fd75513a2d813e859d182f23d1'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_05_schema_shaped_literal_data_is_not_a_schema_target', '85959f3eaecff2252da6f33a1c259ed3ec8a34ba39e49f48b1569e16f63da8e0'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_06_json_cannot_replace_parameter_response_or_pathitem', '3535e8090b1146ff3cf6e1afcb2345b236aa617cdbe300865f11698e8b7dccb9'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_07_openapi_object_kind_and_whole_document_are_preserved', '2438ec0e227077bfdbb7b5ca0282857bb11ef475f4703f3468ab753f0cf4eabc'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_08_local_parameter_reference_and_json_schema_parameter', '638e20e81c05571bbbe2e6dccf79465c77b2a18ffb82da05b303c299f5a69684'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_09_parameter_aliases_keep_both_operation_declarations', '21a31f8748e60f0ae8554c9ce16039fd71ea70cf6aa09fabd8bb6b275c03afa4'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_10_missing_parameter_context_cannot_guess_a_source', '8af45e00b5ba752432b1ba9b0d81d95eaba4b96bd1462a512df64d1d834e5ab3'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_11_extensions_are_opaque_until_a_typed_reference_enters_them', 'cc618ed3a0173d90c6663c5eab7490602f9cd5b6e667f63959c2b8d4cae5cb67'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_12_equal_nonalias_values_do_not_share_late_permissions', 'a052af1b013317fc1d792902a1e6171fee4a8c67f1856db96a379f866a282d8b'), ('tools/normgen/test_gen_door_lesson.py', 'SchemaPositionControls.test_13_independent_schema_errors_are_not_false_verdicts', 'b5f36d918307eb7138c1e49410c8dcfa36babd4ae5acc6dc099ce8ad33d75da9'), ('tools/normgen/test_gen_door_bodies.py', 'bundle_of', '8db3f43ea61522c367ecb36dcb65ee80397041a99801d325d6e16a9ed36c7913'), ('tools/normgen/test_gen_door_bodies.py', 'tables_of', '5ace0b6d5dbd23762aae9b31c1e32049684e1e7c7877ccbec440bcdb77779913'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.__init__', '052c893a67f821371c804d5918ba0631ff7ae34f949c1ce45d2327f8a43d6864'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.node', '69b19c2977d4e341664ef3e3abd1312e7ab89c70367375d98c1c5f1b342559b1'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.strings', '13c0bb438192967ea00caabd189f67e57702129b5070f0a59990d8e7a5204abd'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.pattern_samples', 'c4980773cacbb59bbfb128355eb3f12786ab4f43f5aedeadff99647a34ef8221'), ('tools/normgen/test_gen_door_bodies.py', 'Gen.values', '65202fbcc93c17fca9bf6608fff8ae183713385bedd3e4e0b19513e098b9aee5'), ('tools/normgen/test_gen_door_bodies.py', 'response_object', 'd1e241d8f495b5d0649845731259a2381ece976779c5f1df3919125a4606c067'), ('tools/normgen/test_gen_door_bodies.py', 'response_constant', '065f123bf5639066d98614357058c68bf24a5b9dab5ecb8aee39f26e8161dce9'), ('tools/normgen/test_gen_door_bodies.py', 'checked_values', '88d175a13a52247cdf7ce2844cd39214826f41f130af8be21d56ce04d58368ac'), ('tools/normgen/test_gen_door_bodies.py', 'read_report', 'b4f5fa0d454c7c1f59e9f1927c5ac671687d2f67584faafa77221aaadf1df1bc'), ('tools/normgen/test_gen_door_bodies.py', 'go_process', 'f3c0e8e0f0e08180159b0325bdfeaa9fa6e76fffcc8382a43c34b72859cfd2a1'), ('tools/normgen/test_gen_door_bodies.py', 'disagree', '61b1ee0795c020b267f56474278a9205b7f2448fd428fa2ec9b5348a2be2cdf7'), ('tools/normgen/test_gen_door_bodies.py', 'run_go', 'a9ad04b8395fb093f0cf1170afec957cc8d4eb8151b66a6e5033f9ddf1d0c59f'), ('tools/normgen/test_gen_door_bodies.py', 'oracle', 'ea203d89f7935b8b226acc863269699d6557d1b70b5ffd8156a8f69dca66fe15'), ('tools/normgen/test_gen_door_bodies.py', 'cases_for', '8dd99fd435f7f6e4fe6b5041179b3876f00dbfd2c484affd8f6854fee5affd53'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.__init__', '65e272048521c46f720693a86688b9abfcc6bcf032a09282b9a99bc3c0b66f1f'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.escape', '79cd3c02d29cc2d7a031e51460c691d7168a0af4795b0f3146302c3c30dc68c3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.fragment', 'a371552c315c6a968cdddbfdd77d94cd65b090a557a9eea50b74d39f3876baa1'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.physical', '24468af12453b3da75229cfd227152c9a162db9f5a4b8161774fdfaf932759d3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.owner', 'df0ee85ee7ad5f64c1fe417cccfab37d2bfc6c554778c787a0460cb318a21ec5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.is_json', '8d5fcf5f23cd79945ef14a313b6104172aadc46492e42ae05f42da693c4c69f2'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._json_pairs', 'af6e2d306f2c8a38067fd340d65834395270f13b781e9dd1a783c14f8b8e37b8'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._constant', 'ee428586fb18afc9c887a452bad240765a70945414a1dd824f5a744659cd37a5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._json_tree', 'e9d0c4f9a2ca48a67dff5a2e5686bd024e1125fd91f6fbb9117afc4b9de7559a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.document', '8207901d03b8375b34e2693c42295b282ec6b8360fb22da6923a829777cd103b'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._index', '087d9d97d4c42b02a87945f732f2effcb5bb5d8ad3efb82a10612fc1af08353f'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.value', '510c0a472b390b53da57421c8c704d2c93be3ad36994808341d5100b1e880686'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.at', 'f0e751c401b5bfb6595b78c1b16867d3a9dbc6d41590f1b5aca52d0ec471625a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._late', '499029179a8d4fef6acfb1d8ae8149d1aaefcacb24280069493f786d2c486fb7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._reference', '143c483fc91488a4b836ce998aaa92a6b493297eeab17082e8139fac2306f94b'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._walk', '5725f73b1d4d05396f55de6138ba303f4fec66fa9bed9945bac0e4c0094a7151'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._check_schema', 'e898f10ee2802794b49c19b19a88b630c221871fb6ba9e4b81f49e9c991079b4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.uri', '0edb5200fe6bd7b4129ae5027fca3783e9cd9073d5661573bfc5f5c2bcb10136'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.validator_at', 'd5449f798ac3bca87b37b05d55beeb1a2b301ad05a2f462a2281d17fff25c1e1'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader._locations', 'bec3ce82178bddc85dc081f41b7a5490216281ae554b6f86dc0e7c26ae308a9a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.resolve_object', 'e73e59cc3ba1fd35e7b800dc4f2e983c4cf5eb6e3c5ec8bb964913e2fa80eec7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.schema_type_node', '2b5bfba7bcf2afa9ac7c4781a5a51cb7d3fc38367170eaa6c500ce7af93a893f'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.parameter_validator', '4681bde317733cea1e1024134f55adbb67691cac1fdb278297b62ffbd4622ace'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.validators', 'dbbb7df1a48481cfc00de1c99a7ab6f85da54e6fb8fbd4b9f10a284a2607d61a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.canonical', 'ff12c99b7e7f4948c7c44d4c378df4ca75bfd50acd25fdb013e52406228ce907'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.bundle_origins', '6bdc3284c97a231219ced7ea6b8d8bc168c94b78d62ce2a60007ef8966a40714'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.compare', '56383840167be9ecb03432206bc8a76e2c4204c1ee6e69a22e261bbeba8d08b7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.literal_table', '1557a382d5b269fb066dfb787edcdf925ddbe148cb740a97a0bfac23ed72459a'), ('tools/normgen/test_gen_door_bodies.py', 'synth_module', '64ae86253f1b6bf57f26669f75be849f8cad3c43efe37c7d9a046775230e2fa0'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.setUpClass', 'ed892c5250d188f88505bfbb9e9aa096fa6236d40d3125ad8ef67c6b8d6fe73b'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.tearDownClass', '8d5eaa86110ac5b69b246e646fa16610d1cb4ff1e0e709b303fa64e2ea627c73'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_fresh', '6f3dc13378496cac3eac49ccef22b73cb557f84dbaa43aa0844f2647fc01eaa7'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_bundle_equals_source', 'e29e57de500f40cd14e9e82f96d7e9e32f1406d199c6ecbac1fc67454b0cd978'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_validate_against_oracle', 'b02e5db2587916d8a758baae56aea98949577740de732e23d0d1b3a75cb2cdaa'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_synthetic', 'd2b233e7ea6355391a1bd66c7de9886ccb8a9872f7bded86481b9c806de939d2'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_api', 'e76aef33a1ff16967ec25a842ca540df41523d8cca77a301dc93a515c780c82a'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_mutants', '177bc38a47a3ec1465aaa5f8d71ed0a3e2e053eaec64252fc715e23cfdddfaab'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.setUp', '37bcb7bf356ed51d6454bd0d87beeb5e3069f66f9c6fc6f30ede6c7f400a14b0'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.report', 'e3a3be0c3b53b960bab71546c1accadc1230e57290306ba3171bf7d6ea0fa0d4'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.frames', 'ba5a70d83498634c35c3178f555e6cc9beedc90f2024075d5177e69e0dfafe6b'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_complete_equal_values_keep_distinct_input_identities', 'b26db0270bf07d88bed449cec9c48126812aa484843aa93b1126ea527a48d876'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_reports_require_nonempty_complete_ordered_identity', '9a10744d9b4d618d1cc3b596c9698685ce45ecb3c24caec2dadec7a17afaf1ab'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_process_and_preparation_errors_are_checking_errors', 'da84666ce1f5dbcc405eaff9581131dbca56cec10577f44df8e0f162e804e0d1'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_complete_report_is_checked_before_the_oracle', '549836272bf4455e1ba46968e86f634cb07a87d26e76abf21dde5f64dbd2e764'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.mutant_case', '2c67dbcb8f006484196a5de00f9a6c2e9bd4cffac71f226cccea8ec820020765'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_mutant_loop_does_not_absorb_checking_errors', '377e109d7fa3bb10946fe92a864ce525a3534d2c48ec1e90316c521e63203001'), ('tools/normgen/test_gen_door_bodies.py', 'BodyServiceControls.test_a_complete_correct_mutant_report_remains_a_survivor', 'd1866bcfa04d9a7743225bc475512d7f10a5d019a3b5c0b6fa0510ac1d88930e'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.setUp', '43c4e3b70754207a0bad316052b3094aab9249eb1bd4440e15f16f349959c0a3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.write', '2563171e8aa5e88f808f0cd835fdc99bd1651e4aec18570e177e9029cfffc14d'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.api', '22c13256041e07c9da199c2b6751c6533e7e701136e4c8d218609c34953c894c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.schema', '683d9ad93dfacb25764d07809cbf59fbc1ef2c1e46ab5b466fb2bd4bba4bf9a4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.reader', '81ae5c93b9d3f023c656f436ae986b138b14fce261e182a7b3ca5ad8b242124c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.late', '216340f60c8e1de28e666bd2bcd6c1e1630dad7f0cac1840f25c331f4feb6d74'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_00_actual_four_positions_without_document_or_cache_injection', '6227003eaf3108176c198aa8f59c3ff87ddec3fc2252087a8bebfecac0259b72'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_01_actual_p10_reference_bearing_aliases_keep_each_coordinate', 'ce1bfc62d9844095b2caa16bbd3bcc69ca50958dd62d4ef5fc34ade0204bf44b'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_02_root_json_and_transitive_local_source', '4b7694bc2aab331f91e0ce4df6c439526581e3d00977afb41453bf4f6accd73d'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_03_boolean_schemas_are_not_scalar_errors', '2b24cb97d17090646f872d126e1caa2fc3fd667a2398f4d1b86205a6f88c1d89'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_04_early_p10_to_current_p09_pointer', '620e1a890b74ebf8065c68d8806df420de9ba85383f849a66c6d48dd7b3f1cd3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_05_exact_late_door_before_negative_neighbours', '407b3678435bfc679f4f2eb12a0484e997514fa515e4de4578e62f5f1b2498d5'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_06_missing_chapter_and_wrong_declared_target', '88d0be27c46d30d7fea3ba07ac47ac0f86541e4c4cca9b1e424382f9d9e86ba8'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_07_alias_under_door_and_components_does_not_inherit_permission', '53f0d0748248e926d4a11054529c719af27b975fe850446c9a83b359d9047e85'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_08_real_cache_fill_does_not_authorize_later_declaration', '3c23dfb62c008df9b057733edfb4aed3b4e1c31daa544212b0dff09bb4d3b7cd'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_09_standalone_json_has_no_inherited_late_door', '56c9e9ede4b94f067e659563e25cf2a7505d030d1584d79a91514b8c693dfb13'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_10_legal_reference_aliases_preserve_both_source_positions', 'ebba288eab0c14519cee2ce4093581ee3eef47fb02263429ca24a1b46ca57d58'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_11_cyclic_alias_structure_is_a_checking_error', '447b57369ae49f9e4c6709dcc75183f16136a02755eb9bf18b99e96d8e35cabc'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_12_common_cannot_read_a_lesson', '5968e2398a6e32c7ce9b2fc525a81898f83d4a1f6f4ada38bc43b0b2db620f68'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_13_relative_base_is_the_actual_declaration_resource', '17e117c6cf2015e99addea60f92a4a5ca83c7d579d639a30d868d79a69f4b38c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_14_network_absolute_query_and_missing_resources_are_errors', 'a21b524631bea6b8a6b65d9363ffc8fdc7f6d17cb6cf20b00e9d01a300ffa78c'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_15_physical_boundary_and_real_owner_follow_symlinks', 'ac4322b89509df643798cadbbadfaa75069978574079007f08b16e44110a6fb4'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_16_cross_file_cycle_differs_from_local_recursion', '546eb1094bcec4d0de18916d0cf8abf2091bb4d6c5cf3e35cd7c60162a1c90f9'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_17_malformed_duplicate_nonfinite_and_scalar_json', 'ad8a656210f5c4fdd2f1308ed4f09bf146a755af87c9f3ed2462f9f1289e1ce2'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_18_schema_dialect_and_base_are_not_silently_changed', '78df18f87a7a3c88fe1952aea7ebe89868278d43b882bf5f59737bf3dfbf371a'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_19_source_cache_is_not_healed_after_input_changes', 'cab982fec0d61a8ca991476b8b054912c041d8043a5c8942630b44b21a2711d3'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_20_actual_dotted_definition_is_covered_not_skipped', 'bbb43a3a9f96a7bff2af09363f4f70ca2afb82d2ca4b11b601d00cf8138cbbcc'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_21_unmapped_ambiguous_and_empty_comparisons_are_errors', '4ba3bbbb3fced759716775c069acf2a029dfdf6f35c4fae3f07698e5f4305a43'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_22_proven_alias_origins_retain_every_coordinate', '67cdeffc37ba205d479c06a0fa457b7437b89409e6d59fd603962064d05bcc26'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_23_actual_metadata_tables_are_strict_and_are_not_the_oracle', 'e3c140a12cf04f1670205ebed8f3c41613734d212cc7aae406ddb80499c629ff'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_24_binding_table_completeness_and_source_operation_identity', '2bb1fac29f67fc313efc755839af28a5deea7327f39ea322f59975bc21629042'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReaderControls.test_25_ref_sibling_constraints_belong_to_the_declaration_not_its_target', '2fa2df47f9735aa971f839de2fa529533b2209dfe2f53fd7cd2ddb64035a8dcb')]
 
 _S08_MUTABLE = [('tools/normgen/test_gen_door_lesson.py', 'Model.__init__', '03d887a970132a1162f594f80871a6e3f0c45985598304f70d52359b05188888'), ('tools/normgen/test_gen_door_lesson.py', 'Model.load', '84cb83bc144793b426def6ec8ca857241c54c724add0a9dd3732a240a2069894'), ('tools/normgen/test_gen_door_lesson.py', 'Model.deref', '3e0a8fe90ebda7fb2a5594a43100c85042f72698b5354be8906bbe5607ac2e13'), ('tools/normgen/test_gen_door_lesson.py', 'Model.schema', '0a17d328639806050d0b476d7adfbda370e3955ac9904230edbe2c5b92851c9b'), ('tools/normgen/test_gen_door_lesson.py', 'Model.templates', '73874cea37770e773f903f29a7952dc4bf19816ec0d83a114bb784f56405b63e'), ('tools/normgen/test_gen_door_lesson.py', 'Model.rank', '64b47c61e51d8ab9f131828543324d83cb8cb8b517f6695a38647f2cfeb8f366'), ('tools/normgen/test_gen_door_lesson.py', 'Model.route', '75ca2e24631985cb302dad2605da09e33bbe69050982ac23f4235874ed1edb32'), ('tools/normgen/test_gen_door_lesson.py', 'Model.sample', '6a86ee41a0f0b0fdc0651b0208241723ce1cd4c941193de83915ad3987e3d0fc'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.setUpClass', '69dab29887583afc0d6e4a8e25ef6dd75594f134e1b588ed6e8cd4f78dd805c1'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_probes', '9178e1587389b8caad3b99a2e81aff5ab73aec92986fdb4bbef194f319d1f3ad'), ('tools/normgen/test_gen_door_lesson.py', 'DoorLessonBase.test_mutants', 'ea4907714ff217943f701b4cb51444166594cd8157e9d94dd2f4ff34e50d44c4'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.mutant_case', '17de7ca2cc0f35be2ad8f098d1ca721e022dfc7e501d7769227c3ed25dc0f0e5'), ('tools/normgen/test_gen_door_lesson.py', 'RouteServiceControls.test_complete_before_oracle', '7cc5cf9aafeb5856fa0d43fa5df146a4f20dcdf6977d6b7936305a51879bbcc7'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.output_bindings', 'd8178c39f26b04be8580af5f4796e86d7949f75e747bd2eb7bf9b06292528e07'), ('tools/normgen/test_gen_door_bodies.py', 'SourceSchemaReader.parameter', '26e713c338fd16c76d5eda0bbdcbf7cc5b1284f45acaadbb3048764c909232aa'), ('tools/normgen/test_gen_door_bodies.py', 'DoorBodiesBase.test_params', 'fed7e0e4554ec805407f9d0338b7144104daa68ffa070303b258e82942f5cf69')]
 _S08_OLD_ASSIGNMENTS = [('tools/normgen/test_gen_door_lesson.py', 'HERE', '65eefe4da79587f39b6d92c49700f89186d9cc4fcd1165a730bcdbb58aa5fc02'), ('tools/normgen/test_gen_door_lesson.py', 'ROOT', '3ca87edaf167e2bfa28b5b8acad00a2a832fe57538e31569eba9c5f979ab407a'), ('tools/normgen/test_gen_door_lesson.py', 'LESSONS', '7b57216c88f150296a6db8bbdf9e907addce45b7dec65c5e8ca8927578962f7e'), ('tools/normgen/test_gen_door_lesson.py', 'GOENV', '51cf862cec7861a3727427f4cccbea71714acd827999b8178d9150b756950ffe'), ('tools/normgen/test_gen_door_lesson.py', 'METHODS', '67a560fc62ce72bccf32ae38c22b13accc5a62d7c3fe789857e0d0779bca3420'), ('tools/normgen/test_gen_door_lesson.py', 'CATALOG', 'cfb964e78086e627b2e05b72e756ac59b9d0f890cf7d7bff46dfb0bae9c49ca1'), ('tools/normgen/test_gen_door_lesson.py', 'SAMPLES', '5b096ae7a70db627c3a548d5beb9f2f1b1f02b7112135e1e7772a24a703506c5'), ('tools/normgen/test_gen_door_lesson.py', 'DRIVER', 'c667f606c538ce358b806e69237ff6d5974e6fa3a305fc8852d88de3ac08171a'), ('tools/normgen/test_gen_door_bodies.py', 'HERE', '65eefe4da79587f39b6d92c49700f89186d9cc4fcd1165a730bcdbb58aa5fc02'), ('tools/normgen/test_gen_door_bodies.py', 'ROOT', '3ca87edaf167e2bfa28b5b8acad00a2a832fe57538e31569eba9c5f979ab407a'), ('tools/normgen/test_gen_door_bodies.py', 'LESSONS', 'e9fb07f8c10e06675d7c1036d9e3a7c9a503dd1a201bfe4358040889133ca238'), ('tools/normgen/test_gen_door_bodies.py', 'GOENV', '51cf862cec7861a3727427f4cccbea71714acd827999b8178d9150b756950ffe'), ('tools/normgen/test_gen_door_bodies.py', 'DRIVER', '95fc8ed802a12acd75afd88e47eb28eff65d986cc76e224ad47ea466eb9344fc'), ('tools/normgen/test_gen_door_bodies.py', 'SYNTH', 'a0cf019123e3f558bea3fae5143e69e5d0f9dfe9918f98b24a3fd15032b758d5'), ('tools/normgen/test_gen_door_bodies.py', 'SYNTH_VALUES', '38b760b4e3c8a28b27f57b04e5478f5acb860fca3e8b603b7ea199cca865aa13'), ('tools/normgen/test_gen_door_bodies.py', 'SYNTH_CASES', '7fdb40729bea70c40ff54aa94bb737e97eb68231121483f9307ea720ca06035c')]
@@ -828,6 +850,162 @@ def _given_contexts():
         raise CheckingError("the one declared manual-pair context changed")
     return [_validate_context(dict(id=_S08_CONTEXT, root="testsub", raw=raw,
                                   views=[_strict_json(v) for v in raw], digests=[_sha(v) for v in raw]))]
+
+
+_DOMAIN_TABLE_COMPONENTS = {"TableEditCollection", "TableEditItem",
+                            "PassTableEditCollection", "PassTableEditItem"}
+
+
+def _given_domain_table_context():
+    """One actual complete canonical view; conditional routing, not new admission proof."""
+    path = ROOT / "Platform/02-installer/vectors/canonical/expect/corpus-a110_edit_tables_ok.json"
+    raw = _regular_bytes(path)
+    if _sha(raw) != "dfb74540f75cab35e4032f3f0d44f52f917d5f694fecf434ea83064e33168eb5":
+        raise CheckingError("the declared canonical domain-table context changed")
+    view = _strict_json(raw)
+    if (view.get("name") != "probe" or "ref" in view.get("domain", {}) or
+            view.get("domain", {}).get("edit_tables") != {"disks": ["note"]}):
+        raise CheckingError("wrong canonical domain-table context")
+    return _validate_context(dict(id="canonical-a110-domain-tables:root=probe", root="probe",
+                                 raw=[raw], views=[view], digests=[_sha(raw)]))
+
+
+def _domain_table_probes(model):
+    context = _validate_context(model.domain_context)
+    view = next((v for v in context["views"] if v.get("domain", {}).get("edit_tables")), None)
+    if view is None:
+        raise CheckingError("no declared editable table for the positive proof")
+    table = sorted(view["domain"]["edit_tables"])[0]
+    base = "/domain/" + view["name"] + "/" + table
+    return [("POST", base), ("DELETE", base + "/r1"),
+            ("POST", base + "?ignored=one"), ("DELETE", base + "/r%31"),
+            ("POST", base.replace(view["name"], "%70robe", 1)),
+            ("GET", base), ("PUT", base + "/r1"),
+            ("POST", "/domain/" + view["name"] + "/stash"),
+            ("POST", "/domain/" + view["name"] + "/" + view["unit"]["rows"]),
+            ("POST", "/domain/" + view["name"] + "/unknown"),
+            ("POST", "/domain/unknown/" + table), ("POST", "/domain/testsub/" + table),
+            ("POST", base + "/x"), ("DELETE", base),
+            ("DELETE", base + "/"), ("DELETE", base + "/x/extra")]
+
+
+def _test_domain_table_routes(case):
+    probes = _domain_table_probes(case.model)
+    wants = [expected(case.model, p) for p in probes]
+    case.assertTrue(all("err" not in value for value in wants[:5]), "missing Source positive table routes")
+    got = case._route_executor(case.fresh, probes)
+    bad = disagree(probes, got, lambda p: expected(case.model, p))
+    case.assertEqual(bad, [], "complete finite table route mismatches")
+
+
+_DOMAIN_TABLE_OBSERVER_GO = r'''package apidoor
+import ("encoding/json"; "testing")
+type review103DomainCatalog struct { root string; views []map[string]any }
+func (c review103DomainCatalog) Sub(string) bool { return false }
+func (c review103DomainCatalog) Rows(string,string) bool { return false }
+func (c review103DomainCatalog) Table(string,string) bool { return false }
+func (c review103DomainCatalog) Pass(string,string) bool { return false }
+func (c review103DomainCatalog) CatalogSnapshot() (string,[]map[string]any) { return c.root,c.views }
+func TestReview103DomainTableObservation(t *testing.T) {
+    var views []map[string]any
+    if err:=json.Unmarshal([]byte(__VIEWS__),&views);err!=nil { t.Fatal("checking input",err) }
+    var requests []struct{ ID int; Method,Path string }
+    if err:=json.Unmarshal([]byte(__CASES__),&requests);err!=nil { t.Fatal("checking requests",err) }
+    cat:=review103DomainCatalog{root:__ROOT__,views:views}
+    before,err:=json.Marshal(views);if err!=nil { t.Fatal("checking before",err) }
+    for _,request:=range requests {
+        match,failure:=Route(request.Method,request.Path,cat)
+        var result map[string]any
+        if failure!=nil { result=map[string]any{"err":failure.Code} } else {
+            info:=Ops[match.Op]
+            result=map[string]any{"path":info.Path,"method":info.Method,"params":match.Params,
+                                  "prefixed":match.Prefixed,"sub":match.Sub}
+        }
+        frame:=map[string]any{"id":request.ID,"method":request.Method,"path":request.Path,"result":result}
+        raw,err:=json.Marshal(frame);if err!=nil { t.Fatal("checking frame",err) }
+        t.Log("REVIEW103-DOMAIN-OBS "+string(raw))
+    }
+    after,err:=json.Marshal(views);if err!=nil { t.Fatal("checking after",err) }
+    raw,err:=json.Marshal(map[string]any{"count":len(requests),"snapshot_unchanged":string(before)==string(after)})
+    if err!=nil { t.Fatal("checking terminal",err) };t.Log("REVIEW103-DOMAIN-END "+string(raw))
+}
+'''
+
+
+def _domain_table_observations(done, probes, package):
+    """Check the whole Go lifecycle and every private frame before Source comparison."""
+    _complete_observer_go_test(done, package, "TestReview103DomainTableObservation")
+    rows, terminal = [], None
+    prefix = r"    review103_domain_table_observer_test\.go:[0-9]+: REVIEW103-DOMAIN-"
+    for event in _ndjson(done.stdout):
+        output = event.get("Output", "")
+        match = re.fullmatch(prefix + r"(OBS|END) ([^\n]+)\n", output)
+        if match is None:
+            if re.match(prefix, output):
+                raise CheckingError("malformed/unknown domain observation")
+            continue
+        if terminal is not None:
+            raise CheckingError("late/duplicate domain observation")
+        tag, raw = match.groups()
+        frame = _strict_json(raw)
+        if tag == "OBS":
+            _exact(frame, ("id", "method", "path", "result"))
+            if type(frame["id"]) is not int or frame["id"] != len(rows) + 1 or frame["id"] > len(probes):
+                raise CheckingError("missing/extra/duplicate domain observation identity")
+            if (frame["method"], frame["path"]) != tuple(probes[frame["id"] - 1]):
+                raise CheckingError("domain observation changed its input")
+            result = frame["result"]
+            if type(result) is not dict:
+                raise CheckingError("domain result is not an object")
+            if set(result) == {"err"}:
+                if type(result["err"]) is not int:
+                    raise CheckingError("mistyped domain error")
+            else:
+                _exact(result, ("path", "method", "params", "prefixed", "sub"))
+                if type(result["sub"]) is not str:
+                    raise CheckingError("mistyped domain owner")
+                core = {k: v for k, v in result.items() if k != "sub"}
+                disagree([probes[frame["id"] - 1]], [core])
+            rows.append(result)
+        else:
+            _exact(frame, ("count", "snapshot_unchanged"))
+            if (not probes or len(rows) != len(probes) or type(frame["count"]) is not int or
+                    frame["count"] != len(probes) or type(frame["snapshot_unchanged"]) is not bool or
+                    not frame["snapshot_unchanged"]):
+                raise CheckingError("incomplete/changed domain snapshot terminal")
+            terminal = frame
+    if terminal is None:
+        raise CheckingError("missing domain observation terminal")
+    return rows
+
+
+def _test_domain_table_observations(case):
+    context = _validate_context(case.model.domain_context)
+    probes = _domain_table_probes(case.model)
+    payload = _go_template(_DOMAIN_TABLE_OBSERVER_GO, dict(
+        VIEWS=json.dumps((b"[" + b",".join(context["raw"]) + b"]").decode("utf-8"), ensure_ascii=False),
+        ROOT=json.dumps(context["root"], ensure_ascii=False),
+        CASES=json.dumps(json.dumps([dict(ID=i, Method=m, Path=p) for i, (m, p) in enumerate(probes, 1)]))))
+    path = case.fresh / "apidoor/review103_domain_table_observer_test.go"
+    _new_path(path)
+    path.write_text(payload, encoding="utf-8")
+    try:
+        done = subprocess.run(["go", "test", "-count=1", "-json", "-run",
+                               "^TestReview103DomainTableObservation$", "./apidoor"],
+                              cwd=case.fresh, capture_output=True, text=True, encoding="utf-8",
+                              env=GOENV, timeout=120)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise CheckingError("domain observer process failed") from exc
+    package = (case.fresh / "go.mod").read_text().split()[1] + "/apidoor"
+    got = _domain_table_observations(done, probes, package)
+    bad = []
+    for probe, actual in zip(probes, got):
+        want = expected(case.model, probe)
+        if "err" not in want:
+            want = dict(want, sub=want["params"]["sub"])
+        if actual != want:
+            bad.append((probe, want, actual))
+    case.assertEqual(bad, [], "complete Source table/owner mismatches with poisoned boolean callbacks")
 
 
 def _source_identity_witness(model):
@@ -1724,6 +1902,12 @@ class DoorLessonBase:
     def setUp(self):
         self._route_executor = lambda mod, pr: run(mod, pr)
         if self.LESSON != "06-console":
+            if self.model.domain_context is not None:
+                original = self.fresh
+                _verify_tree(original, self.original_snapshot)
+                self.fresh, self._companion = _owned_context_module(
+                    original, self.tmp / ("domain-context-" + os.urandom(16).hex()), self.model.domain_context)
+                self.addCleanup(lambda: _verify_tree(original, self.original_snapshot))
             return
         self.context = _given_contexts()[0]
         self._b0 = self.fresh
@@ -1822,6 +2006,132 @@ class DoorLessonBase:
 
 
 class RouteServiceControls(unittest.TestCase):
+    def test_preservation_inventory_transition_normal(self):
+        _assert_s08_preservation()
+
+    def test_preservation_inventory_transition_rejects_corruption(self):
+        import ast
+        original_read = Path.read_text
+        body_path = ROOT / "tools/normgen/test_gen_door_bodies.py"
+        lesson_path = ROOT / "tools/normgen/test_gen_door_lesson.py"
+        sources = {p: original_read(p, encoding="utf-8") for p in (body_path, lesson_path)}
+        targets = [(body_path, "SourceSchemaReader", name) for name in ("__init__", "_reference", "_walk")]
+        targets += [(body_path, "SourceSchemaReaderControls",
+                     "test_00_actual_four_positions_without_document_or_cache_injection"),
+                    (lesson_path, "Model", "ok")]
+        corruptions = []
+        for path, cls_name, name in targets:
+            text = sources[path]
+            cls = next(n for n in ast.parse(text).body if isinstance(n, ast.ClassDef) and n.name == cls_name)
+            fn = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == name)
+            lines = text.splitlines(keepends=True)
+            lines[fn.lineno - 1] = lines[fn.lineno - 1].rstrip("\n") + "  # checker corruption\n"
+            changed = "".join(lines)
+            ast.parse(changed)
+            corruptions.append((path, cls_name + "." + name, changed,
+                                "frozen old service/oracle block changed: " + cls_name + "." + name))
+        part = _S08_PARAM_SLICES[0]
+        self.assertEqual(sources[body_path].count(part), 1)
+        self.assertIn('"1", "0"', part)
+        changed = sources[body_path].replace(part, part.replace('"1", "0"', '"2", "0"', 1), 1)
+        ast.parse(changed)
+        corruptions.append((body_path, "parameter slice", changed,
+                            "old parameter/coercion/service source changed"))
+        for path, label, changed, message in corruptions:
+            with self.subTest(corruption=label):
+                def read_text(candidate, *args, **kwargs):
+                    return changed if candidate == path else original_read(candidate, *args, **kwargs)
+                with patch.object(Path, "read_text", read_text):
+                    with self.assertRaises(CheckingError) as caught:
+                        _assert_s08_preservation()
+                self.assertEqual(str(caught.exception), message)
+
+    def domain_fixture_model(self, context):
+        from jsonschema import Draft202012Validator
+        model = Model.__new__(Model)
+        model.context, model.domain_context = None, context
+        name = {"min": 1, "max": None, "pattern": None, "enum": None, "not": None,
+                "validator": Draft202012Validator({"type": "string", "minLength": 1})}
+        model.paths = [dict(path="/domain/{sub}/{table}", segs=["domain", "{sub}", "{table}"],
+                            component="TableEditCollection", checks={}, ops={"POST": ["202"]},
+                            all405=False, prefixed=False),
+                       dict(path="/domain/{sub}/{table}/{name}", segs=["domain", "{sub}", "{table}", "{name}"],
+                            component="TableEditItem", checks={"name": name}, ops={"DELETE": ["202"]},
+                            all405=False, prefixed=False)]
+        return model
+
+    def test_domain_table_context_is_one_actual_complete_source_view(self):
+        context = _given_domain_table_context()
+        self.assertEqual(context["root"], "probe")
+        self.assertEqual(len(context["views"]), 1)
+        self.assertNotIn("ref", context["views"][0]["domain"])
+        self.assertEqual(context["views"][0]["domain"]["edit_tables"], {"disks": ["note"]})
+        self.assertEqual(context["raw"], [_regular_bytes(
+            ROOT / "Platform/02-installer/vectors/canonical/expect/corpus-a110_edit_tables_ok.json")])
+
+    def test_domain_table_model_uses_only_declared_finite_edit_tables(self):
+        model = self.domain_fixture_model(_given_domain_table_context())
+        self.assertEqual(model.route("POST", "/domain/probe/disks"),
+                         ("op", "/domain/{sub}/{table}", "POST", {"sub": "probe", "table": "disks"}, False))
+        self.assertEqual(model.route("DELETE", "/domain/probe/disks/r%31"),
+                         ("op", "/domain/{sub}/{table}/{name}", "DELETE",
+                          {"sub": "probe", "table": "disks", "name": "r1"}, False))
+        self.assertEqual(model.sample(model.paths[0], "sub"), "probe")
+        self.assertEqual(model.sample(model.paths[0], "table"), "disks")
+        for method, path in (("POST", "/domain/probe/stash"), ("POST", "/domain/probe/things"),
+                             ("POST", "/domain/absent/disks"), ("PUT", "/domain/probe/disks/r1")):
+            self.assertEqual(model.route(method, path), ("err", 404))
+
+    def test_domain_table_model_does_not_borrow_another_context(self):
+        model = self.domain_fixture_model(_given_contexts()[0])
+        self.assertEqual(model.route("POST", "/domain/testsub/tallies"), ("err", 404))
+        self.assertEqual(model.route("POST", "/domain/testsub2/shelves"), ("err", 404))
+        model.domain_context = None
+        with self.assertRaises(CheckingError):
+            model.route("POST", "/domain/probe/disks")
+
+    def test_domain_table_context_changed_or_missing_bytes_are_checking_errors(self):
+        with patch(__name__ + "._regular_bytes", return_value=b"{}"):
+            with self.assertRaises(CheckingError):
+                _given_domain_table_context()
+        with patch(__name__ + "._regular_bytes", side_effect=CheckingError("missing public view")):
+            with self.assertRaises(CheckingError):
+                _given_domain_table_context()
+
+    def test_domain_observation_complete_before_comparison(self):
+        package, test = "fixture/apidoor", "TestReview103DomainTableObservation"
+        probe = ("POST", "/domain/probe/disks")
+        row = dict(id=1, method=probe[0], path=probe[1], result=dict(
+            path="/domain/{sub}/{table}", method="POST", params={"sub": "probe", "table": "disks"},
+            prefixed=False, sub="probe"))
+        end = dict(count=1, snapshot_unchanged=True)
+        def report(rows, terminal=end, exit=0):
+            events = [dict(Action="start", Package=package), dict(Action="run", Package=package, Test=test)]
+            for value in rows:
+                events.append(dict(Action="output", Package=package, Test=test,
+                    Output="    review103_domain_table_observer_test.go:20: REVIEW103-DOMAIN-OBS " + json.dumps(value) + "\n"))
+            if terminal is not None:
+                events.append(dict(Action="output", Package=package, Test=test,
+                    Output="    review103_domain_table_observer_test.go:25: REVIEW103-DOMAIN-END " + json.dumps(terminal) + "\n"))
+            events += [dict(Action="pass", Package=package, Test=test), dict(Action="pass", Package=package)]
+            return subprocess.CompletedProcess([], exit, "".join(json.dumps(x) + "\n" for x in events), "")
+        self.assertEqual(_domain_table_observations(report([row]), [probe], package), [row["result"]])
+        changed = copy.deepcopy(row)
+        changed["result"]["sub"] = "another-owner"
+        self.assertEqual(_domain_table_observations(report([changed]), [probe], package), [changed["result"]])
+        mutants = [(report([], None)), report([], end), report([row, row]),
+                   report([dict(row, id=True)]), report([dict(row, id=2)]),
+                   report([dict(row, path=probe[1] + "/other")]),
+                   report([dict(row, result=dict(row["result"], sub=True))]),
+                   report([dict(row, result={k: v for k, v in row["result"].items() if k != "sub"})]),
+                   report([row], dict(count=True, snapshot_unchanged=True)),
+                   report([row], dict(count=1, snapshot_unchanged=False)),
+                   report([row], None), report([row], exit=1)]
+        for mutant in mutants:
+            with self.subTest(stdout=mutant.stdout):
+                with self.assertRaises(CheckingError):
+                    _domain_table_observations(mutant, [probe], package)
+
     """Independent checking-service controls; subprocess responses here are injected."""
 
     def setUp(self):
@@ -2632,6 +2942,9 @@ for _lesson, _slug in LESSONS.items():
 
 
 DoorLesson_p06.test_catalogue_observations = _test_catalogue_observations
+for _slug in ("p08", "p10"):
+    globals()["DoorLesson_" + _slug].test_catalogue_table_routes = _test_domain_table_routes
+    globals()["DoorLesson_" + _slug].test_catalogue_table_observations = _test_domain_table_observations
 
 
 if __name__ == "__main__":
