@@ -9,9 +9,9 @@
 <meta name="consolem-assist-public" content="https://cammeta-checks.taile99433.ts.net">
 <title>Конфигуратор</title>
 <!-- ONE PSIM: мост по ONE.PSIM.PrototypeKit, подключён после стилей прототипа -->
-<link rel="stylesheet" href="app.css?v=0d83551bec97">
-<script src="i18n-en.js?v=c8a2bb480235"></script>
-<script src="openapi.js?v=a48013e7871a"></script>
+<link rel="stylesheet" href="app.css?v=8bb1a481c1a5">
+<script src="i18n-en.js?v=b68839ec5414"></script>
+<script src="openapi.js?v=d944eed136d5"></script>
 <script src="client.js?v=3124abf37ef1"></script>
 <script src="whep-stub.js?v=c1e5524fbef4"></script>
 </head>
@@ -48,9 +48,9 @@
   <div class="gojump" id="gojump">
     <span class="gojump-lead" aria-hidden="true"><svg class="ic-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></span>
     <input id="gq" autocomplete="off" data-i18n-placeholder="Имя, IP, раздел, настройка…" placeholder="Имя, IP, раздел, настройка…"
-      data-i18n-title="Сужает дерево по имени, IP, ID, производителю и модели; разделы, настройки и объекты вне среза предлагает списком"
-      title="Сужает дерево по имени, IP, ID, производителю и модели; разделы, настройки и объекты вне среза предлагает списком"
-      data-on-input='[["goInput",{"$on":"value"}]]' data-on-focus='[["goSearch",{"$on":"value"}]]' data-on-click='[["goClick",{"$on":"value"}]]' data-on-keydown='[["goKey",{"$on":"event"}]]'>
+      data-i18n-title="Фильтрует дерево по имени, IP, ID, производителю и модели. Разделы, настройки и объекты вне среза консоль показывает списком"
+      title="Фильтрует дерево по имени, IP, ID, производителю и модели. Разделы, настройки и объекты вне среза консоль показывает списком"
+      data-on-input='[["goType",{"$on":"value"}]]' data-on-focus='[["goSearch",{"$on":"value"}]]' data-on-click='[["goClick",{"$on":"value"}]]' data-on-keydown='[["goKey",{"$on":"event"}]]'>
     <button type="button" class="gojump-clear hide" id="goClear" data-i18n-title="Очистить" title="Очистить" aria-label="Очистить" data-on-click='[["clearTreeQ",{"$on":"event"}]]'><svg class="ic-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     <span class="gojump-hint" aria-hidden="true">Ctrl K</span>
     <div class="gopop" id="gopop"><div id="goList"></div></div>
@@ -65,7 +65,7 @@
 <main id="main"></main></div>
 </div>
 <aside class="asst-dock" id="asstDock" aria-label="Ассистент" tabindex="-1" hidden>
-  <div class="asst-grip" id="asstGrip" role="separator" aria-orientation="vertical" aria-label="Ширина панели" data-i18n-title="Ширина панели: тяните край или нажимайте стрелки" title="Ширина панели: тяните край или нажимайте стрелки" tabindex="0"></div>
+  <div class="asst-grip" id="asstGrip" role="separator" aria-orientation="vertical" aria-label="Ширина панели" data-i18n-title="Ширина панели: перетащить край или нажать стрелки" title="Ширина панели: перетащить край или нажать стрелки" tabindex="0"></div>
   <div class="asst-head" id="asstHead"></div>
   <div id="asstBlock"></div>
   <div class="asst-foot" id="asstFoot">
@@ -78,7 +78,7 @@
 <div id="domainMenuHost"></div>
 <div class="jump" id="jump" data-on-click='[[".self"],["closeJump"]]'>
   <div class="jbox" data-on-click='[[".stop"]]'>
-    <input id="jq" data-i18n-placeholder="Перейти к объекту…  (камера, датчик, сервер)" placeholder="Перейти к объекту…  (камера, датчик, сервер)" data-on-input='[["jumpList"]]' autofocus>
+    <input id="jq" data-i18n-placeholder="Перейти к объекту…  (камера, датчик, сервер)" placeholder="Перейти к объекту…  (камера, датчик, сервер)" data-on-input='[["jumpType"]]' autofocus>
     <div class="jlist" id="jlist"></div>
   </div>
 </div>
@@ -115,6 +115,6 @@
   </div>
 </div>
 <div class="tctx" id="tctx" role="menu" data-on-mousedown='[["rcMenuDown",{"$on":"event"}]]'></div>
-<script src="app.js?v=2c5caec589f5"></script>
+<script src="app.js?v=c63a68a332ad"></script>
 </body>
 </html>

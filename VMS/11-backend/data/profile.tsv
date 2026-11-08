@@ -1,5 +1,5 @@
 # The capability profile of the VMS stand for the consolem API tests (V/11.6 Н1.2): one row per contract operation
-# consolem.openapi.json @0fbdd12. profile: in — the operation tests are run; out — the operation answers 404 NO_ROUTE, the test
+# consolem.openapi.json @cb728a4. profile: in — the operation tests are run; out — the operation answers 404 NO_ROUTE, the test
 # is outside the profile (the test of NO_ROUTE itself is in the profile); stand — on the stand only (/test/reset, /test/clock, /test/stream-elsewhere). Read by the stand driver; on a new
 # contract version the table is reconciled (V/11.2). The product set — one-domain, the clock — --clock real (the consolem answer, ADR-0094
 # addendum (4)). The in rows — the list capabilities.operations in GET /reference (V/11.2 Н1.5): the declaration and the table are reconciled,

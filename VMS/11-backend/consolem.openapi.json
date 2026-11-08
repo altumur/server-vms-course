@@ -4876,7 +4876,7 @@
           "units"
         ],
         "summary": "Объекты: страницы",
-        "description": "Объекты любых видов. Общее правило страницы: limit, cursor, ответ {items, nextCursor?, total?}. Фильтры по цене — как у нынешних перечней: q, kind, status, noFolder, noRecord, noDetector — ограниченный проход (kind без domainId — как type у /devices); только implements (можно с domainId), а также kind (один или несколько через запятую) вместе с domainId — по индексу вида, страницы полные (чтение по профилю вместо /domains, /servers, /folders, /archives, /volumes); parentId, folderId, ref — один член; ids — по записи",
+        "description": "Объекты любых видов. Общее правило страницы: limit, cursor, ответ {items, nextCursor?, total?}. Фильтры по цене — как у нынешних перечней: q, kind, status, noFolder, noRecord, noDetector — ограниченный проход (kind без domainId — как type у /devices): страница дописывается до limit или до бюджета времени сервера, пустая страница с nextCursor законна; только implements (можно с domainId), а также kind (один или несколько через запятую) вместе с domainId — по индексу вида, страницы полные (чтение по профилю вместо /domains, /servers, /folders, /archives, /volumes); parentId, folderId, ref — один член; ids — по записи",
         "parameters": [
           {
             "name": "limit",
@@ -9088,7 +9088,7 @@
               },
               "scanPartsMax": {
                 "type": "integer",
-                "description": "Сколько разделов вида смотрит один запрос с фильтром. Значение на замер: форма берёт его отсюда и не вшивает"
+                "description": "Сколько разделов вида запрос ограниченного прохода (фильтр /units без члена) смотрит самое меньшее, если страница не набралась раньше. Дальше сервер вправе дописывать страницу до limit или до своего бюджета времени (рекомендация — ~100–200 мс) и только тогда отдать nextCursor; пустая страница с nextCursor законна. Значение на замер: форма его не вшивает и на него не опирается"
               },
               "scenariosMax": {
                 "type": "integer",
@@ -9487,9 +9487,11 @@
             "type": "string",
             "enum": [
               "demo",
-              "one-domain"
+              "one-domain",
+              "large",
+              "xl"
             ],
-            "description": "Набор: demo — эталонный, весь контракт (api/fixtures/demo.json); one-domain — профиль «один домен, камеры и детекторы, хранилища, правила, пользователи» (api/fixtures/one-domain.json). Стенд, который не умеет набор, отвечает 404 NOT_FOUND"
+            "description": "Набор: demo — эталонный, весь контракт (api/fixtures/demo.json); one-domain — профиль «один домен, камеры и детекторы, хранилища, правила, пользователи» (api/fixtures/one-domain.json); large — большой домен, 250 000 камер и 500 серверов (api/fixtures/large.json, записи считает стенд из чисел stand.large); xl — тот же large с 1 000 000 камер, 2 000 серверов, 1 200 папок (api/fixtures/xl.json — наложение на large). large и xl — для замеров формы на большом домене, бэкенду их уметь не обязательно. Стенд, который не умеет набор, отвечает 404 NOT_FOUND"
           },
           "fixturePatch": {
             "type": "object",
