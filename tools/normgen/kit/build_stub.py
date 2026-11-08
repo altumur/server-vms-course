@@ -3,6 +3,7 @@
   python tools/normgen/kit/build_stub.py <dst> [--spec-version <full-export-SHA>] [--go-build]
 Create01-store with build_kit output, stubstore go.mod/cmd and format2 acceptance.yaml, plus format1 assembly.yaml and SPEC_VERSION. The caller initializes/commits the destination Git repository required by the runner. The stub uses X-Configstore-Role. request_line_limit8192 is declared but net/http does not enforce strict framing, so manual-frame extra probes are excluded from the door metric. --go-build builds bin/stubstore; otherwise the runner's build phase does so. Run only through the server queue, not here."""
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -46,6 +47,20 @@ def spec_version(given):
         raise build_kit.KitError("no --spec-version and no git HEAD of /Users/murat/w2c/cammeta-specs")
 
 
+def stub_source():
+    """Keep optional controlled handlers only when the actual door declares them."""
+    _, doc = build_kit.gen_door.load(build_kit.OPENAPI)
+    ops = {op.name for op in build_kit.gen_door.Spec(doc, str(build_kit.OPENAPI)).ops}
+    src = (HERE / "stub/main.go").read_text(encoding="utf-8")
+    for name, count in (("CopyGet", 1), ("CopyHead", 2)):
+        block = re.compile(rf"(?ms)^[ \t]*// BEGIN {name}\n.*?^[ \t]*// END {name}\n\n?")
+        if len(block.findall(src)) != count:
+            raise build_kit.KitError(f"stub/main.go: expected {count} {name} blocks")
+        if name not in ops:
+            src = block.sub("", src)
+    return src
+
+
 def build(dst, spec=None, go_build=False):
     dst = Path(dst)
     manifest = build_kit.build(dst, MODULE, ("door",))
@@ -53,7 +68,7 @@ def build(dst, spec=None, go_build=False):
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
     cmd = store / "cmd/stubstore"
     cmd.mkdir(parents=True, exist_ok=True)
-    src = (HERE / "stub/main.go").read_text(encoding="utf-8")
+    src = stub_source()
     if '"kitmodule/internal/' not in src:
         raise build_kit.KitError("stub/main.go: no import kitmodule/internal/… to rewrite")
     (cmd / "main.go").write_text(src.replace('"kitmodule/internal/', f'"{MODULE}/internal/'), encoding="utf-8")
