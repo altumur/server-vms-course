@@ -58,7 +58,7 @@ units, TLS, external clients and operator windows by their named methods. It doe
 ## Non-HTTP seams: exact request and expectation grammar
 
 The file is `acceptance/K/seams.tsv`. Its last comment header is `# scenario<TAB>step<TAB>request<TAB>expect`; each scenario has consecutive
-steps starting at 1 and a fresh adapter and temporary roots. The runner does not read seams; kit stagetests does. A stand path starts with
+steps starting at 1 and a fresh adapter and temporary roots. Runner execution uses the [common seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol); kit stagetests remain auxiliary, not process acceptance. A stand path starts with
 `$data/`, `$run/` or `$manifest/` and is below that scenario’s data, run or manifest root, without `..`. `inputs/…` is a fixture path relative
 to the acceptance directory. No shell is evaluated. These lexical rules match the course checker on `f6cffb3ea`.
 
