@@ -4,13 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 
 This directory supplies [`seams.tsv`](seams.tsv) to generated stagetests (ADR-0125 addendum (4) item 7 and addendum (5)). It adds no HTTP stand or public runner target for P/02.4. Its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
 
-| Scenarios | Subject | Norm |
-|---|---|---|
-| `s1-put-invalid-source` | an invalid candidate is refused by manifest put with code 2 and the source name; the source file stays intact | P/02.3 N3 step 1, N4 |
-| `s2-new-existing`, `s3-rotate-invalid` | a refused creation or ring check leaves the existing file byte-for-byte intact | P/02.4 N1.9 secrets; P/02.4-14 |
-| `s4-new-exclusive` | concurrent O_EXCL creation at one path directly in `$data` succeeds once; the command creates no parent directory ([layout](../../forms/README.md#scenario-layout)) | P/02.4 N1.9 secrets new |
-| `s12-secrets-walk-unknown`, `s13-secrets-walk-kept` | the selection of the secrets walk: an unknown `identity/x` is listed with code 1, the kept rows leave the selection | P/02.4 N1.9 «Walk»; P/02.4-14 |
-| `s5-poll-healthy`–`s11-poll-read-equality` | the pure poll: catch-up under writes, a break, last at a follower, membership, two voters, equality at tick/read deadline | P/02.4 N1.9 poll; P/02.4-22 |
+The obligations of these scenarios are P/02.3 N3 step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» with P/02.4-14, and P/02.4 N1.9 poll with P/02.4-22; the scenario subjects are in [judge-only case data](README.cases.md).
 
 Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes 0 versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
 
@@ -22,7 +16,7 @@ The [generic profile contract](../../../common/acceptance/PROFILE.md) does not m
 
 ## Inputs
 
-[`inputs/seam-bad.subsystem.yaml`](inputs/seam-bad.subsystem.yaml) is the owned fixture of `s1-put-invalid-source`: a YAML document with only `name`, missing the mandatory manifest structure. The scenario copies it with `@file`, calls the normal `manifest put`, and checks the refusal and unchanged source bytes. It is deliberately outside the accepted manifest corpus. The remaining file inputs are literal owned strings in the seam table.
+File inputs of the seam table are judge-owned; their descriptions are in [judge-only case data](README.cases.md).
 
 ## Platform role socket groups
 

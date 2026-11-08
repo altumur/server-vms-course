@@ -83,20 +83,9 @@ of the check — check_spec 0021baa83): the form is
 `case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling`, the first four fields and the comparison are as in `puts.tsv`; `ceiling` is the row
 ceiling of the new instance of this line (`{row_ceiling}` of the start command of the «Stand»). Before the case the runner verifies the parameter:
 `GET /v1/status` → `max_value` = `ceiling`, and by behaviour — `items` of weight exactly `ceiling` is written, one byte more — 413
-`toolarge` with `limit` = `ceiling`; if it does not match, the run is not performed. The file `probe` (the manifest row
-265 bytes, the mark 74, the view row `87 + 890` = 977; the numbers are after `worker.exec`, ADR-0091 addendum (5), finding of cammeta-c-go I02-G01):
+`toolarge` with `limit` = `ceiling`; if it does not match, the run is not performed.
 
-| Ceiling `{row_ceiling}` | Installation | Expectation |
-|---|---|---|
-| 976 | `probe` | code 2, nothing is written: there is no row, no view and no mark; stderr names the file and the key of the view |
-| 977 | `probe` | code 0, rev 1, the view is the vector `example-sections` |
-| 977 | `probe`, then 9 times `@view-delete` and `probe` | code 2 at the last installation, nothing is written: the row and the mark are rev 9, there is no view (the directive removed it); stderr names the file and the key of the view |
-
-All three lines are in `puts-ceiling.tsv`. The third one, `ceiling_rev_10`, is the boundary rev 9 → 10 of the view weight (the P/02 lesson review, S4):
-each `@view-delete` and `probe` is a new revision (case 03 `view_deleted`), so the view of rev 9 weighs exactly 977 and is written, and the
-view of rev 10 weighs 978 (one more digit of `rev`). The installer checks the weight with the final new rev before any write (chapter 2.3 N3
-step 14a), so the last installation refuses before the parts, the row and the mark. The same boundary reached through a `cas` conflict of two
-installers (the full catalogue read with rev 8, another installer writes rev 9 first) is checked by reading: the table installs sequentially.
+Cases of a non-default ceiling and their expected outcomes are in [judge-only case data](README.cases.md). The installer checks the weight with the final new rev before any write (chapter 2.3 N3 step 14a), so a refusal comes before the parts, the row and the mark. A boundary reached through a `cas` conflict of two installers is checked by reading: the table installs sequentially.
 
 ## Checks by reading
 
