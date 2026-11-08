@@ -627,3 +627,5 @@
 2026-11-08 — V11 после принятого cb728a4: узкая композиция b70/127ed/9f95, затем English/history; происхождение и пределы — [отчёт](decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md).
 
 2026-11-08 — English/history V11 завершены в авторском охвате:30 пар/strict steps PASS, pinned assets и literal payloads сохранены; full strict100ERROR/62EXC против99/62 baseline112b, только reader gaps map+2journal вместо2old hash messages. READY не заявлен; [карта происхождения, переносов и проверки](decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md).
+
+2026-11-08 — Отдельная learn-норм-доля ADR-VMS-0004(1),(2) после frozen c8: six-type router, catalogue-only tools, same-tab/isolation, future answer.learn gate;7 EN/RU pairs/strictsteps/159links PASS, fullstrict100ERROR/62EXC без новых противc8. Без новых acceptanceinputs/harness/пакетов/READY. [Отчёт](decisions/inbox/2026-11-08-запрос-vms-learn-norms.md).
