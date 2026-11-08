@@ -1061,10 +1061,10 @@ class SourceSchemaReader:
         Only the literal table is actual metadata. Required source slots, types,
         defaults and lexeme roles are derived separately from full OpenAPI.
         """
-        match = re.search(r"\bvar\s+paramSchemas\s*=\s*map\[Op\]\[\]paramSpec\s*\{", text)
-        if not match:
-            raise CheckingError("missing actual parameter schema table")
-        pos = match.end() - 1
+        matches = list(re.finditer(r"\bvar\s+paramSchemas\s*=\s*map\[Op\]\[\]paramSpec\s*\{", text))
+        if len(matches) != 1:
+            raise CheckingError("missing/ambiguous actual parameter schema table")
+        pos = matches[0].end() - 1
         def token():
             nonlocal pos
             found = re.match(r'\s*("(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z0-9_]*|[{}:,&])', text[pos:])
@@ -1173,7 +1173,7 @@ class SourceSchemaReader:
                 source_parameters[key] = (prm, base, ptr)
         if source_parameters or re.search(r"\bvar\s+paramSchemas\b", bodies):
             table = self.parameter_table(bodies)
-            seen = set()
+            seen, role_mismatches = set(), []
             for op, values in table.items():
                 if op not in ops.values() or type(values) is not list or not values:
                     raise CheckingError("extra/empty actual parameter operation")
@@ -1195,10 +1195,12 @@ class SourceSchemaReader:
                             value.get("lexeme") != (dict(strip="", **prm["x-query-lexeme"])
                                                      if "x-query-lexeme" in prm and "strip" not in prm["x-query-lexeme"]
                                                      else prm.get("x-query-lexeme"))):
-                        raise CheckingError("actual parameter role/default differs from source")
+                        role_mismatches.append(key)
                     expected["parameter", *key] = (base, ptr + "/schema")
             if seen != set(source_parameters):
                 raise CheckingError("missing actual parameter binding")
+            if role_mismatches:
+                raise AssertionError(f"complete actual parameter role/default mismatches source: {role_mismatches}")
         else:
             table = {}
         actual = {}
@@ -2001,19 +2003,27 @@ class SourceSchemaReaderControls(unittest.TestCase):
         changed = [text.replace(row, ''), text.replace(row, row + '\n' + row),
                    text.replace('name: "n"', 'name: "unknown"'),
                    text.replace('in: "query"', 'in: "path"'),
-                   text.replace('required: true', 'required: false'),
                    text.replace('required: true', 'required: "true"'),
-                   text.replace('def: ""', 'def: "2"'),
                    text.replace('name: "n"', 'name: "n", name: "n"'),
                    text.replace('schema: "opaque-root"', 'unexpected: "opaque-root"'),
                    text.replace('schema: "opaque-root"', 'schema: true'),
-                   text.replace('paramSchemas', 'noParameterTable')]
+                   text.replace('paramSchemas', 'noParameterTable'), text + text]
         for mutant in changed:
             with self.subTest(mutant=mutant):
                 self.assertNotEqual(mutant, text)
                 (module / "apidoor/bodies.go").write_text(mutant)
                 with self.assertRaises(CheckingError):
                     reader.output_bindings(module)
+        for mutant in (text.replace('required: true', 'required: false'),
+                       text.replace('def: ""', 'def: "2"')):
+            with self.subTest(semantic_metadata=mutant), self.assertRaises(AssertionError):
+                (module / "apidoor/bodies.go").write_text(mutant)
+                reader.output_bindings(module)
+        # An invalid later record wins over an earlier normal semantic mismatch.
+        mutant = text.replace('required: true', 'required: false').replace('}},', '}, {name: "extra"}},')
+        (module / "apidoor/bodies.go").write_text(mutant)
+        with self.assertRaises(CheckingError):
+            reader.output_bindings(module)
         (module / "apidoor/bodies.go").write_text(text)
         self.assertEqual(len(reader.output_bindings(module)), 1)
 
