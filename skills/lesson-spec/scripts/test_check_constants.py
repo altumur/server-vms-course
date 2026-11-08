@@ -38,6 +38,8 @@ class Constants(unittest.TestCase):
         paths |= {f"Platform/{owner}/forms/runtime-constants.tsv" for owner in ("06-console", "08-domain", "09-agent")}
         paths |= {f"Platform/common/{ru}contracts/{name}.md" for ru in ("", "ru/") for name in ("accept", "password-hash")}
         paths |= {"Platform/common/vectors/password-hash/cases.tsv", "Platform/common/vectors/wire.tsv"}
+        paths |= {path for path, pointer in check_constants.P08_RELAY_BINDINGS}
+        paths.add("Platform/10-domain-console/forms/runtime-constants.tsv")
         for rel in paths:
             target = self.root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -638,6 +640,127 @@ class FolderConstants(unittest.TestCase):
         self.assertTrue(any(p == self.form for p, _ in self.check()[0]))
 
 
+class RelayMemberConstants(unittest.TestCase):
+    FORM = "Platform/08-domain/forms/runtime-constants.tsv"
+    FOLLOWER = "Platform/10-domain-console/forms/runtime-constants.tsv"
+    # Independent explicit Source addresses: writer owner and the existing reader limit.
+    BINDINGS = (
+        ("Platform/08-domain/data/relay-members.schema.json", "/properties/members/maxProperties"),
+        ("Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+         "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/members/maxItems"),
+    )
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.original = {path: (ROOT / path).read_bytes()
+                         for path in (self.FORM, self.FOLLOWER, *(p for p, _ in self.BINDINGS))}
+        self.restore()
+        lines = [l for l in self.original[self.FORM].decode().splitlines() if l and not l.startswith("#")]
+        rows = [dict(zip(lines[0].split("\t"), l.split("\t"))) for l in lines[1:]]
+        owner = [r for r in rows if r["name"] == "RELAY_MEMBERS_MAX"]
+        self.assertEqual(len(owner), 1)
+        self.value = int(owner[0]["value"])
+
+    def restore(self):
+        for relative, raw in self.original.items():
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+
+    def form_value(self, value):
+        path = self.root / self.FORM
+        lines = path.read_text().splitlines()
+        for i, line in enumerate(lines):
+            if line.startswith("RELAY_MEMBERS_MAX\t"):
+                cells = line.split("\t")
+                cells[1] = str(value)
+                lines[i] = "\t".join(cells)
+                path.write_text("\n".join(lines) + "\n")
+                return
+        self.fail("owner row absent in fixture")
+
+    def carrier(self, path, pointer, value=...):
+        target = self.root / path
+        doc = json.loads(target.read_text()) if path.endswith(".json") else yaml.safe_load(target.read_text())
+        parent, key = parent_at(doc, pointer)
+        if value is ...:
+            del parent[key]
+        else:
+            parent[key] = value
+        # JSON is valid YAML too; only this owned fixture is serialized.
+        target.write_text(json.dumps(doc, ensure_ascii=False) + "\n")
+
+    def check(self):
+        return check_constants.check_p08_relay_constants(self.root)
+
+    def test_actual_source_owner_and_both_carriers_are_read_only(self):
+        self.assertEqual(tuple(check_constants.P08_RELAY_BINDINGS), self.BINDINGS)
+        self.assertEqual(self.check(), ([], {"p08_relay_member_equalities": 2}))
+        self.assertEqual({p: (self.root / p).read_bytes() for p in self.original}, self.original)
+
+    def test_coherent_change_passes_and_owner_only_change_fails(self):
+        self.form_value(self.value + 1)
+        self.assertTrue(self.check()[0])
+        for path, pointer in self.BINDINGS:
+            self.carrier(path, pointer, self.value + 1)
+        self.assertEqual(self.check(), ([], {"p08_relay_member_equalities": 2}))
+
+    def test_each_carrier_missing_drift_or_type_mutation_fails(self):
+        for path, pointer in self.BINDINGS:
+            for value in (self.value + 1, True, str(self.value), float(self.value), None, ...):
+                with self.subTest(path=path, value=value):
+                    self.restore()
+                    self.carrier(path, pointer, value)
+                    self.assertTrue(self.check()[0])
+            self.restore()
+            (self.root / path).unlink()
+            self.assertTrue(self.check()[0])
+
+    def test_required_owner_row_unit_and_positive_int64_grammar(self):
+        path = self.root / self.FORM
+        original = self.original[self.FORM].decode()
+        line = next(l for l in original.splitlines() if l.startswith("RELAY_MEMBERS_MAX\t"))
+        for value in ("0", "0" + str(self.value), "true", "1.5"):
+            with self.subTest(value=value):
+                self.restore()
+                self.form_value(value)
+                self.assertTrue(self.check()[0])
+        for text in (original.replace(line + "\n", ""), original + line + "\n",
+                     original.replace(line, line.replace("\tcount\t", "\tbytes\t"))):
+            self.restore()
+            path.write_text(text)
+            self.assertTrue(self.check()[0])
+        self.restore()
+        path.unlink()
+        self.assertTrue(self.check()[0])
+
+    def test_bool_is_not_integer_and_coherent_overflow_is_not_accepted(self):
+        self.form_value(1)
+        for path, pointer in self.BINDINGS:
+            self.carrier(path, pointer, 1)
+        self.assertFalse(self.check()[0])
+        for path, pointer in self.BINDINGS:
+            self.carrier(path, pointer, True)
+            self.assertTrue(self.check()[0])
+            self.carrier(path, pointer, 1)
+        self.restore()
+        value = 9223372036854775808
+        self.form_value(value)
+        for path, pointer in self.BINDINGS:
+            self.carrier(path, pointer, value)
+        self.assertTrue(any("int64" in str(e) for e in self.check()[0]))
+
+    def test_follower_cannot_shadow_writer_owner_even_at_the_same_value(self):
+        path = self.root / self.FOLLOWER
+        path.write_text(path.read_text() + f"RELAY_MEMBERS_MAX\t{self.value}\tcount\tP/10-R004\tduplicate owner\n")
+        self.assertTrue(self.check()[0])
+        self.restore()
+        path.unlink()
+        self.assertTrue(self.check()[0])
+
+
 class Integration(unittest.TestCase):
     def test_p01_subject_errors_and_counts_reach_check_spec(self):
         from check_spec import Check
@@ -681,6 +804,319 @@ class Integration(unittest.TestCase):
             self.assertTrue(any("subject mutant" in e for e in result.errors))
             self.assertEqual(result.stats["p08_schema_equalities"], 141)
 
+
+
+class DeclaredNumericControls(unittest.TestCase):
+    """New closed coordinates; changing both carriers coherently must remain valid."""
+    BINDINGS = (check_constants.P06_API_BINDINGS + check_constants.P06_SWEEP_BINDINGS +
+                check_constants.P06_READER_BINDINGS + check_constants.P09_WRITER_BINDINGS +
+                check_constants.P09_READER_BINDINGS + check_constants.P08_NEW_BINDINGS)
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.docs, self.owners = {}, {}
+        for i, (path, pointer, owner, name, unit) in enumerate(self.BINDINGS):
+            value = self.owners.setdefault((owner, name), (i + 17, unit))[0]
+            self.put(path, pointer, value)
+        self.restore()
+
+    def put(self, path, pointer, value):
+        doc = self.docs.setdefault(path, {})
+        keys = [x.replace("~1", "/").replace("~0", "~") for x in pointer[1:].split("/")]
+        for key in keys[:-1]:
+            doc = doc.setdefault(key, {})
+        doc[keys[-1]] = value
+
+    def write(self, path, text):
+        dest = self.root / path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(text)
+
+    def restore(self):
+        for path, doc in self.docs.items():
+            self.write(path, json.dumps(doc))
+        for owner in {o for o, _ in self.owners}:
+            rows = ["name\tvalue\tunit\tnorm\tmeaning"]
+            rows += [f"{name}\t{value}\t{unit}\tP/test\tindependent fixture"
+                     for (o, name), (value, unit) in self.owners.items() if o == owner]
+            self.write(f"Platform/{owner}/forms/runtime-constants.tsv", "\n".join(rows) + "\n")
+
+    def check(self, binding, effective=False):
+        judge = check_constants.Judge(self.root)
+        judge.declared_equalities((binding,), "selected", effective)
+        return judge
+
+    def mutate_owner(self, binding, value=None, unit=None, remove=False, duplicate=False):
+        _, _, owner, name, _ = binding
+        path = self.root / f"Platform/{owner}/forms/runtime-constants.tsv"
+        lines = path.read_text().splitlines()
+        at = next(i for i, line in enumerate(lines) if line.startswith(name + "\t"))
+        cells = lines[at].split("\t")
+        if value is not None:
+            cells[1] = str(value)
+        if unit is not None:
+            cells[2] = unit
+        lines[at] = "\t".join(cells)
+        if duplicate:
+            lines.append(lines[at])
+        if remove:
+            del lines[at]
+        path.write_text("\n".join(lines) + "\n")
+
+    def mutate_carrier(self, binding, value=None, remove=False):
+        path, pointer, *_ = binding
+        doc = json.loads((self.root / path).read_text())
+        parent, key = parent_at(doc, pointer)
+        if remove:
+            del parent[key]
+        else:
+            parent[key] = value
+        self.write(path, json.dumps(doc))
+
+    def test_each_declared_carrier_positive_and_coherent_change(self):
+        for binding in self.BINDINGS:
+            with self.subTest(binding=binding):
+                self.restore()
+                self.assertEqual(self.check(binding).errors, [])
+                value = self.owners[binding[2:4]][0] + 7
+                self.mutate_owner(binding, value)
+                self.mutate_carrier(binding, value)
+                self.assertEqual(self.check(binding).errors, [])
+
+    def test_positive_int64_endpoints_are_dynamic_and_huge_owners_fail_cleanly(self):
+        for binding in self.BINDINGS:
+            for value in (1, 9223372036854775807):
+                with self.subTest(binding=binding, value=value):
+                    self.restore()
+                    self.mutate_owner(binding, value)
+                    self.mutate_carrier(binding, value)
+                    self.assertEqual(self.check(binding).errors, [])
+            self.restore()
+            self.mutate_owner(binding, "9" * 5000)
+            self.assertTrue(self.check(binding).errors)
+
+    def test_each_owner_drift_missing_duplicate_type_unit_and_overflow(self):
+        for binding in self.BINDINGS:
+            value = self.owners[binding[2:4]][0]
+            mutations = [dict(value=value+1), dict(remove=True), dict(duplicate=True),
+                         dict(unit="invalid"), *[dict(value=v) for v in
+                         (True, "1.5", "1.0", "01", "1e2", "0", "-1", "9223372036854775808")]]
+            for change in mutations:
+                with self.subTest(binding=binding, change=change):
+                    self.restore()
+                    self.mutate_owner(binding, **change)
+                    self.assertTrue(self.check(binding).errors)
+
+    def test_each_carrier_drift_missing_bool_fraction_type_and_overflow(self):
+        for binding in self.BINDINGS:
+            value = self.owners[binding[2:4]][0]
+            for change in [dict(remove=True), *[dict(value=v) for v in
+                           (value-1, value+1, True, value+0.5, float(value), str(value), None, [], {}, 2**63)]]:
+                with self.subTest(binding=binding, change=change):
+                    self.restore()
+                    self.mutate_carrier(binding, **change)
+                    self.assertTrue(self.check(binding).errors)
+
+    def test_carrier_duplicate_exact_decimal_and_missing_document(self):
+        binding = self.BINDINGS[-1]
+        path, *_ = binding
+        for raw in ('{"x-max-names": 30, "x-max-names": 30}',
+                    '{"x-max-names": 30.000000000000000000000000000001}', '[]'):
+            self.write(path, raw)
+            self.assertTrue(self.check(binding).errors)
+        (self.root / path).unlink()
+        self.assertTrue(self.check(binding).errors)
+
+    def test_actual_array_pointer_and_external_ref_base_with_all_conjuncts(self):
+        binding = check_constants.P06_API_BINDINGS[1]
+        value = self.owners[binding[2:4]][0]
+        path = binding[0]
+        self.write(path, json.dumps({"paths": {"/changes": {"get": {"parameters": [{}, {"schema": {"maximum": value}}]}}}}))
+        self.assertEqual(self.check(binding).errors, [])
+        binding = check_constants.P06_READER_BINDINGS[1]
+        path, pointer, *_ = binding
+        value = self.owners[binding[2:4]][0]
+        self.write(path, '{"allOf":[{"$ref":"sub/limits.json#/$defs/reader"}]}')
+        self.write("Platform/06-console/data/sub/limits.json",
+                   json.dumps({"$defs": {"reader": {"allOf": [{"$ref": "next.json"}]}}}))
+        target = "Platform/06-console/data/sub/next.json"
+        self.write(target, json.dumps({"properties": {"members": {"maxItems": value}}}))
+        self.assertEqual(self.check(binding, True).errors, [])
+        self.write(path, json.dumps({"allOf": [{"$ref": "sub/limits.json#/$defs/reader"},
+                   {"properties": {"members": {"maxItems": value+1}}}]}))
+        self.assertTrue(self.check(binding, True).errors)
+        self.write(target, '{"$ref":"next.json"}')
+        self.assertTrue(self.check(binding, True).errors)
+
+    def test_same_document_root_projection_resolves_target_before_path(self):
+        binding = check_constants.P06_READER_BINDINGS[1]
+        path, _, owner, name, _ = binding
+        value = self.owners[(owner, name)][0]
+        self.write(path, json.dumps({"allOf": [{"$ref": "#/$defs/writer"}],
+                   "$defs": {"writer": {"properties": {"members": {"maxItems": value}}}}}))
+        self.assertEqual(self.check(binding, True).errors, [])
+        self.write(path, '{"allOf":[{"$ref":"#/$defs/writer"}],"$defs":{"writer":{"$ref":"#/$defs/writer"}}}')
+        self.assertTrue(self.check(binding, True).errors)
+
+    def test_reader_missing_projection_is_not_a_writer_equality_pass(self):
+        for binding in check_constants.P06_READER_BINDINGS + check_constants.P09_READER_BINDINGS:
+            with self.subTest(binding=binding):
+                self.restore()
+                path, pointer, *_ = binding
+                doc = json.loads((self.root/path).read_text())
+                parent, key = parent_at(doc, pointer)
+                del parent[key]
+                self.write(path, json.dumps(doc))
+                self.assertTrue(self.check(binding, True).errors)
+
+    def test_history_owner_is_independent_unique_and_exact(self):
+        def check(owner, value):
+            self.write(check_constants.HISTORY_OWNER, owner)
+            self.write(check_constants.HISTORY_CARRIER, json.dumps({"properties": {"events": {"maxItems": value}}}))
+            judge = check_constants.Judge(self.root)
+            # The other two named bindings stay valid in this fixture.
+            judge.domain_numeric()
+            return judge.errors
+        self.assertEqual(check("HISTORY_LINES: 71\n", 71), [])
+        self.assertEqual(check("HISTORY_LINES: 72\n", 72), [])
+        for owner, value in (("HISTORY_LINES: 71\n",72), ("HISTORY_LINES: 72\n",71),
+                             ("",71), ("HISTORY_LINES: 71\nHISTORY_LINES: 71\n",71),
+                             ("HISTORY_LINES: 1.5\n",1), ("HISTORY_LINES: true\n",1),
+                             ("HISTORY_LINES: 9223372036854775808\n",2**63),
+                             ("HISTORY_LINES: 71\n",True), ("HISTORY_LINES: 71\n",71.0)):
+            with self.subTest(owner=owner, value=value):
+                self.assertTrue(check(owner,value))
+
+
+class EntryURLByteControls(unittest.TestCase):
+    def test_independent_field_constraint_coherent_change_and_negatives(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            owner = root / "Platform/08-domain/spec/08.10-domain.norms.md"
+            owner.parent.mkdir(parents=True)
+            carrier = root / check_constants.API
+            def check(value, copy, suffix=""):
+                owner.write_text(f"ENTRY_MAX: forms/runtime-constants.tsv; bytes with class, url ≤ {value}, via, batch; rest\n" + suffix)
+                carrier.write_text(json.dumps({"components": {"schemas": {"Entry": {"properties": {"url": {"x-max-bytes": copy}}}}}}))
+                return check_constants.check_p08_entry_url_bytes(root)[0]
+            self.assertEqual(check(317,317), [])
+            self.assertEqual(check(319,319), [])
+            for owner_value, copy in ((317,318),(318,317),(317,True),(317,317.0),(317,"317"),(317,None),
+                                      ("true",1),("1.5",1),(2**63,2**63)):
+                with self.subTest(owner=owner_value,copy=copy):
+                    self.assertTrue(check(owner_value,copy))
+            self.assertTrue(check(317,317,"ENTRY_MAX: forms/runtime-constants.tsv; bytes with class, url ≤ 317, via, batch; rest\n"))
+            owner.write_text("")
+            self.assertTrue(check_constants.check_p08_entry_url_bytes(root)[0])
+
+
+class NumericSubjectHookIntegration(unittest.TestCase):
+    """Execute only the tracked AST method; all checker dependencies are mocks.
+
+    No check_spec module import, Check initialization, Source oracle or full check.
+    """
+    TARGETS = {
+        "06-console": ("check_p06_numeric_constants",),
+        "08-domain": ("check_p08_named_constants", "check_p08_entry_url_bytes"),
+        "09-agent": ("check_p09_numeric_constants",),
+    }
+    OLD = ("check_p01_constants", "check_p06_folder_constants", "check_p08_constants")
+
+    def invoke(self, directories=(), files=()):
+        import ast
+        import sys
+        import types
+        from unittest.mock import Mock
+
+        path = Path(__file__).with_name("check_spec.py")
+        tree = ast.parse(path.read_bytes(), filename=str(path))
+        check = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Check")
+        method = next(node for node in check.body if isinstance(node, ast.FunctionDef) and node.name == "check_forms")
+        # Compile the actual method node, preserving every statement; do not mirror it.
+        namespace = {}
+        exec(compile(ast.Module(body=[method], type_ignores=[]), str(path), "exec"), namespace)
+        attrs = {node.attr for node in ast.walk(method) if isinstance(node, ast.Attribute)
+                 and isinstance(node.value, ast.Name) and node.value.id == "check_forms"}
+        selectors = {node.iter.func.attr for node in ast.walk(method) if isinstance(node, ast.For)
+                     and isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Attribute)
+                     and isinstance(node.iter.func.value, ast.Name) and node.iter.func.value.id == "check_forms"}
+        forms = types.ModuleType("check_forms")
+        for name in attrs:
+            setattr(forms, name, Mock(name=name, return_value=[]) if name in selectors else
+                    Mock(name=name, side_effect=AssertionError("unrelated form checker executed: " + name)))
+        constants = types.ModuleType("check_constants")
+        names = self.OLD + tuple(name for group in self.TARGETS.values() for name in group)
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        for lesson in directories:
+            (root / "Platform" / lesson).mkdir(parents=True)
+        for lesson in files:
+            dest = root / "Platform" / lesson
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("directory guard must reject files")
+        payloads = {}
+        for index, name in enumerate(names, 1):
+            payloads[name] = ([(root / "diagnostics" / name, name + " first"),
+                               (Path("relative") / name, name + " second σ")], {name + "_count": index})
+            setattr(constants, name, Mock(name=name, return_value=payloads[name]))
+        shell = types.SimpleNamespace(root=root, stats={"preexisting_count": 91}, errors=[])
+        shell.error = Mock(side_effect=lambda path, message: shell.errors.append((path, message)))
+        with patch.dict(sys.modules, {"check_forms": forms, "check_constants": constants}):
+            namespace["check_forms"](shell)
+        for name in selectors:
+            getattr(forms, name).assert_called_once_with(root)
+        for name in attrs - selectors:
+            getattr(forms, name).assert_not_called()
+        return shell, constants, payloads
+
+    def assert_calls_and_forwarding(self, shell, constants, payloads, expected):
+        for name in payloads:
+            helper = getattr(constants, name)
+            if name in expected:
+                helper.assert_called_once_with(shell.root)
+            else:
+                helper.assert_not_called()
+        errors = [error for name in expected for error in payloads[name][0]]
+        stats = {"preexisting_count": 91}
+        for name in expected:
+            stats.update(payloads[name][1])
+        self.assertEqual(shell.errors, errors)
+        self.assertEqual(shell.error.call_args_list, [unittest.mock.call(*error) for error in errors])
+        self.assertEqual(shell.stats, stats)
+
+    def test_all_new_subject_errors_and_separate_counts_are_forwarded(self):
+        shell, constants, payloads = self.invoke(("01-store", *self.TARGETS))
+        expected = ("check_p01_constants", "check_p06_folder_constants", "check_p06_numeric_constants",
+                    "check_p08_constants", "check_p08_named_constants", "check_p08_entry_url_bytes",
+                    "check_p09_numeric_constants")
+        self.assert_calls_and_forwarding(shell, constants, payloads, expected)
+
+    def test_each_helper_is_called_only_for_its_own_lesson_directory(self):
+        for lesson, helpers in self.TARGETS.items():
+            with self.subTest(lesson=lesson):
+                shell, constants, payloads = self.invoke((lesson,))
+                old = {"06-console": ("check_p06_folder_constants",),
+                       "08-domain": ("check_p08_constants",), "09-agent": ()}[lesson]
+                self.assert_calls_and_forwarding(shell, constants, payloads, old + helpers)
+
+    def test_missing_each_lesson_guard_excludes_only_its_helpers(self):
+        order = ("check_p06_folder_constants", "check_p06_numeric_constants", "check_p08_constants",
+                 "check_p08_named_constants", "check_p08_entry_url_bytes", "check_p09_numeric_constants")
+        for absent, helpers in self.TARGETS.items():
+            with self.subTest(absent=absent):
+                shell, constants, payloads = self.invoke(tuple(lesson for lesson in self.TARGETS if lesson != absent))
+                excluded = set(helpers) | {"06-console": {"check_p06_folder_constants"},
+                                          "08-domain": {"check_p08_constants"}, "09-agent": set()}[absent]
+                self.assert_calls_and_forwarding(shell, constants, payloads, tuple(name for name in order if name not in excluded))
+
+    def test_absent_unrelated_or_non_directory_lessons_never_call_helpers(self):
+        for directories, files in (((), ()), (("unrelated",), ()), ((), tuple(self.TARGETS))):
+            with self.subTest(directories=directories, files=files):
+                shell, constants, payloads = self.invoke(directories, files)
+                self.assert_calls_and_forwarding(shell, constants, payloads, ())
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,4 @@
 place	layer	word	value
-	3	x-max-names	50
 /$defs/common.book_row/additionalProperties/properties/entries/items/properties/value	2, 6	x-opaque	true
 /$defs/common.book_row/additionalProperties	3	x-encoding	"json"
 /$defs/common.book_row/properties/	3	x-encoding	"json"
@@ -20,3 +19,4 @@ place	layer	word	value
 /$defs/writer	3	x-max-names	50
 /additionalProperties	3	x-codec	["object"]
 /properties/seq	3	x-codec	["integer"]
+	3	x-max-names	50
