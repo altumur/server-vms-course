@@ -179,6 +179,15 @@ class Docs:
                                      ("pathItems", "pathItem")):
                 for name, value in (components.get(collection) or {}).items():
                     obj(value, "/components/" + collection + "/" + self._token(name), kind)
+        # Admit all typed schema metadata, not just a later selected target.
+        # This also covers preparsed catalogue insertion through load().
+        from jsonschema import Draft202012Validator
+        from jsonschema.exceptions import SchemaError
+        for at in sorted(schemas):
+            try:
+                Draft202012Validator.check_schema(self._pointer(doc, at))
+            except SchemaError as exc:
+                raise GenError(f"{path}#{at}: invalid JSON Schema: {exc.message}") from None
         return {"standalone": standalone, "dialect": dialect, "positions": positions,
                 "schemas": schemas, "objects": objects}
 
@@ -201,6 +210,7 @@ class Docs:
     def load(self, path):
         path = Path(path).resolve()
         self._inside(path)
+        admit = False
         if path not in self.cache:
             if not path.is_file():
                 raise GenError(f"$ref: no file {path}")
@@ -214,21 +224,29 @@ class Docs:
                 elif not path.name.endswith(".openapi.yaml") or not isinstance(doc, dict) or not str(doc.get("openapi", "")).startswith("3.1."):
                     raise GenError(f"{path}: expected an OpenAPI 3.1 contract")
                 meta = self._index(path, doc, standalone)
-                if standalone:
-                    # Existing normgen dependency; validate shape without resolving instance $refs or using the network.
-                    from jsonschema import Draft202012Validator
-                    from jsonschema.exceptions import SchemaError
-                    try:
-                        Draft202012Validator.check_schema(doc)
-                    except SchemaError as exc:
-                        raise GenError(f"{path}: invalid JSON Schema: {exc.message}") from None
             except (OSError, UnicodeError, ValueError, TypeError, AttributeError, RecursionError, yamlsub.YamlError) as exc:
                 raise GenError(f"{path.name}: {exc}") from None
             self.cache[path], self._meta[path] = doc, meta
-            self.inputs.add(path)
+            admit = True
         elif path not in self._meta:
             # S08 keeps its already parsed catalogue document in the same cache.
             self._meta[path] = self._index(path, self.cache[path], path.name.endswith(".schema.json"))
+            admit = True
+        if admit:
+            # Index first so legal reference returns can see declaration metadata.
+            # Admission checks every indexed root, including unselected graphs.
+            try:
+                schemas = self._meta[path]["schemas"]
+                for at in sorted(schemas):
+                    if any(at.startswith(parent + "/") for parent in schemas if parent != at):
+                        continue  # A child is checked from its enclosing schema root.
+                    self._closure(self._pointer(self.cache[path], at), path, at)
+            except Exception:
+                # A failed admission must not leave an accepted cached resource.
+                self.cache.pop(path, None)
+                self._meta.pop(path, None)
+                raise
+            self.inputs.add(path)
         return self.cache[path]
 
     def origin(self, node, base):
@@ -343,6 +361,9 @@ class Docs:
         key = (base, pointer)
         standalone = self._meta[base]["standalone"]
         if key in active:
+            closed = active[active.index(key):]
+            if any(path != base for path, _ in closed):
+                raise GenError("cycle of cross-file schema references")
             if standalone:
                 # A local schema may recur on a child instance, not endlessly on the same value.
                 if not any(steps[active.index(key):]):
@@ -356,8 +377,6 @@ class Docs:
         if isinstance(node, dict):
             if "$ref" in node:
                 target, path, at = self._target(node["$ref"], base, True, pointer)
-                if path != base and path in files + (base,):
-                    raise GenError("cycle of cross-file schema references")
                 self._closure(target, path, at, active + (key,), files + (base,) if path != base else files,
                               done, steps + (False,))
             for at, child in self._children(node, pointer):

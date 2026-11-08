@@ -1,8 +1,9 @@
 r"""Generate refusal catalogue metadata from TSV (ADR-0125 generator 4).
 
-This describes the current executable contract, including its legacy P/02 word
-projection and P/06 field-role checks. Their unification under ADR-0125(6) is held
-for semantic adjudication; do not infer a new word grammar from this description.
+The exact ordered columns select the executable layout (ADR-0125(6)/(8)/(9)).
+All 15-column catalogues share one API, including P/02, P/03 and P/04.
+Question-mark markers declare optional fields; lesson names select physical
+ownership/schema context, never a refusal metadata layout.
 The catalogue encodes declared metadata, not when to refuse. OpenAPI owns body
 schemas/encoding; write-checks.tsv owns write-command checks and ordering. Prose
 cause/outcome/diagnostic/caller cells are not executed or used to choose behavior.
@@ -54,8 +55,8 @@ string. Norm is copied verbatim without interpreting or checking its reference.
 Empty emitted lists use nil; otherwise preserve list order. Go string literals
 escape quote/backslash and C0/DEL controls, retaining other Unicode characters.
 
-Five existing output variants/capabilities
------------------------------------------
+Five emission cases/capabilities (the former P/02-only shape is removed)
+------------------------------------------------------------------------
 1. Ten-column P/01 catalogue:
    chapter,row,name,surface,code,kind,fields,headers,log,norm
 
@@ -92,94 +93,119 @@ Five existing output variants/capabilities
    value, not all values. Exit(func(string),map[string]string) int logs LogLine
    (or name+": "+its error on failure) and returns Code. No IO/exit is performed.
 
-2. Fifteen-column catalogue (currently P/02):
+2. Common fifteen-column catalogue:
    chapter,row,name,surface,code,kind,fields,headers,log,norm,word,
    cause,outcome,diagnostic,caller
 
    Chapter is digits or digits.digits; do not mix whole-lesson and dotted forms
-   in one table. Surface is call, cli, start, process or peer; kind must be -.
-   Code - -> Exit=-1, AnyNonZero=false, Status=0; exit N (0 or a positive decimal
-   without leading zero) -> Exit=N; exit !0 -> Exit=-1, AnyNonZero=true, Status=0.
-   A three-digit 100..599 code -> Status, permitted at call or peer (also http
-   in the extension below). A peer row cannot have an exit code. No integer
-   upper bound is separately imposed before emission. Empty Word is represented
-   by -, not a whitespace-only cell. At selected 02-installer, non-- word is
-   copied verbatim to Word (including any quote characters); - becomes "".
+   in one table. A plain catalogue must contain at least one row. Surface is
+   call, cli, start, process or peer; kind must be -. Code - -> Exit=-1,
+   AnyNonZero=false, Status=0; exit N (0 or a positive decimal without leading
+   zero) -> Exit=N; exit !0 -> Exit=-1, AnyNonZero=true, Status=0. A three-digit
+   100..599 code -> Status, permitted at call or peer (also http in case 4).
+   A peer row cannot have an exit code. No integer upper bound is separately
+   imposed before emission. Other code spellings fail.
 
-   Log is - or captured comma-separated items, with commas inside «...» retained:
-   use regex whitespace*(«[^«»]*»|[^,«»]+?)whitespace*(comma|end). Nonempty quoted
-   captures become Words without quotes; other captures become Log names. These
-   are labels/fragments only, not a generated log-line format. Four final prose
-   columns are required for shape but do not contribute Go fields or behavior.
+   WordCell preserves the exact word cell, including -. Derive an index only
+   when a non-- cell consists of one or more nonempty backtick-delimited tokens
+   plus commas/whitespace: one token -> Word=token, Named=nil; two or more ->
+   Word="", Named=the ordered tokens. Tokens may contain spaces and repeat.
+   All other/unquoted prose (including empty/whitespace-only cells) -> Word="",
+   Named=nil, while WordCell preserves it. A raw - likewise gives Word="" and
+   Named=nil. This is an index, not an alternative-outcome selector or permission
+   to accept any named result. No lesson-specific literal-word path remains.
 
-   Base Go shape:
+   Log is - or captured comma-separated items, with commas inside fragments
+   retained: regex whitespace*(«[^«»]*»|[^,«»]+?)whitespace*(comma|end). Nonempty
+   quoted captures become Words without quotes; other nonempty captures become
+   Log labels. A captured empty item fails. These are metadata labels/fragments,
+   not a generated log-line format. Four final prose columns are required for
+   shape but do not contribute Go fields or behavior.
+
+   Common Go shape (case 3 explains Fields/Headers; they are ALWAYS present):
      type Spec struct {
        Chapter string; Row int; Name, Surface string
        Exit int; AnyNonZero bool; Status int; Word string
        Log, Words []string; Norm string
+       Fields []string; Headers [][2]string; Named []string; WordCell string
      }
+   Chapter's API comment uses the first/last distinct chapter in encounter order.
    ExitCode()(int,bool) returns (Exit,true) when Exit>=0, otherwise (1,true) for
-   AnyNonZero, otherwise (0,false). It does not exit/log. No Check/LogLine/Exit
-   methods of variant 1 are emitted. The P/02 Chapter comment is fixed to
-   "2.1 ... 2.5" by the legacy template; row values are not changed by it.
+   AnyNonZero, otherwise (0,false). Thus exit !0 yields the chosen result 1,
+   never an actual process exit. No Check/LogLine/Exit methods of case 1 exist.
+   All/ByName preserve rows/names as above. No cause/outcome/diagnostic/caller
+   fields are emitted.
 
-3. Extended plain catalogue (same 15 columns; currently selected lessons other
-   than 02-installer, including P/03/P/04): the base shape additionally has
-     Named []string; WordCell string
-   WordCell keeps the exact raw word cell, including -. Derive an index only if
-   the cell consists of one or more nonempty backtick-delimited tokens plus
-   commas/whitespace. One token -> Word=that token, Named=nil; two or more ->
-   Word="", Named=the ordered tokens. Tokens may contain spaces and repeat.
-   Other/unquoted prose -> Word="", Named=nil; WordCell still preserves it.
-   This is an index, not an alternative-outcome selector or permission to accept
-   any named result. Unlike P/02, Chapter's API comment uses first/last distinct
-   chapter in encounter order. A header-only non-P02 plain input has no chapter
-   from which to construct that comment and cannot complete generation.
+3. Direct body/header metadata (a capability of BOTH plain column layouts,
+   not a lesson-selected API variant): Fields []string and Headers [][2]string
+   exist even if all corresponding cells are -. Empty lists are nil. Fields
+   is - or comma-separated unique names [a-z][a-z0-9_]*; trim token whitespace.
+   A single ? suffix is stripped and handled by case 5. Only peer permits these
+   columns in the 15-column format. Headers use case 1's Name: value syntax.
+   There is no RetryAfter Boolean in the plain API and no implicit error field.
+   This metadata does not itself implement HTTP body/schema validation.
 
-   For both plain variants, if any row has fields or headers, add both
-     Fields []string; Headers [][2]string
-   to every Spec. Lists are nil on rows without values. Fields is - or unique
-   comma-separated names [a-z][a-z0-9_]* (trim surrounding token whitespace).
-   Only peer allows fields/headers in the 15-column format. Headers use variant
-   1's Name: value syntax; no RetryAfter Boolean is emitted. This metadata does
-   not itself implement HTTP body validation. No implicit error field is added.
-
-4. Response-schema extension (currently P/05 and other HTTP catalogue lessons):
-   the 16 columns are
+4. Response-schema extension: the 16 columns are
    chapter,row,name,surface,code,kind,fields,headers,log,norm,word,response_schema,
    cause,outcome,diagnostic,caller
 
-   Apply the plain variant selected above, allow surface http in addition, and
-   permit fields/headers at http as well as peer. Always add Response string to
-   Spec: - -> "", otherwise an exact direct components/schemas name from the
-   selected lesson's spec/NN-name.api.openapi.yaml, permitted only at http.
-   Schema context is L.openapi, not inferred from an arbitrary external table's
-   directory. Read these definitions via yamlsub; this is a name/role projection,
-   not generated full JSON validation or body encoding. Numeric HTTP statuses
-   are copied to Status. Response and Word/Named/WordCell remain separate fields.
+   Use the common plain shape, add http to the permitted surfaces and allow
+   fields/headers at http as well as peer. ALWAYS add Response string to Spec:
+   response_schema=- -> ""; otherwise it is a direct components/schemas name
+   of the selected lesson OpenAPI, allowed only at http. Numeric HTTP codes
+   become Status. Response and Word/Named/WordCell remain separate fields.
 
-5. Explicit optional fields (currently P/06 response-schema tables):
-   a ? suffix in fields strips the marker from Fields and records the name.
-   Currently it is admitted only in selected 06-console, 16-column format,
-   surface http and a non-- response_schema. If any row has such a marker, add
+   Schema context is L.openapi, not an arbitrary fixture table's directory.
+   Reuse gen_door_lesson.Docs and yamlsub for the existing offline typed schema
+   reader: declarations retain document base/origin/owner/common/late guards;
+   caches do not confer permissions. Validate every referenced named schema's
+   full typed reference closure, even with fields=-. Follow root schema aliases
+   to the actual target, relative to EACH alias's own document; annotation-only
+   siblings do not hide the alias. Cyclic root aliases, absent/unsafe references,
+   wrong target kinds, missing component names or unresolved targets fail.
+   Constraint-bearing $ref siblings and composed schemas remain full schemas;
+   they are not flattened into a made-up direct field projection.
+
+   Check every schema in that typed closure with the existing offline Draft
+   2020-12 meta-schema validator, including external targets and schema children
+   of extension keywords. Data/annotation values are not schema declarations.
+
+   For explicit fields, the resolved target must expose a direct properties map
+   and a required list (default []) of distinct strings. Unsupported/composed
+   direct-role shapes fail rather than infer a branch. Every listed field must
+   exist in properties; every schema-required field must occur unmarked in the
+   form. A ? field must NOT be schema-required. An unmarked form field MAY be
+   optional in the schema: the form can require it for a narrower branch. Other
+   optional schema properties need not be listed; no all-properties check.
+   fields=- means NO direct projection, NOT an empty field declaration: skip
+   this subset/role comparison only. The complete referenced schema still
+   applies to the actual body and its closure/target are still checked.
+   Response is metadata, not generated body validation/encoding.
+
+5. Explicit optional fields: only a 16-column http row with a non--
+   response_schema may carry ? in fields. Strip the marker from Fields and
+   preserve that ordered name in OptionalFields. If ANY row has a marker, add
      OptionalFields []string
-   to Spec; rows without marked names retain nil. No unconditional new enum,
-   schema copy or inferred optionality is emitted.
+   to the common Spec; rows without markers have nil. Without any marker this
+   field is absent. Other Fields are required by the FORM projection, not
+   necessarily by the wider schema. A peer field or a row with response_schema=-
+   cannot acquire ? by lesson identity. Duplicate/malformed markers fail.
 
-   In that current P/06 context, when fields is not -, the named response schema
-   must directly expose properties as a map and required as a unique string
-   list. Every schema-required name must be listed; every listed name must exist
-   in properties; its ? role must be opposite to membership in required. Other
-   optional schema properties need not be listed. fields=- bypasses that row's
-   role check. Other current lessons do not perform this P/06-specific role
-   validation. A 15-column peer field cannot acquire ? through its lesson name.
+Selection uses exact columns, schema object shape and the explicit ? marker,
+never lesson names or prose. Common rows always emit Named/WordCell and
+Fields/Headers; Response is column-driven and OptionalFields is marker-driven.
+Generated package comments use selected L.code; chapter comments derive from
+row values. Ownership guard and physical schema/provenance paths are separate
+context, not modes. No new setting, protocol, port, semantic refusal decision,
+retry timing, framing, process behavior or stored outcome is implemented.
 
-Current selection is therefore exact header layout plus the explicitly stated
-legacy lesson gates; these gates are not claimed to satisfy the pending form-only
-unification. Additional fields are table-wide capabilities, driven by the cells
-as described. Generated package comments use the selected L.code. All variants
-emit only catalogue metadata and the methods above; they do not choose causes,
-refusals, retry timing, HTTP framing, process behavior or stored outcomes."""
+Provenance records the physical table/proof inputs, every actually loaded schema
+resource, this producer and reused Docs/yamlsub/lesson helpers, plus the existing
+judge. Schema-role checking changes neither the source nor the emitted full
+schema (there is no schema copy in this part). Generated data and declared
+methods above are the complete output contract; no lesson implementation or
+historical package is read. Legacy ce8 builds pin pre-unification producer code.
+"""
 import hashlib
 import re
 import sys
@@ -412,7 +438,7 @@ RESPONSE_COLUMNS = PLAIN_COLUMNS[:11] + ["response_schema"] + PLAIN_COLUMNS[11:]
 
 
 class PlainTable:
-    """Read closed columns for lessons without a local door (P/02 Refusal catalogue): chapter, row, name, surface, code, word, log, norm. kind/fields/headers are '-'; final prose columns imply no generated behavior."""
+    """Read common 15/16-column metadata and explicit field roles; owner identity selects schema paths, not an output variant."""
 
     def __init__(self, text, name="refusals.tsv"):
         self.name = name
@@ -423,8 +449,9 @@ class PlainTable:
         cols = RESPONSE_COLUMNS if self.response else PLAIN_COLUMNS
         if head != cols:
             raise GenError(f"{name}: columns must be {PLAIN_COLUMNS} (or with response_schema after word)")
-        schema_defs = response_schemas(definitions=True) if self.response and L.key == "06-console" else {}
-        schemas = set(schema_defs) if schema_defs else response_schemas() if self.response else set()
+        schema_defs, schema_docs = response_schemas(definitions=True) if self.response else ({}, None)
+        schemas = set(schema_defs)
+        resolved_schemas = {}
         surfaces = PLAIN_SURFACES + (("http",) if self.response else ())
         body_at = ("peer", "http") if self.response else ("peer",)
         self.rows, seen = [], set()
@@ -446,6 +473,8 @@ class PlainTable:
                 rs = r["response_schema"]
                 if rs != "-" and (r["surface"] != "http" or rs not in schemas):
                     raise GenError(f"{where}: response_schema {rs!r} — a components/schemas of the lesson OpenAPI at http, or -")
+                if rs != "-" and rs not in resolved_schemas:
+                    resolved_schemas[rs] = response_schema(schema_docs, schema_defs, rs)
             if r["kind"] != "-":
                 raise GenError(f"{where}: kind is - (no HTTP Fault of the lesson)")
             r["field_list"] = []
@@ -457,22 +486,24 @@ class PlainTable:
                     match = re.fullmatch(r"([a-z][a-z0-9_]*)(\??)", field.strip())
                     if match is None or match[1] in r["field_list"]:
                         raise GenError(f"{where}: fields {r['fields']!r} — names with one optional suffix and no repeats")
-                    if match[2] and not (L.key == "06-console" and self.response and r["surface"] == "http"
+                    if match[2] and not (self.response and r["surface"] == "http"
                                          and r["response_schema"] != "-"):
-                        raise GenError(f"{where}: optional field requires the P/06 HTTP response schema")
+                        raise GenError(f"{where}: optional field requires an HTTP response schema")
                     r["field_list"].append(match[1])
                     if match[2]:
                         r["optional_fields"].append(match[1])
-                if schema_defs and r["surface"] == "http" and r["response_schema"] != "-":
-                    schema = schema_defs[r["response_schema"]]
+                if self.response and r["surface"] == "http" and r["response_schema"] != "-":
+                    schema = resolved_schemas[r["response_schema"]]
+                    if not isinstance(schema, dict) or "$ref" in schema:
+                        raise GenError(f"{where}: unsupported response schema field roles")
                     properties, required = schema.get("properties"), schema.get("required", [])
                     if (not isinstance(properties, dict) or not isinstance(required, list) or
                             any(type(x) is not str for x in required) or len(set(required)) != len(required)):
                         raise GenError(f"{where}: unsupported response schema field roles")
-                    if not set(required) <= set(r["field_list"]):
+                    if not set(required) <= set(r["field_list"]) - set(r["optional_fields"]):
                         raise GenError(f"{where}: required schema fields are missing from fields")
                     for field in r["field_list"]:
-                        if field not in properties or ((field in r["optional_fields"]) == (field in required)):
+                        if field not in properties or (field in r["optional_fields"] and field in required):
                             raise GenError(f"{where}: field {field} required/optional role differs from response schema")
             r["header_list"] = []
             if r["headers"] != "-":                # A neighboring door's headers (P/03 process_busy:Retry-After).
@@ -500,7 +531,7 @@ class PlainTable:
             if r["surface"] == "peer" and (r["exit"] >= 0 or r["any"]):
                 raise GenError(f"{where}: a peer row has no exit code")
             r["word_any"], r["word_cell"] = [], r["word"]
-            if L.key != "02-installer" and r["word"] != "-":    # P/03+: word preserves the normative cell (spec103).
+            if r["word"] != "-":    # All plain forms preserve the cell and derive only its quoted index.
                 toks = re.findall(r"`([^`]+)`", r["word"])   # A token may also be a phrase: exact refusal text (P/06.7).
                 if toks and re.sub(r"`[^`]+`|,|\s", "", r["word"]) == "":
                     # Quoted tokens form a derived index: one token or named outcomes.
@@ -521,9 +552,12 @@ class PlainTable:
                         raise GenError(f"{where}: an empty log item")
             r["var"] = camel(r["name"])
             self.rows.append(r)
-        self.headers = any(r["header_list"] or r["field_list"] for r in self.rows)
+        self.headers = True  # Both plain layouts declare fields/headers columns, even when all cells are '-'.
         self.optional_fields = any(r["optional_fields"] for r in self.rows)
-        self.word_any = L.key != "02-installer"             # P/03+: every row exposes Named and WordCell.
+        self.word_any = True
+        self.schema_inputs = set(schema_docs.inputs) if schema_docs is not None else set()
+        if not self.rows:
+            raise GenError(f"{name}: a plain refusal catalogue must contain a row")
         whole = [r["chapter"] for r in self.rows if "." not in r["chapter"]]
         if whole and len(whole) != len(self.rows):
             raise GenError(f"{name}: chapters of a lesson in one chapter and of chapters NN.K together")
@@ -564,11 +598,60 @@ func (s *Spec) ExitCode() (code int, ok bool) {
 
 
 def response_schemas(definitions=False):
-    """Return lesson OpenAPI component schema names for response_schema."""
-    import yamlsub
-    doc = yamlsub.load(L.openapi.read_text(encoding="utf-8"), L.openapi.name)
-    schemas = (doc.get("components") or {}).get("schemas") or {}
-    return schemas if definitions else set(schemas)
+    """Read schema declarations in the selected physical owner context."""
+    from gen_door_lesson import Docs, GenError as DoorError
+    try:
+        docs = Docs(L.openapi)
+        schemas = (docs.doc.get("components") or {}).get("schemas") or {}
+        return (schemas, docs) if definitions else set(schemas)
+    except DoorError as exc:
+        raise GenError(str(exc)) from None
+
+
+def response_schema(docs, definitions, name):
+    """Check the full named reference closure, then follow root schema aliases for roles."""
+    from gen_door_lesson import GenError as DoorError
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import SchemaError
+    try:
+        node, base = definitions[name], docs.main
+        pointer = "/components/schemas/" + docs._token(name)
+        docs._closure(node, base, pointer)
+        checked = set()
+
+        def check_schema(schema, path, at):
+            # Closure above owns reference rights/cycles; memoisation here only
+            # avoids repeating meta-schema checks on legal local recursion.
+            key = (path, at)
+            if key in checked:
+                return
+            checked.add(key)
+            try:
+                Draft202012Validator.check_schema(schema)
+            except SchemaError as exc:
+                raise GenError(f"{path}#{at}: invalid JSON Schema: {exc.message}") from None
+            if isinstance(schema, dict):
+                if "$ref" in schema:
+                    target, target_path, target_at = docs._target(schema["$ref"], path, True, at)
+                    check_schema(target, target_path, target_at)
+                for child_at, child in docs._children(schema, at):
+                    check_schema(child, path, child_at)
+
+        check_schema(node, base, pointer)
+        seen = set()
+        annotations = {"$ref", "title", "description", "$comment", "default", "examples", "deprecated", "readOnly", "writeOnly"}
+        while isinstance(node, dict) and "$ref" in node:
+            origin = docs.origin(node, base)
+            key = (base, origin)
+            if key in seen:
+                raise GenError(f"{name}: cyclic response schema alias")
+            seen.add(key)
+            if set(node) - annotations:
+                break  # Constraint siblings remain a full schema, not an invented direct field projection.
+            node, base = docs.resolve(node["$ref"], base, schema=True, origin=origin)
+        return node
+    except DoorError as exc:
+        raise GenError(str(exc)) from None
 
 
 def go_spec_plain(r, headers=False, word_any=False, response=False, optional=False):
@@ -590,11 +673,10 @@ def go_headers(hs):
 
 
 def plain_api(table):
-    """Generate catalog API with byte-identical P/02 output; chapter and Headers follow the table."""
+    """Generate the common plain API; capabilities and chapter comments follow the table."""
     api = PLAIN_API.strip("\n")
     chapters = list(dict.fromkeys(r["chapter"] for r in table.rows))
-    if L.key != "02-installer":
-        api = api.replace("// the chapter of the lesson: 2.1 … 2.5",
+    api = api.replace("// the chapter of the lesson: 2.1 … 2.5",
                           "// the chapter of the lesson: " + (" … ".join([chapters[0], chapters[-1]])
                                                                if len(chapters) > 1 else chapters[0]))
     if table.headers:
@@ -609,7 +691,7 @@ def plain_api(table):
         api = api.replace("// peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none",
                           "// http, peer: the HTTP status (peer — the imported door); 0 — none", 1)
     if table.optional_fields:
-        api = api.replace("\n}", "\n\tOptionalFields []string // Explicit optional names; other Fields are required by the response schema.\n}", 1)
+        api = api.replace("\n}", "\n\tOptionalFields []string // Explicit optional names; other Fields are required by this form projection.\n}", 1)
     if table.word_any:
         api = api.replace("\n}", "\n\tNamed   []string // the named outcomes the word cell lists (two or more `…`): a "
                           "catalogue index — which applies is the norm's, not «any of»\n\tWordCell string  // the "
@@ -698,9 +780,14 @@ def provenance():
         return {"path": str(path.relative_to(ROOT)), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
     paths = tsv_input.source_files(DEFAULT_TABLE, root=ROOT)
     if tsv_input.read(DEFAULT_TABLE, root=ROOT).columns == tuple(RESPONSE_COLUMNS):
-        paths.append(L.openapi)
+        table = PlainTable(DEFAULT_TABLE.read_text(encoding="utf-8"), DEFAULT_TABLE.name)
+        paths += sorted(table.schema_inputs)
+    helpers = [Path(__file__).resolve(), Path(tsv_input.__file__)]
+    if tsv_input.read(DEFAULT_TABLE, root=ROOT).columns == tuple(RESPONSE_COLUMNS):
+        import gen_door_lesson, yamlsub
+        helpers += [Path(gen_door_lesson.__file__), Path(yamlsub.__file__), Path(lesson.__file__)]
     return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))], "judge": entry(JUDGE)}
+            "generators": [entry(p) for p in helpers], "judge": entry(JUDGE)}
 
 
 KIT_MD = """
@@ -744,7 +831,7 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 KIT_MD = KIT_MD.replace("Platform/01-store/", L.rel + "/")      # Lesson paths; other text describes P/01.
 
 KIT_MD_PLAIN = """
-## Part `refusals`: the refusal catalogue (generated from `forms/refusals.tsv`; the lesson has no HTTP door)
+## Part `refusals`: the refusal catalogue (closed columns of `forms/refusals.tsv`; generated metadata)
 
 | Package | Import path | Origin |
 |---|---|---|
@@ -752,7 +839,7 @@ KIT_MD_PLAIN = """
 
 ```go
 type Spec struct {
-    Chapter, Name, Surface string // surface: call | cli | start | process | peer
+    Chapter, Name, Surface string // surface: call | cli | start | process | peer__HTTP_SURFACE__
     Row        int
     Exit       int      // the exit code the form fixes; -1 — none
     AnyNonZero bool     // «exit !0»: any nonzero code (yours), never 0
@@ -760,6 +847,11 @@ type Spec struct {
     Word       string   // a fixed refusal/diagnostic token, "" — none
     Log, Words []string // the subjects and «fragments» the diagnostic names; no stdout/stderr format
     Norm       string
+    Fields []string     // direct body-field projection (peer; also http in the 16-column layout)
+    Headers [][2]string // declared header name/value pairs; nil when no projection
+    Named []string      // ordered index of multiple quoted tokens, not a choice of accepted outcomes
+    WordCell string     // exact source cell, including "-" or prose; Word/Named only index it
+__RESPONSE_FIELD____OPTIONAL_FIELD__
 }
 var All []*Spec; func ByName(name string) *Spec
 func (s *Spec) ExitCode() (code int, ok bool) // the fixed code, 1 for «exit !0» (the kit's choice), ok false — none fixed
@@ -767,13 +859,32 @@ func (s *Spec) ExitCode() (code int, ok bool) // the fixed code, 1 for «exit !0
 
 The prose of a row (its cause, outcome, diagnostic and caller action) stays in the norm (`norm`): read it there; the
 package carries only what the form fixes.
+
+The 15-column layout always emits this common Spec, including Fields/Headers and Named/WordCell, independent of
+lesson identity or empty cells. `word=-` gives empty Word/nil Named; a cell made only of backtick tokens plus commas
+and whitespace gives Word for one token or Named for multiple tokens. WordCell always retains the exact cell.
+`code=-` fixes no code; `exit N` fixes Exit=N; `exit !0` sets AnyNonZero and ExitCode returns the chosen nonzero1.
+Numeric call/peer/http codes populate Status. The 16-column layout additionally admits http and declares Response.
+Only an explicit `?` marker adds OptionalFields to the table-wide Spec. Both field lists omit the marker itself.
+For explicit fields, schema-required names must be required by the form, optional markers cannot name schema-required
+properties, and every listed field must exist; the form may require an otherwise optional schema property.
+`fields=-` is no direct projection: the full response schema remains applicable, with its full schema validity and reference/target checked.
+Schemas and alias targets are resolved in the selected physical owner context, not inferred from a fixture path.
+This part emits metadata only: full response validation/encoding, choosing a refusal and IO remain yours.
 """
 
 
 def kit_md():
-    """Use KIT_MD_PLAIN for a15-column catalog without a door (P/02), otherwise P/01 HTTP catalog documentation."""
-    head = next((x for x in DEFAULT_TABLE.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")), "")
-    return KIT_MD_PLAIN if head.split("\t") == PLAIN_COLUMNS else KIT_MD
+    """Use exactly render's column discriminator and document every emitted Spec field."""
+    text = DEFAULT_TABLE.read_text(encoding="utf-8")
+    head = next((x for x in text.splitlines() if x and not x.startswith("#")), "").split("\t")
+    if head == COLUMNS:
+        Table(text, DEFAULT_TABLE.name)
+        return KIT_MD
+    table = PlainTable(text, DEFAULT_TABLE.name)
+    return KIT_MD_PLAIN.replace("__HTTP_SURFACE__", " | http" if table.response else "").replace(
+        "__RESPONSE_FIELD__", "    Response string // named response schema; empty for '-'\n" if table.response else "").replace(
+        "__OPTIONAL_FIELD__", "    OptionalFields []string // marked names; other Fields are form-required\n" if table.optional_fields else "")
 
 
 def main(argv):
