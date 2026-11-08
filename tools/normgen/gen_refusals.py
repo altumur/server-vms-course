@@ -440,8 +440,28 @@ def go_module_plain(table, rel):
     return "\n\n".join(parts) + "\n"
 
 
+def _check_table_owner(table_path):
+    """Canonical physical tables must match the process's selected lesson."""
+    platform = next((p for p in table_path.parents if p.name == "Platform"), None)
+    if platform is None:
+        return  # Standalone fixture tables retain their explicitly selected process context.
+    registry = platform / "lessons.tsv"
+    try:
+        rows = [line.split("\t") for line in registry.read_text(encoding="utf-8").splitlines()
+                if line and not line.startswith("#")]
+    except OSError as exc:
+        raise GenError(f"{table_path}: cannot establish lesson ownership: {exc}") from None
+    owner = table_path.relative_to(platform).parts[0]
+    matches = [row for row in rows if len(row) >= 4 and row[1] == owner]
+    if len(matches) != 1 or matches[0][0] != owner[:2]:
+        raise GenError(f"{table_path}: no unique lesson owner in {registry}")
+    if owner != L.key:
+        raise GenError(f"{table_path}: owned by {owner}, selected {L.key}; use --lesson {owner}")
+
+
 def render(table_path=DEFAULT_TABLE):
     table_path = Path(table_path).resolve()
+    _check_table_owner(table_path)
     try:
         rel = table_path.relative_to(ROOT).as_posix()
     except ValueError:
@@ -455,9 +475,10 @@ def render(table_path=DEFAULT_TABLE):
 
 
 def generate(table_path=DEFAULT_TABLE, out=DEFAULT_OUT):
+    files = render(table_path)
     gdir = Path(out) / "go/refusals"
     gdir.mkdir(parents=True, exist_ok=True)
-    for name, text in render(table_path).items():
+    for name, text in files.items():
         (gdir / name).write_text(text, encoding="utf-8")
     mod = Path(out) / "go/go.mod"                     # модуль выхода урока (у P/01 его пишет gen_tests)
     if not mod.exists():
