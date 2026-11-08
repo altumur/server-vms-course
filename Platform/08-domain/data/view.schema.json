@@ -1340,6 +1340,7 @@
         "maximum": 9007199254740991
       },
       "class": {
+        "description": "class retained by the report-reception knock owner",
         "type": "string",
         "enum": [
           "server",
