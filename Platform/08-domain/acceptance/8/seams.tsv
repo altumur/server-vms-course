@@ -1,4 +1,4 @@
-# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-forced-backup-unconfirmed	1	CALL domain-handover {"forced_backup":"outcome_unconfirmed"}	{"status":409,"error":"called off","frozen":false,"signer_unchanged":true}
 s02-stranded-failure-does-not-undo-take	1	CALL domain-handover {"stranded_put":"outcome_unconfirmed","take":"confirmed_success"}	{"status":200,"stranded_in_answer":false,"old_signer_forgotten":true}
