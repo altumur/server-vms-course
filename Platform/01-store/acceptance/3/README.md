@@ -38,7 +38,11 @@ The store format mark (chapter 1.3 N1.3 `format`; the store pilot, A1): a second
 `FORMAT` and on a directory with a foreign mark does not start (code 2) and changes nothing in the directory. The scenario does not
 touch the stand store. The first write of the mark into an empty directory and a start on one's own directory — every start of the stand and `@restart store` of sc. 08.
 
+Separate executable Z21 probe 5 uses a valid directory of a live daemon, not scenario 10's foreign/missing `FORMAT` mark. It checks `start_data_dir_owned` and `local_data_dir_owned`: refusal of the second daemon before readiness/any write, unchanged first owner/data/ownership; refusal of offline box import/restore and local recover; ownership release after orderly exit and `SIGKILL`, followed by lawful start without manual cleanup. Only owned isolated processes and directories are used. Independent live-owner confirmation and write attribution are required; lawful background work of the first daemon is not attributed to the second attempt. Missing native binding is `NotExecuted`, not a successful refusal.
+
 ## The copy (sc. 11, 12)
+
+**Copying damaged rows.** An existing row with a damaged body and retained version stays in backup as `{key, items: null, index, unreadable: true}`, where `index` is its exact nonempty version; the existing key order and coherent copy header remain. This is separate from import/restore refusing unreadable input under N4. A lost version requires the P/01.1 R028 log entry, a nonzero backup CLI exit and preservation of the previous published file. HTTP copy may return `503 UnavailableFault` before `200` or close incompletely after `200`; a completed copy that omits the row or invents its `index` is invalid. The `bad-unreadable.jsonl` input below witnesses import refusal, not permission to omit a damaged row from backup. The `spoil-row` binding uses `what=body` or `what=index`; without it the dependent observation stays `NotExecuted`.
 
 The store copy (chapter 1.3 N1.3 `copy`; the store pilot, A2). The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a header
 with `index` `"7"` and the rows `platform/epoch_floor` `{floor: "4294967296", generation_at: "1760745600.5"}` (the time form —

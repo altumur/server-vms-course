@@ -114,7 +114,7 @@ named in the implementation description (item 9 of «Implementation decides») p
 from there; a header without a colon; a header with a space before the colon and an obs-fold header continuation (RFC 9112 §5.1–5.2).
 Separately: a target in absolute form `GET http://localhost/v1/get?key=acc/x HTTP/1.1` — `404 badrequest` (the path is not
 decoded and not normalized, N2.1); a body with `Content-Length` and `Transfer-Encoding: chunked` together is read
-as chunked (§6.3). Early refusal (N2.1): `POST /v1/write` with `Content-Length` larger than the body limit and a body
+as chunked (§6.3), closing the connection after the response (RFC 9112 §6.1). For a valid HTTP/1.1 request this is not an automatic `400`: its own operation determines the response. An HTTP/1.0 request with `Transfer-Encoding` has faulty framing: `400 badrequest` and close (R054; RFC 9112 §6.1). Early refusal (N2.1): `POST /v1/write` with `Content-Length` larger than the body limit and a body
 that is still coming — the client gets `413 toolarge` with `Connection: close`, not a reset of the connection.
 
 Probes of the framing and of the request line (N2.1, reconciliation of python and go 2026-10-18), each on raw bytes:

@@ -59,7 +59,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 | Code | When | Norm |
 |---|---|---|
 | 0 | an orderly stop | — |
-| by the start causes in `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `box_no_raft`; exact conditions and codes are owned by the form and P/01.3 N4 | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |
+| by the start causes in `forms/refusals.tsv` | `start_config`, `start_flags`, `start_format`, `start_data_dir_owned`, `box_no_raft`; exact conditions and codes are owned by the form and P/01.3 N4 | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |
 | by the CLI causes in `forms/refusals.tsv` | administrative refusal names and caller actions — P/01.3 N4; no separate lifecycle refusal catalog | [forms/refusals.tsv](forms/refusals.tsv), P/01.3 N4 |
 
 ## Signals and readiness
@@ -67,6 +67,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 | What | How | Norm |
 |---|---|---|
 | SIGTERM | stop admission, bound/cancel I/O, classify admitted work and release resources within the declared orderly-stop budget below the actual manager deadline; no automatic budget from an example | [P/01.3 Snapshot output and orderly stop](spec/01.3-store.norms.md#snapshot-output-and-orderly-stop); P/02.4 N1.1 |
+| data-directory ownership | exclusive until process exit; refuse a second daemon and local operations; after orderly exit or `SIGKILL` no manual ownership-mark cleanup is needed | P/01.3 N1.3 «Data-directory ownership»; `start_data_dir_owned`, `local_data_dir_owned` in the form |
 | restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | readiness | the socket is open; `After=configstore.service` at the others is an order, not readiness: each process itself waits for a reliable read | P/02.4 N3 «server start», «Races» |
 | durability | the barriers are switched off neither by the environment nor by an operation flag | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |
