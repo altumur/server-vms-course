@@ -713,6 +713,24 @@ def _legacy_object(docs, node, base):
     return node, base
 
 
+def _response_object(docs, node, base):
+    """Follow Response References; annotations stay on their original declarations."""
+    seen = set()
+    while isinstance(node, dict) and "$ref" in node:
+        if not isinstance(node["$ref"], str) or set(node) - {"$ref", "summary", "description"} or any(
+                not isinstance(node[key], str) for key in ("summary", "description") if key in node):
+            raise GenError(f"{base}: unsupported Response Reference siblings")
+        origin = docs.origin(node, base)
+        key = (Path(base).resolve(), origin, node["$ref"])
+        if key in seen:
+            raise GenError(f"{base}: cyclic Response Reference")
+        seen.add(key)
+        node, base = docs.resolve(node["$ref"], base, origin=origin)
+    if not isinstance(node, dict):
+        raise GenError(f"{base}: expected a Response Object")
+    return node, base
+
+
 def build(root=ROOT):
     if L.key == "06-console":
         return _p06_build(root)
@@ -755,7 +773,7 @@ def build(root=ROOT):
                     checks[path][p["name"]] = c
             responses = []
             for code, r in op.get("responses", {}).items():
-                r, _ = docs.deref(r, item_base)
+                r, _ = _response_object(docs, r, item_base)
                 responses.append({"code": str(code), "media": list((r.get("content") or {}).keys()),
                                   "headers": list((r.get("headers") or {}).keys())})
             if not responses:
@@ -765,7 +783,7 @@ def build(root=ROOT):
             req_content = (rb.get("content") or {}) if rb else {}
             req_media = list(req_content.keys())
             for r_code, r_raw in op.get("responses", {}).items():
-                r_node, r_base = docs.deref(r_raw, item_base)
+                r_node, r_base = _response_object(docs, r_raw, item_base)
                 if "$ref" not in r_node and not r_node.get("content"):
                     bodies.append(("resp", name, str(r_code), None, None, r_base))
                 for media, mo in (r_node.get("content") or {}).items():
