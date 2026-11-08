@@ -4,6 +4,10 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 The scenarios of [the norms of chapter 2.1](../../spec/02.1-installer.norms.md) N5 (ADR-0080); the stand — [the common acceptance README](../../../common/acceptance/README.md). The door of the chapter is the loader itself: a file is given alone, as the manifest of a subsystem, and the answer is one of two.
 
+## Profile interface
+
+Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.load` loads the single file `{file}` through the normal loader: success exits zero; a refusal names the source file and follows this chapter's outcome rules. The optional `adapters.load` exposes that same loader as the persistent path/JSON-line transport defined by the common contract, without template substitutions. `keys.path_style` declares `json` or `dotted` for transporting the loader's own diagnostic paths; diagnostic authority remains the hint rules below. The installation sample uses the same `stand.manifest-put` interface as [chapter 2.3](../3/README.md), against the prepared public store. Neither adapter supplies a case-based answer or an alternate loader.
+
 ## verdicts.tsv
 
 Tab-separated: `case`, `verdict`. Lines with `#` and empty lines are not scenarios.

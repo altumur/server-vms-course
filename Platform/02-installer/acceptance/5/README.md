@@ -11,6 +11,10 @@ The scenarios and the manifest variants were moved from the acceptance of M10/6
 (stage B) with the former numbers, steps and texts. Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
 `/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md) (stage B); the numbers of the remaining ones did not change.
 
+## Profile interface
+
+Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.rights` consumes `{manifests}`, `{deployment}` and output `{file}` and derives the rights file by this chapter's algorithm; refusals and file absence are those below. `stand.rights-check` consumes the same manifest/deployment inputs and the existing `{file}` to compare, without writing it; zero means semantic equality, nonzero means disagreement. `stand.ring` and `stand.manifest-put` prepare the existing common stand as assigned there; the selected `01-store` profile owns the store process and its role sockets. The implementation chooses the commands and flags for these interfaces. Missing comparison coverage remains unexecuted, not a generated substitute result.
+
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store, `@as <role>`, `@header` before the method, `$name`, `ASSERT`;

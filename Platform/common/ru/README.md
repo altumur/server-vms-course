@@ -30,6 +30,7 @@ vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  векторы общ�
                            разбор ревью стадии B 8–10, № 22)
 contracts/gate-and-pass.api.openapi.yaml  общие формы тел договора сторожевой и передачи (Denied; ссылаются P/06, P/08, P/10)
 acceptance/README.md       общий стенд приёмки: словарь директив и дверей, стенд домена
+acceptance/PROFILE.md      полные общие формы профиля приёмки v2 и состава v1, подстановок, адаптеров и провода векторов
 acceptance/system/         сквозные сценарии нескольких микромодулей
 acceptance/pass/           передача второго вида с подставным воркером раннера
 acceptance/ops/            стенд групповых операций door.pass.operations (ADR-0095)
