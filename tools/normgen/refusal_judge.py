@@ -541,13 +541,14 @@ class SourceSchemas:
     def _walk_chain(self, base, pointer, active=(), files=()):
         key = (base, pointer)
         if key in active:
-            return  # A legal local recursive schema does not re-enter a foreign resource.
+            segment = active[active.index(key):]
+            if any(uri != base for uri, _ in segment):
+                raise CheckingError('cross-resource schema reference cycle')
+            return  # Only the closed segment determines whether recursion is local.
         node = self._typed[base][pointer]
         active = active + (key,)
         if type(node) is dict and '$ref' in node:
             _, target, at = self._edges[key]
-            if target != base and target in files + (base,):
-                raise CheckingError('cross-resource schema reference cycle')
             self._walk_chain(target, at, active, files + (base,) if target != base else files)
         for at, _ in self._children(node, pointer):
             self._walk_chain(base, at, active, files)

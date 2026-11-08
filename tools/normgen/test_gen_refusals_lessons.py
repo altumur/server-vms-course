@@ -647,7 +647,7 @@ func main(){json.NewEncoder(os.Stdout).Encode(map[string]any{"rows":refusals.All
         self._oracle_boundary_observe('legal-disjoint-cross-refs', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted=a)
         self._oracle_boundary_file(data / 'a.schema.json', {'$defs': {'scalar': True}, 'properties': {'other': {'$ref': 'b.schema.json#/$defs/return'}}})
         self._oracle_boundary_file(data / 'b.schema.json', {'$defs': {'return': {'$ref': 'a.schema.json#/$defs/scalar'}}})
-        self._oracle_boundary_observe('true-returning-file-chain', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+        self._oracle_boundary_observe('finite-return-different-pointer', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted={'$defs': {'scalar': True}, 'properties': {'other': {'$ref': 'b.schema.json#/$defs/return'}}})
         local = {'type': 'object', 'properties': {'next': {'$ref': '#'}}}
         self._oracle_boundary_file(data / 'a.schema.json', local)
         self._oracle_boundary_observe('local-recursion', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted=local)
@@ -679,6 +679,77 @@ func main(){json.NewEncoder(os.Stdout).Encode(map[string]any{"rows":refusals.All
         self._oracle_boundary_file(path, json.dumps(document, ensure_ascii=True).encode())
         self._oracle_boundary_set({'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/BoundaryLeaf'})
         self._oracle_boundary_observe('unselected-null-schema', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=True)
+
+    def _canonical_cycle_observe(self, name, a, b, selected, error=False, wanted=None):
+        data = self.home / 'Platform/common/data'
+        self._oracle_boundary_file(data / 'cycle-a.schema.json', a)
+        if b is not None:
+            self._oracle_boundary_file(data / 'cycle-b.schema.json', b)
+        self._oracle_boundary_set({'$ref': '../../common/data/cycle-a.schema.json#/$defs/' + selected})
+        self._oracle_boundary_observe(name, lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=error, wanted=wanted)
+
+    def test_canonical_cycle_normal_source_positive(self):
+        self._oracle_boundary_begin()
+        self._oracle_boundary_observe('canonical-Source03df-positive', lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), wanted=self._boundary_normal)
+
+    def test_canonical_cycle_finite_pointer_return(self):
+        self._oracle_boundary_begin()
+        a = {'$defs': {'Start': {'$ref': 'cycle-b.schema.json#/$defs/Alias'}, 'Leaf': {'type': 'string'}}}
+        b = {'$defs': {'Alias': {'$ref': 'cycle-a.schema.json#/$defs/Leaf'}}}
+        self._canonical_cycle_observe('A-Start-B-Alias-A-Leaf-finite', a, b, 'Start', wanted={'type': 'string'})
+
+    def test_canonical_cycle_true_closed_pair(self):
+        self._oracle_boundary_begin()
+        a = {'$defs': {'Start': {'$ref': 'cycle-b.schema.json#/$defs/Alias'}, 'Leaf': True}}
+        b = {'$defs': {'Alias': {'$ref': 'cycle-a.schema.json#/$defs/Start'}}}
+        for selected in ('Start', 'Leaf'):
+            with self.subTest(selected=selected):
+                self._canonical_cycle_observe('closed-A-Start-B-Alias-A-Start-selected-' + selected, a, b, selected, error=True)
+
+    def test_canonical_cycle_local_recursion(self):
+        self._oracle_boundary_begin()
+        recursive = {'type': 'object', 'properties': {'next': {'$ref': '#/$defs/Recursive'}}}
+        self._canonical_cycle_observe('same-file-recursion', {'$defs': {'Recursive': recursive}}, None, 'Recursive', wanted=recursive)
+
+    def test_canonical_cycle_foreign_arrival_local_recursion(self):
+        self._oracle_boundary_begin()
+        recursive = {'type': 'object', 'properties': {'next': {'$ref': '#/$defs/Recursive'}}}
+        a = {'$defs': {'Start': {'$ref': 'cycle-b.schema.json#/$defs/Recursive'}}}
+        self._canonical_cycle_observe('foreign-prefix-local-closed-segment', a, {'$defs': {'Recursive': recursive}}, 'Start', wanted=recursive)
+
+    def test_canonical_cycle_uri_owner_type_provenance_guards(self):
+        self._oracle_boundary_begin()
+        from urllib.parse import quote
+        data = self.home / 'Platform/common/data'
+        target = self._oracle_boundary_file(data / 'matching.schema.json', True)
+        reader = self._boundary_m.SourceSchemas(self.api)
+        for name, ref in [('encoded-absolute-matching-file', quote(str(target), safe='')), ('nontext-reference', None)]:
+            with self.subTest(name=name):
+                self._oracle_boundary_observe(name, lambda ref=ref: reader.target(ref, self.api), error=True)
+        a = {'$defs': {'Start': {'$ref': 'cycle-b.schema.json#/$defs/Alias'}}}
+        b = {'$defs': {'Alias': {'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/ResourceError'}}}
+        self._canonical_cycle_observe('per-declaration-common-owner-guard', a, b, 'Start', error=True)
+        self._oracle_boundary_set(self._boundary_normal)
+        reader = self._boundary_m.SourceSchemas(self.api)
+        original = self.api.read_bytes()
+        self._oracle_boundary_file(self.api, b'{}')
+        try:
+            self._oracle_boundary_observe('admitted-Source-identity-guard', lambda: reader.schema('VerifyUnavailable'), error=True)
+        finally:
+            self._oracle_boundary_file(self.api, original)
+
+    def test_canonical_cycle_enclosing_openapi_meta(self):
+        self._oracle_boundary_begin()
+        import copy
+        path = self.home / 'Platform/05-resource/spec/05-resource.api.openapi.yaml'
+        original = self._boundary_m.SourceSchemas(path).doc
+        for invalid in (False, True):
+            with self.subTest(invalid=invalid):
+                doc = copy.deepcopy(original)
+                doc['components']['schemas']['Outer'] = {'type': 'object', 'required': 'Leaf' if invalid else ['Leaf'], 'properties': {'Leaf': {'type': 'string'}}}
+                self._oracle_boundary_file(path, json.dumps(doc, ensure_ascii=True).encode())
+                self._oracle_boundary_set({'$ref': '../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Outer/properties/Leaf'})
+                self._oracle_boundary_observe('enclosing-Outer-Leaf-' + ('invalid-required' if invalid else 'valid'), lambda: self._boundary_m.SourceSchemas(self.api).schema('VerifyUnavailable'), error=invalid, wanted=None if invalid else {'type': 'string'})
 
 if __name__ == "__main__":
     unittest.main()
