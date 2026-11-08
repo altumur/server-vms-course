@@ -41,3 +41,7 @@ ru/                        for people, not in the export — translations of the
 The dictionary of normative words is the canon of the whole course; it lies outside the module (a course file).
 
 [Production obligations](contracts/production-obligations.md): finite budgets and public sequences for ADR-0130 Addendum (10).
+
+## Implementation code
+
+Write implementation code without explanatory comments. A short requirement marker is optional and may appear only where that rule is implemented; use the exact ID of an existing requirement anchor. Do not invent marker IDs or a separate numbering scheme. Acceptance checks and judges do not require comments.
