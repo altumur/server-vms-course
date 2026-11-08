@@ -6,6 +6,8 @@ import csv
 import hashlib
 import io
 import json
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -392,6 +394,129 @@ class Z21RefusalSource(unittest.TestCase):
                 table.write_text(text)
                 with self.subTest(text=text), self.assertRaises(refusal_judge.CheckingError):
                     refusal_judge.read_table(table)
+
+
+class Z21RefusalCompiled(unittest.TestCase):
+    """The existing private service reads real generated rows; Source remains the independent oracle."""
+    source_root = HERE.parent.parent
+    code_root = HERE.parent.parent
+
+    @classmethod
+    def setUpClass(cls):
+        cls.output = output_lesson.output_root()
+        cls.ready = output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                                code_root=cls.code_root, profiles=("p01-1",))
+        cls.rows = refusal_judge.read_table(cls.source_root / "Platform/01-store/forms/refusals.tsv")
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-refusals-")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+        output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                    code_root=cls.code_root, profiles=("p01-1",))
+
+    def module(self, name):
+        path = Path(self.tmp.name) / name
+        shutil.copytree(self.ready["p01-1"] / "go", path)
+        return path
+
+    def compare(self, module):
+        report = module / "z21_judge.json"
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(refusal_judge, "TABLE", self.source_root / "Platform/01-store/forms/refusals.tsv"), \
+                patch.object(refusal_judge, "ACCEPTANCE", self.source_root / "Platform/01-store/acceptance"), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            code = refusal_judge.main(["--module-dir", str(module), "--json", str(report)])
+        if code not in (0, 1) or stderr.getvalue():
+            raise refusal_judge.CheckingError(stderr.getvalue() or f"checking exit {code}")
+        result = normal_result(code, report.read_bytes())
+        self.assertTrue({"catalogue " + r["name"] for r in self.rows} <= {r["name"] for r in result["results"]})
+        return code, [r["name"] for r in result["results"] if not r["ok"]]
+
+    def test_source_new_causes_each_reject_code_kind_and_header_mutants(self):
+        self.assertEqual(self.compare(self.module("normal")), (0, []))
+        source = {r["name"]: r for r in self.rows}
+        mutations = []
+        for name in Z21RefusalSource.names:
+            row = source[name]
+            prefix = f'Name: "{name}", Surface: "http", Code: {row["code_n"]}, Kind: "{row["kind"]}"'
+            mutations.append((name + "-code", prefix, prefix.replace(f'Code: {row["code_n"]}', f'Code: {row["code_n"] + 1}')))
+            mutations.append((name + "-kind", prefix, prefix.replace(f'Kind: "{row["kind"]}"', 'Kind: "wrong"')))
+            if row["header_pairs"]:
+                pairs = ", ".join("{" + json.dumps(k) + ", " + json.dumps(v) + "}" for k, v in row["header_pairs"])
+                before = prefix + ", Fields: nil, Headers: [][2]string{" + pairs + "}"
+                mutations.append((name + "-header", before, prefix + ", Fields: nil, Headers: nil"))
+        for name, before, after in mutations:
+            with self.subTest(mutant=name):
+                module = self.module(name)
+                path = module / "refusals/refusals.go"
+                text = path.read_text()
+                self.assertEqual(text.count(before), 1)
+                path.write_text(text.replace(before, after, 1), encoding="utf-8")
+                code, mismatches = self.compare(module)
+                self.assertEqual(code, 1, "surviving Source mutant " + name)
+                self.assertTrue(mismatches)
+
+    def test_complete_compiled_catalogue_missing_and_zero_are_semantic_mismatches(self):
+        self.assertEqual(self.compare(self.module("catalogue-normal")), (0, []))
+        for name, body in (("missing", None), ("zero", "")):
+            module = self.module("catalogue-" + name)
+            path = module / "refusals/refusals.go"
+            text = path.read_text()
+            matches = list(re.finditer(r"var All = \[\]\*Spec\{([^\n]*)\}", text))
+            self.assertEqual(len(matches), 1)
+            match = matches[0]
+            new = match[1].replace(", InputTimeout,", ",", 1) if body is None else body
+            self.assertNotEqual(new, match[1])
+            path.write_text(text[:match.start(1)] + new + text[match.end(1):], encoding="utf-8")
+            code, mismatches = self.compare(module)
+            self.assertEqual(code, 1)
+            self.assertIn("catalogue input_timeout", mismatches)
+
+    def test_old_status_optional_field_retry_kind_and_start_controls_still_fail_semantically(self):
+        self.assertEqual(self.compare(self.module("old-controls-normal")), (0, []))
+        cases = (
+            ('Name: "cas_mismatch", Surface: "http", Code: 409', 'Name: "cas_mismatch", Surface: "http", Code: 410'),
+            ('Fields: []Field{{"index", false}, {"key", true}}', 'Fields: []Field{{"index", false}}'),
+            ('Name: "connection_limit", Surface: "http", Code: 503, Kind: "unavailable", Fields: nil, Headers: [][2]string{{"Retry-After", "1"}}, RetryAfter: true',
+             'Name: "connection_limit", Surface: "http", Code: 503, Kind: "unavailable", Fields: nil, Headers: [][2]string{{"Retry-After", "1"}}, RetryAfter: false'),
+            ('"guard_mismatch", Surface: "http", Code: 412, Kind: "guard"', '"guard_mismatch", Surface: "http", Code: 412, Kind: "guards"'),
+            ('Name: "start_flags", Surface: "start", Code: 2', 'Name: "start_flags", Surface: "start", Code: 1'),
+        )
+        for number, (before, after) in enumerate(cases):
+            with self.subTest(legacy_control=number):
+                module = self.module("old-control-" + str(number))
+                path = module / "refusals/refusals.go"
+                text = path.read_text()
+                self.assertEqual(text.count(before), 1)
+                path.write_text(text.replace(before, after, 1), encoding="utf-8")
+                code, mismatches = self.compare(module)
+                self.assertEqual(code, 1)
+                self.assertTrue(mismatches, "old control survived")
+
+    def test_actual_compile_and_encoder_errors_are_checking_errors(self):
+        module = self.module("compile-error")
+        path = module / "refusals/refusals.go"
+        path.write_text(path.read_text() + "\nnot valid Go\n")
+        with self.assertRaises(refusal_judge.CheckingError):
+            self.compare(module)
+        # Execute the unchanged private encoder with a real failing output descriptor.
+        module = self.module("encoder-error")
+        work = Path(self.tmp.name) / "encoder-service"
+        work.mkdir()
+        shutil.copy(HERE / "refusals/harness/main.go", work / "main.go")
+        (work / "go.mod").write_text("module normgen/refusalharness\n\ngo 1.22\n\nrequire normgen/p01-1 v0.0.0\n\n"
+                                     f"replace normgen/p01-1 => {module}\n", encoding="utf-8")
+        with open("/dev/full", "wb", buffering=0) as failing:
+            done = subprocess.run(["go", "run", "."], cwd=work, stdout=failing, stderr=subprocess.PIPE, timeout=120)
+        self.assertNotEqual(done.returncode, 0)
+        self.assertIn(b"refusal readback encoding:", done.stderr)
+        unused = Path(self.tmp.name) / "unused-readback"
+        unused.mkdir()
+        with patch.object(refusal_judge.subprocess, "run", return_value=SimpleNamespace(
+                returncode=done.returncode, stdout=b"", stderr=done.stderr)):
+            with self.assertRaises(refusal_judge.CheckingError):
+                refusal_judge.harness(module, unused)
 
 
 if __name__ == "__main__":

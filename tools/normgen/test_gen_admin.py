@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
@@ -216,6 +217,87 @@ class Admin(unittest.TestCase):
                 gen_admin.render()
         finally:
             gen_admin.REFUSAL_ROWS["admit"] = saved
+
+
+Z21_BACKUP_BINDING = r'''package admin
+import (
+    "bytes"
+    "errors"
+    "strings"
+    "testing"
+    "normgen/p01-1/flags"
+)
+type z21CopyPort struct{calls int;file string;err error}
+func (p *z21CopyPort) Backup(file string) error {p.calls++;p.file=file;return p.err}
+func (*z21CopyPort) Import(string,uint64,bool) error {panic("backup called import")}
+func (*z21CopyPort) Restore(string,bool) error {panic("backup called restore")}
+func TestZ21AdminBackupExistingPort(t *testing.T) {
+    var out,log bytes.Buffer
+    port:=&z21CopyPort{}
+    f:=&flags.Flags{Cmd:"backup",Args:[]string{"the-output.copy"}}
+    code:=Run(f,Env{Stdout:&out,Stderr:&log,Copy:port})
+    if code!=0 || port.calls!=1 || port.file!="the-output.copy" || out.Len()!=0 || log.Len()!=0 {t.Fatalf("existing CLI binding: %d %+v %q %q",code,port,out.String(),log.String())}
+}
+func TestZ21AdminBackupFailureAndArguments(t *testing.T) {
+    var out,log bytes.Buffer
+    port:=&z21CopyPort{err:errors.New("controlled copy failure")}
+    env:=Env{Stdout:&out,Stderr:&log,Copy:port}
+    if code:=Run(&flags.Flags{Cmd:"backup",Args:[]string{"out"}},env);code!=1 || port.calls!=1 || !strings.Contains(log.String(),port.err.Error()) || out.Len()!=0 {t.Fatal("copy failure was hidden or became a machine stdout contract")}
+    port.calls=0;log.Reset()
+    if code:=Run(&flags.Flags{Cmd:"backup"},env);code!=2 || port.calls!=0 {t.Fatal("wrong positional arguments reached backup")}
+}
+'''
+
+
+class Z21BackupSource(unittest.TestCase):
+    source_root = HERE.parent.parent
+    code_root = HERE.parent.parent
+
+    @classmethod
+    def setUpClass(cls):
+        cls.output = output_lesson.output_root()
+        cls.ready = output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                                code_root=cls.code_root, profiles=("p01-1",))
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-admin-")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+        output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                    code_root=cls.code_root, profiles=("p01-1",))
+
+    def test_backup_comments_bind_actual_copy_contract_and_all_three_causes(self):
+        import csv
+        from test_gen_core import z21_assert_requirement_comment, z21_source_requirement
+        text = (self.ready["p01-1"] / "go/admin/backup.go").read_text()
+        source = z21_source_requirement(self.source_root, 3, "P/01.3-R033")
+        z21_assert_requirement_comment(text, "P/01.3-R033", source)
+        with self.assertRaises(AssertionError):
+            z21_assert_requirement_comment(text.replace("P/01.3-R033", "P/00.0-R000"), "P/01.3-R033", source)
+        raw = (self.source_root / "Platform/01-store/forms/refusals.tsv").read_text()
+        rows = list(csv.DictReader([l for l in raw.splitlines() if l and not l.startswith("#")], delimiter="\t"))
+        for name in ("copy_method", "copy_admin_only", "copy_snapshot_unavailable"):
+            found = [r for r in rows if r["name"] == name]
+            self.assertEqual(len(found), 1)
+            row = found[0]
+            expected = f'{row["chapter"]} row {row["row"]} {name} — {row["code"]} {row["kind"]}'
+            self.assertIn(expected, text)
+            self.assertNotIn(expected, text.replace(name, "removed_cause"))
+
+    def test_compiled_backup_dispatch_keeps_existing_arguments_port_and_failure_exit(self):
+        from test_gen_machine import CheckingError, complete_go_tests
+        module = Path(self.tmp.name) / "normal"
+        shutil.copytree(self.ready["p01-1"] / "go", module)
+        (module / "admin/z21_copy_test.go").write_text(Z21_BACKUP_BINDING, encoding="utf-8")
+        names = ["TestZ21AdminBackupExistingPort", "TestZ21AdminBackupFailureAndArguments"]
+        try:
+            done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^(" + "|".join(names) + ")$", "./admin"],
+                                  cwd=module, capture_output=True, timeout=120)
+            observed = SimpleNamespace(returncode=done.returncode, stdout=done.stdout.decode("utf-8", "strict"),
+                                       stderr=done.stderr.decode("utf-8", "strict"))
+        except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+            raise CheckingError("cannot obtain complete admin component report") from exc
+        self.assertEqual(complete_go_tests(observed, names, "normgen/p01-1/admin"), [])
 
 
 if __name__ == "__main__":
