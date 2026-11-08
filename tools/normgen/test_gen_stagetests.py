@@ -15,7 +15,7 @@ import gen_stagetests  # noqa: E402
 import gen_tests  # noqa: E402
 
 OUT = output_lesson.output_root() / 'p01-1'
-STAGES = (ROOT / "Platform/01-store/forms/stages.tsv").read_text(encoding="utf-8")
+STAGES = (ROOT / "Platform/01-store/forms/stages.kit.tsv").read_text(encoding="utf-8")
 REFUSALS = (ROOT / "Platform/01-store/forms/refusals.tsv").read_text(encoding="utf-8")
 
 # (scenario, step, request, expectation, fixture response(status, body) or None, subtest outcome or None if excluded).
@@ -248,7 +248,7 @@ def synthetic_root(tmp, scen, seams=None):
     acc = root / "Platform/01-store/acceptance/1"
     acc.mkdir(parents=True)
     (root / "Platform/01-store/forms").mkdir(parents=True)
-    (root / "Platform/01-store/forms/stages.tsv").write_text(STAGES, encoding="utf-8")
+    (root / "Platform/01-store/forms/stages.kit.tsv").write_text(STAGES, encoding="utf-8")
     (root / "Platform/01-store/forms/refusals.tsv").write_text(REFUSALS, encoding="utf-8")
     # The adapter reads the declared API even when these grammar probes use
     # synthetic scenarios. Supply that input rather than a producer fallback.

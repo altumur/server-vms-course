@@ -803,7 +803,7 @@ KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests",
              "slot-fate", "slot-release"}                                                # машины P/04 (ADR-0125 доп. (5))                                   # ADR-0125 доп. (5)
 CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
 GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
-                  rf"|(verdicts|puts):({CH}):([^:;\s]+)")
+                  rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)")
 CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
 
 
@@ -813,29 +813,46 @@ def acceptance_dir(lesson, chapter):
 
 
 def stage_forms(root):
-    return sorted(Path(root).glob("Platform/*/forms/stages.tsv"))
+    return sorted([*Path(root).glob("Platform/*/forms/stages.tsv"),
+                   *Path(root).glob("Platform/*/forms/stages.kit.tsv")])
 
 
 def check_stage_parts(path):
     """ADR-0126 доп. (4) п. 13: колонки `kit` (этап закрыт пакетом целиком) и `parts` (части, которыми этап пользуется) —
     `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке; `n` идут по порядку с 1, `depends` —
-    `-` или номера прежних этапов (ADR-0126 доп. (1)). Прочую сверку формы этапов ведёт `check_spec` («Архитектор»)."""
+    `-` или номера прежних этапов (ADR-0126 доп. (1)). Прочую сверку формы этапов ведёт `check_spec` («Архитектор»).
+    ADR-0126(9) phase1: public stages.tsv may omit both package columns;
+    stages.kit.tsv retains them. Both forms preserve their gates and scenario scope."""
     path = Path(path)
-    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
     head = lines[0].split("\t") if lines else []
-    errors = [f"{path.name}: no column {c}" for c in ("stage", "kit", "parts") if c not in head]
+    # During ADR-0126(9) phase1 the public form may retain both package columns
+    # or omit both. The exact retained kit form keeps the legacy package grammar.
+    required = ("stage", "gate") + (("kit", "parts") if path.name == "stages.kit.tsv" else ())
+    errors = [f"{path.name}: no column {c}" for c in required if c not in head]
+    if len(head) != len(set(head)):
+        errors.append(f"{path.name}: duplicate columns")
+    if ("kit" in head) != ("parts" in head):
+        errors.append(f"{path.name}: kit and parts must both be present or both be absent")
     if errors:
         return errors, {}
     lesson = path.parent.parent
     for i, line in enumerate(lines[1:], 1):
-        r = dict(zip(head, line.split("\t")))
+        cells = line.split("\t")
+        if len(cells) != len(head):
+            errors.append(f"{path.name}: row {i}: {len(cells)} cells, expected {len(head)}")
+            continue
+        r = dict(zip(head, cells))
         if "n" in r and r["n"] != str(i):
             errors.append(f"{path.name}: {r['stage']}: n {r['n']!r} — expected {i}")
         if r.get("depends", "-") != "-" and not all(d.isdigit() and 0 < int(d) < i for d in r["depends"].split(",")):
             errors.append(f"{path.name}: {r['stage']}: depends {r['depends']!r} — not the n of former stages")
-        for check in r.get("gate", "").split(";"):
+        checks = r.get("gate", "").split(";")
+        if len(checks) != len(set(checks)):
+            errors.append(f"{path.name}: {r['stage']}: duplicate gate checks")
+        for check in checks:
             errors += gate_errors(lesson, r["stage"], check)
-        for column in ("kit", "parts"):
+        for column in (c for c in ("kit", "parts") if c in head):
             if r[column] == "-":
                 continue
             names = r[column].split(",")
@@ -886,10 +903,11 @@ def gate_errors(lesson, stage, check):
     """ADR-0126 доп. (1) п. 8, доп. (7) пп. 2, 3: одна проверка списка `gate` — закрытый вид без пробелов; глава —
     каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
     `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
-    главы (ADR-0125 доп. (5))."""
+    главы (ADR-0125 доп. (5)). seams:<chapter>:<names|*> selects that chapter's seams.tsv;
+    accept selects scenarios.tsv. Both scopes are local to the declared lesson."""
     m = GATE.fullmatch(check)
     if not m:
-        return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, "
+        return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, seams:…, "
                 f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:… or build"]
     if m[6]:
         if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
@@ -897,6 +915,10 @@ def gate_errors(lesson, stage, check):
         return []
     if check == "build":
         return []
+    chapter = m[8] if m[7] else (m[10] or m[1] or m[4])
+    owner = re.match(r"([0-9]+)-", lesson.name)
+    if not owner or int(chapter.split(".")[0]) != int(owner[1]):
+        return [f"stages.tsv: {stage}: chapter {chapter} is not in lesson {lesson.name}"]
     if m[7]:                                             # verdicts:/puts: — случаи таблицы главы, первая колонка
         chapter, names = m[8], m[9]
         file = acceptance_dir(lesson, chapter) / CASE_TABLE[m[7]]
@@ -907,12 +929,15 @@ def gate_errors(lesson, stage, check):
         known = {ln.split("\t")[0] for ln in file.read_text(encoding="utf-8").splitlines() if ln and not ln.startswith("#")} - {"case"}
         missing = [n for n in names.split(",") if n not in known]
         return [f"stages.tsv: {stage}: cases {missing} are not in {file.relative_to(lesson)}"] if missing else []
-    chapter, names, seams = (m[1], m[2], m[3]) if m[1] else (m[4], m[5], None)
+    chapter, names, seams = ((m[10], m[11], True) if m[10] else
+                             ((m[1], m[2], m[3]) if m[1] else (m[4], m[5], None)))
     file = acceptance_dir(lesson, chapter) / ("seams.tsv" if seams else "scenarios.tsv")
     if not file.is_file():
         return [f"stages.tsv: {stage}: no {file.relative_to(lesson)} for {check.split(':')[0]}:{chapter}"]
     if names == "*":
         return []
+    if len(names.split(",")) != len(set(names.split(","))):
+        return [f"stages.tsv: {stage}: a scenario repeats in {check!r}"]
     known = {ln.split("\t")[0] for ln in file.read_text(encoding="utf-8").splitlines() if ln and not ln.startswith("#")}
     missing = [n for n in names.split(",") if n not in known]
     return [f"stages.tsv: {stage}: scenarios {missing} are not in {file.relative_to(lesson)}"] if missing else []

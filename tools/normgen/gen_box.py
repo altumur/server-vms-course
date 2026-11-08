@@ -758,7 +758,7 @@ def provenance():
             "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py")] +
                           ([entry(HERE / "gen_flags.py")] if f["ceiling_from_flags"] else []),
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
-            "judge_inputs": entries([L.form("stages.tsv"),
+            "judge_inputs": entries([L.form("stages.kit.tsv"),
                             *sorted(L.path("acceptance/3").glob("*.tsv")),
                             L.path("acceptance/3/README.md"),
                             *sorted(L.path("acceptance/3/inputs").glob("*.jsonl")),

@@ -103,13 +103,13 @@ def declarations(root, lesson="02-installer", api=API_P02):
     required = {key for key, owners in wire.consumers(root).items() if lesson in owners}
     if required - covered:
         raise wire.WireError(f"{wire.FORM}: undeclared consumers {sorted(required - covered)}")
-    stages = Path(root) / "Platform" / lesson / "forms/stages.tsv"
+    stages = Path(root) / "Platform" / lesson / "forms/stages.kit.tsv"
     if stages.is_file():
         lines = [line.split("\t") for line in stages.read_text().splitlines() if line and not line.startswith("#")]
         gate = lines[0].index("gate")
         for pkg in {p for row in lines[1:] for p in re.findall(r"vectors:([a-z0-9-]+)", row[gate])}:
             if not any(b.package == f"{lesson}/{pkg}" for b in bindings):
-                raise wire.WireError(f"{wire.FORM}: undeclared stages.tsv package {pkg}")
+                raise wire.WireError(f"{wire.FORM}: undeclared stages.kit.tsv package {pkg}")
     return out
 
 

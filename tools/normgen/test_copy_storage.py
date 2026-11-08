@@ -771,7 +771,7 @@ class CopyStorage(unittest.TestCase):
 
     def test_published_51_steps_through_actual_commands_and_files(self):
         import gate
-        with (ROOT / "Platform/01-store/forms/stages.tsv").open() as stream:
+        with (ROOT / "Platform/01-store/forms/stages.kit.tsv").open() as stream:
             stages = list(csv.DictReader((line for line in stream if not line.startswith("#")), delimiter="\t"))
         stage = next(row for row in stages if row["stage"] == "daemon_copy")
         names = set()

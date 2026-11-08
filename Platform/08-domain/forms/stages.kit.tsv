@@ -1,0 +1,16 @@
+# Seams/build assist the kit; actual full domainstand with neighbours 09/10 remains mandatory.
+# kit=- for every stage.
+n	stage	goal	norms	gate	weight	kit	parts	depends	when
+1	foundation	Environment, families, refusal catalogue, version metadata and constants	P/08.0 N0–N5; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv; forms/versioned-doors.tsv	build	2	-	flags,refusals,families,core	-	true
+2	trust	Read existing root/key/signer without founding; real prepare crypto	P/08.2 N1–N5	tests:8.2:*:seams	4	-	core,stagetests	1	true
+3	turn	Standby before body; row guards and object read-confirm-put order	P/08.10 N1–N5	tests:8.10:*:seams	5	-	core,stagetests	2	true
+4	people	Real first-admin refusal and legacy role/group revisions	P/08.4 N1–N5	tests:8.4:*:seams	4	-	door,families,core,stagetests	3	true
+5	admission	Signed report and generation before publication mark	P/08.3 N1–N5	tests:8.3:*:seams	5	-	door,core,stagetests	4	true
+6	view	Actual camera receipt age, fresh observer and uncertain parts	P/08.1 N1–N5	tests:8.1:*:seams	4	-	core,stagetests	5	true
+7	books	Real envelope refusal and unique-key assembly conflict	P/08.5 N1–N5	tests:8.5:*:seams	4	-	core,stagetests	6	true
+8	edits	Actual m1 secret, repeat identity and executor proof	P/08.6 N1–N5	tests:8.6:*:seams	5	-	door,core,stagetests	7	true
+9	issuing	Body ceiling, unknown revocations and kept-token freeze	P/08.7 N1–N5	tests:8.7:*:seams	4	-	door,core,stagetests	8	true
+10	move	Real handover ordering and exact backup restore	P/08.8 N1–N5	tests:8.8:*:seams	5	-	door,core,stagetests	9	true
+11	shared	Unknown old document, secret refusal and pointer CAS	P/08.9 N1–N5	tests:8.9:*:seams	4	-	door,core,stagetests	10	true
+12	process_proof	Atomic reply replay and version conditions in ordinary writer	P/08.0 N1–N5	tests:8.0:*:seams	4	-	door,core,stagetests	11	true
+13	complete_domain	All process chapters, assigned vectors, real neighbours and reading	P/08.0–P/08.10 N5; common/vectors/consumers.tsv; acceptance/*/README.md	accept:8.1:*;accept:8.3:*;accept:8.4:*;accept:8.5:*;accept:8.6:*;accept:8.7:*;accept:8.8:*;accept:8.9:*;accept:8.10:*	6	-	-	12	true
