@@ -261,6 +261,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
   /api/members/{member}/{part}:
     servers:
       - url: '{origin}'
@@ -376,6 +377,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
         '503':
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
@@ -447,6 +449,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
         '503':
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
@@ -520,6 +523,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
         '503':
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
@@ -592,6 +596,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
         '503':
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
@@ -665,6 +670,7 @@ paths:
                 - properties:
                     error:
                       const: did not answer
+                unevaluatedProperties: false
         '503':
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
