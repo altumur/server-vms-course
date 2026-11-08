@@ -60,7 +60,7 @@ camera	properties.codec	cam/heartbeats	codec	read	a heartbeat word, read only (A
 camera	properties.login	cam/cameras	cred_username	both
 camera	secrets.password	cam/cameras	cred_secret	read	true — a secret is set; the value is not given out
 camera	properties.password	cam/cameras	cred_secret	write	no field — do not touch; null or "" — clear; a string — a new one (V/11.3 Н1.3)
-camera	properties.serverId	rec/heartbeats	сервер держателя основной записи <cam>; свёрнутая камера w2c — сервер приёмника: Unit GET /domain/rec/recordings с её ref и cluster назначения, UUID server:<cluster>/<server>	read	an observation, not part of the version; no holder, no receiver — no field, the group «Без сервера» (V/11.3 Н1.3 «Камера w2c»); at creation it is skipped without a write (V/11.3 Н1.1)
+camera	properties.serverId	rec/heartbeats	server of the main recording holder <cam>; collapsed w2c camera — receiver server: Unit GET /domain/rec/recordings with its ref, the assigned cluster, and when other than offline; UUID server:<cluster>/<server>	read	an observation, not part of the version; no holder, no receiver — no field, the group «Без сервера» (V/11.3 Н1.3 «Камера w2c»); at creation it is skipped without a write (V/11.3 Н1.1)
 camera	status.link	cam/heartbeats	phase	read	running, idle or held — true; not part of the version
 camera	status.observed.fault	cam/heartbeats	device_state	read	a login refusal — auth, did not open or no connectivity — conn, otherwise — drv; the device answers — no field
 camera	status.observed.licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
