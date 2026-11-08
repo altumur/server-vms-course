@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-11-08
 decision-makers: владелец
 consulted: представитель владельца; ревьюверы Claude (`24d498b8a`, Б1 С8 М8), Codex (`ea36645ef`, Б0 С4 М2), Kimi (`d93ecb5d5`, Б0 С3 М4)
