@@ -1,10 +1,185 @@
-"""Generate a refusal catalog without a model (ADR-0125 generator 4).
+r"""Generate refusal catalogue metadata from TSV (ADR-0125 generator 4).
 
-Read refusals.tsv columns chapter, row, name, surface, code, kind, fields, headers, log, norm under a comment header. Emit standard-library Go 1.22 go/refusals/refusals.go with a CamelCase *Spec per row, All, ByName, Check, LogLine and Exit.
+This describes the current executable contract, including its legacy P/02 word
+projection and P/06 field-role checks. Their unification under ADR-0125(6) is held
+for semantic adjudication; do not infer a new word grammar from this description.
+The catalogue encodes declared metadata, not when to refuse. OpenAPI owns body
+schemas/encoding; write-checks.tsv owns write-command checks and ordering. Prose
+cause/outcome/diagnostic/caller cells are not executed or used to choose behavior.
 
-Responsibilities remain separate (addendum(1), item 5): OpenAPI *Fault defines body shape and the door encodes it; this table defines catalog metadata; write-checks.tsv defines write-command conditions/order. This package supplies status, kind, fields, headers and validates the field set without encoding bodies. Reasons and caller behavior remain N4 prose and are not interpreted.
+Invocation and context
+----------------------
+  python tools/normgen/gen_refusals.py [--lesson NN-name] [table.tsv [output-dir]]
 
-  python tools/normgen/gen_refusals.py [table.tsv [output-directory]]"""
+One lesson is selected at import: --lesson overrides NORMGEN_LESSON, otherwise
+01-store. Its key/number/process come from ROOT/Platform/lessons.tsv. The selected
+key determines default forms/refusals.tsv, OpenAPI and output module context:
+NORMGEN_OUT/p01-1 for P/01, NORMGEN_OUT/pNN otherwise; module normgen/p01-1 or
+normgen/pNN. NORMGEN_OUT is an external root managed by lesson.py, never Git out.
+Positional arguments replace table and output paths; they do not rebind L.
+render(table) returns {"refusals.go": formatted Go text}; generate(table,out)
+writes out/go/refusals/refusals.go, and out/go/go.mod only if it is absent.
+Generation renders/validates before creating its destination. main reports a
+GenError to stderr and returns 1; success prints the generated directory.
+
+The input path is physically resolved before reading. If it is under a directory
+named Platform, that directory's lessons.tsv must uniquely register its first
+path component, with a number equal to the component's first two characters.
+That owner must equal the selected lesson; otherwise refuse with the required
+--lesson value. A symlink cannot relabel the physical owner. Missing/ambiguous
+ownership fails; a standalone fixture outside Platform retains selected context.
+Ownership/provenance and schema paths are context, not a column-layout selector.
+
+Input and common emission
+--------------------------
+Read UTF-8 text with Python read_text newline handling. Use literal TAB-separated
+cells, without CSV quoting, escaping or cell-json decoding. Lines beginning with
+# are comments. The first nonempty noncomment line selects the exact ordered
+15- or 16-column layout below; otherwise the 10-column parser must accept it.
+No reordered, missing or extra columns are accepted. The 10-column parser does
+not discard empty lines; the other parser does. Table SHA256 is the UTF-8 encoding
+of the decoded/newline-normalized input text, including comments, not necessarily
+the raw on-disk byte digest. Emit the source path relative to ROOT when possible,
+otherwise its basename, and this digest in comments. gofmt formats the result.
+
+Every cell starts as a string. A name is unique and matches [a-z][a-z0-9_]*;
+its Go variable is underscore-separated parts with their first letters uppercased
+and concatenated (api_error -> ApiError, no initialism dictionary). The emitter
+does not separately check collisions between distinct names with the same Go
+spelling. Each row produces var CamelName = &Spec{...}; exported All []*Spec
+preserves input order, and ByName(string) *Spec indexes the original name or
+returns nil. No row/name sorting or inference from chapter prose occurs. Row is
+a positive decimal without leading zero, converted to Go int. Chapter remains a
+string. Norm is copied verbatim without interpreting or checking its reference.
+Empty emitted lists use nil; otherwise preserve list order. Go string literals
+escape quote/backslash and C0/DEL controls, retaining other Unicode characters.
+
+Five existing output variants/capabilities
+-----------------------------------------
+1. Ten-column P/01 catalogue:
+   chapter,row,name,surface,code,kind,fields,headers,log,norm
+
+   Chapter matches digits.digits. Surface is http, start or cli. At http, code is
+   a three-digit 100..599 status and kind is nonempty lowercase letters; log=-.
+   At start/cli, kind/fields/headers must be -, and code is exactly exit 2 or
+   exit !0. Convert exit !0 to Code=1 (one chosen nonzero result, not a promise
+   that the norm requires precisely 1). Convert exit 2 to Code=2; HTTP code to
+   its integer. Kind is empty at non-HTTP surfaces.
+
+   Fields is - or comma-separated names matching [a-z][a-z_]* with optional ?;
+   no repeated names or kind/error entries. Remove ? and retain its Boolean role.
+   Headers is - or semicolon-separated Name: value entries; names match
+   [A-Za-z][A-Za-z0-9-]*, values are nonempty, surrounding entry whitespace is
+   stripped. RetryAfter is true if any header name case-insensitively equals
+   Retry-After. Header values are copied, not interpreted as deadlines.
+   Non-HTTP log is - or comma-separated, trimmed items: «nonempty fragment» ->
+   Words; otherwise an optional minus followed by letters/spaces starting with
+   a letter -> Log. This parser splits commas even inside quoted fragments.
+
+   Exact Go shape:
+     type Field struct { Name string; Optional bool }
+     type Spec struct {
+       Chapter string; Row int; Name, Surface string; Code int; Kind string
+       Fields []Field; Headers [][2]string; RetryAfter bool
+       Log, Words []string; Norm string
+     }
+   Check(map[string]any) error applies only to http: require every nonoptional
+   listed field, prohibit unknown fields, allow only int/int64/string values.
+   It does not validate full OpenAPI schemas or include implicit kind/error.
+   LogLine(map[string]string)(string,error) rejects http, starts with name+":",
+   appends Words then present Log entries in declared order as name=quoted-value;
+   unknown supplied names fail, and nonempty Log requires at least one supplied
+   value, not all values. Exit(func(string),map[string]string) int logs LogLine
+   (or name+": "+its error on failure) and returns Code. No IO/exit is performed.
+
+2. Fifteen-column catalogue (currently P/02):
+   chapter,row,name,surface,code,kind,fields,headers,log,norm,word,
+   cause,outcome,diagnostic,caller
+
+   Chapter is digits or digits.digits; do not mix whole-lesson and dotted forms
+   in one table. Surface is call, cli, start, process or peer; kind must be -.
+   Code - -> Exit=-1, AnyNonZero=false, Status=0; exit N (0 or a positive decimal
+   without leading zero) -> Exit=N; exit !0 -> Exit=-1, AnyNonZero=true, Status=0.
+   A three-digit 100..599 code -> Status, permitted at call or peer (also http
+   in the extension below). A peer row cannot have an exit code. No integer
+   upper bound is separately imposed before emission. Empty Word is represented
+   by -, not a whitespace-only cell. At selected 02-installer, non-- word is
+   copied verbatim to Word (including any quote characters); - becomes "".
+
+   Log is - or captured comma-separated items, with commas inside «...» retained:
+   use regex whitespace*(«[^«»]*»|[^,«»]+?)whitespace*(comma|end). Nonempty quoted
+   captures become Words without quotes; other captures become Log names. These
+   are labels/fragments only, not a generated log-line format. Four final prose
+   columns are required for shape but do not contribute Go fields or behavior.
+
+   Base Go shape:
+     type Spec struct {
+       Chapter string; Row int; Name, Surface string
+       Exit int; AnyNonZero bool; Status int; Word string
+       Log, Words []string; Norm string
+     }
+   ExitCode()(int,bool) returns (Exit,true) when Exit>=0, otherwise (1,true) for
+   AnyNonZero, otherwise (0,false). It does not exit/log. No Check/LogLine/Exit
+   methods of variant 1 are emitted. The P/02 Chapter comment is fixed to
+   "2.1 ... 2.5" by the legacy template; row values are not changed by it.
+
+3. Extended plain catalogue (same 15 columns; currently selected lessons other
+   than 02-installer, including P/03/P/04): the base shape additionally has
+     Named []string; WordCell string
+   WordCell keeps the exact raw word cell, including -. Derive an index only if
+   the cell consists of one or more nonempty backtick-delimited tokens plus
+   commas/whitespace. One token -> Word=that token, Named=nil; two or more ->
+   Word="", Named=the ordered tokens. Tokens may contain spaces and repeat.
+   Other/unquoted prose -> Word="", Named=nil; WordCell still preserves it.
+   This is an index, not an alternative-outcome selector or permission to accept
+   any named result. Unlike P/02, Chapter's API comment uses first/last distinct
+   chapter in encounter order. A header-only non-P02 plain input has no chapter
+   from which to construct that comment and cannot complete generation.
+
+   For both plain variants, if any row has fields or headers, add both
+     Fields []string; Headers [][2]string
+   to every Spec. Lists are nil on rows without values. Fields is - or unique
+   comma-separated names [a-z][a-z0-9_]* (trim surrounding token whitespace).
+   Only peer allows fields/headers in the 15-column format. Headers use variant
+   1's Name: value syntax; no RetryAfter Boolean is emitted. This metadata does
+   not itself implement HTTP body validation. No implicit error field is added.
+
+4. Response-schema extension (currently P/05 and other HTTP catalogue lessons):
+   the 16 columns are
+   chapter,row,name,surface,code,kind,fields,headers,log,norm,word,response_schema,
+   cause,outcome,diagnostic,caller
+
+   Apply the plain variant selected above, allow surface http in addition, and
+   permit fields/headers at http as well as peer. Always add Response string to
+   Spec: - -> "", otherwise an exact direct components/schemas name from the
+   selected lesson's spec/NN-name.api.openapi.yaml, permitted only at http.
+   Schema context is L.openapi, not inferred from an arbitrary external table's
+   directory. Read these definitions via yamlsub; this is a name/role projection,
+   not generated full JSON validation or body encoding. Numeric HTTP statuses
+   are copied to Status. Response and Word/Named/WordCell remain separate fields.
+
+5. Explicit optional fields (currently P/06 response-schema tables):
+   a ? suffix in fields strips the marker from Fields and records the name.
+   Currently it is admitted only in selected 06-console, 16-column format,
+   surface http and a non-- response_schema. If any row has such a marker, add
+     OptionalFields []string
+   to Spec; rows without marked names retain nil. No unconditional new enum,
+   schema copy or inferred optionality is emitted.
+
+   In that current P/06 context, when fields is not -, the named response schema
+   must directly expose properties as a map and required as a unique string
+   list. Every schema-required name must be listed; every listed name must exist
+   in properties; its ? role must be opposite to membership in required. Other
+   optional schema properties need not be listed. fields=- bypasses that row's
+   role check. Other current lessons do not perform this P/06-specific role
+   validation. A 15-column peer field cannot acquire ? through its lesson name.
+
+Current selection is therefore exact header layout plus the explicitly stated
+legacy lesson gates; these gates are not claimed to satisfy the pending form-only
+unification. Additional fields are table-wide capabilities, driven by the cells
+as described. Generated package comments use the selected L.code. All variants
+emit only catalogue metadata and the methods above; they do not choose causes,
+refusals, retry timing, HTTP framing, process behavior or stored outcomes."""
 import hashlib
 import re
 import sys
