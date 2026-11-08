@@ -224,10 +224,23 @@ func (s *schema) rowRoot(profile node) node {
 		root[k] = v
 	}
 	props := node{}
-	for _, chain := range [][]node{s.resolve(profile), s.resolve(s.doc)} {
+	original := s.resolve(s.doc)
+	for i, chain := range [][]node{s.resolve(profile), original} {
 		for _, n := range chain {
 			if fields, ok := n["properties"].(node); ok {
 				for name, field := range fields {
+					if i == 0 {
+						allowed := true
+						for _, source := range original {
+							if names, ok := source["propertyNames"].(node); ok && !s.valid(names, name) {
+								allowed = false
+								break
+							}
+						}
+						if !allowed {
+							continue
+						}
+					}
 					if _, exists := props[name]; !exists {
 						props[name] = field
 					}
@@ -236,8 +249,6 @@ func (s *schema) rowRoot(profile node) node {
 		}
 	}
 	root["properties"] = props
-	all, _ := s.doc["allOf"].([]any)
-	root["allOf"] = append(append([]any{}, all...), profile)
 	return root
 }
 
