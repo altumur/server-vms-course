@@ -166,6 +166,10 @@ Five emission cases/capabilities (the former P/02-only shape is removed)
    Constraint-bearing $ref siblings and composed schemas remain full schemas;
    they are not flattened into a made-up direct field projection.
 
+   Check every schema in that typed closure with the existing offline Draft
+   2020-12 meta-schema validator, including external targets and schema children
+   of extension keywords. Data/annotation values are not schema declarations.
+
    For explicit fields, the resolved target must expose a direct properties map
    and a required list (default []) of distinct strings. Unsupported/composed
    direct-role shapes fail rather than infer a branch. Every listed field must
@@ -607,10 +611,33 @@ def response_schemas(definitions=False):
 def response_schema(docs, definitions, name):
     """Check the full named reference closure, then follow root schema aliases for roles."""
     from gen_door_lesson import GenError as DoorError
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import SchemaError
     try:
         node, base = definitions[name], docs.main
         pointer = "/components/schemas/" + docs._token(name)
         docs._closure(node, base, pointer)
+        checked = set()
+
+        def check_schema(schema, path, at):
+            # Closure above owns reference rights/cycles; memoisation here only
+            # avoids repeating meta-schema checks on legal local recursion.
+            key = (path, at)
+            if key in checked:
+                return
+            checked.add(key)
+            try:
+                Draft202012Validator.check_schema(schema)
+            except SchemaError as exc:
+                raise GenError(f"{path}#{at}: invalid JSON Schema: {exc.message}") from None
+            if isinstance(schema, dict):
+                if "$ref" in schema:
+                    target, target_path, target_at = docs._target(schema["$ref"], path, True, at)
+                    check_schema(target, target_path, target_at)
+                for child_at, child in docs._children(schema, at):
+                    check_schema(child, path, child_at)
+
+        check_schema(node, base, pointer)
         seen = set()
         annotations = {"$ref", "title", "description", "$comment", "default", "examples", "deprecated", "readOnly", "writeOnly"}
         while isinstance(node, dict) and "$ref" in node:
@@ -841,7 +868,7 @@ Numeric call/peer/http codes populate Status. The 16-column layout additionally 
 Only an explicit `?` marker adds OptionalFields to the table-wide Spec. Both field lists omit the marker itself.
 For explicit fields, schema-required names must be required by the form, optional markers cannot name schema-required
 properties, and every listed field must exist; the form may require an otherwise optional schema property.
-`fields=-` is no direct projection: the full response schema remains applicable, with its reference/target checked.
+`fields=-` is no direct projection: the full response schema remains applicable, with its full schema validity and reference/target checked.
 Schemas and alias targets are resolved in the selected physical owner context, not inferred from a fixture path.
 This part emits metadata only: full response validation/encoding, choosing a refusal and IO remain yours.
 """
