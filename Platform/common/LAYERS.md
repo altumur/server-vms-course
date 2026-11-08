@@ -109,10 +109,14 @@ of the elements of the iteration of `keys()`; sets are compared by counting and 
 
 ## 6. Data families
 
-The schema of a family is the form of one row, object or file of the catalogue `Platform/common/data/catalog.tsv` (the column `schema`).
+For a catalogue entry whose `schema` cell names a JSON Schema file, that file is the form of one row, object or file of `Platform/common/data/catalog.tsv`.
 An instance is `{key, row}` for a row, `{key, object}` for an object, `{key, file}` for a file; the form of `row` is the object `items` after
 the codec (`codec.tsv`). The signed is before tolerance: the codec and the schema
 of the reader work on a parsed copy, the signature, `sha256` and forwarding — on the original bytes.
+
+The `schema` cells `-` and `manifest` are sentinels, not JSON Schema file names. Both are outside common `family-read`: an invocation for such an entry has no family-schema verdict and is a concrete `MissingBinding`, not `ok`. This assigns no serialized form to `MissingBinding`; do not substitute an open or empty schema.
+
+`-` means that there is no schema file in `data/`, not that any bytes are admitted. The key template, kind, owner, readers and all other catalogue requirements still apply; the value form follows the owning norm in the `norm` cell. `manifest` points to the owning manifest-dependent rule: sometimes it supplies value fields, sometimes only the family name. Where the subsystem owns the body, the platform judges the key, owner and readers, not that body's value. The [sentinel and owner-form table](data/README.md) gives the exact distinctions (Architect decision 2026-11-08, ADR-0088 R2, R3, C16). Norms and forms carry these rules without requiring vectors or scenarios as a source of meaning (ADR-0133 addendum (1)).
 
 **Unreadable** — a row was not decoded or did not pass the schema in the reader mode; the answer is a set of refusal paths (JSON
 Pointer). The path of the families is normative: it chooses the outcome (§ 7); where the library gives no place — layer 4.

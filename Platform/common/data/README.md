@@ -6,6 +6,27 @@ This English text is the source; the Russian translation `ru/data/README.md` (fo
 the version, the family schema, the norm (ADR-0083). [`codec.tsv`](codec.tsv) is the codec of the store rows; [`common.schema.json`](common.schema.json)
 is the common definitions of the family schemas, for reference. The reading layers of the families — [LAYERS.md](../LAYERS.md) § 6, § 7.
 
+## Schema-column sentinels and owner forms
+
+The `schema` column either names the family's JSON Schema file or contains `-` or `manifest`. The two sentinels are outside common `family-read`; invoking that schema-based family check for either sentinel is a concrete `MissingBinding`, not `ok`. No serialized `MissingBinding` output form is assigned here. An open or empty schema is not a substitute.
+
+`-` says that no schema file is supplied in `data/`. It does not mean that any bytes are valid: the key template, kind, owner, readers and the rest of the catalogue row remain mandatory, and its `norm` identifies the governing value or file format. `manifest` means that the owner rule depends on the subsystem manifest; it does not invariably mean that the manifest describes the value. The following table is the owner-rule list for these entries (Architect decision 2026-11-08, ADR-0088 R2, R3, C16).
+
+| Catalogue family (`schema`) | Governing value or file form | Public owner |
+|---|---|---|
+| `/etc/w2c/secrets/platform.key`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<role>/server.pem`, `/etc/w2c/tls/<role>/server.key`, `/etc/w2c/roles/<role>.env`, `<domain recovery file>`, `<events or objects root>/<path>/%h<sha256>.name`, `<objects root>/<dir>/~lock` (`-`) | The file format in that catalogue row's norm. These files do not become an unconstrained byte family. | ADR-0088 R2; [P/02.4](../../02-installer/spec/02.4-installer.norms.md) N1.2, N1.5, N1.6, N1.9, N3; [secret files](../contracts/secret-files.md), [environment file](../contracts/env-file.md), [event journal](../contracts/event-journal.md) “File names in shared trees”; [P/05](../../05-resource/spec/05-resource.norms.md) N1.1 |
+| `<sub>/blobs/sha256-<hex>` (`-`) | Bytes; the name is their sha256. | [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5 |
+| `/etc/w2c/configstore-rights.json` (`-`) | `RightsFile`. | [P/01.2](../../01-store/spec/01.2-store.norms.md) N1.2, N2 |
+| `<sub>/idem/<key>` (`-`) | The implementation chooses the form; only the console reads it. There is no cross-implementation value judgment. | [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.1 |
+| `<sub>/<manifest:domain.witness.report>/<name>` (`-`) | The `domain.witness` declaration and P/10 N1.8. | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) ownership paragraph, N1.8; [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.2b |
+| `<sub>/<manifest:unit.rows>/<id>` (`manifest`) | `unit.fields` and the row check contract. | [Row check](../contracts/row-check.md); [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.2 |
+| `<sub>/<manifest:tables>/<name>` (`manifest`) | `tables.<t>.fields`. | [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.6; [P/02.1](../../02-installer/spec/02.1-installer.norms.md) N1.2a |
+| `<sub>/<manifest:domain.books.from>`, `<sub>/<manifest:domain.books.from>/<slot>` (`manifest`) | The domain envelopes contract's `entry` through `domain.books`. | [P/03.7](../../03-worker/spec/03.7-worker.norms.md) N1.2; [domain envelopes](../contracts/domain-envelopes.md) “Contribution” |
+| `domain/<sub>/<manifest:domain.kept>`, `domain/<sub>/<manifest:domain.kept>/*` (`manifest`) | For tables named in `domain.tables`, P/06.1 N1.6; for the others, the subsystem owns the form. | [P/03.7](../../03-worker/spec/03.7-worker.norms.md) N1.6 `kept`; [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.6 |
+| `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*` (`manifest`) | The manifest supplies only the family name (`strList`); the subsystem owns the body. | [P/02.1](../../02-installer/spec/02.1-installer.norms.md) `objects.rows`; [P/05](../../05-resource/spec/05-resource.norms.md) N1.1 |
+
+For the rows whose form belongs to the subsystem, the platform checks the key, owner and readers, not the value. The table does not manufacture a platform value schema or an implementation-specific decoder. The governing rule must be available in the norm or form without vectors or scenarios as its sole definition (ADR-0133 addendum (1)); named normative examples may illustrate it, but the judge corpus is not the definition.
+
 ## Key by the template (V7-FAMILY-KEY-PLACEHOLDER-01)
 
 [`key-placeholders.tsv`](key-placeholders.tsv) is the canonical typed input for readers and generators; the first table below presents the same grammars and examples. The human translation dictionary in `ru/placeholders.tsv` is not a generation input. `<host>` and `<server>`, and `<object-key>` and `<key>`, retain their distinct grammars.

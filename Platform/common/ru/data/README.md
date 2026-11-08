@@ -6,6 +6,27 @@
 версия, схема семьи, норма (ADR-0083). [`codec.tsv`](../../data/codec.tsv) — кодек строк хранилища; [`common.schema.json`](../../data/common.schema.json)
 — общие определения схем семей, справочно. Слои чтения семей — [LAYERS.md](../LAYERS.md) § 6, § 7.
 
+## Пометки колонки schema и формы владельцев
+
+Колонка `schema` либо называет файл JSON Schema семьи, либо содержит `-` или `manifest`. Обе пометки вне общего `family-read`; вызов этой проверки семьи по схеме для любой из них — конкретный `MissingBinding`, не `ok`. Форма сериализованного выхода `MissingBinding` здесь не задаётся. Открытая или пустая схема не является заменой.
+
+`-` означает, что файл схемы в `data/` не предоставлен. Это не допуск любых байтов: шаблон ключа, вид, владелец, читатели и остальные требования строки каталога обязательны, а её `norm` указывает форму значения или файла. `manifest` означает, что правило владельца зависит от манифеста подсистемы; это не всегда описание значения в манифесте. Таблица ниже — перечень правил владельцев для этих строк (решение Архитектора 2026-11-08, ADR-0088 R2, R3, C16).
+
+| Семья каталога (`schema`) | Форма значения или файла | Публичный владелец |
+|---|---|---|
+| `/etc/w2c/secrets/platform.key`, `/etc/w2c/tls/ca.pem`, `/etc/w2c/tls/ca.next.pem`, `/etc/w2c/tls/revoked`, `/etc/w2c/tls/crl.pem`, `/etc/w2c/tls/<role>/server.pem`, `/etc/w2c/tls/<role>/server.key`, `/etc/w2c/roles/<role>.env`, `<domain recovery file>`, `<events or objects root>/<path>/%h<sha256>.name`, `<objects root>/<dir>/~lock` (`-`) | Формат файла в норме этой строки каталога. Эти файлы не становятся семьёй произвольных байтов. | ADR-0088 R2; [P/02.4](../../../02-installer/ru/spec/02.4-installer.norms.md) N1.2, N1.5, N1.6, N1.9, N3; [секретные файлы](../contracts/secret-files.md), [файл окружения](../contracts/env-file.md), [журнал событий](../contracts/event-journal.md) «Имена файлов в общих деревьях»; [P/05](../../../05-resource/ru/spec/05-resource.norms.md) N1.1 |
+| `<sub>/blobs/sha256-<hex>` (`-`) | Байты; имя — их sha256. | [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.5 |
+| `/etc/w2c/configstore-rights.json` (`-`) | `RightsFile`. | [P/01.2](../../../01-store/ru/spec/01.2-store.norms.md) N1.2, N2 |
+| `<sub>/idem/<key>` (`-`) | Форму выбирает реализация, читает только консоль. Межреализационного суда значения нет. | [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.1 |
+| `<sub>/<manifest:domain.witness.report>/<name>` (`-`) | Объявление `domain.witness` и P/10 N1.8. | [P/10](../../../10-domain-console/ru/spec/10-domain-console.norms.md) абзац владения, N1.8; [P/02.1](../../../02-installer/ru/spec/02.1-installer.norms.md) N1.2b |
+| `<sub>/<manifest:unit.rows>/<id>` (`manifest`) | `unit.fields` и договор проверки строки. | [Проверка строки](../contracts/row-check.md); [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.2 |
+| `<sub>/<manifest:tables>/<name>` (`manifest`) | `tables.<t>.fields`. | [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.6; [P/02.1](../../../02-installer/ru/spec/02.1-installer.norms.md) N1.2a |
+| `<sub>/<manifest:domain.books.from>`, `<sub>/<manifest:domain.books.from>/<slot>` (`manifest`) | `entry` договора конвертов домена через `domain.books`. | [P/03.7](../../../03-worker/ru/spec/03.7-worker.norms.md) N1.2; [конверты домена](../contracts/domain-envelopes.md) «Вклад» |
+| `domain/<sub>/<manifest:domain.kept>`, `domain/<sub>/<manifest:domain.kept>/*` (`manifest`) | Для таблиц из `domain.tables` — P/06.1 N1.6; у остальных форму держит подсистема. | [P/03.7](../../../03-worker/ru/spec/03.7-worker.norms.md) N1.6 `kept`; [P/06.1](../../../06-console/ru/spec/06.1-console.norms.md) N1.6 |
+| `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*` (`manifest`) | Манифест даёт только имя семьи (`strList`); тело держит подсистема. | [P/02.1](../../../02-installer/ru/spec/02.1-installer.norms.md) `objects.rows`; [P/05](../../../05-resource/ru/spec/05-resource.norms.md) N1.1 |
+
+У строк, чья форма принадлежит подсистеме, платформа проверяет ключ, владельца и читателей, а не значение. Таблица не создаёт платформенную схему значения или декодер конкретной реализации. Правило должно быть в норме или форме без векторов и сценариев как единственного определения (ADR-0133 доп. (1)); названный пример нормы может его пояснять, но корпус судьи не является определением.
+
 ## Ключ по шаблону (V7-FAMILY-KEY-PLACEHOLDER-01)
 
 [`key-placeholders.tsv`](../../data/key-placeholders.tsv) — канонический типизированный вход читателей и генераторов; первая таблица ниже представляет те же грамматики и примеры. Словарь перевода для человека в `ru/placeholders.tsv` не является входом генерации. `<host>` и `<server>`, а также `<object-key>` и `<key>` сохраняют разные грамматики.
