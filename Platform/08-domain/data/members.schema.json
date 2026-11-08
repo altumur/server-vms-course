@@ -836,6 +836,7 @@
       "common.domain_members_doc": {
         "properties": {
           "members": {
+            "maxProperties": 500,
             "additionalProperties": {
               "$ref": "#/$defs/writer/$defs/common.domain_member_entry"
             }

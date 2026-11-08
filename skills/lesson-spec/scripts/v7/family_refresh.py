@@ -21,6 +21,32 @@ REVISION_FAMILIES = {
 }
 
 
+def pending_reader_outcomes(rules, paths, who):
+    """Resolve pending root/name/seq outcomes from public table cells, not a judge.
+
+    A named-element outcome replaces its root fallback for that child alone.
+    An independent root refusal still participates in the final priority choice.
+    """
+    rows, properties = rules["rows"], rules["properties"]
+    result = {}
+    for role in who:
+        selected = set()
+        for path in paths:
+            name = path.split("/")[1] if path.startswith("/") else None
+            applicable = [i for i, row in enumerate(rows) if row[1] in {role, "*"} and (
+                row[0] == "" or row[0] == path or
+                (row[0] == "/*" and name is not None and name not in properties))]
+            depth = max((rows[i][0].count("/") for i in applicable), default=0)
+            deepest = [i for i in applicable if rows[i][0].count("/") == depth]
+            selected.update(deepest if any(rows[i][4] != "row" for i in deepest) else applicable)
+        if selected:
+            priority = min(int(rows[i][3]) for i in selected)
+            result[role] = [row[0] for i, row in enumerate(rows) if i in selected and int(row[3]) == priority]
+        else:
+            result[role] = []
+    return result
+
+
 def source_rules(root):
     """Require the exact public rules this migration implements before any write."""
     home = Path(root) / "Platform/08-domain"
@@ -60,6 +86,20 @@ def source_rules(root):
         doc = json.loads(read("data/" + name + ".schema.json"))
         if doc.get("x-max-names") != 50:
             raise ValueError(name + ": current reader root name bound must be 50")
+    pending_doc = json.loads(read("data/pending.schema.json"))
+    pending_rows = [line.split("\t") for line in read("data/pending.outcomes.tsv").splitlines()
+                    if line and not line.startswith("#")]
+    if pending_rows[0] != ["path", "reader", "outcome", "priority", "unit", "norm"]:
+        raise ValueError("pending: current outcomes header is required")
+    # Validate the published table with the unchanged strict input loader;
+    # expectation selection below still uses only its explicit public cells.
+    spec.load_outcomes(home / "data/pending.outcomes.tsv", pending_doc)
+    pending_rows = pending_rows[1:]
+    if any(len(row) != 6 or row[0] not in {"", "/*", "/seq"} or not row[3].isdigit()
+           or row[4] not in spec.UNITS for row in pending_rows):
+        raise ValueError("pending: expected public root, name and counter outcome rows")
+    revision_outcomes["domain/pending/<member>"] = {
+        "rows": pending_rows, "properties": list(pending_doc.get("properties", {}))}
     if "The reader and writer use the same current family bound" not in read("spec/08.6-domain.norms.md"):
         raise ValueError("P08.6 current reader family bound is missing")
     doc = json.loads(read("data/view.schema.json"))
@@ -116,8 +156,11 @@ def migrated(row, maximum, revision_outcomes):
             paths = json.loads(row["paths"])
             if "" not in paths:
                 out["paths"] = json.dumps([""] + paths)
-            # Existing invalid-name children keep their declared outcomes and
-            # priorities. This migration does not change that source contract.
+            if family == "domain/pending/<member>":
+                out["outcome"] = json.dumps(pending_reader_outcomes(
+                    revision_outcomes[family], json.loads(out["paths"]), json.loads(row["who"])), ensure_ascii=False)
+            # The outcomes family already has a whole-row outcome. Pending uses
+            # its actual published root/name priorities, including combined faults.
     return out
 
 
@@ -159,7 +202,8 @@ def refresh(root, ledger):
             else:
                 name = "pending" if row["family"] == "domain/pending/<member>" else "outcomes"
                 rules.append({"norm": "Platform/08-domain/spec/08.6-domain.norms.md:383",
-                              "schema": "Platform/08-domain/data/" + name + ".schema.json#/x-max-names"})
+                              "schema": "Platform/08-domain/data/" + name + ".schema.json#/x-max-names",
+                              "outcomes": "Platform/08-domain/data/" + name + ".outcomes.tsv"})
             changed.append({"case": row["case"], "family": row["family"], "mode": row["mode"],
                             "note": row["note"], "public_rules": rules, "cells": cells})
         built.append([new[k] for k in spec.FR_HEADER])

@@ -1916,5 +1916,657 @@ class CyrillicJudge(unittest.TestCase):
         self.assertEqual(self.debt.read_bytes(), before)
 
 
+
+class RefusalAliasControls(unittest.TestCase):
+    """Independent raw typed Source fixtures; only the affected skills checker runs."""
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.lesson = self.root / "Platform/10-domain-console"
+        (self.lesson / "spec").mkdir(parents=True)
+        (self.lesson / "forms").mkdir()
+        self.api = self.lesson / "spec/10-domain-console.api.openapi.yaml"
+        self.form = self.lesson / "forms/refusals.tsv"
+        (self.lesson / "spec/10-domain-console.norms.md").write_text(
+            "## N4 Refusals\n\nThe catalogue is forms/refusals.tsv.\n")
+        self.target = {"type": "object", "required": ["error"], "additionalProperties": False,
+                       "properties": {"error": {"type": "string"}, "detail": {"type": "string"}}}
+        self.doc = {"openapi": "3.1.0", "components": {"schemas": {
+            "Alias": {"$ref": "#/components/schemas/Target"}, "Target": copy.deepcopy(self.target)}}}
+        self.write_doc(self.api, self.doc)
+        self.write_form()
+        self.assertEqual(self.check(), [])  # Complete normal before each independent negative.
+
+    def write_doc(self, path, doc):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(doc))  # JSON is an unambiguous YAML subset.
+
+    def write_form(self, fields="error", kind="-", schema="Alias"):
+        row = ["10", "1", "alias_refusal", "http", "502", kind, fields, "-", "-", "P/10 N4",
+               "refused", schema, "cause", "502 refused", "diagnostic", "client"]
+        self.form.write_text("\t".join(check_forms.REF_COLUMNS + check_forms.REF_EXTRA) + "\n" + "\t".join(row) + "\n")
+
+    def check(self):
+        return check_forms.check_refusals(self.form)[0]
+
+    def assert_error(self, text):
+        errors = self.check()
+        self.assertTrue(any(text in error for error in errors), errors)
+
+    def test_positive_local_alias_annotations_and_raw_public_mapping(self):
+        alias = self.doc["components"]["schemas"]["Alias"]
+        alias.update(title="named alias", description="retained annotation",
+                     examples=[{"$ref": "instance data, not a schema reference"}])
+        self.write_doc(self.api, self.doc)
+        self.assertEqual(self.check(), [])
+        schemas = check_forms.openapi_schemas(self.lesson)
+        self.assertIsInstance(schemas, dict)
+        self.assertEqual(schemas, self.doc["components"]["schemas"])
+        self.assertEqual(schemas["Alias"], alias)
+        self.assertEqual(schemas.origins["Alias"], self.api)
+
+    def test_positive_each_external_hop_uses_its_declaration_base(self):
+        middle = self.root / "Platform/08-domain/spec/dotted.alias.api.openapi.yaml"
+        final = self.root / "Platform/06-console/spec/target.api.openapi.yaml"
+        self.doc["components"]["schemas"]["Alias"] = {
+            "$ref": "../../08-domain/spec/dotted.alias.api.openapi.yaml#/components/schemas/Middle"}
+        self.write_doc(self.api, self.doc)
+        self.write_doc(middle, {"components": {"schemas": {"Middle": {
+            "$ref": "../../06-console/spec/target.api.openapi.yaml#/components/schemas/Target"}}}})
+        self.write_doc(final, {"components": {"schemas": {"Target": self.target}}})
+        self.assertEqual(self.check(), [])
+        final.unlink()
+        self.assert_error("target.api.openapi.yaml")
+
+    def test_missing_resource_missing_target_and_invalid_reference_uri(self):
+        for ref, diagnostic in (
+                ("../../06-console/spec/missing.api.openapi.yaml#/components/schemas/Target", "missing.api.openapi.yaml"),
+                ("#/components/schemas/Absent", "unresolved schema reference"),
+                ("https://example.invalid/a#/components/schemas/X", "nonlocal"),
+                ("//example.invalid/a#/components/schemas/X", "nonlocal"),
+                ("/tmp/a.openapi.yaml#/components/schemas/X", "nonlocal"),
+                ("a.openapi.yaml?query#/components/schemas/X", "nonlocal"),
+                ("%XX.openapi.yaml#/components/schemas/X", "invalid schema reference"),
+                ("#/components/schemas/Target~2", "pointer escape"),
+                ("#anchor", "JSON pointer"), (True, "malformed full response schema")):
+            with self.subTest(ref=ref):
+                self.doc["components"]["schemas"]["Alias"] = {"$ref": ref}
+                self.write_doc(self.api, self.doc)
+                self.assert_error(diagnostic)
+
+    def test_wrong_resource_owner_and_physical_owner_are_errors(self):
+        target = self.root / "Platform/11-later/spec/later.api.openapi.yaml"
+        self.write_doc(target, {"components": {"schemas": {"Target": self.target}}})
+        self.doc["components"]["schemas"]["Alias"] = {
+            "$ref": "../../11-later/spec/later.api.openapi.yaml#/components/schemas/Target"}
+        self.write_doc(self.api, self.doc)
+        self.assert_error("earlier owner")
+        declared = self.root / "Platform/06-console/spec/target.api.openapi.yaml"
+        declared.parent.mkdir(parents=True)
+        declared.symlink_to(target)
+        self.doc["components"]["schemas"]["Alias"]["$ref"] = "../../06-console/spec/target.api.openapi.yaml#/components/schemas/Target"
+        self.write_doc(self.api, self.doc)
+        self.assert_error("physical owner")
+        self.doc["components"]["schemas"]["Alias"]["$ref"] = "10-domain-console.api.openapi.yaml#/components/schemas/Target"
+        self.write_doc(self.api, self.doc)
+        self.assert_error("same-resource")
+
+    def test_wrong_resource_extension_and_wrong_target_position(self):
+        raw = self.lesson / "spec/target.txt"
+        self.write_doc(raw, {"components": {"schemas": {"Target": self.target}}})
+        for ref, diagnostic in (("target.txt#/components/schemas/Target", "unsupported schema resource"),
+                ("#/components/schemas/Target/examples/0", "schema position"),
+                ("#/components/schemas/Target/properties", "schema position"),
+                ("#/components/schemas/Target/description", "schema position"),
+                ("#/paths/~1bad", "named Schema Object")):
+            with self.subTest(ref=ref):
+                self.doc["components"]["schemas"]["Alias"] = {"$ref": ref}
+                self.write_doc(self.api, self.doc)
+                self.assert_error(diagnostic)
+
+    def test_allof_and_ref_siblings_preserve_roles_constraints_and_annotations(self):
+        self.doc["components"]["schemas"]["Alias"] = {
+            "$ref": "#/components/schemas/Target", "description": "not discarded", "minProperties": 1,
+            "allOf": [{"properties": {"trace": {"type": "string"}}, "required": ["trace"]}]}
+        self.write_doc(self.api, self.doc)
+        self.write_form("error,trace,detail?")
+        self.assertEqual(self.check(), [])
+        self.write_form("error,trace?,detail?")
+        self.assert_error("required properties ['trace']")
+        self.doc["components"]["schemas"]["Alias"]["minProperties"] = -1
+        self.write_doc(self.api, self.doc)
+        self.assert_error("malformed full response schema")
+
+    def test_explicit_fields_are_one_way_optional_not_required_and_all_exist(self):
+        for fields, ok in (("error,detail?",True),("error,detail",True),("error",True),
+                           ("error?",False),("detail",False),("error,unknown?",False)):
+            with self.subTest(fields=fields):
+                self.write_form(fields)
+                self.assertEqual(not self.check(),ok)
+
+    def test_dash_skips_projection_but_validates_full_schema_and_reference_closure(self):
+        self.write_form("-")
+        self.assertEqual(self.check(), [])
+        self.doc["components"]["schemas"]["Target"]["properties"]["detail"]["type"] = "not-a-type"
+        self.write_doc(self.api,self.doc)
+        self.assert_error("malformed full response schema")
+        self.doc["components"]["schemas"]["Target"] = dict(self.target, properties={
+            "error": {"type":"string"}, "detail":{"$ref":"#/components/schemas/Absent"}})
+        self.write_doc(self.api,self.doc)
+        self.assert_error("unresolved schema reference")
+
+    def test_named_kind_rows_always_validate_the_named_response_schema(self):
+        self.doc["components"]["schemas"]["Fault"] = {"properties":{"kind":{"const":"badrequest"}}}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-",kind="badrequest")
+        self.assertEqual(self.check(), [])
+        self.doc["components"]["schemas"]["Target"]["required"] = "error"
+        self.write_doc(self.api,self.doc)
+        self.assert_error("malformed full response schema")
+        self.write_form("-",kind="badrequest",schema="Absent")
+        self.assert_error("missing or ambiguous response_schema")
+
+    def test_alias_cycles_fail_even_for_dash_and_structural_recursion_stays_valid(self):
+        self.doc["components"]["schemas"]["Alias"]["$ref"] = "#/components/schemas/Alias"
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assertEqual(self.check(), [])
+        self.doc["components"]["schemas"]["Alias"]["$ref"] = "#/components/schemas/Target"
+        self.doc["components"]["schemas"]["Target"]["properties"]["child"] = {"$ref":"#/components/schemas/Target"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(), [])
+
+        other=self.root/"Platform/common/contracts/local-rule-cycle.api.openapi.yaml"
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../common/contracts/local-rule-cycle.api.openapi.yaml#/components/schemas/A"}
+        self.write_doc(self.api,self.doc)
+        self.write_doc(other,{"components":{"schemas":{"A":{"$ref":"other.api.openapi.yaml#/components/schemas/B"}}}})
+        self.write_doc(other.with_name("other.api.openapi.yaml"),{"components":{"schemas":{"B":{"$ref":"local-rule-cycle.api.openapi.yaml#/components/schemas/A"}}}})
+        self.assert_error("cross-resource schema reference cycle")
+
+    def test_cross_resource_cycle_and_common_to_lesson_are_errors(self):
+        other=self.root/"Platform/common/contracts/alias.api.openapi.yaml"
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../common/contracts/alias.api.openapi.yaml#/components/schemas/Target"}
+        self.write_doc(self.api,self.doc)
+        self.write_doc(other,{"components":{"schemas":{"Target":{"$ref":"../../10-domain-console/spec/10-domain-console.api.openapi.yaml#/components/schemas/Alias"}}}})
+        self.assert_error("common schema cannot refer to a lesson owner")
+        self.write_doc(other,{"components":{"schemas":{"Target":{"$ref":"second.api.openapi.yaml#/components/schemas/Next"}}}})
+        self.write_doc(other.with_name("second.api.openapi.yaml"),{"components":{"schemas":{"Next":{"$ref":"alias.api.openapi.yaml#/components/schemas/Target"}}}})
+        self.assert_error("cross-resource schema reference cycle")
+
+    def test_duplicate_keys_and_ambiguous_schema_origins_never_select_a_winner(self):
+        second=self.api.with_name("duplicate.api.openapi.yaml")
+        self.write_doc(second,{"components":{"schemas":{"Alias":self.target}}})
+        self.assert_error("ambiguous schema 'Alias'")
+        second.unlink()
+        self.api.write_text('components: {schemas: {Alias: {}, Alias: {}}}\n')
+        self.assert_error("duplicate YAML key")
+
+    def test_standalone_schema_full_target_and_owner_data_position(self):
+        target=self.root/"Platform/06-console/data/error.schema.json"
+        self.write_doc(target,self.target)
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/error.schema.json"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(), [])
+        wrong=target.parent.parent/"spec/error.schema.json"
+        self.write_doc(wrong,self.target)
+        self.doc["components"]["schemas"]["Alias"]["$ref"]="../../06-console/spec/error.schema.json"
+        self.write_doc(self.api,self.doc)
+        self.assert_error("owner's data")
+
+    def test_dash_boolean_schema_has_no_direct_projection(self):
+        from unittest.mock import patch
+        target=self.root/"Platform/06-console/data/boolean.schema.json"
+        target.parent.mkdir(parents=True)
+        target.write_text("true")
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/boolean.schema.json"}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        original=check_forms._RefusalSchemas.roles
+        with patch.object(check_forms._RefusalSchemas,"roles",autospec=True,side_effect=original) as roles:
+            self.assertEqual(self.check(), [])
+            self.assertEqual(roles.call_args.kwargs,{"project":False})
+        self.write_form("error")
+        self.assert_error("not in the properties")
+
+    def test_existing_yaml12_source_grammar_preserves_on_and_date_annotations(self):
+        self.api.write_text("""openapi: 3.1.0
+components:
+  schemas:
+    Alias:
+      $ref: '#/components/schemas/Target'
+    Target:
+      type: object
+      description: 2026-11-08
+      required: [error]
+      properties:
+        error: {type: string}
+        on: {type: string}
+""")
+        self.write_form("error,on?")
+        self.assertEqual(self.check(), [])
+
+    def test_subschema_target_keeps_enclosing_schema_validity_and_reference_base(self):
+        self.doc["components"]["schemas"]["Container"]={"$defs":{"Fault":self.target},"required":"invalid"}
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"#/components/schemas/Container/$defs/Fault"}
+        self.write_doc(self.api,self.doc)
+        self.assert_error("malformed full response schema")
+        del self.doc["components"]["schemas"]["Container"]["required"]
+        self.doc["components"]["schemas"]["Container"]["$id"]="https://example.invalid/rebased"
+        self.write_doc(self.api,self.doc)
+        self.assert_error("resolver-specific schema keyword $id")
+
+    def test_warmed_closure_cache_must_not_hide_selected_file_chain_cycle(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Entry":{"$ref":"B.schema.json#/$defs/Leaf"},
+                                   "Cycle":{"$ref":"B.schema.json#/$defs/Return"}}})
+        self.write_doc(b,{"$defs":{"Leaf":self.target,"Return":{"$ref":"A.schema.json#/$defs/Cycle"}}})
+        self.doc["components"]["schemas"].update({
+            "Warm":{"$ref":"../../06-console/data/A.schema.json#/$defs/Entry"},
+            "Bad":{"$ref":"../../06-console/data/B.schema.json#/$defs/Return"}})
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.errors,[])
+        self.assertEqual(model.roles("Warm"),({"error","detail"},{"error"}))
+        with self.assertRaisesRegex(ValueError,"cross-resource schema reference cycle"):
+            model.roles("Bad")
+
+    def test_disjoint_physical_resource_references_are_not_a_logical_cycle(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Entry":{"$ref":"B.schema.json#/$defs/Scalar"},"Scalar":self.target}})
+        self.write_doc(b,{"$defs":{"Scalar":self.target,"Return":{"$ref":"A.schema.json#/$defs/Scalar"}}})
+        self.doc["components"]["schemas"].update({
+            "Forward":{"$ref":"../../06-console/data/A.schema.json#/$defs/Entry"},
+            "Reverse":{"$ref":"../../06-console/data/B.schema.json#/$defs/Return"}})
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        for name in ("Forward","Reverse"):
+            self.assertEqual(model.roles(name),({"error","detail"},{"error"}))
+
+    def test_subschema_enclosing_typed_sibling_refs_remain_full_schema_obligations(self):
+        self.doc["components"]["schemas"].update({
+            "Alias":{"$ref":"#/components/schemas/Outer/properties/Leaf"},
+            "Outer":{"type":"object","properties":{"Leaf":self.target,"Unused":{"type":"string"}},
+                     "examples":[{"$ref":"literal annotation data, not a reference"}]}})
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+        later=self.root/"Platform/11-later/data/later.schema.json"
+        self.write_doc(later,self.target)
+        for ref,diagnostic in (("../../06-console/data/missing.schema.json","missing.schema.json"),
+                               ("../../11-later/data/later.schema.json","earlier owner")):
+            with self.subTest(ref=ref):
+                self.doc["components"]["schemas"]["Outer"]["properties"]["Unused"]={"$ref":ref}
+                self.write_doc(self.api,self.doc)
+                self.assert_error(diagnostic)
+
+    def test_cached_external_source_byte_change_is_an_error_without_healing(self):
+        target=self.root/"Platform/06-console/data/held.schema.json"
+        self.write_doc(target,self.target)
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/held.schema.json"}
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+        held=target.read_bytes()
+        target.write_bytes(held+b" ")
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+        target.write_bytes(held)
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+
+    def test_cached_main_source_byte_change_is_an_error_without_healing(self):
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+        held=self.api.read_bytes()
+        self.api.write_bytes(held+b" ")
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+        self.api.write_bytes(held)
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+
+    def test_existing_typed_line_schema_normal_direct_shape(self):
+        self.doc["components"]["schemas"]["Alias"]={"type":"string","x-line-schema":copy.deepcopy(self.target)}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assertEqual(self.check(),[])
+
+    def test_existing_typed_line_schema_child_is_a_valid_reference_target(self):
+        self.doc["components"]["schemas"].update({
+            "Envelope":{"type":"string","x-line-schema":copy.deepcopy(self.target)},
+            "Alias":{"$ref":"#/components/schemas/Envelope/x-line-schema"}})
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+
+    def test_existing_typed_line_schema_dash_rejects_malformed_required_child(self):
+        self.doc["components"]["schemas"]["Alias"]={"type":"string","x-line-schema":{"required":"error"}}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assert_error("malformed full response schema")
+
+    def test_existing_typed_line_schema_dash_rejects_non_schema_or_invalid_shape(self):
+        self.write_form("-")
+        for child in ("not a schema",[],{"properties":[]},{"type":"unknown"}):
+            with self.subTest(child=child):
+                self.doc["components"]["schemas"]["Alias"]={"type":"string","x-line-schema":child}
+                self.write_doc(self.api,self.doc)
+                self.assert_error("malformed full response schema")
+
+    def test_line_schema_and_ref_keys_inside_annotation_values_stay_opaque(self):
+        payload={"x-line-schema":{"required":"error","$ref":"../../06-console/data/not-a-schema-resource"}}
+        self.doc["components"]["schemas"]["Alias"]={"default":payload,"const":payload,"examples":[payload]}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assertEqual(self.check(),[])
+
+    def test_existing_typed_line_schema_unused_sibling_refs_are_inventoried(self):
+        self.doc["components"]["schemas"].update({
+            "Outer":{"type":"object","properties":{"Leaf":copy.deepcopy(self.target)},
+                     "x-line-schema":{"$ref":"../../06-console/data/missing-lines.schema.json"}},
+            "Alias":{"$ref":"#/components/schemas/Outer/properties/Leaf"}})
+        self.write_doc(self.api,self.doc)
+        self.assert_error("missing-lines.schema.json")
+
+    def test_canonical_finite_return_to_other_pointer_is_valid(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B.schema.json#/$defs/Alias"},"Leaf":self.target}})
+        self.write_doc(b,{"$defs":{"Alias":{"$ref":"A.schema.json#/$defs/Leaf"}}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Start"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+
+    def test_canonical_true_closed_cross_resource_pair_is_error(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B.schema.json#/$defs/Alias"}}})
+        self.write_doc(b,{"$defs":{"Alias":{"$ref":"A.schema.json#/$defs/Start"}}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Start"}
+        self.write_doc(self.api,self.doc)
+        with self.assertRaisesRegex(ValueError,"cross-resource schema reference cycle"):
+            check_forms.openapi_schemas(self.lesson).roles("Alias",project=False)
+
+    def test_canonical_local_recursion_and_foreign_prefix_local_recursion_are_valid(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        tree=copy.deepcopy(self.target)
+        tree["properties"]["child"]={"$ref":"#/$defs/Tree"}
+        self.write_doc(a,{"$defs":{"Tree":tree}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Tree"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B.schema.json#/$defs/Tree"}}})
+        self.write_doc(b,{"$defs":{"Tree":tree}})
+        self.doc["components"]["schemas"]["Alias"]["$ref"]="../../06-console/data/A.schema.json#/$defs/Start"
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+
+    def test_canonical_percent_escapes_and_physical_uri_aliases_keep_identity(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B%2Eschema.json#/%24defs/%41lias"},"Leaf/one~x":self.target}})
+        self.write_doc(b,{"$defs":{"Alias":{"$ref":"A.schema.json#/$defs/St%61rt"}}})
+        alias=a.with_name("alias.schema.json")
+        alias.symlink_to(a)
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/alias.schema.json#/$defs/Start"}
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        with self.assertRaisesRegex(ValueError,"cross-resource schema reference cycle"):
+            model.roles("Alias")
+        first=model._typed_target("../../06-console/data/A.schema.json#/$defs/Leaf~1one~0x",self.api)
+        second=model._typed_target("../../06-console/data/alias.schema.json#/%24defs/Leaf%7E1one%7E0x",self.api)
+        self.assertEqual(first[1:],second[1:])
+        self.assertEqual(first[2],"/$defs/Leaf~1one~0x")
+        self.assertEqual(model._node_key(first[1],first[2]),(a.resolve().as_uri(),"/$defs/Leaf~1one~0x"))
+
+    def test_canonical_reverse_cache_orders_do_not_inherit_chain_permissions(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B.schema.json#/$defs/Alias"},"Leaf":self.target,
+                                   "Loop":{"$ref":"B.schema.json#/$defs/Back"}}})
+        self.write_doc(b,{"$defs":{"Alias":{"$ref":"A.schema.json#/$defs/Leaf"},"Back":{"$ref":"A.schema.json#/$defs/Loop"}}})
+        self.doc["components"]["schemas"].update({"Warm":{"$ref":"../../06-console/data/A.schema.json#/$defs/Start"},
+                                                   "Bad":{"$ref":"../../06-console/data/A.schema.json#/$defs/Loop"}})
+        self.write_doc(self.api,self.doc)
+        for order in (("Warm","Bad"),("Bad","Warm")):
+            model=check_forms.openapi_schemas(self.lesson)
+            for name in order:
+                if name=="Warm":
+                    self.assertEqual(model.roles(name),({"error","detail"},{"error"}))
+                else:
+                    with self.assertRaisesRegex(ValueError,"cross-resource schema reference cycle"):
+                        model.roles(name)
+
+    def test_canonical_boolean_and_equal_value_declarations_have_distinct_pointers(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        self.write_doc(a,{"$defs":{"TrueOne":True,"TrueTwo":True,"FalseOne":False,"FalseTwo":False,
+                                   "ObjectOne":self.target,"ObjectTwo":copy.deepcopy(self.target)}})
+        model=check_forms.openapi_schemas(self.lesson)
+        coordinates=[]
+        for name in ("TrueOne","TrueTwo","FalseOne","FalseTwo","ObjectOne","ObjectTwo"):
+            node,path,pointer=model._typed_target("../../06-console/data/A.schema.json#/$defs/"+name,self.api)
+            self.assertEqual(pointer,"/$defs/"+name)
+            coordinates.append(model._node_key(path,pointer))
+        self.assertEqual(len(set(coordinates)),6)
+        self.assertTrue(all(uri==a.resolve().as_uri() for uri,_ in coordinates))
+        self.assertTrue(set(coordinates)<=model.inventoried)
+
+    def test_canonical_reference_bearing_yaml_aliases_keep_declared_locations(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        a.parent.mkdir(parents=True)
+        # JSON resources use JSON; the reference-bearing aliases live in OpenAPI YAML.
+        api=self.lesson/"spec/aliases.api.openapi.yaml"
+        api.write_text("""components:
+  schemas:
+    First: &shared
+      $ref: '../../06-console/data/B.schema.json#/$defs/Leaf'
+    Second: *shared
+""")
+        self.write_doc(b,{"$defs":{"Leaf":self.target}})
+        model=check_forms.openapi_schemas(self.lesson)
+        first=model._typed_target("#/components/schemas/First",api)
+        second=model._typed_target("#/components/schemas/Second",api)
+        self.assertIs(first[0],second[0])
+        self.assertNotEqual(first[2],second[2])
+        self.assertEqual(model.roles("First"),({"error","detail"},{"error"}))
+        self.assertEqual(model.roles("Second"),({"error","detail"},{"error"}))
+        self.write_doc(b,{"$defs":{"Leaf":{"$ref":"../../10-domain-console/spec/aliases.api.openapi.yaml#/components/schemas/Second"}}})
+        # A later-owner ref is rejected before any cycle permission can be inherited.
+        with self.assertRaisesRegex(ValueError,"earlier owner"):
+            check_forms.openapi_schemas(self.lesson).roles("First")
+
+        common=self.root/"Platform/common/contracts/shared.api.openapi.yaml"
+        other=common.with_name("other.api.openapi.yaml")
+        common.parent.mkdir(parents=True)
+        common.write_text("""components:
+  schemas:
+    Start: &shared
+      $ref: 'other.api.openapi.yaml#/components/schemas/Alias'
+    Leaf: *shared
+""")
+        self.write_doc(other,{"components":{"schemas":{"Alias":{"$ref":"shared.api.openapi.yaml#/components/schemas/Leaf"}}}})
+        self.write_doc(b,{"$defs":{"Leaf":self.target}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../common/contracts/shared.api.openapi.yaml#/components/schemas/Start"}
+        self.write_doc(self.api,self.doc)
+        with self.assertRaisesRegex(ValueError,"cross-resource schema reference cycle.*schemas/Leaf"):
+            check_forms.openapi_schemas(self.lesson).roles("Alias")
+
+    def test_canonical_uri_owner_base_and_schema_type_guards_are_preserved(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        self.write_doc(a,{"$defs":{"Leaf":self.target}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Leaf"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(),[])
+        later=self.root/"Platform/11-later/data/later.schema.json"
+        self.write_doc(later,self.target)
+        for ref,diagnostic in (("https://example.invalid/schema#/Leaf","nonlocal"),
+                               ("../../11-later/data/later.schema.json","earlier owner"),
+                               ("../../06-console/data/A.schema.json#/$defs/Absent","unresolved"),
+                               ("../../06-console/data/A.schema.json#/$defs/Leaf/properties","schema position")):
+            with self.subTest(ref=ref):
+                self.doc["components"]["schemas"]["Alias"]={"$ref":ref}
+                self.write_doc(self.api,self.doc)
+                self.assert_error(diagnostic)
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Leaf"}
+        self.write_doc(self.api,self.doc)
+        self.write_doc(a,{"$defs":{"Leaf":{"required":"error"}}})
+        self.assert_error("malformed full response schema")
+
+    def test_canonical_held_bytes_and_enclosing_schema_obligations_remain(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        self.write_doc(a,{"$defs":{"Leaf":self.target}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Leaf"}
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+        held=a.read_bytes()
+        a.write_bytes(held+b" ")
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+        a.write_bytes(held)
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias")
+        self.write_doc(a,{"$defs":{"Leaf":self.target,"Unused":{"$ref":"missing.schema.json"}}})
+        self.assert_error("missing.schema.json")
+
+    def test_canonical_public_target_shape_and_annotation_values_are_unchanged(self):
+        payload={"$ref":"unresolved literal data","x-line-schema":{"required":"not a schema"}}
+        self.doc["components"]["schemas"]["Target"].update(default=payload,examples=[payload])
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model,self.doc["components"]["schemas"])
+        node,path=model.target("#/components/schemas/Target",self.api)
+        self.assertEqual(node,self.doc["components"]["schemas"]["Target"])
+        self.assertEqual(path,self.api.resolve())
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+
+    def test_role_facts_normal_dag_is_positive_first(self):
+        self.doc["components"]["schemas"]["Alias"]={"allOf":[{"$ref":"#/components/schemas/Target"},
+            {"properties":{"trace":{"type":"string"}},"required":["trace"]}]}
+        self.write_doc(self.api,self.doc)
+        self.write_form("error,trace,detail?")
+        self.assertEqual(self.check(),[])
+
+    def test_role_dash_local_self_and_two_node_alias_rings_are_valid(self):
+        self.write_form("-")
+        for schemas in ({"Alias":{"$ref":"#/components/schemas/Alias"}},
+                        {"Alias":{"$ref":"#/components/schemas/Other"},"Other":{"$ref":"#/components/schemas/Alias"}}):
+            with self.subTest(schemas=schemas):
+                self.doc["components"]["schemas"]=schemas
+                self.write_doc(self.api,self.doc)
+                self.assertEqual(self.check(),[])
+                self.assertIsNone(check_forms.openapi_schemas(self.lesson).roles("Alias",project=False))
+
+    def test_role_productive_local_ref_and_allof_cycles_have_finite_facts(self):
+        self.doc["components"]["schemas"].update({
+            "Alias":{"$ref":"#/components/schemas/Other","properties":{"error":{"type":"string"}},"required":["error"]},
+            "Other":{"allOf":[{"$ref":"#/components/schemas/Alias"}],"properties":{"detail":{"type":"string"}}}})
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertEqual(model.roles("Alias"),({"error","detail"},{"error"}))
+        self.write_form("error,detail?")
+        self.assertEqual(self.check(),[])
+        self.write_form("error?,detail")
+        self.assert_error("required properties ['error']")
+
+    def test_role_pure_alias_explicit_field_is_missing_fact_not_invalid_source_cycle(self):
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"#/components/schemas/Alias"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(check_forms.openapi_schemas(self.lesson).roles("Alias"),(set(),set()))
+        errors=self.check()
+        self.assertTrue(any("not in the properties" in error for error in errors),errors)
+        self.assertFalse(any("cyclic" in error or "cycle" in error for error in errors),errors)
+
+    def test_role_nonrecursive_alternatives_keep_required_intersections(self):
+        branch={"properties":{"detail":{"type":"string"}},"required":["detail"]}
+        other=copy.deepcopy(branch)
+        other["properties"]["trace"]={"type":"string"}
+        for word in ("anyOf","oneOf"):
+            with self.subTest(word=word):
+                self.doc["components"]["schemas"]["Alias"]={"allOf":[{"$ref":"#/components/schemas/Target"}],word:[branch,other]}
+                self.write_doc(self.api,self.doc)
+                self.write_form("error,detail,trace?")
+                self.assertEqual(self.check(),[])
+                self.write_form("error,detail?,trace?")
+                self.assert_error("required properties ['detail']")
+
+    def test_role_grounded_recursive_alternative_has_derivable_required_facts(self):
+        for word in ("anyOf","oneOf"):
+            with self.subTest(word=word):
+                self.doc["components"]["schemas"]["Alias"]={"properties":{"error":{"type":"string"}},
+                    "required":["error"],word:[{"$ref":"#/components/schemas/Alias"},{"$ref":"#/components/schemas/Target"}]}
+                self.write_doc(self.api,self.doc)
+                self.write_form("error,detail?")
+                self.assertEqual(self.check(),[])
+                self.write_form("error?,detail?")
+                self.assert_error("required properties ['error']")
+
+    def test_role_underdetermined_recursive_alternative_is_projection_gap_not_schema_cycle(self):
+        self.doc["components"]["schemas"]["Alias"]={"anyOf":[{"$ref":"#/components/schemas/Alias"},
+            {"properties":{"error":{"type":"string"}},"required":["error"]}]}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assertEqual(self.check(),[])
+        model=check_forms.openapi_schemas(self.lesson)
+        with self.assertRaisesRegex(ValueError,"underdetermined field projection"):
+            model.roles("Alias")
+        self.write_form("error")
+        errors=self.check()
+        self.assertTrue(any("underdetermined field projection" in error for error in errors),errors)
+        self.assertFalse(any("cyclic" in error or "cross-resource" in error for error in errors),errors)
+
+    def test_role_local_structural_recursion_foreign_prefix_and_true_crossfile_cycle(self):
+        a=self.root/"Platform/06-console/data/A.schema.json"
+        b=a.with_name("B.schema.json")
+        tree=copy.deepcopy(self.target)
+        tree["properties"]["child"]={"$ref":"#/$defs/Tree"}
+        self.write_doc(a,{"$defs":{"Start":{"$ref":"B.schema.json#/$defs/Tree"}}})
+        self.write_doc(b,{"$defs":{"Tree":tree}})
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"../../06-console/data/A.schema.json#/$defs/Start"}
+        self.write_doc(self.api,self.doc)
+        for fields in ("-","error,child?"):
+            self.write_form(fields)
+            self.assertEqual(self.check(),[])
+        self.write_doc(b,{"$defs":{"Tree":{"$ref":"A.schema.json#/$defs/Start"}}})
+        for fields in ("-","error"):
+            self.write_form(fields)
+            self.assert_error("cross-resource schema reference cycle")
+
+    def test_role_dash_still_checks_full_metadata_refs_held_bytes_and_opaque_annotations(self):
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"#/components/schemas/Alias","required":"bad"}
+        self.write_doc(self.api,self.doc)
+        self.write_form("-")
+        self.assert_error("malformed full response schema")
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"#/components/schemas/Alias", "default":{"$ref":"literal-not-a-reference"}}
+        self.write_doc(self.api,self.doc)
+        model=check_forms.openapi_schemas(self.lesson)
+        self.assertIsNone(model.roles("Alias",project=False))
+        held=self.api.read_bytes()
+        self.api.write_bytes(held+b" ")
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias",project=False)
+        self.api.write_bytes(held)
+        with self.assertRaisesRegex(ValueError,"source bytes changed"):
+            model.roles("Alias",project=False)
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"https://example.invalid/not-local"}
+        self.write_doc(self.api,self.doc)
+        self.assert_error("nonlocal")
+
+    def test_schema_position_subschema_and_bad_dialect_are_checked(self):
+        self.doc["components"]["schemas"]["Container"]={"$defs":{"Fault":self.target}}
+        self.doc["components"]["schemas"]["Alias"]={"$ref":"#/components/schemas/Container/$defs/Fault"}
+        self.write_doc(self.api,self.doc)
+        self.assertEqual(self.check(), [])
+        self.doc["components"]["schemas"]["Container"]["$defs"]["Fault"]["$id"]="https://example.invalid/new-base"
+        self.write_doc(self.api,self.doc)
+        self.assert_error("resolver-specific schema keyword $id")
+
 if __name__ == "__main__":
     unittest.main()

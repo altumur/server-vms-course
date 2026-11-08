@@ -2585,9 +2585,27 @@ class Check:
             for path, message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+            errors, stats = check_constants.check_p06_numeric_constants(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         if (self.root / "Platform/08-domain").is_dir():
             import check_constants
             errors, stats = check_constants.check_p08_constants(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+            errors, stats = check_constants.check_p08_named_constants(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+            errors, stats = check_constants.check_p08_entry_url_bytes(self.root)
+            for path, message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        if (self.root / "Platform/09-agent").is_dir():
+            import check_constants
+            errors, stats = check_constants.check_p09_numeric_constants(self.root)
             for path, message in errors:
                 self.error(path, message)
             self.stats.update(stats)

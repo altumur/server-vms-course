@@ -26,6 +26,8 @@ Normative keywords follow the [course canon](../../common/NORMATIVE-TERMS.md). T
 (including the order of output arrays, scope — lessons 8–10).
 
 <!-- req: P/10-R002 -->
+The [common production obligations](../../common/contracts/production-obligations.md) and the selected MB3 rules in the common contracts apply here (ADR-0130 Addendum (10)). Use exactly one marker reread before silent: a changed marker with no exact fresh generation is temporarily unconfirmed; defer the derived snapshot and use existing 503 unavailable on a door requiring the confirmed read, not a new member state.
+
 ## N1 Form
 
 [runtime-constants.tsv](../forms/runtime-constants.tsv) projects three owned positive integer limits; RELAY_MEMBERS_MAX is read from its P/08.3 owner form with their requirement anchors; the [form grammar](../forms/README.md#inputs-and-constants) fixes units and scope. These are not additional environment settings.

@@ -636,7 +636,7 @@ paths:
                     properties:
                       term: {type: integer, minimum: 1}
                       rev: {type: integer, minimum: 0}
-                  folders: {type: array, items: {"oneOf": [{"$ref": "#/components/schemas/DomainFolderView"}, {"type": "object", "required": ["id", "garbled"], "additionalProperties": false, "properties": {"id": {"type": "string", "pattern": "^(?:[0-9a-f]{32})$"}, "garbled": {"const": true}}}]}}
+                  folders: {type: array, items: {"unevaluatedProperties": false, "oneOf": [{"$ref": "#/components/schemas/DomainFolderView"}, {"type": "object", "required": ["id", "garbled"], "additionalProperties": false, "properties": {"id": {"type": "string", "pattern": "^(?:[0-9a-f]{32})$"}, "garbled": {"const": true}}}]}}
   /domain/folders/{folder}:
     parameters:
       - name: folder
@@ -2231,6 +2231,7 @@ components:
       content:
         application/json:
           schema:
+            unevaluatedProperties: false
             anyOf:
             - $ref: '#/components/schemas/Refusal'
             - $ref: '#/components/schemas/Executors'
@@ -3031,6 +3032,7 @@ components:
             folders:
               type: object
               additionalProperties:
+                unevaluatedProperties: false
                 anyOf:
                 - type: object
                   required:
@@ -3262,6 +3264,7 @@ components:
           description: the issuer's signature over UTF-8(JCS(doc without kid and sig))
           type: string
         gathered:
+          unevaluatedProperties: false
           anyOf:
           - type: object
             required:

@@ -179,12 +179,360 @@ def fault_kinds(lesson):
     return out
 
 
+class _RefusalSchemas(dict):
+    """Raw public component map plus independent offline schema-role provenance."""
+    _maps = ("properties", "patternProperties", "$defs", "dependentSchemas")
+    _lists = ("allOf", "anyOf", "oneOf", "prefixItems")
+    _single = ("items", "contains", "additionalProperties", "propertyNames", "unevaluatedProperties",
+               "unevaluatedItems", "not", "if", "then", "else", "contentSchema", "x-line-schema")
+
+    def __init__(self, lesson):
+        super().__init__()
+        self.errors, self.origins, self.documents = [], {}, {}
+        self.document_hashes, self.changed_resources = {}, set()
+        self.inventoried, self.inventory_active = set(), set()
+        self.platform = next((p for p in Path(lesson).absolute().parents if p.name == "Platform"), None)
+        for api in sorted((Path(lesson) / "spec").glob("*.api.openapi.yaml")):
+            try:
+                doc = self.load(api)
+                schemas = doc.get("components", {}).get("schemas", {})
+                if not isinstance(schemas, dict):
+                    raise ValueError("components/schemas must be an object")
+                for name, schema in schemas.items():
+                    if name in self:
+                        self.errors.append(f"ambiguous schema {name!r}: {self.origins[name]} and {api}")
+                        self.origins[name] = None
+                    else:
+                        self[name], self.origins[name] = schema, api.resolve()
+            except (OSError, UnicodeError, ValueError, TypeError, AttributeError, yaml.YAMLError) as exc:
+                self.errors.append(f"{api}: schema source error: {exc}")
+
+    def load(self, path):
+        path = Path(os.path.abspath(path))
+        if self.platform is None:
+            raise ValueError("schema resource must have a declared Platform owner")
+        try:
+            lexical = path.relative_to(self.platform).parts
+            physical = path.resolve().relative_to(self.platform.resolve()).parts
+        except ValueError as exc:
+            raise ValueError("schema resource escapes Platform") from exc
+        if (len(lexical) < 2 or not physical or lexical[0] != physical[0] or
+                not (lexical[0] == "common" or re.fullmatch(r"[0-9]{2}-[a-z][a-z-]*", lexical[0]))):
+            raise ValueError("schema resource changes physical owner or has unknown owner")
+        if path.name.endswith(".schema.json"):
+            if len(lexical) != 3 or lexical[1] != "data" or len(physical) != 3 or physical[1] != "data":
+                raise ValueError("standalone schema must stay in its owner's data directory")
+        elif not path.name.endswith(".openapi.yaml"):
+            raise ValueError("unsupported schema resource; expected OpenAPI or standalone schema")
+        physical_path = path.resolve()
+        if physical_path in self.changed_resources:
+            raise ValueError(f"schema source bytes changed during validation: {physical_path}")
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            if physical_path in self.documents:
+                self.changed_resources.add(physical_path)
+                raise ValueError(f"schema source bytes changed or became unavailable: {physical_path}: {exc}") from exc
+            raise
+        digest = hashlib.sha256(raw).hexdigest()
+        if physical_path in self.document_hashes and self.document_hashes[physical_path] != digest:
+            self.changed_resources.add(physical_path)
+            raise ValueError(f"schema source bytes changed during validation: {physical_path}")
+        if physical_path not in self.documents:
+            # Existing skills Source grammar (YAML 1.2 Core, unique string keys).
+            from check_spec import UniqueLoader
+            def pairs(items):
+                out = {}
+                for key, value in items:
+                    if type(key) is not str or key in out:
+                        raise ValueError(f"duplicate or non-string schema source key {key!r}")
+                    out[key] = value
+                return out
+            text = raw.decode("utf-8", "strict")
+            doc = (json.loads(text, object_pairs_hook=pairs) if path.name.endswith(".json") else
+                   yaml.load(text, Loader=UniqueLoader))
+            json.dumps(doc, ensure_ascii=False, allow_nan=False).encode("utf-8")
+            if type(doc) is not dict and not (path.name.endswith(".schema.json") and type(doc) is bool):
+                raise ValueError("OpenAPI resource root must be an object; standalone schema may also be boolean")
+            self.documents[physical_path] = doc
+            self.document_hashes[physical_path] = digest
+        return self.documents[physical_path]
+
+    @staticmethod
+    def _pointer(tokens):
+        """Canonical JSON Pointer from decoded declaration tokens, never object IDs."""
+        return "".join("/" + str(token).replace("~", "~0").replace("/", "~1") for token in tokens)
+
+    @classmethod
+    def _child_pointer(cls, pointer, token):
+        return pointer + cls._pointer((token,))
+
+    @staticmethod
+    def _node_key(base, pointer):
+        return base.resolve().as_uri(), pointer
+
+    def target(self, ref, base):
+        """Keep the existing two-item target API; internal walks retain the pointer."""
+        node, path, _ = self._typed_target(ref, base)
+        return node, path
+
+    def _typed_target(self, ref, base):
+        from urllib.parse import unquote, urlsplit
+        if type(ref) is not str or "\\" in ref or re.search(r"%(?![0-9a-fA-F]{2})", ref):
+            raise ValueError(f"invalid schema reference {ref!r}")
+        uri = urlsplit(ref)
+        if uri.scheme or uri.netloc or uri.query or uri.path.startswith("/"):
+            raise ValueError(f"nonlocal schema reference {ref!r}")
+        path = Path(os.path.abspath(base.parent / unquote(uri.path, errors="strict"))) if uri.path else base
+        doc = self.load(path)
+        if uri.path:
+            source_owner = base.relative_to(self.platform).parts[0]
+            target_owner = path.relative_to(self.platform).parts[0]
+            if path.resolve() == base.resolve():
+                raise ValueError("same-resource schema reference must use a local pointer")
+            if source_owner == "common" and target_owner != "common":
+                raise ValueError("common schema cannot refer to a lesson owner")
+            if source_owner != "common" and target_owner != "common":
+                if not (path.name.endswith(".schema.json") and source_owner == target_owner) and \
+                        int(target_owner[:2]) >= int(source_owner[:2]):
+                    raise ValueError("component schema reference requires an earlier owner")
+        pointer = unquote(uri.fragment, errors="strict")
+        if pointer and not pointer.startswith("/"):
+            raise ValueError("schema reference requires a JSON pointer")
+        tokens = pointer.split("/")[1:] if pointer else []
+        if any(re.search(r"~(?![01])", token) for token in tokens):
+            raise ValueError("malformed schema pointer escape")
+        tokens = [token.replace("~1", "/").replace("~0", "~") for token in tokens]
+        if path.name.endswith(".openapi.yaml"):
+            if len(tokens) < 3 or tokens[:2] != ["components", "schemas"]:
+                raise ValueError("reference target is not a named Schema Object")
+            rest = tokens[3:]
+        else:
+            rest = tokens[:]
+        position = 3 if path.name.endswith(".openapi.yaml") else 0
+        schema_positions = {position}
+        while rest:
+            position += 1
+            keyword = rest.pop(0)
+            if keyword in self._maps + self._lists:
+                if not rest or keyword in self._lists and not re.fullmatch(r"0|[1-9][0-9]*", rest[0]):
+                    raise ValueError("reference target is not a schema position")
+                rest.pop(0)
+                position += 1
+            elif keyword not in self._single:
+                raise ValueError("reference target is not a schema position")
+            schema_positions.add(position)
+        node = doc
+        declaration = doc if 0 in schema_positions else None
+        declaration_pointer = "" if declaration is not None else None
+        if 0 in schema_positions:
+            self.validate(node, path)
+        try:
+            for index, token in enumerate(tokens, 1):
+                node = node[int(token)] if type(node) is list and re.fullmatch(r"0|[1-9][0-9]*", token) else node[token]
+                if index in schema_positions:
+                    self.validate(node, path)
+                    if declaration is None:
+                        declaration = node
+                        declaration_pointer = self._pointer(tokens[:index])
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ValueError(f"unresolved schema reference {ref!r} in {base}") from exc
+        if type(node) not in (dict, bool):
+            raise ValueError("reference target is not a Schema Object or boolean")
+        # Inventory the whole standalone resource or enclosing named component
+        # independently. Never put unselected sibling references on the caller's
+        # selected logical file chain.
+        self.inventory(declaration, path.resolve(), pointer=declaration_pointer)
+        return node, path.resolve(), self._pointer(tokens)
+
+    def inventory(self, node, base, *, pointer):
+        key = self._node_key(base, pointer)
+        if key in self.inventoried or key in self.inventory_active:
+            return
+        self.inventory_active.add(key)
+        try:
+            self.validate(node, base)
+            if type(node) is dict:
+                if "$ref" in node:
+                    # Each resource/declaration is inventoried in its own context.
+                    # The selected incoming chain is checked separately in closure.
+                    self._typed_target(node["$ref"], base)
+                for keyword in self._maps:
+                    for name, child in node.get(keyword, {}).items():
+                        at = self._child_pointer(self._child_pointer(pointer, keyword), name)
+                        self.inventory(child, base, pointer=at)
+                for keyword in self._lists:
+                    for index, child in enumerate(node.get(keyword, [])):
+                        at = self._child_pointer(self._child_pointer(pointer, keyword), index)
+                        self.inventory(child, base, pointer=at)
+                for keyword in self._single:
+                    if keyword in node:
+                        self.inventory(node[keyword], base, pointer=self._child_pointer(pointer, keyword))
+            self.inventoried.add(key)
+        finally:
+            self.inventory_active.remove(key)
+
+    def validate(self, node, base):
+        from jsonschema import Draft202012Validator, SchemaError
+        try:
+            Draft202012Validator.check_schema(node)
+        except SchemaError as exc:
+            raise ValueError(f"malformed full response schema in {base}: {exc.message}") from exc
+        if type(node) is bool:
+            return
+        for keyword in ("$id", "$dynamicRef", "$recursiveRef"):
+            if keyword in node:
+                raise ValueError(f"unsupported resolver-specific schema keyword {keyword} in {base}")
+        if "$schema" in node and node["$schema"] not in (
+                "https://json-schema.org/draft/2020-12/schema", "https://spec.openapis.org/oas/3.1/dialect/base"):
+            raise ValueError(f"unsupported schema dialect in {base}")
+
+    def closure(self, node, base, active=(), *, pointer):
+        key = self._node_key(base, pointer)
+        if key in active:
+            segment = active[active.index(key):]
+            if any(uri != key[0] for uri, _ in segment):
+                chain = " → ".join(uri + "#" + at for uri, at in (*segment, key))
+                raise ValueError(f"cross-resource schema reference cycle: {chain}")
+            return  # The closed segment is local, even after a foreign prefix.
+        # No context-free selected-closure cache: check every incoming chain.
+        self.validate(node, base)
+        if type(node) is bool:
+            return
+        active = (*active, key)
+        if "$ref" in node:
+            target, path, at = self._typed_target(node["$ref"], base)
+            self.closure(target, path, active, pointer=at)
+        for keyword in self._maps:
+            for name, child in node.get(keyword, {}).items():
+                at = self._child_pointer(self._child_pointer(pointer, keyword), name)
+                self.closure(child, base, active, pointer=at)
+        for keyword in self._lists:
+            for index, child in enumerate(node.get(keyword, [])):
+                at = self._child_pointer(self._child_pointer(pointer, keyword), index)
+                self.closure(child, base, active, pointer=at)
+        for keyword in self._single:
+            if keyword in node:
+                self.closure(node[keyword], base, active, pointer=self._child_pointer(pointer, keyword))
+
+    def roles(self, name, project=True):
+        if name not in self or self.origins.get(name) is None:
+            raise ValueError(f"missing or ambiguous response_schema {name!r}")
+        # Hold byte identity for every resource already admitted to this reader.
+        # A change is sticky failure, never a fresh parse that heals the cache.
+        for resource in tuple(self.documents):
+            self.load(resource)
+        base = self.origins[name]
+        pointer = self._child_pointer("/components/schemas", name)
+        self.inventory(self[name], base, pointer=pointer)
+        self.closure(self[name], base, pointer=pointer)
+        if not project:
+            return None  # ADR9: dash has no direct property/required projection.
+
+        # Declared facts form a finite graph. This is field projection, not
+        # schema acceptance or satisfiability; closure above owns cycle validity.
+        graph = {}
+        def collect(node, file, pointer):
+            key = self._node_key(file, pointer)
+            if key in graph:
+                return key
+            facts = {"properties": set(), "required": set(), "unconditional": [], "alternatives": []}
+            graph[key] = facts
+            if type(node) is bool:
+                return key
+            facts["properties"] = set(node.get("properties", {}))
+            facts["required"] = set(node.get("required", []))
+            children = [(child, file, self._child_pointer(self._child_pointer(pointer, "allOf"), index))
+                        for index, child in enumerate(node.get("allOf", []))]
+            if "$ref" in node:
+                children.append(self._typed_target(node["$ref"], file))
+            facts["unconditional"] = [collect(child, child_file, at) for child, child_file, at in children]
+            for keyword in ("anyOf", "oneOf"):
+                if keyword in node:
+                    branches = [collect(child, file,
+                                        self._child_pointer(self._child_pointer(pointer, keyword), index))
+                                for index, child in enumerate(node[keyword])]
+                    facts["alternatives"].append(branches)
+            return key
+        root = collect(self[name], base, pointer)
+
+        # Property names are declared existence facts: preserve the existing
+        # allOf/ref/alternative unions, with no invented facts on a pure ring.
+        properties = {key: set(facts["properties"]) for key, facts in graph.items()}
+        while True:
+            updated = {}
+            for key, facts in graph.items():
+                names = set(facts["properties"])
+                for child in facts["unconditional"]:
+                    names |= properties[child]
+                for branches in facts["alternatives"]:
+                    for child in branches:
+                        names |= properties[child]
+                updated[key] = names
+            if updated == properties:
+                break
+            properties = updated
+
+        # Collapse unconditional ref/allOf rings. Their finite facts are exactly
+        # the union of declarations and outgoing obligations in that component.
+        reach = {}
+        for key in graph:
+            pending, seen = [key], set()
+            while pending:
+                child = pending.pop()
+                if child not in seen:
+                    seen.add(child)
+                    pending.extend(graph[child]["unconditional"])
+            reach[key] = seen
+        component_of, components = {}, {}
+        for key in graph:
+            if key in component_of:
+                continue
+            members = {child for child in reach[key] if key in reach[child]}
+            components[key] = members
+            for child in members:
+                component_of[child] = key
+        obligations = {}
+        universe = set()
+        for key, members in components.items():
+            own, unconditional, alternatives = set(), set(), []
+            for child in members:
+                own |= graph[child]["required"]
+                unconditional |= {component_of[target] for target in graph[child]["unconditional"]
+                                  if component_of[target] != key}
+                alternatives += [[component_of[target] for target in branches]
+                                 for branches in graph[child]["alternatives"]]
+            obligations[key] = own, unconditional, alternatives
+            universe |= own
+
+        def fixed_point(initial):
+            values = {key: set(initial) for key in components}
+            while True:
+                updated = {}
+                for key, (own, unconditional, alternatives) in obligations.items():
+                    required = set(own)
+                    for child in unconditional:
+                        required |= values[child]
+                    for branches in alternatives:
+                        guaranteed = set(values[branches[0]])
+                        for child in branches[1:]:
+                            guaranteed &= values[child]
+                        required |= guaranteed
+                    updated[key] = required
+                if updated == values:
+                    return values
+                values = updated
+        lower = fixed_point(set())[component_of[root]]
+        upper = fixed_point(universe)[component_of[root]]
+        if lower != upper:
+            coordinate = root[0] + "#" + root[1]
+            raise ValueError(f"underdetermined field projection at {coordinate}: recursive alternative "
+                             f"required facts have lower {sorted(lower)!r}, upper {sorted(upper)!r}; "
+                             "full schema/ref closure is valid")
+        return properties[root], lower
 def openapi_schemas(lesson):
-    """Имя компонента → схема OpenAPI урока (все *.api.openapi.yaml)."""
-    out = {}
-    for api in (lesson / "spec").glob("*.api.openapi.yaml"):
-        out.update((yaml.safe_load(api.read_text(encoding="utf-8")) or {}).get("components", {}).get("schemas", {}) or {})
-    return out
+    """Component name → unchanged raw schema; origins/errors stay out of the public mapping."""
+    return _RefusalSchemas(lesson)
 
 
 def typed_refusal_causes(path, norms, section, rows):
@@ -379,31 +727,40 @@ def check_refusals(path):
                 missing = [f.rstrip("?") for f in r["fields"].split(",") if f"`{f.rstrip('?')}`" not in words]
                 if missing:
                     errors.append(f"{where}: fields {missing} not in the prose cell")
-    kinds = fault_kinds(lesson)
     schemas = openapi_schemas(lesson)
-    pairs = openapi_refusal_pairs(lesson) if typed_names else set()
+    errors.extend(f"{path.name}: {message}" for message in schemas.errors)
+    try:
+        kinds = fault_kinds(lesson)
+        pairs = openapi_refusal_pairs(lesson) if typed_names else set()
+    except (OSError, UnicodeError, ValueError, TypeError, AttributeError, yaml.YAMLError) as exc:
+        errors.append(f"{path.name}: OpenAPI refusal source error: {exc}")
+        kinds, pairs = {}, set()
     for r in rows:
         if r["surface"] != "http":
             continue
         where = f"{path.name}: {r['chapter']} row {r['row']} {r['name']}"
-        if r["kind"] == "-":                             # тело без kind — по названной схеме OpenAPI (ADR-0125 доп. (5))
-            name = r.get("response_schema", "")
-            fields = [f.rstrip("?") for f in r["fields"].split(",")] if r["fields"] != "-" else []
+        name = r.get("response_schema", "")
+        fields = None if r["fields"] == "-" else r["fields"].split(",")
+        if name and name != "-":
+            try:
+                projected = schemas.roles(name, project=fields is not None)
+            except (OSError, UnicodeError, ValueError, TypeError, AttributeError, RecursionError, yaml.YAMLError) as exc:
+                errors.append(f"{where}: response_schema {name!r}: {exc}")
+                continue
+            if fields is not None:
+                props, required = projected
+                missing = sorted({f.rstrip("?") for f in fields} - props)
+                if missing:
+                    errors.append(f"{where}: fields {missing} not in the properties of {name}")
+                must = sorted(required - {f for f in fields if not f.endswith("?")})
+                if must:
+                    errors.append(f"{where}: required properties {must} of {name} are not named in fields")
+        if r["kind"] == "-":
             if name == "-":
                 if fields:
                     errors.append(f"{where}: response_schema - (no body), but fields {r['fields']!r}")
-                continue
-            sch = schemas.get(name)
-            if not isinstance(sch, dict):
+            elif not name:
                 errors.append(f"{where}: response_schema {name!r} — no such component schema in the lesson OpenAPI")
-                continue
-            props = set((sch.get("properties") or {}))
-            missing = [f for f in fields if f not in props]
-            if missing:
-                errors.append(f"{where}: fields {missing} not in the properties of {name}")
-            must = [f for f in (sch.get("required") or []) if f not in [x for x in r["fields"].split(",") if not x.endswith("?")]]
-            if must:
-                errors.append(f"{where}: required properties {must} of {name} are not named in fields")
             continue
         if r["kind"] not in kinds:
             errors.append(f"{where}: kind {r['kind']} — no OpenAPI schema of the lesson carries it")
