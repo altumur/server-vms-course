@@ -4,6 +4,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"normgen/p01-1/apidoor"
@@ -23,8 +24,16 @@ type row struct {
 	Probes []probe `json:"probes"`
 }
 
+type report struct {
+	Version   int   `json:"version"`
+	Declared  int   `json:"declared"`
+	Completed int   `json:"completed"`
+	Rows      []row `json:"rows"`
+}
+
 func main() {
-	var out []row
+	declared := len(refusals.All)
+	out := make([]row, 0, declared)
 	for _, s := range refusals.All {
 		r := row{Spec: s}
 		if s.Surface == "http" {
@@ -47,7 +56,10 @@ func main() {
 	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", " ")
-	_ = enc.Encode(out)
+	if err := enc.Encode(report{Version: 1, Declared: declared, Completed: len(out), Rows: out}); err != nil {
+		fmt.Fprintln(os.Stderr, "refusal readback encoding:", err)
+		os.Exit(2)
+	}
 }
 
 // try selects the first field-value arrangement(integer, version string, key string) encoding for any operation.
