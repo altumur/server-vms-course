@@ -11,6 +11,9 @@
 
 Нормативные слова — по [канону курса](../../../common/ru/NORMATIVE-TERMS.md). Правила модуля — [P/01.1 N0](../../../01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
 
+
+Для этого владельца действуют [общие эксплуатационные обязанности](../../../common/ru/contracts/production-obligations.md) (ADR-0130 Addendum (10)). MB4: ход защищает только записи хранилища с условием; внешние действия требуют независимого забора, объявленного их владельцем. Действуют также Q4 о владельце повторов и Q5 об ограничении ресурсов.
+
 ## N1 Форма
 
 **Время.** Поля времени строк и объектов урока — время по [канону N0 P/01.1](../../../01-store/ru/spec/01.1-store.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<host>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<host>` — `at`; `<sub>/decommissioned/<host>` — `asked_at`, `at`; `<sub>/decommission-pending/<host>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<host>` — `at`; объект `<sub>/controller/pass` — `at`, `last_success`; объект `<sub>/snapshot/<worker>` — `ts`.

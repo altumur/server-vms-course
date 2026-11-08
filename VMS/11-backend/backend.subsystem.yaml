@@ -187,13 +187,13 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @0fbdd12 --without-learn (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 254d7b75…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# The build: consolem @cb728a4 --without-learn (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 90e9cd59…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
-# SHA-256 of each (the lesson's README): 0d83551b… app.css, 2c5caec5… app.js, 3124abf3… client.js,
-# 693b77d4… fonts/InterVariable.woff2, c8a2bb48… i18n-en.js, a48013e7… openapi.js, c1e5524f… whep-stub.js
+# SHA-256 of each (the lesson's README): 8bb1a481… app.css, c63a68a3… app.js, 3124abf3… client.js,
+# 693b77d4… fonts/InterVariable.woff2, b68839ec… i18n-en.js, d944eed1… openapi.js, c1e5524f… whep-stub.js
 # (assets/stub-piece.mp4 of the build is left out: `.mp4` is outside console.files, and backend never gives stub://).
-# The set — SHA-256 20c5aa2f0d6b84bac7f61a06f1ae8c786cfa0fe5a3ab8911a733fd9642fb5f1b.
+# The set — SHA-256 083b1638b30c759fc67841b56d1691846cd0424a7435c6a0f7ef84350f40ffb1.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the

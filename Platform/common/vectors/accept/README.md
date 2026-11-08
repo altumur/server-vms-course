@@ -87,3 +87,5 @@ The vectors of lessons 3 and 4 are inputs of an acceptance that passed at two wi
 they were not checked by a reference rebuild (the generation and the mark
 rest on the sections of the contract «Generation, mark, limits» and «The member's publication»; the owners of the text are P/08.3 N1.3,
 [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) N1.2). On a divergence the contract is right, the vector is corrected by «Specification».
+
+Public additional phase/race and existing-norm probe inputs are declared in [production obligation sequences](../production-obligations/README.md). They require Runner binding and do not change this package's existing command forms or historical rows; missing execution is NOTEXEC.

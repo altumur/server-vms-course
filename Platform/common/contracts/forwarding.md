@@ -273,7 +273,12 @@ A local refusal of a side goes by the refusal schema of the OpenAPI of its lesso
 required (not `{error}` alone), at the domain console — the schema of lesson P/10; `detail` is a constant text of the implementation; the answer of
 a far transition is unchanged (guess of stage C FW-G01, the Architect's decision of 2026-10-23).
 
+## Production obligations
+
+ADR-0130 Addendum (10), Q4: each ordinary logical operation MUST have a finite positive implementation-declared end-to-end budget, measured monotonically from its first attempt; queueing, dependency waits, retries and backoff consume it. Inner ordinary hops reserve the existing forwarding allowance `F`; a hop or retry cannot restart or increase the remaining budget. Exactly one declared level owns retries, with bounded backoff and jitter, honouring existing `Retry-After`. On an unknown write outcome, retry only the identical logical operation with the same `id` and original `cas`/`guard`, within qualified replay retention. No new id may bypass ambiguity. If retention cannot be qualified, use owner readback/barrier rules or retain uncertainty; no blind retry as a new operation. Existing `ambiguous`, `unavailable` and forwarding `502` outcomes remain distinct. Streaming and pass retain their existing idle, header and completion rules; this creates no blanket response deadline, wire header or flag.
+
 ## Vectors
 
 There are no vectors: forwarding is checked by the scenarios of the acceptances of chapter 6.7, of lesson P/10 and of lessons P/08–P/09. (ADR-0083 addendum (32) item 2)
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

@@ -93,6 +93,10 @@ a repeat with the same id and the answer again do not shift it (the same rule at
 changes at most until the next successful attempt after the observation window, but the answer term of an unavailable store is not
 bounded by this.
 
+## Production obligations
+
+ADR-0130 Addendum (10), MB4: the turn lease is NOT a fence for external side effects. Its `guard` protects only store mutations that carry it, under the declared clock qualification. A paused old holder can resume after another holder takes the turn; the store rejects its old guard with `412`, but that alone cannot prevent an external action. Each external-effect owner MUST declare and qualify its own independent fence at the effect boundary before relying on exclusivity. Without that fence no exclusive external-effect claim follows from this contract. The controller's barrier and existing `cas`/`guard` wire remain unchanged.
+
 ## Vectors
 
 The package [`turn`](../vectors/turn/README.md) (C08-TURN-SELF-99, the Architect's decision of 2026-10-26): sequences of events
@@ -101,3 +105,4 @@ of one side over a turn row and its actions — take an empty or a given-up one,
 an unknown outcome of a write — of the target row and of one's own turn row, the giving up `holder ""`; placement, signer and operations forms. The console runs its own 16 operations cases with a fresh attempt holder, no manifest revision, not signer relabeling; the 33 previous cases and their existing participants stay byte-identical. Capturing the turn is separate from P/06.9's operations-epoch CAS barrier, generation/ticket guards, two leaders and late IO. Races of two claimants and late writes of the old holder are
 acceptance scenarios of the participants (P/04, P/08.10, P/09.1, P/06.9) and reading. The exact owner/kind selector and narrow freshness comparison are [the wire form](../vectors/wire.md#turn-comparison), the Architect's decision under ADR-0127 P/06 C4.
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

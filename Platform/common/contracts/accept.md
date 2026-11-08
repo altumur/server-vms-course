@@ -59,7 +59,7 @@ reported:       domain/members/<member>/reported               # the mark object
   sign_failures?: from the publication at every acceptance with a write of the mark, as stale; it creates no generation and does not
                 refresh the mark by itself; not in the publication — no field (N1.6a; P/09.1 N1.12; the Architect's decision on the reconciliation of M11, A7, W1)
   every?:       s — the period told to the member by the last answer with a write of the mark (N1.5; the report reception contract «The answer `carry`: `every`»); none — REPORT_EVERY
-keep:           the two last generations and their delta; older ones and those above the mark are removed by the next acceptance
+keep:           the two last generations and their delta; older ones and those above the mark are retried by the next bounded resumable cleanup attempt
 REPORT_EVERY:   5           # s — the agent pass; the holder's answer can assign every (N1.5), 1 … 3600
 MARK_REFRESH:   22.5        # s = LOST_AFTER/2 (chapter 8.1 N1.3) by the holder's monotonic clock
 BODY_LIMIT:     16 MiB      # the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
@@ -70,7 +70,7 @@ ROAD_QUIET:    15         # s, the holder's monotonic clock: three passes of the
 
 The mark is the boundary of what is accepted: an object with a number not above `reported.rev` is immutable; an object above it belongs to nobody: it is not read, not
 transferred, does not hold the number, the next acceptance writes over it. The readers take `reported.rev` and read only the object of this
-generation; a mark without an object or an object not with its `sha256` — the member is `silent`, never a mixture (the readers — P/08.1, P/08.5,
+generation; a mark without an object or an object not with its `sha256` requires the bounded marker reread below before the member is `silent`; never a mixture (the readers — P/08.1, P/08.5,
 P/08.8).
 
 ## The member's publication
@@ -307,7 +307,7 @@ acceptance of this member by any road (none — not heard); acceptance is the ou
    detail: "<member>'s generations reached 2^53 − 1: the mark cannot grow"}, nothing changes (added by the reconciliation of M11, A18); write reports/<rev> = JCS(whole'), then reports/<rev>.delta = body,
    then the mark {rev, sha256, base, delta_sha256, signature?, key, keys_rev?, pinned?, sent_at, received_at,
    request_sha256 (= delta_sha256), via?, stale, sign_failures?, every?};
-   remove reports/<rev−2> and its .delta and the objects above rev
+   remove ALL reports/<g> and their .delta for g < rev−1, and the objects above rev; resume interrupted cleanup on later attempts
 ```
 
 `sent_at` below `mark.sent_at` on the same road is accepted: the order on one road is set by the road, a member's clock that stepped
@@ -371,6 +371,12 @@ answer:        the holder's answer to the client of the agent and of the relay (
                (C09-ANSWER-LIMIT-01, the Architect's decision)
 ```
 
+## Production obligations
+
+ADR-0130 Addendum (10), MB2: cleanup removes ALL report generations older than the last two committed generations, with their deltas, and the uncommitted objects above the current mark by the existing identity rule. It is resumable: a crash or bounded interrupted pass leaves pending eligible generations for a later cleanup attempt, including generations older than `rev−2`. Publication order remains whole, delta, then mark; cleanup cannot delete the current or previous committed generation. A finite positive implementation-declared cleanup/work budget bounds each attempt and completion under qualified workload.
+
+MB3: before declaring `silent` for a missing or hash-mismatched generation, reread the marker exactly once and read the generation named by that marker. If the marker is stable and the named object is still missing or mismatched, keep the existing `silent` outcome. If the reread marker changed and its newly named generation cannot be read exactly, the observation remains temporarily unconfirmed: defer publication of this derived snapshot; a door requiring the confirmed read uses the existing `503 unavailable` outcome. Do not publish `silent` from the race, combine generations, invent a member state or loop indefinitely.
+
 ## Vectors
 
 The package [`accept`](../vectors/accept/README.md) (analysis of review of stage A 8–10, № 13): 66 rows — the inputs of the command `accept`
@@ -384,3 +390,4 @@ a knock larger than 256 KiB) are not expressed by the function «accept» — by
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

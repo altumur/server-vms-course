@@ -193,6 +193,10 @@ the decision of «Domain Specification»; its own record whose issuer is in revo
 point (the term record contract «The switch point `switch`») is false by this set (at the holder's cluster — from the switch point; added by the Quint model of M11, G1, G7); a set by which its own term record does not pass record it writes only in one batch op: batch with a term record that passes by this set: the best one of step 4 of «follow» or the record of the answer `from_carry`; each row has its own cas, the guard domain/agent-turn (otherwise a break between them deprives its own record of the check and the bound SET_GUARD of the next pass is lost; the Architect's decision of 2026-10-31, Quint M12 N2, C08-KEYS-CLAIM-BATCH-01); the batch refused — the set stays in memory (C09-HELD-MEMORY-01), together with it the bound of this pass stays in memory, the next pass writes the batch again; the bound lives in memory only while its own record has not changed: at the start of the pass, before the follow set and the bound, its own record that passed record by its own row domain/keys with a term above the bound of memory (no bound — any) removes the set and the bound of memory, otherwise a record of a new term does not pass the set of memory, the condition of the switch point is false and the next pass writes a smaller term over it; the set is not lost: it will come from a neighbour and meet the new bound, SET_GUARD will refuse, step 2a will raise an alarm (the Architect's decision of 2026-11-01, Quint M13 N15, C09-HELD-MEMORY-02); a row with a `rev` greater than its own set it does not rewrite: at the target of a move it is put by the batch claim before the agent has heard the new set (C08-TARGET-KEYS-RACE-01)
 ```
 
+## Production obligations
+
+Destructive cleanup MUST obey the clock qualification and monotonic deadline rules of [the event journal](event-journal.md), Q6 of ADR-0130 Addendum (10). An uncertain wall-clock jump defers deletion; required security/replay state is retained under finite resource/admission budgets.
+
 ## Vectors
 
 The package [`keys`](../vectors/keys/README.md) (analysis of review of stage A 8–10, № 13): 29 lines — 21 inputs of the command `keys` of the acceptance of
@@ -204,3 +208,4 @@ of the acceptance of M11/2) through the function `token`.
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.
