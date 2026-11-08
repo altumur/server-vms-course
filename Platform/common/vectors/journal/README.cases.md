@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/journal/REA
 
 Generic protocol rules remain in [README.md](README.md). The following original mixed paragraph preserves the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
+### Original passage 1
 
 The same file rules; the header `case<TAB>file<TAB>line<TAB>expect<TAB>note`: `file` is the content of the bucket before the write,
 `line` is the new line without LF, `expect` is the content after the write (JSON strings) or `@refuse` — a refusal of the write, the file does not

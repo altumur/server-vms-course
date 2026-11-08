@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 
 Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
+### Original passage 1
 
 | Scenarios | Subject | Norm |
 |---|---|---|
@@ -14,6 +14,6 @@ Generic rules remain in [README.md](README.md). The following original passages 
 | `s12-secrets-walk-unknown`, `s13-secrets-walk-kept` | the selection of the secrets walk: an unknown `identity/x` is listed with code 1, the kept rows leave the selection | P/02.4 N1.9 «Walk»; P/02.4-14 |
 | `s5-poll-healthy`–`s11-poll-read-equality` | the pure poll: catch-up under writes, a break, last at a follower, membership, two voters, equality at tick/read deadline | P/02.4 N1.9 poll; P/02.4-22 |
 
-<!-- original-mixed-case-paragraph -->
+### Original passage 2
 
 [`inputs/seam-bad.subsystem.yaml`](inputs/seam-bad.subsystem.yaml) is the owned fixture of `s1-put-invalid-source`: a YAML document with only `name`, missing the mandatory manifest structure. The scenario copies it with `@file`, calls the normal `manifest put`, and checks the refusal and unchanged source bytes. It is deliberately outside the accepted manifest corpus. The remaining file inputs are literal owned strings in the seam table.
