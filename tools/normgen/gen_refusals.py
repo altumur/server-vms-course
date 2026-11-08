@@ -189,6 +189,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 
+import machine_source  # noqa: E402
+
 from gen_checks import GenError, camel, go_str, gofmt  # noqa: E402
 
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
@@ -399,7 +401,8 @@ var All = []*Spec{''' +
                  ", ".join(r["var"] for r in table.rows) + "}")
     parts.append("var byName = map[string]*Spec{" + ", ".join(f"{go_str(r['name'])}: {r['var']}"
                                                               for r in table.rows) + "}")
-    return "\n\n".join(parts) + "\n"
+    header = machine_source.identity_header("tools/normgen/gen_refusals.py", [(rel, table.sha256)])
+    return machine_source.go_source("\n\n".join(parts) + "\n", header=header)
 
 
 # ---------------------------------------------------------------- catalog without HTTP (P/02, 15 columns)
@@ -630,7 +633,8 @@ def go_module_plain(table, rel):
                  ", ".join(r["var"] for r in table.rows) + "}")
     parts.append("var byName = map[string]*Spec{" + ", ".join(f"{go_str(r['name'])}: {r['var']}"
                                                               for r in table.rows) + "}")
-    return "\n\n".join(parts) + "\n"
+    header = machine_source.identity_header("tools/normgen/gen_refusals.py", [(rel, table.sha256)])
+    return machine_source.go_source("\n\n".join(parts) + "\n", header=header)
 
 
 def _check_table_owner(table_path):
@@ -700,7 +704,8 @@ def provenance():
     if tsv_input.read(DEFAULT_TABLE, root=ROOT).columns == tuple(RESPONSE_COLUMNS):
         paths.append(L.openapi)
     return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))], "judge": entry(JUDGE)}
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)),
+                           entry(Path(machine_source.__file__))], "judge": entry(JUDGE)}
 
 
 KIT_MD = """
