@@ -1,0 +1,1144 @@
+{
+ "format": 1,
+ "adr": "ADR-0133 addendum (1) (cbf02230bf)",
+ "owner": "spec103-claude",
+ "scope": "P06–P10 Source (vectors/scenarios of 06, 08, 09, 10; P07 has none)",
+ "base": {
+  "component_143": "143cd00f56707fb7c9567f08e1b242d18c1dcab2",
+  "p09_fix_0ad": "0ad49a85bbd1f17699461888cd7692b0a6d34f2a",
+  "cherry_pick": "3d424d9c6",
+  "note": "Applied on branch spec103c/p06-10-adr0133; main is not the base."
+ },
+ "how_to_use": "A vector or scenario may be removed from the export: every governing rule below stays reachable through the listed norm/form anchor. status=moved-to-norm — lifted by this work; status=already-normative — the norm already held it (no change). Anchors are by file, line and nearest req id in this tree.",
+ "entries": [
+  {
+   "class": "array-order",
+   "definition": "Order of the routes array in /where/<id> door answer (and the token routes): manifest order of door.routes, not sorted",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv:182 (24-where-door step 7)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 510,
+     "needle": "routes of the token and of the answer — the routes of door.routes in the order of its manifest list",
+     "req": "P/06.5-R016"
+    }
+   ],
+   "status": "moved-to-norm",
+   "note": "ADR-0133 addendum (1) item 3; commit 369fd342d. Common door-token.md (claims.routes) stays silent on order — foreign delta in REPORT."
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Closed refusal words (error/fault) by door and code of 06-console",
+   "sources": [
+    "Platform/06-console/acceptance/**/scenarios.tsv, seams.tsv (all error/fault cells; pair check inv2.pairs.tsv)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/forms/refusals.tsv",
+     "line": 7,
+     "needle": "surface",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Closed refusal words (error/fault) by door and code of 08-domain",
+   "sources": [
+    "Platform/08-domain/acceptance/**/scenarios.tsv, seams.tsv (all error/fault cells; pair check inv2.pairs.tsv)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/forms/refusals.tsv",
+     "line": 7,
+     "needle": "surface",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Closed refusal words (error/fault) by door and code of 09-agent",
+   "sources": [
+    "Platform/09-agent/acceptance/**/scenarios.tsv, seams.tsv (all error/fault cells; pair check inv2.pairs.tsv)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/09-agent/forms/refusals.tsv",
+     "line": 3,
+     "needle": "surface",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Closed refusal words (error/fault) by door and code of 10-domain-console",
+   "sources": [
+    "Platform/10-domain-console/acceptance/**/scenarios.tsv, seams.tsv (all error/fault cells; pair check inv2.pairs.tsv)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/10-domain-console/forms/refusals.tsv",
+     "line": 3,
+     "needle": "surface",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Console refusal vocabulary and form {detail,error,field?}",
+   "sources": [
+    "Platform/06-console/acceptance/1/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.1-console.norms.md",
+     "line": 409,
+     "needle": "- `error` is a word of the closed list",
+     "req": "P/06.1-R011"
+    },
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 352,
+     "needle": "The common refusals of the console are a JSON object",
+     "req": "P/06.5-R009"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "refusal-word",
+   "definition": "Domain refusal words (P/08 closed list)",
+   "sources": [
+    "Platform/08-domain/acceptance/**/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/data/refusal-words.tsv",
+     "line": 41,
+     "needle": "grant too wide",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "shared edit 409 «the shared settings are at rev N; the edit was made against rev M»",
+   "sources": [
+    "Platform/08-domain/acceptance/9/scenarios.tsv:6"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+     "line": 100,
+     "needle": "the shared settings are at",
+     "req": "P/08.9-R004"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "shared 503 «the shared document at rev N does not read: nothing is written»",
+   "sources": [
+    "Platform/08-domain/acceptance/9/scenarios.tsv:25"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+     "line": 109,
+     "needle": "does not read: nothing",
+     "req": "P/08.9-R004"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "move 409 «nothing was restored: no neighbour gave the copy named, term T rev R (…)»",
+   "sources": [
+    "Platform/08-domain/acceptance/8/scenarios.tsv:24"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+     "line": 440,
+     "needle": "the copy named, term T rev R",
+     "req": "P/08.8-R010"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "move 409 «<c> holds the domain at term N: there is nothing to move here»",
+   "sources": [
+    "Platform/08-domain/acceptance/8/scenarios.tsv:26"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+     "line": 410,
+     "needle": "holds the domain at term N",
+     "req": "P/08.8-R010"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "signer row forgotten: «deposed by term N»",
+   "sources": [
+    "Platform/08-domain/acceptance/8/scenarios.tsv:15"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+     "line": 111,
+     "needle": "deposed by term",
+     "req": "P/08.2-R005"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "«a member signs its ask …» detail",
+   "sources": [
+    "Platform/06-console/acceptance/7/scenarios.tsv:80"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.7-console.norms.md",
+     "line": 330,
+     "needle": "signs its ask",
+     "req": "P/06.7-R015"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "503 pass with a door heard detail/message template",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv:312, acceptance/7/scenarios.tsv:47"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 192,
+     "needle": "no worker of <sub> with a door is heard",
+     "req": "P/06.5-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "session user «break-glass(<who>)»",
+   "sources": [
+    "Platform/06-console/acceptance/7/scenarios.tsv:65"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/gate-and-pass.md",
+     "line": 462,
+     "needle": "break-glass(<who>)",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "404 «no console of <cluster> is known here (CLUSTERS)»",
+   "sources": [
+    "Platform/06-console/acceptance/7/scenarios.tsv:21"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/forms/refusals.tsv",
+     "line": 227,
+     "needle": "no console of <cluster> is known here",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "alarm sentence phrases, join «; », per-member order",
+   "sources": [
+    "Platform/10-domain-console/vectors/alarms/cases.tsv:9-19, acceptance/scenarios.tsv:7"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+     "line": 446,
+     "needle": "silent since <HH:MM>",
+     "req": "P/10-R014"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "delivery sentence",
+   "sources": [
+    "Platform/08-domain/acceptance/9/scenarios.tsv:4"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+     "line": 143,
+     "needle": "rev R on H of T members",
+     "req": "P/08.9-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "resolve from labels (domain term…, unit + …, manifest, none, unit)",
+   "sources": [
+    "Platform/06-console/vectors/resolve/cases.tsv, Platform/08-domain/acceptance/9/scenarios.tsv:13-14"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.7-console.norms.md",
+     "line": 501,
+     "needle": "label:  \"domain term T rev R\"",
+     "req": "P/06.7-R024"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "detail-text",
+   "definition": "backup-refused why literal",
+   "sources": [
+    "Platform/09-agent/acceptance/1/scenarios.tsv:159"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+     "line": 1204,
+     "needle": "older than the copy kept here",
+     "req": "P/09.1-R016"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "word-vocabulary",
+   "definition": "Token refusal reasons (bad_request, by_misplaced, not_granted, outside_scope, no_assignment, assignment_unreadable, unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience, no_centre)",
+   "sources": [
+    "Platform/08-domain/vectors/issue/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/forms/refusals.tsv",
+     "line": 143,
+     "needle": "by_misplaced",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "word-vocabulary",
+   "definition": "Assembly why words (bad_contribution, secret_unopened, no_copy, unseen, silent, never)",
+   "sources": [
+    "Platform/08-domain/vectors/assemble/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+     "line": 60,
+     "needle": "bad_contribution",
+     "req": "P/08.5-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "word-vocabulary",
+   "definition": "Follow reasons (larger, holding, two_holders, none)",
+   "sources": [
+    "Platform/09-agent/vectors/follow/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+     "line": 1618,
+     "needle": "two_holders",
+     "req": "P/09.1-R027"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "word-vocabulary",
+   "definition": "Member states (ok, silent, not_reporting, never, unreadable) and sentences",
+   "sources": [
+    "Platform/10-domain-console/vectors/alarms/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+     "line": 344,
+     "needle": "not_reporting",
+     "req": "P/10-R011"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "headers",
+   "definition": "CSP values, X-Content-Type-Options nosniff",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv (@header)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 90,
+     "needle": "CSP — at least script-src 'self'",
+     "req": "P/06.5-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "headers",
+   "definition": "Location of the shell login redirect",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv (@header Location: =/?return=/testsub2/), seams.tsv:5"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/forms/refusals.tsv",
+     "line": 145,
+     "needle": "/?return=/<sub>/",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "headers",
+   "definition": "Set-Cookie w2c_token / w2c_glass",
+   "sources": [
+    "Platform/06-console/acceptance/7/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.3-console.norms.md",
+     "line": 191,
+     "needle": "w2c_token",
+     "req": "P/06.3-R009"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "field-names",
+   "definition": "Response/body field names of the doors",
+   "sources": [
+    "all expect cells; key inventory inv1/inv1.keys.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+     "line": 27,
+     "needle": "openapi",
+     "req": null
+    },
+    {
+     "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+     "line": 30,
+     "needle": "openapi",
+     "req": null
+    },
+    {
+     "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+     "line": 8,
+     "needle": "openapi",
+     "req": null
+    },
+    {
+     "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+     "line": 12,
+     "needle": "openapi",
+     "req": null
+    }
+   ],
+   "status": "already-normative",
+   "note": "family row schemas: Platform/NN/data/*.schema.json; adapter vocabulary (write_mark, remove_row, lines, garbled, canonical, status, seam observation keys) is judge-side, not a product definition"
+  },
+  {
+   "class": "field-pointers",
+   "definition": "Refusal field pointers (/writes/<n>/…, /guards/<n>/…, /lines/<i>/…, /assigned/<i>, /members/<i>)",
+   "sources": [
+    "Platform/06-console/acceptance/1/scenarios.tsv, 08-domain/acceptance/4/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/data/refusal-words.tsv",
+     "line": 98,
+     "needle": "/writes/<number>/cas",
+     "req": null
+    },
+    {
+     "path": "Platform/08-domain/data/refusal-words.tsv",
+     "line": 40,
+     "needle": "/lines/<i>",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "P/08–P/10 names ascending by UTF-8 bytes unless the form names another key (holding, contested, clusters, keys, kid…)",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/01-store/spec/01.1-store.norms.md",
+     "line": 95,
+     "needle": "The order of output arrays is a common rule of lessons",
+     "req": "P/01.1-R015"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "tombstones /{rows}?deleted=1 by id",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.1-console.norms.md",
+     "line": 501,
+     "needle": "the list in ascending order of `id` (UTF-8 bytes)",
+     "req": "P/06.1-R013"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "key families",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.7-console.norms.md",
+     "line": 298,
+     "needle": "the keys ascending by UTF-8 bytes",
+     "req": "P/06.7-R013"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "GET /folders",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.8-console.norms.md",
+     "line": 196,
+     "needle": "by `id` in UTF-8 bytes",
+     "req": "P/06.8-R007"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "labels sets",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/labels.md",
+     "line": 32,
+     "needle": "in ascending order of UTF-8 bytes",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "view.units order",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+     "line": 154,
+     "needle": "units in each subsystem — by (cluster, id, worker)",
+     "req": "P/08.1-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "book entries",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+     "line": 77,
+     "needle": "entries — by (member, item) in bytes of UTF-8",
+     "req": "P/08.5-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "grant lines, assigned (kind, name)",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+     "line": 583,
+     "needle": "lines by (subject, cap, sub, scope) in UTF-8 bytes",
+     "req": "P/08.4-R014"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "outcomes latest (at,id) desc",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+     "line": 259,
+     "needle": "by (at, id) descending",
+     "req": "P/08.6-R009"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "Entry.ca ascending",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+     "line": 133,
+     "needle": "ascending, without repeats",
+     "req": "P/08.3-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "term.backup_holders",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+     "line": 91,
+     "needle": "the chosen keepers (the selection — N1.5), output in ascending order of name",
+     "req": "P/08.8-R005"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "revoked_keys oldest first",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.10-domain.norms.md",
+     "line": 55,
+     "needle": "at most the 4 latest, the oldest — the first in the array",
+     "req": "P/08.10-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "folder members in order of the body",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.8-console.norms.md",
+     "line": 46,
+     "needle": "references <sub>/<rows>/<id> in order",
+     "req": "P/06.8-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "token audience ascending",
+   "sources": [
+    "exact-array expect cells: inv2/inv2.arrays.tsv, inv4/inv4.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.7-domain.norms.md",
+     "line": 83,
+     "needle": "<audience_claim>: [<member>…] ascending",
+     "req": "P/08.7-R005"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "array-order",
+   "definition": "GET /{rows} configured is explicitly unordered",
+   "sources": [
+    "Platform/06-console/acceptance/1/scenarios.tsv:222"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.1-console.norms.md",
+     "line": 385,
+     "needle": "the order is not normed",
+     "req": "P/06.1-R010"
+    }
+   ],
+   "status": "already-normative",
+   "note": "Judge compares it without order (common/acceptance/README.md dictionary)."
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "request body values as text; JCS for non-strings",
+   "sources": [
+    "Platform/06-console/vectors/requests-body/requests_body.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/request-mark.md",
+     "line": 47,
+     "needle": "<body fields>: by requests.schema, as text",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "request digest kinds",
+   "sources": [
+    "Platform/06-console/vectors/request-digest/digest.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/request-mark.md",
+     "line": 51,
+     "needle": "digest:      <sha256 hex>",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "rid template refusal field",
+   "sources": [
+    "Platform/06-console/vectors/rid/template.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/request-mark.md",
+     "line": 77,
+     "needle": "earliest by byte offset",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "rid grammar",
+   "sources": [
+    "Platform/06-console/vectors/rid/rid.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/request-mark.md",
+     "line": 66,
+     "needle": "rid:        non-empty",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "json field stored canonical, null — no element",
+   "sources": [
+    "Platform/06-console/vectors/requests-body/requests_body.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/row-check.md",
+     "line": 56,
+     "needle": "json:       canonical JSON",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "json field ceiling and too_long",
+   "sources": [
+    "Platform/06-console/acceptance/1/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.1-console.norms.md",
+     "line": 200,
+     "needle": "one `json` field | 4000 bytes of canonical JSON",
+     "req": "P/06.1-R007"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "op step key",
+   "sources": [
+    "Platform/06-console/vectors/op-step/key.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.9-console.norms.md",
+     "line": 326,
+     "needle": "step_key(id, i) = hex(SHA-256",
+     "req": "P/06.9-R009"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "expected(i)",
+   "sources": [
+    "Platform/06-console/vectors/op-step/expected.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.9-console.norms.md",
+     "line": 97,
+     "needle": "Let j be the largest number < i",
+     "req": "P/06.9-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "kept edit id",
+   "sources": [
+    "Platform/08-domain/acceptance/6/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+     "line": 199,
+     "needle": "\"e-\" + the first 12 characters of hex sha256",
+     "req": "P/08.6-R008"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "names index row JCS text",
+   "sources": [
+    "Platform/08-domain/acceptance/5/scenarios.tsv:36"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+     "line": 159,
+     "needle": "\"\" → JCS {missing: [<member>…], missing_count}",
+     "req": "P/08.5-R006"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "anywhere hash",
+   "sources": [
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+     "line": 387,
+     "needle": "check the complete received body against carry.anywhere.sha256",
+     "req": "P/09.1-R007"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "pass policy digest",
+   "sources": [
+    "Platform/10-domain-console/acceptance/seams.tsv:83"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/common/contracts/forwarding.md",
+     "line": 117,
+     "needle": "`X-W2C-Pass-Policy` is exactly one header field",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "inline script hash",
+   "sources": [
+    "Platform/06-console/acceptance/1/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 90,
+     "needle": "CSP — at least script-src 'self' 'sha256-…'",
+     "req": "P/06.5-R003"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "manifest files JCS sha256/size",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv:244"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/02-installer/spec/02.3-installer.norms.md",
+     "line": 72,
+     "needle": "`files` | map author names",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "encoding-digest",
+   "definition": "Row JSON-text cells: x-encoding jcs/json in family schemas (member-topology doc, roles assigned)",
+   "sources": [
+    "Platform/09-agent/acceptance/1/scenarios.tsv:53,187,243"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/09-agent/data/roles.schema.json",
+     "line": 22,
+     "needle": "\"x-encoding\"",
+     "req": null
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "metrics-text",
+   "definition": "Number notation of series values (JCS/ECMAScript), -0, label escaping, TYPE line once",
+   "sources": [
+    "Platform/06-console/vectors/metrics/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 644,
+     "needle": "the canonical JCS notation of a number",
+     "req": "P/06.5-R018"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "metrics-text",
+   "definition": "agg rules, labels order, histogram lines, rounding half-even, garbled count per element",
+   "sources": [
+    "Platform/06-console/vectors/metrics/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 650,
+     "needle": "### Manifest series `metrics[]`",
+     "req": "P/06.5-R018"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "metrics-text",
+   "definition": "Named series and their label sets (w2c_*, <sub>_*)",
+   "sources": [
+    "Platform/06-console/acceptance/5/scenarios.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.5-console.norms.md",
+     "line": 637,
+     "needle": "w2c_changes_messages_total",
+     "req": "P/06.5-R018"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "time-format",
+   "definition": "Time in a row (writer form) and @time",
+   "sources": [
+    "acceptance @time expectations"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/01-store/spec/01.1-store.norms.md",
+     "line": 39,
+     "needle": "Time in a row",
+     "req": "P/01.1-R005"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "time-format",
+   "definition": "Alarm HH:MM UTC of the domain clock",
+   "sources": [
+    "Platform/10-domain-console/vectors/alarms/cases.tsv"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+     "line": 451,
+     "needle": "(the time is UTC of the domain clock)",
+     "req": "P/10-R014"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "native-form",
+   "definition": "resolve exit 2 forms (N5)",
+   "sources": [
+    "vector READMEs"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/spec/06.7-console.norms.md",
+     "line": 550,
+     "needle": "field.type, an unknown merge",
+     "req": "P/06.7-R025"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "native-form",
+   "definition": "view ViewInput camera/silent_after",
+   "sources": [
+    "vector READMEs"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+     "line": 665,
+     "needle": "Native camera input",
+     "req": "P/08.1-R014"
+    }
+   ],
+   "status": "already-normative"
+  },
+  {
+   "class": "native-form",
+   "definition": "alarms N5 member form",
+   "sources": [
+    "vector READMEs"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+     "line": 425,
+     "needle": "silent_after: a required finite positive",
+     "req": "P/10-R014"
+    }
+   ],
+   "status": "already-normative"
+  }
+ ],
+ "checked_classes": [
+  "refusal words error/fault by door and code (162 pairs)",
+  "detail texts and ~substrings",
+  "reason/why/state/kind/from/how/sentence words",
+  "response and request headers",
+  "response field names",
+  "refusal field pointers",
+  "array order (scalar and object arrays; 92 paths)",
+  "canonicalization and digests",
+  "byte substrings of JSON-text cells (x-encoding)",
+  "numbers, time strings, /metrics line format",
+  "formula/label texts (from, sentence)",
+  "README and TSV-comment literals and decision tags",
+  "family-read derived from schemas"
+ ],
+ "limits": [
+  "acceptance README prose read mechanically (quoted literals, decision tags) and by spot check, not line by line",
+  "@absent expectations spot-checked (86 paths)",
+  "pair check (code+word) by form line co-occurrence, not by refusal condition",
+  "seam observation vocabularies are judge adapters; not product definitions",
+  "alarm sentence templates and rid template confirmed by reading the owning norms; the classifier does not generalize member names",
+  "363 links from P06-P10 spec/forms to vectors/acceptance become dangling in a composition without those dirs"
+ ],
+ "not_mapped": "Case-specific expected values, instance data (ids, hashes of fixtures) and judge adapter vocabularies are not definitions; see REPORT.md."
+}
