@@ -66,4 +66,4 @@ Who executes it is the controller (`04-controller`: the shortage, `in_flight`, `
 The withdrawal by the deadline (R27),
 a number above want (R28) and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).
 
-The aggregate waiting/sets[].waiting keeps integer-by-value spellings, but has no common.uint53 ceiling or binary64/int64 conversion. Compute sums and ceil division exactly; individual weight/capacity and all other input domains remain unchanged. The separate adr15-waiting-max53/at53/odd53 inputs are 2^53-1, 2^53 and 2^53+1; with per=2^52 they need two, two and three processes. These are added rows, never a reinterpretation of old cases.
+The aggregate waiting/sets[].waiting keeps integer-by-value spellings, but has no common.uint53 ceiling or binary64/int64 conversion. Compute sums and ceil division exactly; individual weight/capacity and all other input domains remain unchanged. Individual named-input-to-result associations are in [judge-only case data](README.cases.md).

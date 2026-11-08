@@ -73,4 +73,5 @@ By reading or by an acceptance step: the drain (shrinking without the hold-off a
 step; the clock (the first pass without a shortage) — N1.4. There is no field of the reason of not shrinking in the pass report (N1.2): the order
 of the reasons and their words are held by this vector, the pass report does not show them (the Architect's decision of 2026-10-20).
 
-ADR-0127 P/04 C1: only live top n=want(s)>1 is eligible. The two former precedence cases now use live top3 and missing middle2; the new no-live-top-* cases retain their old inputs and require no_victim before any other reason. places.wanted protection is covered by shrink-victim and composed s36/s37, without adding a field to this closed form.
+ADR-0127 P/04 C1: only live top n=want(s)>1 is eligible. places.wanted protection is covered by shrink-victim and composed s36/s37, without adding a field to this closed form.
+ Named-input-to-outcome associations are in [judge-only case data](README.cases.md).

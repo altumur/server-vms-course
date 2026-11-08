@@ -38,8 +38,8 @@ The same file rules; the header `case<TAB>t<TAB>expect<TAB>note`. `t` is the tim
 
 The same file rules; the header `case<TAB>file<TAB>line<TAB>expect<TAB>note`: `file` is the content of the bucket before the write,
 `line` is the new line without LF, `expect` is the content after the write (JSON strings) or `@refuse` — a refusal of the write, the file does not
-change (deeper than `JSON_DEPTH`, `depth-129`; EJ-DEPTH-BASELINE33). A tail without LF is completed with LF, there is no truncation
-(EJ-L03); the bucket `no-final-lf` read after the write gives `garbled` 1, and `json-tail` — three ordinary lines (`tail-json-appended` in `bucket.tsv`; EJ-L06).
+change (deeper than `JSON_DEPTH`; EJ-DEPTH-BASELINE33). A tail without LF is completed with LF, there is no truncation
+(EJ-L03). Named inputs and expected results are in [judge-only case data](README.cases.md).
 
 ## `modes.tsv`
 
