@@ -45,6 +45,7 @@ KEYS = {
 }
 # Subcommand -> HTTP door called through admin.sock: norm file, anchor and gen_core.STUBS-style selector.
 DOORS = {
+    "backup": [(NORMS_13, "P/01.3-R033", None)],
     "status": [(NORMS_13, "P/01.3-R016", "door:GET `/v1/status`")],
     "join": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/join`")],
     "leave": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/leave`")],
@@ -59,7 +60,7 @@ REFUSAL_ROWS = {
     "join": ("join_parity", "join_left"),
     "leave": ("box_last_voter",),
     "admit": ("box_admit",),
-    "backup": ("backup_inside_dir",),
+    "backup": ("backup_inside_dir", "copy_method", "copy_admin_only", "copy_snapshot_unavailable"),
     "rights": ("rights_not_loaded",),
 }
 # Stand-profile own commands: name -> (function, calling directive row in the common README).
@@ -137,8 +138,20 @@ def anchor_items(path):
     return {a: (h, t) for h, _, items in gen_core.sections(path.read_text(encoding="utf-8")) for a, t in items}
 
 
+def has_http_copy():
+    """The actual API selects the new copy documentation; legacy APIs have no such operation."""
+    import gen_door
+
+    try:
+        _, doc = gen_door.load(L.openapi)
+        return any(op.path == "/v1/copy" for op in gen_door.Spec(doc, str(L.openapi)).ops)
+    except (OSError, gen_door.GenError) as exc:
+        raise GenError(f"admin API: {exc}") from None
+
+
 def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
     name = go_name(cmd)
+    copy_http = cmd == "backup" and has_http_copy()
     lines = [f'// {name} — the subcommand `configstore {gram}` (P/01.3 N1.3 admin_ops): exit 1 not in this stage until',
              "// your stage needs it; then replace the body (the signature stays: Run calls it). The flags are parsed",
              "// and checked by the form already (a flag out of form — code 2 before Run); f.Args — the positional words.",
@@ -164,6 +177,8 @@ def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
             if gen_core.plain(t) != "---":
                 lines += gen_core.wrap(f"req: {a} — {gen_core.plain(t)}", "//     ", "//       ")
     for path, anchor, sel in DOORS.get(cmd, []):
+        if cmd == "backup" and not copy_http:
+            continue
         items = anchor_items(path)
         if anchor not in items:
             raise GenError(f"{path.name}: no req anchor {anchor} (gen_admin DOORS {cmd})")
@@ -178,10 +193,13 @@ def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
         lines += gen_core.wrap(f"req: {anchor} — {gen_core.plain(item)}", "//     ", "//       ")
     lines.append("//   the flags — forms/daemon-flags.tsv (commands ∋ " + cmd + "; f.<Field> of package flags):")
     lines += [f"//     {fl} {typ}" + ("" if req == "false" else f", required: {req}") for fl, typ, req in flags]
-    if REFUSAL_ROWS[cmd]:
+    refusals = REFUSAL_ROWS[cmd]
+    if cmd == "backup" and not copy_http:
+        refusals = ("backup_inside_dir",)
+    if refusals:
         lines.append("//   the refusals — forms/refusals.tsv:")
         try:
-            lines += gen_core.refusal_lines(REFUSAL_ROWS[cmd])
+            lines += gen_core.refusal_lines(refusals)
         except gen_core.GenError as exc:
             raise GenError(str(exc)) from None
     return lines
@@ -210,7 +228,8 @@ type Env struct {
 }
 
 // CopyOps is implemented by box.CopyControl. Connect it in launch.App.Admin's
-// ordinary admin.Run environment. No storage format or socket protocol is assumed.
+// ordinary admin.Run environment. The host owns storage and transport. When Source
+// declares admin-only HTTP copy, live backup must follow it rather than a private alias.
 type CopyOps interface {
     Backup(file string) error
     Import(file string, indexBase uint64, force bool) error
@@ -377,10 +396,11 @@ def provenance():
     """Part provenance (ADR-0125 addendum (1), item 6(a)): forms, generator, no handwritten runtime, and judge."""
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": gen_core.sha(path)}
-    paths = [p for src in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON) for p in
+    paths = [p for src in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON, L.openapi) for p in
              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])]
     return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)),
+                           entry(HERE / "gen_door.py"), entry(HERE / "yamlsub.py")],
             "handwritten": [], "judge": entry(JUDGE)}
 
 

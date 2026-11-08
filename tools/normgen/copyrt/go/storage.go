@@ -33,7 +33,8 @@ type ImportProgress struct {
 // CopyStorage connects the copy procedure to your actual store. WithCopyLock
 // excludes ordinary writes, batches and another copy procedure for the entire
 // callback; it must return the callback's error. Snapshot also excludes half-batches.
-// For a live backup use the daemon's store via its own admin transport. For a box
+// For a live backup the host honors Source's transport contract, including
+// admin-only HTTP copy when declared. This port does not implement or qualify it. For a box
 // import/restore open the stopped target store exclusively, not through a socket.
 type CopyStorage interface {
 	WithCopyLock(func(CopyTxn) error) error
@@ -70,6 +71,7 @@ func BackupCopy(store CopyStorage, file, dir string) error {
 	}
 	called := 0
 	var operationErr error
+	var data []byte
 	lockErr := store.WithCopyLock(func(tx CopyTxn) (result error) {
 		called++
 		defer func() { operationErr = result }()
@@ -80,11 +82,13 @@ func BackupCopy(store CopyStorage, file, dir string) error {
 		if state.Import != nil && state.Import.Phase != "Done" {
 			return errors.New("backup: an unfinished import is not a complete store")
 		}
-		data, err := EncodeCopy(state.Index, state.Rows)
+		// Encode while the rows are protected: the result owns its bytes and no
+		// longer aliases the host's mutable slice or item maps after unlocking.
+		data, err = EncodeCopy(state.Index, state.Rows)
 		if err != nil {
 			return err
 		}
-		return WriteCopyFile(file, data)
+		return nil
 	})
 	if operationErr != nil {
 		return operationErr
@@ -95,7 +99,8 @@ func BackupCopy(store CopyStorage, file, dir string) error {
 	if called != 1 {
 		return fmt.Errorf("backup: copy storage executed snapshot %d times, want once", called)
 	}
-	return nil
+	// External file output must not hold the lock excluding ordinary mutations.
+	return WriteCopyFile(file, data)
 }
 
 // WriteCopyFile uses a new file of mode 0600 in the destination directory, syncs

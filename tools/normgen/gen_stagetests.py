@@ -318,7 +318,7 @@ def build(root=ROOT, stages_text=None, transitional=TRANSITIONAL):
     mod = "normgen/p01-1/", L.go_module + "/"                     # Lesson output module.
     files["go/stagetests/engine_test.go"] = ENGINE_GO.replace(*mod)
     files["go/stagetests/doc.go"] = DOC_GO
-    files["go/coreadapter/coreadapter.go"] = ADAPTER_GO.replace(*mod)
+    files["go/coreadapter/coreadapter.go"] = adapter_source(root).replace(*mod)
     files["go/coreadapter/open.go"] = OPEN_GO.replace(*mod)
     files["go/coreadapter/seams.go"] = SEAMS_GO.replace(*mod)
     inv = ["# Inventory of the stage tests (ADR-0125 addenda (3), (4); ADR-0126 addendum (7)): every step of a selected "
@@ -425,6 +425,37 @@ func headers(h [][2]string) map[string]string {
 	return out
 }
 '''
+
+
+def adapter_source(root=ROOT):
+    """Bind optional copy operations to the actual API; older Source keeps its scaffold bytes."""
+    import gen_door
+
+    path = Path(root) / L.rel / "spec" / L.openapi.name
+    try:
+        _, doc = gen_door.load(path)
+        ops = [op for op in gen_door.Spec(doc, str(path)).ops if op.path == "/v1/copy"]
+    except (OSError, gen_door.GenError) as exc:
+        raise GenError(f"stage adapter API: {exc}") from None
+    if not ops:
+        return ADAPTER_GO
+    methods = []
+    for op in ops:
+        if op.params or op.body is not None:
+            raise GenError(f"stage adapter: copy operation {op.name} has unsupported arguments")
+        methods.append(f"func (NotInStage) {op.name}(Ctx) apidoor.Answer {{ return notInStage(apidoor.Op{op.name}) }}\n")
+    text = ADAPTER_GO.replace("// NotInStage — the five methods", "// NotInStage — the methods")
+    text = text.replace("Leave, Metrics of chapter 1.3", "Leave, Metrics and " + ", ".join(op.name for op in ops) + " of chapter 1.3")
+    if text.count("func headers(h [][2]string)") != 1:
+        raise GenError("stage adapter: header helper marker moved")
+    text = text.replace("func headers(h [][2]string)", "".join(methods) + "\nfunc headers(h [][2]string)")
+    # This adapter owns in-process HTTP framing, including the declared bodyless HEAD.
+    text = text.replace("refusal.Body\n", 'headBody(method, refusal.Body)\n')
+    text = text.replace("resp.Body\n", 'headBody(method, resp.Body)\n')
+    text = text.replace('}, b\n', '}, headBody(method, b)\n')
+    text += '\nfunc headBody(method string, body []byte) []byte {\nif method == "HEAD" { return nil }; return body\n}\n'
+    return text
+
 
 OPEN_GO = r'''// Package coreadapter: Open and Ctx — yours (ADR-0126 addendum (7) item 5). The kit puts this stub once and never
 // overwrites it.
