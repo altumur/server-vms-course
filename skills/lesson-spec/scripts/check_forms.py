@@ -821,15 +821,17 @@ def check_stage_parts(path):
     """ADR-0126 доп. (4) п. 13: колонки `kit` (этап закрыт пакетом целиком) и `parts` (части, которыми этап пользуется) —
     `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке; `n` идут по порядку с 1, `depends` —
     `-` или номера прежних этапов (ADR-0126 доп. (1)). Прочую сверку формы этапов ведёт `check_spec` («Архитектор»).
-    ADR-0126(9) phase1: public stages.tsv may omit both package columns;
-    stages.kit.tsv retains them. Both forms preserve their gates and scenario scope."""
+    ADR-0126(9) phase3: public stages.tsv forbids the kit/parts column heads and
+    legacy tests: gates. Retained stages.kit.tsv keeps the legacy grammar."""
     path = Path(path)
     lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
     head = lines[0].split("\t") if lines else []
-    # During ADR-0126(9) phase1 the public form may retain both package columns
-    # or omit both. The exact retained kit form keeps the legacy package grammar.
+    # Check exact fields and parsed gate tokens, never unrelated words in prose.
+    public = path.name == "stages.tsv"
     required = ("stage", "gate") + (("kit", "parts") if path.name == "stages.kit.tsv" else ())
     errors = [f"{path.name}: no column {c}" for c in required if c not in head]
+    if public and {"kit", "parts"} & set(head):
+        errors.append(f"{path.name}: package columns kit/parts are not permitted in the public form")
     if len(head) != len(set(head)):
         errors.append(f"{path.name}: duplicate columns")
     if ("kit" in head) != ("parts" in head):
@@ -851,6 +853,9 @@ def check_stage_parts(path):
         if len(checks) != len(set(checks)):
             errors.append(f"{path.name}: {r['stage']}: duplicate gate checks")
         for check in checks:
+            parsed = GATE.fullmatch(check)
+            if public and parsed and parsed[1]:
+                errors.append(f"{path.name}: {r['stage']}: legacy tests: gates are not permitted; use accept: or seams:")
             errors += gate_errors(lesson, r["stage"], check)
         for column in (c for c in ("kit", "parts") if c in head):
             if r[column] == "-":
