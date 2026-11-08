@@ -1,7 +1,7 @@
 """Generate OpenAPI door routes for lessons after P/01 (ADR-0125 generator 2; P/06 part 3a).
 
   python3 tools/normgen/gen_door_lesson.py --lesson 06-console [<out>]
-gen_door.py delegates here when the lesson is not 01-store. Read spec/<lesson>.api.openapi.yaml via yamlsub, resolving external refs relative to the lesson document; description, summary and x-mounting prose is not interpreted.
+gen_door.py delegates here when the lesson is not 01-store. Read spec/<lesson>.api.openapi.yaml via yamlsub, resolving external refs relative to the lesson document; description, summary and x-mounting prose is not interpreted. The published TableEditCollection/Item or PassTableEditCollection/Item PathItems append collection/item operations; their sub/table names bind only to accepted domain.edit_tables through the existing private CatalogSnapshot capability, never an open template or a fixture catalogue.
 
 Emit go/apidoor/routes.go with Op in OpenAPI path/method order, Ops metadata (method, path, optional /{sub} prefix from {origin}/{sub}, parameters, requiredness, response status/media/headers and request media), router templates and path-schema checks (minLength, maxLength, pattern, enum, const, expanded refs), path/method dispatch, path methods and unanimous-405 metadata. Copy routes_rt.go from doorrt2/go/routes.go: Route(method, path, Catalog), Match and RouteError. The YOURS Catalog supplies loaded sub/rows/table/pass names. Part 3b body parsing/schema checks, Encode and refusal construction are outside this route generator. test_gen_door_lesson.py uses an independent OpenAPI route model, probes and mutants."""
 import hashlib
@@ -731,6 +731,42 @@ def _response_object(docs, node, base):
     return node, base
 
 
+def _table_entries(docs):
+    """The published owner table doors bind only accepted domain.edit_tables names."""
+    components = docs.doc.get("components", {}).get("pathItems", {})
+    pairs = [(a, b) for a, b in (("TableEditCollection", "TableEditItem"),
+                                ("PassTableEditCollection", "PassTableEditItem")) if a in components or b in components]
+    if len(pairs) > 1:
+        raise GenError("domain table PathItems have two competing owner forms")
+    names = pairs[0] if pairs else ()
+    if names:
+        if not all(name in components for name in names):
+            raise GenError("domain table PathItems require both collection and item declarations")
+        view = docs.platform / "02-installer/spec/02.2-installer.view.schema.json"
+        if "edit_tables" not in json.loads(view.read_text(encoding="utf-8"))["$defs"]["domain"]["properties"]:
+            raise GenError("domain table doors require the accepted view's domain.edit_tables")
+        docs.inputs.add(view)
+        docs.inputs.add(docs.platform / "08-domain/spec/08.6-domain.norms.md")
+    return [(path, components[name], name) for path, name in zip(
+        ("/domain/{sub}/{table}", "/domain/{sub}/{table}/{name}"), names) if name in components]
+
+
+def _table_parameters(docs, item, op, base):
+    levels, effective = [], {}
+    for container in (item, op):
+        level = {}
+        for raw in container.get("parameters", []):
+            p, pbase = _legacy_object(docs, raw, base)
+            key = (p.get("in"), p.get("name"))
+            if key[0] not in {"path", "query", "header", "cookie"} or not isinstance(key[1], str) or not key[1] or key in level:
+                raise GenError(f"{base}: invalid/duplicate table parameter {key}")
+            level[key] = {"name": p["name"], "in": p["in"], "required": bool(p.get("required")),
+                          "schema": p.get("schema", {}), "base": pbase}
+        levels.append(list(level.values()))
+        effective.update(level)
+    return list(effective.values()), levels
+
+
 def build(root=ROOT):
     if L.key == "06-console":
         return _p06_build(root)
@@ -741,7 +777,8 @@ def build(root=ROOT):
     names = set()
     bodies.clear()
     priority.clear()
-    for path, item in doc.get("paths", {}).items():
+    entries = [(path, item, "") for path, item in doc.get("paths", {}).items()] + _table_entries(docs)
+    for path, item, component in entries:
         item, item_base = _legacy_object(docs, item, spec)
         segs = segments(path)
         pre = prefixed(item)
@@ -816,6 +853,11 @@ def build(root=ROOT):
                 bodies.append(("req", name, "", media, mo.get("schema"), rb_base))
             ops.append({"name": name, "method": m.upper(), "path": path, "prefixed": pre, "params": params,
                         "responses": responses, "req": req_media, "req_required": bool(rb and rb.get("required"))})
+            if component:
+                effective, levels = _table_parameters(docs, item, op, item_base)
+                ops[-1].update(component=component, levels=levels, checks={
+                    p["name"]: param_check(docs, p["schema"], p["base"], f"{path} {m} {p['name']}")
+                    for p in effective if p["in"] == "path"})
             by_pm[f"{path} {m.upper()}"] = name
             path_ops.append(ops[-1])
         if not path_ops:
@@ -849,7 +891,8 @@ def build(root=ROOT):
                              "decode": decs, "errors": errs, "schemas": schemas})
         methods_of[path] = [o["method"] for o in path_ops]
         all405[path] = all(any(r["code"] == "405" for r in o["responses"]) for o in path_ops)
-        templates.append((path, segs, False))
+        if not component:  # A component is never an open template: its names need the startup snapshot.
+            templates.append((path, segs, False))
         if pre:
             if any(s[1] == "sub" for s in segs):
                 raise GenError(f"{path}: servers {{origin}}/{{sub}} and a parameter sub in the path")
@@ -1096,6 +1139,22 @@ def _p06_go_spec(ops):
     return out + ["\t}, references: []string{" + references + "}, documents: map[string]string{" + documents + "}}", "}", ""]
 
 
+def _table_go_spec(ops):
+    out = ["func domainTableBindings() []p06Operation {", "\treturn []p06Operation{"]
+    for o in ops:
+        if o.get("component") not in {"TableEditCollection", "TableEditItem", "PassTableEditCollection", "PassTableEditItem"}:
+            continue
+        ss = ", ".join("{literal: " + go_str(lit) + "}" if not p else "{parameter: " + go_str(p) + "}"
+                       for lit, p in segments(o["path"]))
+        cs = ", ".join(go_str(n) + ": " + go_check(c) for n, c in o["checks"].items())
+        levels = ["[]Param{" + ", ".join("{" + go_str(p["name"]) + ", " + go_str(p["in"]) + ", " +
+                    str(p["required"]).lower() + "}" for p in level) + "}" for level in o["levels"]]
+        out.append("\t\t{op: " + o["name"] + ", path: " + go_str(o["path"]) + ", component: " + go_str(o["component"]) +
+                   ", segments: []p06Segment{" + ss + "}, checks: map[string]paramCheck{" + cs +
+                   "}, itemParameters: " + levels[0] + ", operationParameters: " + levels[1] + "},")
+    return out + ["\t}", "}", ""]
+
+
 def server_sub_check(docs, item, spec, path):
     """Read sub from server {origin}/{sub}: enum if declared, otherwise unconstrained; Catalog judges names."""
     for s in item.get("servers") or []:
@@ -1182,6 +1241,7 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha, roles
     out += [f"\t{go_str(k)}: {str(v).lower()}," for k, v in all405.items()]
     out += ["}", ""]
     out += _p06_go_spec(ops)
+    out += _table_go_spec(ops)
     return "\n".join(out)
 
 
@@ -1397,7 +1457,21 @@ def kit_md():
     for shape, paths in groups.items():
         if len(paths) > 1:
             lines.append("- `/" + "/".join(shape) + "`: " + ", ".join(f"`{p}`" for p in paths))
-    return KIT_MD_HEAD + "\n".join(lines) + "\n" + KIT_MD_TAIL
+    tables = KIT_MD_TABLES if _table_entries(docs) else ""
+    return KIT_MD_HEAD + "\n".join(lines) + "\n" + tables + KIT_MD_TAIL
+
+
+KIT_MD_TABLES = """
+The table-edit collection and item PathItems bind `/domain/{sub}/{table}` and
+`/domain/{sub}/{table}/{name}` only to `domain.edit_tables` in accepted startup manifest views.
+For those shapes, the existing private capability `CatalogSnapshot() (root string, views []map[string]any)`
+must return the complete immutable loaded views. `domain.ref`, `domain.edit`, `tables`, fixture names and
+the `Catalog.Table` callback do not grant a table-edit route. Catalogue substitutions retain catalogue rank;
+source literals still win. The public `Catalog`, `Route` and `Match` signatures are unchanged.
+The bound `sub` and `table` path parameters are removed from both private effective parameter levels;
+`Match.Params` retains their names and values. Request/response schemas, headers and methods remain
+owned by the PathItem declarations. Manifest-specific field checks, rights, forwarding and IO remain yours.
+"""
 
 
 KIT_MD_P06 = """

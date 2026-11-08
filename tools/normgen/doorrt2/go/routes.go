@@ -234,6 +234,42 @@ func Route(method, path string, cat Catalog) (Match, *RouteError) {
 			hits = append(hits, hit{t, params, sub})
 		}
 	}
+	var tableOps []p06Operation
+	for _, o := range domainTableBindings() {
+		shape := template{path: o.path}
+		possible := len(o.segments) == len(segs)
+		for i, s := range o.segments {
+			shape.segs = append(shape.segs, segment{lit: s.literal, param: s.parameter})
+			if possible && s.parameter == "" && segs[i] != s.literal {
+				possible = false
+			}
+		}
+		for _, h := range hits {
+			if len(h.t.segs) == len(shape.segs) && moreConcrete(h.t, shape) > 0 {
+				possible = false // A source literal already wins without consulting a table catalogue.
+			}
+		}
+		if possible {
+			tableOps = append(tableOps, o)
+		}
+	}
+	if len(tableOps) != 0 {
+		candidates, err := domainTableCandidates(tableOps, path, cat)
+		if err != nil {
+			return Match{}, err
+		}
+		for _, c := range candidates {
+			t := template{path: c.operation.path}
+			for _, s := range c.segments {
+				// Retain catalogue rank rather than turning a bound name into a source literal.
+				t.segs = append(t.segs, segment{lit: s.literal, param: s.parameter})
+				if s.rank == 1 {
+					t.segs[len(t.segs)-1].param = "table"
+				}
+			}
+			hits = append(hits, hit{t, c.values, c.sub})
+		}
+	}
 	if len(hits) == 0 {
 		return Match{}, &RouteError{Code: 404, Reason: "no route"}
 	}
@@ -317,6 +353,77 @@ type p06Target struct {
 	path    string
 	parts   []string
 	offsets []int
+}
+
+// These owner PathItems enumerate only the accepted domain.edit_tables projection.
+// The existing private startup-snapshot capability adds no loader or public Catalog method.
+func domainTableCandidates(operations []p06Operation, path string, cat Catalog) ([]p06Candidate, *RouteError) {
+	provider, ok := cat.(interface {
+		CatalogSnapshot() (root string, views []map[string]any)
+	})
+	if !ok {
+		return nil, p06ContextError("CatalogSnapshot is required for domain table doors")
+	}
+	root, views := provider.CatalogSnapshot()
+	if root == "" {
+		return nil, p06ContextError("selected root is not loaded")
+	}
+	target, ok := p06Split(path)
+	if !ok {
+		return nil, &RouteError{Code: 404, Reason: "the path is not a request path"}
+	}
+	seen, result := map[string]bool{}, []p06Candidate{}
+	for _, view := range views {
+		sub, ok := view["name"].(string)
+		if !ok || sub == "" || seen[sub] {
+			return nil, p06ContextError("missing/duplicate manifest name")
+		}
+		seen[sub] = true
+		value, exists := view["domain"]
+		if !exists {
+			continue
+		}
+		domain, ok := p06Map(value)
+		if !ok {
+			return nil, p06ContextError("domain is not a canonical view object")
+		}
+		value, exists = domain["edit_tables"]
+		if !exists {
+			continue
+		}
+		tables, ok := p06Map(value)
+		if !ok {
+			return nil, p06ContextError("domain.edit_tables is not a canonical view object")
+		}
+		for _, table := range p06Keys(tables) {
+			if table == "" {
+				return nil, p06ContextError("domain.edit_tables has an empty name")
+			}
+			for _, o := range operations {
+				c := p06Bind(o, p06Server{}, sub, p06Choice{"table", table, "domain.edit_tables", tables[table]})
+				if !c.match(target) {
+					continue
+				}
+				valid := true
+				for name, raw := range c.values {
+					value, decoded := raw, true
+					if _, bound := c.bound[name]; !bound {
+						value, decoded = unescape(raw)
+					}
+					check, checked := o.checks[name]
+					valid = valid && decoded && value != "" && (!checked || check.ok(value))
+					c.values[name] = value
+				}
+				if valid {
+					result = append(result, c)
+				}
+			}
+		}
+	}
+	if !seen[root] {
+		return nil, p06ContextError("selected root is not loaded")
+	}
+	return result, nil
 }
 
 func p06ContextError(reason string) *RouteError {
