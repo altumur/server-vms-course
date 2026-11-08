@@ -23,21 +23,21 @@ lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
 
 ## Environment
 
-| Variable | Meaning | Default | Norm |
+| Variable | Meaning | Read phase | Source / setting channel |
 |---|---|---|---|
-| `W2C_ROLE` | the role `<sub>controller`; not the role of the runner command — code 2 | set by the unit | [P/02.4] N1.2 |
-| `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (the profile of a box of one implementation) | [P/02.4] N1.2 |
-| `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] N1.2 |
-| `OBJECTS` / `PLATFORM_OBJECTS` | the objects root: the pass report, the snapshot shards | `<PLATFORM_DIR>/objects` | [P/02.4] N1.2 «The setting channel» |
-| `RESOURCE_ROOT` / `EVENTS` | the events root: its own journal `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] N1.2 «The setting channel», [the event journal contract](../common/contracts/event-journal.md) `journal` |
-| `SERVER_NAME` | its own server; not by the grammar of the slot suffix — code 2 | the short hostname | [P/02.4] N1.2 |
-| `BOX_ID` | the box | `/etc/machine-id`, otherwise the hostname | [P/02.4] N1.2 |
-| `HUNG_MOVE_AFTER`, `REACH_BUDGET` | the terms of the fate of a hung slot and the reachability budget | 900, 10 | [P/02.4] N1.2, [P/04] N1.4, «Implementation decides» item 4 |
-| `W2C_SHRINK_AFTER` | stand only: the shrink term `SHRINK_AFTER`, s; when set — a loud journal line at start; outside the stand it is not set (review of stage B 3–5, № 18) | not set (`SHRINK_AFTER` 300) | [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
-| `CLUSTER` | the cluster name in the snapshot shard | `local` | [P/02.4] N1.2, [P/04] N1.3a |
-| `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/<sub>controller` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
-| `W2C_ENV`, `W2C_SUB_ENV` | the environment files: the common one and the subsystem one | `/etc/w2c/w2c.env`; without a value — none | [P/02.4] N1.2 |
-| `NOTIFY_SOCKET` | the systemd watchdog | — | [P/02.4] N1.1 `notify` |
+| `W2C_ROLE` | the role `<sub>controller`; not the role of the runner command — code 2 | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/<sub>controller.sock` | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `PLATFORM_DIR` | the state root | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `OBJECTS` / `PLATFORM_OBJECTS` | the objects root: the pass report, the snapshot shards | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 «The setting channel» |
+| `RESOURCE_ROOT` / `EVENTS` | the events root: its own journal `audit/<sub>controller/e1/…` | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 «The setting channel», [the event journal contract](../common/contracts/event-journal.md) `journal` |
+| `SERVER_NAME` | its own server; not by the grammar of the slot suffix — code 2 | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `BOX_ID` | the box | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `HUNG_MOVE_AFTER`, `REACH_BUDGET` | the terms of the fate of a hung slot and the reachability budget | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4, «Implementation decides» item 4 |
+| `W2C_SHRINK_AFTER` | stand only: the shrink term `SHRINK_AFTER`, s; when set — a loud journal line at start; outside the stand it is not set (review of stage B 3–5, № 18) | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
+| `CLUSTER` | the cluster name in the snapshot shard | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.3a |
+| `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/<sub>controller` | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, N1.6 |
+| `W2C_ENV`, `W2C_SUB_ENV` | the environment files: the common one and the subsystem one | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
+| `NOTIFY_SOCKET` | the systemd watchdog | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.1 `notify` |
 
 The environment files are read by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md)); the order — the unit values, the role file, `w2c.env`, the subsystem file
 ([P/02.4] N1.2).
@@ -78,17 +78,17 @@ argument of the runner command is the subsystem name `<sub>`.
 | 2 | the environment file is not by the grammar; `SERVER_NAME` is not by the grammar; `W2C_ROLE` is not the role of the command | [P/02.4] N1.2, N4 |
 | ≠ 0 | another start refusal — a log line names the source | [P/02.3] N3 «Process start» |
 
-`RestartPreventExitStatus=2`: after the code 2 the unit is not restarted until an operator action ([P/02.4] N1.1).
+`RestartPreventExitStatus` from its P/02.4 unit source: after the code 2 the unit is not restarted until an operator action ([P/02.4] N1.1).
 
 ## Signals and readiness
 
 - **Readiness** — `Type=notify`: `READY=1` after the schema check and the manifest read, `WATCHDOG=1` on every turn of the pass;
-  `WatchdogSec=360` (SHOULD); without `NOTIFY_SOCKET` it is silent ([P/02.4] N1.1 `notify`, `watchdog`).
-- **The first 45 s** after start it judges nobody: what is seen for the first time has «just changed» ([P/04] N3 «pass()» step 0, N1.4a
+  `WatchdogSec` from its P/02.4 unit source (SHOULD); without `NOTIFY_SOCKET` it is silent ([P/02.4] N1.1 `notify`, `watchdog`).
+- **The first LOST_AFTER** after start it judges nobody: what is seen for the first time has «just changed» ([P/04] N3 «pass()» step 0, N1.4a
   `fresh_controller`).
 - **SIGTERM** — an orderly exit; an unfinished intent is completed by the next holder of the turn
   ([P/04] N1.5, N3 «accept and complete a decision»). **SIGKILL** — the same for the neighbour: the state is only in the rows.
-- **Restart** — `Restart=always`, `RestartSec=2`, except the code 2 ([P/02.4] N1.1).
+- **Restart** — `Restart=always`, `RestartSec` from its P/02.4 unit source, except the code 2 ([P/02.4] N1.1).
 
 ## Stand
 

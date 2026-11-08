@@ -37,10 +37,11 @@ env:
   paths, not a substitute for them.
 - observe is supplied only while the process has no capture; foreign means the exact NameOnAnotherBox result, including
   an unreleased foreign lapsed row.
-- The ordinary scheduler supplies due at CONTEND_EVERY and the current wall-clock seconds. No virtual-clock offset
-  or IO completion is inferred here.
+- The ordinary scheduler supplies due at CONTEND_EVERY and a confirmed current wall-clock Time in seconds. No virtual-clock offset
+  or IO completion is inferred here; invalid carried since/at is not a valid policy snapshot.
 - publish arguments select state/since/at only. The ordinary object writer supplies identity, holder and other fields
-  from its checked snapshot and writes the full object.
+  from its checked snapshot and writes all ten required fields of the current object. since and at use the existing Time codec;
+  a same-state since is retained only from valid local state or a readable current object. Freshness remains version-based.
 functions: {}
 actions:
   choose_phase:

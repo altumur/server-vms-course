@@ -1,0 +1,19 @@
+{
+  "ms": {
+    "path": "/home/pilot/spec103/source125-common145-20261108/MS-PUBLIC-OWNER-CARRIERS-INITIAL.json",
+    "SHA": "5f200af0de4efaad18963abe5ade8f133cca226f91628badb66432f646eec8ab"
+  },
+  "P06P09": {
+    "path": "/home/pilot/spec103/source125-common145-20261108/common-carriers/PUBLIC-P06-P09-OWNER-REANCHOR.json",
+    "SHA": "b28d590810f8502a882cc45d99b4e34b6809121885c48c08f8b4697ddf75bd01"
+  },
+  "P08numeric": {
+    "path": "/home/pilot/spec103/source125-common145-20261108/common-carriers/PUBLIC-P08-NUMERIC-COPY-ROSTER.json",
+    "SHA": "0b8dc5b3d79cf7a53b25203d8897cc0c0e14f0c8a5286f31a252cb2da3d4e3c7"
+  },
+  "P07loading": {
+    "path": "/home/pilot/spec103/source125-common145-20261108/common-carriers/PUBLIC-P07-TARGET-LOADING-CLOSURE.json",
+    "SHA": "0d29b4bfc12380eddf698320109828dd6773fb1b308db59cadce8b6c8c12e368"
+  },
+  "boundary": "Coordinate packets distinguish current03df from external composed after. Final producer pin binds these exact after identities, not old parents. Two renderer Code gaps remain UNKNOWN until exact public diagnostics; no fabricated closures."
+}

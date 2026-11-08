@@ -10,7 +10,7 @@ M11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviou
 the number 06 is taken by a scenario of M11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (M11/03 sc. 14;
 the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections-1.tsv` (historical correction record)). In total 6 scenarios / 39 steps.
 
-The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (28 rows, the former sc. 01–16 of the acceptance of M11/01).
+The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (the canonical package README lists the cases).
 The doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, through which the stand reads the view and the report, are doors of the domain
 console (lesson P/10, [N1.2a](../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter sets the norm for their content.
 

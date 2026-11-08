@@ -37,3 +37,6 @@ A step of an operation requires a manifest with `door.pass.operations` and a wor
 
 Sc. 04–06, 08–13 of the plan table — by reading, the change of the ring of sc. 11 — for good: there is no directive; the form of the key — the cases `a95_*` of the corpus of P/02.1. The algorithms without a stand are checked by the vectors [`op-step`](../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
 
+
+
+ADR-0129(17): retry-failed still uses the ordinary acceptance procedure. Conflicting memory CAS is existing 412 row moved with key/index and field /memory/cas, distinct from per-step expectedVersion; matching CAS permits 202. Unknown acceptance outcomes and cleanup retain the ordinary rules. There is no retry-admission CALL port among the current ports: this HTTP/IO binding must be proved by the actual ordinary operation setup, and is not counted as executed by a source or schema preview.

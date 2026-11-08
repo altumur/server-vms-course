@@ -177,13 +177,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchRefused'
         '412':
-          description: A guard or the cas of a row diverged; nothing is written. leader moved — the generation guard of a step batch (chapter 6.9 N2).
+          description: "A row CAS, revision condition or generation guard diverged; nothing is written. BatchMoved, RevisionMoved and LeaderMoved retain their own conditions and fields."
           content:
             application/json:
               schema:
                 oneOf:
                 - $ref: '#/components/schemas/BatchMoved'
                 - $ref: '#/components/schemas/LeaderMoved'
+                - $ref: '#/components/schemas/RevisionMoved'
         '413':
           description: Over the batch limits, a row heavier than the ceiling, or the body larger than the console limit.
           content:
@@ -422,7 +423,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
+                anyOf:
                 - $ref: '#/components/schemas/FolderMoved'
                 - $ref: '#/components/schemas/FolderRefused'
         '413':
@@ -481,7 +482,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
+                anyOf:
                 - $ref: '#/components/schemas/FolderMoved'
                 - $ref: '#/components/schemas/FolderRefused'
         '413':
@@ -866,6 +867,17 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+        '412':
+          description: The memory-row CAS diverged; row moved with key/index and field /memory/cas. The step expectedVersion check is independent. Nothing in the acceptance batch is written.
+          content:
+            application/json:
+              schema:
+                unevaluatedProperties: false
+                allOf:
+                - $ref: '#/components/schemas/BatchMoved'
+                - properties:
+                    field:
+                      const: /memory/cas
   /session:
     description: Chapter 6.3 (06.3-console.norms.md) — /session and grants.
     get:
@@ -3553,7 +3565,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Policy'
+              $ref: '#/components/schemas/PolicyInput'
     head:
       summary: 'HEAD: Effective policy'
       responses:
@@ -7622,10 +7634,14 @@ components:
           minLength: 1
         until:
           type: number
-          description: wall-clock seconds of the end of the session; 0 — without a term, for the debug identity (via debug; the gate and pass contract `session` `until`, GP-G02)
+          description: "wall-clock seconds of the end of the session; for via ticket, exp of that ticket; 0 without a term for via debug (the gate-and-pass contract session until)."
         via:
           type: string
-          enum: [break-glass, token, debug]
+          enum:
+          - break-glass
+          - token
+          - debug
+          - ticket
           description: the identity step of this session (P/06.3 N1.3 `session`)
         debug:
           type: boolean
@@ -7636,7 +7652,7 @@ components:
           description: step 4a of the right contract applies; a field of the answer, not a row; otherwise there is no field (the gate and pass contract `session` `admin`, ADR-0100 §1)
         grants:
           type: array
-          description: one element per (cap, sub, scope, source); the order — the gate and pass contract `session` `grants`
+          description: "one element per (cap, sub, scope, source); for via ticket these are the rows of its person; order is the gate-and-pass contract session grants."
           items:
             $ref: '#/components/schemas/Grant'
         server_time:
@@ -8095,6 +8111,10 @@ components:
       - mirrors
       - short
       - state
+      - door
+      - waits
+      - restore
+      - mirror
       additionalProperties: false
       properties:
         server:
@@ -8182,6 +8202,15 @@ components:
             type: number
         door:
           $ref: '#/components/schemas/DoorState'
+          if:
+            required:
+            - mode
+            properties:
+              mode:
+                const: mtls
+          then:
+            required:
+            - cert_until
         garbled_rows:
           type: object
           additionalProperties:
@@ -9000,7 +9029,7 @@ components:
           const: /index
         row:
           $ref: '#/components/schemas/Folder'
-      description: Chapter 6.8 N4; the 412 body carries the current row in row.
+      description: "Chapter 6.8 N4: the 412 body includes the current row only when it exists, is not a tombstone and the caller has view; otherwise row is absent."
     OperationInput:
       type: object
       required: [id, items]
@@ -9903,6 +9932,17 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Resolved'
+    PolicyInput:
+      type: object
+      required:
+      - servers
+      additionalProperties: false
+      properties:
+        servers:
+          type: string
+          enum:
+          - shared
+          - distinct
   responses:
     BadBody:
       description: 'The common refusal of parsing a console request (chapter 6.5 N2 «Console request parsing»: query, the JSON of the body, a readable

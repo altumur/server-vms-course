@@ -1,0 +1,17 @@
+# P/05 independent runtime scalars; literal TAB. Values are the sole source; prose owns meaning and formulas.
+# Existing name/value/unit/norm/meaning class, including pending ms support; no new environment or CLI setting.
+name	value	unit	norm	meaning
+INDEX_CACHE_BYTES	67108864	bytes	P/05-R020	Index cache budget, independent of the existing OpenAPI door limit.
+HEARTBEAT_EVERY	10	s	P/05-R025	Resource heartbeat cadence; independent of worker heartbeat with the same value.
+PASS_EVERY	600	s	P/05-R025	Resource pass cadence from end; independent of bucket span and controller cadence.
+PEER_FAILS	3	count	P/05-R030	Consecutive peer failures; boundary differs by restore attempt and mirror pass.
+RESTORE_RETRY	10	s	P/05-R030	Initial restore retry; independent of heartbeat.
+RESTORE_RETRY_MAX	600	s	P/05-R030	Backoff cap; independent of pass cadence.
+LONG_POLL_WAITERS_DEFAULT	16	count	P/05-R032	Default of existing deployment choice; effective limit remains deployment-selected, not fixed16.
+WAIT_DISCONNECT_WITHIN	1	s	P/05-R032	Notice client departure within this duration, independent of busy Retry-After.
+WAIT_OBSERVE_MS	100	ms	P/05-R032	Current-bucket observation period; exact0.1 seconds, separate ms support pending.
+VOLUME_PROBE_WITHIN	5	s	P/05-R053	Upper duration of a volume probe, not a deadline for relieve/pass.
+DOOR_CONNECTIONS_MIN	64	count	P/05-R032	Minimum deployment door capacity; preserve LONG_POLL_WAITERS + query lane margin requirement.
+DOOR_PER_ADDRESS_MIN	32	count	P/05-R032	Independent minimum per-address capacity, not equal to door total.
+QUERY_NAMED_BUCKET_LIMIT	144	count	P/05-R050	Inclusive algorithm-selection threshold; not24h, query horizon or result cap.
+MIRROR_RETENTION_EXTRA	3600	s	P/05-R020	Extra retention of a mirror copy from its own written; independent of query late default.

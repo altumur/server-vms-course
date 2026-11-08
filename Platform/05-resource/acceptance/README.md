@@ -228,11 +228,10 @@ a started process reaches the first step of the start — the reading of the sch
 `@sleep 2` — a check of absence: a repeated reception of the same copy of a bucket does not shift `written` (R05-G04); `written` is wall-clock seconds,
 an implementation may have it as an integer, therefore more than a second passes between the receptions, otherwise the shift would not be visible; sc. 41 step 6,
 `@sleep 12` — a check of absence: the own row `free-*` in the band between the marks is neither removed nor rewritten; the heartbeat with
-`pass_started` (step 5) says that the first pass has begun, within 12 s its step `relieve` on an empty stand is finished (the same deadline as for
-sc. 24–28 after the start of the worker). Waiting for an event is `@until`: sc. 09-resource-door step 2 waits for the first door row, step 3 — for a new door mark
-(`at` has changed; the mark — every 15 s, N1.4 `door_row`), sc. 08 step 16 — for the alarm row in the index, sc. 16-presence-lock
+`pass_started` (step 5) says only that the first pass has begun. The fixed sleep does not confirm the end of `relieve`; this is an early observation. Completion is checked separately by synchronous CALL s63-free-ask-band-completed. Waiting for an event is `@until`: sc. 09-resource-door step 2 waits for the first door row, step 3 — for a new door mark
+(`at` has changed; the mark — every ALIVE_EVERY, N1.4 `door_row`), sc. 08 step 16 — for the alarm row in the index, sc. 16-presence-lock
 steps 3, 5, 7 — for `running` in the heartbeat of the resource (analysis of the review of stage B 3–5, № 26); sc. 17 step 8, 18 step 5 — for the first door row; sc. 19 step 3 — for the heartbeat
-of `w-1` in the listing; sc. 20 steps 3, 5, 7, 9 — for the count of the door after the mark (every 15 s); sc. 22 steps 3, 5 — for the index rows; sc. 31 steps 2, 4 — for the doors
+of `w-1` in the listing; sc. 20 steps 3, 5, 7, 9 — for the count of the door after the mark (every ALIVE_EVERY); sc. 22 steps 3, 5 — for the index rows; sc. 31 steps 2, 4 — for the doors
 of `srv-b` and `srv-a`, step 8 — for the copy of the body at `srv-b` after the first pass of the restarted `srv-a`; sc. 33 step 9, 37–39 the heartbeat step, 40
 steps 4, 5, 41 step 5, 42 step 5 — for the heartbeat of the resource (every 10 s) after the first pass; sc. 34–36 — for the index rows; sc. 43 step 2 — for the heartbeat
 of `w-1` in the listing.
@@ -297,3 +296,7 @@ the answer before the drain, no key; exactly 64 MiB — 204 and the reading 200 
 ## Kit seams
 
 [seams.tsv](seams.tsv) contains additional CALL probes for generated stagetests; their exact fixture setup and observations are [the forms README](../forms/README.md). They invoke the real resource procedures or front door. They supplement [scenarios.tsv](scenarios.tsv), the additional probes and reading, and are not the runner’s process acceptance.
+
+## ADR-0129(16) witnesses
+
+Seams s63–s67 in [seams.tsv](seams.tsv) append to the old 62 without changing the 35 process scenarios / 292 steps or relieve 9+6 vectors. S63 awaits the real synchronous relieve return, then observes 0 writes / 0 deletes, exact contents and the previous own-request version in the band. S64/S65 observe actual candidate IO at 144/145 and calendar fallback, never a result cap. S66/S67 check separate restore/mirror failure-sequence boundaries and unchanged cumulative diagnostics. Setup and normalization are [forms/README](../forms/README.md). These are source obligations; declaration is not execution of an implementation, IO or acceptance. The ms support and actual port bindings are checked separately.

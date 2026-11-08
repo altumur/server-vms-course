@@ -1,0 +1,1913 @@
+{
+  "parent": "7bc7e3fdfdacf20d4fd026bb2ee6bb0234acd1fb",
+  "source_expected": {
+    "Platform/03-worker/acceptance/2/README.md": {
+      "SHA": "d2dd37a5b9844438cd6b29a9d07859259425945d3aed274a4b84b3992e19cb01",
+      "blob": "8ccf889ea28896439391f293e3a539485c03cbbc",
+      "bytes": 38177,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/2/seams.tsv": {
+      "SHA": "c9d49cd743494cadeb2f2e57473696b9bb83d0b56c4a37d5f72304ca4cf51c98",
+      "blob": "66994431f0c91bb63982d62bd1eb5bcfa3d30ffb",
+      "bytes": 9286,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/4/README.md": {
+      "SHA": "743759cc40446c28c5d60c0fd456b5dccf4b46cf00829d5e62d1b3f797b9c52c",
+      "blob": "5da586442bb99ee5ef07583e64071f870744953d",
+      "bytes": 9250,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/4/seams.tsv": {
+      "SHA": "3f08c3f8af88f8951faed7c108e1d8eb5566ecc61912ab6fb6b7d6e9e4a4c493",
+      "blob": "4822dd71c3355206e6a19639412165a2bf82b06b",
+      "bytes": 3433,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/5/README.md": {
+      "SHA": "122180a303d76900e7241715ee85608641f95918329861229a8d3ce5b9b6de4a",
+      "blob": "36613100314cd6e1f30c6dd8a42f9445503e2c6f",
+      "bytes": 704,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/5/seams.tsv": {
+      "SHA": "fff4d778df841170f14363a048e2b07dfe309e951788949c431b200ea7c2b443",
+      "blob": "fe2c3ee7708ec46ba5e1256edb750160c3e4d9fd",
+      "bytes": 939,
+      "mode": "100644"
+    },
+    "Platform/03-worker/acceptance/6/README.md": {
+      "SHA": "317f2175c7882d6f3bf6687de700918d0e431c41073ff05ded32eea10ad726f4",
+      "blob": "485c79b31c29725ab59563572f160d968d98e06f",
+      "bytes": 21043,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/contenders.layers.tsv": {
+      "SHA": "28e1c71f845e97fd282abc89c682cf79fd40aeeb862031e03c6d2dfd7513b845",
+      "blob": "2de92b0f50f75f1675555dbfa3471a352b9d2456",
+      "bytes": 856,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/contenders.schema.json": {
+      "SHA": "663746649a6fb020baf19fed7e3d701d93565740a7476464cd02e52f9c96254d",
+      "blob": "23ff81aa005122093a08114d1b98327f5161ea2f",
+      "bytes": 30536,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/epoch.schema.json": {
+      "SHA": "4796573992e03606764c72b9ec09c6e5899e03f778b73594ea475d0d00e2f0aa",
+      "blob": "4feeefa4b0297b67fc5f6309bb9b304d9e441e62",
+      "bytes": 29072,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/heartbeats.outcomes.tsv": {
+      "SHA": "947b7b0aabb1d3fd686829e1982635801df98d4c58f84f211fc95e81e61b6bc1",
+      "blob": "b139b9a37db404aa20cecb7eec31c1db582ec72f",
+      "bytes": 5136,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/heartbeats.schema.json": {
+      "SHA": "19f863324a1f0a02db34b53f6c7ea4fc06bcd729eef2b972ee79fbb567988477",
+      "blob": "25d2c26cf99ea75f5450c0c132906b052783b80d",
+      "bytes": 45107,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/holds.schema.json": {
+      "SHA": "e741ecc116af16744ee7da32065feb4a5245e212ed9cb6bfe9db8c2fa379c9f5",
+      "blob": "0635e402f52c3c04e7b5e7d249e9b15997e6e42f",
+      "bytes": 30130,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/slots.schema.json": {
+      "SHA": "9c7bfe349be58577ae45248fb03b42242f3a5b105fdcc4a3684c81952d073525",
+      "blob": "c79f908c6e97411d6832a2ae2889e2e858d42e54",
+      "bytes": 30495,
+      "mode": "100644"
+    },
+    "Platform/03-worker/data/state.schema.json": {
+      "SHA": "3afb19210c52a3c71b6a382c2b2d0155caffa4aa5b8e1d7c1d5408d690999c7c",
+      "blob": "94992ed7bbc8c27787c105af2ee5abf2bc9af17f",
+      "bytes": 29403,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/README.md": {
+      "SHA": "764b9b8a8fd4065232ddee45ab791c267b6e76168b74feeff7ae3b7f3ff7e8b6",
+      "blob": "1559da71205be661ded0ad5668d0dc0225f04ba0",
+      "bytes": 19847,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/contender-writer.machine.yaml": {
+      "SHA": "871f7ea75d4078ba64b517a9df663e0933f568a49397c90edf060c2d69c06f8a",
+      "blob": "29961d8a79278953b8a3f747c7b4b1b79971363b",
+      "bytes": 3298,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/refusals.tsv": {
+      "SHA": "a77f5a4666f8653eb866809a0d8d113034c5f659def7aa8698421eece1492488",
+      "blob": "ee3b81bbd950460e6ffb3c7757deeb3956c3cd80",
+      "bytes": 16479,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/row-write-bindings.md": {
+      "SHA": "19f7a1fad5eafd645a0720aa51052594a1439f57da9ece4b645642140a6cfe27",
+      "blob": "f25b5eb83722fafa0ee4518ca1809422e51ccd0e",
+      "bytes": 3894,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/runtime-constants.tsv": {
+      "SHA": "f1763195244e0e751579d8c4666f5c8b9fa8adf1f4dd5094356bad63eb118437",
+      "blob": "c8c47deb1c16621b978680f91549514a26684f5e",
+      "bytes": 2352,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/slot-capture.tsv": {
+      "SHA": "e7d95efe521bcca91b5c224d8a65fe59c4918acd2321de7c53a777870293deea",
+      "blob": "3f018505a8339e3d22ed08f82459c93fb314e329",
+      "bytes": 6347,
+      "mode": "100644"
+    },
+    "Platform/03-worker/forms/stages.tsv": {
+      "SHA": "60209f8aea64f1d26e53fdc2d0cac4870397fec025f1de0874f9f250d8279324",
+      "blob": "19977471d9ac02aefcea96a6f261a0efa4a5fe3f",
+      "bytes": 4260,
+      "mode": "100644"
+    },
+    "Platform/03-worker/lifecycle.md": {
+      "SHA": "d7ca22ba96a5374d0b8f03914ed3d88667b4cf06961e285d9398667528baceb2",
+      "blob": "d082b7c274c98ef209ec2e94c589c1db53e9fb92",
+      "bytes": 10740,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/03-worker.md": {
+      "SHA": "3bfa1a3fd2f5e888447eda29a3469d208d5138a5cf536067f56e31f0df99e856",
+      "blob": "fdba89bc3271d74f5625f4efc75a2f47d53722cb",
+      "bytes": 39999,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/acceptance/2/README.md": {
+      "SHA": "dde7504a318c30cd3d6dc92cad51c41df8552a34a27db29616e4cd41d4cc79be",
+      "blob": "ba8e82fdc1bb5a92918752e3077f93ccb524bc6a",
+      "bytes": 52294,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/acceptance/4/README.md": {
+      "SHA": "cece39b28e1050f9e578a6b9aac23a625f8e7fa1efa52c1bc532ef428ca38cd5",
+      "blob": "43adb29bef9ac6ac73dfb1e24b91d248878f3577",
+      "bytes": 12875,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/acceptance/5/README.md": {
+      "SHA": "d1494db5877105fde7c54382c3ef36d2123ee3f56feef1dd3e4f1bab06cf826e",
+      "blob": "1b27fe15cbe13fe7a43f7b81dc526332f1bb3d4c",
+      "bytes": 1157,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/acceptance/6/README.md": {
+      "SHA": "6e2bb8bb586d17927935e3bad3ebe04008573e6a10c9bf503485510576c2df8c",
+      "blob": "f57dd70014d3886e2eb0e7b5037f481f645075fb",
+      "bytes": 27259,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/forms/README.md": {
+      "SHA": "973e11d3f8c87ac660589e52d48c78886c72dfbb835669f550fbd7c40b6762c4",
+      "blob": "627ee70a28212ee26004fcbdad165488ad51146c",
+      "bytes": 32446,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/forms/row-write-bindings.md": {
+      "SHA": "43437ab5347d0475a045d4ef384a81514017ca8812876df784f373b101ec8335",
+      "blob": "6da8a00cf1ed04845fe5692972b2244e38069d6a",
+      "bytes": 6046,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/lifecycle.md": {
+      "SHA": "7a5f0b0701e21ca3042a89b7fd35e22df6d3027b4647e328bee8dee73029f37f",
+      "blob": "9e3ff10ca1e38cd31784df3663a859058dcda7fe",
+      "bytes": 14623,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03-worker.README.md": {
+      "SHA": "fd5173ad793333b1edc990f0557a2ad8324b952fa5e08fa093fcaa3ea8c7ed18",
+      "blob": "92b2484a12bf938d2b39a75636b30652184627e5",
+      "bytes": 22616,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.1-worker.norms.md": {
+      "SHA": "062b90214d5a131f3bf049fc022a09ce3d2a4a359b97fe0f8c7325167ca7ff33",
+      "blob": "bd1b97561f3b50b87d3b0953940025a8f20aad1d",
+      "bytes": 9373,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.2-worker.norms.md": {
+      "SHA": "e099856a6c618b0ff7e628c31e376738e8ebc93f6b207fdb861c309642dcead9",
+      "blob": "36000214db5328a585d84cc92506fb9402cb7eb6",
+      "bytes": 126076,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.3-worker.norms.md": {
+      "SHA": "31d1810ce3fb37d11c3670d9100090b430e98571b08f0b68bb2bb137703d4dff",
+      "blob": "fcd48391bfb6fa1c55600ed008a8929f4a5701b4",
+      "bytes": 17268,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.4-worker.norms.md": {
+      "SHA": "909ba3ae0d84709befce237453278d32c1a787987ef868da49c745f283f4ff6a",
+      "blob": "2fd2dd3ab991cd4c2792c413d85885531b4fdc38",
+      "bytes": 79833,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.5-worker.norms.md": {
+      "SHA": "64c6a22fa6621af2e41ffcb5f998296b230e6132173a08576a827d3fb4f84f5b",
+      "blob": "f9a3b776ac89e684211b61b96a3138f9989c3e52",
+      "bytes": 11433,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.6-worker.norms.md": {
+      "SHA": "a8e69dc4f30f41301f7e6e1029cbadd48892369cad0141500c3462ff316ca0a4",
+      "blob": "5cc6298fa2b51e905a3d081f28f3d2a2b4bd1549",
+      "bytes": 72607,
+      "mode": "100644"
+    },
+    "Platform/03-worker/ru/spec/03.7-worker.norms.md": {
+      "SHA": "335002f38d5ca0e163bdb6034fca89d6af8163e8345c5d1d921305179605d5d7",
+      "blob": "53db824bdcceddcddee7fc5433b4d691870e0fed",
+      "bytes": 51892,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03-worker.README.md": {
+      "SHA": "9070392621ed18617a62458c97b403f7c5d2b3ad57ae1c21753e1141ae62786d",
+      "blob": "050cf4da6f244619e6892e7230cb23985e255aa2",
+      "bytes": 16173,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.1-worker.norms.md": {
+      "SHA": "12fa78bdd04a42af6ebb11ac6f82e54a92d577c40d409c561be853a75b158e0e",
+      "blob": "9c45b5afc5575206442218cba24b18b9196cd087",
+      "bytes": 7351,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.2-worker.norms.md": {
+      "SHA": "7e58427a706cd0b502540e8a3ae363777443d1eafa2462218aa45a928ae3c850",
+      "blob": "f909c734e93a1d1adb60ab7626b18fe96f3a1670",
+      "bytes": 94735,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.3-worker.norms.md": {
+      "SHA": "7d20e59e3fd246d3bb0c36220f81863ad2009b4f15ebb982b1d17e2cda918bfa",
+      "blob": "e2b435d045fa2f5f1a948231926264ba628092b0",
+      "bytes": 13227,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.4-worker.norms.md": {
+      "SHA": "ae0aa963b5e1fd5bd3f3a0bc99e4a6b6d2c029784b54534088432dbd00f44ce7",
+      "blob": "5298e1f654e4d10379b267d315dc197f47ab4e55",
+      "bytes": 65035,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.5-worker.norms.md": {
+      "SHA": "ea8c6c6aabc2a7d407593816ed4c6ac369c32eea3c80f0bf9fa6ee7266e1909c",
+      "blob": "8f22de054cd50c2d1e275e908b0347bb00acb9ae",
+      "bytes": 9019,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.6-worker.norms.md": {
+      "SHA": "75eac05e21432c374440bcb435aea542342997bd86e0269d2606626b8c2b4759",
+      "blob": "334c4117c9500d43645afed56b700ffa85beb7f0",
+      "bytes": 55684,
+      "mode": "100644"
+    },
+    "Platform/03-worker/spec/03.7-worker.norms.md": {
+      "SHA": "41500d564bd340bc74042113d8e69f442974975a240aa9c580b620e671a3791b",
+      "blob": "42be0b11acd1484c280ddffb0bc0650d8a5968d9",
+      "bytes": 43257,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/env-file.md": {
+      "SHA": "f4f2eb597bb94c6efeb1a4547fc14ba12af1740d1cd929cd555574b01bb49bfc",
+      "blob": "fe3fe5358ac7837b40e5624ae179cc53a42ac6b5",
+      "bytes": 21363,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/observation.md": {
+      "SHA": "875c0b97b417f43b8eac44ff5ca7c64c798abf9d1874008effab0d00464c7ae5",
+      "blob": "0108457b6f464a0b39c143704078fbbb83298647",
+      "bytes": 21904,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/row-check.md": {
+      "SHA": "ba7dc593f739445be2a93aa0a9be08b2bf4bec96d85302b27f25c99220737d47",
+      "blob": "d30a9e17a12b42a0428f689e98567a8cc062b336",
+      "bytes": 30077,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/slot.md": {
+      "SHA": "cee4bedcb4035960f8da8728d21c8305a855cc2dae22b6488db099808bd05359",
+      "blob": "2ff25e0b9e8e1f12be41f2d8aa123e6c32676f27",
+      "bytes": 3923,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/env-file.md": {
+      "SHA": "f711087f74d5c24302e2c11f13e118a88adc26f0a1b35052bd5c075ae4ca4d5c",
+      "blob": "4286b3c25c4b8d70612bb70dba1935d12be1481c",
+      "bytes": 28049,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/observation.md": {
+      "SHA": "b1dd95e5826e6c50ca8ef4e11af5ff3efd53240e56754e533f9e00f448d0b71b",
+      "blob": "3d63cd414eb6410cfcd9243a131cb441a5bb0234",
+      "bytes": 28890,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/row-check.md": {
+      "SHA": "c0d5424423cd7f87eb273bb865aa8ff6ac2326e369fb0066864f134a1f86bd45",
+      "blob": "24ced543a780f02baaf3c69a0a899c54ee1d5f3a",
+      "bytes": 40733,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/slot.md": {
+      "SHA": "315c40729b43f8336be808f661e08fb98c0f0ceb4f7f342866e9af5f2b3b83da",
+      "blob": "aafa6bc8bc1a4a11debf951964545da98b5c5a86",
+      "bytes": 4984,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/row-check/README.md": {
+      "SHA": "6cc55d26af732fae91714a34d487c2ea491b1c5180c60ab10237372af6408e50",
+      "blob": "c38c0e641bd4af68a0d63172174bd6231a8f3c1a",
+      "bytes": 13083,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/slot/README.md": {
+      "SHA": "3cd4ecb2ea49844d7c0f7b5f0f2a99d234b5f7771229ee4dd8934d3b357e3cd6",
+      "blob": "0b30adac67cbdd85a47cda3c1a05a6cecac3a896",
+      "bytes": 3762,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/03.tsv": {
+      "SHA": "7258b223fc3487ccdfda4c6d69a90fe009d595b49b2e819e100511d077426c94",
+      "blob": "0ec20ec67438573268d064d8242adc8ab4418cda",
+      "bytes": 319549,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/row-check/README.md": {
+      "SHA": "c8c78fc07fed45a9058e74f8502308f11a44e2dc84bb08d7336f7fd673584d4e",
+      "blob": "f2c0d672178e5c5b6e7d93a21cd73d6a6fbe291e",
+      "bytes": 9939,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/row-check/state.tsv": {
+      "SHA": "c03f8e64f3b542189ec4cf13bd833624915a295797850988276a94b0cf77861d",
+      "blob": "1f5b197ecd250997388798f587a7ba9e2fe7714b",
+      "bytes": 6755,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/slot/README.md": {
+      "SHA": "31162f0871b81c5428e0bafbde50b4ae9b60d1b57127db81674a27e3178ef260",
+      "blob": "e108537ff20462730237d28e225d3506dcbc426b",
+      "bytes": 2871,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/slot/cases.tsv": {
+      "SHA": "0331ea7ac3ff1b56eb3e35f5dfd70ff8acdcd8fdb193498c9814669f27e26657",
+      "blob": "9766959a15e88d1b961ac50315b40b401f70aab6",
+      "bytes": 2931,
+      "mode": "100644"
+    },
+    "Platform/04-controller/acceptance/README.md": {
+      "SHA": "65fad063d87319f480429b3ef82c348500c089418accf98a06bd1674444f1364",
+      "blob": "72e4f299e6920c87c875d090dff1e462b7d87335",
+      "bytes": 40828,
+      "mode": "100644"
+    },
+    "Platform/04-controller/acceptance/scenarios.tsv": {
+      "SHA": "e316950052bf8db46b87c9818ad9f5bb61bf05ba12c0d1f41d4004951a69d554",
+      "blob": "4447a7f1feeedc599e89aa89af53b1eed0e82d25",
+      "bytes": 57413,
+      "mode": "100644"
+    },
+    "Platform/04-controller/acceptance/seams.tsv": {
+      "SHA": "ac55caa74fc5793f7f639a81007313d3773f6c3b850feb038a39abf90f1909f5",
+      "blob": "d7d24dbfb783f5c62c65e6bf5d6902dbd3daca9b",
+      "bytes": 222401,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/controller-pass.layers.tsv": {
+      "SHA": "a97bda7f27d8685572e99a6380af9e72a52f33bc1aa9de02b2cea809a269f3c4",
+      "blob": "c650a399549b4bb5a8a5428cc977a306cc453eb6",
+      "bytes": 1054,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/controller-pass.schema.json": {
+      "SHA": "53f03369ff109e65cdc073fc46f0e50edc536d00bccc9182deb3e0d64c6b81d8",
+      "blob": "beed36947731cd37fb5a5dea8cba3758eb5b7d67",
+      "bytes": 38553,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/placement-intent.schema.json": {
+      "SHA": "4c5ee1cc2fb6d4a28018a08aca72143cb68a9e99a462d049fef2c0b15b684934",
+      "blob": "20ef9937e6cc8f60790e74ff96973c1e5fa4ad15",
+      "bytes": 30505,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/placement.schema.json": {
+      "SHA": "183ac7aaad067f4831e94c05fb97ce91512088e2b8bc3abad2659d9ef4ec6a8d",
+      "blob": "d5522f2bf2d112a9eba4afd65124a0e7a6f8e256",
+      "bytes": 29824,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/snapshot-unplaced.schema.json": {
+      "SHA": "4529b3b680e3cbaf80a6fd8d4ea3a873d9f11042010ef2698c6e81f72dce65cb",
+      "blob": "4d2c11d53c51826b455a2c8f06ead363877f4220",
+      "bytes": 31846,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/snapshot.schema.json": {
+      "SHA": "aefe31f58a5c7e9817f3183870f590a4bea7b09f55d28388cb8b237d3fcefd31",
+      "blob": "2360e94f5c9e88093b5c2be210567fd56afbef1a",
+      "bytes": 31971,
+      "mode": "100644"
+    },
+    "Platform/04-controller/data/want.schema.json": {
+      "SHA": "35f08555f0b9225e8827551bd090d3bc6aca5a80a2351c75b1bdaf953ae2cd08",
+      "blob": "5c9a30b38b6f03c8cf7b384b3197048590a6c270",
+      "bytes": 29726,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/README.md": {
+      "SHA": "ae58c978967cb71876bbc1ce99c684efd5b7a6762065b1d6acde4f8e16b88e1a",
+      "blob": "77c6bd06c7f6578708393cc18d1bdc81befe1e50",
+      "bytes": 18864,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/daemon-flags.tsv": {
+      "SHA": "e72065bf731f823f78d93c4804f34d69081a8fdec95974f02f7b527b64b2d8bf",
+      "blob": "3045d8a9188679376505d68f6934c78a90b5a813",
+      "bytes": 4218,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/refusals.tsv": {
+      "SHA": "bde5b3b1b7b6328ea1b10f8b855f749cee497b5548a3c9eab23e14765cf44edf",
+      "blob": "33f09abb544d5b2ce52c9c10e33218851d0bb6a8",
+      "bytes": 5017,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/runtime-constants.tsv": {
+      "SHA": "c76ba5df4bf830144d90aa2668f3de75d7de219c345f528ff8cd59acbe8cffff",
+      "blob": "8c48d0276f585758d19c27cb204676aebb8abe40",
+      "bytes": 1198,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/slot-fate.tsv": {
+      "SHA": "7984459d16329e90738ca03c68cfd41402769b7301d151e4fa5b8caf9b373742",
+      "blob": "36aebef54a4b8cc51c18fbf0d0ef6199c9ccb761",
+      "bytes": 3725,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/slot-release.tsv": {
+      "SHA": "a9a4f0a97f2ae69a3b2c119a9dfcd5f009df2046b21c9706d1551032e08917a5",
+      "blob": "8d57b4501a3ad6eb75db46de1ccbad6e9dbeca2e",
+      "bytes": 2415,
+      "mode": "100644"
+    },
+    "Platform/04-controller/forms/stages.tsv": {
+      "SHA": "5a1c4e19ac9f2403d0d16edbf04514c89488e2ec3adcb25763c1b32c067852ad",
+      "blob": "4251c2c29665f0288a9aa42cd3e74ce0909963c9",
+      "bytes": 4593,
+      "mode": "100644"
+    },
+    "Platform/04-controller/lifecycle.md": {
+      "SHA": "bea81b03847f1c454d17763a09ae4e3aa5dbc73518849e5213a5c069d084fa28",
+      "blob": "a4778233831587352ebb522a116bd624a2ee85e9",
+      "bytes": 9465,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/04-controller.md": {
+      "SHA": "834cc2292e694b2ae8cf3c040bdfc867847e5b70e84d7908330088da439468ff",
+      "blob": "664b7184a6c472dd3ce4e8ad4e80702271bb8d25",
+      "bytes": 28600,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/acceptance/README.md": {
+      "SHA": "83f19b22bcad70d29706f75ea4eec47cdcff0f06e76dd52a51654a19accdf87e",
+      "blob": "76b425cde5d8fcb0aaa3bb3ea89b20e967118e78",
+      "bytes": 53656,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/forms/README.md": {
+      "SHA": "b5bba5d2c54f06a4b17fa4f921a6a65266ae085725515b7f23264dea15cce20c",
+      "blob": "f08551bcff73f3e74e71c26b6b252a60a80577ff",
+      "bytes": 28809,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/lifecycle.md": {
+      "SHA": "cbadd9f85f021dbd295207b35323e1a4411471dc121f337dc9982785bb5e45b2",
+      "blob": "d410a744e262a20bd599c8b4b4810eeee4f9fbca",
+      "bytes": 12239,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/spec/04-controller.README.md": {
+      "SHA": "7874e8bf15b9eb81bc1c01fc357b0ab51da25fc4fd6f30347a8579e87b5998ab",
+      "blob": "9f3a7d4227b1ba089dd13fd8035cc58b59b33d29",
+      "bytes": 15577,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/spec/04-controller.norms.md": {
+      "SHA": "f79b3c7754d3482975e81038ba677bc2d1de99bb9e9fe784bd72b82d435fa516",
+      "blob": "bf04f6209de18c2099cf800ebda84738b4a9fdea",
+      "bytes": 246634,
+      "mode": "100644"
+    },
+    "Platform/04-controller/ru/vectors/order/README.md": {
+      "SHA": "010d4da78661681bf83b08ba28a608ce7eef57d465f02bd6a779a8eb0f4e12bb",
+      "blob": "76bbb8998c2f6f520efd26a3033d1c17aee29fe0",
+      "bytes": 10280,
+      "mode": "100644"
+    },
+    "Platform/04-controller/spec/04-controller.README.md": {
+      "SHA": "c479e029aad7d91211838b986ab0e8d455dad704ef157e693858d64083fd0fa5",
+      "blob": "bc971e316a8da0e30ec2e87bd83d85948132a8cd",
+      "bytes": 11066,
+      "mode": "100644"
+    },
+    "Platform/04-controller/spec/04-controller.norms.md": {
+      "SHA": "1542646cd92c197a36920eaf495ded83af52ab88a0586272a95d91f7658ad98a",
+      "blob": "25d813c2b64cf0364b5b74468339776d7ac72f88",
+      "bytes": 188621,
+      "mode": "100644"
+    },
+    "Platform/04-controller/vectors/order/README.md": {
+      "SHA": "0b19f674c7dfc775a908c5834c23572f05b09b0f7e9a06e830ef11040423cb06",
+      "blob": "b4ebe41456b74f44b78f4ed4a372347778bf19c8",
+      "bytes": 8149,
+      "mode": "100644"
+    },
+    "Platform/04-controller/vectors/order/cases.tsv": {
+      "SHA": "e1b4595b7c65a52bac955e5ca75f8ff4c4199270e1b56e4d8964ae8d61260de4",
+      "blob": "b5062d255a72f2703b296da878843db74f972620",
+      "bytes": 15812,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.5-console.norms.md": {
+      "SHA": "bf3fea376377807b47170d76b3931d91ee63ddc1becc4b5d3f54bd5080396883",
+      "blob": "73cfee4c4b811bba2f5005ed6a9ba6640b64bb71",
+      "bytes": 150534,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.5-console.norms.md": {
+      "SHA": "d6c01132756039f324eaecdc3fd40eec0d8abcff12fe46a63451cc92169d8964",
+      "blob": "49ab44f9936fe309590db1c47afa2b32f154d658",
+      "bytes": 117412,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/pool.md": {
+      "SHA": "87897eebbdfff5da4168fd56ef9a1a9c7f40eb9ed0765b91d4678da91ec35d61",
+      "blob": "861e07543130dcd8d702e4f1f32d8982747454c1",
+      "bytes": 9432,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/turn.md": {
+      "SHA": "87dc7fedb45d0a6bb3405d157827b64374ff190ec7f195f36c5671cc5d78f61d",
+      "blob": "c92598ffb2f029567ff73f7484416f4e3a8b688f",
+      "bytes": 10320,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/pool.md": {
+      "SHA": "ea7054e5a40e3361bd7646de05f59e3c345bfbc63a7f5107d8636b80bada5989",
+      "blob": "dd0a5906da99645e3fca856c29ac55f496c7670c",
+      "bytes": 12091,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/pool/README.md": {
+      "SHA": "798e64e32e06efe0771e192984696fa66cc746f4ea17bf69fdd6ee74cfa37f9b",
+      "blob": "1c7ea6baa6819f37ccc00b9dab04b8d508179bf7",
+      "bytes": 7340,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/04.tsv": {
+      "SHA": "7e62e6a4f131abf33204817fe789ab7a17077f05ff4f9f550d291aab7661858a",
+      "blob": "76caf8490bd91783cff86fa7eb8b79fc43116aff",
+      "bytes": 660842,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/pool/README.md": {
+      "SHA": "207f5d574627efb86558934ea8e3f821769e9aecf9acd7a779023787b43b525d",
+      "blob": "4342702a3b787953e5eb89071c82ecf941b47a41",
+      "bytes": 5501,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/pool/cases.tsv": {
+      "SHA": "dbbd119bf047640f661e7d9fadaf8eb9cf1d8d08781308465ef522bf8018e420",
+      "blob": "1dd66262e7b8c72fbdc78ba7c838ba8885fe3160",
+      "bytes": 19313,
+      "mode": "100644"
+    },
+    "Platform/05-resource/README.md": {
+      "SHA": "10015c38d6962d6338157782b4c9709a84e7a48a7d2671942f69618c29f43788",
+      "blob": "62167e2ab106450baf3097e3fb5af3610a9d8406",
+      "bytes": 1361,
+      "mode": "100644"
+    },
+    "Platform/05-resource/acceptance/README.md": {
+      "SHA": "ae6a393f7196d701d8f0fa31e887e5833e8e102d5fa151eb243e4f98ddc908d0",
+      "blob": "bdd97b0b9f8131f72f00d84eed17431ac4bc1500",
+      "bytes": 35627,
+      "mode": "100644"
+    },
+    "Platform/05-resource/acceptance/seams.tsv": {
+      "SHA": "e80e7f29c11a057f6eabbcaea690db443abb44e2591cdaa1e7837d4bcdd10fdf",
+      "blob": "26da5e678f00e88093594c465beb4e4732b6b221",
+      "bytes": 16292,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/doors.schema.json": {
+      "SHA": "ba74c7833251f864d90a7a5653b58b7b5988101b323a5e4d3f1e8f60f7df4d83",
+      "blob": "197cbe8dadf1d204333adbb7ea9ec06a6a5b4ec2",
+      "bytes": 30400,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-audit-alarms.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-audit.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-console-alarms.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-console.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-mirror.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-unit-alarms.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/events-unit.outcomes.tsv": {
+      "SHA": "cd687220383eecc22490440951a00509c92e94721dadbe477815e8972c6f5379",
+      "blob": "164625b6e2b91b4a75cded67b9e0360cc4ba85a3",
+      "bytes": 811,
+      "mode": "100644"
+    },
+    "Platform/05-resource/data/resource-heartbeat.schema.json": {
+      "SHA": "7240183c29770d6ab3c602ad604b28d1db381afbf938677a0d69d63a8ff8e614",
+      "blob": "41bc4f15c5c33d60e1fb386efebf1334d3e9d1aa",
+      "bytes": 39386,
+      "mode": "100644"
+    },
+    "Platform/05-resource/forms/README.md": {
+      "SHA": "4234bb709cfcefd95c5fee2739a0b1dac4a43a3f70f35b00353bba850373b1e9",
+      "blob": "cf0589a696e3cd4ba52255dd49814fa98d0309c3",
+      "bytes": 17751,
+      "mode": "100644"
+    },
+    "Platform/05-resource/forms/refusals.tsv": {
+      "SHA": "ac2332154adea95c2d4ad776c3b09a8d259c91a271ac8499e5d332ac2d1871a2",
+      "blob": "0733ce5727a3ef4944e1cbdb2181a4ff9b6ae093",
+      "bytes": 9977,
+      "mode": "100644"
+    },
+    "Platform/05-resource/forms/runtime-constants.tsv": {
+      "SHA": "fdadbfa642b78dbd02bc2ebe827554dc2dc44fe7e1ea73cc71b37a4485eb7e76",
+      "blob": "86b46483c588fb987a5d644e3a91ae93f4840f82",
+      "bytes": 1815,
+      "mode": "100644"
+    },
+    "Platform/05-resource/forms/stages.tsv": {
+      "SHA": "0266055c7beac3ecf5295dce0ba90fc1b578dd2174231bb4961e5ca202c6bd46",
+      "blob": "8b91581e712ba41152f27d03c0b99cf5b9248b7b",
+      "bytes": 4050,
+      "mode": "100644"
+    },
+    "Platform/05-resource/lifecycle.md": {
+      "SHA": "e88736cfbaddabee9c47428057606e4ff3b45588e6193919d3d6a4000158ee5e",
+      "blob": "7a82dfe3976c4a4dfa81063f08d216b05a6ef774",
+      "bytes": 9814,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/README.md": {
+      "SHA": "9c3527e3d9f80e3b10f7f66715514f75a7ac44dd65a599f10019ede2e258a896",
+      "blob": "6dbdc22bb54139186ee20129c7db21e34f678df7",
+      "bytes": 1828,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/acceptance/README.md": {
+      "SHA": "59620defd5d4b5828421f88ff0322b28b9374e8705fc2b5edb3ee593c3fa1924",
+      "blob": "0548fabdd10da07610e86a271288bf7593296bb9",
+      "bytes": 45318,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/forms/README.md": {
+      "SHA": "7148db705ddc5c80e9ca5001e6830888e8c3ac11811d2e4520471501b4b69612",
+      "blob": "76d9658a45be358eb686b5a865dfa6e8e0628204",
+      "bytes": 28575,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/lifecycle.md": {
+      "SHA": "0099896923a4c0f6dc1b60d5b5a2c52d53677cc8e67a97feac406b8c98f02f80",
+      "blob": "4a21c8d7a6847017dfbcf2ebadfdaad650cb2117",
+      "bytes": 12517,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/spec/05-resource.README.md": {
+      "SHA": "9f00f01a1be910fddd5c3b5bfd970d91084d078bf0da3ce481152f0249c1ad2e",
+      "blob": "c8d47ef96c9473e26eebd391623d163f6f1bf986",
+      "bytes": 10496,
+      "mode": "100644"
+    },
+    "Platform/05-resource/ru/spec/05-resource.norms.md": {
+      "SHA": "31568f309c324f81bd111f8b8e8c0e45ce30a0c3854020628a12bc5e24b3eb22",
+      "blob": "b5acda3aa1d22556ab5757decd65de494b3b23fa",
+      "bytes": 167876,
+      "mode": "100644"
+    },
+    "Platform/05-resource/spec/05-resource.README.md": {
+      "SHA": "6a709d0c8f69d28cc0ffece92c025e7b5d7219c87abb6ff1a08c0e0363e4f60d",
+      "blob": "866960a3e383a4689cc85949695fbe2fa38371cd",
+      "bytes": 7162,
+      "mode": "100644"
+    },
+    "Platform/05-resource/spec/05-resource.norms.md": {
+      "SHA": "930c85e5efca17ba8a838a96a8be3c84b32e9fae7e1116a79d1b66d14bd3c442",
+      "blob": "bc2075dd1b061ebc4cfa77562eab722dc2ef4f8a",
+      "bytes": 132999,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/5/README.md": {
+      "SHA": "0b7564ef1c296f096247055e8bad05dbbb20ac4dce7e69674f2c1fbb56a7147a",
+      "blob": "9e6130e15baf1f72d4cc5160d57339f7b0b1c824",
+      "bytes": 26708,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/5/inputs/res-srv-p-stalled.json": {
+      "SHA": "842ee60fbbe925c52db577dffbdaf85a7cc74730d539a67d147a3f89e9866d7e",
+      "blob": "e5ab02bf4c7cbbcd0a76dcb424512bab371fabd2",
+      "bytes": 578,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/5/inputs/res-srv-q-extra-field.json": {
+      "SHA": "5f2f127281d23b5029c780397e0d5da151719559cb23f13ac053a837e715d67c",
+      "blob": "bcc9a91b8246991e18a2605f9150fd9d11a1a623",
+      "bytes": 590,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/5/inputs/res-srv-r-wrong-server.json": {
+      "SHA": "074aee72a67d59051db2b97c3075c6e8f1195f075cde99fb527986e413c08a8b",
+      "blob": "3776945b8acf5b7e979b12eacf8341aa4816655a",
+      "bytes": 578,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/5/inputs/res-srv-s-no-url.json": {
+      "SHA": "26e60481fa0566939f8dd7688e306929ebe572903a016dff01f88e2c2b0ad4b6",
+      "blob": "25de208ed8acddefeb27110d24c5695941f46845",
+      "bytes": 549,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/5/README.md": {
+      "SHA": "65b787491e7d36ba757da1c2c80d2fc93e04fbd3232c0fcb383d9f1d6ff8451a",
+      "blob": "537201416fb306dd7fd0278111b567985846a039",
+      "bytes": 34733,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06-console.api.openapi.yaml": {
+      "SHA": "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e",
+      "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+      "bytes": 403567,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/events-merge.md": {
+      "SHA": "a22f02fefba66ab1597d3ac39c9c3b70fe2e03911c418f49a84507037ac300e1",
+      "blob": "730d5a1777f58671dc9162c7f5d9f3f23e1dc701",
+      "bytes": 14773,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/object-client.md": {
+      "SHA": "891470acaa271e2f4259e7a87ea61095e448d9f3df99a34375174e3dec96ec63",
+      "blob": "bb54275487d4d009975234282ba05e3dec8b78ef",
+      "bytes": 10060,
+      "mode": "100644"
+    },
+    "Platform/common/data/catalog.tsv": {
+      "SHA": "d5d8f0e11ccaa9081a42b0fecfb1523e4cea42e9c9e4ad91496b62e3a7d7261a",
+      "blob": "e7952ff41e9d02c9d1cb50d57b4362f57ede3e08",
+      "bytes": 65958,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/events-merge.md": {
+      "SHA": "2be18dcd4cb89c19343afc3d81470e1ccb9c8d51c4fe1df4ec78825e780eeb28",
+      "blob": "54cd4ea160553c157cf95b48ab7434e1785eb2e5",
+      "bytes": 19449,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/object-client.md": {
+      "SHA": "dfe36555677ccc917bff39b63d8e0df16b9c3f4d6d34df4b35a8221b38075581",
+      "blob": "4344d3e3b7b00125a71feb5f99e103f792ef413e",
+      "bytes": 13331,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/05.tsv": {
+      "SHA": "ef5f5f210d3e7ccafa84e6682690d391ae7dfad89409fb3f45d2507fe14b638b",
+      "blob": "ded44c76a80ce47cb1a823060e4a39e186a1c3e4",
+      "bytes": 380952,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/README.md": {
+      "SHA": "d49b89bd0c274df054e0ec48db7eefa13d3a8afcbbf703877affe5c10b739f67",
+      "blob": "5f4df6b962e97fa80bc2cca3a62ea5d04cb30393",
+      "bytes": 34497,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/seams.tsv": {
+      "SHA": "7c6cb2c3b68bb29a7deb89d367667c484264671d1c00a2310dd08c01f39d4e68",
+      "blob": "c4a1507c425f6f2edf940b18ddee07424058897e",
+      "bytes": 12159,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/2/README.md": {
+      "SHA": "70a2f30bd0953365b07411cbd6c60e91605e09da89628c9aaea488f2734a1acb",
+      "blob": "8e4264d9e0c4f761fcc0c70d83b98cc7abe19b1e",
+      "bytes": 5668,
+      "mode": "100644"
+    },
+    "Platform/09-agent/data/alarms.schema.json": {
+      "SHA": "f1a873963d54519b87a0342a127889dde0daef09bf3032786f4a3a600959e21f",
+      "blob": "73c14f54fe86e0448f86dd8b55ce6fba9695406b",
+      "bytes": 30470,
+      "mode": "100644"
+    },
+    "Platform/09-agent/data/outcomes.schema.json": {
+      "SHA": "98d782b71116b095bd6dca5d9fbf6c0294610c9fb10b7e884ae7fc855626abc5",
+      "blob": "3246dc933ab73c01ea029320500583c85a1686e8",
+      "bytes": 28699,
+      "mode": "100644"
+    },
+    "Platform/09-agent/forms/README.md": {
+      "SHA": "ce4513fdcb10b38fcdcc9fc76f60a1b6ccc7eca8fb492e0d8266323d75721ffb",
+      "blob": "4ceb0283da22f80447c3567a327278acf7970796",
+      "bytes": 14454,
+      "mode": "100644"
+    },
+    "Platform/09-agent/forms/runtime-constants.tsv": {
+      "SHA": "8a142de4fb54a1ff5ba83476424fc50b4ddf37ec256abd6c611775c15cd00685",
+      "blob": "daad9ab8575234e4d3d7bae692a1335e89da97db",
+      "bytes": 1507,
+      "mode": "100644"
+    },
+    "Platform/09-agent/lifecycle.md": {
+      "SHA": "345abaf46fcc3814005613e8dd08fc9b5b48b18721c1c6670b148711b59922d6",
+      "blob": "969a5769df8ab56a5d455517e39c29e5c6db5564",
+      "bytes": 13290,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/acceptance/1/README.md": {
+      "SHA": "3392db9c8f79c0c101b41cb37e7e520057c017cb876b369451090234e8a7996d",
+      "blob": "b91d9a2c78ff66255d5160ebebc0b63ea6fb03dd",
+      "bytes": 43912,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/acceptance/2/README.md": {
+      "SHA": "14d56bbbc96e7c2c371dba0b57d11540b3530460ba62e08db3cfe9ad7022db76",
+      "blob": "7a941095ead0b5fe111f52d9783a5231c966ec7c",
+      "bytes": 7474,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/forms/README.md": {
+      "SHA": "aa32ade65b453e8a2a13b914c607113125604a47eaa739a8f02d6c6e8c05432d",
+      "blob": "2e86595a831168f950524cab13b3d27960fa95a5",
+      "bytes": 23951,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/lifecycle.md": {
+      "SHA": "06ef03985e30fccd565967f64368dbdcc5391f5a152eb01d4082664dd4942607",
+      "blob": "77a9e5eeb1e03b8ccba036f43fd8c547d722c9fc",
+      "bytes": 16989,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/spec/09.1-agent.norms.md": {
+      "SHA": "0da886dd0bf527b131d11f551ba8fd22a27db03afb34f85af61fae2a4a11026a",
+      "blob": "bdec33a496c7ffd7d1e2a491c8243b714371485d",
+      "bytes": 269055,
+      "mode": "100644"
+    },
+    "Platform/09-agent/ru/spec/09.2-agent.norms.md": {
+      "SHA": "c480f4a13c5f97de12d9133c9ad4e8576d351828cf68190ca604848f8bd476f7",
+      "blob": "a77553a3b2e6ae1a57de4c7a8394e2d61ab7fe69",
+      "bytes": 38426,
+      "mode": "100644"
+    },
+    "Platform/09-agent/spec/09-agent.api.openapi.yaml": {
+      "SHA": "b7b63c93aeb90373bfdca830774626d86c1fd86de947dc20ef922e8ad5b47207",
+      "blob": "fb56ee99c96eb2f5024edad5b6b86bcdea47092d",
+      "bytes": 50789,
+      "mode": "100644"
+    },
+    "Platform/09-agent/spec/09.1-agent.norms.md": {
+      "SHA": "f22ea77e38a8bc2a8e0fe7510e94bb58a166656881606f3872b0794a30ef78c2",
+      "blob": "ec02da2675ce0ddf018d1d772a43128111567efa",
+      "bytes": 215331,
+      "mode": "100644"
+    },
+    "Platform/09-agent/spec/09.2-agent.norms.md": {
+      "SHA": "a4cdb5a4caeb89c1b8ff445e34df64b08d46f3ec9996ac7f7c9a233aabe80ced",
+      "blob": "95a0400fa4f55613226ad24a269804ef969fda3e",
+      "bytes": 28470,
+      "mode": "100644"
+    },
+    "Platform/09-agent/forms/refusals.tsv": {
+      "SHA": "dceb213e03d9aec17bd0170a2ec15bec65ea9c68175376f0cef7c3eda209782c",
+      "blob": "d6e048513923c4410286ca5423fb57da02fbac6a",
+      "bytes": 10273,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/09.tsv": {
+      "SHA": "b5e702312e09964ec537a900c87e7302022c574a423c55d4d5ccbc195bb88b95",
+      "blob": "59ff4308ec2447f5ef24129c3dcf15d7c3803979",
+      "bytes": 865815,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/1/README.md": {
+      "SHA": "1af9510980e4f69a4723cb1f86ad46c1d7c06c25c4915f02e014388e80274fe3",
+      "blob": "ada753bdeb0b851cac81809eab693c4448367ade",
+      "bytes": 45765,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/1/seams.tsv": {
+      "SHA": "3bc1c760cea80ddd47c23665cdb455735a145d999c86b2b374f904eb13c668f2",
+      "blob": "28e59d88248bea1d46dab08e11a45a7ed403e129",
+      "bytes": 2741,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/2/README.md": {
+      "SHA": "f605c49e31537bf3c5b87ede0f0e0a9f6d3bc3fe8c553af605db5c7082dd647c",
+      "blob": "6dc4ad705bb206d3a049cd521a25083d5063dcab",
+      "bytes": 14956,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/3/README.md": {
+      "SHA": "7f27ade01f7173087c460c7df4803f5bbaa9ade75b4fdfca7550bf27bca1248e",
+      "blob": "efc1ee9733d1911914c9507ba24b544761f09dc0",
+      "bytes": 3884,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/6/README.md": {
+      "SHA": "65fb73b54d72f92634f19591b5187004fd65ea730d885113caa5ca9dfc7aed9b",
+      "blob": "1f6f1f1afbc117dabf6ba63dc1648e27a62696b8",
+      "bytes": 20221,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/8/README.md": {
+      "SHA": "9525686f7dfd2fd9edaed7c2f896da390cb5726761854838d1d098677a2ca404",
+      "blob": "16cbf6294bb0fdb212d4b1e1216f289fbb372b41",
+      "bytes": 9073,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/8/seams.tsv": {
+      "SHA": "4ddd917d9af432d4eb866a17735ee9c37a30751ed9f9528c66c46a1b99f5f538",
+      "blob": "cd38485de5779d90439e715c91ead36f6fe30eb9",
+      "bytes": 3604,
+      "mode": "100644"
+    },
+    "Platform/06-console/acceptance/9/README.md": {
+      "SHA": "8b7e06fa1a0ec8b526b01687c4cf7fd490ce3097f343031d23094901b9f7b2b7",
+      "blob": "e889442edbf21439d655a1006e4752716ae0571c",
+      "bytes": 5228,
+      "mode": "100644"
+    },
+    "Platform/06-console/data/folders.schema.json": {
+      "SHA": "8776e115cded3190960766d6c753308a429be5742d3a5bd661ce9f8fc4bad9b1",
+      "blob": "cd64f37d3b4c719885c362c67a020ddd8c5edbd0",
+      "bytes": 29761,
+      "mode": "100644"
+    },
+    "Platform/06-console/data/memberof.schema.json": {
+      "SHA": "9eba6a013e74c5e91d81f1f068dedd0a56540a8c5b7200baabf0f336ca5d270e",
+      "blob": "c3b17b3d05900d19f34d544e0d048859ac24e0cb",
+      "bytes": 29026,
+      "mode": "100644"
+    },
+    "Platform/06-console/data/sweep.schema.json": {
+      "SHA": "f7e653d3d2d39ba6e3ecc36112e14b247407b60aafbde7e96fb49b3de97f563e",
+      "blob": "ba97c4c74a9b568113a0a40e5722321214953bf9",
+      "bytes": 29253,
+      "mode": "100644"
+    },
+    "Platform/06-console/forms/README.md": {
+      "SHA": "1361dcd33daf5128482f5b314533dece5fc68ebd84df0b089021fe357800dc43",
+      "blob": "b1c1ca0f651695837b0779639f8252fa58dc9853",
+      "bytes": 19374,
+      "mode": "100644"
+    },
+    "Platform/06-console/forms/refusals.tsv": {
+      "SHA": "5bf0ce923df6822f97368005f66e4fe968613d44cf767e0353c439bb28634238",
+      "blob": "3f09d0c6d4b82d769382699807efecf4d0a432f0",
+      "bytes": 74579,
+      "mode": "100644"
+    },
+    "Platform/06-console/forms/runtime-constants.tsv": {
+      "SHA": "477c7b8960a06e84608519a0e0b70922881c34b7094bcf4f72d67938c2afd3f7",
+      "blob": "8542832c7e5136950e865ec9dbea20b06b7038fe",
+      "bytes": 4037,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/06-console.md": {
+      "SHA": "0050844582b3c73e9473085e025d7cb24917cf149a4172f0101e0e5fd10c87b2",
+      "blob": "7e3b4638a39ee29c1feca5d089b0590e644b63d4",
+      "bytes": 99251,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/1/README.md": {
+      "SHA": "c44881416b547f65b0afc1d39d5f4a87e80e4e0ff9aec8dd31bcbd9e1e4b604f",
+      "blob": "5cc66dbc954484475561e5e2f732bdf3d26cc128",
+      "bytes": 62789,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/2/README.md": {
+      "SHA": "82eb478646ced6500391c1f210c571d74c60dabff3086c81589e57a8e3e98eea",
+      "blob": "db9620164409cdf4e38bcd8df7cc7a7ed9c49ed3",
+      "bytes": 21153,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/3/README.md": {
+      "SHA": "8b80a4e61286888957bf7f9a4d9435005abe3cae87bd2f6ed9c9e8f05d7c75c2",
+      "blob": "91edc0e18c1ede6cb21fe06d37ccb44b053244be",
+      "bytes": 5168,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/6/README.md": {
+      "SHA": "0b7619b789dbcc286a5195c95d39b7f777eb172f8ba4bbbf68006474656c410d",
+      "blob": "caaa0889c24d277a00e83a5d10b3775a7aa3df06",
+      "bytes": 26586,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/8/README.md": {
+      "SHA": "3f63864334f55b9f8712ba4f02c9d13e9e2fdea1a30327fd8e61e687c5f6e41c",
+      "blob": "88374ee8f5aa407dee0134ab0b9971fa1c6ef5e5",
+      "bytes": 12860,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/acceptance/9/README.md": {
+      "SHA": "be6de00e27e7abac90c2008af4c4f2f0e101e3bb2efee014a6259de895b5ab25",
+      "blob": "e54d9a0ba7b38cfae4d05bd5301a8c8635da36dc",
+      "bytes": 7069,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/forms/README.md": {
+      "SHA": "d6bfd6009e267db143cef3073b3ba4252c801fdde3373da8c67439a8b23ec5c8",
+      "blob": "27542de34b9b025fc2550a7e47c8a47c22965e4b",
+      "bytes": 31112,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06-console.README.md": {
+      "SHA": "4e51026ddde486af666a1880986e0997ef98643c38295e9c98e216e47b7c4546",
+      "blob": "66d9f1b34e889f4e8103a702c6da1333b43bb5d8",
+      "bytes": 71833,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.1-console.norms.md": {
+      "SHA": "66f4bc871baf8ce40fd1b8dbfc7d5a9be6b9a9ecc570509be74fd1c61d6e4149",
+      "blob": "9b67dd1108cdcdaf175e86353ed49a201234a0fd",
+      "bytes": 213455,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.2-console.norms.md": {
+      "SHA": "acf4cc41a5b9c27c02694c5241cbd373952fad6b0dd85ef8b707c6783b2ea041",
+      "blob": "66910647e5fa97bb098c60bdda58d919a9de8363",
+      "bytes": 42911,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.3-console.norms.md": {
+      "SHA": "41385af41aea18386c807605018c3647e07bdae646e6c227a9659a1ab49cae77",
+      "blob": "61eb8b6022554a3e30c22f57878687a37d4121e3",
+      "bytes": 38150,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.4-console.norms.md": {
+      "SHA": "69ebc7b1225e29987ab3e174d2863e38ac2f191e2e8fadf97744630a46dda422",
+      "blob": "9b63378143069af9016098738ee62c771270057c",
+      "bytes": 79275,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.6-console.norms.md": {
+      "SHA": "1954b0b3d9b4e59e7324be1ebd3e641369aca2821d3758a201fae91bb855349c",
+      "blob": "5bef4d3b3a8a93652c10e9ee2fc874a27a808903",
+      "bytes": 86131,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.7-console.norms.md": {
+      "SHA": "5b5498e1c9286c42ebd84b76c3372ce35e02def4c952bda6cafead7eb02177f8",
+      "blob": "312d0c06521b818d5c0ffd9915b043bcbba4f8a0",
+      "bytes": 79558,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.8-console.norms.md": {
+      "SHA": "893c15825069773ad88121737089e24d94cd2de7325a67bbb9b0ccd5c71d203e",
+      "blob": "c38bab47ac68ed988f587b7088d350f4a2d97074",
+      "bytes": 71162,
+      "mode": "100644"
+    },
+    "Platform/06-console/ru/spec/06.9-console.norms.md": {
+      "SHA": "0b5748e1404a644355e70d21491a97d98bab41b1f06fd66ead374c5eceaf46fe",
+      "blob": "24827c73307f78bbf6542a02083e1b3fc7e1d24b",
+      "bytes": 66563,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06-console.README.md": {
+      "SHA": "e4d43de17fc3de42df73662e0dbce838e5e054698fb1b6a82ec8845dfe56ce1c",
+      "blob": "9d95562180ffce0df108ce24ada718d8dd4e29bd",
+      "bytes": 50835,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.1-console.norms.md": {
+      "SHA": "10f1b2c481c6592483343200fb7a0041b77d9a8f33a28d86ec722061bb265fde",
+      "blob": "b2b47751bd9f5aff27835b28125eaaf48a9074e6",
+      "bytes": 158859,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.2-console.norms.md": {
+      "SHA": "865b72bf45df140fcc595390faae10f2b16095939e890d88dfe790a04b0fff6e",
+      "blob": "8db6aeaf06b67f6906d862f527254d2b5b49850d",
+      "bytes": 31470,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.3-console.norms.md": {
+      "SHA": "650bd1b7f044251f5cb5a0bea95e87ec68d0509314c4b5a72513c4ce49354f69",
+      "blob": "5f34a117c2870d2a24cab1ff79d2936c890e947c",
+      "bytes": 30678,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.4-console.norms.md": {
+      "SHA": "453ac6fb90f0668030bdfff6ac836b9de377222b52996c4741cc7ec372d2c14d",
+      "blob": "0f7ba67ce3631e29a487e5a18d0b7e62d67f29ac",
+      "bytes": 62052,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.6-console.norms.md": {
+      "SHA": "ad95b4a3f38ade2b0d48b4a12cfc5927e74f19950110df6fa01f885b6e5206e6",
+      "blob": "9b12e18d102ed39d609a5eb47303a2b0694dffb7",
+      "bytes": 68399,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.7-console.norms.md": {
+      "SHA": "3502f3d4c7d657a80f265bec235f72ab7944860355aa8a1b8ab082ddcd2d5764",
+      "blob": "1f1b0b8a597fc32c9cb44a7962cf5140c6a7ce9f",
+      "bytes": 63878,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.8-console.norms.md": {
+      "SHA": "83bf0e6028a27ccc406a3fddc639412c98d42b28057dc5731924262abfe596e6",
+      "blob": "6e1d53834b65bac45a10ad085bcd21291a94c57e",
+      "bytes": 51966,
+      "mode": "100644"
+    },
+    "Platform/06-console/spec/06.9-console.norms.md": {
+      "SHA": "310b432a331dd5ae4c47f69856e2bd69128c599a6d597dbd5955c37ef79a1a23",
+      "blob": "dde642f9a6245c175ec45ca098e4a981bbaf15c0",
+      "bytes": 51914,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/door-token.md": {
+      "SHA": "8aeee0f3415194a5c98ad6e5418dc9b5ea7d23fb87a811a97c9c51b05e396f5d",
+      "blob": "206193de5e64c9075af2cc5d7f9a1f7893c2ab8d",
+      "bytes": 14525,
+      "mode": "100644"
+    },
+    "Platform/common/data/cell-json-sha256.tsv": {
+      "SHA": "6a97f2ac619a0cca4dbc4f8cfc55d1475be9ec2cfb07b2ba5c95694fe3c3c984",
+      "blob": "58a94d879238bf5230b2379307c1ced56c29e493",
+      "bytes": 349778,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/door-token.md": {
+      "SHA": "9fb35fa32355e1224c706f6ad432ae3acaa235dc3b98edaa2c0b54eaa40df740",
+      "blob": "1f67c6dab0ba02fab6338c48ea3d8adebb7d5ff8",
+      "bytes": 18481,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/06.tsv": {
+      "SHA": "c7a8f0dd616ae3e293523b17a01569861a0686b43c678240bf37b9fd94019b4d",
+      "blob": "d95f0d721b6d6a83312b4af30e6ceba1814154f7",
+      "bytes": 413684,
+      "mode": "100644"
+    },
+    "Platform/08-domain/forms/README.md": {
+      "SHA": "b03c5191097978d9023daf7163e237d43b243f122137230e357f358f8abd24b8",
+      "blob": "37d19be0c479f2d66dc5951bca3094fb3a13705b",
+      "bytes": 19038,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/forms/README.md": {
+      "SHA": "1a225c139aa46a851c32a6b0d6a1b92e970815bb1e6052628ccbb3e16e2a497b",
+      "blob": "b66e823f564a88f6c980c07adf0da1765cda6a3b",
+      "bytes": 29724,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.4-domain.norms.md": {
+      "SHA": "1a08600021424391aef461159ac8747fac7efff854b98953f85d432be6545c2d",
+      "blob": "e4c03802c1295c5bc8c897e1e07a8723863baa26",
+      "bytes": 175293,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.5-domain.norms.md": {
+      "SHA": "41624722d10a302602d032e961f934e51364ae923e6ef3c52a475647ac51847c",
+      "blob": "88faee5e48393330ac37ee53d67104f735e4cd32",
+      "bytes": 97211,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08-domain.api.openapi.yaml": {
+      "SHA": "b20b3b72e2d1ce994811176920867f3aaad08c74861819e6ade435d0a3e419d4",
+      "blob": "69474c840faeba26ae2e824c3deead99d8ba9bbb",
+      "bytes": 185461,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.4-domain.norms.md": {
+      "SHA": "20bfbbb3c168fd8c924bbb73bb39293c7a1856d71072b0da398c07f55bde9d2b",
+      "blob": "a3dbf6b691437a1a9bcb7bec1eb8c9cea225eb5e",
+      "bytes": 139814,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.5-domain.norms.md": {
+      "SHA": "cec10347016a5bf3a0cff6c0a51225611f8902db0ea9ed1a02a0d0f5bb1d2ca7",
+      "blob": "43d0098abe7a80636bbc9e97e2412b5eca67a1aa",
+      "bytes": 77403,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json": {
+      "SHA": "7baf9369fd4f4b93a6d2dd5b601bc64ccfe05062c035f2e525da69b30cfb2835",
+      "blob": "1f59205bc90968ec707a6e228d1655adc7da855d",
+      "bytes": 817,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv": {
+      "SHA": "aaed2ab263f143ee36ccd548bb7c0af452f10c8b0aaf1e4e93d5aa51e08ab9e6",
+      "blob": "4400fa6ff6985f9d1700425c5e1be93a3eba3852",
+      "bytes": 2124,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json": {
+      "SHA": "e3814f85e6eb65edffc7ba55d5157c0cb20d1cf2302998d81de3595a43b0a014",
+      "blob": "dd28a5641076e1f105281791dc365976cdcc13ae",
+      "bytes": 534,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json": {
+      "SHA": "fe56381aed51b1b691c840618698cd66b74b5069d7ded2548b3c9fbed0c5063f",
+      "blob": "42bb47981e6642da664763aab124adb23f558496",
+      "bytes": 818,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json": {
+      "SHA": "a1f31651417ef83c1bc394655a4cb6acf456154bd5106066dd939a0efc8ea48a",
+      "blob": "a7b8e44f99d56bc59f3a4dd48c16ebecff0ea712",
+      "bytes": 827,
+      "mode": "100644"
+    },
+    "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json": {
+      "SHA": "1bd6092755f526778ab41582de4f1a350e8be21a64044877785304b1c558fa00",
+      "blob": "030a70432c32101a8ae9352eb4e7e33984f393d4",
+      "bytes": 534,
+      "mode": "100644"
+    },
+    "Platform/09-agent/forms/stages.tsv": {
+      "SHA": "7e5e0b3557757dd20391a901ca8607c42a1fc7224796cc11840e9b9cc91b799e",
+      "blob": "28c562275b099b0fb2a85965d808d844792612e1",
+      "bytes": 2987,
+      "mode": "100644"
+    },
+    "Platform/01-store/ru/spec/01.1-store.norms.md": {
+      "SHA": "d8d93d33a66851b656902c0f263e06867caf321804740f35e46d396b21b13fa4",
+      "blob": "a6d35960de4ffbae9acfa3994e0d87c58cce4374",
+      "bytes": 118431,
+      "mode": "100644"
+    },
+    "Platform/01-store/spec/01.1-store.norms.md": {
+      "SHA": "184fd477ff7e920fdd865e21b9d773c86401418bfe6eb09b037edc9e5693a505",
+      "blob": "93c4048f95731c0e356befd92072943ed4821a0e",
+      "bytes": 85471,
+      "mode": "100644"
+    },
+    "Platform/06-console/data/operations.layers.tsv": {
+      "SHA": "ae71fe339044f938b2e2e17ea287c84edf87192edc5fd8443f6aa01b08e39bc8",
+      "blob": "ac34f79011048c6e38c117824c44881d237435a7",
+      "bytes": 1302,
+      "mode": "100644"
+    },
+    "Platform/06-console/data/operations.schema.json": {
+      "SHA": "4b77637771cf71d07ddeeb8896bf369747e01d130027be447fbd9262359e9431",
+      "blob": "03a0f41cb6dd883e27b1a32c0f1358bb621b9c16",
+      "bytes": 30948,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/issued.layers.tsv": {
+      "SHA": "0f0a27163d3609baca486bef1a6116be6299e112442711346585444aec2c2ee7",
+      "blob": "e3cfeb4588163a33eab53f494056770841fb509a",
+      "bytes": 940,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/issued.schema.json": {
+      "SHA": "279aa69182acbc36c692f503725248d3118700db911f7f1445b12da18372b0be",
+      "blob": "6f9d9f03b694467c15b93417b812545ebbb7295b",
+      "bytes": 29136,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.2-domain.norms.md": {
+      "SHA": "857fa5e38081a3fc3b8f2e223959f49ae94a68488c7d0cf7420d62d901c1aa93",
+      "blob": "f708d2a346abeb656a4bdba99d277ee4ea800d3b",
+      "bytes": 87836,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.2-domain.norms.md": {
+      "SHA": "e31b2ae9a1789ce632ac54ac1c8cda0737b4e90337edb936cb986160dab6fdaa",
+      "blob": "294a8ac9999360e03566d663e5b40629eebb89c4",
+      "bytes": 71456,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/event-journal.md": {
+      "SHA": "53773c1878e11389c7531a80dd5b7d116cc4ce3d2460147d254531bd5f3a6e71",
+      "blob": "407b96d74b79f8e8557e9d8c7a3afb6835a2c270",
+      "bytes": 24473,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/holds.md": {
+      "SHA": "46f18f8d62613cac114b18c7332f7783bc5d617f34d37bdd4e9652b9836fede2",
+      "blob": "42557f80f6affa12b05cc997cfa0d135785baab7",
+      "bytes": 7347,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/record.md": {
+      "SHA": "a65f6d7a0962d8567abca66d1bbe24b925b03272cd257f2c6b16b24219035c9c",
+      "blob": "43435e26287d942a8a11d5395d4c24d9c11dc59c",
+      "bytes": 19454,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/schema.md": {
+      "SHA": "0fe4ed70c93648a53196b31e203dda8e910d657536cd831179ca1be9ac0cc2eb",
+      "blob": "6a799918540ec3115a8ac722c0c94a62c1e6c019",
+      "bytes": 6470,
+      "mode": "100644"
+    },
+    "Platform/common/data/README.md": {
+      "SHA": "83aecca973f4f7cfeb7b47b1fd446760d5db910b9294ac8e2b0721e663cfc9cb",
+      "blob": "bb2d6fa4182f0c967968a6b138b2cda21884ee6e",
+      "bytes": 17488,
+      "mode": "100644"
+    },
+    "Platform/common/data/codec.tsv": {
+      "SHA": "fc8f59027628a14ed0b18495989ea5c45a45a558f6fc6d8fe8f61fc9fd2808dd",
+      "blob": "d5ab25b2e48f73655a55d2057cc48a2fdc75a19f",
+      "bytes": 2758,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/event-journal.md": {
+      "SHA": "15901944a00c9f573fce77022d96cba951af2d511bb26779bd1a7165bfd6e147",
+      "blob": "1949097399b1c0303d582fa419ca86381add51b0",
+      "bytes": 32846,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/holds.md": {
+      "SHA": "700f7ce1c2d3f6ff07a4efc4ebf31084a866ea8bcf10749a0df518b001360340",
+      "blob": "6a7d99ce6117840fb4187ebc5ef5589f142383e9",
+      "bytes": 9750,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/record.md": {
+      "SHA": "a688a3ca0475883b75a559dc5a9be80d7d9798bbf88dfbe1a5b59bbecaa027a6",
+      "blob": "db9be14e9a81546578ac886dc285b1279c1f1bf4",
+      "bytes": 24898,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/schema.md": {
+      "SHA": "6b54ebfb67a95896d694006b148d0899ae12a305770ecf50ed5a10a73398665a",
+      "blob": "b5958a181894f13e08bcb8476a029126ab7e81eb",
+      "bytes": 8619,
+      "mode": "100644"
+    },
+    "Platform/common/ru/data/README.md": {
+      "SHA": "52eb7596bf8574ea1664c38c9a02b3df7e9769121a9a4086df09117aa1ece8ea",
+      "blob": "db617e6e86c051b989f90b4d14e36ab2088b8af3",
+      "bytes": 20569,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/heartbeat-read/README.md": {
+      "SHA": "29e9b0b331dab014583b5e06088f6f7261ca0d0f323f626dfa7546115b07bf59",
+      "blob": "9657a8e39b73c74c91f7fad0d53ca7fd3e0576e2",
+      "bytes": 7314,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/holds/README.md": {
+      "SHA": "4732546ad10441b6b33cb918fdb539edbf992730c9a3b103f5ad6666dff09809",
+      "blob": "8551cd921260ae9be15e1685110614db755942fb",
+      "bytes": 5931,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/may/README.md": {
+      "SHA": "338b89a96a0a3dd18fbdfe2b984ef5e1333cdf60a17cd994b1d45989969571c8",
+      "blob": "c1e3dc8e63f288dfe86b362e63640b65b4e93979",
+      "bytes": 15109,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/record/README.md": {
+      "SHA": "a694648dc89be02ac3ceddc047ae21b7183cbaa2a02a0df831caf4ee1c3a443f",
+      "blob": "c5b72eb9ca51c2dff4077dfe82a148360e29f8dd",
+      "bytes": 8145,
+      "mode": "100644"
+    },
+    "Platform/common/ru/vectors/schema/README.md": {
+      "SHA": "b6a7c05967da72fb717aad4b8e68943bd63544dac048f8a2c5623c19b311c7ec",
+      "blob": "7c22eb2073d50fc9c21a5cbe51839c170378fd73",
+      "bytes": 4537,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/01.tsv": {
+      "SHA": "0226d33edec0dd646ce8790db80084076742a90e744916c286fd48bc3935d310",
+      "blob": "ed3d150f2806888bf329f68c7a16346d38c06bb4",
+      "bytes": 19131,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/family-read/08.tsv": {
+      "SHA": "1f92a35ce3de75fe6ebac4cbfbd2cac0da52a33943e687309a06b4a6ac267fae",
+      "blob": "d029a705d73904055ec9f36d926ca846b0657e7f",
+      "bytes": 1343306,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/heartbeat-read/README.md": {
+      "SHA": "7b243a35b1953dc3ee919c10cc280e71611b9acff39913d21c586439486d55da",
+      "blob": "cc9e2d585ac655bb4e77c591a6baf06fb64de202",
+      "bytes": 5866,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/heartbeat-read/cases.tsv": {
+      "SHA": "bdb76c01cf8ee7134352c51693d71f19b14d36651da9789fc0fbebbfcf922ecd",
+      "blob": "e5808bd6b5091bae2b198b064f30516881f6602f",
+      "bytes": 7271,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/heartbeat-read/worker.tsv": {
+      "SHA": "ab0d101aa7c68e55af8c520525c9072fb584c8b2984dcecf7db5361fa9d60fe7",
+      "blob": "3c52557feacb049b7bb0ead329f630d2600ad1e3",
+      "bytes": 7568,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/holds/README.md": {
+      "SHA": "9841a6a50542eed50f4763fabb16414e55b5ac0dfecfb22051dbb2d577a2cf97",
+      "blob": "68b205e8fd8478b5230becfbcaf7e5cf24dd5257",
+      "bytes": 4532,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/holds/cases.tsv": {
+      "SHA": "a94544bad738476688b7d82fd91cb1b1841b964490884aaab983f85d3d6b1fca",
+      "blob": "f8d4392c874e1270dfe41679617646446b82f0d6",
+      "bytes": 11101,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/journal/bucket.tsv": {
+      "SHA": "f838fe410509975887a460cc83774ff42a54d9ee73cf295129886afbe83471d5",
+      "blob": "22ead137e768f969cd7de69bd78dc387719e8102",
+      "bytes": 7147,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/may/README.md": {
+      "SHA": "64f91e6bc48a38d9a6326828bab9b68c3f32290015f4734498789e101cc9cb3c",
+      "blob": "de005a3dd96847b8e2d3253280f96b7cd8ffd043",
+      "bytes": 11872,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/may/cases.tsv": {
+      "SHA": "00a3bce969511d029d57818309346b5efc1c527cd352027a2dfba9e9d47582b4",
+      "blob": "25aad873e8902222cb8eae79bbfc6bfecb3c0ff6",
+      "bytes": 50344,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/record/README.md": {
+      "SHA": "7659b4902575b9d8535b7073db829013202ff662b138f6c27193efbe4e22176e",
+      "blob": "a943852a67f85fb1a863eed5c83705e3cdec1a28",
+      "bytes": 6272,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/record/cases.tsv": {
+      "SHA": "c22204ec25ab51d0a06c1ceee855fe9972e0ff185810d976cbafe4814cd93dee",
+      "blob": "efa3df8230a33b6177b80586bb38a32c365364c9",
+      "bytes": 49424,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/schema/README.md": {
+      "SHA": "7abc388ad7ff3eb9055fe35418da1680358636dbc22ba749ee38c95047382796",
+      "blob": "95757704b304a539e4b1fbac9e152a08cc110f0b",
+      "bytes": 3180,
+      "mode": "100644"
+    },
+    "Platform/common/vectors/schema/cases.tsv": {
+      "SHA": "8014248a89cf80ad0bf7514da591d0cd79748a990cbd1621f81c1692c2e89799",
+      "blob": "30b61fb54d35cc91e670fa6ece666db3a9fe9f4a",
+      "bytes": 2274,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/accept.md": {
+      "SHA": "c2d620dac481ef1d31906d58e8232cd8f7268cb0cbca96089a1be4f6882f8b8d",
+      "blob": "52f6fce36ab4657075ae9ca940c8d78279416a48",
+      "bytes": 42517,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/accept.md": {
+      "SHA": "b14b55885ce9c1712e71a3e4e13c9f1f368b6153e4c1b0f62a3532de807bf3c0",
+      "blob": "3ad74846731412f2cdad1ea98cf54a2a87c7f54a",
+      "bytes": 52846,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/0/README.md": {
+      "SHA": "9edb0db2a8d2e1b996bd1d82d789c957a85fa82cf121e0d4cf119a708cd784e2",
+      "blob": "7ebd417c46ce0d776939249da9368abf236cfcaa",
+      "bytes": 438,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/1/README.md": {
+      "SHA": "1ee75ba28b945035cc7679c6eb6e87f98eb623e1a8b9722a5ae218ebb75e10a7",
+      "blob": "24e1e343736558c61dbbcae7a1b45bc5ce03b42c",
+      "bytes": 4253,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/3/README.md": {
+      "SHA": "589e2c3e4b14958761658d6d9a15aa18838dc6f206e50a20cc705a5840f35391",
+      "blob": "0ccfe473d352ab7595f176233eb463659fe230db",
+      "bytes": 20322,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/4/README.md": {
+      "SHA": "7793aac9cf56068676ec86559019f4673e5ad0f01d74f4c7970d91da32b6cb82",
+      "blob": "057c91c37a386e8f617b62e2e77d5d98c04b3b07",
+      "bytes": 19652,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/4/seams.tsv": {
+      "SHA": "fc4899569c4a4c5b6f278e67994b255bd22b10d481337f4a689455f9a10b6439",
+      "blob": "0f972e0c321da914b1e1311150e0a915269e5d44",
+      "bytes": 3372,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/5/README.md": {
+      "SHA": "f9f60517a5c3db447726211ebd82f51dbe768fc6bed26c630fa4d972ded541d5",
+      "blob": "f0776dc7af9371849a88cb953b04a127ae7887ec",
+      "bytes": 7357,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/5/scenarios.tsv": {
+      "SHA": "c02b3a5d1b7be7353873c55ecacf69ff169b9a31ace77cdf5bbcb48e3c6756b3",
+      "blob": "0ea73991b072b57683e52b4c47764c4c74e3ec23",
+      "bytes": 8963,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/7/README.md": {
+      "SHA": "905769dc3b81a935ac807b822a39bed5afa2b903e676b4aa2173ec59aea6a7a3",
+      "blob": "b62d608b146df183890478c99eb617b89495f68b",
+      "bytes": 7619,
+      "mode": "100644"
+    },
+    "Platform/08-domain/acceptance/8/README.md": {
+      "SHA": "23fec55805554654025154c5078c56d44b8eedee9ee9bba90fff96077b27fb31",
+      "blob": "28ed1b6fbfa0d513e70dfd620b04b9c03fd525aa",
+      "bytes": 9559,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/alarm-history.schema.json": {
+      "SHA": "282ad0aa7a11fddc69039d0f2afc1c124d3d73dfcfc2dc5e550d0e397323e4f6",
+      "blob": "5a1e5806db3140ee0e13c6dcc1b286a2a4486c2c",
+      "bytes": 31038,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/break-glass.outcomes.tsv": {
+      "SHA": "f38c17724579fde8b38ead82b665cec2c26e5a56cf0216b10b261df5fb508097",
+      "blob": "a7ddcf4ff460d221e1756cb4a502d66d7db64b47",
+      "bytes": 2700,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/break-glass.schema.json": {
+      "SHA": "7b22dea96af4b9f5a85c7db8b44aa0efc600c644329c3dde88130a1c37f970b5",
+      "blob": "b6cf7a6e18b5f88c4e1e44ede0f3003a02e73e4f",
+      "bytes": 29317,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/domain-folders.schema.json": {
+      "SHA": "5cbf22fbba43426f53030cd3f045ccfbeed31f56c2249f896b413239c5bbe3e6",
+      "blob": "5e7497e565e2b1ba3f8040c54f01c3c7f0236e0c",
+      "bytes": 29701,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/grants.outcomes.tsv": {
+      "SHA": "57444f250c7805939a77641956548afefb988edf1e1e64c64833c787e2969aa9",
+      "blob": "db7a92f3b93703cb6012162a2de870c7f4f481dc",
+      "bytes": 3093,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/grants.schema.json": {
+      "SHA": "892fa4d919b876bae84dac750ff3e5bb90660f551a1e8f5810357b6ab50a4e39",
+      "blob": "75d0579b3cf8353dc808ec1f321562f80f1ae0e9",
+      "bytes": 29217,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/groups.outcomes.tsv": {
+      "SHA": "80aa3b6e51d5bf4f38cf2685043479c1a2fc9a88e49c5dd5ad728604c8cbd8e5",
+      "blob": "c1ade9dd63617c3bef71f50a44cf58063c35d5e1",
+      "bytes": 1526,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/groups.schema.json": {
+      "SHA": "121e901768012f219a3f2603b35f093778de74b1edd6237318e93468cebf760f",
+      "blob": "bde9e61bc8dfe6192c04b53e86d55f776677fcc1",
+      "bytes": 30326,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/members.schema.json": {
+      "SHA": "98dd70c17ff073a89b1ec0bbb93ab6de2760237edc2fc3652c4df3888b09853d",
+      "blob": "82f54d1cdc5604030efe18a208accf50eefd9b38",
+      "bytes": 29225,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/outcomes.layers.tsv": {
+      "SHA": "b335add432c2f7b3994f8a4d304c5913eae776407d3ac7aa9672b80b17efcd04",
+      "blob": "9b36ca17627aa15f26a0e0ccad24f38dba0310aa",
+      "bytes": 847,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/outcomes.schema.json": {
+      "SHA": "c91d0f8ca0c462c86e6269cc7c38c5ff483ee3f17a700d3976b253016f867396",
+      "blob": "23b2ee42791759c4264534069e2fb431143ebe6a",
+      "bytes": 28652,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/pending.layers.tsv": {
+      "SHA": "f997448b0b6df70f6bfd399782feea5c61999ce8dd1d567c17ebb2c200f129b2",
+      "blob": "076efb1a0729cbc8213632b1b65b9b20f119f28b",
+      "bytes": 1073,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/pending.schema.json": {
+      "SHA": "ba9ca903bfb78c9b457b30039a6ae6715107e3c0f4e8d572b39d2b7000c78c2e",
+      "blob": "ac9d5e42b7d84aeaa36ccfcee6d0164fbb9d1851",
+      "bytes": 32111,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/roles.outcomes.tsv": {
+      "SHA": "d50919ef45eee156292c26eb1285f459236e47d5a37f568f8fa8c9c421b6f451",
+      "blob": "a9a98aaa4338c99d2f292ce63e08ce486b4f1091",
+      "bytes": 1689,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/roles.schema.json": {
+      "SHA": "ca3b921d8745fb1ecaf4c77143c83a3a26f86cff0b23b92561b00cd2abf5ca79",
+      "blob": "9d72390be8f85ebd5398fc88b665611ec76303fd",
+      "bytes": 32112,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/users.outcomes.tsv": {
+      "SHA": "91411985de0eddccedf18cc975331aeb5576111203a341c241159a2175a8701e",
+      "blob": "03ad41efb48f8f86ecc865fe0d963489747f0886",
+      "bytes": 1685,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/users.schema.json": {
+      "SHA": "36b6ba8db969dfe9eb8fcf3216703e3beaf9c4cd5bf79fbf588282a539011a43",
+      "blob": "37e51bbb028d19e338c375bdfa3448f9efe5e2c8",
+      "bytes": 30986,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/view-rows.schema.json": {
+      "SHA": "f232030a311a8348835ad741b0ed5ed350d8052af8c3947d0c77089f30f9eae0",
+      "blob": "e34cecdc31e76fd57b0ef103003ee287a9f81cb9",
+      "bytes": 38462,
+      "mode": "100644"
+    },
+    "Platform/08-domain/data/view.schema.json": {
+      "SHA": "e171b8a76ff39a09915bd8fb5ae6cf046f591c3d93203fc951026762cf397f6f",
+      "blob": "512cc3447cd766067aa135298059fa0db10232a5",
+      "bytes": 45289,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/0/README.md": {
+      "SHA": "8f3deebe375d594a4288d66f291f1706095a7aaab24f42dbef4ff212735dc3d8",
+      "blob": "c298e3a8b06d6a5529e614af76172e5bd89e2b15",
+      "bytes": 784,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/1/README.md": {
+      "SHA": "2ecf779ac924e4002bbcd82ea87897bd0b22dc9916fc1a06193be51b0f1b9f7a",
+      "blob": "2ea88795b033496fe085ad9c07862431bc164b64",
+      "bytes": 5357,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/3/README.md": {
+      "SHA": "4128a3e43143e458c07a2cc1a902e08c16d498a8098cbc89fc7bf356fb6ad438",
+      "blob": "20d9d04ede4a721213ee7fe39f922a35d3576d17",
+      "bytes": 25166,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/4/README.md": {
+      "SHA": "bc80951e95368cb3c4e4c31bd385085f17413ef6f06894ee3af09cb265e8cab0",
+      "blob": "0b0d4c1915cf4d23946fd0fb8f0dff038589b229",
+      "bytes": 24582,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/5/README.md": {
+      "SHA": "50f079d8e438cd4779107aaf7d1aa88d4ed0ca6311a256e6f6b40a93b2a7db86",
+      "blob": "67514cb662119d4c89e7f044ffe5fe88aaaf8476",
+      "bytes": 9233,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/7/README.md": {
+      "SHA": "187633916de2bb57a784e9db5a0d928537e29d0ac79d25a4f794a6bd6dc55510",
+      "blob": "ada879d08f6a961271b52b4585e500b44e00ae30",
+      "bytes": 9647,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/acceptance/8/README.md": {
+      "SHA": "fb1d218bb504012dcb8313239881d3c3caffe4718e75533dd86bbf92368601d2",
+      "blob": "5087e267153a10a4e959373d5d4eab4b13d944c2",
+      "bytes": 12389,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.0-domain.norms.md": {
+      "SHA": "9b2805c308568a7f1e7b73a849f99c6950ace3fd5c2fd83d8f6cbeb9271b04e2",
+      "blob": "f11da40ee867c88b9d66fa8ad69b4fa5d90aa32f",
+      "bytes": 37418,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.1-domain.norms.md": {
+      "SHA": "6b1bb4b35d131c856c58cc4e598e5ccaa63ba3c9ee917224bc09d00a55583d2c",
+      "blob": "653d81aa833b6bee936adc85ba90dd5ebcf3f32b",
+      "bytes": 115852,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.3-domain.norms.md": {
+      "SHA": "4deba519cfa1fe11789cd7d6715b37fc33869b1d69bb37d6239289711bb16cc4",
+      "blob": "1187dc7e58dbf8fb1c7c8e32a0bc49e63381c1ca",
+      "bytes": 133593,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.6-domain.norms.md": {
+      "SHA": "9ab7e8f16bf16b0cf0e3a7a553ffb2f25b721591efa5570333c64491891a7dad",
+      "blob": "7125833db5c74f47d1e3c1bc58911d2214f8785b",
+      "bytes": 79724,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.8-domain.norms.md": {
+      "SHA": "4ffe89bf95d1ed0b181795b5fe84ceca354c22164e90162ed0ebee27e2d0318d",
+      "blob": "5957d8898d7eb730f552d0d69c423b031a06e1af",
+      "bytes": 157553,
+      "mode": "100644"
+    },
+    "Platform/08-domain/ru/spec/08.9-domain.norms.md": {
+      "SHA": "f20fa5607dc606050fcd96c60b62c69b0861b50405a434655674431753400da4",
+      "blob": "5d00e3eaf18b727719d220d88cc1a2d3ba7bd7e8",
+      "bytes": 45424,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.0-domain.norms.md": {
+      "SHA": "d52f47a231bf400e4ee14ba0ebf8397b66c1dd473185b8ca09393952a074ee66",
+      "blob": "6572117e928184261bf2f9573f418213dadafb73",
+      "bytes": 29210,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.1-domain.norms.md": {
+      "SHA": "999e441d9ff984c870d1b15fb345fb5f7a1ca33fc7830e0e8dba5f693a2389e5",
+      "blob": "b701a1134753b20e7ab6bd8564d03218e45dcd66",
+      "bytes": 93466,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.3-domain.norms.md": {
+      "SHA": "12c1f45be56a2112299e315e62752aee52a035a4aaa934fef90b071a41f41530",
+      "blob": "5c3b9056e21e8ae6362b79e9b9cd2b1df3aaddf0",
+      "bytes": 107819,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.6-domain.norms.md": {
+      "SHA": "f0e523f2fffb596185091a21e56031c328bac7591e442a42de19528b41116773",
+      "blob": "bdfac2cc2569ac0b500b77155dfddc4252b1cb1e",
+      "bytes": 64283,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.8-domain.norms.md": {
+      "SHA": "d3227575422bd7af0f640daf33ff5c6dfe2b3e6090807a41769fa588084ce564",
+      "blob": "273ea66cf5b4d9c5299a0c2e321ba3754e23465d",
+      "bytes": 123624,
+      "mode": "100644"
+    },
+    "Platform/08-domain/spec/08.9-domain.norms.md": {
+      "SHA": "0494c23441d0f69cd7d2b92273c609f8ca358eaf9f10c1dce80529452605110d",
+      "blob": "e98ceaa458de726f5236008f21c84dcb49255843",
+      "bytes": 37563,
+      "mode": "100644"
+    },
+    "Platform/common/contracts/domain-envelopes.md": {
+      "SHA": "c2f7ef74a20e3347204fddb0a8cdc50b45f8cd8a2a3e2c81f7bdf08df4c45d59",
+      "blob": "f8e36ed2f77c1ef187c19af02b54e4dda5e8e509",
+      "bytes": 13345,
+      "mode": "100644"
+    },
+    "Platform/common/ru/contracts/domain-envelopes.md": {
+      "SHA": "c3e09c4a0de72e803bb77edb078625c4fc462049684d1f1d888a4b725cfbe077",
+      "blob": "605b0898e52c9d3083022461449bd3590e29e800",
+      "bytes": 16533,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/ru/spec/07-console-module.norms.md": {
+      "SHA": "c61cb7ec8423fb55a49165cce38b0e5089cfbfe19536b6d2119f726382c13da5",
+      "blob": "11551e5a755ef757687dfbae625012e2aea8883f",
+      "bytes": 87493,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/spec/07-console-module.norms.md": {
+      "SHA": "0b6788649f9485c97c0b251d50cab19a7767cb6540f02a46e4c8181a8d20f00c",
+      "blob": "880c522814449c219b2c5795740de177d8cfe29c",
+      "bytes": 63009,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/CONSOLE-MODULE.md": {
+      "SHA": "fadd5527ca33747056f6bcfafa4218f94dc15e09661c4921cb982af91cc2bab1",
+      "blob": "13515f56a52fe04be7d7b193302de6c16b770bdf",
+      "bytes": 51390,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/ru/CONSOLE-MODULE.md": {
+      "SHA": "cf85e1d9321f6b8e1ea554af84c582b890f36b1bc6a65b2f3f04dfcbec4389e3",
+      "blob": "1d10c21d1b9f423b460b7e2fe95f8c9a3692ddcc",
+      "bytes": 71701,
+      "mode": "100644"
+    },
+    "Platform/10-domain-console/ru/spec/10-domain-console.norms.md": {
+      "SHA": "3c0d9502d9f661c177e8910bcd4dd94d26a0d286e7afe939b59cd0473a55b508",
+      "blob": "6efa02677d35e7f3af5a8e37f039968ef575d851",
+      "bytes": 99389,
+      "mode": "100644"
+    },
+    "Platform/10-domain-console/spec/10-domain-console.norms.md": {
+      "SHA": "865990d3f1cb65752d09aa03515af12c9f0653c882a8ab2bbe82ea509790fedf",
+      "blob": "e5fd3548d647805e5478a1c23ef258faf78db6f8",
+      "bytes": 78068,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/data/localization.tsv": {
+      "SHA": "2bc760e6957eaffb04fd7c444cd411cf597ded4e2b6d1c950375236facbd0b40",
+      "blob": "3b4b706e886d20117c959202ac9aa9cfeb0c4161",
+      "bytes": 45206,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/module/console.js": {
+      "SHA": "155b0746b075db0ac339d40c46b34896c15511a4c25cd12d2271604f82976003",
+      "blob": "322cfe7b3ce32c6283246bc8486385f9583ec843",
+      "bytes": 326674,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/ru/spec/07-console-module.README.md": {
+      "SHA": "2e293adf5e9c7bc4f1b643a3773758f73c958a4f6f44082dc5c9627c39840d14",
+      "blob": "3cdff9bc57a23e59265e20979afcabf5750e57b6",
+      "bytes": 9621,
+      "mode": "100644"
+    },
+    "Platform/07-console-module/spec/07-console-module.README.md": {
+      "SHA": "6f097d981c84a3183caf3a7fe2e51e12b03f8e3289b9461e50800e4e2cced553",
+      "blob": "1f7f6afb74309cc4dfebbe943652802d24a452a4",
+      "bytes": 6649,
+      "mode": "100644"
+    },
+    "Source/tests/console/holder-page.test.js": {
+      "SHA": "b4b659d5bf754a3d0b7bc3cda687365c1ada59764544f8c7ff7526ce82b5215c",
+      "blob": "857f762e8bf3deacb85be4f50bda1a283f0fbd4d",
+      "bytes": 16238,
+      "mode": "100644"
+    }
+  },
+  "protected_meaning": [
+    "ADR125(8) relay_01_413 and c10_007_502 exact rows",
+    "Source21 production endpoint and all unrelated stage3 units",
+    "ADR129(29) narrow schema/current guard semantics",
+    "current P10 table PathItems/relay5000 and alarm37/15/scenario corrections",
+    "current actual7family08 writer first6/IDs/input changes",
+    "Code6005/all other current Code/skills",
+    "no new named finite-profile form or C2 attribution"
+  ],
+  "unmodified_source_packages": [
+    "Source/w2cplatform",
+    "VMS",
+    "all other Source except acceptedJ1 test"
+  ],
+  "no_package_export_install_pin_change": true,
+  "P10_protected_table_nodes": "Current TableEditCollection/TableEditItem parsed identity equal; P08 six shared holder components inserted in schemas, not pathItems",
+  "P01_dependency": "ExactlyR008/R010 changed; all other current P01.1 requirement units including Source21 remain equal. NoSourceA floor rows copied. P02 canonical/layout/wrappers/whole SourceB not adopted.",
+  "outside_rule": "After commit all tree entries outside declared315Source+11metadata must retain parent mode/type/blob. Git-only current-doc reanchor does not repeat Sourcecontrols."
+}

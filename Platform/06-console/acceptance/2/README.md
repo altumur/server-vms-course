@@ -119,7 +119,7 @@ the former kid — by reading: the stand has one ring.
    A POST without a secret stays an ordinary creation, its repeat works by chapter 6.1.
 2. With the ring k1: the same POST with alpha creates a unit, an exact repeat returns the former
    answer; replacing only the secret with bravo gives 422 key reused and changes nothing.
-   This is the last step of scenario 01. Also check a former pending younger/older than 30 s
+   This is the last step of scenario 01. Also check a former pending younger/older than CLAIM_TAKEOVER_AFTER
    by the rules of chapter 6.1: the prohibition without a ring does not remove a foreign claim; a set unreadable
    ring stays 503, it is not replaced by the mode without a key.
 3. With the ring k1 leave the done claim of the original POST, then by PUT change the secret of the unit.

@@ -16,7 +16,7 @@ bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
 `PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 N1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN (M10 and M11 were moved whole; review analysis of stage B 3–5, № 34); «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
-«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is `id-map.tsv` (historical record).
+«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`.
 
 ## N0 Vocabulary
 
@@ -41,12 +41,12 @@ of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and
 
 ```yaml
 reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (only from servers.show; added by M10/10),
-         /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by M10/10),
+         /where/<id>, /<sub>/where/<id>, /servers, /<sub>/servers (only loaded subsystem profiles), /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by M10/10),
          /events, /metrics (only running_gauge and workers_gauge), /domain/* (forwarding contract «Domain doors»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (only with display.tree.folders)
 writes:  POST/PUT/DELETE /<rows>[/<id>] and /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (only with display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (forwarding contract «Domain doors»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} outside show, the doors of the holders (door from where — only to the shell)
-order:   /session → /manifest → /mounts → /changes (only on mounting) → per subsystem /<rows> → /folders (if at least one subsystem declared display.tree.folders) → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
+order:   /session → /manifest → /mounts → /changes (only on mounting) → per subsystem /<rows> → /folders (if at least one subsystem declared display.tree.folders) → /servers → /<sub>/servers (other catalogue profiles, in order) → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; polling every poll_s; /events?unit= of the selected one — every 5 s
 subsystems: opts.subsystems — the names of the subsystems of the catalogue (the root and /mounts) whose units the module loads, shows as a tree and writes
          (/<rows>, /<sub>/<rows>, the card, the forms); no key — all; a list — only the named ones; [] — none (ADR-0112 addendum (23) item 2)
@@ -67,7 +67,19 @@ The words `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) a
 N1.1, N1.2. The parts of the list that the domain introduces (`/domain/*`, `/api/held`, `/domain/shared/<sub>`, `/domain/alarms`,
 `login_url`) are the late layer N1.6.
 
+Worker observations use the existing request context of P/06.5 N2. In the servers phase, read root `/servers` once, then the other loaded catalogue profiles through `/<sub>/servers` in catalogue order. The explicit root prefix is the same profile, not another observation. `opts.subsystems` limits unit loading, not these observations; `[]` does not make the profile catalogue empty. An unconfirmed catalogue is unknown, not an empty or confirmed working profile.
+
+Keep documents and their policy/ServerRow observations separate by profile. The private worker identity is the exact `(sub, worker)` from the confirmed request context; the existing reference is `worker:<sub>/<w>`. Selection and callbacks use the original WorkerRow of that profile without adding a synthetic `sub`. Do not substitute root, join on a short name or read internal storage.
+
+An unreadable, refused or unavailable profile remains unknown, without an empty-worker fact or another profile's row as fallback. A last-known observation is not a successful current read. The public `refresh.servers` remains exactly the root response's `d.servers` map, not the entire Servers document, its policy or merged profiles; private error/last-known state adds no public field or event. P/06 API and WorkerRow are unchanged.
+
 ### N1.5 The contract of the module with the shell
+
+For the accepted path and editor corrections of ADR-0129(18), classify only the path before the query, using the root and mounted subsystem routes already declared by P/06.5 N2. Keep the original request address, CAS revision, logical-action key and replay rules. A query does not make a service door a table or permit `ifMatch` there.
+
+An `int` control never truncates the input. It sends the same safely representable integer as an ordinary JSON integer, or refuses locally with the text retained and no substituted number sent. A list remains a typed list across display, editing another element and submission: commas inside a string, empty strings, order and duplicates are not lost by splitting, trimming or deduplication. Ordinary lists acquire no placement-label restriction.
+
+An added section with an `off` reason stays visible with that reason, but neither mouse nor keyboard activation enters it or invokes its `render`. An enabled neighbouring section still works. This is UI behaviour, not a server permission.
 
 ```yaml
 module:    one module object — PlatformConsole {version, features, mount}; mount(root, opts) returns the page object
@@ -164,6 +176,12 @@ commands:  the kind command / command.failed — the word and the note of the mo
 The session, the grants and the login by which `may` judges — [P/06.3](../../06-console/spec/06.3-console.norms.md) (the gate,
 `/session`); the server checks every request regardless of `may`. The words `display` — P/06.5 N1.2.
 
+**Cluster refresh.** A cluster load emits the existing `refresh {units, servers, domain}` only when its own root `/servers` read is confirmed. `servers` is exactly that read's root `d.servers` map, not the entire Servers document, its policy or merged profiles. A failed root read skips only this cluster emission: ordinary reads, local repaint and the next poll still continue. Previous data and the initial `{}` are not fresh observations. A confirmed empty map, an unchanged map and the first same-map recovery after failure each produce the ordinary event; there is no change-only mode or catch-up replay.
+
+This exception does not change holder-only `refresh {domain}`, access `refresh {access}`, select, logout, card.closed, session or `pc.ready`. The entire session-read, last-user replay and different-user secret-reset rule above remains unchanged. While the root read is unconfirmed, a subscriber also misses the other data of that cluster poll through this event; absence of the event is not a periodic health signal. Local last-known/error state introduces no public error, field, value type or event.
+
+A failed domain continuation uses the existing `domain: null` error carrier rather than a successful partial prefix. Normal `200` values of P/10 `complete`, `unread` and other declared incomplete observations retain their owner meanings; this frequency exception does not reclassify them automatically as transport errors or turn `complete` into a client traversal flag.
+
 **UI language, caption source and display dates (ADR-0121 addendum (10)).** The one editable source of platform captions is [data/localization.tsv](../data/localization.tsv), with the existing `key`, `en`, `ru` columns. The published module's existing `WORDS` dictionaries are a deterministic materialization of that table, not a second editable vocabulary. A key without a namespace selects `WORDS[language][key]`; `n.<name>` selects `WORDS[language].n[<name>]`; `kinds.<event-kind>` selects `WORDS[language].kinds[<event-kind>]`, keeping the entire event-kind suffix literal, including its dots. Thus `n.late` and `kinds.server.decommission_requested` retain their existing two different bindings; an arbitrary recursive dot split is not used. The materialized Russian strings use JSON-compatible JavaScript Unicode escapes and have exactly the table's string values after ordinary JavaScript parsing. No additional runtime decoder or vocabulary alias is introduced.
 
 For each `mount(root, opts)` instance, the selected UI language is Russian only when `opts.lang === "ru"`; otherwise it is English, including when `lang` is omitted. The browser language does not select the module's language. Caption materialization is present in the same synchronously served `/platform/console.js?v=1`: mounting, selecting Russian and rendering a caption require no locale-table fetch, new route, query parameter, storage key, version or public call. The language of one mounted instance does not change another instance. Subject captions and all protocol/data values remain as supplied by their owning contracts.
@@ -171,6 +189,10 @@ For each `mount(root, opts)` instance, the selected UI language is Russian only 
 The module's UI timestamp/date renderings use an explicit locale of `ru-RU` for that instance's Russian UI and `en-US` for its English UI. This includes the existing full timestamp rendering and the day/month/short-time rendering, without making their private helper names public API. Full timestamp rendering keeps its existing format options; day/month/short-time rendering keeps `day: "2-digit"`, `month: "2-digit"`, `hour: "2-digit"`, `minute: "2-digit"`, `hour12: false`. Locale selection does not add a `timeZone` override or change the existing time zone, seconds-to-milliseconds conversion, precision, absent-value/dash handling, input parsing, or serialization. Protocol timestamps, deadlines, durations, request bodies, responses and stored values are not translated or reformatted by this UI rule.
 
 ### N1.6 The domain section — the late layer: introduced by lessons 8 and 10 (without ids of its own)
+
+The current `pending` view is a member-keyed count (`integer >= 0`) or `null` for an unreadable member row; it is not a list of edit descriptions. Counts and the separate `outcomes` arrays are displayed independently, including zero and unknown counts.
+
+Both domain loaders follow the opaque cursor of `GET /domain` under P/10-R004. The assembled view preserves all six per-member projections, required empty subsystem keys, complete contested claimant lists and global fields. Repeated conflict context is one conflict fact, not another member or another copy of the fact. Ordinary paginated reads promise no snapshot across changes; a failed continuation is not a complete successful read.
 
 The parts of N1.4 and N1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, V5; as P/02.1
 N1.2b). The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 N1.6): the parts
@@ -222,6 +244,10 @@ go, an empty document — `null`; the domain checks the schema on `PUT` («Imple
 The holder page (`/`, CSP, `/manifest`, `/mounts`, `/session`) is served by lesson P/10 (P/10-04): implementations serve the bytes of the module
 as they are; what the module calls in the mode `domain` is a property of the published module, not of the implementations (M11/8 N1.8 `module`).
 
+Both domain loaders collect the existing optional reader field `unread` by [P/10 N1.2a](../../10-domain-console/spec/10-domain-console.norms.md) and its `ServedView.unread` type in the [P/08 owner OpenAPI](../../08-domain/spec/08-domain.api.openapi.yaml). All pages absent means absent; any supplied value keeps the field, including an empty result. Union the literal Part strings without duplicates in first-observation and in-page order; a later absent or empty value never erases earlier parts. No parsing, trimming, padding, sorting or normalization is performed. This does not change individual response constraints or infer completeness from absence.
+
+Keep the first head's globals, the six projections, complete contested lists, required empty subsystem keys, opaque continuation and visibility unchanged. A valid `200` with a normal incomplete `complete`/`unread` state remains an ordinary observation with its owner values, not a transport error. The module may show the observed normal incompleteness privately; it adds no public event/field or client completeness flag and promises no snapshot. A real failed continuation still uses the existing `domain: null` path and private last-known/error state; the root-confirmation rule of cluster refresh stays unchanged.
+
 ---
 
 ## N2 The library contract
@@ -259,6 +285,8 @@ N1.5 `forms`.
 ---
 
 ## N5 Acceptance
+
+The ADR-0129(18) checks read the current canonical P/07 module files. Declare fixture origins separately: a frozen wrapper is not the canonical module; an instrumented navigation return and a substituted shell-short module are not unchanged-module executions. Check path/query neighbours, safe-integer edges, lossless list edits, scoped worker identities, current pending counts, both paginated loaders and disabled-section input. J-P07-01 is a separate holder-fixture scope on the same corrected candidate. No old positive array, error, incomplete output, or aggregate test count closes the existing C6/A1/N5/P/07-07/08 debts.
 
 The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, V2): the module is a library in the browser,
 the HTTP-TSV stand does not run it. The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) —

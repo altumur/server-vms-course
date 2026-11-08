@@ -12,6 +12,7 @@ spec/05-resource.norms.md           нормы (одна глава)
 spec/05-resource.api.openapi.yaml   двери
 spec/05-resource.README.md          инструкция реализации
 lifecycle.md                        флаги, окружение, коды выхода, юниты
+forms/runtime-constants.tsv          независимые уставки; HTTP-значения — в OpenAPI
 data/<семья>.schema.json            семьи данных, которыми урок владеет (JSON Schema 2020-12, ADR-0092; ADR-0088), с .layers.tsv, .outcomes.tsv
 vectors/relieve/                    векторы алгоритма, который урок вводит
 acceptance/                         приёмка урока (README.md, scenarios.tsv, inputs/)

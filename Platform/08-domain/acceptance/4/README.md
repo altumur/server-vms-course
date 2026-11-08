@@ -9,7 +9,7 @@ M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones (there is one source, the numbers do not collide).
 In total 33 scenarios / 498 steps (sc. 23 — versions and the replay memory, ADR-0094 B3, B4; sc. 21, 22 — the feed `GET /changes` under a grant, ADR-0094 B2; sc. 24–37 — the increment of rights ADR-0097–ADR-0100, **there is no dry run by an implementation**, and the steps of sc. 02, 17 are rewritten for the role `admin`; sc. 13–15 — the coverage audit of P/08, audit-kimi 1e9929d51; sc. 16–19 — the coverage audit of P/08, the second pass of Gemini; sc. 12 `pass-need` — 9 steps, `need` of the route `door.pass` at the cluster console, C06-PASS-NEED-51-01; sc. 11 `events-view` — 10 steps, the visibility of `GET /events` under a narrow grant, C06-EVENTS-VIEW-33-01; steps 01/22–24 — the White_Space boundary of a name, the review analysis of stage B 8–10, № 18; steps 01/25–26 — `GET /drain` with a narrow grant — 403: the drain requires `view` on `*`, C06-DRAIN-VISIBILITY-33-01; steps 01/27–33 — `POST /marks` without the grant `edit` — 403 before the body, a narrow `edit unit:` — one's own unit 2xx, a foreign one 403, C06-BODYEDIT-SCOPE-33-01).
 
-The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (106 rows; the owner is chapter 8.4).
+The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (the canonical package README lists the cases).
 The scenario M11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved (the Architect's decision 2026-10-20 on the plans
 8–10, item 1; the row of `corrections-4.tsv` (historical correction record)). The other scenarios of M11/09 are at the neighbours: 03 (`break-glass`) and 06 (`domain-keys`) —
 [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (14, 06); 05 (`names-index`) — [chapter 8.5](../5/README.md) (number 11).
@@ -141,4 +141,4 @@ Step 25: there is no row `c9`, the condition — 412 with `revision: 0`. The bre
 
 ## Kit seams
 
-[4 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

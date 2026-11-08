@@ -57,17 +57,17 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    After an unknown outcome first the barrier of the version of turn, then a re-read. Check two controllers
    on different units: capacity 1, the same spread_by, different home of the members of a group. A change of owner
    lets a late writer neither add to the old assignment nor remove from the new one.
-5. Work out the table of fates by the age of the observed version of the slot: 45/90 s, gone, hung, wait, unsure, two silences.
+5. Work out the table of fates by the age of the observed version of the slot: SLOT_TERM / (SLOT_TERM + LOST_AFTER), gone, hung, wait, unsure, two silences.
    A shift of the writer's until and a restart of the judge are checked separately; a future finite until is not spoiling.
    Check names_given on a renewal between the judgment and the capture; do not replace an unknown gen with zero.
    The release of a readable row keeps holder/until/gen/server; a torn row with a readable gen is written wholly released and
-   nobody's: released "true", holder "", until 0, gen as read, server — if it is readable, otherwise ""; gen is not readable —
+   nobody's: released "true", holder "", until 0, gen as read, server — keep it if readable by the field schema, otherwise omit it without a substitute; gen is not readable —
    do not change the row, do not grant a permission to capture (N3 «write release»; the guess of stage C C04-TORN-01, the Architect's decision of 2026-10-23).
 6. Publish separate snapshot shards only after a successful reading of the source, mask the addresses, exclude
    secrets/blob. Check an empty unplaced, a departed worker, a refusal of one shard (N1.3a, N3 «snapshot»). Before the publication
-   check the bytes of the whole serialization against the 64 MiB of the resource door; max_bytes is held by the store on put, its `TooLarge` is the
+   check the bytes of the whole serialization against its P/05 resource door limit L; max_bytes is held by the store on put, its `TooLarge` is the
    same outcome (C04-SNAPSHOT-CEILING-MAXBYTES-01); exactly the limit / +1, an empty shard and the former shard after a refusal.
-7. Run the acceptance by its README: 37 scenarios / 533 steps in the order of the file (all — with the resource P/05 on
+7. Run the acceptance by its README: the full published scenario and step set in the order of the file (all — with the resource P/05 on
    the server of the controller: the controller reads the objects of the cluster through the resource of its server, R17; without the resource — «unknown»,
    P03-OBJECTS-DEFAULT-1FD).
    A repeated run also clears the POST claims and the id memory.

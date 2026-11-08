@@ -6,11 +6,11 @@
       "as_of": "50"
     },
     "index": "73",
-    "taken_sha256": "1eb1faae1dd264d070a2a3df09aa0cc1b62180345b1824d59079c12cedab596c"
+    "taken_sha256": "fd45633c0e02b7a12327876967f87bbbbe3081a0387116769d94bf754b188558"
   },
   "attempts": [
     {
-      "body": "{\"as_of\":100,\"doc\":{\"ann\":0,\"élise\":120}}",
+      "body": "{\"as_of\":\"100\",\"doc\":\"{\\\"ann\\\":0,\\\"élise\\\":120}\"}",
       "advertised": {
         "as_of": 100,
         "sha256": "597df22e613a0e83a73eaf06538b89e56871979aaeb53fd5356503c479c0cb19"
