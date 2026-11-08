@@ -705,6 +705,14 @@ bodies = []          # build collects (req|resp, Op, status, media, schema, docu
 priority = []        # build collects templates for x-route-priority mode.
 
 
+def _legacy_object(docs, node, base):
+    """Resolve a located OpenAPI object, retaining its document for child refs."""
+    node, base = docs.deref(node, base)
+    if not isinstance(node, dict) or "$ref" in node:
+        raise GenError(f"{base}: expected an object without ambiguous $ref siblings")
+    return node, base
+
+
 def build(root=ROOT):
     if L.key == "06-console":
         return _p06_build(root)
@@ -716,6 +724,7 @@ def build(root=ROOT):
     bodies.clear()
     priority.clear()
     for path, item in doc.get("paths", {}).items():
+        item, item_base = _legacy_object(docs, item, spec)
         segs = segments(path)
         pre = prefixed(item)
         item_params = item.get("parameters", [])
@@ -730,7 +739,7 @@ def build(root=ROOT):
             names.add(name)
             params = []
             for prm in item_params + op.get("parameters", []):
-                prm, pbase = docs.deref(prm, spec)
+                prm, pbase = docs.deref(prm, item_base)
                 params.append({"name": prm["name"], "in": prm["in"], "required": bool(prm.get("required")),
                                "schema": prm.get("schema", {}), "base": pbase})
             declared = {p["name"] for p in params if p["in"] == "path"}
@@ -746,23 +755,26 @@ def build(root=ROOT):
                     checks[path][p["name"]] = c
             responses = []
             for code, r in op.get("responses", {}).items():
-                r, _ = docs.deref(r, spec)
+                r, _ = docs.deref(r, item_base)
                 responses.append({"code": str(code), "media": list((r.get("content") or {}).keys()),
                                   "headers": list((r.get("headers") or {}).keys())})
             if not responses:
                 raise GenError(f"{path} {m}: no responses")
             rb = op.get("requestBody")
-            req_content = ((docs.deref(rb, spec)[0] or {}).get("content") or {}) if rb else {}
+            rb, rb_base = docs.deref(rb, item_base) if rb is not None else (None, item_base)
+            req_content = (rb.get("content") or {}) if rb else {}
             req_media = list(req_content.keys())
             for r_code, r_raw in op.get("responses", {}).items():
-                r_node, r_base = docs.deref(r_raw, spec)
+                r_node, r_base = docs.deref(r_raw, item_base)
+                if "$ref" not in r_node and not r_node.get("content"):
+                    bodies.append(("resp", name, str(r_code), None, None, r_base))
                 for media, mo in (r_node.get("content") or {}).items():
                     bodies.append(("resp", name, str(r_code), media, mo.get("schema"), r_base))
                     sch = mo.get("schema") or {}
                     if isinstance(sch, dict) and "x-line-schema" in sch:      # x-ndjson declares the line schema.
                         bodies.append(("line", name, str(r_code), media, sch["x-line-schema"], r_base))
             for prm in item.get("parameters", []) + op.get("parameters", []):
-                prm, pbase = docs.deref(prm, spec)
+                prm, pbase = docs.deref(prm, item_base)
                 if prm["in"] in ("query", "header"):
                     sch = prm.get("schema") or {}
                     sch_node = docs.deref(sch, pbase, schema=True)[0] if isinstance(sch, dict) else {}
@@ -783,7 +795,7 @@ def build(root=ROOT):
                                    bool(prm.get("required")), sch_node.get("default") if isinstance(sch_node, dict) else None,
                                    lex))
             for media, mo in req_content.items():
-                bodies.append(("req", name, "", media, mo.get("schema"), docs.deref(rb, spec)[1]))
+                bodies.append(("req", name, "", media, mo.get("schema"), rb_base))
             ops.append({"name": name, "method": m.upper(), "path": path, "prefixed": pre, "params": params,
                         "responses": responses, "req": req_media, "req_required": bool(rb and rb.get("required"))})
             by_pm[f"{path} {m.upper()}"] = name
@@ -796,7 +808,7 @@ def build(root=ROOT):
                 for prm in o["params"]:
                     if prm["in"] != "path":
                         continue
-                    raw_prm = next(x for x in docs.deref_list(item, o, spec) if x["name"] == prm["name"] and x["in"] == "path")
+                    raw_prm = next(x for x in docs.deref_list(item, o, item_base) if x["name"] == prm["name"] and x["in"] == "path")
                     cap = raw_prm.get("x-path-capture", "segment")
                     if cap not in ("segment", "remainder"):
                         raise GenError(f"{path} {prm['name']}: x-path-capture {cap!r}")
@@ -824,7 +836,7 @@ def build(root=ROOT):
             if any(s[1] == "sub" for s in segs):
                 raise GenError(f"{path}: servers {{origin}}/{{sub}} and a parameter sub in the path")
             templates.append((path, [("", "sub")] + segs, True))
-            checks.setdefault(path, {})["sub"] = server_sub_check(docs, item, spec, path)
+            checks.setdefault(path, {})["sub"] = server_sub_check(docs, item, item_base, path)
     return ops, templates, checks, by_pm, methods_of, all405, docs
 
 
@@ -1001,6 +1013,8 @@ def _p06_build(root):
                 response, r_base = _p06_object(docs, r_raw, op_base)
                 responses.append({"code": str(code), "media": list((response.get("content") or {}).keys()),
                                   "headers": list((response.get("headers") or {}).keys())})
+                if not response.get("content"):
+                    bodies.append(("resp", name, str(code), None, None, r_base))
                 for media, mo in (response.get("content") or {}).items():
                     schema = mo.get("schema")
                     bodies.append(("resp", name, str(code), media, schema, r_base))
@@ -1169,6 +1183,9 @@ def bodies_source(docs, rel, sha):
                                               "" if default is None else json.dumps(default, ensure_ascii=False), lex))
             continue
         kind, op, code, media, schema, base = entry
+        if kind == "resp" and media is None:
+            resp.setdefault(op, {}).setdefault(code, {})
+            continue
         if kind == "line":
             if isinstance(schema, dict) and set(schema) == {"$ref"}:
                 lines.setdefault(op, {})[code] = b.schema_ref(schema, base)[len("#/$defs/"):]
