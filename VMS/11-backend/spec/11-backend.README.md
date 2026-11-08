@@ -90,3 +90,5 @@ are confirmed by the implementation description (the section «Implementation ch
 The order of the sources: the norms of the chapter → the consolem contract and the mapping table → the product tests → the lecture; the platform — the norms
 of the export of the VMS pin. If a norm is silent or contradicts itself — a question to «VMS Specification» with the place, a counterexample and a
 proposal; the contract — a question to «Console», the fork is ours (ADR-0112); a platform norm — through «Architect».
+
+The catalogue-only learning branch is specified by [V/11.7](11.7-backend.norms.md) and the learning-only tools by [V/11.10](11.10-backend.norms.md). These future-contract norms do not change the current pinned API or enable training: `answer.learn` requires Console contract agreement, an authorised repin and the supply/isolation conditions of [V/11.1](11.1-backend.norms.md). Working tools and plan checks remain in their existing branches. Learning acceptance inputs and packs are a separately authorised step.

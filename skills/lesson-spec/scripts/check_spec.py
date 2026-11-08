@@ -1219,7 +1219,7 @@ class Check:
             if re.fullmatch(NORM_ID, row["new"]):
                 news.setdefault(row["new"], []).append((line, row["old"]))
         for value in ids:
-            if value not in news:
+            if value not in news and not (table == VMS_IDMAP and self.id_map_added_after_move(value, prefix, rows, news)):
                 self.error(norms, f"checklist id {value} is not in the column new of {table}")
         for value, entries in sorted(news.items()):
             if not re.fullmatch(re.escape(prefix) + r"-[0-9]+", value) or value in ids:
@@ -1229,6 +1229,20 @@ class Check:
                     self.error(norms, f"{table} line {line}: new {value} is not in the checklist, and its old {old} "
                                       "is in no old lesson's checklist")
         self.stats["id_map_ids"] += len(ids)
+
+    @staticmethod
+    def id_map_added_after_move(value, prefix, rows, news):
+        """A VMS item added after the move has no predecessor, so the archived map stays byte-exact without it.
+
+        Owner of the VMS Source, 2026-11-08: such an id is not in the column old and numbers after the last mapped
+        id of its chapter; anything else is a renumbering and still needs the map.
+        """
+        number = re.compile(re.escape(prefix) + r"-([0-9]+)")
+        match = number.fullmatch(value)
+        if not match or any(row["old"] == value for _, row in rows):
+            return False
+        mapped = [int(found.group(1)) for found in map(number.fullmatch, news) if found]
+        return bool(mapped) and int(match.group(1)) > max(mapped)
 
     def old_ids(self):
         """Checklist ids of the old lessons (М*_*/spec/NN-*.norms.md). Read once."""
