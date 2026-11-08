@@ -90,7 +90,6 @@ the processes, resets the store and the variables.
 - **Time in a row (sc. 13).** The rule of N0 P/01.1 «Time in a row» (the Architect's decision of 2026-10-18), the reader side:
   the same course as sc. 16, but the door row is written with `at` with 6 fraction digits (`901.123456`, `906.654321`) — a write of a form
   that the reader accepts and the writer does not write; the outcome is the same.
-- **The deadline of 90 s** of sc. 14 is the waiting limit of exactly this stand; after `@sigkill` the heartbeat seen earlier is used.
 
 ## Full form and reproducibility
 

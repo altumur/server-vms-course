@@ -218,3 +218,4 @@ scenario	step	request	expect
 #
 # The scenarios have no sleeps.
 #
+# <README, scenario deadline> Scenario 04 admits 150 s until the mark of the reaper, then 90 s until the removal of the row.

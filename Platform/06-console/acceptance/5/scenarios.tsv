@@ -444,3 +444,4 @@ scenario	step	request	expect
 # |---|---|---|
 # | 16/6, 13/6 | 5 s | time before an action: two writes of the door row by the role `resource` are spaced by the clock of the console — the row is fresh, while the heartbeat is spoiled (`unreachable`, `resource_state` of the observation contract) |
 #
+# <README, scenario deadline> The deadline of 90 s of sc. 14 is the waiting limit of exactly this stand; after `@sigkill` the heartbeat seen earlier is used.

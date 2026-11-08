@@ -43,8 +43,7 @@ The format is [the dictionary of directives and doors of the «Stand» of the co
 04/3 is the same as the original one. The presence of the header at /marks does not create a promise
 of replay memory for a note.
 
-Scenario 04 admits 150 s until the mark of the reaper, then 90 s until the removal of the row;
-the runner must not end the whole scenario earlier than the total budget of its steps. After
+The runner must not end a whole scenario earlier than the total budget of its steps. After
 the last step wait for the stop of all the created processes, then delete the state.
 
 ## Comparison
