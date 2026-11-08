@@ -88,6 +88,157 @@ class SectionLabels(unittest.TestCase):
                     gen_core.find(secs, name)
 
 
+def _core_source_index(path):
+    """Read existing Source requirement declarations, retaining their section and full text."""
+    text = Path(path).read_text(encoding="utf-8")
+    rows, section, current, lines, fence = {}, "", None, [], False
+
+    def finish():
+        if current is not None:
+            value = "\n".join(lines).strip()
+            if current in rows or not value:
+                raise AssertionError("missing/duplicate Source requirement body: " + current)
+            rows[current] = (section, value)
+
+    for line in text.splitlines():
+        if line.startswith("```"):
+            fence = not fence
+        anchor = re.fullmatch(r"<!-- req: (P/[0-9]+\.[0-9]+-R[0-9]+) -->", line) if not fence else None
+        heading = re.match(r"^#{2,4} (.+)$", line) if not fence else None
+        if anchor or heading:
+            finish(); current, lines = None, []
+            if heading:
+                section = re.sub('^\u041d(?=[0-9])', 'N', heading[1])
+            else:
+                current = anchor[1]
+        elif current is not None:
+            lines.append(line)
+    finish()
+    return rows
+
+
+def _core_expected_markers(root, name):
+    """Independent accepted method locations; no generator selectors or rendered report."""
+    indices = {chapter: _core_source_index(Path(root) / f"Platform/01-store/spec/01.{chapter}-store.norms.md")
+               for chapter in (1, 2, 3)}
+    explicit = {
+        "Context": ("P/01.2-R006", "P/01.2-R017", "P/01.2-R018", "P/01.2-R019", "P/01.1-R050", "P/01.1-R066"),
+        "Rights": ("P/01.2-R012", "P/01.2-R014", "P/01.2-R015", "P/01.3-R016"),
+        "Status": ("P/01.3-R013", "P/01.3-R015", "P/01.3-R016", "P/01.3-R017"),
+        "Join": ("P/01.3-R013", "P/01.3-R016", "P/01.3-R017"),
+        "Leave": ("P/01.3-R013", "P/01.3-R016", "P/01.3-R017", "P/01.3-R023"),
+        "Metrics": ("P/01.3-R015", "P/01.3-R016"),
+        "CopyGet": ("P/01.3-R033", "P/01.3-R034"), "CopyHead": ("P/01.3-R033",),
+    }
+    if name in explicit:
+        anchors = explicit[name]
+        for anchor in anchors:
+            if anchor not in indices[int(anchor.split('.')[1][0])]:
+                raise AssertionError("missing Source method binding " + anchor)
+        return anchors
+    selectors = {"Get": ("N3 Procedures", "read("), "List": ("list(",),
+                 "Write": ("write(", "delete(", "write batch(", "Admission time", "Replay by identifier", "Persistence cost"),
+                 "QueryRefused": ("N2.1 Request parsing",)}
+    if name not in selectors:
+        raise AssertionError("unknown method binding " + name)
+    selected = []
+    for prefix in selectors[name]:
+        values = [(anchor, body) for anchor, (head, body) in indices[1].items() if head.startswith(prefix)]
+        if not values:
+            raise AssertionError("missing Source method section " + prefix)
+        if name == "QueryRefused":
+            start = [i for i, (_, body) in enumerate(values) if body.startswith("- **Query.**")]
+            if len(start) != 1:
+                raise AssertionError("missing/ambiguous Source Query clause")
+            begin = start[0]
+            end = next((i for i in range(begin + 1, len(values)) if values[i][1].startswith("- **")), len(values))
+            values = values[begin:end]
+        selected.extend(anchor for anchor, _ in values)
+    if len(set(selected)) != len(selected):
+        raise AssertionError("ambiguous Source method binding")
+    return tuple(selected)
+
+
+def _core_marker_view(text):
+    # Opaque literals cannot invent a function or req marker. Keep only exact machine comments.
+    def visible(match):
+        token = match[0]
+        if re.fullmatch(r"//[ \t]*req:[ \t]*P/[0-9]+\.[0-9]+-R[0-9]+[ \t]*", token):
+            return token
+        return "".join("\n" if c == "\n" else " " for c in token)
+    return re.sub(r'"(?:\\.|[^"\\])*"|`[^`]*`|\x27(?:\\.|[^\x27\\])*\x27|//[^\n]*|/\*.*?\*/',
+                  visible, text, flags=re.S)
+
+
+def _assert_core_markers(text, name, expected):
+    view = _core_marker_view(text)
+    matches = list(re.finditer(r"((?:^[ \t]*(?://[^\n]*)?\n)*)^func \(s \*Store\) "
+                               + re.escape(name) + r"\(", view, re.M))
+    if len(matches) != 1:
+        raise AssertionError("missing/duplicate actual Store method " + name)
+    markers = re.findall(r"//[ \t]*req:[ \t]*(P/[0-9]+\.[0-9]+-R[0-9]+)[ \t]*$", matches[0][1], re.M)
+    if len(markers) != len(set(markers)) or set(markers) != set(expected):
+        raise AssertionError("missing/stale/extra Source method markers: " + name)
+
+
+def _assert_requirement_marker(text, identity, source):
+    if not source.strip():
+        raise AssertionError("empty independent Source requirement")
+    markers = re.findall(r"(?m)^\s*//[ \t]*req:[ \t]*(P/[0-9]+\.[0-9]+-R[0-9]+)[ \t]*$",
+                         _core_marker_view(text))
+    if markers.count(identity) != 1:
+        raise AssertionError("missing or stale Source requirement marker " + identity)
+
+
+class CosmeticCoreControls(unittest.TestCase):
+    """Synthetic Source/declaration cases; integration setups and native code are not run."""
+    def test_00_id_only_markers_bind_actual_method(self):
+        _assert_core_markers('// req: P/01.1-R001\nfunc (s *Store) Get(c Ctx) apidoor.Answer {}\n',
+                             'Get', ['P/01.1-R001'])
+        _assert_requirement_marker('// req: P/01.1-R001\n', 'P/01.1-R001', 'independent source body')
+
+    def test_missing_stale_duplicate_extra_and_prose_only_markers(self):
+        normal = '// req: P/01.1-R001\nfunc (s *Store) Get(c Ctx) apidoor.Answer {}\n'
+        for wrong in (normal.replace('P/01.1-R001', 'P/01.1-R999'), normal.replace('// req:', '// prose:'),
+                      '// req: P/01.1-R001\n' + normal, '// req: P/01.1-R002\n' + normal,
+                      normal.replace('R001\n', 'R001 — copied prose\n')):
+            with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                _assert_core_markers(wrong, 'Get', ['P/01.1-R001'])
+
+    def test_markers_must_bind_real_unique_function(self):
+        normal = '// req: P/01.1-R001\nfunc (s *Store) Get(c Ctx) apidoor.Answer {}\n'
+        for wrong in ('/*' + normal + '*/', 'var fake = `' + normal + '`', normal + normal,
+                      normal.replace('Get(', 'Other(')):
+            with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                _assert_core_markers(wrong, 'Get', ['P/01.1-R001'])
+
+    def test_independent_source_sections_missing_duplicate_and_query_bounds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); directory = root / 'Platform/01-store/spec'; directory.mkdir(parents=True)
+            path = directory / '01.1-store.norms.md'
+            for chapter in (2, 3):
+                (directory / f'01.{chapter}-store.norms.md').write_text('## N1 Form\n')
+            normal = ('## N3 Procedures\n<!-- req: P/01.1-R001 -->\nintro\n'
+                      '### read(key)\n<!-- req: P/01.1-R002 -->\nread body\n'
+                      '## N2 Doors\n### N2.1 Request parsing\n<!-- req: P/01.1-R003 -->\n- **Query.** data\n'
+                      '<!-- req: P/01.1-R004 -->\nquery continuation\n'
+                      '<!-- req: P/01.1-R005 -->\n- **Body.** data\n')
+            path.write_text(normal)
+            self.assertEqual(_core_expected_markers(root, 'Get'), ('P/01.1-R001', 'P/01.1-R002'))
+            self.assertEqual(_core_expected_markers(root, 'QueryRefused'), ('P/01.1-R003', 'P/01.1-R004'))
+            for wrong in (normal.replace('### read(key)', '### foreign'), normal + '<!-- req: P/01.1-R001 -->\nduplicate\n',
+                          normal.replace('- **Query.**', 'missing')):
+                path.write_text(wrong)
+                with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                    _core_expected_markers(root, 'QueryRefused' if 'missing' in wrong else 'Get')
+
+    def test_requirement_markers_do_not_accept_missing_or_stale_source(self):
+        for actual, source in [('// req: P/01.1-R999\n', 'body'), ('// req: P/01.1-R001\n', ''),
+                               ('var fake = `// req: P/01.1-R001\n`', 'body')]:
+            with self.subTest(actual=actual), self.assertRaises(AssertionError):
+                _assert_requirement_marker(actual, 'P/01.1-R001', source)
+
+
 class Core(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -124,66 +275,22 @@ class Core(unittest.TestCase):
         self.assertNotIn("build failed", out)
 
     def test_anchors_over_methods(self):
-        norms = gen_core.NORMS.read_text(encoding="utf-8")
-        for name, sections in (("Get", ["read("]), ("List", ["list("]),
-                               ("Write", ["write(", "delete(", "write batch(", "Admission time", "Replay by identifier"]),
-                               ("QueryRefused", ["N2.1 Request parsing"])):
-            m = re.search(rf"((?://.*\n)+)func \(s \*Store\) {name}\(", self.core)
-            self.assertTrue(m, name)
-            doc = m[1]
-            for sec in sections:
-                self.assertIn(f"«{sec}", doc, name)
-            anchors = re.findall(r"req: (P/01\.1-R\d+)", doc)
-            self.assertTrue(anchors, name)
-            for a in anchors:
-                self.assertIn(f"<!-- req: {a} -->", norms)
-        write = re.search(r"((?://.*\n)+)func \(s \*Store\) Write\(", self.core)[1]
-        for a in ("P/01.1-R072", "P/01.1-R099", "P/01.1-R117", "P/01.1-R068", "P/01.1-R141"):
-            self.assertIn(a, write)
+        for name in ("Get", "List", "Write", "QueryRefused"):
+            _assert_core_markers(self.core, name, _core_expected_markers(gen_core.ROOT, name))
         for name in ("Rights", "Status", "Join", "Leave", "Metrics"):
             self.assertRegex(self.core, rf"func \(s \*Store\) {name}\([^)]*\) apidoor.Answer {{\n\treturn notInStage\(")
 
     def test_identity_over_context(self):
-        """Context comments bind identity anchors from P/01.2 N1.1/check, P/01.1 parsing/list, ordering, header and refusals; Context's body is unchanged, not a solution."""
-        m = re.search(r"((?://.*\n)+)func \(s \*Store\) Context\(call Call, header map\[string\]string\) Ctx \{\n"
-                      r"\treturn &Request\{Call: call, Header: header\}\n\}", self.core)
-        self.assertTrue(m)
-        doc = m[1]
-        texts = {}
-        for path, _, anchor, _ in gen_core.IDENTITY:
-            self.assertIn(f"req: {anchor} — ", doc)
-            texts.setdefault(path, path.read_text(encoding="utf-8"))
-            self.assertIn(f"<!-- req: {anchor} -->", texts[path])
-        for want in ("403 with the role of the socket", "return `403` before the body is parsed",
-                     "«frame → route → identity → body»", "P/01.3-07", "X-Configstore-Role",
-                     "1.2 row 7 role_header — 403 forbidden", "refusals.RoleHeader", "1.1 row 4 identity",
-                     "QueryRefused too"):
-            self.assertIn(want, doc)
+        _assert_core_markers(self.core, "Context", _core_expected_markers(gen_core.ROOT, "Context"))
+        self.assertRegex(self.core, r"func \(s \*Store\) Context\(call Call, header map\[string\]string\) Ctx \{\n"
+                         r"\treturn &Request\{Call: call, Header: header\}\n\}")
         kit = (Path(self.tmp.name) / "KIT.md").read_text(encoding="utf-8")
         self.assertIn("**Context — the identity of the call: what to check.**", kit)
 
     def test_anchors_over_stubs(self):
-        """Chapter1.2/1.3 stub comments include STUBS norm locations and door refusal rows; bodies remain notInStage."""
-        texts = {}
-        for name, refs in gen_core.STUBS.items():
-            m = re.search(rf"((?://.*\n)+)func \(s \*Store\) {name}\(", self.core)
-            self.assertTrue(m, name)
-            doc = m[1]
-            for path, anchor, sel in refs:
-                self.assertIn(f"req: {anchor} — ", doc, name)
-                texts.setdefault(path, path.read_text(encoding="utf-8"))
-                self.assertIn(f"<!-- req: {anchor} -->", texts[path])
-                if sel and sel.startswith("door:"):
-                    self.assertIn(f"{anchor} — {sel[5:]}: ", doc, name)
-            for r in gen_core.STUB_REFUSALS[name]:
-                self.assertIn(f" {r} — ", doc, name)
-            self.assertIn("Identity first", doc)
-        rights = re.search(r"((?://.*\n)+)func \(s \*Store\) Rights\(", self.core)[1]
-        for want in ("`404 badrequest`", "Access is checked by the identity admin", "refusals.RightsNotAdmin"):
-            self.assertIn(want, rights)
-        leave = re.search(r"((?://.*\n)+)func \(s \*Store\) Leave\(", self.core)[1]
-        self.assertIn("«the last voter»", leave)
-        self.assertIn("identity (403) → body and membership (400, 409)", leave)
+        for name in ("Rights", "Status", "Join", "Leave", "Metrics", "CopyGet", "CopyHead"):
+            _assert_core_markers(self.core, name, _core_expected_markers(gen_core.ROOT, name))
+            self.assertRegex(self.core, rf"func \(s \*Store\) {name}\([^)]*\) apidoor.Answer {{\n\treturn notInStage\(apidoor.Op{name}\)")
 
     def test_manifest_and_doc(self):
         m = __import__("json").loads((Path(self.tmp.name) / "kit.manifest.json").read_text(encoding="utf-8"))
@@ -198,6 +305,59 @@ class Core(unittest.TestCase):
         self.assertNotIn("ErrNotImplemented", open_go)
         doc = (Path(self.tmp.name) / "KIT.md").read_text(encoding="utf-8")
         self.assertIn("## Part `core`: the core stub — what to fill", doc)
+
+
+def _seed_prior_machine_identity(data):
+    """Make an old untouched scaffold distinct through a real machine identity field."""
+    pattern = rb"(?m)^// Source: [^\r\n]+\n// sha256: ([0-9a-f]{64})$"
+    match = re.search(pattern, data)
+    if match is None:
+        raise AssertionError("seed fixture has no machine Source/SHA identity")
+    start, end = match.span(1)
+    digest = data[start:end]
+    changed = (b"0" if digest[:1] != b"0" else b"1") + digest[1:]
+    prior = data[:start] + changed + data[end:]
+    if prior == data or hashlib.sha256(prior).digest() == hashlib.sha256(data).digest():
+        raise AssertionError("seed identity fixture must change actual file hash")
+    return prior
+
+
+class CosmeticSeedControls(unittest.TestCase):
+    """Synthetic files exercise the existing Python seed rule, without build/Go setup."""
+    def fixture(self):
+        return (b"// Source: Platform/01-store/spec/01.2-store.norms.md\n// sha256: " + b"a" * 64
+                + b"\npackage coreadapter\nfunc (s *Store) Rights(c Ctx) apidoor.Answer { return notInStage(apidoor.OpRights) }\n")
+
+    def test_00_machine_identity_varies_hash_preserving_declarations(self):
+        normal = self.fixture()
+        prior = _seed_prior_machine_identity(normal)
+        self.assertNotEqual(prior, normal)
+        self.assertNotEqual(hashlib.sha256(prior).digest(), hashlib.sha256(normal).digest())
+        self.assertEqual(prior.split(b"package coreadapter", 1)[1], normal.split(b"package coreadapter", 1)[1])
+        self.assertEqual(build_kit.declarations(prior), build_kit.declarations(normal))
+
+    def test_seed_refresh_uses_prior_hash_and_keeps_model_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); seed, dst = root / 'seed', root / 'dst'
+            rel = '01-store/internal/coreadapter/rights.go'; path = seed / rel; path.parent.mkdir(parents=True)
+            generated = self.fixture(); prior = _seed_prior_machine_identity(generated); path.write_bytes(prior)
+            manifest = {'files': [dict(path=rel, editable=True, sha256=hashlib.sha256(prior).hexdigest())]}
+            (seed / 'kit.manifest.json').write_text(json.dumps(manifest))
+            taken, kept, refreshed = build_kit.seed_rule(dst, seed)
+            self.assertFalse(taken(dst / rel, generated))
+            self.assertEqual((kept, refreshed), ([], [rel]))
+            self.assertEqual(path.read_bytes(), prior, 'classification must preserve seed bytes')
+            mine = prior + b'\n// mine\n'; path.write_bytes(mine)
+            taken, kept, refreshed = build_kit.seed_rule(dst, seed)
+            self.assertTrue(taken(dst / rel, generated))
+            self.assertEqual((kept, refreshed), ([rel], []))
+            self.assertEqual(path.read_bytes(), mine)
+
+    def test_missing_or_malformed_identity_cannot_make_noop_fixture(self):
+        for wrong in (b'package coreadapter\n', self.fixture().replace(b'// sha256:', b'// digest:'),
+                      self.fixture().replace(b'a' * 64, b'a' * 63)):
+            with self.subTest(data=wrong), self.assertRaises(AssertionError):
+                _seed_prior_machine_identity(wrong)
 
 
 class Kit(unittest.TestCase):
@@ -239,7 +399,7 @@ class Kit(unittest.TestCase):
             (pkg / "status.go").unlink()
             (pkg / "get.go").write_text((pkg / "get.go").read_text(encoding="utf-8") + status, encoding="utf-8")
             old = (pkg / "rights.go").read_bytes()
-            (pkg / "rights.go").write_bytes(old.replace(b"By the norms:", b"By the norms (old kit):"))
+            (pkg / "rights.go").write_bytes(_seed_prior_machine_identity(old))
             m = json.loads((seed / "kit.manifest.json").read_text(encoding="utf-8"))
             for f in m["files"]:
                 if f["path"].endswith("coreadapter/rights.go"):
@@ -554,15 +714,16 @@ class Z21CoreSource(unittest.TestCase):
         for file, chapter, identity, short in (("copyget", 3, "P/01.3-R033", False),
                 ("copyget", 3, "P/01.3-R034", False), ("copyhead", 3, "P/01.3-R033", False),
                 ("write", 1, "P/01.1-R148", True), ("frame", 1, "P/01.1-R147", False)):
+            source = z21_source_requirement(self.source_root, chapter, identity)
             relative = "go/frame/frame.go" if file == "frame" else f"core/coreadapter/{file}.go"
             text = (self.ready["p01-1"] / relative).read_text()
-            source = z21_source_requirement(self.source_root, chapter, identity)
-            z21_assert_requirement_comment(text, identity, source, abbreviated=short)
+            _assert_requirement_marker(text, identity, source)
             with self.subTest(file=file, identity=identity):
-                for changed in (text.replace(identity, "P/00.0-R000"), text.replace(source[:30], "stale source", 1)):
+                for changed in (text.replace(identity, "P/00.0-R000"),
+                                re.sub(r"(?m)^\s*// req: " + re.escape(identity) + r"[ \t]*$", "", text)):
                     self.assertNotEqual(changed, text)
                     with self.assertRaises(AssertionError):
-                        z21_assert_requirement_comment(changed, identity, source, abbreviated=short)
+                        _assert_requirement_marker(changed, identity, source)
 
     def module(self, name):
         import yaml

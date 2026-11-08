@@ -598,9 +598,75 @@ class SourceSchemaReader:
         found = re.search(r"late layer:\s*lessons?\s+([0-9 ,and]+)\s+introduce", "\n".join(header), re.I)
         return bool(found and target_owner in {int(x) for x in re.findall(r"[0-9]+", found[1])})
 
+    def _walk_vertex(self, path, pointer, kind):
+        """Identity belongs to a physical declaration, including boolean/aliased values."""
+        key = (self.physical(path).as_uri(), pointer, kind)
+        if not hasattr(self, "_walk_graph"):
+            self._walk_graph, self._walk_revision, self._walk_checked_revision = {}, 0, -1
+        if key not in self._walk_graph:
+            self._walk_graph[key] = set()
+            self._walk_revision += 1
+        return key
+
+    def _walk_link(self, source, pointer, kind, target, fragment, target_kind):
+        origin = self._walk_vertex(source, pointer, kind)
+        destination = self._walk_vertex(target, fragment, target_kind)
+        if destination not in self._walk_graph[origin]:
+            self._walk_graph[origin].add(destination)
+            self._walk_revision += 1
+
+    def _walk_check_cycles(self):
+        """Check canonical logical SCCs after inventory; physical inventory is not a ref edge.
+
+        The complete graph makes cached suffixes visible without rewalking every
+        incoming trail. Local schema recursion stays within one physical URI.
+        ReferenceObject-only local cycles retain resolve_object's existing check.
+        """
+        graph = getattr(self, "_walk_graph", {})
+        if not graph or self._walk_checked_revision == self._walk_revision:
+            return
+        seen, order = set(), []
+        for root in graph:
+            if root in seen:
+                continue
+            seen.add(root)
+            stack = [(root, iter(graph[root]))]
+            while stack:
+                node, children = stack[-1]
+                child = next(children, None)
+                if child is None:
+                    order.append(node)
+                    stack.pop()
+                elif child not in seen:
+                    seen.add(child)
+                    stack.append((child, iter(graph[child])))
+        reverse = {node: set() for node in graph}
+        for node, children in graph.items():
+            for child in children:
+                reverse[child].add(node)
+        seen.clear()
+        for root in reversed(order):
+            if root in seen:
+                continue
+            component, pending = [], [root]
+            seen.add(root)
+            while pending:
+                node = pending.pop()
+                component.append(node)
+                for parent in reverse[node]:
+                    if parent not in seen:
+                        seen.add(parent)
+                        pending.append(parent)
+            if len({uri for uri, pointer, kind in component}) > 1:
+                coordinates = sorted(uri + "#" + pointer + " (" + kind + ")" for uri, pointer, kind in component)
+                raise CheckingError("cross-file canonical reference cycle: " + " -> ".join(coordinates))
+        self._walk_checked_revision = self._walk_revision
+
+
     def _reference(self, source, pointer, ref, kind, chain):
         if type(ref) is not str:
             raise CheckingError("source $ref must be a string")
+        source = self.physical(source)
         try:
             parsed = urlsplit(ref)
         except ValueError as exc:
@@ -614,6 +680,8 @@ class SourceSchemaReader:
             name = unquote_to_bytes(parsed.path).decode("utf-8")
         except UnicodeError as exc:
             raise CheckingError("invalid path UTF-8") from exc
+        if name.startswith(("/", "\\")) or "\\" in name:
+            raise CheckingError("only offline relative references are supported after decoding")
         target = self.physical(source.parent / name) if name else source
         fragment = self.fragment(parsed.fragment)
         if name and target == source:
@@ -629,8 +697,6 @@ class SourceSchemaReader:
             if not allowed and not (origin_owner is not None and target_owner is not None
                                     and self._late(source, pointer, target_owner)):
                 raise CheckingError(f"forbidden owner transition: {source}#{pointer} -> {target}")
-            if target in chain:
-                raise CheckingError("cross-file reference cycle: " + " -> ".join(map(str, chain + (target,))))
         # The owner/declaration check above always runs, including for cached resources and aliases.
         self.document(target)
         self.at(target, fragment, kind)
@@ -638,26 +704,59 @@ class SourceSchemaReader:
         if identity in self.edges and self.edges[identity] != (target, fragment):
             raise CheckingError("physical reference target changed after reading")
         self.edges[identity] = (target, fragment)
+        # Only the selected fragment is a logical edge. Inventory every resource
+        # independently, so an unrelated back-reference is not an incoming cycle.
+        self._walk_link(source, pointer, kind, target, fragment, kind)
         next_chain = chain + (target,) if target != source else chain
         if target != source:
-            self._walk(target, "", "schema" if self.is_json(target) else "document", next_chain)
+            self._walk(target, "", "schema" if self.is_json(target) else "document", (target,))
+        self._walk(target, fragment, kind, next_chain)
+        if not getattr(self, "_walk_depth", 0):
+            self._walk_check_cycles()
         return target, fragment, next_chain
 
+    def _walk_inventory(self, path):
+        """Admit the entire enclosing typed resource before any selected entry."""
+        path = self.physical(path)
+        self.document(path)
+        if not hasattr(self, "_walk_inventory_active"):
+            self._walk_inventory_active, self._walk_inventory_done = set(), set()
+        if path in self._walk_inventory_active or path in self._walk_inventory_done:
+            return
+        self._walk_inventory_active.add(path)
+        try:
+            self._walk(path, "", "schema" if self.is_json(path) else "document", (path,))
+            self._walk_inventory_done.add(path)
+        finally:
+            self._walk_inventory_active.remove(path)
+
     def _walk(self, path, pointer, kind, chain):
+        path = self.physical(path)
+        self._walk_inventory(path)
         node = self.at(path, pointer, kind)
         key = (path, pointer, kind)
+        self._walk_vertex(path, pointer, kind)
         if key in self.active or key in self.visited:
+            if not getattr(self, "_walk_depth", 0):
+                self._walk_check_cycles()
             return
         self.active.add(key)
-        if kind == "schema":
-            self._check_schema(node)
-        if type(node) is dict and "$ref" in node:
-            target, fragment, next_chain = self._reference(path, pointer, node["$ref"], kind, chain)
-            self._walk(target, fragment, kind, next_chain)
-        for child, child_kind in self.children[key]:
-            self._walk(path, child, child_kind, chain)
-        self.active.remove(key)
-        self.visited.add(key)
+        self._walk_depth = getattr(self, "_walk_depth", 0) + 1
+        try:
+            if kind == "schema":
+                self._check_schema(node)
+            if type(node) is dict and "$ref" in node:
+                target, fragment, next_chain = self._reference(path, pointer, node["$ref"], kind, chain)
+                self._walk(target, fragment, kind, next_chain)
+            for child, child_kind in self.children[key]:
+                self._walk_link(path, pointer, kind, path, child, child_kind)
+                self._walk(path, child, child_kind, chain)
+            self.visited.add(key)
+        finally:
+            self.active.remove(key)
+            self._walk_depth -= 1
+        if not self._walk_depth:
+            self._walk_check_cycles()
 
     @staticmethod
     def _check_schema(node):
@@ -993,6 +1092,27 @@ class SourceSchemaReader:
     P06_BINDING_SHA256 = "301877bb8402fc1f02ca5273161b2d943be6d4f139b4208c331fdc823b868751"
     P06_WITNESS_SHA256 = "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19"
 
+    # Source999 is a separately selected primary tuple. The A08 constants above remain legacy inputs.
+    _P06_SOURCE999_CONTEXT = "source999-b407-owner-af592"
+    _P06_LEGACY_CONTEXT = "legacy-a08-a64-binding3018"
+    _P06_SOURCE999_SELECTION = Path(
+        "/home/pilot/coord103-src/adr0083-144-tools-handoff-20261108/background-p06-source999-operation-identity-binding-20261108/SOURCE999-B407-OPERATION-IDENTITY-SRC-CONTEXT-SELECTION.json")
+    _P06_SOURCE999_SELECTION_SHA256 = "66970d441e95caadc85a48f4872233cd0964e59d465fe7aad7a825cfd2d5910c"
+    _P06_SOURCE999_PIN = "99962a8de68b64d0e515153fff43e2062dcfe261"
+    _P06_SOURCE999_API_SHA256 = "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e"
+
+    def _p06_identity_context(self, selected=None):
+        """Select one declared tuple before identity checking; never infer it from API bytes."""
+        held = getattr(self, "_p06_selected_identity_context", None)
+        selected = selected if selected is not None else held if held is not None else self._P06_SOURCE999_CONTEXT
+        if type(selected) is not str or selected not in (self._P06_SOURCE999_CONTEXT, self._P06_LEGACY_CONTEXT):
+            raise CheckingError("unknown/mistyped explicit Source operation identity context")
+        if held is not None and held != selected:
+            raise CheckingError("Source operation identity context changed on a reader")
+        self._p06_selected_identity_context = selected
+        return selected
+
+
     def _p06_identity_records(self, witness, binding):
         """Validate stable Source identities; historical schema digests are not current oracles."""
         heads = [("/folders", "OpHeadFolders"), ("/folders/{id}", "OpHeadFoldersById"),
@@ -1001,8 +1121,48 @@ class SourceSchemaReader:
                  ("/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart")]
         appended = {"/paths/" + self.escape(route) + "/head": (symbol, ordinal)
                     for ordinal, (route, symbol) in enumerate(heads, 141)}
-        if (type(witness) is not dict or type(witness.get("records")) is not list or
-                len(witness["records"]) != 146 or type(binding) is not dict or
+        context = self._p06_identity_context()
+        if type(witness) is not dict or type(witness.get("records")) is not list or len(witness["records"]) != 146:
+            raise CheckingError("incomplete historical Source identity witness")
+        if context == self._P06_SOURCE999_CONTEXT:
+            api = {"path": "Platform/06-console/spec/06-console.api.openapi.yaml",
+                   "blob": "9d00b1e00adbfba903f072c70d56235a7a8dcb43",
+                   "sha256": self._P06_SOURCE999_API_SHA256, "bytes": 403567}
+            counts = {"original": 140, "HEAD": 6, "total": 146}
+            owner_map = ("/home/pilot/coord103-src/z21-p06-operation-identity-current-binding-a08-20261108/immutable-input/operation-map.json")
+            if (type(binding) is not dict or binding.get("selected_Source") != self._P06_SOURCE999_PIN or
+                    type(binding.get("API")) is not dict or binding["API"] != dict(api, mode="100644") or
+                    type(binding["API"].get("bytes")) is not int or witness.get("API_after") != api or
+                    type(witness["API_after"].get("bytes")) is not int or
+                    type(binding.get("independent_Source_owner_map")) is not dict or
+                    binding["independent_Source_owner_map"].get("path") != owner_map or
+                    binding["independent_Source_owner_map"].get("sha256") != self.P06_WITNESS_SHA256 or
+                    type(binding.get("expected_counts")) is not dict or binding["expected_counts"] != counts or
+                    any(type(value) is not int for value in binding["expected_counts"].values()) or
+                    type(binding.get("existing_HEAD_assignments_reused")) is not list or
+                    len(binding["existing_HEAD_assignments_reused"]) != 6 or
+                    type(witness.get("original140")) is not int or witness["original140"] != 140 or
+                    type(witness.get("ordinary_new_HEAD6")) is not int or witness["ordinary_new_HEAD6"] != 6):
+                raise CheckingError("incomplete/wrong selected Source999 identity binding")
+            selected_records = []
+            for row in witness["records"]:
+                if type(row) is not dict or type(row.get("member_of_original140")) is not bool:
+                    raise CheckingError("mistyped historical Source identity record")
+                if row["member_of_original140"]:
+                    selected_records.append({key: row.get(key) for key in
+                        ("member_of_original140", "after_pointer", "method", "actual_adapter_Op", "logical_ordinal_original140")}
+                        | {"logical_ordinal_current146": row.get("logical_ordinal_original140")})
+            head_fields = {"after_pointer", "method", "actual_adapter_Op", "logical_ordinal_original140", "logical_ordinal_current146"}
+            for row in binding["existing_HEAD_assignments_reused"]:
+                if type(row) is not dict or set(row) != head_fields:
+                    raise CheckingError("mistyped selected HEAD identity record")
+                selected_records.append(dict(row, member_of_original140=False))
+            if len(selected_records) != 146:
+                raise CheckingError("incomplete selected Source999 operation identities")
+            records = selected_records
+        else:
+            records = binding.get("records") if type(binding) is dict else None
+        if context == self._P06_LEGACY_CONTEXT and (type(binding) is not dict or
                 type(binding.get("records")) is not list or len(binding["records"]) != 146 or
                 binding.get("Source_pin") != "a08ef6ef101514c926e68d3fb00c8d121da60e01" or
                 type(binding.get("current_API")) is not dict or
@@ -1012,7 +1172,7 @@ class SourceSchemaReader:
                 binding["immutable_original_witness"].get("sha256") != self.P06_WITNESS_SHA256):
             raise CheckingError("incomplete/wrong current Source identity binding")
         counts = {"original140": 140, "existing_HEAD": 6, "current_total": 146, "current_API_slots": 146}
-        if (type(binding.get("counts")) is not dict or binding["counts"] != counts or
+        if context == self._P06_LEGACY_CONTEXT and (type(binding.get("counts")) is not dict or binding["counts"] != counts or
                 any(type(value) is not int for value in binding["counts"].values())):
             raise CheckingError("mistyped/incomplete Source identity counts")
         original, old_heads, old_symbols, old_ordinals = {}, {}, set(), set()
@@ -1040,7 +1200,7 @@ class SourceSchemaReader:
         identities, symbols, ordinals = {}, set(), set()
         fields = {"member_of_original140", "after_pointer", "method", "actual_adapter_Op",
                   "logical_ordinal_original140", "logical_ordinal_current146"}
-        for row in binding["records"]:
+        for row in records:
             if type(row) is not dict or set(row) != fields:
                 raise CheckingError("incomplete current Source identity record")
             pointer, symbol, ordinal = row["after_pointer"], row["actual_adapter_Op"], row["logical_ordinal_current146"]
@@ -1066,35 +1226,41 @@ class SourceSchemaReader:
             raise CheckingError("incomplete current146 Source identity set")
         return identities
 
-    def _p06_operation_identities(self):
+    def _p06_operation_identities(self, operation_identity_context=None):
+        context = self._p06_identity_context(operation_identity_context)
         packet = Path(self.P06_OPERATION_IDENTITY_INPUT)
         try:
             if not packet.is_absolute() or packet.is_symlink() or not packet.is_dir():
                 raise CheckingError("Source identity input must be an explicit regular absolute directory")
+            binding_path = (Path(self._P06_SOURCE999_SELECTION) if context == self._P06_SOURCE999_CONTEXT
+                            else packet / "CURRENT-API-BINDING.json")
+            binding_sha = (self._P06_SOURCE999_SELECTION_SHA256 if context == self._P06_SOURCE999_CONTEXT
+                           else self.P06_BINDING_SHA256)
             values = []
-            for name, expected in (("operation-map.json", self.P06_WITNESS_SHA256),
-                                   ("CURRENT-API-BINDING.json", self.P06_BINDING_SHA256)):
-                file = packet / name
-                if file.is_symlink() or not file.is_file():
-                    raise CheckingError("missing/nonregular Source identity input: " + name)
+            for file, expected in ((packet / "operation-map.json", self.P06_WITNESS_SHA256),
+                                   (binding_path, binding_sha)):
+                if not file.is_absolute() or file.is_symlink() or not file.is_file():
+                    raise CheckingError("missing/nonregular Source identity input: " + file.name)
                 raw = file.read_bytes()
                 if hashlib.sha256(raw).hexdigest() != expected:
-                    raise CheckingError("Source identity input changed: " + name)
+                    raise CheckingError("Source identity input changed: " + file.name)
                 values.append(json.loads(raw))
+            expected_api = (self._P06_SOURCE999_API_SHA256 if context == self._P06_SOURCE999_CONTEXT
+                            else self.P06_CURRENT_API_SHA256)
             if (self.source.relative_to(self.root).as_posix() != "Platform/06-console/spec/06-console.api.openapi.yaml" or
-                    hashlib.sha256(self.source.read_bytes()).hexdigest() != self.P06_CURRENT_API_SHA256):
-                raise CheckingError("current Source API identity changed")
+                    hashlib.sha256(self.source.read_bytes()).hexdigest() != expected_api):
+                raise CheckingError("current Source API identity changed for " + context)
         except (OSError, UnicodeError, ValueError, TypeError) as exc:
             raise CheckingError("Source operation identity input unavailable") from exc
         return self._p06_identity_records(*values)
 
-    def operation_declarations(self):
+    def operation_declarations(self, *, operation_identity_context=None):
         """Enumerate source slots, retaining coordinates independently of object/cache identity."""
         doc = self.document(self.source)
         slots = [(route, "/paths/" + self.escape(route), "") for route in doc.get("paths", {})]
         identities = None
         if self.owner(self.source) == 6:
-            identities = self._p06_operation_identities()
+            identities = self._p06_operation_identities(operation_identity_context)
             standard = {"UnitsCollection": "/{rows}", "UnitItem": "/{rows}/{id}",
                         "TableCollection": "/{table}", "TableItem": "/{table}/{name}",
                         "PassRoot": "/{pass}", "ConsoleFile": "/{sub}/{file}"}
@@ -2286,7 +2452,8 @@ class SourceSchemaReaderControls(unittest.TestCase):
         with self.assertRaises(CheckingError):
             own.validator_at(source, "/components/schemas/Also")
         pointer = "/paths/~1api~1backup/get/responses/200/content/application~1json/schema"
-        self.assertTrue(own.validator_at(source, pointer).is_valid("x"))
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            own.validator_at(source, pointer)
 
     def test_09_standalone_json_has_no_inherited_late_door(self):
         source, _ = self.late()
@@ -2842,16 +3009,647 @@ class SourceSchemaReaderControls(unittest.TestCase):
         self.assertEqual(local.edges, {})
 
 
+class FinalBoundaryControls(unittest.TestCase):
+    """Physical warm-entry/URI/legacy-bootstrap neighbours, without cache injection."""
+    def setUp(self):
+        self.fixture = CanonicalTraversalFinishControls("runTest")
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+
+    def warm_api(self, outer):
+        safe = self.fixture.schema("Safe", {"type": "integer"})
+        api = self.fixture.api(schemas={"Leaf": {"type": "string"}, "Outer": outer})
+        reader = SourceSchemaReader(self.fixture.root, safe)
+        reader.document(api)
+        return reader, api
+
+    def test_00_warm_valid_enclosing_metadata_and_opaque_data(self):
+        reader, api = self.warm_api({"type": "object", "properties": {"error": {"type": "string"}},
+            "required": ["error"], "default": {"$ref": "https://unavailable.invalid/", "x-line-schema": {"required": "data"}}})
+        self.assertTrue(reader.validator_at(api, "/components/schemas/Leaf").is_valid("owned"))
+        self.assertIn(api, reader._walk_inventory_done)
+        self.assertIn((api, "/components/schemas/Outer", "schema"), reader.visited)
+        self.assertFalse(any(ref.startswith("https:") for file, pointer, ref, kind in reader.edges))
+
+    def test_warm_unselected_outer_metadata_fails_at_schema_guard(self):
+        reader, api = self.warm_api({"type": "object", "required": "error"})
+        with self.assertRaisesRegex(CheckingError, "invalid source Schema Object"):
+            reader.validator_at(api, "/components/schemas/Leaf")
+        self.assertNotIn(api, reader._walk_inventory_done)
+
+    def test_warm_unselected_missing_ref_fails_at_pointer_guard(self):
+        reader, api = self.warm_api({"$ref": "#/components/schemas/Missing"})
+        with self.assertRaisesRegex(CheckingError, "missing source pointer"):
+            reader.validator_at(api, "/components/schemas/Leaf")
+
+    def test_warm_unselected_typed_extension_metadata_is_admitted(self):
+        reader, api = self.warm_api({"x-line-schema": {"required": "error"}})
+        with self.assertRaisesRegex(CheckingError, "invalid source Schema Object"):
+            reader.validator_at(api, "/components/schemas/Leaf")
+
+    def test_encoded_unicode_per_hop_and_exactly_one_decode_remain_valid(self):
+        leaf = self.fixture.schema("nested/Leafé", {"type": "integer", "minimum": 2})
+        alias = self.fixture.schema("nested/Alias", {"$ref": "Leaf%C3%A9.schema.json"})
+        entry = self.fixture.schema("Entry", {"$ref": "nested/Alias.schema.json"})
+        reader = SourceSchemaReader(self.fixture.root, entry)
+        self.assertTrue(reader.validator_at(entry, "").is_valid(2))
+        self.assertFalse(reader.validator_at(entry, "").is_valid(1))
+        self.assertEqual(reader.edges[alias, "", "Leaf%C3%A9.schema.json", "schema"], (leaf, ""))
+        literal = self.fixture.schema("literal%2Fname", {"type": "boolean"})
+        entry = self.fixture.schema("Once", {"$ref": "literal%252Fname.schema.json"})
+        reader = SourceSchemaReader(self.fixture.root, entry)
+        self.assertEqual(reader.edges[entry, "", "literal%252Fname.schema.json", "schema"], (literal, ""))
+
+    def test_decoded_absolute_and_backslash_existing_targets_are_refused(self):
+        target = self.fixture.schema("Target", {"type": "integer"}, owner="common")
+        backslash = self.fixture.schema("Back\\Target", {"type": "integer"}, owner="common")
+        SourceSchemaReader(self.fixture.root, target)
+        SourceSchemaReader(self.fixture.root, backslash)
+        for ref in (quote(str(target), safe=""), quote("/" + str(target), safe=""),
+                    "../../common/data/Back%5CTarget.schema.json"):
+            entry = self.fixture.schema("Invalid", {"$ref": ref})
+            with self.subTest(ref=ref), self.assertRaisesRegex(CheckingError, "offline relative.*after decoding"):
+                SourceSchemaReader(self.fixture.root, entry)
+
+    def test_enclosing_inventory_preserves_finite_and_true_closed_graphs(self):
+        a, b = self.fixture.pair()
+        reader = SourceSchemaReader(self.fixture.root, a)
+        self.assertTrue(reader.validator_at(a, "/$defs/Start").is_valid({"error": "owned"}))
+        self.assertEqual(reader._walk_graph[a.as_uri(), "/$defs/Start", "schema"], {(b.as_uri(), "/$defs/Alias", "schema")})
+        a, b = self.fixture.pair(closed=True)
+        safe = self.fixture.schema("Safe", {"type": "integer"})
+        reader = SourceSchemaReader(self.fixture.root, safe)
+        reader.document(a); reader.document(b)
+        with self.assertRaisesRegex(CheckingError, "cross-file canonical reference cycle"):
+            reader.validator_at(a, "/$defs/Start")
+
+    def test_enclosing_inventory_rechecks_warm_declaration_rights(self):
+        source, target, pointer = self.fixture.late()
+        reader = SourceSchemaReader(self.fixture.root, target)
+        self.assertTrue(reader.validator_at(source, pointer).is_valid("owned"))
+        source, target, pointer = self.fixture.late(extra_components=True)
+        reader = SourceSchemaReader(self.fixture.root, target)
+        reader.document(source)
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            reader.validator_at(source, "/components/schemas/Forbidden")
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            reader.validator_at(source, pointer)
+
+    def test_real_historical_class_bootstrap_uses_exact_separate_carriers(self):
+        packet = SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT
+        witness_raw = (packet / "operation-map.json").read_bytes()
+        binding_raw = (packet / "CURRENT-API-BINDING.json").read_bytes()
+        self.assertEqual(hashlib.sha256(witness_raw).hexdigest(), SourceSchemaReader.P06_WITNESS_SHA256)
+        self.assertEqual(hashlib.sha256(binding_raw).hexdigest(), SourceSchemaReader.P06_BINDING_SHA256)
+        binding = json.loads(binding_raw)
+        expected = {r["after_pointer"]: (r["actual_adapter_Op"], r["logical_ordinal_current146"]) for r in binding["records"]}
+        current = Path("/home/pilot/coord103/wt-source143-refresh515-joint")
+        current_api = current / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        self.assertEqual(hashlib.sha256(current_api.read_bytes()).hexdigest(), SourceSchemaReader._P06_SOURCE999_API_SHA256)
+        owner = SourceOperationIdentityControls
+        try:
+            with patch.dict(globals(), {"ROOT": current}):
+                owner.setUpClass()
+            self.assertNotEqual(owner.legacy_source_root, current)
+            self.assertEqual(owner.reader._p06_selected_identity_context, SourceSchemaReader._P06_LEGACY_CONTEXT)
+            self.assertEqual({r["declaration"]: (r["symbol"], r["ordinal"]) for r in owner.baseline}, expected)
+            self.assertEqual({r["component"] for r in owner.baseline if r["component"]},
+                             {"UnitsCollection", "UnitItem", "TableCollection", "TableItem", "PassRoot", "ConsoleFile"})
+            materialized = owner.legacy_fixture_provenance["carriers"]
+            actual = {str(path.relative_to(owner.legacy_source_root)): digest for path,digest in owner.reader.provenance.items()}
+            self.assertEqual(actual, {path: row["sha256"] for path,row in materialized.items()})
+            self.assertEqual(len(actual), 5, "only the actual direct Source dependency closure is materialized")
+            self.assertEqual(owner.raw_inputs["CURRENT-API-BINDING.json"], binding_raw)
+            self.__class__.LEGACY_BOOTSTRAP_RECEIPT = dict(owner.legacy_fixture_provenance,
+                status="PASS", identities=len(owner.baseline), actual_provenance=actual,
+                current_Source999_unchanged=hashlib.sha256(current_api.read_bytes()).hexdigest())
+            self.__class__.LEGACY_BOOTSTRAP_BYTES = {str(path.relative_to(owner.legacy_source_root)): path.read_bytes()
+                for path in owner.legacy_source_root.rglob("*") if path.is_file()}
+        finally:
+            owner.doClassCleanups()
+
+
+class CanonicalTraversalFinishControls(unittest.TestCase):
+    """Independent synthetic physical sources; no generated schemas or cache injection."""
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="canonical-source-traversal-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def schema(self, name, value, owner="06-console"):
+        file = self.root / "Platform" / owner / "data" / (name + ".schema.json")
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(json.dumps(value))
+        return file
+
+    def api(self, schemas=None, paths=None, owner="06-console", components=None):
+        from io import StringIO
+        from ruamel.yaml import YAML
+        file = self.root / "Platform" / owner / "spec" / (owner + ".api.openapi.yaml")
+        file.parent.mkdir(parents=True, exist_ok=True)
+        doc = {"openapi": "3.1.0", "info": {"title": "owned synthetic source", "version": "1"},
+               "paths": paths or {}, "components": components or {"schemas": schemas or {}}}
+        output = StringIO(); emitter = YAML(); emitter.width = 4096
+        emitter.dump(doc, output); file.write_text(output.getvalue())
+        return file
+
+    def pair(self, closed=False, escaped=False):
+        target = "#/%24defs/%53tart" if escaped else "#/$defs/Start"
+        a = self.schema("A", {"$defs": {"Start": {"$ref": "B.schema.json#/$defs/Alias"},
+                                       "Leaf": {"type": "object", "properties": {"error": {"type": "string"}}, "required": ["error"]},
+                                       "Scalar": {"type": "integer"}}})
+        b = self.schema("B", {"$defs": {"Alias": {"$ref": "A.schema.json" + (target if closed else "#/$defs/Leaf")},
+                                       "Unrelated": {"$ref": "A.schema.json#/$defs/Scalar"}}})
+        return a, b
+
+    def test_00_finite_other_pointer_file_return_and_unrelated_inventory_backref(self):
+        a, b = self.pair()
+        reader = SourceSchemaReader(self.root, a)
+        validator = reader.validator_at(a, "/$defs/Start")
+        self.assertTrue(validator.is_valid({"error": "owned"}))
+        self.assertFalse(validator.is_valid({}))
+        self.assertEqual(reader.edges[b, "/$defs/Unrelated", "A.schema.json#/$defs/Scalar", "schema"], (a, "/$defs/Scalar"))
+        # No inventory edge to the target document root was invented.
+        origin = (a.as_uri(), "/$defs/Start", "schema")
+        self.assertEqual(reader._walk_graph[origin], {(b.as_uri(), "/$defs/Alias", "schema")})
+
+    def test_true_closed_cross_file_pair_is_checking_error_cold_and_naturally_warm(self):
+        a, b = self.pair(closed=True)
+        with self.assertRaisesRegex(CheckingError, "cross-file canonical reference cycle"):
+            SourceSchemaReader(self.root, a)
+        safe = self.schema("Safe", {"type": "integer"})
+        reader = SourceSchemaReader(self.root, safe)
+        reader.document(a); reader.document(b)  # Natural public document/index cache fills.
+        self.assertIn(a, reader.docs); self.assertIn(b, reader.docs)
+        with self.assertRaisesRegex(CheckingError, "cross-file canonical reference cycle"):
+            reader.validator_at(a, "/$defs/Start")
+
+    def test_physical_path_aliases_share_one_canonical_graph_vertex(self):
+        a, b = self.pair()
+        reader = SourceSchemaReader(self.root, a)
+        alias = a.parent / ".." / "data" / a.name
+        self.assertEqual(reader._walk_vertex(alias, "/$defs/Start", "schema"),
+                         reader._walk_vertex(a, "/$defs/Start", "schema"))
+        value, file, pointer = reader.resolve_object(alias, "/$defs/Start", "schema")
+        self.assertEqual((file, pointer), (a, "/$defs/Leaf"))
+        self.assertEqual(value["required"], ["error"])
+
+    def test_percent_escaped_equivalent_pointer_cannot_hide_closed_segment(self):
+        a, b = self.pair(closed=True, escaped=True)
+        with self.assertRaisesRegex(CheckingError, "cross-file canonical reference cycle"):
+            SourceSchemaReader(self.root, b)
+
+    def test_local_productive_recursion_and_foreign_prefix_are_valid(self):
+        a = self.schema("Tree", {"$defs": {"Node": {"type": "object", "properties": {"next": {"$ref": "#/$defs/Node"}}}},
+                                 "$ref": "#/$defs/Node"})
+        b = self.schema("Prefix", {"$ref": "Tree.schema.json#/$defs/Node"})
+        reader = SourceSchemaReader(self.root, b)
+        self.assertTrue(reader.validator_at(b, "").is_valid({"next": {"next": {}}}))
+        self.assertFalse(reader.validator_at(a, "/$defs/Node").is_valid({"next": 1}))
+        local = self.schema("LocalAlias", {"$defs": {"A": {"$ref": "#/$defs/B"}, "B": {"$ref": "#/$defs/A"}}})
+        SourceSchemaReader(self.root, local)
+
+    def test_unselected_invalid_metadata_and_missing_targets_are_not_projected_away(self):
+        good = self.schema("Good", {"type": "string"})
+        for value, diagnostic in [({"$defs": {"Selected": {"type": "string"}, "Unused": {"required": "error"}}}, "invalid source Schema Object"),
+                                  ({"$defs": {"Selected": {"type": "string"}, "Unused": {"$ref": "Good.schema.json#/$defs/Missing"}}}, "missing source pointer")]:
+            target = self.schema("Container", value)
+            entry = self.schema("Entry", {"$ref": "Container.schema.json#/$defs/Selected"})
+            with self.subTest(diagnostic=diagnostic), self.assertRaisesRegex(CheckingError, diagnostic):
+                SourceSchemaReader(self.root, entry)
+
+    def test_opaque_annotation_refs_and_typed_schema_positions_stay_distinct(self):
+        source = self.schema("Opaque", {"default": {"$ref": "https://unavailable.invalid/"},
+            "const": {"x-line-schema": {"$ref": "missing.schema.json"}},
+            "properties": {"$ref": {"type": "string"}}, "$defs": {"Leaf": {"type": "integer"}}})
+        reader = SourceSchemaReader(self.root, source)
+        self.assertFalse(reader.edges)
+        self.assertIn(("/properties/$ref", "schema"), reader.children[source, "", "schema"])
+        typed = self.schema("Typed", {"x-line-schema": {"required": "error"}})
+        with self.assertRaisesRegex(CheckingError, "invalid source Schema Object"):
+            SourceSchemaReader(self.root, typed)
+
+    def test_equal_boolean_and_yaml_alias_values_keep_declared_coordinates(self):
+        source = self.schema("Bools", {"$defs": {"True1": True, "True2": True, "False1": False, "False2": False,
+                                                "Equal1": {"type": "integer"}, "Equal2": {"type": "integer"}}})
+        reader = SourceSchemaReader(self.root, source)
+        for name in ("True1", "True2", "False1", "False2", "Equal1", "Equal2"):
+            self.assertIn((source.as_uri(), "/$defs/" + name, "schema"), reader._walk_graph)
+        target = self.schema("Target", {"type": "integer"})
+        alias = {"$ref": "../data/Target.schema.json"}
+        api = self.api(schemas={"First": alias, "Second": alias})
+        reader = SourceSchemaReader(self.root, api)
+        self.assertIs(reader.at(api, "/components/schemas/First", "schema"), reader.at(api, "/components/schemas/Second", "schema"))
+        for name in ("First", "Second"):
+            self.assertEqual(reader.edges[api, "/components/schemas/" + name, alias["$ref"], "schema"], (target, ""))
+
+    def late(self, extra_components=False, target_owner="08-domain"):
+        target = self.schema("Target", {"type": "string", "minLength": 1}, owner=target_owner)
+        ref = {"$ref": "../../" + target_owner + "/data/Target.schema.json"}
+        path = {"description": "Chapter 6.7 N1.13", "get": {"responses": {"200": {"description": "ok",
+                "content": {"application/json": {"schema": ref}}}}}}
+        source = self.api(schemas={"Forbidden": ref} if extra_components else {}, paths={"/late": path})
+        norm = source.parent / "06.7-console.norms.md"
+        norm.write_text("# P/06.7\n\n**A chapter of the late layer: lessons 8 and 10 introduce it**\n")
+        return source, target, "/paths/~1late/get/responses/200/content/application~1json/schema"
+
+    def test_legal_late_door_then_forbidden_components_common_and_later_targets(self):
+        source, target, pointer = self.late()
+        reader = SourceSchemaReader(self.root, source)
+        self.assertTrue(reader.validator_at(source, pointer).is_valid("owned"))
+        self.assertFalse(reader.validator_at(source, pointer).is_valid(""))
+        source, target, pointer = self.late(extra_components=True)
+        # New reader over the immutable complete fixture; valid door genuinely fills the target cache first.
+        read = Path.read_bytes; observations = []
+        def observe(file):
+            observations.append(file.resolve()); return read(file)
+        with patch.object(Path, "read_bytes", observe), self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            SourceSchemaReader(self.root, source)
+        self.assertIn(target, observations)
+        source, target, pointer = self.late(target_owner="09-agent")
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            SourceSchemaReader(self.root, source)
+        common = self.schema("ForbiddenCommon", {"$ref": "../../08-domain/data/Target.schema.json"}, owner="common")
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            SourceSchemaReader(self.root, common)
+
+    def test_naturally_warm_target_does_not_grant_another_declaration_rights(self):
+        source, target, pointer = self.late(extra_components=True)
+        reader = SourceSchemaReader(self.root, target)
+        self.assertIn(target, reader.docs)
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            reader.validator_at(source, "/components/schemas/Forbidden")
+        with self.assertRaisesRegex(CheckingError, "forbidden owner transition"):
+            reader.validator_at(source, pointer)
+
+    def test_parameter_override_keeps_external_declaration_schema_base(self):
+        bound = self.schema("Bound", {"type": "integer", "minimum": 3}, owner="05-resource")
+        carrier = self.api(owner="05-resource", components={"parameters": {"Limit": {
+            "name": "limit", "in": "query", "required": False, "schema": {"$ref": "../data/Bound.schema.json"}}}})
+        source = self.api(owner="08-domain", paths={"/x": {"parameters": [
+            {"$ref": "../../05-resource/spec/05-resource.api.openapi.yaml#/components/parameters/Limit"}],
+            "get": {"parameters": [{"name": "limit", "in": "query", "required": True,
+                                       "schema": {"type": "string", "maxLength": 9}}],
+                    "responses": {"200": {"description": "ok"}}}}})
+        reader = SourceSchemaReader(self.root, source)
+        rows = reader.operation_declarations()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(len(rows[0]["parameters"]), 2)
+        effective, resolved = {}, []
+        for value, file, pointer in rows[0]["parameters"]:
+            parameter, base = reader.parameter(value, file, (None, "/x", "get"), (file, pointer))
+            effective[parameter["in"], parameter["name"]] = parameter
+            resolved.append((parameter, base))
+        self.assertIs(resolved[0][0]["required"], False)
+        self.assertEqual(resolved[0][1], carrier)
+        self.assertEqual(reader.schema_type_node(resolved[0][0]["schema"], carrier), {"type": "integer", "minimum": 3})
+        self.assertEqual(reader.edges[carrier, "/components/parameters/Limit/schema", "../data/Bound.schema.json", "schema"], (bound, ""))
+        self.assertEqual(resolved[1][1], source)
+        self.assertIs(effective["query", "limit"]["required"], True)
+        self.assertEqual(effective["query", "limit"]["schema"], {"type": "string", "maxLength": 9})
+
+    def test_naturally_warm_typed_extension_target_keeps_full_metadata_checks(self):
+        safe = self.schema("Safe", {"type": "integer"})
+        api = self.api(schemas={"Entry": {"$ref": "#/x-envelope"}})
+        api.write_text(api.read_text() + "\nx-envelope:\n  type: object\n  properties:\n    broken:\n      required: error\n")
+        reader = SourceSchemaReader(self.root, safe)
+        reader.document(api)
+        with self.assertRaisesRegex(CheckingError, "invalid source Schema Object"):
+            reader.resolve_object(api, "/components/schemas/Entry", "schema")
+
+    def test_uri_kind_and_held_source_bytes_guards_remain_errors(self):
+        target = self.schema("Target", {"type": "integer"})
+        safe = self.schema("Safe", {"type": "integer"})
+        reader = SourceSchemaReader(self.root, safe)
+        for ref in ("https://unavailable.invalid/x", "Target.schema.json?query=1", "Target.schema.json#/%GG"):
+            source = self.schema("Invalid", {"$ref": ref})
+            with self.subTest(ref=ref), self.assertRaises(CheckingError):
+                SourceSchemaReader(self.root, source)
+        parameter = {"$ref": "../data/Target.schema.json"}
+        api = self.api(components={"parameters": {"Wrong": parameter}})
+        with self.assertRaisesRegex(CheckingError, "JSON Schema cannot replace an OpenAPI object"):
+            SourceSchemaReader(self.root, api)
+        reader.document(target)
+        target.write_text(target.read_text() + "\n")
+        with self.assertRaisesRegex(CheckingError, "source changed after reading"):
+            reader.validator_at(target, "")
+
+    def test_non_schema_local_reference_object_cycle_semantics_unchanged(self):
+        api = self.api(components={"pathItems": {"A": {"$ref": "#/components/pathItems/B"},
+                                               "B": {"$ref": "#/components/pathItems/A"}}})
+        reader = SourceSchemaReader(self.root, api)
+        with self.assertRaisesRegex(CheckingError, "cyclic reference-only object"):
+            reader.resolve_object(api, "/components/pathItems/A", "path")
+
+
+class SelectedP06IdentityControls(unittest.TestCase):
+    """Selected public tuple guards; synthetic validators are distinct from full consumers."""
+    source_root = Path("/home/pilot/coord103/wt-source143-refresh515-joint")
+
+    def inputs(self):
+        packet = SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT
+        witness_raw = (packet / "operation-map.json").read_bytes()
+        selection_raw = SourceSchemaReader._P06_SOURCE999_SELECTION.read_bytes()
+        self.assertEqual(hashlib.sha256(witness_raw).hexdigest(), SourceSchemaReader.P06_WITNESS_SHA256)
+        self.assertEqual(hashlib.sha256(selection_raw).hexdigest(), SourceSchemaReader._P06_SOURCE999_SELECTION_SHA256)
+        witness, selection = json.loads(witness_raw), json.loads(selection_raw)
+        # Expected identities are owner-declared coordinates, never API traversal or producer output.
+        expected = {r["after_pointer"]: (r["actual_adapter_Op"], r["logical_ordinal_original140"])
+                    for r in witness["records"] if r["member_of_original140"]}
+        self.assertEqual(len(expected), 140)
+        for row in selection["existing_HEAD_assignments_reused"]:
+            self.assertNotIn(row["after_pointer"], expected)
+            expected[row["after_pointer"]] = (row["actual_adapter_Op"], row["logical_ordinal_current146"])
+        self.assertEqual(len(expected), 146)
+        return witness, selection, expected
+
+    def identity_fixture(self):
+        # Narrow physical API/map/receipt guard fixture, not a Source constructor/cache substitute.
+        reader = object.__new__(SourceSchemaReader)
+        reader.root = self.source_root
+        reader.source = self.source_root / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        return reader
+
+    def test_00_selected_physical_identity_guard_reads_exact_tuple(self):
+        witness, selection, expected = self.inputs()
+        reader = self.identity_fixture()
+        self.assertEqual(reader._p06_operation_identities(SourceSchemaReader._P06_SOURCE999_CONTEXT), expected)
+        self.assertEqual(reader._p06_selected_identity_context, SourceSchemaReader._P06_SOURCE999_CONTEXT)
+        self.assertEqual(reader._p06_operation_identities(), expected)
+
+    def test_actual_shared_body_and_route_consumers_use_same_selected_context(self):
+        witness, selection, expected = self.inputs()
+        source = self.source_root / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        reader = SourceSchemaReader(self.source_root, source)
+        rows = reader.operation_declarations(operation_identity_context=SourceSchemaReader._P06_SOURCE999_CONTEXT)
+        self.assertEqual({r["declaration"]: (r["symbol"], r["ordinal"]) for r in rows}, expected)
+        self.assertEqual({r["component"] for r in rows if r["component"]},
+                         {"UnitsCollection", "UnitItem", "TableCollection", "TableItem", "PassRoot", "ConsoleFile"})
+        inherited, bases = 0, set()
+        for row in rows:
+            effective = {}
+            for node, file, pointer in row["parameters"]:
+                parameter, base = reader.parameter(node, file, (row["symbol"], row["route"], row["method"]), (file, pointer))
+                effective[parameter["in"], parameter["name"]] = parameter
+                self.assertEqual(reader.at(file, pointer, "parameter"), node)
+                if pointer.startswith(row["item_pointer"] + "/parameters/"):
+                    inherited += 1
+                if "schema" in parameter:
+                    coordinates = reader._locations(parameter["schema"], base, "schema")
+                    self.assertTrue(coordinates)
+                    for schema_file, schema_pointer in coordinates:
+                        bases.add(str(schema_file.relative_to(self.source_root)))
+                        self.assertEqual(reader.at(schema_file, schema_pointer, "schema"), parameter["schema"])
+        self.assertGreater(inherited, 0)
+        self.assertTrue(bases)
+        import test_gen_door_lesson as route
+        with patch.object(route, "ROOT", self.source_root):
+            model = route.Model("06-console")
+            self.assertEqual(model.reader.root, self.source_root)
+            self.assertEqual(model.reader._p06_selected_identity_context, reader._p06_selected_identity_context)
+            self.assertEqual({r["declaration"]: (r["symbol"], r["ordinal"]) for r in model.declarations}, expected)
+            ops, symbols = route._cosmetic_source_ops(model)
+            self.assertEqual(len(ops), 146)
+            self.assertEqual(symbols, sorted(expected.values(), key=lambda v: v[1]))
+
+    def test_actual_source_parameter_slots_overrides_and_schema_uri_bases(self):
+        witness, selection, expected = self.inputs()
+        source = self.source_root / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        import yamlsub
+        raw_docs, raw_hashes = {}, {}
+        def doc(path):
+            if path not in raw_docs:
+                data = path.read_bytes()
+                raw_hashes[str(path.relative_to(self.source_root))] = hashlib.sha256(data).hexdigest()
+                raw_docs[path] = json.loads(data) if path.suffix == ".json" else yamlsub.load(data.decode(), path.name)
+            return raw_docs[path]
+        def slot(path, pointer):
+            value = doc(path)
+            for token in pointer.split("/")[1:] if pointer else []:
+                token = token.replace("~1", "/").replace("~0", "~")
+                value = value[int(token)] if type(value) is list else value[token]
+            return value
+        def target(path, ref):
+            uri = urlsplit(ref)
+            self.assertFalse(uri.scheme or uri.netloc or uri.query)
+            file = (path.parent / unquote_to_bytes(uri.path).decode()).resolve() if uri.path else path
+            return file, unquote_to_bytes(uri.fragment).decode()
+        def resolved(path, pointer):
+            seen = set()
+            value = slot(path, pointer)
+            while type(value) is dict and "$ref" in value:
+                self.assertNotIn((path, pointer), seen)
+                seen.add((path, pointer))
+                path, pointer = target(path, value["$ref"])
+                value = slot(path, pointer)
+            return value, path, pointer
+        # Independently read the original parameter declarations before any actual reader.
+        bindings, overrides = {}, 0
+        for declaration in expected:
+            method = declaration.rsplit("/", 1)[1]
+            item, file, pointer = resolved(source, declaration.rsplit("/", 1)[0])
+            occurrences, effective = [], {}
+            for owner, value in ((pointer, item), (pointer + "/" + method, item[method])):
+                for index, parameter in enumerate(value.get("parameters", [])):
+                    position = owner + "/parameters/" + str(index)
+                    actual_parameter, base, location = resolved(file, position)
+                    occurrences.append((parameter, file, position))
+                    key = (actual_parameter["in"], actual_parameter["name"])
+                    overrides += key in effective
+                    effective[key] = (actual_parameter, base, location)
+            bindings[declaration] = (occurrences, effective)
+        reader = SourceSchemaReader(self.source_root, source)
+        rows = reader.operation_declarations(operation_identity_context=SourceSchemaReader._P06_SOURCE999_CONTEXT)
+        self.assertEqual({r["declaration"]: (r["symbol"], r["ordinal"]) for r in rows}, expected)
+        total, schema_refs, bases = 0, 0, set()
+        for row in rows:
+            occurrences, effective = bindings[row["declaration"]]
+            self.assertEqual(row["parameters"], occurrences)
+            actual = {}
+            for value, file, pointer in row["parameters"]:
+                parameter, base = reader.parameter(value, file, (row["symbol"], row["route"], row["method"]), (file, pointer))
+                actual[parameter["in"], parameter["name"]] = (parameter, base)
+                total += 1
+            self.assertEqual(set(actual), set(effective))
+            for key, (parameter, base, pointer) in effective.items():
+                self.assertEqual(actual[key], (parameter, base))
+                if "schema" in parameter:
+                    locations = reader._locations(actual[key][0]["schema"], base, "schema")
+                    self.assertIn((base, pointer + "/schema"), locations)
+                    bases.add(str(base.relative_to(self.source_root)))
+                    schema = parameter["schema"]
+                    if type(schema) is dict and "$ref" in schema:
+                        self.assertEqual(reader.edges[base, pointer + "/schema", schema["$ref"], "schema"],
+                                         target(base, schema["$ref"]))
+                        schema_refs += 1
+        self.assertGreater(total, 0)
+        self.assertGreater(schema_refs, 0)
+        self.__class__.ACTUAL_PARAMETER_RECEIPT = dict(Source=SourceSchemaReader._P06_SOURCE999_PIN,
+            context=reader._p06_selected_identity_context, operations=len(rows), parameter_occurrences=total,
+            parameter_overrides=overrides, schema_ref_bases_checked=schema_refs, schema_declaration_bases=sorted(bases),
+            independent_expected_resource_hashes=raw_hashes, actual_provenance={str(p.relative_to(self.source_root)): h for p,h in reader.provenance.items()})
+
+    def test_selected_receipt_source_api_map_counts_and_heads_are_strict(self):
+        witness, selection, expected = self.inputs()
+        self.assertEqual(self.identity_fixture()._p06_identity_records(witness, selection), expected)
+        changes = []
+        for key, value in (("selected_Source", "0" * 40), ("selected_Source", None),
+                           ("expected_counts", {"original": True, "HEAD": 6, "total": 146})):
+            changed = copy.deepcopy(selection); changed[key] = value; changes.append(changed)
+        for key in ("path", "sha256", "bytes", "blob"):
+            changed = copy.deepcopy(selection); changed["API"][key] = None; changes.append(changed)
+        for key in ("sha256", "path"):
+            changed = copy.deepcopy(selection); changed["independent_Source_owner_map"][key] = "wrong"; changes.append(changed)
+        for field, value in (("logical_ordinal_current146", True), ("logical_ordinal_current146", 1),
+                             ("actual_adapter_Op", "OpWrong"), ("after_pointer", "/paths/~1wrong/head"),
+                             ("logical_ordinal_original140", False), ("method", "GET")):
+            changed = copy.deepcopy(selection); changed["existing_HEAD_assignments_reused"][0][field] = value; changes.append(changed)
+        changed = copy.deepcopy(selection); changed["existing_HEAD_assignments_reused"].pop(); changes.append(changed)
+        for changed in changes:
+            with self.subTest(change=changed), self.assertRaises(CheckingError):
+                self.identity_fixture()._p06_identity_records(witness, changed)
+
+    def test_original_witness_count_bool_ordinals_and_duplicates_are_strict(self):
+        witness, selection, expected = self.inputs()
+        for field, value in (("logical_ordinal_original140", True), ("member_of_original140", 1),
+                             ("actual_adapter_Op", "bad"), ("after_pointer", "/not-an-operation")):
+            changed = copy.deepcopy(witness); changed["records"][0][field] = value
+            with self.subTest(field=field), self.assertRaises(CheckingError):
+                self.identity_fixture()._p06_identity_records(changed, selection)
+        for field in ("after_pointer", "actual_adapter_Op", "logical_ordinal_original140"):
+            changed = copy.deepcopy(witness); changed["records"][1][field] = changed["records"][0][field]
+            with self.subTest(duplicate=field), self.assertRaises(CheckingError):
+                self.identity_fixture()._p06_identity_records(changed, selection)
+        for changed in (dict(witness, records=witness["records"][:-1]), dict(witness, original140=True),
+                        dict(witness, API_after={})):
+            with self.subTest(shape=changed.keys()), self.assertRaises(CheckingError):
+                self.identity_fixture()._p06_identity_records(changed, selection)
+
+    def test_owned_physical_missing_changed_nonregular_inputs_and_api_fail(self):
+        witness, selection, expected = self.inputs()
+        with tempfile.TemporaryDirectory(prefix="selected-p06-identity-") as tmp:
+            root = Path(tmp); source = root / "Platform/06-console/spec/06-console.api.openapi.yaml"
+            source.parent.mkdir(parents=True); api = self.identity_fixture().source.read_bytes(); source.write_bytes(api)
+            packet = root / "packet"; packet.mkdir(); mapfile = packet / "operation-map.json"
+            mapraw = (SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT / "operation-map.json").read_bytes()
+            receipt = root / "selection.json"; receiptraw = SourceSchemaReader._P06_SOURCE999_SELECTION.read_bytes()
+            reader = object.__new__(SourceSchemaReader)
+            reader.root, reader.source, reader.P06_OPERATION_IDENTITY_INPUT = root, source, packet
+            reader._P06_SOURCE999_SELECTION = receipt
+            mapfile.write_bytes(mapraw); receipt.write_bytes(receiptraw)
+            self.assertEqual(reader._p06_operation_identities(), expected)
+            for file, raw in ((mapfile, mapraw), (receipt, receiptraw), (source, api)):
+                for variant in ("missing", "changed", "directory", "symlink"):
+                    file.unlink()
+                    if variant == "changed": file.write_bytes(raw + b" ")
+                    elif variant == "directory": file.mkdir()
+                    elif variant == "symlink": file.symlink_to(root / "absent")
+                    with self.subTest(file=file.name, variant=variant), self.assertRaises(CheckingError):
+                        reader._p06_operation_identities()
+                    if file.is_symlink() or file.is_file(): file.unlink()
+                    elif file.is_dir(): file.rmdir()
+                    file.write_bytes(raw)
+            wrong = source.with_name("wrong.openapi.yaml"); source.rename(wrong); reader.source = wrong
+            with self.assertRaises(CheckingError): reader._p06_operation_identities()
+
+    def test_explicit_context_is_fixed_and_legacy_receipt_remains_distinct(self):
+        witness, selection, expected = self.inputs()
+        reader = self.identity_fixture()
+        reader._p06_identity_context(SourceSchemaReader._P06_LEGACY_CONTEXT)
+        raw = (SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT / "CURRENT-API-BINDING.json").read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), SourceSchemaReader.P06_BINDING_SHA256)
+        legacy = json.loads(raw)
+        self.assertEqual(reader._p06_identity_records(witness, legacy), expected)
+        with self.assertRaisesRegex(CheckingError, "context changed"):
+            reader._p06_operation_identities(SourceSchemaReader._P06_SOURCE999_CONTEXT)
+        for context in (True, "unknown", {}, 1):
+            with self.subTest(context=context), self.assertRaises(CheckingError):
+                self.identity_fixture()._p06_identity_context(context)
+        with self.assertRaisesRegex(CheckingError, "identity changed"):
+            self.identity_fixture()._p06_operation_identities(SourceSchemaReader._P06_LEGACY_CONTEXT)
+
+    def test_synthetic_missing_extra_operations_and_pathitems_cannot_pass(self):
+        witness, selection, expected = self.inputs()
+        import yamlsub
+        raw = self.identity_fixture().source.read_text()
+        original = yamlsub.load(raw)
+        for variant in ("missing-operation", "extra-operation", "missing-PathItem"):
+            doc = copy.deepcopy(original)
+            if variant == "missing-operation": del doc["components"]["pathItems"]["UnitsCollection"]["get"]
+            elif variant == "extra-operation": doc["components"]["pathItems"]["UnitsCollection"]["trace"] = {"responses": {"200": {"description": "ok"}}}
+            else: del doc["components"]["pathItems"]["ConsoleFile"]
+            reader = self.identity_fixture()
+            def resolve(file, pointer, kind):
+                node = doc
+                for token in pointer.strip("/").split("/"):
+                    node = node[token.replace("~1", "/").replace("~0", "~")]
+                return node, file, pointer
+            # Synthetic enumerator only. This is not the full physical Source constructor.
+            with patch.object(reader, "document", return_value=doc), patch.object(reader, "resolve_object", side_effect=resolve), \
+                    patch.object(reader, "owner", return_value=6), patch.object(reader, "_p06_operation_identities", return_value=expected):
+                with self.subTest(variant=variant), self.assertRaises(CheckingError):
+                    reader.operation_declarations()
+
+
 class SourceOperationIdentityControls(unittest.TestCase):
     """Current P06 Source identities and isolated checking guards; no generator or Go."""
 
     @classmethod
+    def _materialize_legacy_source(cls):
+        """Only five pinned directly used carriers; never the current Source root or an archive."""
+        from datetime import datetime, timezone
+        pin = "a08ef6ef101514c926e68d3fb00c8d121da60e01"
+        carriers = (('Platform/06-console/spec/06-console.api.openapi.yaml', '61571d4560024921fffef85f91d7678c2583d1e4', 'a64e0b92ab0fba1581309ef88f2b62fcaa3d29521f06e8d64126e64b3469f8d2', 402321), ('Platform/05-resource/spec/05-resource.api.openapi.yaml', '4eec4308b2f63983066b89818e40b2d2aad2e4e2', '576c0e06170583752fed724e086989256195273a5f37896e7401560d69a3ea39', 35928), ('Platform/08-domain/spec/08-domain.api.openapi.yaml', '862b513d4df5d29b9a3de26df599609886cc99e0', 'c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac', 173611), ('Platform/common/contracts/gate-and-pass.api.openapi.yaml', '1b2a582ab87d8bb397e6c6021d7e5e443a4ddc9a', 'fc7a681e70ba1401e21ce88121836dbd4905306dab33db53d81e353368cc6c38', 2260), ('Platform/06-console/spec/06.7-console.norms.md', '59c654b04cded8b436f3bd36d547841c85d2a448', '54a8e8d9f51ece8a5484ff18dc608fcebb2734de1a3ed2aca00b9298178c20f5', 63937))
+        code_root = HERE.parent.parent.resolve()
+        cls._legacy_fixture_temp = tempfile.TemporaryDirectory(prefix="source-a08-identity-")
+        cls.addClassCleanup(cls._legacy_fixture_temp.cleanup)
+        root = Path(cls._legacy_fixture_temp.name)
+        captures = root / "git-captures"
+        captures.mkdir()
+        calls, records = [], {}
+        def git(*arguments):
+            argv = ["bash", "-c", 'cd "$1" || exit 1; [ "$(git rev-parse --show-toplevel)" = "$1" ] || exit 1; shift; git -c core.quotePath=false "$@"',
+                    "checked-git", str(code_root), *arguments]
+            started = datetime.now(timezone.utc).isoformat()
+            try:
+                done = subprocess.run(argv, cwd=code_root, env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"),
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except (OSError, subprocess.SubprocessError) as exc:
+                raise CheckingError("historical fixture Git process failed: " + str(exc)) from exc
+            number = len(calls) + 1
+            stdout, stderr = captures / f"{number:02}.stdout", captures / f"{number:02}.stderr"
+            stdout.write_bytes(done.stdout); stderr.write_bytes(done.stderr)
+            calls.append(dict(argv=argv, cwd=str(code_root), start=started, end=datetime.now(timezone.utc).isoformat(),
+                              exit=done.returncode, stdout=str(stdout.relative_to(root)), stderr=str(stderr.relative_to(root))))
+            cls.legacy_fixture_provenance = dict(pin=pin, root=str(root), carriers=records, calls=calls)
+            if done.returncode:
+                raise CheckingError("historical fixture Git failed: " + done.stderr.decode("utf-8", "replace"))
+            return done.stdout
+        for relative, blob, digest, size in carriers:
+            metadata = git("ls-tree", pin, "--", relative).decode("utf-8").strip()
+            if metadata != "100644 blob " + blob + "\t" + relative:
+                raise CheckingError("historical fixture mode/blob changed: " + relative)
+            raw = git("show", pin + ":" + relative)
+            if (len(raw) != size or hashlib.sha256(raw).hexdigest() != digest or
+                    hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest() != blob):
+                raise CheckingError("historical fixture raw bytes changed: " + relative)
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw); path.chmod(0o644)
+            if path.stat().st_mode & 0o777 != 0o644 or path.read_bytes() != raw:
+                raise CheckingError("historical fixture materialization changed: " + relative)
+            path.chmod(0o444)
+            records[relative] = dict(mode="100644", blob=blob, sha256=digest, size=size, fixture_mode="0444")
+        return root
+
+    @classmethod
     def setUpClass(cls):
-        cls.source = ROOT / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        cls.legacy_source_root = cls._materialize_legacy_source()
+        cls.source = cls.legacy_source_root / "Platform/06-console/spec/06-console.api.openapi.yaml"
         cls.packet = SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT
-        cls.reader = SourceSchemaReader(ROOT, cls.source)
-        # A normal physical current-Source baseline precedes every checking control.
-        cls.baseline = cls.reader.operation_declarations()
+        cls.reader = SourceSchemaReader(cls.legacy_source_root, cls.source)
+        # A normal physical explicitly historical Source baseline precedes its checking controls.
+        cls.baseline = cls.reader.operation_declarations(operation_identity_context=SourceSchemaReader._P06_LEGACY_CONTEXT)
         if len(cls.baseline) != 146:
             raise CheckingError("current146 identity baseline is incomplete")
         cls.raw_inputs = {}
@@ -2966,6 +3764,7 @@ class SourceOperationIdentityControls(unittest.TestCase):
         source.write_bytes(raw)
         reader = object.__new__(SourceSchemaReader)
         reader.root, reader.source = root, source
+        reader._p06_identity_context(SourceSchemaReader._P06_LEGACY_CONTEXT)
         reader.P06_OPERATION_IDENTITY_INPUT = self.packet_copy()
         self.assertEqual(len(reader._p06_operation_identities()), 146)
         source.write_bytes(raw + b"\n")

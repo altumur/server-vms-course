@@ -80,6 +80,286 @@ class DirectiveLabels(unittest.TestCase):
                     gen_admin.commands()
 
 
+def _admin_source_requirement(path, identity):
+    text = Path(path).read_text(encoding="utf-8")
+    matches = re.findall(r"(?m)^<!-- req: " + re.escape(identity)
+                         + r" -->\s*([\s\S]*?)(?=^<!-- req:|^#{2,4} |\Z)", text)
+    if len(matches) != 1 or not matches[0].strip():
+        raise AssertionError("missing/ambiguous Source admin requirement " + identity)
+    return matches[0]
+
+
+def _admin_source_contract(root):
+    """Read command/flag/anchor facts from Source, independently of gen_admin's report."""
+    import tsv_input
+    root = Path(root)
+    base = root / "Platform/01-store"
+    flags = tsv_input.read(base / "forms/daemon-flags.tsv", root=root)
+    if not {"flag", "type", "required", "commands"} <= set(flags.columns):
+        raise AssertionError("incomplete Source command flags")
+    commands, by_command, seen = [], {}, set()
+    for _, row in flags.rows:
+        if row["flag"] in seen:
+            raise AssertionError("duplicate Source flag")
+        seen.add(row["flag"])
+        owners = row["commands"].split(",")
+        if len(owners) != len(set(owners)) or any(not re.fullmatch(r"[a-z][a-z-]*", c) for c in owners):
+            raise AssertionError("malformed Source command ownership")
+        for command in owners:
+            if command == "daemon":
+                continue
+            if command not in by_command:
+                commands.append(command); by_command[command] = []
+            by_command[command].append((row["flag"], row["type"], row["required"]))
+    norms = base / "spec/01.3-store.norms.md"
+    block = _admin_source_requirement(norms, "P/01.3-R006")
+    yaml = re.findall(r"```yaml\n(.*?)\n```", block, re.S)
+    if len(yaml) != 1:
+        raise AssertionError("missing Source admin declaration block")
+    clauses = dict(re.findall(r"(?m)^([a-z_]+):\s*([\s\S]*?)(?=^[a-z_]+:|\Z)", yaml[0]))
+    grammar = clauses.get("admin_ops", "")
+    roster = [re.match(r"\s*([a-z][a-z-]*)\b", part) for part in grammar.split("|")]
+    if not roster or any(m is None for m in roster):
+        raise AssertionError("malformed Source admin_ops")
+    declared = [m[1] for m in roster]
+    if len(set(declared)) != len(declared) or set(declared) != set(commands):
+        raise AssertionError("Source flags/admin_ops command mismatch")
+    # These are the accepted subcommand bindings; every target must still exist in full Source.
+    keys = {"recover": [("box", "word")], "restore": [("copy", "all"), ("floor", "all"), ("box", "word")],
+            "import": [("copy", "all"), ("import", "all"), ("floor", "all"), ("box", "word")],
+            "status": [("box", "word")], "join": [("repeat", "word"), ("box", "word")],
+            "leave": [("repeat", "word"), ("box", "word")], "admit": [("repeat", "word"), ("box", "word")],
+            "backup": [("copy", "all")], "rights": []}
+    refusals = {"recover": ("recover_box", "recover_isolated", "recover_upper", "recover_peers", "recovery_unsafe", "clock_early"),
+                "restore": ("copy_input", "clock_early"), "import": ("copy_input", "import_repeated", "clock_early"),
+                "status": (), "join": ("join_parity", "join_left"), "leave": ("box_last_voter",),
+                "admit": ("box_admit",),
+                "backup": ("backup_inside_dir", "copy_method", "copy_admin_only", "copy_snapshot_unavailable"),
+                "rights": ("rights_not_loaded",)}
+    doors = {"backup": [("01.3-store.norms.md", "P/01.3-R033", None)],
+             "status": [("01.3-store.norms.md", "P/01.3-R016", "door:GET `/v1/status`")],
+             "join": [("01.3-store.norms.md", "P/01.3-R016", "door:POST `/v1/join`")],
+             "leave": [("01.3-store.norms.md", "P/01.3-R016", "door:POST `/v1/leave`")],
+             "rights": [("01.2-store.norms.md", "P/01.2-R014", None)]}
+    if set(commands) != set(keys):
+        raise AssertionError("Source command binding roster changed")
+    for command, selections in keys.items():
+        for key, mode in selections:
+            if key not in clauses or not clauses[key].strip() or (mode == "word" and
+                    not re.search(r"(?<![\w-])" + command + r"(?![\w-])", clauses[key])):
+                raise AssertionError("missing Source admin clause " + command + ":" + key)
+    table = tsv_input.read(base / "forms/refusals.tsv", root=root)
+    if not {"name", "code", "kind", "norm"} <= set(table.columns):
+        raise AssertionError("incomplete Source refusal table")
+    rows = {}
+    for _, row in table.rows:
+        if row["name"] in rows:
+            raise AssertionError("duplicate Source refusal")
+        rows[row["name"]] = row
+    for values in refusals.values():
+        for name in values:
+            if name not in rows or not all(rows[name][field] for field in ("code", "kind", "norm")):
+                raise AssertionError("missing Source refusal binding " + name)
+    anchors = {"P/01.3-R006", "P/01.3-R018"}
+    _admin_source_requirement(norms, "P/01.3-R018")
+    for values in doors.values():
+        for filename, anchor, selector in values:
+            body = _admin_source_requirement(base / "spec" / filename, anchor)
+            if selector and len(re.findall(r"\| " + re.escape(selector[5:]) + r" \|", body)) != 1:
+                raise AssertionError("missing/ambiguous Source admin door " + selector)
+            anchors.add(anchor)
+    text = norms.read_text(encoding="utf-8")
+    recovery = re.findall(r"(?m)^### recover the store \(no majority\)\n([\s\S]*?)(?=^#{2,4} |\Z)", text)
+    if len(recovery) != 1:
+        raise AssertionError("missing Source recover procedure")
+    recovery_ids = re.findall(r"<!-- req: (P/01\.3-R[0-9]+) -->", recovery[0])
+    if not recovery_ids or len(set(recovery_ids)) != len(recovery_ids):
+        raise AssertionError("missing/duplicate Source recover anchors")
+    for identity in recovery_ids:
+        _admin_source_requirement(norms, identity)
+        anchors.add(identity)
+    own = (root / "Platform/common/acceptance/README.md").read_text(encoding="utf-8")
+    if len(re.findall(r"(?m)^\| `@spoil row <(?:key|ключ)>` / `@spoil row-index <(?:key|ключ)>` \|[^\n]*`spoil-row`", own)) != 1:
+        raise AssertionError("missing/ambiguous Source stand command")
+    return dict(root=str(root.resolve()), commands=commands, flags=by_command, keys=keys, refusals=refusals, doors=doors, anchors=anchors)
+
+
+def _assert_admin_selectors(producer, source):
+    if producer.commands() != (source["commands"], source["flags"]):
+        raise AssertionError("Source command/flag metadata mismatch")
+    root = Path(source["root"])
+    doors = {cmd: [(str(path.resolve()), anchor, selector) for path, anchor, selector in values]
+             for cmd, values in producer.DOORS.items()}
+    expected_doors = {cmd: [(str((root / "Platform/01-store/spec" / filename).resolve()), anchor, selector)
+                            for filename, anchor, selector in values] for cmd, values in source["doors"].items()}
+    if producer.KEYS != source["keys"] or producer.REFUSAL_ROWS != source["refusals"] or doors != expected_doors:
+        raise AssertionError("Source KEYS/DOORS/REFUSAL_ROWS binding mismatch")
+
+
+def _admin_go_tokens(text):
+    pattern = r'\s+|//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|`[^`]*`|[A-Za-z_][A-Za-z_0-9]*|[^\w\s]'
+    tokens = [m[0] for m in re.finditer(pattern, text, re.S)
+              if not m[0].isspace() and not m[0].startswith(("//", "/*"))]
+    return tokens
+
+
+def _admin_go_functions(text):
+    tokens = _admin_go_tokens(text)
+    functions, depth, at = {}, 0, 0
+    while at < len(tokens):
+        token = tokens[at]
+        if token == "func" and depth == 0 and at + 2 < len(tokens) and tokens[at + 2] == "(":
+            name, start = tokens[at + 1], at
+            if name in functions:
+                raise AssertionError("duplicate actual admin function " + name)
+            while at < len(tokens) and tokens[at] != "{":
+                at += 1
+            header = tokens[start:at]
+            end, nesting = at + 1, 1
+            while end < len(tokens) and nesting:
+                nesting += (tokens[end] == "{") - (tokens[end] == "}")
+                end += 1
+            if nesting:
+                raise AssertionError("unclosed actual admin function")
+            functions[name] = (header, tokens[at + 1:end - 1])
+            at = end
+            continue
+        depth += (token == "{") - (token == "}")
+        at += 1
+    return functions
+
+
+def _assert_admin_layout(pkg, manifest, commands):
+    """Check actual declarations/delegation plus manifest ownership; comments carry no authority."""
+    expected_files = {c + ".go" for c in commands} | {"admin.go", "own.go"}
+    if {p.name for p in Path(pkg).glob("*.go")} != expected_files:
+        raise AssertionError("incomplete/extra actual admin files")
+    for filename in expected_files:
+        tokens = _admin_go_tokens((Path(pkg) / filename).read_text())
+        if tokens[:2] != ["package", "admin"] or tokens.count("package") != 1:
+            raise AssertionError("actual admin package ownership " + filename)
+    entries = {}
+    for row in manifest["files"]:
+        if row["path"] in entries:
+            raise AssertionError("duplicate manifest path")
+        entries[row["path"]] = row
+    run = _admin_go_functions((Path(pkg) / "admin.go").read_text()).get("Run")
+    if run is None:
+        raise AssertionError("missing actual admin.Run")
+    cases = [run[1][i + 1] for i, token in enumerate(run[1][:-1]) if token == "case"]
+    if set(cases) != {'"' + c + '"' for c in commands} or len(cases) != len(commands):
+        raise AssertionError("Source admin dispatcher roster mismatch")
+    for filename in expected_files:
+        row = entries.get("01-store/internal/admin/" + filename, {})
+        if row.get("editable") is not (filename != "admin.go"):
+            raise AssertionError("admin manifest ownership " + filename)
+    for command in commands:
+        name = "".join(part[:1].upper() + part[1:] for part in command.split("-"))
+        functions = _admin_go_functions((Path(pkg) / (command + ".go")).read_text())
+        if set(functions) != {name}:
+            raise AssertionError("actual per-command function roster " + command)
+        header, body = functions[name]
+        signature = ['func', name, '(', 'f', '*', 'flags', '.', 'Flags', ',', 'env', 'Env', ')', 'int']
+        want = ['return', 'NotInStage', '(', '"' + command + '"', ',', 'env', ')']
+        if command in ("backup", "import", "restore"):
+            want = ['if', 'env', '.', 'Copy', '!=', 'nil', '{', 'return', 'runCopy', '(',
+                    '"' + command + '"', ',', 'f', ',', 'env', ')', '}', *want]
+        # The lexical reader emits each punctuation character separately.
+        want = [piece for token in want for piece in (['!', '='] if token == '!=' else [token])]
+        dispatch = ['case', '"' + command + '"', ':', 'return', name, '(', 'f', ',', 'env', ')']
+        if header != signature or body != want or not any(run[1][i:i + len(dispatch)] == dispatch
+                                                         for i in range(len(run[1]))):
+            raise AssertionError("actual admin signature/delegation " + command)
+    own = _admin_go_functions((Path(pkg) / "own.go").read_text())
+    if set(own) != {"SpoilRow"} or own["SpoilRow"][0] != ['func', 'SpoilRow', '(', 'args', '[', ']', 'string', ',', 'env', 'Env', ')', 'int']:
+        raise AssertionError("actual stand command ownership/signature")
+    tokens = _admin_go_tokens((Path(pkg) / "own.go").read_text())
+    binding = ['var', 'Own', '=', 'map', '[', 'string', ']', 'func', '(', 'args', '[', ']', 'string',
+               ',', 'env', 'Env', ')', 'int', '{', '"spoil-row"', ':', 'SpoilRow', ',', '}']
+    if sum(tokens[i:i + len(binding)] == binding for i in range(len(tokens))) != 1:
+        raise AssertionError("actual stand command dispatch binding")
+
+
+class CosmeticAdminControls(unittest.TestCase):
+    """Synthetic machine-only package and Source-selection controls, no build/setup."""
+    def fixture(self, root):
+        pkg = Path(root)
+        (pkg / 'admin.go').write_text('package admin\nfunc Run(f *flags.Flags, env Env) int { switch f.Cmd { case "status": return Status(f, env) }; return 1 }\n')
+        (pkg / 'status.go').write_text('package admin\nfunc Status(f *flags.Flags, env Env) int { return NotInStage("status", env) }\n')
+        (pkg / 'own.go').write_text('package admin\nvar Own = map[string]func(args []string, env Env) int{"spoil-row": SpoilRow,}\nfunc SpoilRow(args []string, env Env) int { return NotInStage("spoil-row", env) }\n')
+        return {'files': [dict(path='01-store/internal/admin/' + file, editable=file != 'admin.go')
+                          for file in ('admin.go', 'status.go', 'own.go')]}
+
+    def test_00_comment_free_layout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _assert_admin_layout(Path(tmp), self.fixture(tmp), ['status'])
+
+    def test_missing_wrong_signature_delegation_and_comment_only_function(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = self.fixture(tmp); path = Path(tmp) / 'status.go'; normal = path.read_text()
+            for wrong in (normal.replace('Status(', 'Other('), normal.replace('return NotInStage("status", env)', 'return 0'),
+                          normal.replace('flags.Flags', 'Other'), '/*' + normal + '*/'):
+                path.write_text(wrong)
+                with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                    _assert_admin_layout(Path(tmp), manifest, ['status'])
+
+    def test_manifest_and_dispatch_ownership_are_real(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = self.fixture(tmp)
+            manifest['files'][1]['editable'] = False
+            with self.assertRaisesRegex(AssertionError, 'ownership'):
+                _assert_admin_layout(Path(tmp), manifest, ['status'])
+            manifest['files'][1]['editable'] = True
+            p = Path(tmp) / 'admin.go'; p.write_text(p.read_text().replace('return Status(f, env)', 'return 0'))
+            with self.assertRaisesRegex(AssertionError, 'delegation'):
+                _assert_admin_layout(Path(tmp), manifest, ['status'])
+
+    def test_comment_only_map_and_wrong_package_do_not_bind(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = self.fixture(tmp); path = Path(tmp) / 'own.go'; normal = path.read_text()
+            for wrong in (normal.replace('var Own =', '// var Own ='), normal.replace('package admin', 'package foreign')):
+                path.write_text(wrong)
+                with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                    _assert_admin_layout(Path(tmp), manifest, ['status'])
+
+    def test_same_basename_foreign_source_is_not_a_binding(self):
+        from types import SimpleNamespace
+        source = dict(root='/synthetic', commands=['status'], flags={'status': []}, keys={}, refusals={},
+                      doors={'status': [('01.3-store.norms.md', 'P/01.3-R016', None)]})
+        producer = SimpleNamespace(commands=lambda: (['status'], {'status': []}), KEYS={}, REFUSAL_ROWS={},
+                  DOORS={'status': [(Path('/synthetic/Platform/01-store/spec/01.3-store.norms.md'), 'P/01.3-R016', None)]})
+        _assert_admin_selectors(producer, source)
+        producer.DOORS['status'][0] = (Path('/foreign/01.3-store.norms.md'), 'P/01.3-R016', None)
+        with self.assertRaisesRegex(AssertionError, 'binding'):
+            _assert_admin_selectors(producer, source)
+
+    def test_source_selectors_not_producer_report(self):
+        from types import SimpleNamespace
+        source = dict(root='/synthetic', commands=['status'], flags={'status': [('-x', 'bool', 'false')]}, keys={'status': []},
+                      refusals={'status': ()}, doors={})
+        producer = SimpleNamespace(commands=lambda: (['status'], source['flags']), KEYS={'status': []},
+                                   REFUSAL_ROWS={'status': ()}, DOORS={})
+        _assert_admin_selectors(producer, source)
+        for name, value in [('KEYS', {}), ('REFUSAL_ROWS', {'status': ('invented',)}),
+                            ('DOORS', {'status': [(Path('wrong'), 'P/01.3-R999', None)]}),
+                            ('commands', lambda: (['status'], {'status': []}))]:
+            old = getattr(producer, name); setattr(producer, name, value)
+            with self.subTest(name=name), self.assertRaises(AssertionError):
+                _assert_admin_selectors(producer, source)
+            setattr(producer, name, old)
+
+    def test_source_anchor_missing_duplicate_and_wrong_identity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'norms.md'
+            normal = '<!-- req: P/01.3-R006 -->\nindependent body\n'
+            path.write_text(normal)
+            self.assertIn('independent body', _admin_source_requirement(path, 'P/01.3-R006'))
+            for wrong in (normal.replace('R006', 'R999'), normal + normal, '<!-- req: P/01.3-R006 -->\n'):
+                path.write_text(wrong)
+                with self.subTest(wrong=wrong), self.assertRaises(AssertionError):
+                    _admin_source_requirement(path, 'P/01.3-R006')
+
+
 class Admin(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -100,45 +380,17 @@ class Admin(unittest.TestCase):
         self.assertEqual(sorted(p.name for p in (OUT / "admin").glob("*.go")), sorted(Path(r).name for r in files))
 
     def test_one_file_per_subcommand(self):
-        cmds, flags = gen_admin.commands()
-        self.assertEqual(set(cmds), {"recover", "restore", "import", "status", "join", "leave", "admit", "backup", "rights"})
-        admin = (self.pkg / "admin.go").read_text(encoding="utf-8")
-        self.assertIn("DO NOT EDIT", admin)
-        for cmd in cmds:
-            text = (self.pkg / f"{cmd}.go").read_text(encoding="utf-8")
-            name = gen_admin.go_name(cmd)
-            self.assertEqual(re.findall(r"^func (\w+)\(", text, re.M), [name])
-            self.assertIn(f"func {name}(f *flags.Flags, env Env) int {{", text)
-            self.assertIn(f'return NotInStage("{cmd}", env)', text)
-            if cmd in ("backup", "import", "restore"):
-                self.assertIn("if env.Copy != nil", text)
-                self.assertIn(f'return runCopy("{cmd}", f, env)', text)
-            self.assertIn(f'case "{cmd}":\n\t\treturn {name}(f, env)', admin)
-            self.assertNotIn("DO NOT EDIT", text)
-            self.assertIn("(req: P/01.3-R006)", text)
-            self.assertIn("admin_ops: " + cmd, text)
-            for fl, _, _ in flags[cmd]:
-                self.assertIn(f"//\t  {fl} ", text, (cmd, fl))
-            for r in gen_admin.REFUSAL_ROWS[cmd]:
-                self.assertIn(f" {r} — ", text, (cmd, r))
+        source = _admin_source_contract(gen_admin.ROOT)
+        _assert_admin_selectors(gen_admin, source)
+        _assert_admin_layout(self.pkg, self.manifest, source["commands"])
 
     def test_anchors_by_table(self):
-        text = {c: (self.pkg / f"{c}.go").read_text(encoding="utf-8") for c in gen_admin.KEYS}
-        self.assertIn("import: from an immutable copy", text["import"])
-        self.assertIn("copy: the backup copy", text["backup"])
-        self.assertIn("floor: (platform/epoch_floor {floor, generation_at}); generation:", text["restore"])
-        self.assertIn("req: P/01.3-R020 — ", text["recover"])
-        self.assertIn("| Isolation |", text["recover"])                # R026 is the full phase table, not just its first row.
-        self.assertIn("«recover the store (no majority)»", text["recover"])
-        self.assertIn("recover — a refusal, code 2", text["recover"])
-        self.assertIn("req: P/01.3-R018 — The CLI `backup`", text["backup"])
-        self.assertIn("GET `/v1/status`: `{id, state", text["status"])
-        self.assertIn("req: P/01.2-R014 — `GET /v1/rights` returns", text["rights"])
-        self.assertIn("leave — 409 refused («the last voter»)", text["leave"])
-        self.assertNotIn("join of its own id", text["recover"])          # box includes only clauses about the current subcommand.
+        source = _admin_source_contract(gen_admin.ROOT)
+        _assert_admin_selectors(gen_admin, source)
+        self.assertTrue(source["anchors"])
         own = (self.pkg / "own.go").read_text(encoding="utf-8")
         self.assertIn('"spoil-row": SpoilRow,', own)
-        self.assertIn("the command `spoil-row` of «Stand»", own)
+        self.assertIn("SpoilRow", _admin_go_functions(own))
 
     def test_manifest_editable_and_doc(self):
         own = {f["path"] for f in self.manifest["files"] if f.get("editable")}
