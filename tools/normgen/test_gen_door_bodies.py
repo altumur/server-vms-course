@@ -676,6 +676,27 @@ class SourceSchemaReader:
     def uri(path, pointer):
         return Path(path).as_uri() + "#" + quote(pointer, safe="/~$")
 
+    def _source_graph_identity(self):
+        """Keep registry reuse bound to complete bytes and original physical targets.
+
+        A stat-only cache cannot prove Source immutability. Verify every document
+        and late-declaration byte digest, and resolve each nonlocal path again.
+        Permissions were checked per declaration by _walk/_reference; neither a
+        cached registry nor equal schema values confer another declaration's rights.
+        """
+        for file, held in list(self.provenance.items()):
+            if self.physical(file) != file:
+                raise CheckingError("physical source changed after reading")
+            if hashlib.sha256(file.read_bytes()).hexdigest() != held:
+                raise CheckingError(f"source changed after reading: {file}")
+        for (file, pointer, ref, kind), (target, fragment) in list(self.edges.items()):
+            name = urlsplit(ref).path
+            if name and self.physical(file.parent / unquote_to_bytes(name).decode("utf-8")) != target:
+                raise CheckingError("physical reference target changed after reading")
+        return (tuple(sorted((str(file), digest) for file, digest in self.provenance.items())),
+                tuple(sorted((str(file), pointer, ref, kind, str(target), fragment)
+                             for (file, pointer, ref, kind), (target, fragment) in self.edges.items())))
+
     def validator_at(self, path, pointer):
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
@@ -683,36 +704,43 @@ class SourceSchemaReader:
         path = self.physical(path)
         self.document(path)
         self._walk(path, pointer, "schema", (path,))
+        graph = self._source_graph_identity()
+        if graph != getattr(self, "_registry_graph", None):
+            def offline(uri):
+                raise CheckingError(f"unregistered resource; network disabled: {uri}")
 
-        def offline(uri):
-            raise CheckingError(f"unregistered resource; network disabled: {uri}")
-
-        # URI aliases retain complete original contents. Relative references from a symlinked
-        # resource use its physical declaration base; no $id or replacement schema is injected.
-        for (file, ptr, ref, kind), target in list(self.edges.items()):
-            self._reference(file, ptr, ref, kind, (file,))
-        resources = {file.as_uri(): file for file in self.docs}
-        pending = list(resources.items())
-        seen = set()
-        while pending:
-            base_uri, physical = pending.pop()
-            if (base_uri, physical) in seen:
-                continue
-            seen.add((base_uri, physical))
-            for (file, ptr, ref, kind), (target, fragment) in self.edges.items():
-                if file != physical:
+            # Complete original resources and URI aliases, with all declaration
+            # guards rerun for a new graph. Do not replay all edges for every scalar.
+            for (file, ptr, ref, kind), target in list(self.edges.items()):
+                self._reference(file, ptr, ref, kind, (file,))
+            resources = {file.as_uri(): file for file in self.docs}
+            pending = list(resources.items())
+            seen = set()
+            while pending:
+                base_uri, physical = pending.pop()
+                if (base_uri, physical) in seen:
                     continue
-                alias_uri = urlsplit(urljoin(base_uri, ref))._replace(fragment="").geturl()
-                if alias_uri in resources and resources[alias_uri] != target:
-                    raise CheckingError("ambiguous physical resource URI")
-                if alias_uri not in resources:
-                    resources[alias_uri] = target
-                    pending.append((alias_uri, target))
-        registry = Registry(retrieve=offline)
-        for uri, file in resources.items():
-            doc = self.document(file)
-            registry = registry.with_resource(uri, Resource(contents=doc, specification=DRAFT202012))
-        validator = Draft202012Validator({"$ref": self.uri(path, pointer)}, registry=registry)
+                seen.add((base_uri, physical))
+                for (file, ptr, ref, kind), (target, fragment) in self.edges.items():
+                    if file != physical:
+                        continue
+                    alias_uri = urlsplit(urljoin(base_uri, ref))._replace(fragment="").geturl()
+                    if alias_uri in resources and resources[alias_uri] != target:
+                        raise CheckingError("ambiguous physical resource URI")
+                    if alias_uri not in resources:
+                        resources[alias_uri] = target
+                        pending.append((alias_uri, target))
+            registry = Registry(retrieve=offline)
+            for uri, file in resources.items():
+                doc = self.document(file)
+                registry = registry.with_resource(uri, Resource(contents=doc, specification=DRAFT202012))
+            self._source_registry = registry
+            self._source_validators = {}
+            self._registry_graph = self._source_graph_identity()
+        key = (path, pointer)
+        if key in self._source_validators:
+            return self._source_validators[key]
+        validator = Draft202012Validator({"$ref": self.uri(path, pointer)}, registry=self._source_registry)
 
         class CheckedValidator:
             def is_valid(inner, instance):
@@ -720,8 +748,9 @@ class SourceSchemaReader:
                     return validator.is_valid(instance)
                 except Exception as exc:
                     raise CheckingError(f"source oracle failed at {path}#{pointer}: {exc}") from exc
-        return CheckedValidator()
-
+        checked = CheckedValidator()
+        self._source_validators[key] = checked
+        return checked
     def _locations(self, node, base, kind):
         base = self.physical(base)
         result = self.locations.get((base, id(node), kind), [])
@@ -1025,6 +1054,72 @@ class SourceSchemaReader:
             raise CheckingError("uncovered source operation identity")
         return out
 
+    @staticmethod
+    def parameter_table(text):
+        """Parse actual Go parameter records, independently of definition naming.
+
+        Only the literal table is actual metadata. Required source slots, types,
+        defaults and lexeme roles are derived separately from full OpenAPI.
+        """
+        match = re.search(r"\bvar\s+paramSchemas\s*=\s*map\[Op\]\[\]paramSpec\s*\{", text)
+        if not match:
+            raise CheckingError("missing actual parameter schema table")
+        pos = match.end() - 1
+        def token():
+            nonlocal pos
+            found = re.match(r'\s*("(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z0-9_]*|[{}:,&])', text[pos:])
+            if not found:
+                raise CheckingError("malformed actual parameter literal")
+            pos += found.end()
+            return found[1]
+        def mapping():
+            if token() != "{":
+                raise CheckingError("actual parameter map expected")
+            result = {}
+            key = token()
+            while key != "}":
+                if key in result or token() != ":":
+                    raise CheckingError("duplicate/malformed actual parameter field")
+                result[key] = value()
+                end = token()
+                if end == "}":
+                    break
+                if end != ",":
+                    raise CheckingError("malformed actual parameter separator")
+                key = token()
+            return result
+        def sequence():
+            if token() != "{":
+                raise CheckingError("actual parameter list expected")
+            result = []
+            nonlocal pos
+            checkpoint = pos
+            if token() == "}":
+                return result
+            pos = checkpoint
+            while True:
+                result.append(mapping())
+                end = token()
+                if end == "}":
+                    return result
+                if end != ",":
+                    raise CheckingError("malformed actual parameter list")
+        def value():
+            nonlocal pos
+            checkpoint = pos
+            item = token()
+            if item.startswith('"'):
+                return json.loads(item)
+            if item in ("true", "false"):
+                return item == "true"
+            if item == "&" and token() == "queryLexeme":
+                return mapping()
+            if item == "{":
+                pos = checkpoint
+                return sequence()
+            raise CheckingError("unsupported actual parameter value")
+        return mapping()
+
     def output_bindings(self, module):
         """Pair source operation coordinates with actual route/body table identities."""
         try:
@@ -1063,7 +1158,53 @@ class SourceSchemaReader:
                 for media, body in value.get("content", {}).items():
                     if "schema" in body:
                         expected["response", op, str(status), media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
+        # Bind all query/header definition roots through their actual table,
+        # never by guessing the producer's dotted-name convention.
+        source_parameters = {}
+        for record in declarations:
+            op = ops[record["route"], record["method"]]
+            merged = {}
+            for node, file, pointer in record["parameters"]:
+                prm, base, ptr = self.resolve_object(file, pointer, "parameter")
+                if prm["in"] in ("query", "header"):
+                    merged[prm["in"], prm["name"]] = (prm, base, ptr)
+            for (place, name), (prm, base, ptr) in merged.items():
+                key = (op, place, name)
+                source_parameters[key] = (prm, base, ptr)
+        if source_parameters or re.search(r"\bvar\s+paramSchemas\b", bodies):
+            table = self.parameter_table(bodies)
+            seen = set()
+            for op, values in table.items():
+                if op not in ops.values() or type(values) is not list or not values:
+                    raise CheckingError("extra/empty actual parameter operation")
+                for value in values:
+                    if (type(value) is not dict or
+                            set(value) not in ({"name", "in", "required", "schema", "def"},
+                                               {"name", "in", "required", "schema", "def", "lexeme"}) or
+                            any(type(value[k]) is not str for k in ("name", "in", "schema", "def")) or
+                            type(value["required"]) is not bool):
+                        raise CheckingError("mistyped actual parameter record")
+                    key = (op, value["in"], value["name"])
+                    if key in seen or key not in source_parameters:
+                        raise CheckingError("duplicate/extra actual parameter binding")
+                    seen.add(key)
+                    prm, base, ptr = source_parameters[key]
+                    schema = prm.get("schema", {})
+                    default = json.dumps(schema["default"], ensure_ascii=False) if "default" in schema else ""
+                    if (value["required"] != bool(prm.get("required")) or value["def"] != default or
+                            value.get("lexeme") != (dict(strip="", **prm["x-query-lexeme"])
+                                                     if "x-query-lexeme" in prm and "strip" not in prm["x-query-lexeme"]
+                                                     else prm.get("x-query-lexeme"))):
+                        raise CheckingError("actual parameter role/default differs from source")
+                    expected["parameter", *key] = (base, ptr + "/schema")
+            if seen != set(source_parameters):
+                raise CheckingError("missing actual parameter binding")
+        else:
+            table = {}
         actual = {}
+        for op, values in table.items():
+            for value in values:
+                actual["parameter", op, value["in"], value["name"]] = value["schema"]
         try:
             for op, values in request.items():
                 for media, name in values.items():
@@ -1135,6 +1276,27 @@ class DoorBodiesBase:
         cls.fresh = out / "go"
         cls.defs = bundle_of(cls.fresh)["$defs"]
         cls.cases = cases_for(cls.defs, random.Random(36))
+
+    def setUp(self):
+        # A is the original generated output. Existing drivers and mutants write
+        # only B/C copies, and the original remains checked across every test.
+        from test_gen_door_lesson import (_tree_receipt, _verify_tree, _copy_owned,
+                                          CheckingError as SnapshotError)
+        cls = type(self)
+        try:
+            if "_body_original_snapshot" not in cls.__dict__:
+                cls._body_original_snapshot = _tree_receipt(cls.fresh)
+            _verify_tree(cls.fresh, cls._body_original_snapshot)
+            self.fresh = self.tmp / ("body-owned-" + os.urandom(16).hex())
+            _copy_owned(cls.fresh, self.fresh)
+        except SnapshotError as exc:
+            raise CheckingError(f"body immutable output/copy: {exc}") from exc
+        def unchanged():
+            try:
+                _verify_tree(cls.fresh, cls._body_original_snapshot)
+            except SnapshotError as exc:
+                raise CheckingError(f"body original output changed: {exc}") from exc
+        self.addCleanup(unchanged)
 
     @classmethod
     def tearDownClass(cls):
@@ -1403,6 +1565,25 @@ class BodyServiceControls(unittest.TestCase):
             with patch(__name__ + ".run_go", side_effect=lambda mod, cases: [oracle(bundle_of(mod)["$defs"])(*c) for c in cases]):
                 with self.assertRaisesRegex(AssertionError, "survives"):
                     obj.test_mutants()
+
+
+    def test_generated_original_is_immutable_and_each_body_service_gets_a_copy(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); original = root / "original"; original.mkdir()
+            (original / "payload").write_bytes(b"original")
+            fixture = type("BodySnapshotFixture", (DoorBodiesBase, unittest.TestCase),
+                           {"fresh": original, "tmp": root, "runTest": lambda self: None})
+            first = fixture(); first.setUp()
+            (first.fresh / "payload").write_bytes(b"owned service instrumentation")
+            self.assertEqual((original / "payload").read_bytes(), b"original")
+            self.assertTrue(first.doCleanups())
+            second = fixture(); second.setUp()
+            self.assertNotEqual(first.fresh, second.fresh)
+            self.assertEqual((second.fresh / "payload").read_bytes(), b"original")
+            self.assertTrue(second.doCleanups())
+            (original / "payload").write_bytes(b"tamper")
+            with self.assertRaises(CheckingError):
+                fixture().setUp()
 
 
 class SourceSchemaReaderControls(unittest.TestCase):
@@ -1742,6 +1923,107 @@ class SourceSchemaReaderControls(unittest.TestCase):
         mismatch = reader.compare(actual, cases)
         self.assertTrue(mismatch)
         self.assertTrue(all(row[0] == "Root" for row in mismatch))
+
+
+    def test_26_cached_validator_rechecks_complete_source_bytes(self):
+        target = self.schema({"type": "string", "minLength": 1})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        pointer = "/components/schemas/Root"
+        self.assertTrue(reader.validator_at(reader.source, pointer).is_valid("a"))
+        self.assertFalse(reader.validator_at(reader.source, pointer).is_valid(1))
+        target.write_text('{"type":"integer"}', encoding="utf-8")
+        with self.assertRaises(CheckingError):
+            reader.validator_at(reader.source, pointer)
+        self.assertEqual(target.read_text(), '{"type":"integer"}')
+
+    def test_27_cached_validator_rejects_equal_value_symlink_repin(self):
+        first = self.schema({"type": "integer"})
+        second = self.schema({"type": "integer"}, name="other")
+        alias = first.with_name("alias.schema.json")
+        alias.symlink_to(first.name)
+        reader = self.reader({"$ref": "../data/alias.schema.json"})
+        pointer = "/components/schemas/Root"
+        self.assertTrue(reader.validator_at(reader.source, pointer).is_valid(1))
+        alias.unlink()
+        alias.symlink_to(second.name)
+        with self.assertRaises(CheckingError):
+            reader.validator_at(reader.source, pointer)
+
+    def test_28_cached_validator_rechecks_late_declaration_bytes(self):
+        source, _ = self.late()
+        reader = SourceSchemaReader(self.root, source)
+        pointer = "/paths/~1api~1backup/get/responses/200/content/application~1json/schema"
+        self.assertTrue(reader.validator_at(source, pointer).is_valid("a"))
+        norm = self.root / "Platform/06-console/spec/06.7-console.norms.md"
+        norm.write_bytes(norm.read_bytes() + b"\nchanged declaration\n")
+        with self.assertRaises(CheckingError):
+            reader.validator_at(source, pointer)
+
+    def test_29_cached_registry_includes_a_new_explicit_schema_entry(self):
+        self.schema({"type": "integer", "minimum": 2})
+        source = self.api(schemas={"Root": {"type": "string"}})
+        import yamlsub
+        doc = yamlsub.load(source.read_text(), source.name)
+        doc["x-explicit"] = {"$ref": "../data/target.schema.json"}
+        self.write(str(source.relative_to(self.root)), doc, yaml=True)
+        reader = SourceSchemaReader(self.root, source)
+        self.assertTrue(reader.validator_at(source, "/components/schemas/Root").is_valid("a"))
+        target = reader.validator_at(source, "/x-explicit")
+        self.assertTrue(target.is_valid(2))
+        self.assertFalse(target.is_valid(1))
+
+
+    def parameter_fixture(self):
+        spec = self.api(paths={"/x": {"get": {
+            "parameters": [{"name": "n", "in": "query", "required": True,
+                            "schema": {"type": "integer", "minimum": 2}}],
+            "responses": {"200": {"description": "ok"}}}}})
+        module = self.root / "actual-go"
+        (module / "apidoor").mkdir(parents=True)
+        (module / "apidoor/routes.go").write_text('var ops = map[string]Op{\n"/x GET": OpX,\n}\n')
+        actual = ('var requestSchemas = map[Op]map[string]string{}\n'
+                  'var responseSchemas = map[Op]map[string]map[string]string{}\n'
+                  'var paramSchemas = map[Op][]paramSpec{\n'
+                  'OpX: {{name: "n", in: "query", required: true, schema: "opaque-root", def: ""}},\n}\n')
+        (module / "apidoor/bodies.go").write_text(actual)
+        return SourceSchemaReader(self.root, spec), module, actual
+
+    def test_30_actual_parameter_definitions_do_not_require_a_dotted_name_convention(self):
+        reader, module, text = self.parameter_fixture()
+        defs = {"opaque-root": {"type": "integer", "minimum": 2}}
+        bindings = reader.output_bindings(module)
+        self.assertEqual(reader.compare(defs, [("opaque-root", 2), ("opaque-root", 1)], bindings), [])
+        self.assertEqual(len(bindings), 1)
+
+    def test_31_parameter_table_missing_extra_duplicate_and_roles_fail(self):
+        reader, module, text = self.parameter_fixture()
+        row = 'OpX: {{name: "n", in: "query", required: true, schema: "opaque-root", def: ""}},'
+        changed = [text.replace(row, ''), text.replace(row, row + '\n' + row),
+                   text.replace('name: "n"', 'name: "unknown"'),
+                   text.replace('in: "query"', 'in: "path"'),
+                   text.replace('required: true', 'required: false'),
+                   text.replace('required: true', 'required: "true"'),
+                   text.replace('def: ""', 'def: "2"'),
+                   text.replace('name: "n"', 'name: "n", name: "n"'),
+                   text.replace('schema: "opaque-root"', 'unexpected: "opaque-root"'),
+                   text.replace('schema: "opaque-root"', 'schema: true'),
+                   text.replace('paramSchemas', 'noParameterTable')]
+        for mutant in changed:
+            with self.subTest(mutant=mutant):
+                self.assertNotEqual(mutant, text)
+                (module / "apidoor/bodies.go").write_text(mutant)
+                with self.assertRaises(CheckingError):
+                    reader.output_bindings(module)
+        (module / "apidoor/bodies.go").write_text(text)
+        self.assertEqual(len(reader.output_bindings(module)), 1)
+
+    def test_32_bound_parameter_schema_wrong_value_is_a_semantic_mismatch(self):
+        reader, module, _ = self.parameter_fixture()
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-root", 1), ("opaque-root", 2)]
+        self.assertTrue(reader.compare({"opaque-root": {"type": "integer", "minimum": 1}}, cases, bindings))
+        with self.assertRaises(CheckingError):
+            reader.compare({"other-root": {"type": "integer"}}, [("other-root", 1)], bindings)
 
 
 for _lesson, _slug in LESSONS.items():
