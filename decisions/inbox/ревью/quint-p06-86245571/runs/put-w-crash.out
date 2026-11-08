@@ -1,0 +1,426 @@
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-21-11_8670871390453701884
+# APALACHE version: 0.62.1 | build: a321771                       I@22:21:11.909
+Starting checker server on port 18823...                          I@22:21:11.912
+The Apalache server is running on port 18823. Press Ctrl-C to stop.
+Nov 08, 2026 10:21:13 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@22:21:13.845
+PASS #1: TypeCheckerSnowcat                                       I@22:21:14.116
+ > Running Snowcat .::.                                           I@22:21:14.116
+ > Your types are purrfect!                                       I@22:21:14.635
+ > All expressions are typed                                      I@22:21:14.635
+PASS #2: ConfigurationPass                                        I@22:21:14.636
+  > Set the initialization predicate to q::init                   I@22:21:14.638
+  > Set the transition predicate to q::step                       I@22:21:14.638
+  > Set an invariant to q::inv                                    I@22:21:14.639
+PASS #3: DesugarerPass                                            I@22:21:14.642
+  > Desugaring...                                                 I@22:21:14.642
+PASS #4: InlinePass                                               I@22:21:14.649
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:21:14.649
+PASS #5: TemporalPass                                             I@22:21:14.701
+  > Rewriting temporal operators...                               I@22:21:14.701
+  > No temporal property specified, nothing to encode             I@22:21:14.701
+PASS #6: InlinePass                                               I@22:21:14.701
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:21:14.702
+PASS #7: PrimingPass                                              I@22:21:14.712
+  > Introducing q::initPrimed for q::init'                        I@22:21:14.713
+PASS #8: VCGen                                                    I@22:21:14.714
+  > Producing verification conditions from the invariant q::inv   I@22:21:14.714
+  > VCGen produced 1 verification condition(s)                    I@22:21:14.717
+PASS #9: PreprocessingPass                                        I@22:21:14.720
+  > Before preprocessing: unique renaming                         I@22:21:14.720
+ > Applying standard transformations:                             I@22:21:14.724
+  > PrimePropagation                                              I@22:21:14.724
+  > Desugarer                                                     I@22:21:14.726
+  > UniqueRenamer                                                 I@22:21:14.732
+  > Normalizer                                                    I@22:21:14.735
+  > SetMembershipSimplifier                                       I@22:21:14.741
+  > Keramelizer                                                   I@22:21:14.744
+  > After preprocessing: UniqueRenamer                            I@22:21:14.751
+PASS #10: TransitionFinderPass                                    I@22:21:14.756
+  > Found 1 initializing transitions                              I@22:21:14.769
+  > Found 15 transitions                                          I@22:21:14.789
+  > No constant initializer                                       I@22:21:14.790
+  > Applying unique renaming                                      I@22:21:14.790
+PASS #11: OptimizationPass                                        I@22:21:14.794
+ > Applying optimizations:                                        I@22:21:14.797
+  > ConstSimplifier                                               I@22:21:14.798
+  > ExprOptimizer                                                 I@22:21:14.807
+  > SetMembershipSimplifier                                       I@22:21:14.811
+  > ConstSimplifier                                               I@22:21:14.811
+PASS #12: AnalysisPass                                            I@22:21:14.819
+ > Marking skolemizable existentials and sets to be expanded...   I@22:21:14.821
+  > Skolemization                                                 I@22:21:14.822
+  > Expansion                                                     I@22:21:14.823
+  > Remove unused let-in defs                                     I@22:21:14.826
+ > Running analyzers...                                           I@22:21:14.830
+  > Introduced expression grades                                  I@22:21:14.834
+PASS #13: BoundedChecker                                          I@22:21:14.834
+State 0: Checking 1 state invariants                              I@22:21:15.069
+State 0: state invariant 0 holds.                                 I@22:21:15.073
+Step 0: picking a transition out of 1 transition(s)               I@22:21:15.075
+Step 1: Transition #0 is disabled                                 I@22:21:15.082
+State 1: Checking 1 state invariants                              I@22:21:15.105
+State 1: state invariant 0 holds.                                 I@22:21:15.106
+Step 1: Transition #3 is disabled                                 I@22:21:15.121
+Step 1: Transition #4 is disabled                                 I@22:21:15.141
+Step 1: Transition #5 is disabled                                 I@22:21:15.150
+Step 1: Transition #6 is disabled                                 I@22:21:15.161
+Step 1: Transition #8 is disabled                                 I@22:21:15.173
+Step 1: Transition #9 is disabled                                 I@22:21:15.180
+Step 1: Transition #10 is disabled                                I@22:21:15.197
+Step 1: Transition #11 is disabled                                I@22:21:15.210
+Step 1: Transition #12 is disabled                                I@22:21:15.218
+Step 1: Transition #13 is disabled                                I@22:21:15.225
+Step 1: Transition #14 is disabled                                I@22:21:15.234
+Step 1: picking a transition out of 2 transition(s)               I@22:21:15.234
+Step 2: Transition #0 is disabled                                 I@22:21:15.246
+State 2: Checking 1 state invariants                              I@22:21:15.255
+State 2: state invariant 0 holds.                                 I@22:21:15.255
+Step 2: Transition #4 is disabled                                 I@22:21:15.273
+Step 2: Transition #5 is disabled                                 I@22:21:15.279
+Step 2: Transition #8 is disabled                                 I@22:21:15.296
+Step 2: Transition #9 is disabled                                 I@22:21:15.302
+Step 2: Transition #10 is disabled                                I@22:21:15.321
+Step 2: Transition #11 is disabled                                I@22:21:15.333
+Step 2: Transition #12 is disabled                                I@22:21:15.341
+Step 2: Transition #13 is disabled                                I@22:21:15.347
+State 2: Checking 1 state invariants                              I@22:21:15.355
+State 2: state invariant 0 holds.                                 I@22:21:15.355
+Step 2: picking a transition out of 5 transition(s)               I@22:21:15.356
+Step 3: Transition #0 is disabled                                 I@22:21:15.370
+State 3: Checking 1 state invariants                              I@22:21:15.378
+State 3: state invariant 0 holds.                                 I@22:21:15.378
+Step 3: Transition #4 is disabled                                 I@22:21:15.395
+Step 3: Transition #5 is disabled                                 I@22:21:15.402
+Step 3: Transition #9 is disabled                                 I@22:21:15.427
+Step 3: Transition #10 is disabled                                I@22:21:15.439
+Step 3: Transition #11 is disabled                                I@22:21:15.451
+Step 3: Transition #12 is disabled                                I@22:21:15.461
+Step 3: Transition #13 is disabled                                I@22:21:15.469
+State 3: Checking 1 state invariants                              I@22:21:15.477
+State 3: state invariant 0 holds.                                 I@22:21:15.478
+Step 3: picking a transition out of 6 transition(s)               I@22:21:15.478
+Step 4: Transition #0 is disabled                                 I@22:21:15.492
+State 4: Checking 1 state invariants                              I@22:21:15.503
+State 4: state invariant 0 holds.                                 I@22:21:15.504
+Step 4: Transition #5 is disabled                                 I@22:21:15.538
+Step 4: Transition #9 is disabled                                 I@22:21:15.579
+Step 4: Transition #12 is disabled                                I@22:21:15.626
+Step 4: Transition #13 is disabled                                I@22:21:15.648
+State 4: Checking 1 state invariants                              I@22:21:15.658
+State 4: state invariant 0 holds.                                 I@22:21:15.659
+Step 4: picking a transition out of 9 transition(s)               I@22:21:15.660
+Step 5: Transition #0 is disabled                                 I@22:21:15.675
+State 5: Checking 1 state invariants                              I@22:21:15.688
+State 5: state invariant 0 holds.                                 I@22:21:15.689
+Step 5: Transition #9 is disabled                                 I@22:21:15.850
+State 5: Checking 1 state invariants                              I@22:21:15.932
+State 5: state invariant 0 holds.                                 I@22:21:15.961
+Step 5: Transition #13 is disabled                                I@22:21:16.020
+State 5: Checking 1 state invariants                              I@22:21:16.044
+State 5: state invariant 0 holds.                                 I@22:21:16.046
+Step 5: picking a transition out of 11 transition(s)              I@22:21:16.046
+Step 6: Transition #0 is disabled                                 I@22:21:16.064
+State 6: Checking 1 state invariants                              I@22:21:16.099
+State 6: state invariant 0 holds.                                 I@22:21:16.100
+State 6: Checking 1 state invariants                              I@22:21:16.423
+State 6: state invariant 0 holds.                                 I@22:21:16.521
+Step 6: Transition #13 is disabled                                I@22:21:16.694
+State 6: Checking 1 state invariants                              I@22:21:16.745
+State 6: state invariant 0 holds.                                 I@22:21:16.794
+Step 6: picking a transition out of 12 transition(s)              I@22:21:16.796
+Step 7: Transition #0 is disabled                                 I@22:21:16.814
+State 7: Checking 1 state invariants                              I@22:21:16.873
+State 7: state invariant 0 holds.                                 I@22:21:16.874
+State 7: Checking 1 state invariants                              I@22:21:17.540
+State 7: state invariant 0 holds.                                 I@22:21:17.724
+Step 7: Transition #13 is disabled                                I@22:21:18.156
+State 7: Checking 1 state invariants                              I@22:21:18.198
+State 7: state invariant 0 holds.                                 I@22:21:18.375
+Step 7: picking a transition out of 12 transition(s)              I@22:21:18.376
+Step 8: Transition #0 is disabled                                 I@22:21:18.395
+State 8: Checking 1 state invariants                              I@22:21:18.473
+State 8: state invariant 0 holds.                                 I@22:21:18.474
+State 8: Checking 1 state invariants                              I@22:21:19.826
+State 8: state invariant 0 holds.                                 I@22:21:20.422
+State 8: Checking 1 state invariants                              I@22:21:20.742
+State 8: state invariant 0 holds.                                 I@22:21:21.179
+Step 8: picking a transition out of 13 transition(s)              I@22:21:21.181
+Step 9: Transition #0 is disabled                                 I@22:21:21.198
+State 9: Checking 1 state invariants                              I@22:21:21.362
+State 9: state invariant 0 holds.                                 I@22:21:21.363
+State 9: Checking 1 state invariants                              I@22:21:23.978
+State 9: state invariant 0 holds.                                 I@22:21:25.491
+State 9: Checking 1 state invariants                              I@22:21:26.051
+State 9: state invariant 0 holds.                                 I@22:21:27.085
+Step 9: picking a transition out of 13 transition(s)              I@22:21:27.087
+Step 10: Transition #0 is disabled                                I@22:21:27.104
+State 10: Checking 1 state invariants                             I@22:21:27.349
+State 10: state invariant 0 holds.                                I@22:21:27.350
+State 10: Checking 1 state invariants                             I@22:21:29.332
+Check the trace in: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-21-11_8670871390453701884/violation1.tla, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-21-11_8670871390453701884/MCviolation1.out, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-21-11_8670871390453701884/violation1.json, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-21-11_8670871390453701884/violation1.itf.json I@22:21:31.353
+State 10: state invariant 0 violated.                             I@22:21:31.354
+Found 1 error(s)                                                  I@22:21:31.357
+The outcome is: Error                                             I@22:21:31.370
+An example execution:
+
+[State 0]
+{
+  clIntent: 0,
+  clSt: "none",
+  clVer: 0,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Idle"),
+  readIdx: Map("A" -> 0, "B" -> 0),
+  readRev: Map("A" -> 0, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 1]
+{
+  clIntent: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 1, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Claimed", "B" -> "Idle"),
+  readIdx: Map("A" -> 0, "B" -> 0),
+  readRev: Map("A" -> 0, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 2]
+{
+  clIntent: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 1, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Read", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 3]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 2, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Intended", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 4]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 2, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Landed", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 5]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 2, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Landed", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[State 6]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 2, "B" -> 0),
+  now: 30,
+  phase: Map("A" -> "Landed", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[State 7]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: true,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 0),
+  now: 30,
+  phase: Map("A" -> "Idle", "B" -> "Idle"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[State 8]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 3,
+  contDone: false,
+  crashed: true,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 3),
+  now: 30,
+  phase: Map("A" -> "Idle", "B" -> "TookOver"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[State 9]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 3,
+  contDone: false,
+  crashed: true,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 3),
+  now: 30,
+  phase: Map("A" -> "Idle", "B" -> "Confirmed"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[State 10]
+{
+  clIntent: 2,
+  clSt: "done",
+  clVer: 4,
+  contDone: true,
+  crashed: true,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 3),
+  now: 30,
+  phase: Map("A" -> "Idle", "B" -> "Answered"),
+  readIdx: Map("A" -> 1, "B" -> 0),
+  readRev: Map("A" -> 1, "B" -> 0),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> 2)
+}
+
+[violation] Found an issue (19909ms).
+error: found a counterexample

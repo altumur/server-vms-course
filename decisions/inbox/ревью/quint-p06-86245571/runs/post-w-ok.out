@@ -1,0 +1,278 @@
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-27-21_13892305193240520953
+# APALACHE version: 0.62.1 | build: a321771                       I@22:27:21.035
+Starting checker server on port 18823...                          I@22:27:21.037
+The Apalache server is running on port 18823. Press Ctrl-C to stop.
+Nov 08, 2026 10:27:22 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@22:27:22.996
+PASS #1: TypeCheckerSnowcat                                       I@22:27:23.293
+ > Running Snowcat .::.                                           I@22:27:23.293
+ > Your types are purrfect!                                       I@22:27:24.134
+ > All expressions are typed                                      I@22:27:24.134
+PASS #2: ConfigurationPass                                        I@22:27:24.135
+  > Set the initialization predicate to q::init                   I@22:27:24.138
+  > Set the transition predicate to q::step                       I@22:27:24.138
+  > Set an invariant to q::inv                                    I@22:27:24.138
+PASS #3: DesugarerPass                                            I@22:27:24.141
+  > Desugaring...                                                 I@22:27:24.141
+PASS #4: InlinePass                                               I@22:27:24.149
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:27:24.149
+PASS #5: TemporalPass                                             I@22:27:24.209
+  > Rewriting temporal operators...                               I@22:27:24.210
+  > No temporal property specified, nothing to encode             I@22:27:24.210
+PASS #6: InlinePass                                               I@22:27:24.210
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:27:24.210
+PASS #7: PrimingPass                                              I@22:27:24.219
+  > Introducing q::initPrimed for q::init'                        I@22:27:24.220
+PASS #8: VCGen                                                    I@22:27:24.224
+  > Producing verification conditions from the invariant q::inv   I@22:27:24.224
+  > VCGen produced 1 verification condition(s)                    I@22:27:24.227
+PASS #9: PreprocessingPass                                        I@22:27:24.229
+  > Before preprocessing: unique renaming                         I@22:27:24.229
+ > Applying standard transformations:                             I@22:27:24.233
+  > PrimePropagation                                              I@22:27:24.234
+  > Desugarer                                                     I@22:27:24.235
+  > UniqueRenamer                                                 I@22:27:24.237
+  > Normalizer                                                    I@22:27:24.241
+  > SetMembershipSimplifier                                       I@22:27:24.247
+  > Keramelizer                                                   I@22:27:24.251
+  > After preprocessing: UniqueRenamer                            I@22:27:24.258
+PASS #10: TransitionFinderPass                                    I@22:27:24.264
+  > Found 1 initializing transitions                              I@22:27:24.276
+  > Found 17 transitions                                          I@22:27:24.300
+  > No constant initializer                                       I@22:27:24.301
+  > Applying unique renaming                                      I@22:27:24.301
+PASS #11: OptimizationPass                                        I@22:27:24.305
+ > Applying optimizations:                                        I@22:27:24.308
+  > ConstSimplifier                                               I@22:27:24.309
+  > ExprOptimizer                                                 I@22:27:24.320
+  > SetMembershipSimplifier                                       I@22:27:24.324
+  > ConstSimplifier                                               I@22:27:24.325
+PASS #12: AnalysisPass                                            I@22:27:24.335
+ > Marking skolemizable existentials and sets to be expanded...   I@22:27:24.337
+  > Skolemization                                                 I@22:27:24.337
+  > Expansion                                                     I@22:27:24.339
+  > Remove unused let-in defs                                     I@22:27:24.342
+ > Running analyzers...                                           I@22:27:24.347
+  > Introduced expression grades                                  I@22:27:24.351
+PASS #13: BoundedChecker                                          I@22:27:24.351
+State 0: Checking 1 state invariants                              I@22:27:24.587
+State 0: state invariant 0 holds.                                 I@22:27:24.592
+Step 0: picking a transition out of 1 transition(s)               I@22:27:24.594
+State 1: Checking 1 state invariants                              I@22:27:24.627
+State 1: state invariant 0 holds.                                 I@22:27:24.628
+Step 1: Transition #3 is disabled                                 I@22:27:24.636
+Step 1: Transition #4 is disabled                                 I@22:27:24.645
+Step 1: Transition #6 is disabled                                 I@22:27:24.665
+Step 1: Transition #7 is disabled                                 I@22:27:24.676
+Step 1: Transition #8 is disabled                                 I@22:27:24.694
+Step 1: Transition #9 is disabled                                 I@22:27:24.706
+Step 1: Transition #10 is disabled                                I@22:27:24.713
+Step 1: Transition #11 is disabled                                I@22:27:24.726
+Step 1: Transition #12 is disabled                                I@22:27:24.740
+Step 1: Transition #13 is disabled                                I@22:27:24.749
+Step 1: Transition #14 is disabled                                I@22:27:24.760
+Step 1: Transition #15 is disabled                                I@22:27:24.766
+Step 1: Transition #16 is disabled                                I@22:27:24.775
+Step 1: picking a transition out of 3 transition(s)               I@22:27:24.775
+State 2: Checking 1 state invariants                              I@22:27:24.800
+State 2: state invariant 0 holds.                                 I@22:27:24.801
+Step 2: Transition #3 is disabled                                 I@22:27:24.806
+Step 2: Transition #6 is disabled                                 I@22:27:24.822
+Step 2: Transition #7 is disabled                                 I@22:27:24.829
+Step 2: Transition #8 is disabled                                 I@22:27:24.840
+Step 2: Transition #9 is disabled                                 I@22:27:24.849
+Step 2: Transition #10 is disabled                                I@22:27:24.855
+Step 2: Transition #11 is disabled                                I@22:27:24.867
+Step 2: Transition #12 is disabled                                I@22:27:24.875
+Step 2: Transition #14 is disabled                                I@22:27:24.889
+Step 2: Transition #15 is disabled                                I@22:27:24.894
+Step 2: picking a transition out of 6 transition(s)               I@22:27:24.902
+State 3: Checking 1 state invariants                              I@22:27:24.921
+State 3: state invariant 0 holds.                                 I@22:27:24.921
+Step 3: Transition #7 is disabled                                 I@22:27:24.947
+Step 3: Transition #8 is disabled                                 I@22:27:24.959
+Step 3: Transition #9 is disabled                                 I@22:27:24.970
+Step 3: Transition #10 is disabled                                I@22:27:24.976
+Step 3: Transition #11 is disabled                                I@22:27:24.990
+Step 3: Transition #12 is disabled                                I@22:27:24.999
+Step 3: Transition #14 is disabled                                I@22:27:25.017
+Step 3: Transition #15 is disabled                                I@22:27:25.024
+Step 3: picking a transition out of 8 transition(s)               I@22:27:25.033
+State 4: Checking 1 state invariants                              I@22:27:25.064
+State 4: state invariant 0 holds.                                 I@22:27:25.065
+Step 4: Transition #7 is disabled                                 I@22:27:25.107
+State 4: Checking 1 state invariants                              I@22:27:25.119
+State 4: state invariant 0 holds.                                 I@22:27:25.120
+Step 4: Transition #11 is disabled                                I@22:27:25.165
+Step 4: Transition #12 is disabled                                I@22:27:25.188
+Step 4: Transition #15 is disabled                                I@22:27:25.227
+Step 4: picking a transition out of 12 transition(s)              I@22:27:25.238
+State 5: Checking 1 state invariants                              I@22:27:25.266
+State 5: state invariant 0 holds.                                 I@22:27:25.267
+Step 5: Transition #7 is disabled                                 I@22:27:25.386
+State 5: Checking 1 state invariants                              I@22:27:25.411
+State 5: state invariant 0 holds.                                 I@22:27:25.412
+State 5: Checking 1 state invariants                              I@22:27:25.485
+Check the trace in: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-27-21_13892305193240520953/violation1.tla, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-27-21_13892305193240520953/MCviolation1.out, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-27-21_13892305193240520953/violation1.json, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-27-21_13892305193240520953/violation1.itf.json I@22:27:25.630
+State 5: state invariant 0 violated.                              I@22:27:25.631
+Found 1 error(s)                                                  I@22:27:25.632
+The outcome is: Error                                             I@22:27:25.647
+An example execution:
+
+[State 0]
+{
+  clAns: "none",
+  clBorn: 0,
+  clSt: "none",
+  clVer: 0,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 0),
+  nextBorn: 1,
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Idle"),
+  plan: Map("A" -> 0, "B" -> 0),
+  rowBorn: 0,
+  rowBy: "",
+  rowOn: false,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 1]
+{
+  clAns: "none",
+  clBorn: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 1, "B" -> 0),
+  nextBorn: 1,
+  now: 0,
+  phase: Map("A" -> "Claimed", "B" -> "Idle"),
+  plan: Map("A" -> 0, "B" -> 0),
+  rowBorn: 0,
+  rowBy: "",
+  rowOn: false,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 2]
+{
+  clAns: "none",
+  clBorn: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 1, "B" -> 0),
+  nextBorn: 1,
+  now: 0,
+  phase: Map("A" -> "Ready", "B" -> "Idle"),
+  plan: Map("A" -> 0, "B" -> 0),
+  rowBorn: 0,
+  rowBy: "",
+  rowOn: false,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 3]
+{
+  clAns: "none",
+  clBorn: 1,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 2, "B" -> 0),
+  nextBorn: 2,
+  now: 0,
+  phase: Map("A" -> "Intended", "B" -> "Idle"),
+  plan: Map("A" -> 1, "B" -> 0),
+  rowBorn: 0,
+  rowBy: "",
+  rowOn: false,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 4]
+{
+  clAns: "none",
+  clBorn: 1,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 2, "B" -> 0),
+  nextBorn: 2,
+  now: 0,
+  phase: Map("A" -> "Landed", "B" -> "Idle"),
+  plan: Map("A" -> 1, "B" -> 0),
+  rowBorn: 1,
+  rowBy: "K",
+  rowOn: true,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 5]
+{
+  clAns: "201",
+  clBorn: 1,
+  clSt: "done",
+  clVer: 3,
+  contDone: false,
+  crashed: false,
+  false409: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 2, "B" -> 0),
+  nextBorn: 2,
+  now: 0,
+  phase: Map("A" -> "Answered", "B" -> "Idle"),
+  plan: Map("A" -> 1, "B" -> 0),
+  rowBorn: 1,
+  rowBy: "K",
+  rowOn: true,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[violation] Found an issue (5049ms).
+error: found a counterexample

@@ -1,0 +1,165 @@
+An example execution:
+
+[State 0]
+{
+  clIntent: 0,
+  clSt: "none",
+  clVer: 0,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 0),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Idle"),
+  readIdx: Map("A" -> 0, "B" -> 0),
+  readRev: Map("A" -> 0, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 1]
+{
+  clIntent: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 1),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Claimed"),
+  readIdx: Map("A" -> 0, "B" -> 0),
+  readRev: Map("A" -> 0, "B" -> 0),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 2]
+{
+  clIntent: 0,
+  clSt: "pending",
+  clVer: 1,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 1),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Read"),
+  readIdx: Map("A" -> 0, "B" -> 1),
+  readRev: Map("A" -> 0, "B" -> 1),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 3]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: false,
+  landCount: 0,
+  myVer: Map("A" -> 0, "B" -> 2),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Intended"),
+  readIdx: Map("A" -> 0, "B" -> 1),
+  readRev: Map("A" -> 0, "B" -> 1),
+  rowBy: "base",
+  rowIdx: 1,
+  rowRev: 1,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 4]
+{
+  clIntent: 2,
+  clSt: "pending",
+  clVer: 2,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 2),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Landed"),
+  readIdx: Map("A" -> 0, "B" -> 1),
+  readRev: Map("A" -> 0, "B" -> 1),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 5]
+{
+  clIntent: 2,
+  clSt: "done",
+  clVer: 3,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 0,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 2),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Answered"),
+  readIdx: Map("A" -> 0, "B" -> 1),
+  readRev: Map("A" -> 0, "B" -> 1),
+  rowBy: "K",
+  rowIdx: 2,
+  rowRev: 2,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[State 6]
+{
+  clIntent: 2,
+  clSt: "done",
+  clVer: 3,
+  contDone: false,
+  crashed: false,
+  falseSuccess: false,
+  foreignCount: 1,
+  keyLanded: true,
+  landCount: 1,
+  myVer: Map("A" -> 0, "B" -> 2),
+  now: 0,
+  phase: Map("A" -> "Idle", "B" -> "Answered"),
+  readIdx: Map("A" -> 0, "B" -> 1),
+  readRev: Map("A" -> 0, "B" -> 1),
+  rowBy: "C",
+  rowIdx: 3,
+  rowRev: 3,
+  sawAt: Map("A" -> 0, "B" -> 0),
+  sawVer: Map("A" -> -1, "B" -> -1)
+}
+
+[violation] Found an issue (1470ms).
+error: found a counterexample

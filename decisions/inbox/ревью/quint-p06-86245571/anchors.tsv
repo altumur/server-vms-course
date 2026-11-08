@@ -1,0 +1,80 @@
+# anchor	file_at_pin	line	substring_must_appear_on_that_line
+06.9:28	Platform/06-console/spec/06.9-console.norms.md	28	are counted by the wall clocks of the leader and of the reaper
+06.9:390	Platform/06-console/spec/06.9-console.norms.md	390	One console per subsystem leads
+06.9:393	Platform/06-console/spec/06.9-console.norms.md	393	Right after taking it, rewrite
+06.9:399	Platform/06-console/spec/06.9-console.norms.md	399	The generation is the index of the epoch row
+06.9:318	Platform/06-console/spec/06.9-console.norms.md	318	carries exactly one row
+06.9:320	Platform/06-console/spec/06.9-console.norms.md	320	the console itself adds the generation guard
+06.9:321	Platform/06-console/spec/06.9-console.norms.md	321	of a success batch is `step_key
+06.9:405	Platform/06-console/spec/06.9-console.norms.md	405	now > created_at + OPS_RUN_MAX
+06.9:424	Platform/06-console/spec/06.9-console.norms.md	424	At OPS_STEP_TRIES failures
+06.9:440	Platform/06-console/spec/06.9-console.norms.md	440	Condition: there is no open step call
+06.9:451	Platform/06-console/spec/06.9-console.norms.md	451	so a late batch of the former leader runs into them
+06.9:494	Platform/06-console/spec/06.9-console.norms.md	494	now ≥ finished_at + OPS_KEEP
+06.9:508	Platform/06-console/spec/06.9-console.norms.md	508	The leader is on a process pause
+06.9:541	Platform/06-console/spec/06.9-console.norms.md	541	the ticket lives one call
+06.1:181	Platform/06-console/spec/06.1-console.norms.md	181	Term of a done claim
+06.1:182	Platform/06-console/spec/06.1-console.norms.md	182	Cleanup uses a local monotonic age
+06.1:183	Platform/06-console/spec/06.1-console.norms.md	183	a new observer counts it as fresh
+06.1:549	Platform/06-console/spec/06.1-console.norms.md	549	Start of a subscription
+06.1:553	Platform/06-console/spec/06.1-console.norms.md	553	the client reads all rows anew
+06.1:555	Platform/06-console/spec/06.1-console.norms.md	555	the number is evicted from the history
+06.1:707	Platform/06-console/spec/06.1-console.norms.md	707	Target write
+06.1:713	Platform/06-console/spec/06.1-console.norms.md	713	`POST` of a unit: step 8
+06.1:714	Platform/06-console/spec/06.1-console.norms.md	714	`PUT` of a unit: step 5a of «edit» keeps the intended `revision`
+06.1:715	Platform/06-console/spec/06.1-console.norms.md	715	a write of a table row: step 2a
+06.1:717	Platform/06-console/spec/06.1-console.norms.md	717	does not prove a target write
+06.1:719	Platform/06-console/spec/06.1-console.norms.md	719	For POST of a unit, neither an equal foreign
+06.1:763	Platform/06-console/spec/06.1-console.norms.md	763	preserves and reuses these same intended values
+06.1:767	Platform/06-console/spec/06.1-console.norms.md	767	its revision AND born match the complete saved intent
+06.1:772	Platform/06-console/spec/06.1-console.norms.md	772	keep pending for the continuation
+06.1:783	Platform/06-console/spec/06.1-console.norms.md	783	After an unknown outcome of a write
+06.1:830	Platform/06-console/spec/06.1-console.norms.md	830	5a. the key present: write into the claim the intended revision
+06.1:831	Platform/06-console/spec/06.1-console.norms.md	831	6. write {…former, …new, revision: former + 1}
+06.1:994	Platform/06-console/spec/06.1-console.norms.md	994	give(after, wait)
+06.1:999	Platform/06-console/spec/06.1-console.norms.md	999	3. reset 1, 2, 3
+06.1:1136	Platform/06-console/spec/06.1-console.norms.md	1136	the storage term of done claims
+06.2:202	Platform/06-console/spec/06.2-console.norms.md	202	for each row of units and tables
+06.2:215	Platform/06-console/spec/06.2-console.norms.md	215	Two consoles reseal the same thing
+06.5:255	Platform/06-console/spec/06.5-console.norms.md	255	a pass as a stream — the stream lane
+06.5:824	Platform/06-console/spec/06.5-console.norms.md	824	the callback lane — not smaller than the common one
+life:27	Platform/06-console/lifecycle.md	27	Start order
+life:91	Platform/06-console/lifecycle.md	91	Readiness
+life:92	Platform/06-console/lifecycle.md	92	SIGTERM
+const:5	Platform/06-console/forms/runtime-constants.tsv	5	CHANGES_TICK
+const:6	Platform/06-console/forms/runtime-constants.tsv	6	CHANGES_HISTORY
+const:20	Platform/06-console/forms/runtime-constants.tsv	20	OPS_STEP_WAIT
+const:21	Platform/06-console/forms/runtime-constants.tsv	21	OPS_STEP_TRIES
+const:22	Platform/06-console/forms/runtime-constants.tsv	22	OPS_TICK
+const:23	Platform/06-console/forms/runtime-constants.tsv	23	OPS_RUN_MAX
+const:24	Platform/06-console/forms/runtime-constants.tsv	24	OPS_KEEP
+const:32	Platform/06-console/forms/runtime-constants.tsv	32	CLAIM_TAKEOVER_AFTER
+const:33	Platform/06-console/forms/runtime-constants.tsv	33	DONE_ANSWER_KEEP
+turn:32	Platform/common/contracts/turn.md	32	TURN_TERM: 45
+turn:98	Platform/common/contracts/turn.md	98	is NOT a fence
+gate:596	Platform/common/contracts/gate-and-pass.md	596	stream
+gate:614	Platform/common/contracts/gate-and-pass.md	614	close:
+gate:644	Platform/common/contracts/gate-and-pass.md	644	stream:
+gate:645	Platform/common/contracts/gate-and-pass.md	645	PASS_WAIT_MAX: 9000
+mark:253	Platform/common/contracts/request-mark.md	253	An uncertain wall-clock jump
+adr-q6	decisions/0130-боевая-пригодность-сгенерированного-кода.md	188	Скачки часов (Q6)
+life:65	Platform/06-console/lifecycle.md	65	a manifest change
+06.1:754	Platform/06-console/spec/06.1-console.norms.md	754	except the continuation of a claim
+06.9:395	Platform/06-console/spec/06.9-console.norms.md	395	Every OPS_TICK
+06.9:397	Platform/06-console/spec/06.9-console.norms.md	397	on SIGTERM, give it back
+06.9:327	Platform/06-console/spec/06.9-console.norms.md	327	A refusal by the generation guard
+06.1:554	Platform/06-console/spec/06.1-console.norms.md	554	1. `after` is not a number of this insta
+06.1:760	Platform/06-console/spec/06.1-console.norms.md	760	8. prepare the row {id, revision: 1 | to
+06.1:764	Platform/06-console/spec/06.1-console.norms.md	764	write the row with cas "" | cas of the t
+06.1:766	Platform/06-console/spec/06.1-console.norms.md	766	toolarge: reliably nothing is written → 
+06.1:770	Platform/06-console/spec/06.1-console.norms.md	770	if the write of the result is not confir
+06.1:775	Platform/06-console/spec/06.1-console.norms.md	775	**Claim ownership.** The version of the 
+06.1:792	Platform/06-console/spec/06.1-console.norms.md	792	**Races.** Two consoles with one key: th
+06.9:313	Platform/06-console/spec/06.9-console.norms.md	313	**Step ticket** — a ticket of the gate-a
+06.9:422	Platform/06-console/spec/06.9-console.norms.md	422	8. When the call is over, re-read the ou
+06.9:423	Platform/06-console/spec/06.9-console.norms.md	423	If it is not: failures in a row + 1, the
+06.9:509	Platform/06-console/spec/06.9-console.norms.md	509	- A restart of the leader in the middle 
+gate:283	Platform/common/contracts/gate-and-pass.md	283	1. lane: reserve / monitor / feed / call
+turn:42	Platform/common/contracts/turn.md	42	1. Read `<turn>`. If it is unreadable, t
+06.9:415	Platform/06-console/spec/06.9-console.norms.md	415	1. If cancel, go to the round; if paused
+turn:45	Platform/common/contracts/turn.md	45	2. If there is no row, use `cas ""`. If 

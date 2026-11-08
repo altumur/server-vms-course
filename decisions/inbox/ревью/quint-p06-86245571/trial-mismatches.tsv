@@ -1,0 +1,9 @@
+id	expect	actual	cause	action
+put-false-success-noforeign	hold	error	Connection dropped at 1.3 s: server of the earlier killed trial pass was still handling the abandoned request; infrastructure, not model	rerun; run.py now retries Connection dropped (max 2, logged) and classifies deadlock separately
+ret-w-removed	violated	error	Connection dropped at 2.5 s; infrastructure	rerun
+post-mut-no-look	violated	hold	The mutant only removed look-first, but the step-5 route of the model also proves own row (06.1:754 keeps the same exception), so nothing changed	mutant replaced by no_proof (both routes lose the proof, 06.1:713,767)
+lead-mut-no-gen	violated	hold	allSafe (one outcome, outcome only by batch) rests on cas "" of the outcome; the generation guard is an additional layer not distinguished by that property	property too coarse for the guard: added noStaleLanding (ghost-tracked completed landing of a stale ticket); allSafe-without-guard kept as control lead-c-allsafe-nogen
+lead-mut-no-bump	violated	hold	Same as above; additionally the mutant set gen to epoch+1 without moving the epoch row, so the new leader's own batch was refused	mutant fixed (gen = current epoch; ghost bumps counted), checked with noStaleLanding
+feed-loop-ok-rate256-d1	hold	violated	No client fairness: a lazy client that delays poll across ticks is evicted at any rate; the counterexample was client laziness, not rate*D	assumption B: tick only when clients are attentive; a violation under B is then a pure rate result
+feed-loop-ok-rate128-d2	hold	violated	Same as feed-loop-ok-rate256-d1	Same
+reseal-noedit-lost	hold	violated	Apalache reports deadlock (all processes done, no enabled action) as a violation; run.py counted it as violated; trace ends without editLost=true	idle action added to all finite models; run.py classifies deadlock as its own outcome; no result was counted as violation from deadlock elsewhere (grep over the trial outputs: only this run)

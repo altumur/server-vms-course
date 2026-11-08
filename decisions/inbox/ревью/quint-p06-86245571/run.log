@@ -1,0 +1,176 @@
+21:49:40 put-false-success expect=violated actual=violated match=yes secs=14.2 why=06.1:714: foreign edit at the intended revision reads as own write
+21:50:08 put-at-most-once expect=violated actual=violated match=yes secs=42.3 why=landed then foreign edit, continuation re-applies (06.1:714,830)
+21:51:55 put-false-success-noforeign expect=hold actual=hold match=yes secs=134.7 why=without a foreign writer the equal revision can only be own
+21:52:22 put-at-most-once-noforeign expect=hold actual=hold match=yes secs=134.0 why=without a foreign writer: one landing
+21:52:37 put-w-done expect=violated actual=violated match=yes secs=15.0 why=done via continuation after unknown outcome reachable
+21:52:43 put-w-foreign expect=violated actual=violated match=yes secs=5.9 why=foreign edit and done reachable
+21:52:48 put-c-false expect=violated actual=violated match=yes secs=4.7 why=tool control: a false invariant is reported as violated
+21:53:06 put-mut-no-intent expect=violated actual=violated match=yes secs=18.3 why=no saved intent: continuation cannot prove own write, the edit lands twice
+21:53:37 put-repair-content expect=hold actual=hold match=yes secs=102.3 why=continuation also proves own content (control of the fix)
+21:53:42 put-w-takeover expect=violated actual=violated match=yes secs=5.2 why=takeover reachable
+21:53:49 put-w-land expect=violated actual=violated match=yes secs=6.3 why=own write reachable
+21:54:12 put-mut-no-guard expect=violated actual=violated match=yes secs=22.9 why=without the claim guard a late write of A lands after takeover
+21:54:37 put-mut-blind expect=violated actual=violated match=yes secs=25.6 why=continuation does not look at the target: the edit lands twice
+21:54:45 post-atMostOneLand expect=hold actual=hold match=yes secs=98.4 why=06.1:713,719,763,767: intent, cas, guard
+21:56:36 post-noFalseSuccess expect=hold actual=hold match=yes secs=118.9 why=06.1:713,719,763,767: intent, cas, guard
+21:57:24 post-noFalse409 expect=hold actual=hold match=yes secs=159.3 why=06.1:713,719,763,767: intent, cas, guard
+21:57:40 post-w-cont expect=violated actual=violated match=yes secs=16.0 why=done by continuation reachable
+21:57:46 post-w-ok expect=violated actual=violated match=yes secs=6.1 why=normal 201 reachable
+21:57:53 post-w-takeover expect=violated actual=violated match=yes secs=6.8 why=takeover reachable
+21:58:18 post-mut-no-intent expect=violated actual=violated match=yes secs=25.5 why=no intent: continuation cannot prove own row
+21:58:33 post-doneMatches expect=hold actual=hold match=yes secs=116.9 why=06.1:713,719,763,767: intent, cas, guard
+21:58:35 post-mut-rev-only expect=violated actual=violated match=yes secs=16.3 why=proof by revision only: a foreign row reads as own
+21:58:39 post-w-409 expect=violated actual=violated match=yes secs=6.1 why=409 exists for a foreign row reachable
+21:58:44 post-w-foreign expect=violated actual=violated match=yes secs=5.1 why=foreign row reachable
+21:58:50 post-c-false expect=violated actual=violated match=yes secs=6.1 why=tool control: a false invariant is reported as violated
+21:59:06 post-mut-no-proof expect=violated actual=violated match=yes secs=31.6 why=own row without the proof of 06.1:713,767 reads as foreign
+21:59:11 ret-bound-restarts expect=violated actual=violated match=yes secs=4.8 why=restarts reset the observation: cleanup can recede indefinitely
+21:59:15 ret-w-removed expect=violated actual=violated match=yes secs=4.4 why=cleanup reachable
+21:59:20 ret-mut-wall expect=violated actual=violated match=yes secs=4.3 why=wall age + forward jump: removal before KEEP of true time
+21:59:23 post-mut-fresh-born expect=violated actual=violated match=yes secs=33.1 why=takeover drops the intent: own row looks foreign
+21:59:25 clk-cancel-early-fwd expect=violated actual=violated match=yes secs=4.9 why=forward jump > RUN_MAX: time-based cancel at true age 0 (06.9:405)
+21:59:30 clk-reap-early-fwd expect=violated actual=violated match=yes secs=5.2 why=reaper wall jump deletes finished record early (06.9:494)
+21:59:37 clk-cancel-early-nojump expect=hold actual=hold match=yes secs=7.0 why=no jumps: not early
+21:59:44 clk-run-bounded-nojump expect=hold actual=hold match=yes secs=7.0 why=no jumps: bound holds under fair ticks
+21:59:52 clk-mono-reap-fwd expect=hold actual=hold match=yes secs=8.6 why=monotonic retention
+21:59:57 clk-mut-reap-nokeep expect=violated actual=violated match=yes secs=5.0 why=mutant reaps at once
+22:00:02 clk-w-reap expect=violated actual=violated match=yes secs=5.1 why=reap at KEEP reachable
+22:00:07 clk-w-early expect=violated actual=violated match=yes secs=5.0 why=witness of early cancel
+22:00:13 clk-c-false expect=violated actual=violated match=yes secs=5.8 why=tool control: a false invariant is reported as violated
+22:01:04 post-mut-no-guard expect=violated actual=hold match=no secs=100.5 why=no guard: late A write after B's write
+22:01:09 ret-min expect=hold actual=hold match=yes secs=5.4 why=06.1:183: first observation >= save time
+22:01:15 ret-bound-norestart expect=hold actual=hold match=yes secs=5.9 why=without restarts the fair cleanup removes in KEEP+slack
+22:01:20 ret-w-restart expect=violated actual=violated match=yes secs=4.3 why=restart reachable
+22:01:24 ret-c-false expect=violated actual=violated match=yes secs=4.1 why=tool control: a false invariant is reported as violated
+22:01:29 clk-step-depends-fwd expect=violated actual=violated match=yes secs=4.9 why=06.9:28 'neither a step ... depends' vs round+finish
+22:01:33 clk-run-bounded-back expect=violated actual=violated match=yes secs=4.9 why=backward jump postpones the deadline: roots held beyond OPS_RUN_MAX
+22:01:40 clk-reap-early-nojump expect=hold actual=hold match=yes secs=7.0 why=no jumps: KEEP respected
+22:01:49 clk-mono-early-fwd expect=hold actual=hold match=yes secs=8.5 why=monotonic age (repair of S13): jump irrelevant
+22:01:54 clk-mut-run-ge0 expect=violated actual=violated match=yes secs=4.8 why=mutant cancels regardless of RUN_MAX
+22:01:59 clk-w-cancel expect=violated actual=violated match=yes secs=5.0 why=cancel by true age reachable
+22:02:04 clk-w-ok-step expect=violated actual=violated match=yes secs=4.9 why=a step ok reachable
+22:02:09 clk-w-steps expect=violated actual=violated match=yes secs=4.9 why=steps cancelled by the clock
+22:02:46 lead-okOnce expect=hold actual=hold match=yes secs=153.0 why=06.9:318-321, 440-451: guard+cas
+22:04:36 lead-outcomeOnce expect=hold actual=hold match=yes secs=147.5 why=06.9:318-321, 440-451: guard+cas
+22:05:24 lead-outcomeOkIsBatch expect=hold actual=hold match=yes secs=157.6 why=06.9:318-321, 440-451: guard+cas
+22:05:34 lead-w-sigterm-handover expect=violated actual=violated match=yes secs=10.5 why=operation completes on another leader after SIGTERM with two calls
+22:05:42 lead-w-two-calls expect=violated actual=violated match=yes secs=7.5 why=two calls of one step key after handover
+22:06:15 lead-w-fail expect=violated actual=violated match=yes secs=33.0 why=fail not_run path
+22:06:20 lead-c-false expect=violated actual=violated match=yes secs=5.6 why=tool control: a false invariant is reported as violated
+22:06:30 lead-mut-no-cas expect=violated actual=violated match=yes secs=9.8 why=without cas two outcomes land
+22:06:56 lead-doneHasOutcome expect=hold actual=hold match=yes secs=139.7 why=06.9:318-321, 440-451: guard+cas
+22:07:02 lead-w-done-ok expect=violated actual=violated match=yes secs=6.5 why=normal completion reachable
+22:07:09 lead-w-sigterm-done expect=violated actual=violated match=yes secs=6.2 why=done with a process gone
+22:07:15 lead-w-cancel expect=violated actual=violated match=yes secs=6.1 why=cancel path
+22:07:22 lead-w-handover-gen expect=violated actual=violated match=yes secs=7.2 why=operation finished in generation 2
+22:07:23 lead-sim-allSafe expect=hold actual=hold match=yes secs=0.9 why=simulation: deeper traces
+22:07:29 lead-mut-finish-nocas expect=violated actual=violated match=yes secs=6.5 why=finish overwrites outcome
+22:07:30 lead-sim-noStale expect=hold actual=hold match=yes secs=0.8 why=simulation: deeper traces than the 12-step SMT bound (16 steps took 27 min)
+22:07:38 lead-mut-no-gen expect=violated actual=violated match=yes secs=7.6 why=without the guard a stale ticket lands after the bump
+22:07:45 feed-noskip expect=hold actual=hold match=yes secs=7.6 why=06.1:555,994-1002: eviction gives reset, not a gap
+22:07:51 feed-loop-rate257 expect=violated actual=violated match=yes secs=5.6 why=sustained rate*D > H: reset loop
+22:07:57 feed-loop-ok-rate128-d2 expect=hold actual=hold match=yes secs=6.3 why=boundary: rate*D <= H: no loop
+22:08:15 feed-loop-ok-burst expect=hold actual=hold match=yes secs=17.2 why=one burst, no restarts: one reset per client, no loop
+22:08:19 feed-w-reset expect=violated actual=violated match=yes secs=4.9 why=reset reachable
+22:08:24 feed-w-allread expect=violated actual=violated match=yes secs=5.0 why=both clients in re-read
+22:08:29 feed-c-false expect=violated actual=violated match=yes secs=4.6 why=tool control: a false invariant is reported as violated
+22:08:33 lane-callback expect=hold actual=hold match=yes secs=4.2 why=06.5:824: L_CB >= L_COMMON
+22:08:38 lane-c-cb-small expect=violated actual=violated match=yes secs=5.1 why=L_CB < L_COMMON breaks the admissibility (06.5:824 is needed)
+22:08:42 lane-w-pass expect=violated actual=violated match=yes secs=4.1 why=normal pass
+22:08:47 reseal-noedit-lost expect=hold actual=hold match=yes secs=5.0 why=06.2:215 cas of the read version
+22:08:52 reseal-w-edit expect=violated actual=violated match=yes secs=4.4 why=edit and reseal both happen
+22:08:56 reseal-c-false expect=violated actual=violated match=yes secs=4.2 why=tool control: a false invariant is reported as violated
+22:09:17 lead-noStaleLanding expect=hold actual=hold match=yes secs=166.2 why=06.9:320,399,508: a batch under an older generation does not land after the bump
+22:11:26 lead-c-allsafe-nogen expect=hold actual=hold match=yes secs=129.8 why=the at-most-one outcome rests on cas of the outcome; the generation guard is a second layer
+22:11:34 lead-mut-no-bump expect=violated actual=violated match=yes secs=7.5 why=without the epoch rewrite a former leader's batch still passes the guard
+22:11:50 feed-known expect=hold actual=hold match=yes secs=15.7 why=client knowledge sound
+22:11:56 feed-loop-rate129-d2 expect=violated actual=violated match=yes secs=6.1 why=sustained rate*D > H at D=2
+22:12:02 feed-loop-ok-rate256-d1 expect=hold actual=hold match=yes secs=6.4 why=boundary at D=1
+22:12:07 feed-storm-burst expect=violated actual=violated match=yes secs=5.0 why=both clients reset in one tick: synchronous full re-read
+22:12:12 feed-w-delivered expect=violated actual=violated match=yes secs=4.8 why=delivery reachable
+22:12:17 feed-mut-no-reset expect=violated actual=violated match=yes secs=4.8 why=without the reset the feed silently skips evicted numbers
+22:12:21 lane-deadlock expect=hold actual=hold match=yes secs=4.3 why=06.5:255: callback lane separate
+22:12:25 lane-mut-common expect=violated actual=violated match=yes secs=4.0 why=callbacks on the common lane deadlock
+22:12:29 lane-w-common-full expect=violated actual=violated match=yes secs=4.0 why=stalled readers can occupy the common lane and refuse operators
+22:12:33 lane-c-false expect=violated actual=violated match=yes secs=3.9 why=tool control: a false invariant is reported as violated
+22:12:37 reseal-w-done expect=violated actual=violated match=yes secs=4.4 why=both consoles complete
+22:12:42 reseal-mut-no-cas expect=violated actual=violated match=yes secs=4.3 why=reseal without cas loses a concurrent edit
+--- rerun of claim_put, claim_post, ops_leader with crash/SIGTERM ghosts (Sun Nov  8 22:17:09 UTC 2026) ---
+22:17:21 put-false-success expect=violated actual=violated match=yes secs=12.1 why=06.1:714: foreign edit at the intended revision reads as own write
+22:17:53 put-at-most-once expect=violated actual=violated match=yes secs=44.2 why=landed then foreign edit, continuation re-applies (06.1:714,830)
+22:19:35 put-false-success-noforeign expect=hold actual=hold match=yes secs=133.9 why=without a foreign writer the equal revision can only be own
+22:20:02 put-at-most-once-noforeign expect=hold actual=hold match=yes secs=129.2 why=without a foreign writer: one landing
+22:20:12 put-w-done expect=violated actual=violated match=yes secs=10.3 why=done via continuation after unknown outcome reachable
+22:20:15 put-w-foreign expect=violated actual=violated match=yes secs=2.1 why=foreign edit and done reachable
+22:20:16 put-w-land expect=violated actual=violated match=yes secs=1.4 why=own write reachable
+22:20:37 put-mut-no-guard expect=violated actual=violated match=yes secs=21.3 why=without the claim guard a late write of A lands after takeover
+22:20:55 put-mut-blind expect=violated actual=violated match=yes secs=18.2 why=continuation does not look at the target: the edit lands twice
+22:21:04 put-repair-content expect=hold actual=hold match=yes secs=88.9 why=continuation also proves own content (control of the fix)
+put-w-takeover: retry 1 after server Connection dropped
+post-noFalseSuccess: retry 1 after server Connection dropped
+22:21:06 post-noFalseSuccess expect=hold actual=error match=no secs=1.1 why=06.1:713,719,763,767: intent, cas, guard
+22:21:10 put-w-takeover expect=violated actual=violated match=yes secs=5.4 why=takeover reachable
+22:21:31 put-w-crash expect=violated actual=violated match=yes secs=20.9 why=done reachable after the executor crashed (life:92) while the claim was pending
+22:21:36 put-c-false expect=violated actual=violated match=yes secs=4.7 why=tool control: a false invariant is reported as violated
+22:21:53 put-mut-no-intent expect=violated actual=violated match=yes secs=17.0 why=no saved intent: continuation cannot prove own write, the edit lands twice
+22:22:53 post-doneMatches expect=hold actual=hold match=yes secs=106.9 why=06.1:713,719,763,767: intent, cas, guard
+22:22:59 post-w-409 expect=violated actual=violated match=yes secs=6.4 why=409 exists for a foreign row reachable
+22:23:05 post-w-foreign expect=violated actual=violated match=yes secs=5.3 why=foreign row reachable
+22:23:31 post-w-crash expect=violated actual=violated match=yes secs=26.7 why=201 reachable after the executor crashed while the claim was pending
+22:23:43 post-atMostOneLand expect=hold actual=hold match=yes secs=110.3 why=06.1:713,719,763,767: intent, cas, guard
+22:23:56 post-mut-no-intent expect=violated actual=violated match=yes secs=24.9 why=no intent: continuation cannot prove own row
+22:24:13 post-mut-rev-only expect=violated actual=violated match=yes secs=16.5 why=proof by revision only: a foreign row reads as own
+22:24:48 post-mut-no-proof expect=violated actual=violated match=yes secs=35.4 why=own row without the proof of 06.1:713,767 reads as foreign
+22:27:04 post-noFalse409 expect=hold actual=hold match=yes secs=200.5 why=06.1:713,719,763,767: intent, cas, guard
+22:27:19 post-w-cont expect=violated actual=violated match=yes secs=15.6 why=done by continuation reachable
+22:27:23 lead-okOnce expect=hold actual=hold match=yes secs=155.1 why=06.9:318-321, 440-451: guard+cas
+22:27:26 post-w-ok expect=violated actual=violated match=yes secs=6.2 why=normal 201 reachable
+22:27:32 post-w-takeover expect=violated actual=violated match=yes secs=6.0 why=takeover reachable
+22:27:38 post-c-false expect=violated actual=violated match=yes secs=6.1 why=tool control: a false invariant is reported as violated
+22:28:15 post-mut-fresh-born expect=violated actual=violated match=yes secs=37.4 why=takeover drops the intent: own row looks foreign
+22:29:46 post-mut-no-guard expect=violated actual=hold match=no secs=91.4 why=no guard: late A write after B's write
+22:30:04 lead-outcomeOkIsBatch expect=hold actual=hold match=yes secs=161.1 why=06.9:318-321, 440-451: guard+cas
+22:30:18 lead-w-sigterm-handover expect=violated actual=violated match=yes secs=13.3 why=operation completes on another leader after SIGTERM with two calls
+22:30:26 lead-w-two-calls expect=violated actual=violated match=yes secs=7.9 why=two calls of one step key after handover
+22:31:01 lead-w-fail expect=violated actual=violated match=yes secs=35.6 why=fail not_run path
+22:31:07 lead-c-false expect=violated actual=violated match=yes secs=5.8 why=tool control: a false invariant is reported as violated
+22:31:17 lead-mut-no-cas expect=violated actual=violated match=yes secs=10.1 why=without cas two outcomes land
+22:32:36 lead-outcomeOnce expect=hold actual=hold match=yes secs=169.2 why=06.9:318-321, 440-451: guard+cas
+22:34:14 lead-noStaleLanding expect=hold actual=hold match=yes secs=176.7 why=06.9:320,399,508: a batch under an older generation does not land after the bump
+22:35:13 lead-doneHasOutcome expect=hold actual=hold match=yes secs=157.7 why=06.9:318-321, 440-451: guard+cas
+22:35:20 lead-w-done-ok expect=violated actual=violated match=yes secs=6.7 why=normal completion reachable
+22:35:27 lead-w-sigterm-done expect=violated actual=violated match=yes secs=6.7 why=done with a process gone
+22:35:33 lead-w-cancel expect=violated actual=violated match=yes secs=6.2 why=cancel path
+22:35:40 lead-w-handover-gen expect=violated actual=violated match=yes secs=7.4 why=operation finished in generation 2
+22:35:41 lead-sim-allSafe expect=hold actual=hold match=yes secs=0.9 why=simulation: deeper traces
+22:35:48 lead-mut-finish-nocas expect=violated actual=violated match=yes secs=6.7 why=finish overwrites outcome
+22:35:49 lead-sim-noStale expect=hold actual=hold match=yes secs=0.9 why=simulation: deeper traces than the 12-step SMT bound (16 steps took 27 min)
+22:35:57 lead-mut-no-gen expect=violated actual=violated match=yes secs=8.0 why=without the guard a stale ticket lands after the bump
+22:36:41 lead-c-allsafe-nogen expect=hold actual=hold match=yes secs=147.6 why=the at-most-one outcome rests on cas of the outcome; the generation guard is a second layer
+22:36:49 lead-mut-no-bump expect=violated actual=violated match=yes secs=7.6 why=without the epoch rewrite a former leader's batch still passes the guard
+22:39:00 post-noFalseSuccess expect=hold actual=hold match=yes secs=102.7 why=06.1:713,719,763,767: intent, cas, guard
+--- rerun of ops_leader with handedOver ghost (Sun Nov  8 22:39:53 UTC 2026) ---
+22:42:50 lead-okOnce expect=hold actual=hold match=yes secs=164.5 why=06.9:318-321, 440-451: guard+cas
+22:43:03 lead-outcomeOnce expect=hold actual=hold match=yes secs=177.4 why=06.9:318-321, 440-451: guard+cas
+22:45:35 lead-doneHasOutcome expect=hold actual=hold match=yes secs=152.0 why=06.9:318-321, 440-451: guard+cas
+22:45:36 lead-outcomeOkIsBatch expect=hold actual=hold match=yes secs=165.9 why=06.9:318-321, 440-451: guard+cas
+22:45:39 lead-w-done-ok expect=violated actual=violated match=yes secs=3.3 why=normal completion reachable
+lead-w-sigterm-done: retry 1 after server Connection dropped
+22:45:48 lead-w-sigterm-done expect=violated actual=violated match=yes secs=7.3 why=done with a process gone
+22:45:50 lead-w-sigterm-handover expect=violated actual=violated match=yes secs=13.4 why=operation completes on another leader after SIGTERM with two calls
+22:45:54 lead-w-two-calls expect=violated actual=violated match=yes secs=4.1 why=two calls of one step key after handover
+22:45:55 lead-w-cancel expect=violated actual=violated match=yes secs=6.6 why=cancel path
+lead-w-fail: retry 1 after server Connection dropped
+22:46:03 lead-w-handover-gen expect=violated actual=violated match=yes secs=8.4 why=operation finished in generation 2
+22:46:04 lead-sim-allSafe expect=hold actual=hold match=yes secs=0.9 why=simulation: deeper traces
+22:46:11 lead-mut-finish-nocas expect=violated actual=violated match=yes secs=7.1 why=finish overwrites outcome
+22:46:12 lead-sim-noStale expect=hold actual=hold match=yes secs=0.9 why=simulation: deeper traces than the 12-step SMT bound (16 steps took 27 min)
+22:46:20 lead-mut-no-gen expect=violated actual=violated match=yes secs=8.1 why=without the guard a stale ticket lands after the bump
+22:46:33 lead-w-fail expect=violated actual=violated match=yes secs=32.9 why=fail not_run path
+22:46:39 lead-c-false expect=violated actual=violated match=yes secs=5.9 why=tool control: a false invariant is reported as violated
+22:46:48 lead-mut-no-cas expect=violated actual=violated match=yes secs=9.6 why=without cas two outcomes land
+22:49:38 lead-noStaleLanding expect=hold actual=hold match=yes secs=170.0 why=06.9:320,399,508: a batch under an older generation does not land after the bump
+22:52:03 lead-c-allsafe-nogen expect=hold actual=hold match=yes secs=144.8 why=the at-most-one outcome rests on cas of the outcome; the generation guard is a second layer
+22:52:11 lead-mut-no-bump expect=violated actual=violated match=yes secs=7.9 why=without the epoch rewrite a former leader's batch still passes the guard
+--- added witness lead-w-second-call (Sun Nov  8 23:09:45 UTC 2026): only a new val in ops_leader.qnt, other ops_leader runs not repeated ---
+23:09:53 lead-w-second-call expect=violated actual=violated match=yes secs=7.1 why=after SIGTERM of the holder the other leader issues its own call and the step ends ok

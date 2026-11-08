@@ -1,0 +1,304 @@
+An example execution:
+
+[State 0]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 0,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 0,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 1,
+      events: 0,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "",
+      myTurn: Map("L1" -> 0, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 0, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 0
+    }
+}
+
+[State 1]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 0,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 0,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 1,
+      events: 0,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "L1",
+      myTurn: Map("L1" -> 1, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 0, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 1
+    }
+}
+
+[State 2]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 0,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 2,
+      events: 0,
+      gen: Map("L1" -> 2, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "L1",
+      myTurn: Map("L1" -> 1, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 0, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 1
+    }
+}
+
+[State 3]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 2, "L2" -> 0),
+      callsTotal: 1,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 2,
+      events: 0,
+      gen: Map("L1" -> 2, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "L1",
+      myTurn: Map("L1" -> 1, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 1
+    }
+}
+
+[State 4]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 1,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> true, "L2" -> false),
+      epoch: 2,
+      events: 0,
+      gen: Map("L1" -> 2, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "L1",
+      myTurn: Map("L1" -> 1, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 1
+    }
+}
+
+[State 5]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 2, "L2" -> 0),
+      callsTotal: 2,
+      cancelFlag: false,
+      draining: Map("L1" -> false, "L2" -> false),
+      ended: Map("L1" -> true, "L2" -> false),
+      epoch: 2,
+      events: 0,
+      gen: Map("L1" -> 2, "L2" -> 0),
+      giveUps: 0,
+      handedOver: false,
+      holder: "L1",
+      myTurn: Map("L1" -> 1, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 1
+    }
+}
+
+[State 6]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 2, "L2" -> 0),
+      callsTotal: 2,
+      cancelFlag: false,
+      draining: Map("L1" -> true, "L2" -> false),
+      ended: Map("L1" -> true, "L2" -> false),
+      epoch: 2,
+      events: 1,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 1,
+      handedOver: false,
+      holder: "",
+      myTurn: Map("L1" -> 0, "L2" -> 0),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "L1",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 2
+    }
+}
+
+[State 7]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 2, "L2" -> 0),
+      callsTotal: 2,
+      cancelFlag: false,
+      draining: Map("L1" -> true, "L2" -> false),
+      ended: Map("L1" -> true, "L2" -> false),
+      epoch: 2,
+      events: 1,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 1,
+      handedOver: false,
+      holder: "L2",
+      myTurn: Map("L1" -> 0, "L2" -> 3),
+      okLands: 0,
+      opSt: "running",
+      outcome: "none",
+      outcomeWrites: 0,
+      pendingGiveUpBy: "L1",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 3
+    }
+}
+
+[State 8]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 2,
+      cancelFlag: false,
+      draining: Map("L1" -> true, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 2,
+      events: 1,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 1,
+      handedOver: false,
+      holder: "L2",
+      myTurn: Map("L1" -> 0, "L2" -> 3),
+      okLands: 1,
+      opSt: "running",
+      outcome: "ok",
+      outcomeWrites: 1,
+      pendingGiveUpBy: "L1",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 3
+    }
+}
+
+[State 9]
+{
+  s:
+    {
+      alive: Map("L1" -> true, "L2" -> true),
+      bumps: 1,
+      callGen: Map("L1" -> 0, "L2" -> 0),
+      callsTotal: 2,
+      cancelFlag: false,
+      draining: Map("L1" -> true, "L2" -> false),
+      ended: Map("L1" -> false, "L2" -> false),
+      epoch: 2,
+      events: 1,
+      gen: Map("L1" -> 0, "L2" -> 0),
+      giveUps: 1,
+      handedOver: true,
+      holder: "L2",
+      myTurn: Map("L1" -> 0, "L2" -> 3),
+      okLands: 1,
+      opSt: "done",
+      outcome: "ok",
+      outcomeWrites: 1,
+      pendingGiveUpBy: "L1",
+      staleLanded: false,
+      ticketBump: Map("L1" -> 1, "L2" -> 0),
+      tries: Map("L1" -> 0, "L2" -> 0),
+      turnVer: 3
+    }
+}
+
+[violation] Found an issue (12608ms).
+error: found a counterexample

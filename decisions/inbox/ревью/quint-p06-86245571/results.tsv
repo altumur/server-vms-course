@@ -1,0 +1,101 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+put-false-success	claim_put	noFalseSuccess	property	apalache (bounded)	12	0		violated	violated	yes	12.1	runs/put-false-success.out
+put-at-most-once	claim_put	atMostOneLand	property	apalache (bounded)	14	0		violated	violated	yes	44.2	runs/put-at-most-once.out
+put-false-success-noforeign	claim_put	noFalseSuccess	control	apalache (bounded)	14	0	FOREIGN_MAX=0	hold	hold	yes	133.9	runs/put-false-success-noforeign.out
+put-at-most-once-noforeign	claim_put	atMostOneLand	control	apalache (bounded)	14	0	FOREIGN_MAX=0	hold	hold	yes	129.2	runs/put-at-most-once-noforeign.out
+put-repair-content	claim_put	noFalseSuccess	control	apalache (bounded)	14	0	REPAIR=true	hold	hold	yes	88.9	runs/put-repair-content.out
+put-w-done	claim_put	w_done_after_unknown	witness	apalache (bounded)	14	0		violated	violated	yes	10.3	runs/put-w-done.out
+put-w-takeover	claim_put	w_takeover_reached	witness	apalache (bounded)	8	0		violated	violated	yes	5.4	runs/put-w-takeover.out
+put-w-foreign	claim_put	w_foreign_seen	witness	apalache (bounded)	14	0		violated	violated	yes	2.1	runs/put-w-foreign.out
+put-w-crash	claim_put	w_done_after_crash	witness	apalache (bounded)	14	0	FOREIGN_MAX=0	violated	violated	yes	20.9	runs/put-w-crash.out
+put-w-land	claim_put	w_land	witness	apalache (bounded)	6	0		violated	violated	yes	1.4	runs/put-w-land.out
+put-c-false	claim_put	c_false	control	apalache (bounded)	2	0		violated	violated	yes	4.7	runs/put-c-false.out
+put-mut-no-guard	claim_put	atMostOneLand	mutant	apalache (bounded)	14	0	"FOREIGN_MAX=0;MUT=""no_guard"""	violated	violated	yes	21.3	runs/put-mut-no-guard.out
+put-mut-no-intent	claim_put	atMostOneLand	mutant	apalache (bounded)	14	0	"FOREIGN_MAX=0;MUT=""no_intent"""	violated	violated	yes	17.0	runs/put-mut-no-intent.out
+put-mut-blind	claim_put	atMostOneLand	mutant	apalache (bounded)	14	0	"FOREIGN_MAX=0;MUT=""takeover_blind"""	violated	violated	yes	18.2	runs/put-mut-blind.out
+post-w-cont	claim_post	w_done_cont	witness	apalache (bounded)	12	0		violated	violated	yes	15.6	runs/post-w-cont.out
+post-w-409	claim_post	w_409_foreign	witness	apalache (bounded)	8	0		violated	violated	yes	6.4	runs/post-w-409.out
+post-w-ok	claim_post	w_done_ok	witness	apalache (bounded)	8	0		violated	violated	yes	6.2	runs/post-w-ok.out
+post-w-foreign	claim_post	w_foreign_row	witness	apalache (bounded)	3	0		violated	violated	yes	5.3	runs/post-w-foreign.out
+post-w-takeover	claim_post	w_takeover	witness	apalache (bounded)	8	0		violated	violated	yes	6.0	runs/post-w-takeover.out
+post-w-crash	claim_post	w_done_after_crash	witness	apalache (bounded)	14	0		violated	violated	yes	26.7	runs/post-w-crash.out
+post-c-false	claim_post	c_false	control	apalache (bounded)	2	0		violated	violated	yes	6.1	runs/post-c-false.out
+post-mut-no-intent	claim_post	noFalse409	mutant	apalache (bounded)	14	0	"MUT=""no_intent"""	violated	violated	yes	24.9	runs/post-mut-no-intent.out
+post-mut-fresh-born	claim_post	noFalse409	mutant	apalache (bounded)	14	0	"MUT=""fresh_born"""	violated	violated	yes	37.4	runs/post-mut-fresh-born.out
+post-mut-rev-only	claim_post	noFalseSuccess	mutant	apalache (bounded)	14	0	"MUT=""rev_only"""	violated	violated	yes	16.5	runs/post-mut-rev-only.out
+post-mut-no-guard	claim_post	atMostOneLand	mutant	apalache (bounded)	14	0	"MUT=""no_guard"""	violated	hold	no	91.4	runs/post-mut-no-guard.out
+post-mut-no-proof	claim_post	noFalse409	mutant	apalache (bounded)	14	0	"MUT=""no_proof"""	violated	violated	yes	35.4	runs/post-mut-no-proof.out
+ret-min	claim_retention	removedNotEarly	property	apalache (bounded)	10	0		hold	hold	yes	5.4	runs/ret-min.out
+ret-bound-restarts	claim_retention	removedInBound	property	apalache (bounded)	12	0		violated	violated	yes	4.8	runs/ret-bound-restarts.out
+ret-bound-norestart	claim_retention	removedInBound	control	apalache (bounded)	12	0	MAX_RESTARTS=0	hold	hold	yes	5.9	runs/ret-bound-norestart.out
+ret-w-removed	claim_retention	w_removed	witness	apalache (bounded)	8	0	MAX_RESTARTS=0	violated	violated	yes	4.4	runs/ret-w-removed.out
+ret-w-restart	claim_retention	w_restart_used	witness	apalache (bounded)	8	0		violated	violated	yes	4.3	runs/ret-w-restart.out
+ret-mut-wall	claim_retention	removedNotEarly	mutant	apalache (bounded)	10	0	"MUT=""wall_age"";WALL_JUMP=86400"	violated	violated	yes	4.3	runs/ret-mut-wall.out
+ret-c-false	claim_retention	c_false	control	apalache (bounded)	2	0		violated	violated	yes	4.1	runs/ret-c-false.out
+clk-cancel-early-fwd	ops_clock	cancelNotEarly	property	apalache (bounded)	8	0	JUMPS=Set(86405)	violated	violated	yes	4.9	runs/clk-cancel-early-fwd.out
+clk-step-depends-fwd	ops_clock	stepNotClockCancelled	property	apalache (bounded)	8	0	JUMPS=Set(86405)	violated	violated	yes	4.9	runs/clk-step-depends-fwd.out
+clk-reap-early-fwd	ops_clock	reapNotEarly	property	apalache (bounded)	10	0	JUMPS=Set(86405);MAX_JUMPS=1	violated	violated	yes	5.2	runs/clk-reap-early-fwd.out
+clk-run-bounded-back	ops_clock	runBounded	property	apalache (bounded)	12	0	JUMPS=Set(-86400)	violated	violated	yes	4.9	runs/clk-run-bounded-back.out
+clk-cancel-early-nojump	ops_clock	cancelNotEarly	control	apalache (bounded)	12	0	MAX_JUMPS=0	hold	hold	yes	7.0	runs/clk-cancel-early-nojump.out
+clk-reap-early-nojump	ops_clock	reapNotEarly	control	apalache (bounded)	12	0	MAX_JUMPS=0	hold	hold	yes	7.0	runs/clk-reap-early-nojump.out
+clk-run-bounded-nojump	ops_clock	runBounded	control	apalache (bounded)	12	0	MAX_JUMPS=0	hold	hold	yes	7.0	runs/clk-run-bounded-nojump.out
+clk-mono-early-fwd	ops_clock	cancelNotEarly	control	apalache (bounded)	12	0	JUMPS=Set(86405);MONO=true	hold	hold	yes	8.5	runs/clk-mono-early-fwd.out
+clk-mono-reap-fwd	ops_clock	reapNotEarly	control	apalache (bounded)	12	0	JUMPS=Set(86405);MONO=true	hold	hold	yes	8.6	runs/clk-mono-reap-fwd.out
+clk-mut-run-ge0	ops_clock	cancelNotEarly	mutant	apalache (bounded)	8	0	"MAX_JUMPS=0;MUT=""run_ge0"""	violated	violated	yes	4.8	runs/clk-mut-run-ge0.out
+clk-mut-reap-nokeep	ops_clock	reapNotEarly	mutant	apalache (bounded)	10	0	"MAX_JUMPS=0;MUT=""reap_nokeep"""	violated	violated	yes	5.0	runs/clk-mut-reap-nokeep.out
+clk-w-cancel	ops_clock	w_cancel_by_time	witness	apalache (bounded)	10	0	MAX_JUMPS=0	violated	violated	yes	5.0	runs/clk-w-cancel.out
+clk-w-reap	ops_clock	w_reap	witness	apalache (bounded)	12	0	MAX_JUMPS=0	violated	violated	yes	5.1	runs/clk-w-reap.out
+clk-w-ok-step	ops_clock	w_ok_step	witness	apalache (bounded)	6	0	MAX_JUMPS=0	violated	violated	yes	4.9	runs/clk-w-ok-step.out
+clk-w-early	ops_clock	w_early_cancel	witness	apalache (bounded)	6	0	JUMPS=Set(86405)	violated	violated	yes	5.0	runs/clk-w-early.out
+clk-w-steps	ops_clock	w_steps_cancelled	witness	apalache (bounded)	8	0	JUMPS=Set(86405)	violated	violated	yes	4.9	runs/clk-w-steps.out
+clk-c-false	ops_clock	c_false	control	apalache (bounded)	2	0		violated	violated	yes	5.8	runs/clk-c-false.out
+lead-w-done-ok	ops_leader	w_done_ok	witness	apalache (bounded)	10	0		violated	violated	yes	3.3	runs/lead-w-done-ok.out
+lead-w-sigterm-handover	ops_leader	w_after_sigterm_handover	witness	apalache (bounded)	16	0		violated	violated	yes	13.4	runs/lead-w-sigterm-handover.out
+lead-w-second-call	ops_leader	w_handover_by_second_call	witness	apalache (bounded)	16	0		violated	violated	yes	7.1	runs/lead-w-second-call.out
+lead-w-sigterm-done	ops_leader	w_sigterm_then_done	witness	apalache (bounded)	14	0		violated	violated	yes	7.3	runs/lead-w-sigterm-done.out
+lead-w-two-calls	ops_leader	w_two_calls	witness	apalache (bounded)	16	0		violated	violated	yes	4.1	runs/lead-w-two-calls.out
+lead-w-cancel	ops_leader	w_cancel	witness	apalache (bounded)	8	0		violated	violated	yes	6.6	runs/lead-w-cancel.out
+lead-w-fail	ops_leader	w_fail	witness	apalache (bounded)	14	0		violated	violated	yes	32.9	runs/lead-w-fail.out
+lead-w-handover-gen	ops_leader	w_handover_gen	witness	apalache (bounded)	14	0		violated	violated	yes	8.4	runs/lead-w-handover-gen.out
+lead-c-false	ops_leader	c_false	control	apalache (bounded)	2	0		violated	violated	yes	5.9	runs/lead-c-false.out
+lead-sim-allSafe	ops_leader	allSafe	property	sim	40	3000		hold	hold	yes	0.9	runs/lead-sim-allSafe.out
+lead-mut-no-cas	ops_leader	outcomeOnce	mutant	apalache (bounded)	16	0	"MUT=""no_outcome_cas"""	violated	violated	yes	9.6	runs/lead-mut-no-cas.out
+lead-mut-finish-nocas	ops_leader	outcomeOnce	mutant	apalache (bounded)	16	0	"MUT=""finish_no_cancel_cas"""	violated	violated	yes	7.1	runs/lead-mut-finish-nocas.out
+lead-noStaleLanding	ops_leader	noStaleLanding	property	apalache (bounded)	12	0		hold	hold	yes	170.0	runs/lead-noStaleLanding.out
+lead-sim-noStale	ops_leader	noStaleLanding	property	sim	40	3000		hold	hold	yes	0.9	runs/lead-sim-noStale.out
+lead-c-allsafe-nogen	ops_leader	allSafe	control	apalache (bounded)	16	0	"MUT=""no_gen_guard"""	hold	hold	yes	144.8	runs/lead-c-allsafe-nogen.out
+lead-mut-no-gen	ops_leader	noStaleLanding	mutant	apalache (bounded)	16	0	"MUT=""no_gen_guard"""	violated	violated	yes	8.1	runs/lead-mut-no-gen.out
+lead-mut-no-bump	ops_leader	noStaleLanding	mutant	apalache (bounded)	16	0	"MUT=""no_bump"""	violated	violated	yes	7.9	runs/lead-mut-no-bump.out
+feed-noskip	feed	noSilentSkip	property	apalache (bounded)	12	0	"MODE=""burst"""	hold	hold	yes	7.6	runs/feed-noskip.out
+feed-known	feed	knownSound	property	apalache (bounded)	12	0		hold	hold	yes	15.7	runs/feed-known.out
+feed-loop-rate257	feed	noResetLoop	property	apalache (bounded)	14	0	D=1;RATE=257	violated	violated	yes	5.6	runs/feed-loop-rate257.out
+feed-loop-rate129-d2	feed	noResetLoop	property	apalache (bounded)	14	0	D=2;RATE=129	violated	violated	yes	6.1	runs/feed-loop-rate129-d2.out
+feed-loop-ok-rate128-d2	feed	noResetLoop	control	apalache (bounded)	14	0	D=2;RATE=128	hold	hold	yes	6.3	runs/feed-loop-ok-rate128-d2.out
+feed-loop-ok-rate256-d1	feed	noResetLoop	control	apalache (bounded)	14	0	D=1;RATE=256	hold	hold	yes	6.4	runs/feed-loop-ok-rate256-d1.out
+feed-loop-ok-burst	feed	noResetLoop	control	apalache (bounded)	14	0	"BURST=257;MODE=""burst"";RESTARTS_MAX=0"	hold	hold	yes	17.2	runs/feed-loop-ok-burst.out
+feed-storm-burst	feed	noStorm	property	apalache (bounded)	8	0	"BURST=257;MODE=""burst"""	violated	violated	yes	5.0	runs/feed-storm-burst.out
+feed-w-reset	feed	w_reset	witness	apalache (bounded)	6	0	"MODE=""burst"""	violated	violated	yes	4.9	runs/feed-w-reset.out
+feed-w-delivered	feed	w_delivered	witness	apalache (bounded)	6	0	RATE=1	violated	violated	yes	4.8	runs/feed-w-delivered.out
+feed-w-allread	feed	w_all_read	witness	apalache (bounded)	8	0	"MODE=""burst"""	violated	violated	yes	5.0	runs/feed-w-allread.out
+feed-mut-no-reset	feed	noSilentSkip	mutant	apalache (bounded)	10	0	"MODE=""burst"";MUT=""no_reset"""	violated	violated	yes	4.8	runs/feed-mut-no-reset.out
+feed-c-false	feed	c_false	control	apalache (bounded)	2	0		violated	violated	yes	4.6	runs/feed-c-false.out
+lane-deadlock	lanes	noDeadlock	property	apalache (bounded)	8	0		hold	hold	yes	4.3	runs/lane-deadlock.out
+lane-callback	lanes	callbackEverAdmissible	property	apalache (bounded)	8	0		hold	hold	yes	4.2	runs/lane-callback.out
+lane-mut-common	lanes	noDeadlock	mutant	apalache (bounded)	8	0	"MUT=""callback_on_common"""	violated	violated	yes	4.0	runs/lane-mut-common.out
+lane-c-cb-small	lanes	callbackEverAdmissible	control	apalache (bounded)	8	0	L_CB=1;L_COMMON=2	violated	violated	yes	5.1	runs/lane-c-cb-small.out
+lane-w-common-full	lanes	w_common_full_stalled	witness	apalache (bounded)	6	0		violated	violated	yes	4.0	runs/lane-w-common-full.out
+lane-w-pass	lanes	w_pass_ok	witness	apalache (bounded)	4	0		violated	violated	yes	4.1	runs/lane-w-pass.out
+lane-c-false	lanes	c_false	control	apalache (bounded)	2	0		violated	violated	yes	3.9	runs/lane-c-false.out
+reseal-noedit-lost	reseal	noEditLost	property	apalache (bounded)	10	0		hold	hold	yes	5.0	runs/reseal-noedit-lost.out
+reseal-w-done	reseal	w_done	witness	apalache (bounded)	8	0		violated	violated	yes	4.4	runs/reseal-w-done.out
+reseal-w-edit	reseal	w_edit_and_seal	witness	apalache (bounded)	8	0		violated	violated	yes	4.4	runs/reseal-w-edit.out
+reseal-mut-no-cas	reseal	noEditLost	mutant	apalache (bounded)	8	0	"MUT=""no_cas"""	violated	violated	yes	4.3	runs/reseal-mut-no-cas.out
+reseal-c-false	reseal	c_false	control	apalache (bounded)	2	0		violated	violated	yes	4.2	runs/reseal-c-false.out
+lead-doneHasOutcome	ops_leader	doneHasOutcome	property	apalache (bounded)	16	0		hold	hold	yes	152.0	runs/lead-doneHasOutcome.out
+lead-okOnce	ops_leader	okOnce	property	apalache (bounded)	16	0		hold	hold	yes	164.5	runs/lead-okOnce.out
+lead-outcomeOkIsBatch	ops_leader	outcomeOkIsBatch	property	apalache (bounded)	16	0		hold	hold	yes	165.9	runs/lead-outcomeOkIsBatch.out
+lead-outcomeOnce	ops_leader	outcomeOnce	property	apalache (bounded)	16	0		hold	hold	yes	177.4	runs/lead-outcomeOnce.out
+post-atMostOneLand	claim_post	atMostOneLand	property	apalache (bounded)	14	0		hold	hold	yes	110.3	runs/post-atMostOneLand.out
+post-doneMatches	claim_post	doneMatches	property	apalache (bounded)	14	0		hold	hold	yes	106.9	runs/post-doneMatches.out
+post-noFalse409	claim_post	noFalse409	property	apalache (bounded)	14	0		hold	hold	yes	200.5	runs/post-noFalse409.out
+post-noFalseSuccess	claim_post	noFalseSuccess	property	apalache (bounded)	14	0		hold	hold	yes	102.7	runs/post-noFalseSuccess.out

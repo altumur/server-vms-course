@@ -1,0 +1,147 @@
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-08-48_3987878568612306527
+# APALACHE version: 0.62.1 | build: a321771                       I@22:08:48.671
+Starting checker server on port 18823...                          I@22:08:48.673
+The Apalache server is running on port 18823. Press Ctrl-C to stop.
+Nov 08, 2026 10:08:50 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@22:08:50.612
+PASS #1: TypeCheckerSnowcat                                       I@22:08:50.872
+ > Running Snowcat .::.                                           I@22:08:50.872
+ > Your types are purrfect!                                       I@22:08:51.255
+ > All expressions are typed                                      I@22:08:51.255
+PASS #2: ConfigurationPass                                        I@22:08:51.255
+  > Set the initialization predicate to q::init                   I@22:08:51.257
+  > Set the transition predicate to q::step                       I@22:08:51.257
+  > Set an invariant to q::inv                                    I@22:08:51.258
+PASS #3: DesugarerPass                                            I@22:08:51.260
+  > Desugaring...                                                 I@22:08:51.260
+PASS #4: InlinePass                                               I@22:08:51.266
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:08:51.267
+PASS #5: TemporalPass                                             I@22:08:51.285
+  > Rewriting temporal operators...                               I@22:08:51.285
+  > No temporal property specified, nothing to encode             I@22:08:51.285
+PASS #6: InlinePass                                               I@22:08:51.285
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@22:08:51.285
+PASS #7: PrimingPass                                              I@22:08:51.288
+  > Introducing q::initPrimed for q::init'                        I@22:08:51.290
+PASS #8: VCGen                                                    I@22:08:51.291
+  > Producing verification conditions from the invariant q::inv   I@22:08:51.291
+  > VCGen produced 1 verification condition(s)                    I@22:08:51.293
+PASS #9: PreprocessingPass                                        I@22:08:51.296
+  > Before preprocessing: unique renaming                         I@22:08:51.296
+ > Applying standard transformations:                             I@22:08:51.300
+  > PrimePropagation                                              I@22:08:51.301
+  > Desugarer                                                     I@22:08:51.301
+  > UniqueRenamer                                                 I@22:08:51.302
+  > Normalizer                                                    I@22:08:51.304
+  > SetMembershipSimplifier                                       I@22:08:51.306
+  > Keramelizer                                                   I@22:08:51.307
+  > After preprocessing: UniqueRenamer                            I@22:08:51.310
+PASS #10: TransitionFinderPass                                    I@22:08:51.312
+  > Found 1 initializing transitions                              I@22:08:51.319
+  > Found 6 transitions                                           I@22:08:51.325
+  > No constant initializer                                       I@22:08:51.325
+  > Applying unique renaming                                      I@22:08:51.326
+PASS #11: OptimizationPass                                        I@22:08:51.327
+ > Applying optimizations:                                        I@22:08:51.330
+  > ConstSimplifier                                               I@22:08:51.331
+  > ExprOptimizer                                                 I@22:08:51.334
+  > SetMembershipSimplifier                                       I@22:08:51.335
+  > ConstSimplifier                                               I@22:08:51.336
+PASS #12: AnalysisPass                                            I@22:08:51.338
+ > Marking skolemizable existentials and sets to be expanded...   I@22:08:51.339
+  > Skolemization                                                 I@22:08:51.339
+  > Expansion                                                     I@22:08:51.339
+  > Remove unused let-in defs                                     I@22:08:51.340
+ > Running analyzers...                                           I@22:08:51.341
+  > Introduced expression grades                                  I@22:08:51.343
+PASS #13: BoundedChecker                                          I@22:08:51.343
+State 0: Checking 1 state invariants                              I@22:08:51.568
+State 0: state invariant 0 holds.                                 I@22:08:51.584
+Step 0: picking a transition out of 1 transition(s)               I@22:08:51.589
+State 1: Checking 1 state invariants                              I@22:08:51.596
+State 1: state invariant 0 holds.                                 I@22:08:51.601
+State 1: Checking 1 state invariants                              I@22:08:51.618
+State 1: state invariant 0 holds.                                 I@22:08:51.623
+Step 1: Transition #3 is disabled                                 I@22:08:51.637
+Step 1: Transition #4 is disabled                                 I@22:08:51.651
+Step 1: Transition #5 is disabled                                 I@22:08:51.661
+Step 1: picking a transition out of 3 transition(s)               I@22:08:51.661
+State 2: Checking 1 state invariants                              I@22:08:51.680
+State 2: state invariant 0 holds.                                 I@22:08:51.684
+State 2: Checking 1 state invariants                              I@22:08:51.694
+State 2: state invariant 0 holds.                                 I@22:08:51.698
+Step 2: Transition #3 is disabled                                 I@22:08:51.707
+State 2: Checking 1 state invariants                              I@22:08:51.718
+State 2: state invariant 0 holds.                                 I@22:08:51.721
+Step 2: Transition #5 is disabled                                 I@22:08:51.731
+Step 2: picking a transition out of 4 transition(s)               I@22:08:51.731
+State 3: Checking 1 state invariants                              I@22:08:51.741
+Check the trace in: /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-08-48_3987878568612306527/violation1.tla, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-08-48_3987878568612306527/MCviolation1.out, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-08-48_3987878568612306527/violation1.json, /home/pilot/review103-claude-adr0130-p06-quint/decisions/inbox/ревью/quint-p06-86245571/runs/_apalache-out/server/2026-11-08T22-08-48_3987878568612306527/violation1.itf.json I@22:08:51.851
+State 3: state invariant 0 violated.                              I@22:08:51.852
+Found 1 error(s)                                                  I@22:08:51.853
+The outcome is: Error                                             I@22:08:51.856
+An example execution:
+
+[State 0]
+{
+  s:
+    {
+      editLost: false,
+      editValue: 0,
+      editsDone: 0,
+      kid: "old",
+      phase: Map("C1" -> "Start", "C2" -> "Start"),
+      read: Map("C1" -> 0, "C2" -> 0),
+      rowIdx: 1
+    }
+}
+
+[State 1]
+{
+  s:
+    {
+      editLost: false,
+      editValue: 0,
+      editsDone: 0,
+      kid: "old",
+      phase: Map("C1" -> "Start", "C2" -> "Read"),
+      read: Map("C1" -> 0, "C2" -> 1),
+      rowIdx: 1
+    }
+}
+
+[State 2]
+{
+  s:
+    {
+      editLost: false,
+      editValue: 0,
+      editsDone: 0,
+      kid: "new",
+      phase: Map("C1" -> "Start", "C2" -> "Done"),
+      read: Map("C1" -> 0, "C2" -> 1),
+      rowIdx: 2
+    }
+}
+
+[State 3]
+{
+  s:
+    {
+      editLost: false,
+      editValue: 1,
+      editsDone: 1,
+      kid: "new",
+      phase: Map("C1" -> "Start", "C2" -> "Done"),
+      read: Map("C1" -> 0, "C2" -> 1),
+      rowIdx: 3
+    }
+}
+
+[violation] Found an issue (3609ms).
+error: found a counterexample
