@@ -1872,7 +1872,7 @@ def check_openapi_routing(api):
 
 
 CONST_COLUMNS = ["name", "value", "unit", "norm", "meaning"]
-CONST_UNITS = {"count", "s", "bytes"}
+CONST_UNITS = {"count", "s", "ms", "bytes"}
 
 
 def runtime_constant_forms(root):
@@ -1881,7 +1881,7 @@ def runtime_constant_forms(root):
 
 def check_runtime_constants(path):
     """ADR-0125 доп. (5), P/06: числовые константы урока — форма-норма. name уникален [A-Z][A-Z0-9_]*; value — положительное
-    целое без ведущих нулей; unit count|s|bytes; norm — якорь требования этого урока, существующий в его нормах; meaning не пуст."""
+    целое int64 без ведущих нулей; unit count|s|ms|bytes; norm — якорь требования этого урока, существующий в его нормах; meaning не пуст."""
     path = Path(path)
     lesson = path.parent.parent
     errors, rows = read(path, CONST_COLUMNS)
@@ -1897,6 +1897,8 @@ def check_runtime_constants(path):
         seen.add(r["name"])
         if not re.fullmatch(r"[1-9][0-9]*", r["value"]):
             errors.append(f"{where}: value {r['value']!r} is not a positive integer")
+        elif len(r["value"]) > 19 or len(r["value"]) == 19 and r["value"] > "9223372036854775807":
+            errors.append(f"{where}: value {r['value']!r} exceeds positive int64")
         if r["unit"] not in CONST_UNITS:
             errors.append(f"{where}: unit {r['unit']!r} not in {sorted(CONST_UNITS)}")
         g = REQ.fullmatch(r["norm"])

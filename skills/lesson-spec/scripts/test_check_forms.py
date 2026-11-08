@@ -662,12 +662,78 @@ class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants
             f.write_text(head + good, encoding="utf-8")
             self.assertEqual(check_forms.check_runtime_constants(f)[0], [])
             for bad in (good + good, good.replace("CHANGES_TICK", "changes_tick"), good.replace("\t1\t", "\t0\t"),
-                        good.replace("\t1\t", "\t01\t"), good.replace("\ts\t", "\tms\t"), good.replace("P/06.1-R030", "P/06.1-R999"),
+                        good.replace("\t1\t", "\t01\t"), good.replace("\ts\t", "\tns\t"), good.replace("P/06.1-R030", "P/06.1-R999"),
                         good.replace("P/06.1-R030", "P/05.1-R030"), good.replace("the listing tick", " ")):
                 f.write_text(head + bad, encoding="utf-8")
                 self.assertTrue(check_forms.check_runtime_constants(f)[0], bad)
         finally:
             shutil.rmtree(tmp)
+
+    def check_rows(self, rows):
+        with tempfile.TemporaryDirectory() as tmp:
+            lesson = Path(tmp) / "Platform/03-worker"
+            (lesson / "spec").mkdir(parents=True)
+            (lesson / "forms").mkdir()
+            (lesson / "spec/03.3-worker.norms.md").write_text(
+                "<!-- req: P/03.3-R005 -->\n", encoding="utf-8")
+            (lesson / "spec/03.6-worker.norms.md").write_text(
+                "<!-- req: P/03.6-R012 -->\n", encoding="utf-8")
+            path = lesson / "forms/runtime-constants.tsv"
+            text = "name\tvalue\tunit\tnorm\tmeaning\n" + "".join(
+                "\t".join(row) + "\n" for row in rows)
+            path.write_text(text, encoding="utf-8")
+            before = path.read_bytes()
+            result = check_forms.check_runtime_constants(path)
+            self.assertEqual(path.read_bytes(), before)
+            return result
+
+    def constant_row(self, value="250", unit="ms"):
+        return ("WAKE_GAP_MS", value, unit, "P/03.3-R005", "minimum event gap")
+
+    def test_ms_rows_keep_values_and_units(self):
+        rows = [self.constant_row(),
+                ("PERFORM_GRACE_MS", "200", "ms", "P/03.6-R012", "grace"),
+                ("REQUESTS_HOLD_MS", "500", "ms", "P/03.6-R012", "look hold")]
+        self.assertEqual(self.check_rows(rows), ([], {"runtime_constants": 3}))
+
+    def test_existing_units_and_positive_int64_boundaries(self):
+        for unit in ("count", "s", "ms", "bytes"):
+            for value in ("1", "250", "9223372036854775807"):
+                with self.subTest(unit=unit, value=value):
+                    self.assertEqual(self.check_rows([self.constant_row(value, unit)]),
+                                     ([], {"runtime_constants": 1}))
+
+    def test_unknown_units_still_refuse(self):
+        for unit in ("ns", "MS", "millisecond", "", "ms "):
+            with self.subTest(unit=unit):
+                errors, _ = self.check_rows([self.constant_row(unit=unit)])
+                self.assertEqual(len(errors), 1)
+                self.assertIn("unit", errors[0])
+
+    def test_ms_integer_grammar_still_refuses(self):
+        for value in ("0", "-1", "1.5", "true", "0250", "1e3", "\u0661", "+250", " 250"):
+            with self.subTest(value=value):
+                errors, _ = self.check_rows([self.constant_row(value)])
+                self.assertEqual(len(errors), 1)
+                self.assertIn("value", errors[0])
+
+    def test_int64_overflow_refuses_without_integer_conversion(self):
+        for value in ("9223372036854775808", "9999999999999999999", "1" + "0" * 5000):
+            with self.subTest(digits=len(value)):
+                errors, _ = self.check_rows([self.constant_row(value, "s")])
+                self.assertEqual(len(errors), 1)
+                self.assertIn("int64", errors[0])
+
+    def test_ms_duplicate_anchor_and_meaning_guards_remain(self):
+        good = self.constant_row()
+        variants = [[good, good],
+                    [good[:3] + ("P/03.3-R999", good[4])],
+                    [good[:3] + ("P/04-R005", good[4])],
+                    [good[:4] + (" ",)],
+                    [("wake_gap_ms",) + good[1:]]]
+        for rows in variants:
+            with self.subTest(rows=rows):
+                self.assertTrue(self.check_rows(rows)[0])
 
 
 class WireP06(unittest.TestCase):                  # расширения провода P/06 (wire.md «P/06 transport constructors»)
