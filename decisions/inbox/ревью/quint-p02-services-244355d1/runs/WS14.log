@@ -1,0 +1,259 @@
+quint verify --main=ws_hb --max-steps=12 --invariant=inv_activatingBound --server-endpoint=localhost:8855 /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/workerstart.qnt
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-15-04_3411341318579924209
+# APALACHE version: 0.62.1 | build: a321771                       I@17:15:04.418
+Starting checker server on port 8855...                           I@17:15:04.421
+The Apalache server is running on port 8855. Press Ctrl-C to stop.
+Nov 08, 2026 5:15:06 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@17:15:06.534
+PASS #1: TypeCheckerSnowcat                                       I@17:15:07.044
+ > Running Snowcat .::.                                           I@17:15:07.044
+ > Your types are purrfect!                                       I@17:15:07.442
+ > All expressions are typed                                      I@17:15:07.442
+PASS #2: ConfigurationPass                                        I@17:15:07.443
+  > Set the initialization predicate to q::init                   I@17:15:07.446
+  > Set the transition predicate to q::step                       I@17:15:07.446
+  > Set an invariant to q::inv                                    I@17:15:07.446
+PASS #3: DesugarerPass                                            I@17:15:07.451
+  > Desugaring...                                                 I@17:15:07.451
+PASS #4: InlinePass                                               I@17:15:07.459
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:15:07.459
+PASS #5: TemporalPass                                             I@17:15:07.544
+  > Rewriting temporal operators...                               I@17:15:07.544
+  > No temporal property specified, nothing to encode             I@17:15:07.544
+PASS #6: InlinePass                                               I@17:15:07.544
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:15:07.544
+PASS #7: PrimingPass                                              I@17:15:07.561
+  > Introducing q::initPrimed for q::init'                        I@17:15:07.562
+PASS #8: VCGen                                                    I@17:15:07.563
+  > Producing verification conditions from the invariant q::inv   I@17:15:07.564
+  > VCGen produced 1 verification condition(s)                    I@17:15:07.567
+PASS #9: PreprocessingPass                                        I@17:15:07.571
+  > Before preprocessing: unique renaming                         I@17:15:07.572
+ > Applying standard transformations:                             I@17:15:07.579
+  > PrimePropagation                                              I@17:15:07.580
+  > Desugarer                                                     I@17:15:07.582
+  > UniqueRenamer                                                 I@17:15:07.585
+  > Normalizer                                                    I@17:15:07.593
+  > SetMembershipSimplifier                                       I@17:15:07.598
+  > Keramelizer                                                   I@17:15:07.604
+  > After preprocessing: UniqueRenamer                            I@17:15:07.617
+PASS #10: TransitionFinderPass                                    I@17:15:07.623
+  > Found 1 initializing transitions                              I@17:15:07.639
+  > Found 32 transitions                                          I@17:15:07.671
+  > No constant initializer                                       I@17:15:07.671
+  > Applying unique renaming                                      I@17:15:07.672
+PASS #11: OptimizationPass                                        I@17:15:07.679
+ > Applying optimizations:                                        I@17:15:07.685
+  > ConstSimplifier                                               I@17:15:07.686
+  > ExprOptimizer                                                 I@17:15:07.703
+  > SetMembershipSimplifier                                       I@17:15:07.707
+  > ConstSimplifier                                               I@17:15:07.708
+PASS #12: AnalysisPass                                            I@17:15:07.722
+ > Marking skolemizable existentials and sets to be expanded...   I@17:15:07.724
+  > Skolemization                                                 I@17:15:07.724
+  > Expansion                                                     I@17:15:07.735
+  > Remove unused let-in defs                                     I@17:15:07.739
+ > Running analyzers...                                           I@17:15:07.745
+  > Introduced expression grades                                  I@17:15:07.748
+PASS #13: BoundedChecker                                          I@17:15:07.749
+State 0: Checking 1 state invariants                              I@17:15:08.012
+State 0: state invariant 0 holds.                                 I@17:15:08.023
+Step 0: picking a transition out of 1 transition(s)               I@17:15:08.025
+Step 1: Transition #0 is disabled                                 I@17:15:08.040
+Step 1: Transition #1 is disabled                                 I@17:15:08.045
+State 1: Checking 1 state invariants                              I@17:15:08.066
+State 1: state invariant 0 holds.                                 I@17:15:08.069
+State 1: Checking 1 state invariants                              I@17:15:08.097
+State 1: state invariant 0 holds.                                 I@17:15:08.107
+State 1: Checking 1 state invariants                              I@17:15:08.131
+State 1: state invariant 0 holds.                                 I@17:15:08.135
+Step 1: Transition #9 is disabled                                 I@17:15:08.147
+Step 1: Transition #11 is disabled                                I@17:15:08.171
+Step 1: Transition #13 is disabled                                I@17:15:08.188
+Step 1: Transition #15 is disabled                                I@17:15:08.195
+Step 1: Transition #17 is disabled                                I@17:15:08.201
+Step 1: Transition #21 is disabled                                I@17:15:08.211
+Step 1: Transition #25 is disabled                                I@17:15:08.226
+Step 1: Transition #27 is disabled                                I@17:15:08.234
+Step 1: Transition #29 is disabled                                I@17:15:08.243
+Step 1: Transition #31 is disabled                                I@17:15:08.253
+Step 1: picking a transition out of 3 transition(s)               I@17:15:08.253
+Step 2: Transition #0 is disabled                                 I@17:15:08.259
+Step 2: Transition #3 is disabled                                 I@17:15:08.274
+Step 2: Transition #5 is disabled                                 I@17:15:08.284
+Step 2: Transition #7 is disabled                                 I@17:15:08.292
+State 2: Checking 1 state invariants                              I@17:15:08.309
+State 2: state invariant 0 holds.                                 I@17:15:08.313
+State 2: Checking 1 state invariants                              I@17:15:08.330
+State 2: state invariant 0 holds.                                 I@17:15:08.332
+State 2: Checking 1 state invariants                              I@17:15:08.340
+State 2: state invariant 0 holds.                                 I@17:15:08.342
+Step 2: Transition #15 is disabled                                I@17:15:08.346
+Step 2: Transition #17 is disabled                                I@17:15:08.350
+Step 2: Transition #21 is disabled                                I@17:15:08.354
+Step 2: Transition #25 is disabled                                I@17:15:08.359
+Step 2: Transition #27 is disabled                                I@17:15:08.366
+Step 2: Transition #29 is disabled                                I@17:15:08.372
+Step 2: Transition #31 is disabled                                I@17:15:08.377
+Step 2: picking a transition out of 4 transition(s)               I@17:15:08.378
+Step 3: Transition #0 is disabled                                 I@17:15:08.381
+Step 3: Transition #3 is disabled                                 I@17:15:08.391
+Step 3: Transition #5 is disabled                                 I@17:15:08.399
+Step 3: Transition #7 is disabled                                 I@17:15:08.411
+Step 3: Transition #9 is disabled                                 I@17:15:08.419
+Step 3: Transition #11 is disabled                                I@17:15:08.427
+Step 3: Transition #13 is disabled                                I@17:15:08.435
+State 3: Checking 1 state invariants                              I@17:15:08.440
+State 3: state invariant 0 holds.                                 I@17:15:08.442
+Step 3: Transition #17 is disabled                                I@17:15:08.446
+Step 3: Transition #21 is disabled                                I@17:15:08.450
+Step 3: Transition #25 is disabled                                I@17:15:08.455
+Step 3: Transition #27 is disabled                                I@17:15:08.459
+Step 3: Transition #29 is disabled                                I@17:15:08.464
+Step 3: Transition #31 is disabled                                I@17:15:08.468
+Step 3: picking a transition out of 2 transition(s)               I@17:15:08.469
+Step 4: Transition #0 is disabled                                 I@17:15:08.471
+Step 4: Transition #3 is disabled                                 I@17:15:08.480
+Step 4: Transition #5 is disabled                                 I@17:15:08.486
+Step 4: Transition #7 is disabled                                 I@17:15:08.492
+Step 4: Transition #9 is disabled                                 I@17:15:08.498
+Step 4: Transition #11 is disabled                                I@17:15:08.506
+Step 4: Transition #13 is disabled                                I@17:15:08.513
+Step 4: Transition #15 is disabled                                I@17:15:08.517
+State 4: Checking 1 state invariants                              I@17:15:08.521
+State 4: state invariant 0 holds.                                 I@17:15:08.522
+Step 4: Transition #21 is disabled                                I@17:15:08.526
+Step 4: Transition #25 is disabled                                I@17:15:08.530
+Step 4: Transition #27 is disabled                                I@17:15:08.536
+Step 4: Transition #29 is disabled                                I@17:15:08.546
+Step 4: Transition #31 is disabled                                I@17:15:08.559
+Step 4: picking a transition out of 2 transition(s)               I@17:15:08.563
+Step 5: Transition #0 is disabled                                 I@17:15:08.570
+Step 5: Transition #3 is disabled                                 I@17:15:08.587
+Step 5: Transition #5 is disabled                                 I@17:15:08.593
+Step 5: Transition #7 is disabled                                 I@17:15:08.600
+Step 5: Transition #9 is disabled                                 I@17:15:08.607
+Step 5: Transition #11 is disabled                                I@17:15:08.613
+Step 5: Transition #13 is disabled                                I@17:15:08.619
+Step 5: Transition #15 is disabled                                I@17:15:08.623
+Step 5: Transition #17 is disabled                                I@17:15:08.626
+Step 5: Transition #21 is disabled                                I@17:15:08.629
+Step 5: Transition #25 is disabled                                I@17:15:08.634
+Step 5: Transition #27 is disabled                                I@17:15:08.639
+Step 5: Transition #29 is disabled                                I@17:15:08.649
+Step 5: Transition #31 is disabled                                I@17:15:08.654
+Step 5: picking a transition out of 1 transition(s)               I@17:15:08.654
+Step 6: Transition #0 is disabled                                 I@17:15:08.656
+Step 6: Transition #3 is disabled                                 I@17:15:08.664
+Step 6: Transition #5 is disabled                                 I@17:15:08.669
+Step 6: Transition #7 is disabled                                 I@17:15:08.676
+Step 6: Transition #9 is disabled                                 I@17:15:08.680
+Step 6: Transition #11 is disabled                                I@17:15:08.685
+Step 6: Transition #13 is disabled                                I@17:15:08.690
+Step 6: Transition #15 is disabled                                I@17:15:08.693
+Step 6: Transition #17 is disabled                                I@17:15:08.696
+Step 6: Transition #21 is disabled                                I@17:15:08.698
+Step 6: Transition #25 is disabled                                I@17:15:08.702
+Step 6: Transition #27 is disabled                                I@17:15:08.708
+Step 6: Transition #29 is disabled                                I@17:15:08.713
+Step 6: Transition #31 is disabled                                I@17:15:08.722
+Step 6: picking a transition out of 1 transition(s)               I@17:15:08.722
+Step 7: Transition #0 is disabled                                 I@17:15:08.724
+Step 7: Transition #3 is disabled                                 I@17:15:08.739
+Step 7: Transition #5 is disabled                                 I@17:15:08.744
+Step 7: Transition #7 is disabled                                 I@17:15:08.750
+Step 7: Transition #9 is disabled                                 I@17:15:08.754
+Step 7: Transition #11 is disabled                                I@17:15:08.760
+Step 7: Transition #13 is disabled                                I@17:15:08.764
+Step 7: Transition #15 is disabled                                I@17:15:08.771
+Step 7: Transition #17 is disabled                                I@17:15:08.775
+Step 7: Transition #21 is disabled                                I@17:15:08.777
+Step 7: Transition #25 is disabled                                I@17:15:08.781
+Step 7: Transition #27 is disabled                                I@17:15:08.785
+Step 7: Transition #29 is disabled                                I@17:15:08.793
+Step 7: Transition #31 is disabled                                I@17:15:08.797
+Step 7: picking a transition out of 1 transition(s)               I@17:15:08.797
+Step 8: Transition #0 is disabled                                 I@17:15:08.798
+Step 8: Transition #3 is disabled                                 I@17:15:08.807
+Step 8: Transition #5 is disabled                                 I@17:15:08.812
+Step 8: Transition #7 is disabled                                 I@17:15:08.819
+Step 8: Transition #9 is disabled                                 I@17:15:08.824
+Step 8: Transition #11 is disabled                                I@17:15:08.829
+Step 8: Transition #13 is disabled                                I@17:15:08.835
+Step 8: Transition #15 is disabled                                I@17:15:08.838
+Step 8: Transition #17 is disabled                                I@17:15:08.842
+Step 8: Transition #21 is disabled                                I@17:15:08.845
+Step 8: Transition #25 is disabled                                I@17:15:08.869
+Step 8: Transition #27 is disabled                                I@17:15:08.877
+Step 8: Transition #29 is disabled                                I@17:15:08.886
+Step 8: Transition #31 is disabled                                I@17:15:08.891
+Step 8: picking a transition out of 1 transition(s)               I@17:15:08.891
+Step 9: Transition #0 is disabled                                 I@17:15:08.893
+Step 9: Transition #3 is disabled                                 I@17:15:08.907
+Step 9: Transition #5 is disabled                                 I@17:15:08.912
+Step 9: Transition #7 is disabled                                 I@17:15:08.917
+Step 9: Transition #9 is disabled                                 I@17:15:08.922
+Step 9: Transition #11 is disabled                                I@17:15:08.928
+Step 9: Transition #13 is disabled                                I@17:15:08.933
+Step 9: Transition #15 is disabled                                I@17:15:08.937
+Step 9: Transition #17 is disabled                                I@17:15:08.939
+Step 9: Transition #21 is disabled                                I@17:15:08.942
+Step 9: Transition #25 is disabled                                I@17:15:08.945
+Step 9: Transition #27 is disabled                                I@17:15:08.948
+Step 9: Transition #29 is disabled                                I@17:15:08.952
+Step 9: Transition #31 is disabled                                I@17:15:08.955
+Step 9: picking a transition out of 1 transition(s)               I@17:15:08.955
+Step 10: Transition #0 is disabled                                I@17:15:08.957
+Step 10: Transition #3 is disabled                                I@17:15:08.963
+Step 10: Transition #5 is disabled                                I@17:15:08.967
+Step 10: Transition #7 is disabled                                I@17:15:08.971
+Step 10: Transition #9 is disabled                                I@17:15:08.976
+Step 10: Transition #11 is disabled                               I@17:15:08.986
+Step 10: Transition #13 is disabled                               I@17:15:08.997
+Step 10: Transition #15 is disabled                               I@17:15:09.000
+Step 10: Transition #17 is disabled                               I@17:15:09.003
+Step 10: Transition #21 is disabled                               I@17:15:09.005
+Step 10: Transition #25 is disabled                               I@17:15:09.012
+Step 10: Transition #27 is disabled                               I@17:15:09.018
+Step 10: Transition #29 is disabled                               I@17:15:09.022
+Step 10: Transition #31 is disabled                               I@17:15:09.026
+Step 10: picking a transition out of 1 transition(s)              I@17:15:09.026
+Step 11: Transition #0 is disabled                                I@17:15:09.028
+Step 11: Transition #3 is disabled                                I@17:15:09.035
+Step 11: Transition #5 is disabled                                I@17:15:09.039
+Step 11: Transition #7 is disabled                                I@17:15:09.044
+Step 11: Transition #9 is disabled                                I@17:15:09.048
+Step 11: Transition #11 is disabled                               I@17:15:09.052
+Step 11: Transition #13 is disabled                               I@17:15:09.056
+Step 11: Transition #15 is disabled                               I@17:15:09.061
+Step 11: Transition #17 is disabled                               I@17:15:09.064
+Step 11: Transition #21 is disabled                               I@17:15:09.067
+Step 11: Transition #25 is disabled                               I@17:15:09.070
+Step 11: Transition #27 is disabled                               I@17:15:09.074
+Step 11: Transition #29 is disabled                               I@17:15:09.077
+Step 11: Transition #31 is disabled                               I@17:15:09.080
+Step 11: picking a transition out of 1 transition(s)              I@17:15:09.080
+Step 12: Transition #0 is disabled                                I@17:15:09.082
+Step 12: Transition #3 is disabled                                I@17:15:09.088
+Step 12: Transition #5 is disabled                                I@17:15:09.092
+Step 12: Transition #7 is disabled                                I@17:15:09.096
+Step 12: Transition #9 is disabled                                I@17:15:09.100
+Step 12: Transition #11 is disabled                               I@17:15:09.103
+Step 12: Transition #13 is disabled                               I@17:15:09.108
+Step 12: Transition #15 is disabled                               I@17:15:09.110
+Step 12: Transition #17 is disabled                               I@17:15:09.112
+Step 12: Transition #21 is disabled                               I@17:15:09.116
+Step 12: Transition #25 is disabled                               I@17:15:09.119
+Step 12: Transition #27 is disabled                               I@17:15:09.122
+Step 12: Transition #29 is disabled                               I@17:15:09.126
+Step 12: Transition #31 is disabled                               I@17:15:09.130
+Step 12: picking a transition out of 1 transition(s)              I@17:15:09.130
+The outcome is: NoError                                           I@17:15:09.137
+[ok] No violation found (5199ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

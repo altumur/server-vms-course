@@ -1,0 +1,88 @@
+WS01	ws_a	inv_noKill	property	verify	8	0	С1 START_WAIT у программы от exec, TS=90, чтение≤срока	violated	violated	yes	6.8	workerstart.qnt
+WS02	ws_b	inv_noKill	control	verify	14	0	контроль: START_WAIT от старта юнита (exec), TS=90	holds	holds	yes	7.8	workerstart.qnt
+WS03	ws_c	inv_noKill	property	verify	8	0	С1 последнее чтение за START_WAIT на 30 (READ_OVER=TS−START_WAIT), база юнита	violated	violated	yes	5.5	workerstart.qnt
+WS04	ws_c0	inv_noKill	control	verify	12	0	контроль: READ_OVER=29 — на границу нет	holds	holds	yes	6.8	workerstart.qnt
+WS05	ws_d	inv_noKill	property	verify	8	0	С1 flock без срока (pres:32) при TS=90	violated	violated	yes	5.8	workerstart.qnt
+WS06	ws_e	inv_noKill	property	verify	8	0	граница: TS=120, база exec — ничья в пользу kill	violated	violated	yes	5.3	workerstart.qnt
+WS07	ws_f	inv_noKill	control	verify	14	0	контроль: TS=121, база exec — минимальный безопасный срок	holds	holds	yes	6.3	workerstart.qnt
+WS08	ws_g	inv_noKill	control	verify	14	0	контроль: TS=∞, база unit, flock ограничен — нет kill	holds	holds	yes	7.4	workerstart.qnt
+WS09	ws_n	inv_nobodyNotKilled	property	verify	10	0	С2 nobody без READY до TS=90	violated	violated	yes	6.8	workerstart.qnt
+WS10	ws_nr	inv_nobodyNotKilled	control	verify	14	0	контроль: READY=1 при входе в цикл nobody	holds	holds	yes	8.5	workerstart.qnt
+WS11	ws_ni	inv_nobodyNotKilled	control	verify	14	0	контроль: TS=∞ в ветке nobody	holds	holds	yes	9.0	workerstart.qnt
+WS12	ws_n	killsLT2	witness	verify	18	0	С2 цикл перезапусков nobody: ≥2 убийства сроком	violated	violated	yes	6.9	workerstart.qnt
+WS13	ws_h	inv_activatingBound	property	verify	8	0	С1/С2 TS=∞ + flock без срока: activating без предела	violated	violated	yes	5.3	workerstart.qnt
+WS14	ws_hb	inv_activatingBound	control	verify	12	0	контроль: TS=∞, но flock≤60 — activating конечен	holds	holds	yes	6.5	workerstart.qnt
+WS15	ws_b	notReady	witness	verify	10	0	достижимость Ready	violated	violated	yes	7.0	workerstart.qnt
+WS16	ws_b	notExit1	witness	verify	8	0	достижимость exit 1 по START_WAIT	violated	violated	yes	5.4	workerstart.qnt
+WS17	ws_b	notExit2	witness	verify	8	0	достижимость exit 2	violated	violated	yes	5.1	workerstart.qnt
+WS18	ws_n	notNobody	witness	verify	10	0	достижимость nobody	violated	violated	yes	6.0	workerstart.qnt
+WS19	ws_m1	inv_readyAfterCapture	mutant	verify	10	0	мутант: READY=1 до захвата имени	violated	violated	yes	6.6	workerstart.qnt
+WS20	ws_m2	inv_exit1Deadline	mutant	verify	8	0	мутант: конец START_WAIT не соблюдён	violated	violated	yes	5.4	workerstart.qnt
+WS21	ws_m3	inv_noRestartAfter2	mutant	verify	10	0	мутант: перезапуск после exit 2	violated	violated	yes	5.3	workerstart.qnt
+WS22	ws_a	inv_exit1Deadline	property	verify	12	0	exit 1 не позже START_WAIT+READ_OVER своей базы	holds	holds	yes	5.9	workerstart.qnt
+WS23	ws_b	inv_exit1Deadline	property	verify	12	0	то же, база unit	holds	holds	yes	6.3	workerstart.qnt
+WS24	ws_n	inv_readyAfterCapture	property	verify	12	0	READY только после захвата имени	holds	holds	yes	8.0	workerstart.qnt
+WS25	ws_b	inv_noRestartAfter2	property	verify	12	0	exit 2 не перезапускает	holds	holds	yes	7.2	workerstart.qnt
+WT01	wt_a	inv_passBounded	property	verify	8	0	С4 3 номера × START_MAX 90 > период 60	violated	violated	yes	5.7	workertimer.qnt
+WT02	wt_a	inv_opsFresh	property	verify	8	0	С4 данные действия старше минуты	violated	violated	yes	5.7	workertimer.qnt
+WT03	wt_a	inv_serial	control	verify	12	0	контроль: oneshot+таймер — проходы не параллельны	holds	holds	yes	14.0	workertimer.qnt
+WT04	wt_a	inv_noStartWhileUncertain	control	verify	12	0	контроль: uncertain занят (правило 5)	holds	holds	yes	16.0	workertimer.qnt
+WT05	wt_b	inv_passBounded	control	verify	12	0	контроль: 3 × 20 = период (STOP/START=20)	holds	holds	yes	11.9	workertimer.qnt
+WT06	wt_b	inv_opsFresh	control	verify	12	0	контроль: то же, данные свежи	holds	holds	yes	12.8	workertimer.qnt
+WT07	wt_c	inv_opsFresh	control	verify	12	0	контроль: перепроверка возраста перед каждым действием (не норма)	holds	holds	yes	16.7	workertimer.qnt
+WT08	wt_d	inv_passBounded	property	verify	8	0	С4 чтение /metrics без срока	violated	violated	yes	5.5	workertimer.qnt
+WT09	wt_e	inv_passBounded	control	verify	12	0	контроль: --no-block (не норма)	holds	holds	yes	11.9	workertimer.qnt
+WT10	wt_e	inv_opsFresh	control	verify	12	0	контроль: --no-block, свежие данные	holds	holds	yes	11.2	workertimer.qnt
+WT11	wt_m1	inv_noStartWhileUncertain	mutant	verify	14	0	мутант: план игнорирует uncertain	violated	violated	yes	7.5	workertimer.qnt
+WT12	wt_m2	inv_serial	mutant	verify	8	0	мутант: два механизма (таймер и рука) параллельно	violated	violated	yes	5.6	workertimer.qnt
+WT13	wt_a	notAct	witness	verify	8	0	достижимость действия	violated	violated	yes	6.1	workertimer.qnt
+WT14	wt_b	notCompleted	witness	verify	14	0	достижимость двух завершённых проходов	violated	violated	yes	7.3	workertimer.qnt
+SA01	sa_a	inv_code2NoRestart	property	verify	6	0	С5 сокет запускает службу после кода 2	violated	violated	yes	5.7	socketact.qnt
+SA02	sa_a	inv_opStopHolds	property	verify	6	0	С5 окно оператора нарушено сокетом	violated	violated	yes	4.5	socketact.qnt
+SA03	sa_a	inv_sockNotFailed	property	verify	6	0	С5 TriggerLimit переводит сокет в failure	violated	violated	yes	4.7	socketact.qnt
+SA04	sa_a	inv_restartPrevent2	control	verify	10	0	контроль: путь Restart= кодом 2 закрыт (A1 не затрагивает)	holds	holds	yes	6.5	socketact.qnt
+SA05	sa_nosock	inv_code2NoRestart	control	verify	10	0	контроль: без активации сокета A1 не нарушено	holds	holds	yes	6.1	socketact.qnt
+SA06	sa_nosock	inv_opStopHolds	control	verify	10	0	контроль: без активации сокета окно держится	holds	holds	yes	6.5	socketact.qnt
+SA07	sa_fix2	inv_code2NoRestart	control	verify	10	0	контроль: код 2 останавливает сокеты (вариант лечения)	holds	holds	yes	5.4	socketact.qnt
+SA08	sa_fixop	inv_opStopHolds	control	verify	10	0	контроль: стоп оператора охватывает .socket	holds	holds	yes	5.3	socketact.qnt
+SA09	sa_notrig	inv_sockNotFailed	control	verify	8	0	контроль: TriggerLimit выключен	holds	holds	yes	5.1	socketact.qnt
+SA10	sa_m1	inv_restartPrevent2	mutant	verify	8	0	мутант: Restart= перезапускает код 2	violated	violated	yes	5.0	socketact.qnt
+SA11	sa_a	notFailed2	witness	verify	6	0	достижимость exit 2	violated	violated	yes	5.1	socketact.qnt
+SA12	sa_a	notRunning	witness	verify	6	0	достижимость работающей службы	violated	violated	yes	5.8	socketact.qnt
+RS01	rs_read	inv_barrierWithinWait	property	verify	10	0	С6 чтение барьера без срока — ROLLOUT_WAIT превышается	violated	violated	yes	6.1	rolloutsteps.qnt
+RS02	rs_bound	inv_barrierWithinWait	control	verify	10	0	контроль: чтение обрезается остатком ROLLOUT_WAIT (не норма)	holds	holds	yes	5.6	rolloutsteps.qnt
+RS03	rs_a	inv_noEnableBeforeEnd	control	verify	12	0	контроль: W2C_HOLD удерживает включение до конца (норма)	holds	holds	yes	5.4	rolloutsteps.qnt
+RS04	rs_m1	inv_noEnableBeforeEnd	mutant	verify	10	0	мутант: на повторе HOLD считают как при первой установке	violated	violated	yes	5.0	rolloutsteps.qnt
+RS05	rs_a	inv_doneAfterBarrier	control	verify	12	0	контроль: Done только с барьером в этой попытке	holds	holds	yes	6.4	rolloutsteps.qnt
+RS06	rs_m2	inv_doneAfterBarrier	mutant	verify	10	0	мутант: повтор завершается без барьера	violated	violated	yes	4.8	rolloutsteps.qnt
+RS07	rs_a	notDone	witness	verify	10	0	достижимость Done	violated	violated	yes	4.5	rolloutsteps.qnt
+RS08	rs_a	notRepeated	witness	verify	12	0	достижимость повтора	violated	violated	yes	6.1	rolloutsteps.qnt
+PB01	pb_ok	inv_seen	property	verify	1	0	02.4:530 простой 2 с замечен пачкой: DOWN=2.00	holds	holds	yes	4.6	pollbound.qnt
+PB02	pb_ok201	inv_seen	control	verify	1	0	контроль: простой 2.01 с	holds	holds	yes	5.5	pollbound.qnt
+PB03	pb_198	inv_seen	mutant	verify	1	0	мутант (RestartSec короче): простой 1.98 с не замечается	violated	violated	yes	4.5	pollbound.qnt
+PB06	pb_199	inv_seen	control	verify	1	0	контроль: простой 1.99 с — граница целочисленной сетки (см. отчёт)	holds	holds	yes	4.2	pollbound.qnt
+PB04	pb_short	inv_seen	mutant	verify	1	0	мутант: RestartSec=1, простой 1.00 с	violated	violated	yes	4.6	pollbound.qnt
+PB05	pb_ok	inv_sanity	witness	verify	1	0	наблюдения не пусты (невакуумность)	holds	holds	yes	5.2	pollbound.qnt
+RP01	rp_3f	inv_machine	property	run	60	20000	8 инвариантов машины (machine: invariants)	holds	holds	yes	12.6	rolloutpoll.qnt
+RP02	rp_3f	inv_pollBounded	property	run	60	20000	опрос закрывается не позже ROLLOUT_WAIT	holds	holds	yes	10.1	rolloutpoll.qnt
+RP03	rp_3f	inv_lastAnswerThisBatch	property	run	60	20000	живой — только по ответу этого батча (late ignored)	holds	holds	yes	10.2	rolloutpoll.qnt
+RP04	rp_3f	inv_aliveReplyLive	property	run	60	20000	живой — только по живому ответу	holds	holds	yes	10.3	rolloutpoll.qnt
+RP05	rp_3f	inv_oneReadPerBatch	property	run	60	20000	одно чтение целей на батч	holds	holds	yes	9.8	rolloutpoll.qnt
+RP06	rp_3f	inv_lateCommitIgnored	property	run	60	20000	поздний commit игнорируется	holds	holds	yes	9.8	rolloutpoll.qnt
+RP07	rp_3f	inv_passQuorum	property	run	60	20000	pass только при живых ≥ quorum+1	holds	holds	yes	10.1	rolloutpoll.qnt
+RP08	rp_3f	notPassed	witness	run	60	20000	достижимость passed	violated	violated	yes	1.4	rolloutpoll.qnt
+RP09	rp_3f	notRefused	witness	run	60	20000	достижимость refused	violated	violated	yes	1.3	rolloutpoll.qnt
+RP10	rp_3f	notBreakAll	witness	run	60	20000	достижимость обрыва всех	violated	violated	yes	1.3	rolloutpoll.qnt
+RP11	rp_3f	notExpired	witness	run	60	20000	достижимость wait_expired	violated	violated	yes	1.3	rolloutpoll.qnt
+RP12	rp_m1	inv_aliveReplyLive	mutant	run	60	20000	мутант: любой ответ живой	violated	violated	yes	1.3	rolloutpoll.qnt
+RP13	rp_m2	inv_lastAnswerThisBatch	mutant	run	60	20000	мутант: ответ чужой пачки учтён	violated	violated	yes	1.4	rolloutpoll.qnt
+RP14	rp_m3	inv_lateCommitIgnored	mutant	run	60	20000	мутант: read_expired не снимает чтение	violated	violated	yes	1.3	rolloutpoll.qnt
+RP15	rp_m4	inv_pollBounded	mutant	run	60	20000	мутант: нет wait_expired	violated	violated	yes	1.4	rolloutpoll.qnt
+RP16	rp_m5	inv_passQuorum	mutant	run	60	20000	мутант: судья quorum без запаса	violated	violated	yes	1.4	rolloutpoll.qnt
+TR01	rolloutpoll_traces	traces(44)	control	test	0	1	трассы канона rollout-poll.traces.tsv (44)	holds	holds	yes	10.5	rolloutpoll_traces.qnt
+TR02	rolloutpoll_traces	traces(44)	control	test	0	1	негативный контроль: трассы на мутанте 1 (любой ответ живой)	violated	violated	yes	10.5	runs/rolloutpoll_traces_m1.qnt
+TR03	rolloutpoll_traces	traces(44)	control	test	0	1	чувствительность трасс: мутант 2 (ответ чужой пачки учтён); ожидание не подтвердилось, см. отчёт	violated	holds	NO	10.5	runs/rolloutpoll_traces_m2.qnt
+TR04	rolloutpoll_traces	traces(44)	control	test	0	1	чувствительность трасс: мутант 3 (read_expired не снимает чтение)	violated	violated	yes	10.5	runs/rolloutpoll_traces_m3.qnt
+TR05	rolloutpoll_traces	traces(44)	control	test	0	1	чувствительность трасс: мутант 4 (нет wait_expired)	violated	violated	yes	10.7	runs/rolloutpoll_traces_m4.qnt
+TR06	rolloutpoll_traces	traces(44)	control	test	0	1	чувствительность трасс: мутант 5 (судья без запаса)	violated	violated	yes	10.7	runs/rolloutpoll_traces_m5.qnt
+mismatch=1 total=87

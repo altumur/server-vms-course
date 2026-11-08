@@ -1,0 +1,112 @@
+quint verify --main=sa_nosock --max-steps=10 --invariant=inv_opStopHolds --server-endpoint=localhost:8855 /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/socketact.qnt
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-04_12406953771469317647
+# APALACHE version: 0.62.1 | build: a321771                       I@17:17:04.966
+Starting checker server on port 8855...                           I@17:17:04.968
+The Apalache server is running on port 8855. Press Ctrl-C to stop.
+Nov 08, 2026 5:17:07 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@17:17:07.942
+PASS #1: TypeCheckerSnowcat                                       I@17:17:08.358
+ > Running Snowcat .::.                                           I@17:17:08.359
+ > Your types are purrfect!                                       I@17:17:08.851
+ > All expressions are typed                                      I@17:17:08.851
+PASS #2: ConfigurationPass                                        I@17:17:08.852
+  > Set the initialization predicate to q::init                   I@17:17:08.855
+  > Set the transition predicate to q::step                       I@17:17:08.856
+  > Set an invariant to q::inv                                    I@17:17:08.859
+PASS #3: DesugarerPass                                            I@17:17:08.864
+  > Desugaring...                                                 I@17:17:08.864
+PASS #4: InlinePass                                               I@17:17:08.877
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:17:08.878
+PASS #5: TemporalPass                                             I@17:17:08.924
+  > Rewriting temporal operators...                               I@17:17:08.924
+  > No temporal property specified, nothing to encode             I@17:17:08.924
+PASS #6: InlinePass                                               I@17:17:08.925
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:17:08.925
+PASS #7: PrimingPass                                              I@17:17:08.931
+  > Introducing q::initPrimed for q::init'                        I@17:17:08.933
+PASS #8: VCGen                                                    I@17:17:08.934
+  > Producing verification conditions from the invariant q::inv   I@17:17:08.934
+  > VCGen produced 1 verification condition(s)                    I@17:17:08.937
+PASS #9: PreprocessingPass                                        I@17:17:08.943
+  > Before preprocessing: unique renaming                         I@17:17:08.943
+ > Applying standard transformations:                             I@17:17:08.949
+  > PrimePropagation                                              I@17:17:08.949
+  > Desugarer                                                     I@17:17:08.958
+  > UniqueRenamer                                                 I@17:17:08.959
+  > Normalizer                                                    I@17:17:08.972
+  > SetMembershipSimplifier                                       I@17:17:08.978
+  > Keramelizer                                                   I@17:17:08.993
+  > After preprocessing: UniqueRenamer                            I@17:17:09.004
+PASS #10: TransitionFinderPass                                    I@17:17:09.012
+  > Found 1 initializing transitions                              I@17:17:09.028
+  > Found 7 transitions                                           I@17:17:09.056
+  > No constant initializer                                       I@17:17:09.056
+  > Applying unique renaming                                      I@17:17:09.057
+PASS #11: OptimizationPass                                        I@17:17:09.062
+ > Applying optimizations:                                        I@17:17:09.065
+  > ConstSimplifier                                               I@17:17:09.066
+  > ExprOptimizer                                                 I@17:17:09.072
+  > SetMembershipSimplifier                                       I@17:17:09.073
+  > ConstSimplifier                                               I@17:17:09.073
+PASS #12: AnalysisPass                                            I@17:17:09.075
+ > Marking skolemizable existentials and sets to be expanded...   I@17:17:09.077
+  > Skolemization                                                 I@17:17:09.077
+  > Expansion                                                     I@17:17:09.078
+  > Remove unused let-in defs                                     I@17:17:09.079
+ > Running analyzers...                                           I@17:17:09.082
+  > Introduced expression grades                                  I@17:17:09.084
+PASS #13: BoundedChecker                                          I@17:17:09.084
+State 0: Checking 1 state invariants                              I@17:17:09.370
+State 0: state invariant 0 holds.                                 I@17:17:09.378
+Step 0: picking a transition out of 1 transition(s)               I@17:17:09.385
+Step 1: Transition #0 is disabled                                 I@17:17:09.418
+Step 1: Transition #2 is disabled                                 I@17:17:09.434
+Step 1: Transition #3 is disabled                                 I@17:17:09.440
+Step 1: picking a transition out of 2 transition(s)               I@17:17:09.485
+Step 2: Transition #1 is disabled                                 I@17:17:09.499
+Step 2: Transition #3 is disabled                                 I@17:17:09.504
+Step 2: Transition #4 is disabled                                 I@17:17:09.510
+Step 2: picking a transition out of 2 transition(s)               I@17:17:09.511
+Step 3: Transition #0 is disabled                                 I@17:17:09.517
+Step 3: Transition #2 is disabled                                 I@17:17:09.524
+Step 3: Transition #3 is disabled                                 I@17:17:09.528
+Step 3: picking a transition out of 2 transition(s)               I@17:17:09.534
+Step 4: Transition #1 is disabled                                 I@17:17:09.541
+Step 4: Transition #3 is disabled                                 I@17:17:09.545
+Step 4: Transition #4 is disabled                                 I@17:17:09.556
+Step 4: picking a transition out of 2 transition(s)               I@17:17:09.558
+Step 5: Transition #0 is disabled                                 I@17:17:09.564
+Step 5: Transition #2 is disabled                                 I@17:17:09.571
+Step 5: Transition #3 is disabled                                 I@17:17:09.575
+Step 5: picking a transition out of 2 transition(s)               I@17:17:09.582
+Step 6: Transition #1 is disabled                                 I@17:17:09.595
+Step 6: Transition #3 is disabled                                 I@17:17:09.599
+Step 6: Transition #4 is disabled                                 I@17:17:09.603
+Step 6: picking a transition out of 2 transition(s)               I@17:17:09.604
+Step 7: Transition #0 is disabled                                 I@17:17:09.609
+Step 7: Transition #2 is disabled                                 I@17:17:09.614
+Step 7: Transition #3 is disabled                                 I@17:17:09.616
+Step 7: picking a transition out of 2 transition(s)               I@17:17:09.621
+Step 8: Transition #1 is disabled                                 I@17:17:09.627
+Step 8: Transition #3 is disabled                                 I@17:17:09.632
+Step 8: Transition #4 is disabled                                 I@17:17:09.636
+Step 8: picking a transition out of 2 transition(s)               I@17:17:09.637
+Step 9: Transition #0 is disabled                                 I@17:17:09.641
+Step 9: Transition #1 is disabled                                 I@17:17:09.646
+Step 9: Transition #2 is disabled                                 I@17:17:09.647
+Step 9: Transition #4 is disabled                                 I@17:17:09.657
+Step 9: picking a transition out of 1 transition(s)               I@17:17:09.657
+Step 10: Transition #0 is disabled                                I@17:17:09.660
+Step 10: Transition #1 is disabled                                I@17:17:09.661
+Step 10: Transition #2 is disabled                                I@17:17:09.662
+Step 10: Transition #4 is disabled                                I@17:17:09.667
+Step 10: picking a transition out of 1 transition(s)              I@17:17:09.668
+The outcome is: NoError                                           I@17:17:09.671
+[ok] No violation found (5341ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

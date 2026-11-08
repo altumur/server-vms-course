@@ -1,0 +1,744 @@
+quint run --main=rp_m4 --backend=rust --max-steps=60 --max-samples=20000 --invariant=inv_pollBounded --seed=0x1234abcd --init=initAll --step=stepAll rolloutpoll.qnt
+An example execution:
+
+[State 0]
+{
+  rp_m4::rolloutpoll::answered: Set(),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: -1,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> -9, "c" -> -9),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 0,
+      now: 0,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 1]
+{
+  rp_m4::rolloutpoll::answered: Set(),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 0,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> -9, "c" -> -9),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 100,
+      now: 0,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 2]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held:
+        Set(
+          {
+            r: { applied: 0, lid: "", memOK: true, some: true, st: "Follower" },
+            v: "b"
+          }
+        ),
+      k: 0,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> -9),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 100,
+      now: 0,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 3]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held:
+        Set(
+          {
+            r: { applied: 0, lid: "", memOK: true, some: true, st: "Follower" },
+            v: "b"
+          }
+        ),
+      k: 0,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> -9),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 100,
+      now: 100,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 4]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 1,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> -9),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 200,
+      now: 100,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 5]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held:
+        Set(
+          {
+            r:
+              { applied: 2, lid: "b", memOK: true, some: true, st: "Follower" },
+            v: "c"
+          }
+        ),
+      k: 1,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 200,
+      now: 100,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 6]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held:
+        Set(
+          {
+            r:
+              { applied: 2, lid: "b", memOK: true, some: true, st: "Follower" },
+            v: "c"
+          }
+        ),
+      k: 1,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 200,
+      now: 200,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 7]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 200,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 8]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 250,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 9]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "a"), (1, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 250,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 10]
+{
+  rp_m4::rolloutpoll::answered: Set((0, "b"), (1, "a"), (1, "c"), (2, "a")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 250,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 11]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 0, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 250,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 12]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a"), (2, "b")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 2, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 250,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 13]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a"), (2, "b")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 2, "c" -> 1),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 260,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 14]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a"), (2, "b"), (2, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 2, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 260,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b", "c"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 15]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a"), (2, "b"), (2, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 2,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 2, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 300,
+      now: 300,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b", "c"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 16]
+{
+  rp_m4::rolloutpoll::answered:
+    Set((0, "b"), (1, "a"), (1, "b"), (1, "c"), (2, "a"), (2, "b"), (2, "c")),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 3,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 2, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 400,
+      now: 300,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 17]
+{
+  rp_m4::rolloutpoll::answered:
+    Set(
+      (0, "b"),
+      (1, "a"),
+      (1, "b"),
+      (1, "c"),
+      (2, "a"),
+      (2, "b"),
+      (2, "c"),
+      (3, "b")
+    ),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held:
+        Set(
+          {
+            r:
+              {
+                applied: 1,
+                lid: "b",
+                memOK: false,
+                some: true,
+                st: "Follower"
+              },
+            v: "b"
+          }
+        ),
+      k: 3,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 3, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: false,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 400,
+      now: 300,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set(),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: false,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 18]
+{
+  rp_m4::rolloutpoll::answered:
+    Set(
+      (0, "b"),
+      (1, "a"),
+      (1, "b"),
+      (1, "c"),
+      (2, "a"),
+      (2, "b"),
+      (2, "c"),
+      (3, "a"),
+      (3, "b")
+    ),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 3,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 3, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 400,
+      now: 300,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[State 19]
+{
+  rp_m4::rolloutpoll::answered:
+    Set(
+      (0, "b"),
+      (1, "a"),
+      (1, "b"),
+      (1, "c"),
+      (2, "a"),
+      (2, "b"),
+      (2, "c"),
+      (3, "a"),
+      (3, "b")
+    ),
+  rp_m4::rolloutpoll::commited: Set(),
+  rp_m4::rolloutpoll::st:
+    {
+      alive: Set(),
+      did: [],
+      held: Set(),
+      k: 3,
+      lastLive: Map("a" -> false, "b" -> false, "c" -> false),
+      lastReplyK: Map("a" -> -9, "b" -> 3, "c" -> 2),
+      lateCommitApplied: false,
+      leaderId: "@null",
+      leaderless: true,
+      mst: "polling",
+      need: Set(),
+      nextRead: 1,
+      nextTickAt: 400,
+      now: 301,
+      readDl: Set(),
+      readDone: false,
+      reads: Set(),
+      readsInBatch: 0,
+      replied: Set("a", "b"),
+      resultCode: 0,
+      resultWord: "",
+      selfReplied: true,
+      target: Set(),
+      waitAt: 300
+    }
+}
+
+[violation] Found an issue (42ms at 24 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x1234abcd --backend=rust to reproduce.
+error: Invariant violated

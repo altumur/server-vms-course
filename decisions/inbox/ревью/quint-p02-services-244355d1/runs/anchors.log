@@ -1,0 +1,52 @@
+ok	02.3:207	as the first step, before step 1	
+ok	02.3:212	repeat it with a pause of 1 s	
+ok	02.3:213	`START_WAIT` = 60 s after the start of the process, do not start with code 1	
+ok	02.3:228	The runner is a reader of the view	
+ok	02.3:229	within `START_WAIT`	
+ok	02.3:233	«Do not start» means to exit with a non-zero code	
+ok	02.3:234	RestartPreventExitStatus=2	
+ok	02.3:372	The two start codes are checked by reading	
+ok	02.3:375	seams of the lesson have no directive	
+ok	02.4:48	RestartPreventExitStatus=2 (a start refusal	
+ok	02.4:49	RestartSec=2; After=configstore.service (not Wants: the store is not pulled in)	
+ok	02.4:50	ProtectSystem=strict	
+ok	02.4:55	configstore-admin.socket	
+ok	02.4:58	Service=configstore.service	
+ok	02.4:62	Type=notify; NotifyAccess=main	
+ok	02.4:72	w2c-run.sh worker	
+ok	02.4:87	Type=notify; NotifyAccess=main; WatchdogSec=360; TimeoutStopSec = worker.stop_timeout	
+ok	02.4:88	20…50, default 20	
+ok	02.4:102	Type=oneshot, Restart=no	
+ok	02.4:104	OnBootSec 1–2 min	
+ok	02.4:105	OnUnitActiveSec 1 min	
+ok	02.4:115	the controller sends READY=1 after the schema check	
+ok	02.4:116	the worker — after capturing the name	
+ok	02.4:217	reads its own series <sub>_workers_wanted	
+ok	02.4:224	failed, the last successful collection is older than a minute by the local monotonic clock	
+ok	02.4:225	is greater than 60 or −1	
+ok	02.4:227	start the missing ones of this set (the smallest first), stop the running ones	
+ok	02.4:236	passes are serialised; a number is reserved until start; an uncertain outcome	
+ok	02.4:238	exactly one mechanism executes the series on an installation	
+ok	02.4:239	stopping — systemctl stop	
+ok	02.4:395	wait for its answer GET /v1/status	
+ok	02.4:530	a restart of a member by RestartSec=2 keeps it down for 2 s	
+ok	02.4:533	install with W2C_HOLD	
+ok	02.4:534	also on a repeat of rollout	
+ok	02.4:558	the barrier waits no longer than ROLLOUT_WAIT, polling once per 1 s	
+ok	02.4:560	ROLLOUT_WAIT: 300 s	
+ok	02.4:561	a repeat with the same command is harmless	
+ok	02.4:563	does not enable the units of the subsystems of the rollout	
+ok	02.4:821	`After` sets the start order, but not the readiness of the store	
+ok	02.1:235	`worker.stop_timeout` — an integer from 20 to 50, default 20	
+ok	03.2:537	an exclusive blocking flock	
+ok	03.2:555	the name is not obtained → writing_allowed = false, no heartbeat	
+ok	03.2:668	seek_name()	
+ok	pres:32	open(O_CREAT) → an exclusive blocking flock	
+ok	sc:89	the answer read limit and the answer wait term — decided by the client implementation	
+ok	machine:38	BATCH: 1	
+ok	machine:39	READ: 1	
+ok	machine:40	ROLLOUT_WAIT: 300	
+ok	machine:73	Events of one instant, in this order: read_expired; tick; wait_expired	
+ok	machine:152	id: tick-2	
+ok	02.4:529	two observations of one voter	
+bad=0 total=51 report_unknown=0 pin=244355d161139bd6fe65fd68c7e5134598c21ba3

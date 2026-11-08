@@ -1,0 +1,123 @@
+quint verify --main=rs_a --max-steps=12 --invariant=notRepeated --server-endpoint=localhost:8855 /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/rolloutsteps.qnt
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-42_9759488554136250634
+# APALACHE version: 0.62.1 | build: a321771                       I@17:17:42.933
+Starting checker server on port 8855...                           I@17:17:42.935
+The Apalache server is running on port 8855. Press Ctrl-C to stop.
+Nov 08, 2026 5:17:45 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+PASS #0: SanyParser                                               I@17:17:45.648
+PASS #1: TypeCheckerSnowcat                                       I@17:17:46.013
+ > Running Snowcat .::.                                           I@17:17:46.013
+ > Your types are purrfect!                                       I@17:17:46.501
+ > All expressions are typed                                      I@17:17:46.501
+PASS #2: ConfigurationPass                                        I@17:17:46.502
+  > Set the initialization predicate to q::init                   I@17:17:46.507
+  > Set the transition predicate to q::step                       I@17:17:46.507
+  > Set an invariant to q::inv                                    I@17:17:46.507
+PASS #3: DesugarerPass                                            I@17:17:46.516
+  > Desugaring...                                                 I@17:17:46.516
+PASS #4: InlinePass                                               I@17:17:46.524
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:17:46.525
+PASS #5: TemporalPass                                             I@17:17:46.591
+  > Rewriting temporal operators...                               I@17:17:46.593
+  > No temporal property specified, nothing to encode             I@17:17:46.594
+PASS #6: InlinePass                                               I@17:17:46.594
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@17:17:46.594
+PASS #7: PrimingPass                                              I@17:17:46.601
+  > Introducing q::initPrimed for q::init'                        I@17:17:46.602
+PASS #8: VCGen                                                    I@17:17:46.603
+  > Producing verification conditions from the invariant q::inv   I@17:17:46.604
+  > VCGen produced 1 verification condition(s)                    I@17:17:46.607
+PASS #9: PreprocessingPass                                        I@17:17:46.612
+  > Before preprocessing: unique renaming                         I@17:17:46.613
+ > Applying standard transformations:                             I@17:17:46.619
+  > PrimePropagation                                              I@17:17:46.619
+  > Desugarer                                                     I@17:17:46.624
+  > UniqueRenamer                                                 I@17:17:46.627
+  > Normalizer                                                    I@17:17:46.631
+  > SetMembershipSimplifier                                       I@17:17:46.635
+  > Keramelizer                                                   I@17:17:46.638
+  > After preprocessing: UniqueRenamer                            I@17:17:46.642
+PASS #10: TransitionFinderPass                                    I@17:17:46.646
+  > Found 1 initializing transitions                              I@17:17:46.658
+  > Found 7 transitions                                           I@17:17:46.680
+  > No constant initializer                                       I@17:17:46.681
+  > Applying unique renaming                                      I@17:17:46.683
+PASS #11: OptimizationPass                                        I@17:17:46.689
+ > Applying optimizations:                                        I@17:17:46.692
+  > ConstSimplifier                                               I@17:17:46.693
+  > ExprOptimizer                                                 I@17:17:46.701
+  > SetMembershipSimplifier                                       I@17:17:46.703
+  > ConstSimplifier                                               I@17:17:46.704
+PASS #12: AnalysisPass                                            I@17:17:46.709
+ > Marking skolemizable existentials and sets to be expanded...   I@17:17:46.714
+  > Skolemization                                                 I@17:17:46.714
+  > Expansion                                                     I@17:17:46.715
+  > Remove unused let-in defs                                     I@17:17:46.719
+ > Running analyzers...                                           I@17:17:46.723
+  > Introduced expression grades                                  I@17:17:46.726
+PASS #13: BoundedChecker                                          I@17:17:46.726
+State 0: Checking 1 state invariants                              I@17:17:47.031
+State 0: state invariant 0 holds.                                 I@17:17:47.036
+Step 0: picking a transition out of 1 transition(s)               I@17:17:47.038
+Step 1: Transition #0 is disabled                                 I@17:17:47.051
+Step 1: Transition #2 is disabled                                 I@17:17:47.066
+Step 1: Transition #4 is disabled                                 I@17:17:47.126
+Step 1: Transition #5 is disabled                                 I@17:17:47.145
+Step 1: Transition #6 is disabled                                 I@17:17:47.161
+Step 1: picking a transition out of 1 transition(s)               I@17:17:47.161
+State 2: Checking 1 state invariants                              I@17:17:47.164
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-42_9759488554136250634/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-42_9759488554136250634/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-42_9759488554136250634/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p02q/apalache-work/_apalache-out/server/2026-11-08T17-17-42_9759488554136250634/violation1.itf.json I@17:17:47.269
+State 2: state invariant 0 violated.                              I@17:17:47.270
+Found 1 error(s)                                                  I@17:17:47.270
+The outcome is: Error                                             I@17:17:47.273
+An example execution:
+
+[State 0]
+{
+  rs_a::rolloutsteps::attempt: 1,
+  rs_a::rolloutsteps::barrierOvershoot: 0,
+  rs_a::rolloutsteps::barrierStart: 0,
+  rs_a::rolloutsteps::barrierThisAttempt: false,
+  rs_a::rolloutsteps::newSubEnabled: false,
+  rs_a::rolloutsteps::newSubInstalled: false,
+  rs_a::rolloutsteps::now: 0,
+  rs_a::rolloutsteps::repeated: false,
+  rs_a::rolloutsteps::rolloutDone: false,
+  rs_a::rolloutsteps::stage: "Get"
+}
+
+[State 1]
+{
+  rs_a::rolloutsteps::attempt: 1,
+  rs_a::rolloutsteps::barrierOvershoot: 0,
+  rs_a::rolloutsteps::barrierStart: 0,
+  rs_a::rolloutsteps::barrierThisAttempt: false,
+  rs_a::rolloutsteps::newSubEnabled: false,
+  rs_a::rolloutsteps::newSubInstalled: false,
+  rs_a::rolloutsteps::now: 0,
+  rs_a::rolloutsteps::repeated: false,
+  rs_a::rolloutsteps::rolloutDone: false,
+  rs_a::rolloutsteps::stage: "Failed"
+}
+
+[State 2]
+{
+  rs_a::rolloutsteps::attempt: 2,
+  rs_a::rolloutsteps::barrierOvershoot: 0,
+  rs_a::rolloutsteps::barrierStart: 0,
+  rs_a::rolloutsteps::barrierThisAttempt: false,
+  rs_a::rolloutsteps::newSubEnabled: false,
+  rs_a::rolloutsteps::newSubInstalled: false,
+  rs_a::rolloutsteps::now: 0,
+  rs_a::rolloutsteps::repeated: true,
+  rs_a::rolloutsteps::rolloutDone: false,
+  rs_a::rolloutsteps::stage: "Get"
+}
+
+[violation] Found an issue (5174ms).
+error: found a counterexample

@@ -1,0 +1,119 @@
+quint test --main=rolloutpoll_traces --match=tr_ --max-samples=1 runs/rolloutpoll_traces_m5.qnt
+
+  rolloutpoll_traces
+    ok tr_healthy_under_write passed 1 test(s)
+    1) tr_rupture_drops_target failed after 1 test(s)
+    2) tr_not_live_reply failed after 1 test(s)
+    3) tr_leader_changed failed after 1 test(s)
+    ok tr_held_before_self passed 1 test(s)
+    ok tr_self_no_answer passed 1 test(s)
+    ok tr_read_timeout passed 1 test(s)
+    ok tr_read_after_rupture passed 1 test(s)
+    ok tr_one_read_per_batch passed 1 test(s)
+    ok tr_batch_not_delayed passed 1 test(s)
+    ok tr_late_status_ignored passed 1 test(s)
+    ok tr_late_commit_ignored passed 1 test(s)
+    4) tr_deadline_order failed after 1 test(s)
+    ok tr_deadline_order_refuse passed 1 test(s)
+    5) tr_unanswered_before_tick failed after 1 test(s)
+    ok tr_voters_changed passed 1 test(s)
+    ok tr_members_changed passed 1 test(s)
+    ok tr_voters_changed_no_leader passed 1 test(s)
+    ok tr_voters_changed_candidate passed 1 test(s)
+    ok tr_no_leader_break passed 1 test(s)
+    ok tr_candidate_break passed 1 test(s)
+    ok tr_voters_reordered passed 1 test(s)
+    ok tr_pre_at_leader passed 1 test(s)
+    ok tr_last_at_follower passed 1 test(s)
+    ok tr_last_passes passed 1 test(s)
+    ok tr_last_two_of_three_not_enough passed 1 test(s)
+    ok tr_leader_voters_changed passed 1 test(s)
+    ok tr_leader_voters_changed_held passed 1 test(s)
+    ok tr_follower_voters_not_checked passed 1 test(s)
+    ok tr_voters_changed_later_batch passed 1 test(s)
+    ok tr_became_leader_later_batch passed 1 test(s)
+    ok tr_lost_leadership_later_batch passed 1 test(s)
+    ok tr_last_leader_id_not_self passed 1 test(s)
+    ok tr_leader_address_empty passed 1 test(s)
+    6) tr_target_voter_silent failed after 1 test(s)
+    ok tr_status_refused_connection passed 1 test(s)
+    ok tr_answer_at_tick_instant passed 1 test(s)
+    ok tr_commit_at_deadline_instant passed 1 test(s)
+    7) tr_two_voters_refused failed after 1 test(s)
+    8) tr_two_voters_last_refused failed after 1 test(s)
+    ok tr_two_voters_last_downtime_passes passed 1 test(s)
+    ok tr_two_voters_downtime_passes passed 1 test(s)
+    ok tr_downtime_three_voters_polls passed 1 test(s)
+    9) tr_voter_without_address failed after 1 test(s)
+
+  35 passing (6643ms)
+  9 failed
+
+  1) tr_rupture_drops_target:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:28:227)
+    Use --seed=0xc1ab4a4f27c4bcf --match=tr_rupture_drops_target to repeat.
+  2) tr_not_live_reply:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:48:107)
+    Use --seed=0xccc10c8e841fe5bc --match=tr_not_live_reply to repeat.
+  3) tr_leader_changed:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:58:227)
+    Use --seed=0xcc417792e8644de6 --match=tr_leader_changed to repeat.
+  4) tr_deadline_order:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:128:107)
+    Use --seed=0xeb7cb31037807550 --match=tr_deadline_order to repeat.
+  5) tr_unanswered_before_tick:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "polling") and (not(st.target.exists(t => t.v == "c")))) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:146:107)
+    Use --seed=0x87c1e9288e3e599e --match=tr_unanswered_before_tick to repeat.
+  6) tr_target_voter_silent:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (not(st.target.exists(t => t.v == "c"))) and (st.target.exists(t => t.v == "a" and t.c == 10)) and (not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:242:107)
+    Use --seed=0x77bcb9975023ae3c --match=tr_target_voter_silent to repeat.
+  7) tr_two_voters_refused:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "refused") and (hasDid(st.did, recD("refuse", -1, 2, Set(), "not enough live voters")))) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:269:102)
+    Use --seed=0x3d72c17084cf10db --match=tr_two_voters_refused to repeat.
+  8) tr_two_voters_last_refused:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:277:101)
+    Use --seed=0x49bffae328060605 --match=tr_two_voters_last_refused to repeat.
+  9) tr_voter_without_address:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:8:40
+        8:   action tcheck(c: bool): bool = all { assert(c), st' = st, answered' = answered, commited' = commited }
+                                                  ^^^^^^^^^
+          at tcheck((hasDid(st.did, recD("tick", 2, -1, Set(), ""))) and (not(hasDid(st.did, recD("pass", -1, -1, Set(), "")))) and (st.mst == "polling")) (/home/pilot/review103-claude-adr0130-p02-quint/decisions/inbox/ревью/quint-p02-services-244355d1/runs/rolloutpoll_traces_m5.qnt:300:107)
+    Use --seed=0xf7496270f782d812 --match=tr_voter_without_address to repeat.
+
+
+  Use --verbosity=3 to show executions.
+  Further debug with: quint test --verbosity=3 runs/rolloutpoll_traces_m5.qnt
+error: Tests failed
