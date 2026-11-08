@@ -1,0 +1,148 @@
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/wd-01/_apalache-out/server/2026-11-08T19-09-27_16245021981588327138
+# APALACHE version: 0.62.1 | build: a321771                       I@19:09:27.902
+Starting checker server on port 8861...                           I@19:09:27.904
+The Apalache server is running on port 8861. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@19:09:29.863
+PASS #1: TypeCheckerSnowcat                                       I@19:09:30.133
+ > Running Snowcat .::.                                           I@19:09:30.133
+ > Your types are purrfect!                                       I@19:09:30.705
+ > All expressions are typed                                      I@19:09:30.705
+PASS #2: ConfigurationPass                                        I@19:09:30.706
+  > Set the initialization predicate to q::init                   I@19:09:30.708
+  > Set the transition predicate to q::step                       I@19:09:30.708
+  > Set an invariant to q::inv                                    I@19:09:30.709
+PASS #3: DesugarerPass                                            I@19:09:30.712
+  > Desugaring...                                                 I@19:09:30.712
+PASS #4: InlinePass                                               I@19:09:30.719
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@19:09:30.719
+PASS #5: TemporalPass                                             I@19:09:30.760
+  > Rewriting temporal operators...                               I@19:09:30.760
+  > No temporal property specified, nothing to encode             I@19:09:30.760
+PASS #6: InlinePass                                               I@19:09:30.760
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@19:09:30.760
+PASS #7: PrimingPass                                              I@19:09:30.768
+  > Introducing q::initPrimed for q::init'                        I@19:09:30.770
+PASS #8: VCGen                                                    I@19:09:30.771
+  > Producing verification conditions from the invariant q::inv   I@19:09:30.772
+  > VCGen produced 1 verification condition(s)                    I@19:09:30.775
+PASS #9: PreprocessingPass                                        I@19:09:30.778
+  > Before preprocessing: unique renaming                         I@19:09:30.778
+ > Applying standard transformations:                             I@19:09:30.782
+  > PrimePropagation                                              I@19:09:30.783
+  > Desugarer                                                     I@19:09:30.786
+  > UniqueRenamer                                                 I@19:09:30.789
+  > Normalizer                                                    I@19:09:30.792
+  > SetMembershipSimplifier                                       I@19:09:30.796
+  > Keramelizer                                                   I@19:09:30.799
+  > After preprocessing: UniqueRenamer                            I@19:09:30.806
+PASS #10: TransitionFinderPass                                    I@19:09:30.810
+  > Found 1 initializing transitions                              I@19:09:30.822
+  > Found 10 transitions                                          I@19:09:30.833
+  > No constant initializer                                       I@19:09:30.833
+  > Applying unique renaming                                      I@19:09:30.834
+PASS #11: OptimizationPass                                        I@19:09:30.836
+ > Applying optimizations:                                        I@19:09:30.839
+  > ConstSimplifier                                               I@19:09:30.839
+  > ExprOptimizer                                                 I@19:09:30.846
+  > SetMembershipSimplifier                                       I@19:09:30.848
+  > ConstSimplifier                                               I@19:09:30.848
+PASS #12: AnalysisPass                                            I@19:09:30.854
+ > Marking skolemizable existentials and sets to be expanded...   I@19:09:30.855
+  > Skolemization                                                 I@19:09:30.856
+  > Expansion                                                     I@19:09:30.857
+  > Remove unused let-in defs                                     I@19:09:30.860
+ > Running analyzers...                                           I@19:09:30.863
+  > Introduced expression grades                                  I@19:09:30.866
+PASS #13: BoundedChecker                                          I@19:09:30.866
+State 0: Checking 1 state invariants                              I@19:09:31.112
+State 0: state invariant 0 holds.                                 I@19:09:31.115
+Step 0: picking a transition out of 1 transition(s)               I@19:09:31.117
+Step 1: Transition #0 is disabled                                 I@19:09:31.122
+Step 1: Transition #1 is disabled                                 I@19:09:31.125
+Step 1: Transition #2 is disabled                                 I@19:09:31.128
+Step 1: Transition #3 is disabled                                 I@19:09:31.131
+Step 1: Transition #5 is disabled                                 I@19:09:31.138
+Step 1: Transition #6 is disabled                                 I@19:09:31.140
+Step 1: Transition #8 is disabled                                 I@19:09:31.148
+Step 1: picking a transition out of 3 transition(s)               I@19:09:31.153
+Step 2: Transition #0 is disabled                                 I@19:09:31.161
+Step 2: Transition #2 is disabled                                 I@19:09:31.167
+Step 2: Transition #3 is disabled                                 I@19:09:31.169
+State 2: Checking 1 state invariants                              I@19:09:31.174
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/wd-01/_apalache-out/server/2026-11-08T19-09-27_16245021981588327138/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/wd-01/_apalache-out/server/2026-11-08T19-09-27_16245021981588327138/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/wd-01/_apalache-out/server/2026-11-08T19-09-27_16245021981588327138/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/wd-01/_apalache-out/server/2026-11-08T19-09-27_16245021981588327138/violation1.itf.json I@19:09:31.253
+State 2: state invariant 0 violated.                              I@19:09:31.253
+Found 1 error(s)                                                  I@19:09:31.254
+The outcome is: Error                                             I@19:09:31.256
+An example execution:
+
+[State 0]
+{
+  wd_norm::p04_pass_watchdog::budget: 0,
+  wd_norm::p04_pass_watchdog::decided: 0,
+  wd_norm::p04_pass_watchdog::judgedNonAlive: false,
+  wd_norm::p04_pass_watchdog::kills: 0,
+  wd_norm::p04_pass_watchdog::lastNotify: 0,
+  wd_norm::p04_pass_watchdog::lastPassDur: 0,
+  wd_norm::p04_pass_watchdog::lastPassEnd: 0,
+  wd_norm::p04_pass_watchdog::now: 0,
+  wd_norm::p04_pass_watchdog::opCost: 361,
+  wd_norm::p04_pass_watchdog::passStart: 0,
+  wd_norm::p04_pass_watchdog::phase: "Idle",
+  wd_norm::p04_pass_watchdog::reports: 0,
+  wd_norm::p04_pass_watchdog::runsSinceStart: 0,
+  wd_norm::p04_pass_watchdog::slotFirstSeen: -1,
+  wd_norm::p04_pass_watchdog::turnBusy: false,
+  wd_norm::p04_pass_watchdog::turnSeenAt: -1,
+  wd_norm::p04_pass_watchdog::u: 2
+}
+
+[State 1]
+{
+  wd_norm::p04_pass_watchdog::budget: 0,
+  wd_norm::p04_pass_watchdog::decided: 0,
+  wd_norm::p04_pass_watchdog::judgedNonAlive: false,
+  wd_norm::p04_pass_watchdog::kills: 0,
+  wd_norm::p04_pass_watchdog::lastNotify: 0,
+  wd_norm::p04_pass_watchdog::lastPassDur: 0,
+  wd_norm::p04_pass_watchdog::lastPassEnd: 0,
+  wd_norm::p04_pass_watchdog::now: 0,
+  wd_norm::p04_pass_watchdog::opCost: 361,
+  wd_norm::p04_pass_watchdog::passStart: 0,
+  wd_norm::p04_pass_watchdog::phase: "Control",
+  wd_norm::p04_pass_watchdog::reports: 0,
+  wd_norm::p04_pass_watchdog::runsSinceStart: 0,
+  wd_norm::p04_pass_watchdog::slotFirstSeen: 0,
+  wd_norm::p04_pass_watchdog::turnBusy: true,
+  wd_norm::p04_pass_watchdog::turnSeenAt: -1,
+  wd_norm::p04_pass_watchdog::u: 2
+}
+
+[State 2]
+{
+  wd_norm::p04_pass_watchdog::budget: 0,
+  wd_norm::p04_pass_watchdog::decided: 0,
+  wd_norm::p04_pass_watchdog::judgedNonAlive: false,
+  wd_norm::p04_pass_watchdog::kills: 1,
+  wd_norm::p04_pass_watchdog::lastNotify: 0,
+  wd_norm::p04_pass_watchdog::lastPassDur: 0,
+  wd_norm::p04_pass_watchdog::lastPassEnd: 0,
+  wd_norm::p04_pass_watchdog::now: 361,
+  wd_norm::p04_pass_watchdog::opCost: 361,
+  wd_norm::p04_pass_watchdog::passStart: 0,
+  wd_norm::p04_pass_watchdog::phase: "Down",
+  wd_norm::p04_pass_watchdog::reports: 0,
+  wd_norm::p04_pass_watchdog::runsSinceStart: 0,
+  wd_norm::p04_pass_watchdog::slotFirstSeen: 0,
+  wd_norm::p04_pass_watchdog::turnBusy: true,
+  wd_norm::p04_pass_watchdog::turnSeenAt: -1,
+  wd_norm::p04_pass_watchdog::u: 2
+}
+
+[violation] Found an issue (3788ms).
+Nov 08, 2026 7:09:29 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

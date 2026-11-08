@@ -1,0 +1,107 @@
+clk-01	clk_premise	invEndsBound	property	verify	10	0	ctrl<=60,leader=0	pass	pass	1	7.5	p04_clock_delete.qnt
+clk-02	clk_premise	invMadeBound	property	verify	10	0	ctrl<=60,leader=0	pass	pass	1	7.8	p04_clock_delete.qnt
+clk-03	clk_premise	invManualNotDeleted	property	verify	10	0	ctrl<=60,leader=0	pass	pass	1	6.7	p04_clock_delete.qnt
+clk-04	clk_premise	invDaNotEarly	property	verify	10	0	ctrl<=60,leader=0,da=mono	pass	pass	1	8.2	p04_clock_delete.qnt
+clk-05	clk_jump	invEndsBound	property	verify	6	0	ctrl unbounded,leader=0; Б1	violation	violation	1	4.8	p04_clock_delete.qnt
+clk-06	clk_jump	invMadeBound	property	verify	10	0	ctrl unbounded,leader=0; строка с made	pass	pass	1	7.7	p04_clock_delete.qnt
+clk-07	clk_jump	invDaNotEarly	property	verify	10	0	ctrl unbounded,leader=0,da=mono	pass	pass	1	7.6	p04_clock_delete.qnt
+clk-08	clk_jump_fix	invEndsBound	control	verify	10	0	предложение Б1: not_before=ends-60, ctrl unbounded, leader=0	pass	pass	1	7.9	p04_clock_delete.qnt
+clk-09	clk_jump_fix_leader	invEndsBound	control	verify	8	0	предложение Б1, leader unbounded (тот же сервер/снимок ВМ)	violation	violation	1	4.8	p04_clock_delete.qnt
+clk-10	clk_jump_leader	invMadeStrict	property	verify	8	0	ctrl unbounded,leader unbounded; точная граница keep-60	violation	violation	1	4.8	p04_clock_delete.qnt
+clk-11	clk_premise_leader	invEndsBound	control	verify	10	0	ctrl<=60,leader<=60	pass	pass	1	9.5	p04_clock_delete.qnt
+clk-12	clk_premise_leader	invMadeBound	property	verify	10	0	ctrl<=60,leader<=60	pass	pass	1	9.3	p04_clock_delete.qnt
+clk-13	clk_mut_no_nb	invMadeBound	mutant	verify	8	0	мутант: без not_before; ctrl unbounded	violation	violation	1	4.8	p04_clock_delete.qnt
+clk-14	clk_mut_manual	invManualNotDeleted	mutant	verify	8	0	мутант: ручная строка удаляется	violation	violation	1	5.2	p04_clock_delete.qnt
+clk-15	clk_jump_da_wall	invDaNotEarly	mutant	verify	8	0	чтение М1: delete_after по стенным часам	violation	violation	1	5.1	p04_clock_delete.qnt
+clk-w1	clk_premise	witEndsDeleted	witness	verify	8	0		violation	violation	1	4.9	p04_clock_delete.qnt
+clk-w2	clk_premise	witMadeDeleted	witness	verify	8	0		violation	violation	1	5.0	p04_clock_delete.qnt
+clk-w3	clk_premise	witDaDeleted	witness	verify	10	0		violation	violation	1	5.0	p04_clock_delete.qnt
+clk-w4	clk_premise	witManualKept	witness	verify	6	0		violation	violation	1	5.1	p04_clock_delete.qnt
+clk-w5	clk_premise	witDaAfterRestart	witness	verify	10	0	перезапуск, отсчёт заново	violation	violation	1	5.1	p04_clock_delete.qnt
+clk-w7	clk_jump	witMadeDeleted	witness	verify	10	0	невакуумность clk-06	violation	violation	1	4.9	p04_clock_delete.qnt
+clk-w8	clk_jump	witDaDeleted	witness	verify	10	0	невакуумность clk-07	violation	violation	1	5.1	p04_clock_delete.qnt
+clk-w9	clk_jump_fix	witEndsDeleted	witness	verify	10	0	невакуумность clk-08	violation	violation	1	5.0	p04_clock_delete.qnt
+clk-w10	clk_premise_leader	witEndsDeleted	witness	verify	10	0	невакуумность clk-11	violation	violation	1	4.9	p04_clock_delete.qnt
+clk-w6	clk_jump_leader	witLeaderSkew	witness	verify	4	0		violation	violation	1	4.7	p04_clock_delete.qnt
+wd-01	wd_norm	invNoKill	property	verify	8	0	норма без бюджета; opCost 1..400	violation	violation	1	4.7	p04_pass_watchdog.qnt
+wd-02	wd_norm	invNoKillIfOpFits	property	verify	10	0	сумма операций, не одна операция > WD	violation	violation	1	4.8	p04_pass_watchdog.qnt
+wd-03	wd_norm	invCompletedPassWithinWd	property	verify	16	0	завершённый проход всегда <= WD: граница фактически сторожевая	pass	pass	1	12.3	p04_pass_watchdog.qnt
+wd-04	wd_norm	invIdleAfterPassReleased	property	verify	16	0	после завершающего действия ход сдан	pass	pass	1	11.5	p04_pass_watchdog.qnt
+wd-05	wd_budget	invNoKill	control	verify	12	0	предложение С1: бюджет B*c+2c<=WD	pass	pass	1	31.3	p04_pass_watchdog.qnt
+wd-06	wd_notify_each	invNoKillIfOpFits	control	verify	14	0	WATCHDOG=1 на каждое решение	pass	pass	1	10.3	p04_pass_watchdog.qnt
+wd-w1	wd_norm	witCompletion	witness	verify	6	0	завершённый проход достижим	violation	violation	1	4.8	p04_pass_watchdog.qnt
+wd-w2	wd_norm	witKilled	witness	verify	8	0	убийство сторожем достижимо	violation	violation	1	4.8	p04_pass_watchdog.qnt
+wd-w3	wd_norm	witTwoKillsNoReport	witness	verify	14	0	2 убийства, 0 финальных отчётов	violation	violation	1	5.7	p04_pass_watchdog.qnt
+wd-w4	wd_norm	witTwoKillsNoJudgement	witness	verify	16	0	2 убийства, неживой судьбы нет	violation	violation	1	6.2	p04_pass_watchdog.qnt
+wd-w5	wd_norm	witNonAlive	witness	verify	12	0	неживая судьба достижима без убийства	violation	violation	1	5.5	p04_pass_watchdog.qnt
+wd-w6	wd_norm	witBusyAfterKill	witness	verify	12	0	ход занят после убийства	violation	violation	1	4.9	p04_pass_watchdog.qnt
+wd-w8	wd_budget	witCompletion	witness	verify	8	0	невакуумность wd-05	violation	violation	1	5.0	p04_pass_watchdog.qnt
+wd-w9	wd_notify_each	witCompletion	witness	verify	8	0	невакуумность wd-06	violation	violation	1	4.9	p04_pass_watchdog.qnt
+wd-w7	wd_notify_each	witLongPassNoKill	witness	verify	14	0	проход длиннее WD без убийства при notify на решение	violation	violation	1	4.8	p04_pass_watchdog.qnt
+fate-01	fate_notorn	invTrueAgeBelowTermAlive	property	verify	10	0	без torn	pass	pass	1	9.1	p04_slot_fate.qnt
+fate-02	fate_notorn	invConflictThenAlive	property	verify	10	0	без torn	pass	pass	1	8.4	p04_slot_fate.qnt
+fate-03	fate_notorn	invNoReleaseOverwrite	property	verify	10	0	без torn	pass	pass	1	8.1	p04_slot_fate.qnt
+fate-04	fate_notorn	invFreshMovesNothing	property	verify	10	0	читаемые строки	pass	pass	1	9.0	p04_slot_fate.qnt
+fate-05	fate_base	invFreshMovesNothing	property	verify	8	0	с torn: уточнение текста N:324	violation	violation	1	5.9	p04_slot_fate.qnt
+fate-06	fate_base	witTornMoveAtZero	witness	verify	6	0	torn и gone при первом взгляде	violation	violation	1	5.9	p04_slot_fate.qnt
+fate-m1	fate_nocas	invNoReleaseOverwrite	mutant	verify	10	0	мутант: release без cas	violation	violation	1	6.4	p04_slot_fate.qnt
+fate-m2	fate_noreset	invConflictThenAlive	mutant	verify	10	0	мутант: новая версия не сбрасывает age	violation	violation	1	6.6	p04_slot_fate.qnt
+fate-m3	fate_until	invTrueAgeBelowTermAlive	mutant	verify	8	0	мутант: возраст из until пишущего	violation	violation	1	6.4	p04_slot_fate.qnt
+fate-w1	fate_base	witR1	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w2	fate_base	witR2	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w3	fate_base	witR3	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w4	fate_base	witR4	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w5	fate_base	witR5	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w6	fate_base	witR6	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	1.1	p04_slot_fate.qnt
+fate-w7	fate_base	witR7	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	1.1	p04_slot_fate.qnt
+fate-w8	fate_base	witR8	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w9	fate_base	witR9	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	1.2	p04_slot_fate.qnt
+fate-w10	fate_base	witR10	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	1.2	p04_slot_fate.qnt
+fate-w11	fate_base	witR11	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w12	fate_base	witR12	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w13	fate_base	witR13	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w14	fate_base	witR14	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.8	p04_slot_fate.qnt
+fate-w15	fate_base	witR15	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w16	fate_base	witR16	witness	sim	30	200000	строка формы slot-fate	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w20	fate_base	witRel2	witness	verify	12	0	slot-release: conflict	violation	violation	1	6.3	p04_slot_fate.qnt
+fate-w21	fate_base	witRel5	witness	verify	10	0	slot-release: ok	violation	violation	1	6.1	p04_slot_fate.qnt
+fate-w22	fate_base	witConflict	witness	verify	12	0		violation	violation	1	7.5	p04_slot_fate.qnt
+fate-w23	fate_base	witReleased	witness	verify	10	0		violation	violation	1	6.1	p04_slot_fate.qnt
+fate-w25	fate_notorn	witReleased	witness	verify	10	0	невакуумность fate-03	violation	violation	1	6.2	p04_slot_fate.qnt
+fate-w26	fate_notorn	witR3	witness	sim	30	200000	невакуумность fate-04	violation	violation	1	0.9	p04_slot_fate.qnt
+fate-w24	fate_base	witGrantAfterRelease	witness	verify	10	0		violation	violation	1	6.1	p04_slot_fate.qnt
+turn-01	turn_base	invCapacity	property	verify	7	0	2 контроллера, 2 ед., 2 рабочих; глубина мала: см. отчёт	pass	pass	1	46.7	p04_turn_race.qnt
+turn-02	turn_base	invOneAssign	property	verify	7	0		pass	pass	1	48.5	p04_turn_race.qnt
+turn-03	turn_base	invIdleConsistent	property	verify	7	0		pass	pass	1	52.5	p04_turn_race.qnt
+turn-04	turn_base	invNoStaleApplied	property	verify	7	0		pass	pass	1	33.4	p04_turn_race.qnt
+turn-f1	turn_base_focus	invCapacity	property	verify	10	0	фокус без шума: подмножество поведений; глубже Apalache	pass	pass	1	144.2	p04_turn_race.qnt
+turn-f2	turn_base_focus	invOneAssign	property	verify	10	0	фокус	pass	pass	1	124.7	p04_turn_race.qnt
+turn-f3	turn_base_focus	invIdleConsistent	property	verify	10	0	фокус	pass	pass	1	157.2	p04_turn_race.qnt
+turn-s1	turn_base	invCapacity	property	sim	40	300000	симуляция	pass	pass	1	60.1	p04_turn_race.qnt
+turn-s2	turn_base	invOneAssign	property	sim	40	300000	симуляция	pass	pass	1	61.5	p04_turn_race.qnt
+turn-s3	turn_base	invIdleConsistent	property	sim	40	300000	симуляция	pass	pass	1	61.9	p04_turn_race.qnt
+turn-s4	turn_base	invNoNewWhileActive	property	sim	40	300000	симуляция	pass	pass	1	59.3	p04_turn_race.qnt
+turn-s5	turn_base	invNoStaleApplied	property	sim	40	300000	симуляция	pass	pass	1	58.9	p04_turn_race.qnt
+turn-s6	turn_base	invNoEarlyCapture	property	sim	40	300000	симуляция	pass	pass	1	59.9	p04_turn_race.qnt
+turn-s7	turn_sigterm_release	invCapacity	control	sim	40	300000	SIGTERM сдаёт ход (С4), симуляция	pass	pass	1	50.1	p04_turn_race.qnt
+turn-s8	turn_sigterm_release	invIdleConsistent	control	sim	40	300000	SIGTERM сдаёт ход (С4), симуляция	pass	pass	1	47.0	p04_turn_race.qnt
+turn-w1	turn_base	witTakeoverActive	witness	sim	40	200000	захват чужого активного intent	violation	violation	1	1.5	p04_turn_race.qnt
+turn-w2	turn_base	witStaleRefused	witness	sim	40	200000	опоздавшая запись 412	violation	violation	1	1.7	p04_turn_race.qnt
+turn-w3	turn_base	witBothPlaced	witness	sim	40	200000		violation	violation	1	18.0	p04_turn_race.qnt
+turn-w4	turn_base	witCommitWithRecover	witness	sim	40	200000		violation	violation	1	3.5	p04_turn_race.qnt
+turn-w5	turn_base	witGone	witness	sim	40	100000	SIGTERM достижим	violation	violation	1	1.3	p04_turn_race.qnt
+turn-w6	turn_base	witTwoCaptures	witness	sim	40	100000		violation	violation	1	1.3	p04_turn_race.qnt
+turn-w7	turn_sigterm_release	witTwoCaptures	witness	sim	40	100000		violation	violation	1	1.4	p04_turn_race.qnt
+turn-m1	turn_noguard	invNoStaleApplied	mutant	sim	40	200000	мутант: запись без guard	violation	violation	1	2.1	p04_turn_race.qnt
+turn-m2	turn_noguard	invIdleConsistent	mutant	sim	40	1000000	мутант: запись без guard	violation	violation	1	110.4	p04_turn_race.qnt
+turn-m3	turn_nofresh_focus	invCapacity	mutant	sim	45	300000	мутант: решение по старому снимку (фокус)	violation	violation	1	1.4	p04_turn_race.qnt
+turn-m4	turn_skipintent	invNoNewWhileActive	mutant	sim	40	200000	мутант: новое решение при активном intent	violation	violation	1	1.5	p04_turn_race.qnt
+turn-m5	turn_skipintent	invIdleConsistent	mutant	sim	40	1000000	мутант	violation	violation	1	109.0	p04_turn_race.qnt
+turn-m6	turn_addfirst_focus	invOneAssign	mutant	sim	45	300000	мутант: добавление без снятия (фокус)	violation	violation	1	1.4	p04_turn_race.qnt
+turn-m7	turn_nobump	invNoLateApplied	mutant	sim	40	1000000	мутант: барьер без смены версии, опоздавшая запись применена после барьера (T:83)	violation	violation	1	2.0	p04_turn_race.qnt
+turn-s9	turn_base	invNoLateApplied	property	sim	40	300000	T:83: после барьера опоздавшая запись не применяется	pass	pass	1	52.6	p04_turn_race.qnt
+turn-m8	turn_noage	invNoEarlyCapture	mutant	sim	30	100000	мутант: захват чужого раньше TURN_TERM	violation	violation	1	1.3	p04_turn_race.qnt
+turn-w9	turn_base	witLatePending	witness	sim	40	200000	барьер при записи в пути	violation	violation	1	1.7	p04_turn_race.qnt
+turn-w8	turn_sigterm_release	witFastAfterSigterm	witness	sim	40	100000	SIGTERM со сдачей: захват без ожидания TURN_TERM	violation	violation	1	1.3	p04_turn_race.qnt
+turn-c1	turn_noage	invCapacity	control	sim	40	1000000	захват без возраста: безопасность размещения держится на guard	pass	pass	1	144.4	p04_turn_race.qnt
+turn-c2	turn_noage	invIdleConsistent	control	sim	40	1000000	то же	pass	pass	1	158.1	p04_turn_race.qnt

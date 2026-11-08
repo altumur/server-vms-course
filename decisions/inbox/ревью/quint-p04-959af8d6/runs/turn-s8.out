@@ -1,0 +1,1227 @@
+release::p04_turn_race::pc:
+    Map("c1" -> "Idle", "c2" -> "Decide"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "", u: "" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 4, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> -1000, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 0),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 4,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 202, ver: 4 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 31]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 0, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 2,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: false,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 0, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> 4),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Idle", "c2" -> "S2"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 4, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> -1000, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 4,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 202, ver: 4 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 32]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 0, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 2,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: false,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: true,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 0, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Idle", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 4, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> -1000, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 5,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 0, ver: 5 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 33]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 0, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 2,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: false,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: true,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 0, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Idle", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 5, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> -1000, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 5,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 0, ver: 5 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 34]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 1, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 3,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 101, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> 6, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc:
+    Map("c1" -> "Decide", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 5, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 6,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 101, ver: 6 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 35]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 1, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 3,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 101, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Idle", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 5, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 7,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 0, ver: 7 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 36]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 1, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 3,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 101, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Idle", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 7, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 7,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 0, ver: 7 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 37]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 2, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 4,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 102, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> 8, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc:
+    Map("c1" -> "Decide", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "", u: "" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 7, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 0, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 8,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 102, ver: 8 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 38]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 2, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 4,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 102, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> 8, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "S2", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "w2", u: "u2" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 7, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 1, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: false, target: "", unit: "", ver: 0 },
+      log: 8,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 102, ver: 8 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 39]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 2, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 4,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 102, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> 8, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "S3", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "w2", u: "u2" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 7, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 1, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: true, target: "w2", unit: "u2", ver: 9 },
+      log: 9,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 102, ver: 8 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[State 40]
+{
+  turn_sigterm_release::p04_turn_race::abandoned:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::abandonedPassed:
+    Map("c1" -> false, "c2" -> false),
+  turn_sigterm_release::p04_turn_race::attempt: Map("c1" -> 2, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::ghostAcceptedActive: false,
+  turn_sigterm_release::p04_turn_race::ghostDoubleTakeLog: 4,
+  turn_sigterm_release::p04_turn_race::ghostEarlyCapture: false,
+  turn_sigterm_release::p04_turn_race::ghostFastAfterSigterm: true,
+  turn_sigterm_release::p04_turn_race::ghostLateApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostSigtermReleased: true,
+  turn_sigterm_release::p04_turn_race::ghostStaleApplied: false,
+  turn_sigterm_release::p04_turn_race::ghostStaleRefused: false,
+  turn_sigterm_release::p04_turn_race::ghostTookActive: false,
+  turn_sigterm_release::p04_turn_race::inflight:
+    Map(
+      "c1" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        },
+      "c2" ->
+        {
+          aUnits: Set(),
+          cas: -1,
+          guard: -1,
+          holder: 0,
+          iActive: false,
+          iTarget: "",
+          iUnit: "",
+          key: "",
+          pWorker: "",
+          sub: "",
+          valid: false
+        }
+    ),
+  turn_sigterm_release::p04_turn_race::myMark: Map("c1" -> 102, "c2" -> 202),
+  turn_sigterm_release::p04_turn_race::myVer: Map("c1" -> -1, "c2" -> -1),
+  turn_sigterm_release::p04_turn_race::now: 152,
+  turn_sigterm_release::p04_turn_race::pc: Map("c1" -> "Gone", "c2" -> "Gone"),
+  turn_sigterm_release::p04_turn_race::plan:
+    Map("c1" -> { t: "w2", u: "u2" }, "c2" -> { t: "w2", u: "u1" }),
+  turn_sigterm_release::p04_turn_race::seenAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::seenVer: Map("c1" -> 7, "c2" -> 2),
+  turn_sigterm_release::p04_turn_race::sentAt: Map("c1" -> 152, "c2" -> 152),
+  turn_sigterm_release::p04_turn_race::snapAssign:
+    Map(
+      "c1" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      "c2" ->
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 })
+    ),
+  turn_sigterm_release::p04_turn_race::snapCount: Map("c1" -> 1, "c2" -> 1),
+  turn_sigterm_release::p04_turn_race::snapIntent:
+    Map(
+      "c1" -> { active: false, target: "", unit: "", ver: 0 },
+      "c2" -> { active: false, target: "", unit: "", ver: 0 }
+    ),
+  turn_sigterm_release::p04_turn_race::snapPlace:
+    Map(
+      "c1" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      "c2" ->
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" })
+    ),
+  turn_sigterm_release::p04_turn_race::store:
+    {
+      assign:
+        Map("w1" -> { units: Set(), ver: 0 }, "w2" -> { units: Set(), ver: 0 }),
+      intent: { active: true, target: "w2", unit: "u2", ver: 9 },
+      log: 10,
+      place:
+        Map("u1" -> { ver: 0, worker: "" }, "u2" -> { ver: 0, worker: "" }),
+      turn: { holder: 0, ver: 10 }
+    },
+  turn_sigterm_release::p04_turn_race::turnWrittenAt: 152
+}
+
+[ok] No violation found (45648ms at 6572 traces/second).
+Trace length statistics: max=41, min=11, average=29.35
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xb19e2655328db961 --backend=rust to reproduce.

@@ -1,0 +1,185 @@
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/fate-w24/_apalache-out/server/2026-11-08T19-13-23_6325967392140870412
+# APALACHE version: 0.62.1 | build: a321771                       I@19:13:23.239
+Starting checker server on port 8861...                           I@19:13:23.242
+The Apalache server is running on port 8861. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@19:13:25.207
+PASS #1: TypeCheckerSnowcat                                       I@19:13:25.531
+ > Running Snowcat .::.                                           I@19:13:25.531
+ > Your types are purrfect!                                       I@19:13:26.685
+ > All expressions are typed                                      I@19:13:26.685
+PASS #2: ConfigurationPass                                        I@19:13:26.686
+  > Set the initialization predicate to q::init                   I@19:13:26.688
+  > Set the transition predicate to q::step                       I@19:13:26.689
+  > Set an invariant to q::inv                                    I@19:13:26.689
+PASS #3: DesugarerPass                                            I@19:13:26.692
+  > Desugaring...                                                 I@19:13:26.692
+PASS #4: InlinePass                                               I@19:13:26.701
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@19:13:26.701
+PASS #5: TemporalPass                                             I@19:13:26.745
+  > Rewriting temporal operators...                               I@19:13:26.746
+  > No temporal property specified, nothing to encode             I@19:13:26.746
+PASS #6: InlinePass                                               I@19:13:26.746
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@19:13:26.746
+PASS #7: PrimingPass                                              I@19:13:26.758
+  > Introducing q::initPrimed for q::init'                        I@19:13:26.759
+PASS #8: VCGen                                                    I@19:13:26.760
+  > Producing verification conditions from the invariant q::inv   I@19:13:26.761
+  > VCGen produced 2 verification condition(s)                    I@19:13:26.763
+PASS #9: PreprocessingPass                                        I@19:13:26.766
+  > Before preprocessing: unique renaming                         I@19:13:26.766
+ > Applying standard transformations:                             I@19:13:26.770
+  > PrimePropagation                                              I@19:13:26.770
+  > Desugarer                                                     I@19:13:26.772
+  > UniqueRenamer                                                 I@19:13:26.775
+  > Normalizer                                                    I@19:13:26.779
+  > SetMembershipSimplifier                                       I@19:13:26.784
+  > Keramelizer                                                   I@19:13:26.787
+  > After preprocessing: UniqueRenamer                            I@19:13:26.794
+PASS #10: TransitionFinderPass                                    I@19:13:26.800
+  > Found 1 initializing transitions                              I@19:13:26.808
+  > Found 9 transitions                                           I@19:13:26.823
+  > No constant initializer                                       I@19:13:26.824
+  > Applying unique renaming                                      I@19:13:26.824
+PASS #11: OptimizationPass                                        I@19:13:26.828
+ > Applying optimizations:                                        I@19:13:26.831
+  > ConstSimplifier                                               I@19:13:26.832
+  > ExprOptimizer                                                 I@19:13:26.841
+  > SetMembershipSimplifier                                       I@19:13:26.845
+  > ConstSimplifier                                               I@19:13:26.845
+PASS #12: AnalysisPass                                            I@19:13:26.853
+ > Marking skolemizable existentials and sets to be expanded...   I@19:13:26.855
+  > Skolemization                                                 I@19:13:26.855
+  > Expansion                                                     I@19:13:26.856
+  > Remove unused let-in defs                                     I@19:13:26.859
+ > Running analyzers...                                           I@19:13:26.863
+  > Introduced expression grades                                  I@19:13:26.867
+PASS #13: BoundedChecker                                          I@19:13:26.867
+State 0: Checking 2 state invariants                              I@19:13:27.105
+State 0: state invariant 0 holds.                                 I@19:13:27.116
+State 0: state invariant 1 holds.                                 I@19:13:27.120
+Step 0: picking a transition out of 1 transition(s)               I@19:13:27.120
+Step 1: Transition #7 is disabled                                 I@19:13:27.261
+Step 1: Transition #8 is disabled                                 I@19:13:27.283
+Step 1: picking a transition out of 7 transition(s)               I@19:13:27.283
+Step 2: Transition #7 is disabled                                 I@19:13:27.390
+Step 2: Transition #8 is disabled                                 I@19:13:27.408
+Step 2: picking a transition out of 7 transition(s)               I@19:13:27.409
+State 3: Checking 2 state invariants                              I@19:13:27.501
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/fate-w24/_apalache-out/server/2026-11-08T19-13-23_6325967392140870412/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/fate-w24/_apalache-out/server/2026-11-08T19-13-23_6325967392140870412/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/fate-w24/_apalache-out/server/2026-11-08T19-13-23_6325967392140870412/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p04q/work/fate-w24/_apalache-out/server/2026-11-08T19-13-23_6325967392140870412/violation1.itf.json I@19:13:27.647
+State 3: state invariant 0 violated.                              I@19:13:27.648
+Found 1 error(s)                                                  I@19:13:27.649
+The outcome is: Error                                             I@19:13:27.664
+An example execution:
+
+[State 0]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: true,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 1,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[State 1]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[State 2]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "release", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> false, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 2, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> 2, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 1, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "writing", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> 2, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[State 3]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> 3, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "release", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> false, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 2, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 5, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "released", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> 2, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: true,
+  fate_base::p04_slot_fate::slotVer: 3,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[violation] Found an issue (4851ms).
+Nov 08, 2026 7:13:24 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

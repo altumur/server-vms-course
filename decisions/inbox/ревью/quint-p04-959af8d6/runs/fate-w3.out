@@ -1,0 +1,162 @@
+An example execution:
+
+[State 0]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: true,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 1,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[State 1]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 0
+}
+
+[State 2]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 900
+}
+
+[State 3]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 0,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 900
+}
+
+[State 4]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> true, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 90,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 900
+}
+
+[State 5]
+{
+  fate_base::p04_slot_fate::conflicted: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::firstSeen: Map("c1" -> 90, "c2" -> 0),
+  fate_base::p04_slot_fate::ghostBadAfterConflict: false,
+  fate_base::p04_slot_fate::ghostOverwrote: false,
+  fate_base::p04_slot_fate::grantedAfterRelease: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::lastAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::lastFate: Map("c1" -> "move", "c2" -> ""),
+  fate_base::p04_slot_fate::lastReadable: Map("c1" -> false, "c2" -> true),
+  fate_base::p04_slot_fate::lastRow: Map("c1" -> 3, "c2" -> 0),
+  fate_base::p04_slot_fate::lastTrueAge: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::now: 90,
+  fate_base::p04_slot_fate::relCas: Map("c1" -> -1, "c2" -> -1),
+  fate_base::p04_slot_fate::relRow: Map("c1" -> 0, "c2" -> 0),
+  fate_base::p04_slot_fate::relState: Map("c1" -> "idle", "c2" -> "idle"),
+  fate_base::p04_slot_fate::seenVer: Map("c1" -> 2, "c2" -> -1),
+  fate_base::p04_slot_fate::slotReadable: false,
+  fate_base::p04_slot_fate::slotReleased: false,
+  fate_base::p04_slot_fate::slotVer: 2,
+  fate_base::p04_slot_fate::trueAgeJudged: false,
+  fate_base::p04_slot_fate::untilW: 45,
+  fate_base::p04_slot_fate::workerAlive: true,
+  fate_base::p04_slot_fate::writerOffset: 900
+}
+
+[violation] Found an issue (58ms at 5534 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xd98f585e8bf38d0e --backend=rust to reproduce.
+error: Invariant violated

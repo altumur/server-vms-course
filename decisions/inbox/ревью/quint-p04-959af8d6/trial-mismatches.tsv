@@ -1,0 +1,8 @@
+id	module	invariant	expect	actual	cause	resolution
+clk-10(v1)	clk_jump_leader	invMadeBound	violation	pass	граница invMadeBound содержит слагаемое LEADER_BOUND; при LEADER_BOUND=100000 инвариант вакуумен (истинен для любого момента)	заменён на invMadeStrict (keep-60 без поправки на лидера), прогон clk-10 заново
+turn-trial-a	turn_base (все инстансы в файле)	invCapacity	pass	error	размер JSON для Apalache превысил 20 МБ: quint передаёт все модули файла	run.py подаёт один инстанс во временном файле
+turn-trial-b	turn_nofresh, turn_addfirst	invCapacity, invOneAssign	violation	pass	симуляция с шумом 60 000 трасс не дошла до цепочки из двух решений; поиск, а не свойство	добавлены инстансы *_focus (подмножество поведений, только для поиска контрпримеров)
+turn-trial-c	turn_noguard_focus	invIdleConsistent	-	runtime error	nondet-привязка вычисляла applyWrite на пустой записи (ключ "") раньше условия w.valid; ошибка модели	applyWrite сделан тотальным для пустого ключа
+turn-trial-d	turn_nobump	invIdleConsistent	violation	pass	инвариант не ограничивает утверждение T:83: при совпадении цели опоздавшая запись идемпотентна с восстановлением; мутант сильнее ловится свойством о применении после барьера	введён invNoLateApplied, прогон turn-m7 и turn-s9
+turn-trial-e	turn_noguard, turn_skipintent	invCapacity, invOneAssign	-	pass	при двух единицах и cas целевой строки отсутствие guard не нарушает вместимость и единственность в проверенных границах (см. отчёт, С10)	оставлены invIdleConsistent и invNoStaleApplied; вывод в отчёте
+fate-trial-a	fate_nocas	invNoReleaseOverwrite	violation	pass (rust 30 000 трасс)	редкая цепочка для случайной симуляции	прогон через verify, итог violation
