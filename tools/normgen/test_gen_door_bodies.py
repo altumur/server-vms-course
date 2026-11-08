@@ -330,7 +330,7 @@ class SourceSchemaReader:
     SCHEMA_MAPS = ("properties", "patternProperties", "$defs", "dependentSchemas")
     SCHEMA_LISTS = ("allOf", "anyOf", "oneOf", "prefixItems")
     SCHEMA_SINGLE = ("items", "contains", "additionalProperties", "unevaluatedProperties",
-                     "unevaluatedItems", "propertyNames", "not", "if", "then", "else", "contentSchema")
+                     "unevaluatedItems", "propertyNames", "not", "if", "then", "else", "contentSchema", "x-line-schema")
     ANNOTATIONS = {"title", "description", "$comment", "default", "examples", "$schema",
                    "readOnly", "writeOnly", "deprecated", "discriminator", "xml", "externalDocs"}
 
@@ -2024,6 +2024,20 @@ class SourceSchemaReaderControls(unittest.TestCase):
         self.assertTrue(reader.compare({"opaque-root": {"type": "integer", "minimum": 1}}, cases, bindings))
         with self.assertRaises(CheckingError):
             reader.compare({"other-root": {"type": "integer"}}, [("other-root", 1)], bindings)
+
+
+    def test_33_existing_ndjson_line_schema_is_a_typed_source_edge(self):
+        spec = ROOT / "Platform/05-resource/spec/05-resource.api.openapi.yaml"
+        reader = SourceSchemaReader(ROOT, spec)
+        pointer = "/paths/~1buckets~1{sub}~1{unit}/get/responses/200/content/application~1x-ndjson/schema/x-line-schema"
+        key = (spec, pointer, "#/components/schemas/BucketInfo", "schema")
+        self.assertEqual(reader.edges[key], (spec, "/components/schemas/BucketInfo"))
+        # The established extension is typed only in a Schema Object;
+        # identically shaped instance/example data remains opaque.
+        fixture = self.api(schemas={"Root": {"type": "object", "default": {
+            "x-line-schema": {"$ref": "https://not-a-source.invalid/data"}}}})
+        local = SourceSchemaReader(self.root, fixture)
+        self.assertEqual(local.edges, {})
 
 
 for _lesson, _slug in LESSONS.items():
