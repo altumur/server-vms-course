@@ -6,6 +6,8 @@ Callers supply actual input identities; package documentation and fixtures are n
 code and must never be sent through these functions merely by their suffix.
 """
 import ast
+import hashlib
+from pathlib import Path
 import io
 import re
 import tokenize
@@ -180,3 +182,29 @@ def python_source(text, *, header=""):
         previous = end
     result.append(text[previous:])
     return "".join(result)
+
+
+def go_files(files, *, generator, sources, root, editable=(), anchor_ids=None):
+    """Normalize an explicit code map after producers have used private selectors.
+
+    Data entries in mixed maps are retained byte-for-byte.  Callers name actual
+    inputs and editable outputs; suffix selection applies only to this code map.
+    """
+    root = Path(root).resolve()
+    generator = Path(generator).resolve()
+    def relative(path):
+        return path.relative_to(root).as_posix() if path.is_relative_to(root) else path.name
+    inputs = [(relative(p), hashlib.sha256(p.read_bytes()).hexdigest())
+              for p in dict.fromkeys(Path(p).resolve() for p in [generator, *sources])]
+    result = {}
+    editable = frozenset(editable)
+    for name, data in files.items():
+        if not name.endswith('.go'):
+            result[name] = data
+            continue
+        binary = isinstance(data, bytes)
+        text = data.decode('utf-8') if binary else data
+        header = identity_header(relative(generator), inputs, editable=name in editable)
+        output = go_source(text, header=header, anchor_ids=anchor_ids)
+        result[name] = output.encode('utf-8') if binary else output
+    return result

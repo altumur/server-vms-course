@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import lesson
+import machine_source
 from gen_checks import gofmt, go_str
 from gen_door_lesson import Docs, GenError as DoorError, METHODS
 
@@ -216,7 +217,7 @@ def render(root=ROOT, lesson_key=None):
                  f"RowTemplate:{go_str(r['template'])}, Revision:{revisions[r['revision']]}, "
                  f"ETag:{r['etag']}, IfMatch:{modes[r['if_match']]}, AbsentRevisionZero:{str(r['absent_revision']=='0').lower()}, "
                  f"Norms:[]string{{{','.join(go_str(n) for n in r['norms'])}}}}},\n")
-    return {"coreadapter/versioned_doors.go": gofmt(text + "}\n" + TAIL)}
+    return machine_source.go_files({"coreadapter/versioned_doors.go": gofmt(text + "}\n" + TAIL)}, generator=__file__, sources=sources, root=root)
 
 
 def generate(out=L.out, root=ROOT, lesson_key=None):
@@ -249,7 +250,7 @@ def provenance():
     sources = list(dict.fromkeys(p for src in sources for p in
                                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
     return {"form": [entry(p) for p in sources], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(HERE / "yamlsub.py"), entry(HERE / "gen_door_lesson.py"), entry(HERE / "gen_checks.py")],
             "judge": entry(JUDGE)}
 

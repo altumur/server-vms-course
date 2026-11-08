@@ -13,6 +13,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
+import machine_source  # noqa: E402
 import gen_core  # noqa: E402 -- norm parsing, comment wrapping and refusals.tsv rows
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
 import tsv_input  # noqa: E402 — source cells before command interpretation
@@ -361,6 +362,7 @@ def render():
     names = ", ".join(f"{c}.go" for c in cmds)
     files["admin/admin.go"] = gen_core.gofmt(ADMIN.replace("{flags_sha}", gen_core.sha(FLAGS)).replace("{module}", GO_MODULE)
                                              .replace("{cases}", cases).replace("{files}", names))
+    files = machine_source.go_files(files, generator=__file__, sources=(FLAGS, NORMS_13, NORMS_12, NORMS_11, REFUSALS, COMMON, L.openapi), root=ROOT, editable=[name for name in files if own(name)])
     return files, report
 
 
@@ -399,7 +401,7 @@ def provenance():
     paths = [p for src in (FLAGS, NORMS_13, NORMS_12, REFUSALS, COMMON, L.openapi) for p in
              (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])]
     return {"form": [entry(p) for p in dict.fromkeys(paths)], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)),
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__)),
                            entry(HERE / "gen_door.py"), entry(HERE / "yamlsub.py")],
             "handwritten": [], "judge": entry(JUDGE)}
 

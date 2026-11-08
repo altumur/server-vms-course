@@ -16,6 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
+import machine_source  # noqa: E402
 import lesson  # noqa: E402
 L = lesson.get("02-installer")              # Loader always belongs to lesson02 regardless of the selected lesson.
 
@@ -176,7 +177,7 @@ def render():
         files[f"manifest/{dst}"] = src.read_bytes()
     sources = "".join(f"//   {rel(src)} sha256 {sha(src)}\n" for src in FORMS.values())
     files["manifest/forms.go"] = (FORMS_GO % {"sources": sources}).encode("utf-8")
-    return files
+    return machine_source.go_files(files, generator=__file__, sources=(*FORMS.values(), *(RUNTIME / n for n in RUNTIME_FILES)), root=ROOT)
 
 
 def go_mod(out):
@@ -224,7 +225,7 @@ def provenance():
                               (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
     return {"form": [entry(p) for p in forms],
             "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__))],
             "handwritten": [entry(RUNTIME / n) for n in RUNTIME_FILES], "judge": entry(JUDGE)}
 
 

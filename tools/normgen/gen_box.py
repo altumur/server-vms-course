@@ -19,6 +19,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
+import machine_source  # noqa: E402
 import lesson  # noqa: E402
 L = lesson.CURRENT
 
@@ -712,6 +713,7 @@ def render():
     files = {"box/box.go": gofmt(box), "box/copy.go": gofmt(cp)}
     if f["copy_storage"]:
         files.update({rel: gofmt(source.read_text(encoding="utf-8")) for rel, source in COPY_RUNTIME.items()})
+    files = machine_source.go_files(files, generator=__file__, sources=(NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README, *([FLAGS] if f["ceiling_from_flags"] else []), *(COPY_RUNTIME.values() if f["copy_storage"] else [])), root=ROOT)
     return files, f
 
 
@@ -755,7 +757,7 @@ def provenance():
     return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README] +
                             ([FLAGS] if f["ceiling_from_flags"] else [])),
             "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py")] +
+            "generators": [entry(Path(__file__).resolve()), entry(Path(machine_source.__file__)), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py")] +
                           ([entry(HERE / "gen_flags.py")] if f["ceiling_from_flags"] else []),
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
             "judge_inputs": entries([L.form("stages.tsv"),
