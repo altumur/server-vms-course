@@ -1,0 +1,186 @@
+{
+  "parent": "25e65c97dc61f48c7505ed0cd2f4db7393870b54",
+  "authority": "ADR0125(8) eb52 (replaces conflicting7); P09 detail normative ADR0129(20)2",
+  "Source_records": [
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "c572ccfc3957932ac14ac531e181023eda65d0bf",
+        "sha256": "cbe0067a186a855328b991d50e1ae9be383a522e00893ae4d38cd2d435542ba2",
+        "bytes": 20676,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "8b88b3e326fc4686485957621d70cb544c4c15dd",
+        "sha256": "a51acb77073c7c833b359c0606db4da4d3ff6d301a5050eafc82d664d1d8cdd2",
+        "bytes": 20729,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "e74592e45b4a9dd1398fccaf23738904c48f4aef",
+        "sha256": "32a1cf1f0888a7a1972b91d3ff661e958bc752c21c1512e3e31cc72c203a2646",
+        "bytes": 12583,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "db9e2d5b489dae8b3b6ca257c181347ff463ccce",
+        "sha256": "45d0fa821aee83c85d1321be2b45fd04cbe898050029bc21fdf5937dfdf13a86",
+        "bytes": 12667,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "55d499c3bd582dc9058428147234e55dc2a751bb",
+        "sha256": "13cf7ca0b17301153a454325cab53ebdc3dd3c34e1c33656b8b6e81f475f1f98",
+        "bytes": 16214,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "020d2161d48750394d16f9ee38be9c7608e31ec8",
+        "sha256": "daf7cf551cb93444eca27dc49211a0c2c2bfa187f319937a64359563219883c2",
+        "bytes": 16341,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "kind": "Source",
+      "before": {
+        "blob": "ac3b324ad739dcdb93d36a944c090703767f6118",
+        "sha256": "f831dcf02672a87201083d40d16c035bfc95089a5b2872f45cefbb619e2ee990",
+        "bytes": 21572,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "ce6b4a4e8a2897b0dbd5b28f17a9beb6eccbca96",
+        "sha256": "1b7c2cafae3c77fe4180944d08459a712597836018c944a4a88767c2029e104b",
+        "bytes": 21580,
+        "mode": "100644"
+      }
+    }
+  ],
+  "literal_blocks": [
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:load_text",
+      "old": "2.1\t1\tload_text\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 1\trefused:text\ttext outside N1.1 (layer 1): the encoding, a control character, a second document, a root that is not a block mapping, an anchor, a tag, an alias, `<<`, a collection key, a plain key not as a string, a repeated key, the depth, a literal TAB outside a comment, U+2028/U+2029, an escape outside the list, `{k:}`, the rules `rare`, `comment`, `block`, a YAML parser error\t`refused:text`\ta refusal with the source (the path and the line are a hint)\tfix the file\n",
+      "new": "2.1\t1\tload_text\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 1\t`refused:text`\ttext outside N1.1 (layer 1): the encoding, a control character, a second document, a root that is not a block mapping, an anchor, a tag, an alias, `<<`, a collection key, a plain key not as a string, a repeated key, the depth, a literal TAB outside a comment, U+2028/U+2029, an escape outside the list, `{k:}`, the rules `rare`, `comment`, `block`, a YAML parser error\t`refused:text`\ta refusal with the source (the path and the line are a hint)\tfix the file\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:load_form",
+      "old": "2.1\t2\tload_form\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 2\trefused:form\tform (layer 2): `name` absent, not by the grammar, reserved, starting with `free-` (ADR-0091 addendum (24) item 5); a key outside the closed set of its level (including `fixed`, `inherit`, `merge`, `unique` of a table field); a value out of form: the type, a word outside the enumeration, a number as a string, an integer outside ±(2^53 − 1) or with a fractional part, NaN/infinity/float overflow, a required key absent, a said key without a value, a name in an open set of names not by its grammar, a forbidden word (a reserved name of rows or of a table, a platform pulse word); `*_secret` in `snapshot`, `domain.edit`, `shared`, `show` (N1.3a; the N4 row of P/06.2); a declaration of a book, of a token kind, of `domain.shared`, `merge` or `domain.witness` out of the form of N1.2b; a file name of `console.files` outside the grammar: a segment `..`, an absolute path, an extension outside the closed list, a name under `api/`, a repetition (ADR-0094 addendum (1), (4) item 2, (8) item 2)\t`refused:form`\ta refusal with the source (the path is a hint)\tfix the file\n",
+      "new": "2.1\t2\tload_form\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 2\t`refused:form`\tform (layer 2): `name` absent, not by the grammar, reserved, starting with `free-` (ADR-0091 addendum (24) item 5); a key outside the closed set of its level (including `fixed`, `inherit`, `merge`, `unique` of a table field); a value out of form: the type, a word outside the enumeration, a number as a string, an integer outside ±(2^53 − 1) or with a fractional part, NaN/infinity/float overflow, a required key absent, a said key without a value, a name in an open set of names not by its grammar, a forbidden word (a reserved name of rows or of a table, a platform pulse word); `*_secret` in `snapshot`, `domain.edit`, `shared`, `show` (N1.3a; the N4 row of P/06.2); a declaration of a book, of a token kind, of `domain.shared`, `merge` or `domain.witness` out of the form of N1.2b; a file name of `console.files` outside the grammar: a segment `..`, an absolute path, an extension outside the closed list, a name under `api/`, a repetition (ADR-0094 addendum (1), (4) item 2, (8) item 2)\t`refused:form`\ta refusal with the source (the path is a hint)\tfix the file\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:load_relations",
+      "old": "2.1\t3\tload_relations\tcall\t-\t-\t-\t-\tsource,name\tP/02.1 N4 row 3\trefused:relations\ta relation of N1.4 does not hold (only on a clean form): to something undeclared or inadmissible by the relations table, including the own subsystem in `worker.requests`, a platform family in `objects.rows`, a repeated route of `door.routes`, an unknown field in `snapshot`\t`refused:relations`\ta refusal with the source and the name\tfix the file\n",
+      "new": "2.1\t3\tload_relations\tcall\t-\t-\t-\t-\tsource,name\tP/02.1 N4 row 3\t`refused:relations`\ta relation of N1.4 does not hold (only on a clean form): to something undeclared or inadmissible by the relations table, including the own subsystem in `worker.requests`, a platform family in `objects.rows`, a repeated route of `door.routes`, an unknown field in `snapshot`\t`refused:relations`\ta refusal with the source and the name\tfix the file\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:load_catalogue",
+      "old": "2.1\t4\tload_catalogue\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 4\trefused:catalogue\ta reference to another manifest of the catalogue does not resolve, a subsystem name intersects rows/tables of the catalogue, a token kind in two manifests of the catalogue (N3 «load_catalogue»)\t`refused:catalogue`\ta refusal with the source at loading the catalogue\tput the missing manifest or fix this one\n",
+      "new": "2.1\t4\tload_catalogue\tcall\t-\t-\t-\t-\tsource\tP/02.1 N4 row 4\t`refused:catalogue`\ta reference to another manifest of the catalogue does not resolve, a subsystem name intersects rows/tables of the catalogue, a token kind in two manifests of the catalogue (N3 «load_catalogue»)\t`refused:catalogue`\ta refusal with the source at loading the catalogue\tput the missing manifest or fix this one\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:manifest_mark_unreadable",
+      "old": "2.3\t3\tmanifest_mark_unreadable\tprocess\texit 2\t-\t-\t-\tkey\tP/02.3 N4 row 3\trefused\tat a running process: the mark is not by the form (N1.5)\tstop, as no start\texit code 2, log: refused and the row name; the unit is not restarted — the alarm is visible\tfix the mark by an admin write of the store by the `rev` of the row (P/01.3; analysis of review of stage A 6–7, B1); an unconfirmed read of the mark is not a change, the process continues (the Architect's decision on gap Go P/02 № 1)\n",
+      "new": "2.3\t3\tmanifest_mark_unreadable\tprocess\texit 2\t-\t-\t-\tkey\tP/02.3 N4 row 3\t`refused`\tat a running process: the mark is not by the form (N1.5)\tstop, as no start\texit code 2, log: refused and the row name; the unit is not restarted — the alarm is visible\tfix the mark by an admin write of the store by the `rev` of the row (P/01.3; analysis of review of stage A 6–7, B1); an unconfirmed read of the mark is not a change, the process continues (the Architect's decision on gap Go P/02 № 1)\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:put_profile_form",
+      "old": "2.3\t14\tput_profile_form\tcli\texit 2\t-\t-\t-\tprofile\tP/02.3 N4 row 14; P/06.8 N1.3\trefused:form\tmanifest put: finite deletion profile out of form, missing packet/H/multiplicity/provenance proof, wrong effective limits or sufficient bound above B (step6a, also unchanged path)\trefused:form, exit 2, no installation write\tstderr names the profile and violated field/proof; for an oversized packet its name, bound and B\tsupply a complete proved finite profile and suitable actual store limits; no mutation-time bypass\n",
+      "new": "2.3\t14\tput_profile_form\tcli\texit 2\t-\t-\t-\tprofile\tP/02.3 N4 row 14; P/06.8 N1.3\t`refused:form`\tmanifest put: finite deletion profile out of form, missing packet/H/multiplicity/provenance proof, wrong effective limits or sufficient bound above B (step6a, also unchanged path)\trefused:form, exit 2, no installation write\tstderr names the profile and violated field/proof; for an oversized packet its name, bound and B\tsupply a complete proved finite profile and suitable actual store limits; no mutation-time bypass\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:secrets_unknown_family",
+      "old": "2.4\t14\tsecrets_unknown_family\tcli\texit 1\t-\t-\t-\tkey\tP/02.4 N4 row 14\tunknown-row-form\t`secrets seal`/`status`: a selected row that matches no row family of the data catalogue (P/02.4 N1.9 «Walk», `unknown`)\tcode 1, the walk to the end; the row is untouched\tthe log line «`<object-key>` unknown-row-form» without the value\texamine the row: there is no known form — do not guess the fields (C02-RESEAL-UNKNOWN-FORM-93, the Architect's decision 2026-10-25)\n",
+      "new": "2.4\t14\tsecrets_unknown_family\tcli\texit 1\t-\t-\t-\tkey\tP/02.4 N4 row 14\t`unknown-row-form`\t`secrets seal`/`status`: a selected row that matches no row family of the data catalogue (P/02.4 N1.9 «Walk», `unknown`)\tcode 1, the walk to the end; the row is untouched\tthe log line «`<object-key>` unknown-row-form» without the value\texamine the row: there is no known form — do not guess the fields (C02-RESEAL-UNKNOWN-FORM-93, the Architect's decision 2026-10-25)\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:secrets_unreadable_family",
+      "old": "2.4\t15\tsecrets_unreadable_family\tcli\texit 1\t-\t-\t-\tkey\tP/02.4 N4 row 15\tunreadable\t`secrets seal`/`status`: a walked row is not readable (P/02.4 N1.9 «Walk», `walked`)\tcode 1, the walk to the end; the row is untouched\tthe log line «`<object-key>` unreadable» without the value\texamine the row by the outcomes of its family (V7 item 3, the Architect's decision 2026-10-28, P4)\n",
+      "new": "2.4\t15\tsecrets_unreadable_family\tcli\texit 1\t-\t-\t-\tkey\tP/02.4 N4 row 15\t`unreadable`\t`secrets seal`/`status`: a walked row is not readable (P/02.4 N1.9 «Walk», `walked`)\tcode 1, the walk to the end; the row is untouched\tthe log line «`<object-key>` unreadable» without the value\texamine the row by the outcomes of its family (V7 item 3, the Architect's decision 2026-10-28, P4)\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word:domain_window_busy",
+      "old": "2.4\t21\tdomain_window_busy\tcli\texit 2\t-\t-\t-\tcause\tP/02.4 N4 row 21\tbusy\tdomain installation and changes by the recovery file: a second command on the same installation while the first is running\ta refusal, code 2, `busy`, before changes\tthe word `busy`\twait for the first; one operator window per domain (guess of stage C I02-DOMAIN-WINDOW, the Architect's decision 2026-10-23)\n",
+      "new": "2.4\t21\tdomain_window_busy\tcli\texit 2\t-\t-\t-\tcause\tP/02.4 N4 row 21\t`busy`\tdomain installation and changes by the recovery file: a second command on the same installation while the first is running\ta refusal, code 2, `busy`, before changes\tthe word `busy`\twait for the first; one operator window per domain (guess of stage C I02-DOMAIN-WINDOW, the Architect's decision 2026-10-23)\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "label": "P02-word-header-record",
+      "old": "# The first ten columns are the P/01 catalogue columns; word is a fixed diagnostic/refusal token, - if none is prescribed.\n",
+      "new": "# The first ten columns are the P/01 catalogue columns; word is a backtick-delimited fixed diagnostic/refusal token, or the unquoted - if none is prescribed.\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "label": "P02-README-word-description",
+      "old": "`word` is a fixed refusal/diagnostic token, or `-`. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in\n",
+      "new": "`word` is a fixed refusal/diagnostic token delimited by backticks, or the unquoted `-`; delimiters are not part of the token. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in\n"
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "label": "P02-README-example-text",
+      "old": "`2.1 / 1 / load_text / call / - / word refused:text`",
+      "new": "``2.1 / 1 / load_text / call / - / word `refused:text` ``"
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "label": "P02-README-example-unknown",
+      "old": "`2.4 / 14 / secrets_unknown_family / cli / exit 1 / word unknown-row-form`",
+      "new": "``2.4 / 14 / secrets_unknown_family / cli / exit 1 / word `unknown-row-form` ``"
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/README.md",
+      "label": "P02-RU-word-description",
+      "old": "`word` — фиксированное слово или `-`;",
+      "new": "`word` — фиксированный токен в обратных кавычках либо `-` без кавычек; разделители не входят в токен;"
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/README.md",
+      "label": "P02-RU-example-text",
+      "old": "`2.1 / 1 / load_text / call / - / word refused:text`",
+      "new": "``2.1 / 1 / load_text / call / - / word `refused:text` ``"
+    },
+    {
+      "path": "Platform/02-installer/ru/forms/README.md",
+      "label": "P02-RU-example-unknown",
+      "old": "`2.4 / 14 / secrets_unknown_family / cli / exit 1 / word unknown-row-form`",
+      "new": "``2.4 / 14 / secrets_unknown_family / cli / exit 1 / word `unknown-row-form` ``"
+    },
+    {
+      "path": "Platform/09-agent/spec/09-agent.api.openapi.yaml",
+      "label": "P09-RelayRefusal-detail-required",
+      "old": "[error]",
+      "new": "[error, detail]",
+      "exact_old_offset": 17491
+    }
+  ],
+  "protected": [
+    "Platform/09-agent/forms/refusals.tsv relay_01_413",
+    "Platform/10-domain-console/forms/refusals.tsv c10_007_502",
+    "all Code/generator/judge/skills/VMS/current unrelated Source bytes"
+  ],
+  "literal_meanings_unchanged": true,
+  "required_detail_not_new_norm": true,
+  "Repo_norm_Req_units_changed": 0,
+  "registry_accepted_applied": false,
+  "reanchor_from": "6950dbbac378815872015d15831a527bf4218cbd",
+  "Code6005_preserved": true
+}

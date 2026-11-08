@@ -1,0 +1,13 @@
+{
+  "schema": "Platform/09-agent/spec/09-agent.api.openapi.yaml#/components/schemas/RelayRefusal",
+  "before_required": [
+    "error"
+  ],
+  "after_required": [
+    "error",
+    "detail"
+  ],
+  "all_other_schema_properties_unchanged": true,
+  "controls": "Existing Source-only positive/negative requiredness controls in external SOURCE-CONTROLS.json; no backend/runtime",
+  "ABI": "Existing relay status/reason/role branch rules unchanged; forms may be stricter than shared schema"
+}

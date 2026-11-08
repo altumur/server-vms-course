@@ -37,7 +37,7 @@ There are no units. There is no domain: it is set up by the directive `@domain` 
   `domain/backup-taken`, `domain/shared`, `domain/shared-refused`, `domain/root`, `domain/placed`, `domain/outcomes`,
   `domain/agent-turn`); `store` without `member` is the store of `hold`.
 - `resource` without a prefix is the resource door of `hold`: through it the holder's objects `domain/members/<member>/…` are read.
-- Do not speed up the clocks: `LOST_AFTER` 45 s, `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `VIEW_EVERY` 3 s; the `@until` terms are taken with
+- Do not speed up the clocks: `LOST_AFTER` 45 s, `REPORT_EVERY`, `MARK_REFRESH` 22.5 s, `VIEW_EVERY` 3 s; the `@until` terms are taken with
   a margin.
 - The runner goes as the human `root` (the first administrator — chapter 8.4).
 
@@ -221,7 +221,7 @@ same). The remaining sleeps (from the READMEs of the acceptances of M11/12 and M
 | 01/2 | 35 s | time before an action: the first backup copy and its keepers after `@domain` — `BACKUP_EVERY` 30 s and the agent pass 5 s |
 | 01/5 | 10 s | time before an action: the member went quiet after the write of `domain/backup-taken` — two agent passes |
 | 06/6 | 10 s | absence: fresh copies with the same content are not rewritten — a rewrite would be in the nearest agent pass (5 s), two passes; `as_of` is freshened no more often than `FRESH_EVERY` 60 s |
-| 06/9 | 65 s | absence: longer than `FRESH_EVERY` 60 s — the freshening of `as_of` in memory has already happened, but it is not in the row: to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19; the whole hour — by reading) |
+| 06/9 | 65 s | absence: longer than `FRESH_EVERY` — the freshening of `as_of` in memory has already happened, but it is not in the row: to the medium no more often than `AS_OF_STORE_EVERY` 3600 s (VMS request № 19; the whole hour — by reading) |
 | 11/6 | 65 s | time before an action: two windows of `BACKUP_EVERY` after the revocation — the copy with `bob` (step 9) is made at once, not after a window |
 | 11/10 | 6 s | time before an action: the copy with `bob` — in the nearest pass of the holder (3 s) with a margin |
 | 15/4 | 25 s | absence: for two `TURN_RENEW` (10 s) the waiting one does not take a fresh queue — the holder is the former one (step 5) |
@@ -245,11 +245,11 @@ no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 38 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
 ## Anywhere copy hash (G09-ANYWHERE-HASH-01)
 
-The four fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
+The five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
 digest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file
 next to the table; expect is a JSON subset of the observations, not an input to the implementation.
 
@@ -259,9 +259,11 @@ Every attempt starts independently from that initial state: its trusted carry ad
 the body and mark, and records the store operations and marker changes. received_at is the receipt time and domain_age is the answer age; each case prepares a valid trusted carry for server m1 and its active agent guard. It reports arrays in attempt order:
 computed_sha256, copy_writes, marker_confirmed; for a refusal also related_edits (the writes belonging to this copy),
 copy_items, copy_index and taken_sha256. The digest observation comes from the normal code path that judges the body;
-it is not computed by the fixture instead of that path. The two positive vectors must reach the actual copy write.
+it is not computed by the fixture instead of that path. The three positive vectors must reach the actual copy write.
 
 The existing agent-carry IO seam can carry these inputs: these files do not declare a new native command. A fixture
 that only calculates the expected digest does not check the negative cases: they require the former copy, exact index
-and marker to stay unchanged and zero copy writes and related edits. The four cases cover as_of in the digest, JCS
+and marker to stay unchanged and zero copy writes and related edits. The five cases cover as_of in the digest, JCS
 instead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.
+
+The owner wire body contains raw KV strings doc and as_of. Only the outer JSON is canonicalized for the digest; the internal doc text is not normalized first. The inner-text neighbor has equal decoded inner objects but different strings and digests, and observes the exact successful copy_items. The trusted advertised as_of, received_at and domain_age retain their existing numeric types. Existing refusal cases preserve the complete initial raw copy, index and the rebaselined current-wire marker. No case reports actual IO success before its adapter is run.

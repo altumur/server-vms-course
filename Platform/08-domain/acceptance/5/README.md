@@ -10,8 +10,7 @@ M11/09 (05 → 11) (stage B, ADR-0083 addendum (1): without a change of behaviou
 the number 05 is taken by a scenario of M11/05, it got the number 11 — the next one after the largest number of the sources of the chapter (M11/09
 sc. 10; the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections-5.tsv` (historical correction record)). In total 7 scenarios / 72 steps (sc. 14 — ADR-0097 §4, there is no dry run by an implementation; the delivery of a key with the `sub` of a book and the key `role:` — by reading: the stand does not give a row with `sub` when the book is already assembled) (sc. 13 — the coverage audit of P/08, the second pass of Gemini).
 
-The assembly on all edges without a stand is checked by the vector [`assemble`](../../vectors/assemble/README.md) (17 rows, the former sc. 06
-of the acceptance of M11/05). Sc. 02 `notes-unique` of the acceptance of M11/05 is [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) sc. 13, sc. 04 `slot-liveness` — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) sc. 13.
+The assembly on all edges without a stand is checked by the vector [`assemble`](../../vectors/assemble/README.md) (cases and their provenance: the canonical package README). Sc. 02 `notes-unique` of the acceptance of M11/05 is [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) sc. 13, sc. 04 `slot-liveness` — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) sc. 13.
 The refusals of the declaration of a book and of the index of names are the cases `m51_books_*`, `m59_names_*` of the corpus of
 [P/02.1](../../../02-installer/acceptance/1/README.md).
 

@@ -89,7 +89,7 @@ None: the setting channel is the environment only (P/02.4 N1.2).
 
 ## Signals and readiness
 
-- The pass — once every `every`, the default `REPORT_EVERY` 5 s; the answer of the holder can set `every` 1…3600
+- The pass — once every `every`, the default `REPORT_EVERY`; the answer of the holder can set `every` 1…3600
   ([P/08.3](../08-domain/spec/08.3-domain.norms.md) N1.3, N1.5; [P/09.1](spec/09.1-agent.norms.md) N3 «the agent pass»).
 - `503 standby` of the holder — «the holder is unavailable» for this pass, not a reason to look for another term; a retry by the next
   pass ([P/09.1 N1.12](spec/09.1-agent.norms.md) `agent`).

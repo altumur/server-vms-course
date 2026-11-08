@@ -1,0 +1,728 @@
+{
+  "status": "PASS",
+  "source315_before_after_map": "/home/pilot/spec103/source125-common145-20261108/common-carriers/COMMON145-EXACT-SOURCE-DECLARATION.json",
+  "controls": {
+    "external": "/home/pilot/spec103/source125-common145-20261108/common-carriers/SOURCE-INTEGRATION-CONTROLS.json",
+    "SHA": "a9663f3b2b13d666c9cd01bce35f62321c27f2c70f624532ad7679be261ca4f0"
+  },
+  "summary": {
+    "total": 911,
+    "pass": 911,
+    "fail": 0,
+    "new_refs": 147,
+    "new_decoded_bound_cases": 15,
+    "req_units_changed": 118
+  },
+  "not_executed": [
+    "full check_spec",
+    "old32/archives/corpus programs",
+    "codecs/real readers",
+    "Node/JS/tests/native/HTTP/Go/SUT/stand/models"
+  ],
+  "limits": "Source/raw/changed-ref/decoded-schema checks only; physical root/catalogue admission and key-selected real consumers remain independent missing-binding/Tools/Runner work.",
+  "mirror_composition": [
+    {
+      "en": "Platform/03-worker/03-worker.md",
+      "ru": "Platform/03-worker/ru/03-worker.md",
+      "status": "BYTE_EXACT_ACCEPTED_UNPAIRED_RU_LECTURE_REUSED",
+      "errors": [],
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "limit": "No same-name English lecture exists; not a new mirror PASS. Canonical English normative owners remain spec/*.norms.md."
+    },
+    {
+      "en": "Platform/03-worker/acceptance/2/README.md",
+      "ru": "Platform/03-worker/ru/acceptance/2/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "f2fe4aedb871da3e6a6e16a36bb1f3068975d2e5",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/acceptance/4/README.md",
+      "ru": "Platform/03-worker/ru/acceptance/4/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/acceptance/5/README.md",
+      "ru": "Platform/03-worker/ru/acceptance/5/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/acceptance/6/README.md",
+      "ru": "Platform/03-worker/ru/acceptance/6/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/forms/README.md",
+      "ru": "Platform/03-worker/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/forms/row-write-bindings.md",
+      "ru": "Platform/03-worker/ru/forms/row-write-bindings.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/lifecycle.md",
+      "ru": "Platform/03-worker/ru/lifecycle.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03-worker.README.md",
+      "ru": "Platform/03-worker/ru/spec/03-worker.README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.1-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.1-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.2-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.2-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.3-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.3-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.4-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.4-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.5-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.5-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.6-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.6-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/03-worker/spec/03.7-worker.norms.md",
+      "ru": "Platform/03-worker/ru/spec/03.7-worker.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/env-file.md",
+      "ru": "Platform/common/ru/contracts/env-file.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/observation.md",
+      "ru": "Platform/common/ru/contracts/observation.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/row-check.md",
+      "ru": "Platform/common/ru/contracts/row-check.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/slot.md",
+      "ru": "Platform/common/ru/contracts/slot.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/row-check/README.md",
+      "ru": "Platform/common/ru/vectors/row-check/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/slot/README.md",
+      "ru": "Platform/common/ru/vectors/slot/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8c8fdd6e27e8eaba0e79cf044a17619bc7bf31b",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/04-controller.md",
+      "ru": "Platform/04-controller/ru/04-controller.md",
+      "status": "BYTE_EXACT_ACCEPTED_UNPAIRED_RU_LECTURE_REUSED",
+      "errors": [],
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "limit": "No same-name English lecture exists; not a new mirror PASS. Canonical English normative owners remain spec/*.norms.md."
+    },
+    {
+      "en": "Platform/04-controller/acceptance/README.md",
+      "ru": "Platform/04-controller/ru/acceptance/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/forms/README.md",
+      "ru": "Platform/04-controller/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/lifecycle.md",
+      "ru": "Platform/04-controller/ru/lifecycle.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/spec/04-controller.README.md",
+      "ru": "Platform/04-controller/ru/spec/04-controller.README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/spec/04-controller.norms.md",
+      "ru": "Platform/04-controller/ru/spec/04-controller.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/04-controller/vectors/order/README.md",
+      "ru": "Platform/04-controller/ru/vectors/order/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.5-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.5-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b45425690d0db3fa74e3b7d4bdce4289918c67ec",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/pool.md",
+      "ru": "Platform/common/ru/contracts/pool.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/pool/README.md",
+      "ru": "Platform/common/ru/vectors/pool/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "17880ed03ac6dcf9e347ecdda3e1036f677e1582",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/README.md",
+      "ru": "Platform/05-resource/ru/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/acceptance/README.md",
+      "ru": "Platform/05-resource/ru/acceptance/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/forms/README.md",
+      "ru": "Platform/05-resource/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/lifecycle.md",
+      "ru": "Platform/05-resource/ru/lifecycle.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/spec/05-resource.README.md",
+      "ru": "Platform/05-resource/ru/spec/05-resource.README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/05-resource/spec/05-resource.norms.md",
+      "ru": "Platform/05-resource/ru/spec/05-resource.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "930c85e5efca17ba8a838a96a8be3c84b32e9fae7e1116a79d1b66d14bd3c442",
+      "ruSHA": "31568f309c324f81bd111f8b8e8c0e45ce30a0c3854020628a12bc5e24b3eb22"
+    },
+    {
+      "en": "Platform/06-console/acceptance/5/README.md",
+      "ru": "Platform/06-console/ru/acceptance/5/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/events-merge.md",
+      "ru": "Platform/common/ru/contracts/events-merge.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/object-client.md",
+      "ru": "Platform/common/ru/contracts/object-client.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "9d7febf4725354b892919338a05c1b9e1ca7a9ed",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/acceptance/1/README.md",
+      "ru": "Platform/09-agent/ru/acceptance/1/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "fea447ca89e65870255d8de4c3123131da9a42f4",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/acceptance/2/README.md",
+      "ru": "Platform/09-agent/ru/acceptance/2/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "d8a80dc2e6fd93535cd3646643f4b3dab23c0605",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/forms/README.md",
+      "ru": "Platform/09-agent/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "8d404139f6733dbb201e4f51667532be4fb007cf",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/lifecycle.md",
+      "ru": "Platform/09-agent/ru/lifecycle.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "d8a80dc2e6fd93535cd3646643f4b3dab23c0605",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/spec/09.1-agent.norms.md",
+      "ru": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "ce3d158a857634d5efce07dba726d740c120b2f3",
+      "errors": []
+    },
+    {
+      "en": "Platform/09-agent/spec/09.2-agent.norms.md",
+      "ru": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "8d404139f6733dbb201e4f51667532be4fb007cf",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/06-console.md",
+      "ru": "Platform/06-console/ru/06-console.md",
+      "status": "BYTE_EXACT_ACCEPTED_UNPAIRED_RU_LECTURE_REUSED",
+      "errors": [],
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "limit": "No same-name English lecture exists; not a new mirror PASS. Canonical English normative owners remain spec/*.norms.md."
+    },
+    {
+      "en": "Platform/06-console/acceptance/1/README.md",
+      "ru": "Platform/06-console/ru/acceptance/1/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/acceptance/2/README.md",
+      "ru": "Platform/06-console/ru/acceptance/2/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/acceptance/3/README.md",
+      "ru": "Platform/06-console/ru/acceptance/3/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/acceptance/6/README.md",
+      "ru": "Platform/06-console/ru/acceptance/6/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/acceptance/8/README.md",
+      "ru": "Platform/06-console/ru/acceptance/8/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/acceptance/9/README.md",
+      "ru": "Platform/06-console/ru/acceptance/9/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/forms/README.md",
+      "ru": "Platform/06-console/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b45425690d0db3fa74e3b7d4bdce4289918c67ec",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06-console.README.md",
+      "ru": "Platform/06-console/ru/spec/06-console.README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.1-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.1-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.2-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.2-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.3-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.3-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.4-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.4-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.6-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.6-console.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "ad95b4a3f38ade2b0d48b4a12cfc5927e74f19950110df6fa01f885b6e5206e6",
+      "ruSHA": "1954b0b3d9b4e59e7324be1ebd3e641369aca2821d3758a201fae91bb855349c"
+    },
+    {
+      "en": "Platform/06-console/spec/06.7-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.7-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.8-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.8-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/06-console/spec/06.9-console.norms.md",
+      "ru": "Platform/06-console/ru/spec/06.9-console.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/door-token.md",
+      "ru": "Platform/common/ru/contracts/door-token.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "b8e3fe0f359a3f86e5a72cb4c4400c3b658b47b2",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/forms/README.md",
+      "ru": "Platform/08-domain/ru/forms/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "fea447ca89e65870255d8de4c3123131da9a42f4",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.4-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "039a6e7939823547e9d5c06945d08f434097e618",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.5-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/01-store/spec/01.1-store.norms.md",
+      "ru": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "184fd477ff7e920fdd865e21b9d773c86401418bfe6eb09b037edc9e5693a505",
+      "ruSHA": "d8d93d33a66851b656902c0f263e06867caf321804740f35e46d396b21b13fa4"
+    },
+    {
+      "en": "Platform/08-domain/spec/08.2-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.2-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/event-journal.md",
+      "ru": "Platform/common/ru/contracts/event-journal.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/holds.md",
+      "ru": "Platform/common/ru/contracts/holds.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/record.md",
+      "ru": "Platform/common/ru/contracts/record.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/schema.md",
+      "ru": "Platform/common/ru/contracts/schema.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "0fe4ed70c93648a53196b31e203dda8e910d657536cd831179ca1be9ac0cc2eb",
+      "ruSHA": "6b54ebfb67a95896d694006b148d0899ae12a305770ecf50ed5a10a73398665a"
+    },
+    {
+      "en": "Platform/common/data/README.md",
+      "ru": "Platform/common/ru/data/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/heartbeat-read/README.md",
+      "ru": "Platform/common/ru/vectors/heartbeat-read/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/holds/README.md",
+      "ru": "Platform/common/ru/vectors/holds/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/may/README.md",
+      "ru": "Platform/common/ru/vectors/may/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/record/README.md",
+      "ru": "Platform/common/ru/vectors/record/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/vectors/schema/README.md",
+      "ru": "Platform/common/ru/vectors/schema/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "dec76c11391f46dc7ab277721bc000ffd3ca7aa4",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/accept.md",
+      "ru": "Platform/common/ru/contracts/accept.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "ce3d158a857634d5efce07dba726d740c120b2f3",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/0/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/0/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/1/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/1/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/3/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/3/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/4/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/4/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/5/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/5/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/7/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/7/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/acceptance/8/README.md",
+      "ru": "Platform/08-domain/ru/acceptance/8/README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.0-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.0-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.1-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "12c1f45be56a2112299e315e62752aee52a035a4aaa934fef90b071a41f41530",
+      "ruSHA": "4deba519cfa1fe11789cd7d6715b37fc33869b1d69bb37d6239289711bb16cc4"
+    },
+    {
+      "en": "Platform/08-domain/spec/08.6-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "f0e523f2fffb596185091a21e56031c328bac7591e442a42de19528b41116773",
+      "ruSHA": "9ab7e8f16bf16b0cf0e3a7a553ffb2f25b721591efa5570333c64491891a7dad"
+    },
+    {
+      "en": "Platform/08-domain/spec/08.8-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/08-domain/spec/08.9-domain.norms.md",
+      "ru": "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/common/contracts/domain-envelopes.md",
+      "ru": "Platform/common/ru/contracts/domain-envelopes.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "7468b5670a6bd78e28693387b38fce9342200247",
+      "errors": []
+    },
+    {
+      "en": "Platform/07-console-module/spec/07-console-module.norms.md",
+      "ru": "Platform/07-console-module/ru/spec/07-console-module.norms.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "62ae3dfd9d7295c083f6d2464a37d40acef18aa2",
+      "errors": []
+    },
+    {
+      "en": "Platform/07-console-module/CONSOLE-MODULE.md",
+      "ru": "Platform/07-console-module/ru/CONSOLE-MODULE.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "62ae3dfd9d7295c083f6d2464a37d40acef18aa2",
+      "errors": []
+    },
+    {
+      "en": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "ru": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+      "status": "NEW_COALESCED_PAIR_CHECK",
+      "errors": [],
+      "enSHA": "865990d3f1cb65752d09aa03515af12c9f0653c882a8ab2bbe82ea509790fedf",
+      "ruSHA": "3c0d9502d9f661c177e8910bcd4dd94d26a0d286e7afe939b59cd0473a55b508"
+    },
+    {
+      "en": "Platform/07-console-module/spec/07-console-module.README.md",
+      "ru": "Platform/07-console-module/ru/spec/07-console-module.README.md",
+      "status": "BYTE_EXACT_ACCEPTED_PAIR_REUSED",
+      "pin": "62ae3dfd9d7295c083f6d2464a37d40acef18aa2",
+      "errors": []
+    }
+  ]
+}

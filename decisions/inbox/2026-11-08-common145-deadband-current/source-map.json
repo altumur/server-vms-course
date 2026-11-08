@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "status": "EXACT_BEFOREWRITE_FOLLOWUP_OF_REAL_COMPOSITION_FINDING",
+  "readingparent": "d5e9ab4b46829f8a90553759610a151e3034c0d8",
+  "normal_parent": "30eb9d734c7668f293dc05e08be5299a1040341f",
+  "authority": "ADR129(29)fd6d0c3f item7 +published deadband dispositiona3912; no new meaning/choice",
+  "sourcepaths": 2,
+  "literalblocks": 4,
+  "branch": "spec103/common145-deadband-30eb9d73",
+  "worktree": "/home/pilot/wt-spec103-common145-deadband-30eb9d73",
+  "changes": [
+    {
+      "path": "Platform/04-controller/spec/04-controller.norms.md",
+      "before": {
+        "SHA": "1542646cd92c197a36920eaf495ded83af52ab88a0586272a95d91f7658ad98a",
+        "blob": "25d813c2b64cf0364b5b74468339776d7ac72f88",
+        "bytes": 188621
+      },
+      "after": {
+        "SHA": "12cc35b84b7e0d80a7290e1bb8be968b43479cb064eb266a199ad8c011567b2e",
+        "blob": "3d57b78144bc40ab193314a0abb55b74cc138f3c",
+        "bytes": 188500
+      },
+      "blocks": [
+        {
+          "before_codepoints": [
+            25623,
+            25822
+          ],
+          "before_UTF8": [
+            25932,
+            26131
+          ],
+          "before_LF": 183,
+          "old": "| `rebalance: {dead_band}` | outside this lesson: manual rebalance is not executed and dead_band is not consumed by the controller; the accepted manifest form remains P/02.1 | by the manifest form |\n",
+          "new": "| `rebalance: {dead_band}` | rebalancing on request: while the spread of the load is smaller — do not move | `0.10` |\n",
+          "after_codepoints": [
+            25623,
+            25741
+          ],
+          "after_UTF8": [
+            25932,
+            26052
+          ],
+          "after_LF": 183
+        },
+        {
+          "before_codepoints": [
+            167042,
+            167148
+          ],
+          "before_UTF8": [
+            172511,
+            172619
+          ],
+          "before_LF": 1487,
+          "old": "5. **the boundary of this lesson** — no manual rebalance procedure or trigger; dead_band is not consumed;\n",
+          "new": "5. **how rebalancing is requested** and who calls it; the budget;\n",
+          "after_codepoints": [
+            166961,
+            167027
+          ],
+          "after_UTF8": [
+            172432,
+            172498
+          ],
+          "after_LF": 1487
+        }
+      ],
+      "inverse": "EXACT"
+    },
+    {
+      "path": "Platform/04-controller/ru/spec/04-controller.norms.md",
+      "before": {
+        "SHA": "f79b3c7754d3482975e81038ba677bc2d1de99bb9e9fe784bd72b82d435fa516",
+        "blob": "bf04f6209de18c2099cf800ebda84738b4a9fdea",
+        "bytes": 246634
+      },
+      "after": {
+        "SHA": "895a95f10432fe651e7ada2550f1b81273055de5c55cef480da368bbc0ace455",
+        "blob": "c1ea1f2c22932027f1d5b18abb02f75bbde45583",
+        "bytes": 246475
+      },
+      "blocks": [
+        {
+          "before_codepoints": [
+            23492,
+            23675
+          ],
+          "before_UTF8": [
+            33836,
+            34123
+          ],
+          "before_LF": 163,
+          "old": "| `rebalance: {dead_band}` | вне этого урока: ручной rebalance не исполняется, dead_band контроллером не потребляется; принятая форма манифеста остаётся P/02.1 | по форме манифеста |\n",
+          "new": "| `rebalance: {dead_band}` | перебалансировка по запросу: пока разброс нагрузки меньше — не двигать | `0.10` |\n",
+          "after_codepoints": [
+            23492,
+            23603
+          ],
+          "after_UTF8": [
+            33836,
+            34008
+          ],
+          "after_LF": 163
+        },
+        {
+          "before_codepoints": [
+            153692,
+            153791
+          ],
+          "before_UTF8": [
+            225404,
+            225563
+          ],
+          "before_LF": 1353,
+          "old": "5. **границу этого урока** — ручной процедуры и триггера rebalance нет, dead_band не потребляется;\n",
+          "new": "5. **как запрашивается перебалансировка** и кто её зовёт; бюджет;\n",
+          "after_codepoints": [
+            153620,
+            153686
+          ],
+          "after_UTF8": [
+            225289,
+            225404
+          ],
+          "after_LF": 1353
+        }
+      ],
+      "inverse": "EXACT"
+    }
+  ],
+  "scope": "Restore ONLY existing requested-rebalance dead_band row/default0.10 and ImplementationDecides5 mechanism/budget; ordinaryN3 algorithm/schema/forms/corpus unchanged",
+  "reason": "Older accepted17880 withdrawal prose overrode later ADR29 in initial common composition. Original weak text-presence control was insufficient; d5e/f7 preserved as nonfinal history. No permission/meaning wait.",
+  "checks": [
+    {
+      "name": "Platform/04-controller/spec/04-controller.norms.md:exact_old_owner_literals",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/spec/04-controller.norms.md:requested_threshold0.10",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/spec/04-controller.norms.md:no_withdrawal_claim",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/spec/04-controller.norms.md:outside4literals_exact",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/ru/spec/04-controller.norms.md:exact_old_owner_literals",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/ru/spec/04-controller.norms.md:requested_threshold0.10",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/ru/spec/04-controller.norms.md:no_withdrawal_claim",
+      "pass": true
+    },
+    {
+      "name": "Platform/04-controller/ru/spec/04-controller.norms.md:outside4literals_exact",
+      "pass": true
+    },
+    {
+      "name": "affected_EN_RU",
+      "pass": true,
+      "errors": []
+    }
+  ]
+}

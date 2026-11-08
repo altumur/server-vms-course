@@ -122,7 +122,7 @@ sealed:         an envelope m1 with a JSON object of what is secret to the membe
                 by the holder's ring before m1 (P/08.5 N1.4 carry)
 ```
 
-The reader of the content of `sealed` skips fields outside the list (ADR-0098 §4): without this an agent of a former version would reject the whole answer. What the agent writes from an opened envelope and what it does with one that did not open is [P/09.1](../../09-agent/spec/09.1-agent.norms.md) N1.4 (`sealed`, `member_row`,
+Opened `sealed` content is the current closed composition above. An unknown field makes that content unreadable; it is not accepted by skipping the field. Keep the copies, their freshness marks and related writes unchanged, using the existing unaccepted-content path of P/09.1 N1.4. This does not change the m1 cryptographic open function or its historical byte witnesses. What the agent writes from an opened envelope and what it does with one that did not open is [P/09.1](../../09-agent/spec/09.1-agent.norms.md) N1.4 (`sealed`, `member_row`,
 `member_copy`, `break_glass`). The envelope `m1` of the answer of the holder's token door carries the JSON text `{request_id, token, exp}` (P/08.7 N1.3 `answer`).
 
 ## Vectors

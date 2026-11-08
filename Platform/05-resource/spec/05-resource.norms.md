@@ -16,8 +16,7 @@ the buckets, the writers of the file, the encoding of names and the writing of a
 lock and the count `room` are [the presence lock contract](../../common/contracts/presence-lock.md) (review of stage A
 3–5, № 9): the lesson is the owner of both. The request of N1.5, the merge, the reaper, the submission and the console doors are [chapter 6.4](../../06-console/spec/06.4-console.norms.md) (P/06);
 repeat suppression and the execution of requests are [chapter 3.6](../../03-worker/spec/03.6-worker.norms.md). «P/0N» is a lesson of the
-module, «P/0N.K» is its chapter; «M10/N» without an address is a former lesson (the history of the move). Norm ids are `P/05-MM`;
-the map to former ids is `id-map.tsv` (historical record).
+module, «P/0N.K» is its chapter; «M10/N» without an address is a former lesson (the history of the move). Norm ids are `P/05-MM`.
 
 ## N0 Vocabulary
 
@@ -26,6 +25,8 @@ the map to former ids is `id-map.tsv` (historical record).
 Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## N1 Form
+
+The positive integer settings owned by this lesson are [runtime-constants.tsv](../forms/runtime-constants.tsv); it is their numeric source. HTTP bounds/defaults stay in the [OpenAPI](05-resource.api.openapi.yaml), and high/low in the existing P/02 space form. ALIVE_EVERY/LOST_AFTER belong to the observation contract; JSON_DEPTH belongs to P/01. Equal values do not merge distinct budgets. WAIT_OBSERVE_MS / 1000 is the existing observation period in seconds. A pending ms reader/validator is a delivery dependency, not a waiver or a changed physical duration.
 
 <!-- req: P/05-R002 -->
 
@@ -119,7 +120,7 @@ A file system error after admission is a refusal of the write, not a success and
 <!-- req: P/05-R011 -->
 
 **Bodies at the resource** (moved from M10/10 N1.5 `mirror` and N1.4, parts of
-M10/10-06, -07, -08 by the `note` of id-map; the decision of the Specification on question V2 of the move; the field `blob`, the digest, the bytes door of
+M10/10-06, -07, -08 by the move record; the decision of the Specification on question V2 of the move; the field `blob`, the digest, the bytes door of
 the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-console.norms.md) N1.5):
 
 <!-- req: P/05-R012 -->
@@ -128,7 +129,7 @@ the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-
 mirror:   every local body — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled;
           copies — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1 (log of cammeta-go, lesson 10 № 1); the row
           does not read — bodies are not copied in this pass, the reason is in the heartbeat (settings_unread: mirror; V7 item 3, the decision of the Architect of 2026-10-28, P1; line 20 of the list);
-          reception: hash while reading; PEER_FAILS 3; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>`
+          reception: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>`
           of a subsystem with a blob field; another key (uppercase hex, without `sha256-`, a subsystem without a blob field) — an ordinary object,
           its owner writes it: 405 (reconciliation of python and go M10/6–11, T11)
 ```
@@ -142,8 +143,8 @@ possible; a refusal, not a truncation):
 
 | What | Limit | Where | Words / code |
 |---|---|---|---|
-| an object at the resource door (reading, body copy, mirror piece) | 64 MiB | the resource door (N2) | `413` |
-| lines in the answer of `/events` | 1000 by default, 10,000 the limit | the index (N1.3) | truncation, `truncated` |
+| an object at the resource door (reading, body copy, mirror piece) | `Content-Length.maximum` of the [HTTP form](05-resource.api.openapi.yaml) blob-copy operation | the resource door (N2) | `413` |
+| lines in the answer of `/events` | `limit.default` and `limit.maximum` of `GET /events` in the [HTTP form](05-resource.api.openapi.yaml) | the index (N1.3) | truncation, `truncated` |
 | retention term | a finite number > 0 | the resource (N1.3 `retention`) | «not known», remove nothing |
 | the object store | `max_bytes` (0 — no ceiling); the store says it itself | `put` | `TooLarge` «over this store's limit» |
 
@@ -192,7 +193,7 @@ step 2; the Architect's decision of 2026-10-27).
 ```yaml
 index:
   one_per_resource: over its own tree and the .mirror/<server>/ copies; the state is always live; there is no rebuild
-  cache:    bounded (64 MiB), dropped without loss of correctness; a file is reread by size/mtime/inode from the place
+  cache:    bounded (INDEX_CACHE_BYTES), dropped without loss of correctness; a file is reread by size/mtime/inode from the place
   query:    the query rules that the merge needs (parameters, defaults, by) — the event log merge contract «The resource query and answer»
             (moved there, EM-READ-33-01); the grammar of the parameters and the refusals — below this block
   row:      {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …fields}
@@ -216,7 +217,7 @@ retention:
             mirror copies — an hour longer; what is removed — the journal events.removed
 ```
 
-**Retention deadline** (ADR-0127, review of P/05 C4). Use the bucket's own persisted logical `written` from the event-journal contract “Bucket write time”. First resolve term reads and holds conservatively; a hold or unknown dependency keeps the bucket. For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor. A mirror copy uses the corresponding tree's term plus `3600`, measured from its own copy `written`. Equality deletes; a time below the deadline keeps it. Neither window start/end nor filesystem `mtime` substitutes for `written`. Restore preserves the copy's `written`; it does not restart the retention clock. All usual conservative holds and read outcomes precede this predicate.
+**Retention deadline** (ADR-0127, review of P/05 C4). Use the bucket's own persisted logical `written` from the event-journal contract “Bucket write time”. First resolve term reads and holds conservatively; a hold or unknown dependency keeps the bucket. For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor. A mirror copy uses the corresponding tree's term plus `MIRROR_RETENTION_EXTRA`, measured from its own copy `written`. Equality deletes; a time below the deadline keeps it. Neither window start/end nor filesystem `mtime` substitutes for `written`. Restore preserves the copy's `written`; it does not restart the retention clock. All usual conservative holds and read outcomes precede this predicate.
 
 <!-- req: P/05-R021 -->
 
@@ -225,7 +226,7 @@ and N3 «merge» (the console); the form of the console answer (`answer` above, 
 
 <!-- req: P/05-R022 -->
 
-A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer 1…10000 (reconciliation of python and go M10/6–11, E12–E15):
+A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer within the HTTP form bounds (reconciliation of python and go M10/6–11, E12–E15):
 - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with
   digits on at least one side, an optional exponent `e`/`E` with a sign; `1_0`, `.5`, `5.`, `1e3` are numbers,
   `1e-400` is 0; `+1`, a space (`%201`, `1%20`), non-ASCII digits (`١`), `0x10`, an overflow — 400;
@@ -260,7 +261,7 @@ until a reliable read. An absent retention row gives the default, a read error d
 
 ```yaml
 resource:                                    # one process per server; without a controller
-  heartbeat: the object platform/resources/<server>/heartbeat every 10 s
+  heartbeat: the object platform/resources/<server>/heartbeat every HEARTBEAT_EVERY
     {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]},
      workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door,
      retention_garbled?: [<sub>…], retention_withheld?: {<sub>: days_garbled | unknown | holds_unread}, …}
@@ -291,11 +292,11 @@ resource:                                    # one process per server; without a
              there, review of stage A 3–5, № 9; live.<sub> — ADR-0084 addendum (3) R14′, № 3, 19)
             do not write the door while platform/decommission/<my server> stands (the observation contract «Server decommissioned» narrower; the console deleted it)
   lost_after: LOST_AFTER                      # the observation contract «Freshness» (layout audit, the decision of the Architect of 2026-10-25, A-01); by a change on the clock of the reader
-  pass:      the first — at start, right after readiness (the door row is written); then every 600 s from the end of the pass
+  pass:      the first — at start, right after readiness (the door row is written); then every PASS_EVERY from the end of the pass
              (C05-PASS-FIRST-AT-START-01): retain → usage → relieve → mirror; each step in its own attempt; pass_stalled on a hang
-  space:     platform/space {enabled: true | false, high: 0.85, low: 0.75}   # shares; enabled until switched off:
-             # no row — enabled with the thresholds 0.85/0.75; enabled: false — the resource removes its own row free-* (reconciliation of python and go M10/6–11, E45)
-             # the row does not read — the step relieve is not executed: the defaults 0.85/0.75 are not substituted, its own row free-* is
+  space:     platform/space {enabled, high, low}   # shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off:
+             # no row — enabled with high/low defaults of that space form; enabled: false — the resource removes its own row free-* (reconciliation of python and go M10/6–11, E45)
+             # the row does not read — the step relieve is not executed: the high/low defaults of the space form are not substituted, its own row free-* is
              # neither written nor removed, the reason is in the heartbeat settings_unread: space (V7 item 3, the decision of the Architect of 2026-10-28, on the proposal; line 21 of the list)
              # the form of the row — P/02.4 N1.9 (written by admin, w2cctl space)
   free_ask:  <sub>/requests/free-<server>-<volume> {free, volume, server, at}   # its own form (ADR-0059): written and rewritten with cas only
@@ -315,8 +316,8 @@ resource:                                    # one process per server; without a
              the neighbours — the next copies live servers by name; liveness — by the door row platform/doors/<host>, as in the merge
              contract «Live resources» (the version changed within the last LOST_AFTER on the clock of this resource, the first look — as fresh), the heartbeat
              of the neighbour does not judge here (the decision of the Architect of 2026-10-31); only closed buckets;
-             the copy in .mirror/<server>/…; a copy is never a source while the owner answers; PEER_FAILS 3, a bucket ≤ 64 MiB
-             as a whole, a copy ages an hour later than the original; a closed bucket larger than 64 MiB (the mirror reception limit) is not
+             the copy in .mirror/<server>/…; a copy is never a source while the owner answers; PEER_FAILS, a bucket within the resource door byte limit (OpenAPI Content-Length.maximum)
+             as a whole, a copy adds MIRROR_RETENTION_EXTRA to its term; a closed bucket larger than that door limit (the mirror reception limit) is not
              copied: there is no assembly from pieces and no partial copy, it enters mirror.skipped of the heartbeat on every pass,
              the other buckets are copied (log of cammeta-go, lesson 8 № 7)
              # the form of the row platform/mirror — P/02.4 N1.9 (written by admin, w2cctl mirror)
@@ -342,7 +343,7 @@ resource:                                    # one process per server; without a
 
 <!-- req: P/05-R026 -->
 
-**Writer and reader heartbeat forms** (ADR-0127, review of P/05 C3). The writer MUST include `door`, `waits`, `restore`, `mirror` and `units`. At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero. Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt. `door` always has its actual `addr` and `mode`; `mtls` additionally requires the actual server-certificate `cert_until`. The root schema remains the tolerant reader form for old incomplete heartbeats; `$defs.writer` strengthens only the writer. A reader does not synthesize successful operation or TLS state from an absent old field.
+**Writer and reader heartbeat forms** (ADR-0127, review of P/05 C3). The current writer and reader MUST include `door`, `waits`, `restore`, `mirror` and `units`. At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero. Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt. `door` always has its actual `addr` and `mode`; `mtls` additionally requires the actual server-certificate `cert_until`. The ordinary root schema requires those current fields and the mtls condition in both modes. A violation has the existing unreadable-heartbeat outcome; a reader does not synthesize successful operation or TLS state from an absent field.
 
 **Unnamed presence uncertainty** (ADR-0127, review of P/05 C2). A current lock error without a readable slot name makes the whole role snapshot unknown, even after a successful listing and at cold start. Apply the presence-lock contract's “An unknown role snapshot”: omit `workers`, `running`, `unknown` and snapshot-derived `instances`, set the affected `room.<sub>` to `"unknown"`, omit its `live.<sub>`, keep independently complete room/live of other roles. Do not infer a slot from the filename, prior memory, or another lock; do not interpret the omission as `unlisted` or `gone`.
 
@@ -375,8 +376,8 @@ acceptance](../../common/acceptance/system/README.md)):
 
 ```yaml
 restore:    at start the resource pulls its closed buckets from the neighbours whose heartbeats mirrors name it: GET /mirrored/<me>,
-            each bucket by its sum, tmp + rename; PEER_FAILS 3 in a row — the neighbour is skipped for the attempt; RESTORE_RETRY 10 s,
-            doubling up to 600; done when the full lists are received and the copies are checked from all known necessary neighbours;
+            each bucket by its sum, tmp + rename; PEER_FAILS consecutive failures — the neighbour is skipped until the end of this restore attempt; RESTORE_RETRY,
+            doubling up to RESTORE_RETRY_MAX; done when the full lists are received and the copies are checked from all known necessary neighbours;
             the necessary neighbours — those whose readable heartbeats mirrors name this server; the local events are lost, and the heartbeats
             of the neighbours do not read or there is no heartbeat of a neighbour — all known server doors are necessary (platform/doors, door_row above),
             except its own: each is to answer with a full listing GET /mirrored/<me> (a full empty listing and 404 — there are no
@@ -387,6 +388,9 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
             then — the reindexing of the subsystem; a copy is never a source while the owner answers (mirror above)
 ```
 
+
+The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again. A mirror peer is considered again next pass. These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary.
+
 ### N1.6 Hint and HTTP representations
 
 <!-- req: P/05-R031 -->
@@ -395,7 +399,7 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
 `want` — a non-empty comma-separated list `<sub>/<kind>[/<unit>]`; each part of ASCII letters,
 digits, `_`, `-`, `.`, 1…64 characters, not starting with a dot. `client`, if given, — 1…128
 printable ASCII characters without a space. `since` — a decimal uint64 without a sign/leading zeros,
-0 by default. `timeout` — a finite number of seconds in (0,30], 30 by default.
+0 by default. `timeout` — finite seconds with the bounds and default of `GET /events/wait` in the [HTTP form](05-resource.api.openapi.yaml).
 Empty/repeated parameters, unknown parameters (`&foo=1`), other forms and values out of range — 400; `since` and
 `timeout` — only ASCII digits (and a dot for `timeout`), non-ASCII digits — 400 (reconciliation of python and go M10/6–11, E14, E16). `since=0` —
 the client has no position: the answer at once is `{changed: true, seq, touched}` if under want there are lines in the buckets of the resource of any
@@ -413,14 +417,14 @@ The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[
 `<sub>/<kind>/<unit>` that match want; the events themselves are not there. seq belongs to one process
 of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
 With full/replaced the client does not advance its cursor by seq, but returns to the ordinary pass.
-By default up to 16 waits (the deployment parameter LONG_POLL_WAITERS); a new wait when
-full is answered 200/full. First replace the former wait of the same verified CN and named client: it receives 200/replaced and releases its place; only then check capacity for the new wait. Thus at 16 pending waits a replacement is admitted and 16 remain; a different CN cannot free that place (ADR-0127, review of P/05 M2).
-A wait does not take the lane of 8 requests /events (N3 «query»); it holds its connection of the door until the answer
-(changed, term, full, replaced) or until the noticed departure of the client (no later than 1 s) — the «common lane» of N2 is the connection limit
+By default up to LONG_POLL_WAITERS_DEFAULT waits (the deployment parameter LONG_POLL_WAITERS); a new wait when
+full is answered 200/full. First replace the former wait of the same verified CN and named client: it receives 200/replaced and releases its place; only then check capacity for the new wait. Thus at a full effective LONG_POLL_WAITERS a replacement is admitted and the same number remain; a different CN cannot free that place (ADR-0127, review of P/05 M2).
+A wait does not take the /events computation lane of P/06.4 N3 merge (N3 «query»); it holds its connection of the door until the answer
+(changed, term, full, replaced) or until the noticed departure of the client (within WAIT_DISCONNECT_WITHIN) — the «common lane» of N2 is the connection limit
 of the resource door («Implementation decides» item 10; C05-WAIT-COMMON-LANE-01).
 In TLS the identity is the CN of the certificate plus client; another CN does not displace a wait (ADR-0075).
 Without client the deployment uses a separate wait per client address; a repeat with a busy
-address — full. The current buckets are observed every 0.1 s while there are waiting ones; a missed
+address — full. The current buckets are observed every WAIT_OBSERVE_MS / 1000 seconds while there are waiting ones; a missed
 hint or a write to an old bucket is made up for by the ordinary pass, not by a promise of delivery.
 
 <!-- req: P/05-R033 -->
@@ -459,7 +463,7 @@ Schema — [`doors.schema.json`](../data/doors.schema.json), outcomes — [`door
 |---|---|---|---|---|
 | `url` | string | required |  | the address of the resource door (RESOURCE_URL) |
 | `since` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the resource start |
-| `at` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the last mark, every ALIVE_EVERY; judged by a change of the row version, not by the value (resource_state of the observation contract) |
 | `.<name>` | string | optional |  | name: `room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) R14′); a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Count room»), or "unknown"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 N3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live) |
 
 Only at the writer (`$defs.writer`):
@@ -486,7 +490,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 |---|---|---|---|---|
 | `server` | string; matching `[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 N2) |
 | `box` | string | optional |  | the box (BOX_ID, the environment file contract «Environment variables») |
-| `ts` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the heartbeat; written every 10 s |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the heartbeat; written every HEARTBEAT_EVERY (forms/runtime-constants.tsv) |
 | `url` | string | required |  | the address of the resource door |
 | `schema` | integer; ≥ 1; ≤ 9007199254740991; the whole sign for the reader too (x-whole) | required |  | SCHEMA of the build (P/06.6 N1.1a heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown |
 | `build` | string | required |  | the build word (BUILD); not a string — the field is unknown: null in the console's answers (V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list) |
@@ -504,7 +508,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `instances` | map author names: name — string; matching `[^/]+/[^/]+` in full, value — string; matching `[\s\S]+` in full | optional |  | `{<sub>/<slot name>: <instance>}` |
 | `instances.<name>` | string; matching `[\s\S]+` in full | optional |  |  |
 | `short` | integer; ≥ 0; ≤ 9007199254740991 | required |  | how many bytes the mark asked to free and could not (P/06.5 N3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by N3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value (stage C guess R05-G03, the Architect's decision of 2026-10-23) |
-| `waits` | map `{waiting, held, full, replaced, max}` | optional |  | counters of the /events/wait waits (N1.6); in every heartbeat (E39) |
+| `waits` | map `{waiting, held, full, replaced, max}` | required |  | counters of the /events/wait waits (N1.6); in every heartbeat (E39) |
 | `waits.waiting` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `waits.held` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `waits.full` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
@@ -516,7 +520,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `pass_stalled` | number; ≥ 0 | optional |  | seconds, only while the pass is hung (PULSE_LIMIT) |
 | `volumes_stuck` | map author names: name — string, value — number | optional |  | volumes whose probe did not answer (P/06.5 ResourceRow) |
 | `volumes_stuck.<name>` | number | optional |  |  |
-| `door` | map `{addr, mode, cert_until?}` | optional |  | the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 N1.4; ADR-0075 addendum (3); analysis of review of stage B 3–5, № 28) |
+| `door` | map `{addr, mode, cert_until?}` | required |  | the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 N1.4; ADR-0075 addendum (3); analysis of review of stage B 3–5, № 28) |
 | `door.addr` | string | required |  | the address of the resource door — RESOURCE_HOST:RESOURCE_PORT |
 | `door.mode` | string; one of: `loopback`, `mtls` | required |  | loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS (ADR-0075) |
 | `door.cert_until` | number | optional |  | wall-clock seconds of the expiry of the server certificate of its own set (W2C_TLS_DIR); with mtls |
@@ -528,7 +532,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `retention_withheld.<name>` | string; one of: `days_garbled`, `unknown`, `holds_unread` | optional |  |  |
 | `settings_unread` | list, at least 1 items, without repeats, element — one of: `mirror`, `space` | optional |  | the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 N1.4 mirror, space, N3; V7 item 3, the Architect's decision of 2026-10-28, P1; rows 20, 21 of the list) |
 | `settings_unread[]` | one of: `mirror`, `space` | optional |  |  |
-| `restore` | map author names: name — string, value — map `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | optional |  | `{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Bucket restore»); in every heartbeat (E39) |
+| `restore` | map author names: name — string, value — map `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | required |  | `{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Bucket restore»); in every heartbeat (E39) |
 | `restore.<name>` | map `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | optional |  |  |
 | `restore.<name>.done` | bool | required |  |  |
 | `restore.<name>.silent` | bool | optional |  |  |
@@ -540,7 +544,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `restore.<name>.failures` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `restore.<name>.lines_garbled` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
 | `restore.<name>.next` | number | optional |  |  |
-| `mirror` | map `{skipped, failed, peer_errors, lines_garbled, sum_refused?, peer_sum_refused?, pull_sum_bad?, unsummed?}` | optional |  | mirror counters (N1.4 mirror; skipped — buckets larger than 64 MiB); in every heartbeat (E39) |
+| `mirror` | map `{skipped, failed, peer_errors, lines_garbled, sum_refused?, peer_sum_refused?, pull_sum_bad?, unsummed?}` | required |  | mirror counters (N1.4 mirror; skipped — buckets larger than the resource door limit (OpenAPI Content-Length.maximum, P/05-R014)); in every heartbeat (E39) |
 | `mirror.skipped` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `mirror.failed` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `mirror.peer_errors` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
@@ -549,13 +553,6 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `mirror.peer_sum_refused` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
 | `mirror.pull_sum_bad` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
 | `mirror.unsummed` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
-
-Only at the writer (`$defs.writer`):
-
-| Key | Also |
-|---|---|
-| `<root>` |  |
-| `door` |  |
 
 **`disk`**
 
@@ -624,7 +621,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/<sub>.alarms/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -645,7 +642,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/audit/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -666,7 +663,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/audit.alarms/<role>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -687,7 +684,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/console/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -708,7 +705,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/console.alarms/<instance>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -729,7 +726,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/.mirror/<server>/<tree>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — file
 
@@ -750,7 +747,7 @@ Outcomes of an unreadable file (the reader is a role; `*` — all readers of the
 
 | Path of refusal | Reader | Outcome | Priority | Unit | Norm |
 |---|---|---|---|---|---|
-| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
+| the whole file | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH (P/01.1 N2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | row | the event journal contract `bucket` `torn`; stage C guesses EJ-G03, EJ-G07 |
 
 #### `<events root>/.workers/<sub>/<instance>.lock` — file
 
@@ -796,7 +793,7 @@ Outcomes of an unreadable object (the reader is a role; `*` — all readers of t
 <!-- req: P/05-R035 -->
 
 The full contract: [OpenAPI](05-resource.api.openapi.yaml).
-GET of an object is limited to 64 MiB by the bytes actually read: exactly the limit is allowed,
+GET of an object is limited to the resource door byte limit (OpenAPI Content-Length.maximum) by the bytes actually read: exactly the limit is allowed,
 +1 byte — 413 ResourceError before the success headers; until the size is confirmed the body is
 buffered within bounds or checked against an immutable object with a reliable size.
 The ceiling of the store itself can be higher and does not cancel this limit of the door. It distinguishes
@@ -818,7 +815,7 @@ are performed separately. An outer array does not replace JSON Lines.
 | resource PUT /mirror/{server}/{path} | 204 without a body; the header `X-Sum` — SHA-256 of the body (64 lowercase hex), required | no `X-Sum` or it is not in form — 400, the body is not accepted; the SHA-256 of the body does not match — 422; 408/413/500 — without a body |
 | resource GET /mirrored/{server} | 200 MirroredListing | 404/500 without a body |
 | resource GET /mirrored/{server}/{path} | 200 bytes + X-Sum | 404/500 without a body |
-| resource `PUT /v1/objects/<sub>/blobs/<digest>` | 204 without a body. Required are a length ≤64 MiB, `X-Written` — a non-negative time of the source copy (absent or not a number — 400), a sha256 name with 64 lowercase hex; bytes of another digest — 422; a key not of the blob form or a subsystem without a blob field — 405, as for any object (N1.1 «Bodies at the resource» `mirror`; reconciliation of python and go M10/6–11, T10, T11). On reading the actual limit/sum are checked | 400/404/405/408/409/411/413/422/503 — `ResourceError`, 403 — it or `ResourceDenied`. The common refusals of the console do not apply here (moved from M10/10 N2) |
+| resource `PUT /v1/objects/<sub>/blobs/<digest>` | 204 without a body. Required are a length ≤the resource door byte limit (OpenAPI Content-Length.maximum), `X-Written` — a non-negative time of the source copy (absent or not a number — 400), a sha256 name with 64 lowercase hex; bytes of another digest — 422; a key not of the blob form or a subsystem without a blob field — 405, as for any object (N1.1 «Bodies at the resource» `mirror`; reconciliation of python and go M10/6–11, T10, T11). On reading the actual limit/sum are checked | 400/404/405/408/409/411/413/422/503 — `ResourceError`, 403 — it or `ResourceDenied`. The common refusals of the console do not apply here (moved from M10/10 N2) |
 
 <!-- req: P/05-R037 -->
 
@@ -888,7 +885,7 @@ For door mode `mtls`, the per-operation role table is [forms/door-roles.tsv](../
 conditional HTTP requests are not part of the lesson. The size of the answer is fixed before reading; the answer
 does not promise a snapshot of the whole tree. After the output has started, a break of the stream does not turn into a second
 HTTP status: the caller does not accept incomplete bytes as a whole copy. The mirror reception is limited by
-64 MiB and by the read term declared by the deployment; exceeding the size — 413, the term — 408.
+the resource door byte limit (OpenAPI Content-Length.maximum) and by the read term declared by the deployment; exceeding the size — 413, the term — 408.
 `PUT /v1/objects/<sub>/blobs/<digest>` is the body copy of a neighbour (the table above; N1.1 «Bodies at the resource»); `PUT /<rows>/<id>/<blob_field>`
 belongs wholly to [P/06.1](../../06-console/spec/06.1-console.norms.md) N2 (the bytes door of the console); other
 objects the resource door does not write — a refusal of the write of a non-blob, there is no partial copy of the blobs contract.
@@ -930,14 +927,14 @@ stand on the norms of the lesson; review of stage B 3–5, V1). The refusals of 
 
 ```
 1. check the parameters (N1.3)                                         → 400 (ResourceError at the resource, ConsoleRefusal at the console)
-2. candidates: a window ≤ 144 buckets — names by time; wider — a listing of the directory; if a bound cannot be represented by a calendar name — a listing, without an overflow; both trees of the subsystem (and .alarms);
+2. candidates: a window ≤ QUERY_NAMED_BUCKET_LIMIT buckets — names by time; wider — a listing of the directory; if a bound cannot be represented by a calendar name — a listing, without an overflow; the threshold only selects candidate search, never a query horizon or a result cap; both trees of the subsystem (and .alarms);
    the copies .mirror/*: the same bucket is a duplicate, it answers under the name of the owner
 3. read the files from the place of the last read (a cache by size/mtime/inode); a torn line — skip it (partial);
    an unreadable line or a file not in its place — skip it and count it in lines_garbled (N1.3), the answer is not 503
 4. filter: kind, subsystem, unit — the logical reference <tree>/<unit>, for a line of the tree .alarms — without the suffix (and the lines with of = unit; a parameter with the suffix .alarms — the form UnitRef allows it — is not normalized and matches no line: 200 without matches, C05-QUERY-UNIT-ALARMS-01), class, the window from ≤ t < to (or likewise by occurred: buckets up to to + late, the event log merge contract `by`)
 5. epoch_is and fenced the resource does not set: they are set by the merger (the event log merge contract); the resource needs no rights to <sub>/epoch/*
 6. remove the id duplicates, order and take the first limit by cut (the event log merge contract); truncated = the number of candidates after deduplication minus the number given
-→ the lines of N1.3; more than 8 requests at once → 503 busy, Retry-After: 1 (counted are the requests /events that are being computed now;
+→ the lines of N1.3; more simultaneously computed requests than the P/06.4 N3 merge lane bound → 503 busy, Retry-After: 1 (counted are the requests /events that are being computed now;
   a held wait /events/wait does not take this lane — C05-WAIT-COMMON-LANE-01)
 ```
 
@@ -945,12 +942,12 @@ stand on the norms of the lesson; review of stage B 3–5, V1). The refusals of 
 
 **Races.** Reading an open bucket during appending: only whole lines are given, a torn one is not given and the answer carries `partial: true` (`truncated` is a number, N1); a listing does not fix the content of the files: a file that has vanished does not confirm an empty bucket. A read error of a file or a directory is not given as a full answer; after the HTTP stream has started — a break, before it — 503 ResourceError. An unreadable line is not a read error: it is skipped and counted (N1.3, P/01.1 N0 «Stability of output»).
 
-### resource pass — at start, then every 600 s from the end of the pass
+### resource pass — at start, then every PASS_EVERY from the end of the pass
 
 <!-- req: P/05-R052 -->
 
-The first pass is right after readiness (the door row is written), not after 600 s: the reconciliation after a restart and the edges of
-`free_ask` do not wait for a window of up to 10 min; the next one is 600 s after the end of the previous one (C05-PASS-FIRST-AT-START-01, the decision of
+The first pass is right after readiness (the door row is written), not after PASS_EVERY: the reconciliation after a restart and the edges of
+`free_ask` do not wait for PASS_EVERY; the next one is PASS_EVERY after the end of the previous one (C05-PASS-FIRST-AT-START-01, the decision of
 the Specification on the recommendation of the Architect, 2026-10-30).
 
 <!-- req: P/05-R053 -->
@@ -967,8 +964,8 @@ retain:  for each tree: days = <sub>/retention | the default (tree.alarms — al
          apply the inclusive deadline now >= written + seconds of N1.3 retention, only to closed buckets (the console marks — not earlier than the longest; holds keep — also the buckets
          of the units of other subsystems whose about names the held one, and the buckets of unknown units; what a row holds, the window,
          an incomplete declaration and unreadable rows — the holds contract common/contracts/holds.md, P/06.4 N1.5;
-         the mirror copies — days + 1 h); the journal events.removed; index.forget
-usage:   measure the volumes (a probe ≤ 5 s); the heartbeat space/volumes
+         the mirror copies — the tree term plus MIRROR_RETENTION_EXTRA); the journal events.removed; index.forget
+usage:   measure the volumes (a probe ≤ VOLUME_PROBE_WITHIN); the heartbeat space/volumes
 relieve: platform/space.enabled ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing
          (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.<volume> of this volume; N1.4 free_ask);
          platform/space does not read — the step is not executed (N1.4 space); a heartbeat of a worker of this subsystem on this server does not
@@ -981,7 +978,7 @@ relieve: platform/space.enabled ∧ used/total > high → for manifests with req
          on which the absence of unit AND the exact match of server/volume were checked (P/01.1); conflict — under the key there is already another row (an ordinary request or a new own one) → do not touch it,
          the journal free_ask.key_taken
 mirror:  platform/mirror does not read → the step is not executed, settings_unread: mirror (N1.4 mirror); platform/mirror.enabled → the neighbours = the next copies live ones by name (liveness — the door row, N1.4 mirror); the closed buckets that the neighbour does not have
-         (the sum) → PUT /mirror/<me>/<path> with X-Sum = SHA-256 of the bucket; PEER_FAILS in a row → the neighbour is skipped for the pass
+         (the sum) → PUT /mirror/<me>/<path> with X-Sum = SHA-256 of the bucket; PEER_FAILS consecutive failures → the neighbour is skipped until the end of this mirror pass
 each step is its own attempt; a step longer than PULSE_LIMIT → pass_stalled in the heartbeat
 ```
 
@@ -1030,7 +1027,7 @@ the former ones, except `09-resource-door` from M10/11 (there — 01; the number
 | 20 | `20-door-room`: the field `door` in the resource heartbeat; `room.testsub2`, `live.testsub2` of the door row by the live locks — a number n ≥ 2 in `live`, the base n = 1 and a name without a number — only in `room` (coverage audit of P/05, F03) | N1.4 `heartbeat`, `door_row`, `room`; [the presence lock contract](../../common/contracts/presence-lock.md) «Count `room`» |
 | 21 | `21-events-wait`: `/events/wait` — by the term `{changed: false, seq}`; `since=0` with a line under `want` — at once `changed` with `touched`; `seq` is monotonic; the cursor `since=seq` — without changes (coverage audit of P/05, F05) | N1.6, N2 |
 | 22 | `22-torn-tail`: a bucket tail without LF — not in `events` and `truncated`, `partial: true`, not `lines_garbled` (coverage audit of P/05, F06) | N1.3 «Unreadable bucket line», N3 «query» step 3; the event log contract `torn` |
-| 23 | `23-object-ceiling`: a body copy of exactly 64 MiB — 204 and the read 200 (coverage audit of P/05, F07); +1 byte — 413 — checked by reading (C05-CEILING-PLUS-ONE-READING-01) | N1.1 «Resource ceilings», N2, N4 |
+| 23 | `23-object-ceiling`: a body copy of exactly the resource door byte limit (OpenAPI Content-Length.maximum) — 204 and the read 200 (coverage audit of P/05, F07); +1 byte — 413 — checked by reading (C05-CEILING-PLUS-ONE-READING-01) | N1.1 «Resource ceilings», N2, N4 |
 | 24 | the edges of `free_ask` on the first pass (C05-PASS-FIRST-AT-START-01; coverage audit of P/05, F04): the resource writes its own request row `free-srv-a-events`, in the heartbeat `short` ≥ 1 | N1.4 `free_ask`, `space`, `heartbeat`; N3 «resource pass» `relieve` |
 | 25 | under its own key a row with `unit` — not touched (the same version), the event `free_ask.key_taken` | N1.4 `free_ask`, `space`, `heartbeat`; N3 «resource pass» `relieve` |
 | 26 | under its own key a row with another's `server` — not touched, `free_ask.key_taken` | N1.4 `free_ask`, `space`, `heartbeat`; N3 «resource pass» `relieve` |
@@ -1048,11 +1045,14 @@ the former ones, except `09-resource-door` from M10/11 (there — 01; the number
 | 38 | `38-holds-garbled-row`: a hold row without a readable window — `garbled_rows.notches` (G06) | N3 `retain`; N1.4 `heartbeat`; [the holds contract](../../common/contracts/holds.md) |
 | 39 | `39-settings-unread`: unreadable `platform/space` and `platform/mirror` — `settings_unread: [mirror, space]`, its own row `free-*` is not written (G06) | N1.4 `space`, `mirror`, `heartbeat`; N3 |
 | 40 | `40-space-disabled`: `enabled: false` — its own row `free-*` is removed, `short` 0 (G07) | N1.4 `space` (E45), `heartbeat.short`; N3 `relieve` |
-| 41 | `41-space-band`: between `low` and `high` with `need > 0` its own row stands as it is (G07) | N1.4 `free_ask` (E44); N3 `relieve` |
+| 41 | `41-space-band`: early observation of the own row in the band; completion is established separately by synchronous s63-free-ask-band-completed (G07) | N1.4 `free_ask` (E44); N3 `relieve` |
 | 42 | `42-heartbeat-units`: `units` of the resource heartbeat — the ids of the units from `status` of a live worker in ascending order of bytes (G08) | N1.4 `heartbeat` (E39), `running` |
 | 43 | `43-spoiled-object-door`: a spoiled object — the door gives it as it is: the listing and `GET` 200 (G08) | N1.1 `door`; «Implementation decides» item 8 (C05-SPOIL-OBJECT-BYTES-01) |
 | 44 | `44-objects-door-family`: `objects.door` of the manifest — `testsub2/tickets/t1` (`@put object` from `inputs/`) — `GET` 200 and in the listing; `testsub/tickets/t1` without `objects` in the manifest — 403 (G01) | N1.1 `door`; N2; N4 |
 | 45 | `45-gone-door`: the tombstone `.gone/<object-key>` (`@put object` from `inputs/`) — outside the ordinary listing, `prefix=.gone/` and `GET` of the body — reading, `PUT` — 405; an older copy — 409, there is no key; a newer one — 204 with the source `written`, the tombstone is removed by the same action (G02) | N1.1 `written` (C05-GONE-REWRITE-AT-WRITE-01), `door` (C05-GONE-BODY-READ-01); N4 «deleted later»; [the tombstone contract](../../common/contracts/tombstone.md) `listing`, `rewrite` |
+
+
+The additional source seams s63–s67 in [acceptance/seams.tsv](../acceptance/seams.tsv) use the existing synchronous ports: completed relieve in the band; actual candidate selection at 144/145 and calendar fallback; independent peer retry boundaries. The unchanged process scenario41 observes only its listed early state; pass_started plus a fixed sleep does not prove relieve completion. A seam declaration is not implementation execution.
 
 TSV observes only the listed steps. The other evidence is listed separately
 in the acceptance README: the writing/reading of buckets and the real fsync barriers, retention/holds, the mirror and a stream with a break, free_ask
@@ -1069,7 +1069,7 @@ An implementation is to name in its description:
 
 1. **the object store on the box and in the cluster** — the layout on disk (directories, the delete tombstones `.gone/<object-key>` — the tombstone contract) and the size limits; the address `OBJECTS` and the access of the client — [the object store client contract](../../common/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
 2. ~~**how the resource learns the presence of processes**~~ — normed: [the presence lock contract](../../common/contracts/presence-lock.md) `presence_lock` (the second pilot, N-1);
-3. **the eviction policy of the index cache** within 64 MiB (N1.3); the number of merge lanes (8) and the term (3 s) are a norm of [P/06.4](../../06-console/spec/06.4-console.norms.md) N3 «merge», not a choice;
+3. **the eviction policy of the index cache** within INDEX_CACHE_BYTES (N1.3); the number of merge lanes and the term are a norm of [P/06.4](../../06-console/spec/06.4-console.norms.md) N3 «merge», not a choice;
 4. **the long poll `/events/wait`**: the structure of the memory of observations and the deployable limit of waits; the forms of want/the answer and the profile of the timeout are N1.6, not a choice;
 5. **the journal line**: the fields beyond `sub`/`target`/`addr` of the event log contract `journal`, the writer role, the epoch of the tree (`e1`);
 6. **streams and the reading of a body**: the term of the mirror reception, the way to check the whole body before publication, the distinction of a refusal before the headers and a break after them (the limits and terms of the POST of the console — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) «Implementation decides» item 3);
@@ -1080,8 +1080,8 @@ An implementation is to name in its description:
    the copy/listing does not read» — 503). The description and the API of the library are written in the repository of the implementation by the owner of this lesson before the
    code; the worker and the other writers of the families read only the contract and the API; a mix of languages in one box is not supported
    (guesses of stage C W03-OBJ, OF-G01/G02, ADR-0087 addendum (12) item 7).
-10. **the connection limit of the resource door** (the «common lane» of N2) for all routes: no less than 64 at once and 32 per address (no less than
-   LONG_POLL_WAITERS + 8 with a margin, so that full and busy are reachable); beyond it — 503 busy, Retry-After: 1
+10. **the connection limit of the resource door** (the «common lane» of N2) for all routes: no less than DOOR_CONNECTIONS_MIN at once and DOOR_PER_ADDRESS_MIN per address (no less than
+   LONG_POLL_WAITERS + the P/06.4 merge lane count with a margin, so that full and busy are reachable); beyond it — 503 busy, Retry-After: 1
    (C05-WAIT-COMMON-LANE-01).
 11. **`PUT /mirror/<own server>/…`** — a copy of its own bucket from itself: accept it (a copy in `.mirror/<own server>/`) or refuse
    (400 without a body); a copy from itself breaks nothing (a copy is never a source while the owner answers, N1.4 `mirror`),
@@ -1096,18 +1096,18 @@ An implementation conforms to the lesson when every norm is fulfilled; a norm id
 - [ ] **P/05-01** the object of N1.1: whole or nothing, a writer per directory, create-once, the platform families are closed; one encoding of names ([the event log contract](../../common/contracts/event-journal.md) «File names in shared trees»: `%XX`, `%h<sha256>`; the threshold of `%h` — by the full file name: the component, the suffix of the norm, `TEMP_RESERVE` 16 bytes — checked by reading, review of stage B 3–5, № 20) — sc. 03 step 10 [of the acceptance of chapter 6.4](../../06-console/acceptance/4/README.md) (`:` of the console instance), the rest — by reading the contract/README; the presence lock ([the presence lock contract](../../common/contracts/presence-lock.md)) — sc. 16 (from M10/11), sc. 12 [of the acceptance of P/04](../../04-controller/acceptance/README.md); row objects for `objects.rows` and `commands/*` — sc. 29 (`testsub2/marks/*`, `commands/*` of both subsystems; the second pass of the audit); sc. 05 [of the acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md); checked by reading
 - [ ] **P/05-02** the objects door of N2: the families `PLATFORM_DOOR`, the codes — sc. 01; the fresh copy, an equal `written` — the greater server, `missing`, `X-Missing` at 404 — sc. 31; `objects.door` of the manifest (`testsub2/tickets/*`; for a manifest without `objects` — 403) — sc. 44; the tombstones `.gone/` — read only (the listing `prefix=.gone/`, the body, `PUT` — 405) — sc. 45; spoiling the bytes of an object — the door gives it as it is — sc. 43; the listing is a filter, `*` is a subsystem of the catalogue, the grammar of the key and the parameters, `OPTIONS` — sc. 01; the case of the key — sc. 05 step 13 [of the acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md); the service names with `~` outside the listing and not a key ([the event log contract](../../common/contracts/event-journal.md) «File names in shared trees», ADR-0083 addendum (16)): the directory lock `~lock` — sc. 19; the temporary name of the writer — by the same rule of traversal, checked by reading (the stand does not stop a write between temp and rename)
 - [ ] **P/05-03** the event line (the event log contract «The line and the bucket»): `t`, `kind`, `id`, `of` of the platform, `class` only for an alarm, without `v` — sc. 03 of the acceptance of chapter 6.4; checked by reading
-- [ ] **P/05-04** the bucket by `t`, 600 s, the epoch in the path, the alarm tree, `fsync` of alarms and of the journal (the event log contract) — checked by reading; a torn line — sc. 22 (reading by the index)
+- [ ] **P/05-04** the bucket by `t`, the bucket period of the event journal contract, the epoch in the path, the alarm tree, `fsync` of alarms and of the journal (the event log contract) — checked by reading; a torn line — sc. 22 (reading by the index)
 - [ ] **P/05-05** the index: one per resource, without rebuild, the cache does not affect correctness; the query of N1.3 with `epoch_is`, the cut and `truncated` — sc. 02; sc. 03 of the acceptance of chapter 6.4; an id duplicate, the order `cut`, `keep`, `by=occurred`, `late`, `truncated` after deduplication, `HEAD /events` — 405 — sc. 35; `/events/{path}` 200 with `X-Sum`, 206 and 416 with `Content-Range`, `/buckets` of an unknown unit — 404 — sc. 36; the grammar of the parameters — sc. 02; the journal without `requests.journal`, BucketInfo JSON Lines, Range — sc. 04 of the acceptance of chapter 6.4; an unreadable bucket line and a file not in its place — 200 and `lines_garbled` (P/01.1 N0 «Stability of output») (sc. 08 steps 12–14; a finding of the move); a torn tail — `partial: true`, not in `events`/`truncated`, not `lines_garbled` — sc. 22; the class from the line's class field, absence means observation; .alarms selects writer layout and retention, never overrides class, `subsystem` and `unit` of alarms without the suffix, `unit` with `.alarms` — 200 without matches — sc. 34
 - [ ] **P/05-06** the term per subsystem: 365/1095, «not known» — do not remove, the floor of the marks, holds, the journal `events.removed` — checked by reading; the reasons in the heartbeat: a wrong `days` in `retention` and `alarms_retention` — `retention_garbled`, `retention_withheld: days_garbled` — sc. 37; a hold row without a readable window — `garbled_rows` — sc. 38
-- [ ] **P/05-07** the resource of N1.4: the heartbeat 10 s, the door row, its `room.<sub>` and `live.<sub>` (the numbers n ≥ 2 of the live locks, ADR-0084 addendum (3) R14′; review of stage B 3–5, № 26) by the live locks (ADR-0084; the presence lock contract «Count room»); the lock: the flock of the resource without waiting, ENOENT of stat — a mismatch, the delete of gone only after a matched comparison — checked by reading: a test with the worker stopped between open and flock (review of stage B 3–5, № 19); the content of the lock by the family presence-lock: empty or out of form at a busy one — a live one without a number (in `room.<sub>`, not in `workers`, `running`, `live.<sub>`), `unknown` — only an unreadable file — checked by reading (review of stage B 3–5, № 23); the pass of 600 s in the order of N3, `pass_stalled` — checked by reading; the field `door {addr, mode: loopback | mtls, cert_until}` in the heartbeat — sc. 20 (`cert_until` with mtls — checked by reading; review of stage B 3–5, № 28); `room.<sub>` and `live.<sub>` by the live locks: without workers, the number n ≥ 2, the base n = 1, a name without a number — sc. 20; the heartbeat fields `units`, `waits`, `restore`, `mirror` — sc. 05 step 12 of the acceptance of chapter 3.6; `units` of two units in ascending order of bytes — sc. 42; an unreadable worker heartbeat does not enter `units` (C05-UNITS-PULSE-GARBLED-01) — checked by reading; `mirrors` — sc. 33; `settings_unread` — sc. 39
-- [ ] **P/05-08** the disk marks by shares (no row `platform/space` — enabled 0.85/0.75 — checked by reading; disabled — its own row is removed, `short` 0 — sc. 40; between low and high with need > 0 it stands — sc. 41; the row does not read — `relieve` is not executed — sc. 39), the request `free-*` by the formula, the write with `cas` by the version of its own form, the removal under the mark only by `delete` with `cas` of the checked version (conflict — do not touch); volume without a hyphen by N1.4 `free_ask`, a row with `unit` or another's server/volume under its own key is not touched — the journal `free_ask.key_taken` (its own row and `short`, four edges of a foreign form — sc. 24–28); nobody executes or marks it; the resource itself deletes nothing except buckets — checked by reading
-- [ ] **P/05-09** the mirror: the neighbours by name and liveness by the door row (the bound — the vector `fresh-age`), closed buckets, a copy is not a source, the limits, `mirror.skipped` — checked by reading; the paths `/mirror`, `/mirrored`, `/events/{path}`, `/buckets` (`..`, `%2F`, another's tree) and the methods — sc. 08; the reception of a copy: an open bucket (a window in the future), no `X-Sum` or not in form — 400, the sum — 422 without a copy — sc. 32; 204, the listing `/mirrored`, a repeat does not shift `written`, the bytes with `X-Sum` — sc. 33; OWS of `X-Sum`, the copying of buckets on two resources — checked by reading (a bucket closes after 600 s)
+- [ ] **P/05-07** the resource of N1.4: the heartbeat every HEARTBEAT_EVERY, the door row, its `room.<sub>` and `live.<sub>` (the numbers n ≥ 2 of the live locks, ADR-0084 addendum (3) R14′; review of stage B 3–5, № 26) by the live locks (ADR-0084; the presence lock contract «Count room»); the lock: the flock of the resource without waiting, ENOENT of stat — a mismatch, the delete of gone only after a matched comparison — checked by reading: a test with the worker stopped between open and flock (review of stage B 3–5, № 19); the content of the lock by the family presence-lock: empty or out of form at a busy one — a live one without a number (in `room.<sub>`, not in `workers`, `running`, `live.<sub>`), `unknown` — only an unreadable file — checked by reading (review of stage B 3–5, № 23); the pass every PASS_EVERY in the order of N3, `pass_stalled` — checked by reading; the field `door {addr, mode: loopback | mtls, cert_until}` in the heartbeat — sc. 20 (`cert_until` with mtls — checked by reading; review of stage B 3–5, № 28); `room.<sub>` and `live.<sub>` by the live locks: without workers, the number n ≥ 2, the base n = 1, a name without a number — sc. 20; the heartbeat fields `units`, `waits`, `restore`, `mirror` — sc. 05 step 12 of the acceptance of chapter 3.6; `units` of two units in ascending order of bytes — sc. 42; an unreadable worker heartbeat does not enter `units` (C05-UNITS-PULSE-GARBLED-01) — checked by reading; `mirrors` — sc. 33; `settings_unread` — sc. 39
+- [ ] **P/05-08** the disk marks by shares (no row `platform/space` — enabled with the high/low defaults of the P/02 space form — checked by reading; disabled — its own row is removed, `short` 0 — sc. 40; between low and high with need > 0 it stands — early sc. 41 observation and the completed synchronous s63-free-ask-band-completed; the row does not read — `relieve` is not executed — sc. 39), the request `free-*` by the formula, the write with `cas` by the version of its own form, the removal under the mark only by `delete` with `cas` of the checked version (conflict — do not touch); volume without a hyphen by N1.4 `free_ask`, a row with `unit` or another's server/volume under its own key is not touched — the journal `free_ask.key_taken` (its own row and `short`, four edges of a foreign form — sc. 24–28); nobody executes or marks it; the resource itself deletes nothing except buckets — checked by reading
+- [ ] **P/05-09** the mirror: the neighbours by name and liveness by the door row (the bound — the vector `fresh-age`), closed buckets, a copy is not a source, the limits, `mirror.skipped` — checked by reading; the paths `/mirror`, `/mirrored`, `/events/{path}`, `/buckets` (`..`, `%2F`, another's tree) and the methods — sc. 08; the reception of a copy: an open bucket (a window in the future), no `X-Sum` or not in form — 400, the sum — 422 without a copy — sc. 32; 204, the listing `/mirrored`, a repeat does not shift `written`, the bytes with `X-Sum` — sc. 33; OWS of `X-Sum`, the copying of buckets on two resources — checked by reading (a bucket closes by the event journal span)
 - [ ] **P/05-10** `/events/wait` — the hint of N1.6: the forms `{changed: false, seq}` by the term and `{changed: true, seq, touched}`, `since=0` with lines under `want`, a monotonic `seq`, the cursor `since=seq` — sc. 21; the forms full/replaced, the profile of the parameters, the limit of waits and the displacement of its own identity; full/replaced does not advance the cursor; the periodic pass is mandatory — separate probes of the acceptance README, not TSV; an unknown parameter and non-ASCII digits — sc. 02; the trees console/audit without a hint — checked by reading
 - [ ] **P/05-11** the delete tombstones and the convergence of copies (N1.1 «Tombstones»): the tombstone at the deleter — outside the ordinary listing, `prefix=.gone/` and the body — reading, an older copy — 409, a newer write removes it by the same action (C05-GONE-REWRITE-AT-WRITE-01) — sc. 45; the dropping of copies by a neighbour, the confirmations and the removal by `peers ⊆ acked` — checked by reading (the stand of the [system acceptance](../../common/acceptance/system/README.md) with two resources; there is no scenario)
 - [ ] **P/05-12** `restore` of events from neighbours at the resource start (N1.4 «Bucket restore»), repeats, «done» only after a full attempt, all known doors; `restored` — only the pulled buckets (step 49 of the drill `05-power-pull`)
   on the loss of the local events — checked by reading (a stand with two resources)
 - [ ] **P/05-13** the schema check at the resource start (N3 «resource start — schema check»; part of M10/10-01): no row — its own SCHEMA, not a number or version > SCHEMA — do not start (the Architect's decision of 2026-11-04, as P/03.2), with the code 2, a read error — wait without starting work. Version above SCHEMA and not a number — the code 2, there is no door row, version 1 — it starts — sc. 17; a read error — it waits, without a restart it starts after the store returns — sc. 18; no row — its own SCHEMA — every scenario with `@start resource`; «before reading the manifest» — checked by reading
 - [ ] **P/05-14** the body copy at the resource (N1.1 «Bodies at the resource» `mirror`, N2; part of M10/10-07): the mirror of bodies always (copies 1 without the row `platform/mirror`, on the first pass to the neighbour with the source `written`) — sc. 31; the reception with a hash, the copy door only for a blob key of a subsystem with a blob field — sc. 10; `written` of a copy does not decrease — sc. 30; the refusals of the copy door (422, 400 without `X-Written`, 405) — sc. 10; 409 «deleted later» — sc. 45; 408, 411 and the closing of incoming copies in the cleanup window (part of M10/10-08) — checked by reading
-- [ ] **P/05-15** the resource ceilings (N1.1 «Resource ceilings»; part of M10/10-06): 64 MiB at the resource door — the refusal 413, not a truncation; `limit` of `/events` — sc. 02; a body copy of exactly 64 MiB — 204 and the read 200 — sc. 23, +1 byte — 413 without a write — checked by reading (413 before reading the body; the door is not obliged to drain beyond its volume — the client can get a break, P/01.1 N2.1 and item 9; C05-CEILING-PLUS-ONE-READING-01, -02); GET of an object larger than 64 MiB and `max_bytes` of the object store — checked by reading (the acceptance README, evidence outside TSV)
+- [ ] **P/05-15** the resource ceilings (N1.1 «Resource ceilings»; part of M10/10-06): the resource door byte limit (OpenAPI Content-Length.maximum) at the resource door — the refusal 413, not a truncation; `limit` of `/events` — sc. 02; a body copy of exactly the resource door byte limit (OpenAPI Content-Length.maximum) — 204 and the read 200 — sc. 23, +1 byte — 413 without a write — checked by reading (413 before reading the body; the door is not obliged to drain beyond its volume — the client can get a break, P/01.1 N2.1 and item 9; C05-CEILING-PLUS-ONE-READING-01, -02); GET of an object larger than the resource door byte limit (OpenAPI Content-Length.maximum) and `max_bytes` of the object store — checked by reading (the acceptance README, evidence outside TSV)
 - [ ] **P/05-16** the request to free space: the addressee — the workers of the subsystem on the server `<server>`, `<volume>` — the volume of the resource, `Σ freeing` — over the live heartbeats of this subsystem on this server for this volume (N1.4 `free_ask`, N3 `relieve`) — the vectors [`relieve`](../vectors/relieve/README.md): the answer `freeing: 0` and `freeing: N` (the VMS request freeing)
 

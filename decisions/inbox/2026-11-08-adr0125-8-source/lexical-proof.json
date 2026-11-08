@@ -1,0 +1,82 @@
+{
+  "status": "PROPOSED_9_QUOTED_FIXED_TOKENS",
+  "row_count": 52,
+  "changed_words": [
+    {
+      "row": 11,
+      "chapter": "2.1",
+      "address": "1",
+      "name": "load_text",
+      "old": "refused:text",
+      "new": "`refused:text`"
+    },
+    {
+      "row": 12,
+      "chapter": "2.1",
+      "address": "2",
+      "name": "load_form",
+      "old": "refused:form",
+      "new": "`refused:form`"
+    },
+    {
+      "row": 13,
+      "chapter": "2.1",
+      "address": "3",
+      "name": "load_relations",
+      "old": "refused:relations",
+      "new": "`refused:relations`"
+    },
+    {
+      "row": 14,
+      "chapter": "2.1",
+      "address": "4",
+      "name": "load_catalogue",
+      "old": "refused:catalogue",
+      "new": "`refused:catalogue`"
+    },
+    {
+      "row": 22,
+      "chapter": "2.3",
+      "address": "3",
+      "name": "manifest_mark_unreadable",
+      "old": "refused",
+      "new": "`refused`"
+    },
+    {
+      "row": 33,
+      "chapter": "2.3",
+      "address": "14",
+      "name": "put_profile_form",
+      "old": "refused:form",
+      "new": "`refused:form`"
+    },
+    {
+      "row": 48,
+      "chapter": "2.4",
+      "address": "14",
+      "name": "secrets_unknown_family",
+      "old": "unknown-row-form",
+      "new": "`unknown-row-form`"
+    },
+    {
+      "row": 49,
+      "chapter": "2.4",
+      "address": "15",
+      "name": "secrets_unreadable_family",
+      "old": "unreadable",
+      "new": "`unreadable`"
+    },
+    {
+      "row": 56,
+      "chapter": "2.4",
+      "address": "21",
+      "name": "domain_window_busy",
+      "old": "busy",
+      "new": "`busy`"
+    }
+  ],
+  "all_other_cells_intended_byte_exact": true,
+  "dash_spelling_preserved": true,
+  "prose_not_generator_dispatch": true,
+  "new_fields_or_classes": false
+}

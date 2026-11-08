@@ -13,3 +13,4 @@ OUTCOMES_KEEP	500	count	P/09.1-R008	Maximum stored outcomes, also limited by the
 ALARM_WINDOW	86400	s	P/09.1-R013	Page from = once-computed to minus this window
 ALARM_PAGE	100	count	P/09.1-R013	Newest alarm rows in one regular page
 URGENT_GAP	1	s	P/09.1-R013	Minimum gap between urgent reports
+GONE_CHECK_EVERY	600	s	P/09.1-R008	Minimum period of the confirmed read check of memberof-gone rows and removed memberof copy units

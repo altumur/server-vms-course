@@ -239,7 +239,7 @@ knock:          {name, last, times, key, fingerprint, pinned, keys_rev, class, b
   keys_rev:     rev набора, который член держит, или null
   class:        class тела; не по форме или нет — server; человек видит его и подтверждает приёмом (P/08.3 N1.1a)
   batch?:       имя партии: стук с верной подписью партии, годной или нет (раздел «Стук партии»)
-  limit:        не больше 64 стучащихся, в памяти процесса domain; старший по last вытесняется
+  limit:        не больше KNOCKS стучащихся (форма P/08 forms/runtime-constants.tsv, строка KNOCKS), в памяти процесса domain; старший по last вытесняется
 ```
 
 ## Стук партии

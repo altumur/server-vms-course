@@ -13,6 +13,9 @@
    "object"
   ]
  },
+ "allOf": [
+  {"$ref": "#/$defs/writer"}
+ ],
  "$defs": {
   "common.book_missing": {
    "description": "who is missing in the book — [{member, why}] class server first, within by member in UTF-8 bytes, one per book (P/08.5 N1.3 missing); the order and «one per member» — a rule of the lesson, not the form",
@@ -814,6 +817,9 @@
    "x-integer": true,
    "minimum": 0,
    "maximum": 9007199254740991
+  },
+  "writer": {
+   "maxProperties": 500
   }
  }
 }

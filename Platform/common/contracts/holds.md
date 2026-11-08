@@ -49,7 +49,7 @@ released:   released is declared and the element of this field in the row exists
 unit:       the element of the field unit — the id of a unit of the subsystem A as it is, byte for byte; there is no element or it is empty — the addressee is not
             read
 since, until: the elements of the fields since and until read by their type are finite numbers, wall seconds (the codec `Platform/common/data/codec.tsv`, the row `time`; B-27);
-            the notation is also read by the reader `time`: ^(0|[1-9][0-9]*)(\.[0-9]+)?$, the value is finite — «-1», «+5», «1e3» are out of form,
+            the notation is also read by the reader `time`: ^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$, the value is finite — «-1», «+5», «1e3» are out of form,
             though the type int or float would read them (the Architect's decision of 2026-10-27, as OBS154-RAW-TIME-EXACT-01);
             there is no element, it does not read by its type or by the reader `time`, the field is not of a numeric type or the number is not finite — the window is not read
 window:     the window [since, end], end = until, with longest — min(until, since + longest); until ≤ since — the row holds

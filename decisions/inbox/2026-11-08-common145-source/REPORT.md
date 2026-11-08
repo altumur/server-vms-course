@@ -1,0 +1,19 @@
+# Common145: faithful accepted Source composition
+
+Source component, author **review**. Base `7bc7e3fdfdacf20d4fd026bb2ee6bb0234acd1fb`; Source source-map reading pin `03df76f29457d46ffa8a89d9e1f66ab9b9383b29` remains exact for all315before identities. Source125(8) is included exactly once. One Source writer spec103; independent consumer/control writer Runner; sole integrated acceptor SRC.
+
+The315 Source paths are coalesced from accepted own deltas, never foreign parents, old whole trees, Code packs, witnesses or historical metadata. P03 form23 includes three originalms positions; P04 has no ms, P05 WAIT_OBSERVE_MS100 is a separate carrier. P04 precise weighted aggregates/decimal output, P05 five declared seams and local ResourceRow, P06 ordinary/S08+reader bounds, P08 shared raw forms/role/representability/collection limits, P09 direct owner refs and response limits, current P10 owner table/relay/forwarded contracts are tied to one common after.
+
+Public input: THREE P06 API pairs already256/25/256, separate HEAD wait25, folder UTF8 bound255, folder/memberof/sweep effective reader projections and namedSWEEP_LIMIT64. P09 outcomes500/alarms100 accepted bounds/projections are restored. P08 new numeric copies have explicit named owners or existing field forms; no names inferred from equal values. “Finite profile” means existing numeric/collection/representability and key-selected writer contracts, not P02C2/a new named form.
+
+P07 selects publishedmodule155b and courseJ1a0d/b4b659; selected locale/boot/wrapper/package and eight positive owner nodes are byte/tree-equal to accepted context. J1 explicitly injects canonicalmodule and selects CONSOLE_FILE before boot. Source witness/fallback is not adopted or executed. Historical39boolean/3empty arrays/42keys is one component receipt, not a new current-common execution or broad P07 behavioral closure.
+
+Cross-owner closure: shared Time codec has the accepted at-most-three-digit reader form; its two P01.1 owner unitsR008/R010 and actual family01 Time changes are transferred explicitly. All other P01.1 units remain current. SourceA floor additions, P02 canonical/layout/wrapper changes/family02 and module-design are excluded. R012 finite ownclaims in P06/P08 remain numeric, not narrowed to Time. Current Source21 BODY/timeout/copy/ownership and production endpoint, CP6, ADR129(29) guards, P10 table PathItems/relay5000 and corrected corpus are preserved.
+
+## Source controls and evidence
+
+Fresh Source composition controls: 911/911;147 newly addressed refs resolve,15 decoded-JSON-schema boundary neighbours cover reader/writer physical limits, changed JSON/YAML parses and exact raw/inverse controls bind every source after. No KV codec or actual catalogue/admission inference from those checks. Seven newly coalesced EN/RU pairs have0errors;89 byte-exact accepted pairs and3 accepted unpaired RU lecture bytes reuse component evidence.118 normalized requirement units MODIFIED,0ADDED/REMOVED; this records faithful delivery of existing meanings, not new norms.
+
+No fullcheck_spec, old32/38/66/archives/corpus replay, Node/JS/parser/test/Go/native/HTTP/SUT/stand/model execution. Isolated Source checks do not replace Runner/Tools typed-reader controls. TWO residual renderer Code gaps are not identified by historical public plan; exact diagnostics remain UNKNOWN. Admitted catalogue/root/pass-context/B1/N5 and key-context instance/SUT bindings retain explicit missing/unknown statuses. Wider P07 C6/A1/N5/P07-07/08 remain open. Production17 is stage3, NOTEXEC/budgetsNULL/providerUNKNOWN.
+
+Source publication is not common/GATE/lesson/production READY, main installation, export, package or Owner41/ce8 pin adoption. Frozen components, manifests and old results remain immutable. Public maps and preservation are adjacent; external freeze/producer map binds final normal publication.

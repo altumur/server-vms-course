@@ -10,14 +10,13 @@ The bytes are written by «Specification»; the rows are by the text of the cont
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first line not skipped is the header `case<TAB>input<TAB>expect<TAB>note`.
 
-**Input** — `{SCHEMA, row}`: `SCHEMA` — the build number (in the vectors 3, to distinguish 1, SCHEMA and SCHEMA + 1; at the current
-specification SCHEMA = 1); `row` — the elements of the row `platform/schema` as text (`{version, at}`) or `null` — there is no row.
+**Input** — `{SCHEMA, row}`: `SCHEMA` is the current build number, 1 in the current specification and these vectors; `row` is `platform/schema` elements as text (`{version, at}`), or `null` for an absent row. Synthetic positive support of a former layout under SCHEMA=3 is not required.
 **Output** — `{start: true, version}` (start; the version as a decimal string) or `{refuse: "too_new", n}` (the schema is newer; `n` —
 the exact N as a decimal string) or `{refuse: "not_a_form"}`. The comparison — JSON by value. «Refusal — code 2» is an outcome
 of the process at start; the function of the package in the single command `vectors` answers with code 0 and the output object `{refuse…}`
 (ACC-VECTORS-CONNECT-04; ACC-SCHEMA-REFUSE-EXIT-01, the Architect's decision 2026-10-27).
 
-9 rows: 1, SCHEMA, SCHEMA + 1, 2^63 (without overflow), 0, 1.5, no row; `at` of the order of 1e308 — reads, beyond binary64 — not of the form (C137-SCHEMA-TIME-01).
+9 rows: current1, exactly SCHEMA, SCHEMA+1, exact2^63, 0, 1.5, absence; finite-binary64 time and overflow. Positive starts use only the current schema.
 
 ## Run
 

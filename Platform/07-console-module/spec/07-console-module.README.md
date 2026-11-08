@@ -56,6 +56,8 @@ with `open: true` («Implementation decides» item 1 of the norms is closed, the
 
 ## Boundary checks
 
+For ADR-0129(18), compare the proposed changes against N1.5/N1.6 and the current canonical module, not a historical witness. Keep the full original URL and CAS/replay behaviour; retain integer input on a local refusal and preserve typed list elements. Before worker changes, obtain the exact public-context disposition; before cursor code, fix the six-projection assembly and incomplete-read plan. Check current pending 0/1/null separately from outcomes; J-P07-01 stays a separate test scope. Disabled sections cannot be entered by mouse or keyboard. Publication checks still compare the same three files byte for byte at the existing routes and version. Existing unrelated debts remain open.
+
 The module calls nothing outside N1.4 `reads`/`writes`; the paths of `never` (`/{sub}/requests`, `/api/backup`, `/resources`, tables outside
 `servers.show`, the doors of the holders) do not appear among the requests intercepted by the jsdom test, neither on mounting nor on
 polling. The parts of the list that the domain introduces are checked in the mode `domain` of the late layer (N1.6).

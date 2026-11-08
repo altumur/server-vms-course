@@ -27,7 +27,7 @@ The separator is a literal TAB. Lines starting with `#` are comments; the first 
 `surface` is one of `call` (a pure procedure), `cli`, `start`, `process` (a running process), `peer` (a check whose owner is another lesson).
 `code` is a three-digit HTTP status for a `peer` outcome, `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
 `kind`, `fields`, `headers` are `-`: P/02 has no HTTP response body schema. In particular, a `peer` row does not invent a P/02 HTTP door.
-`word` is a fixed refusal/diagnostic token, or `-`. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in
+`word` is a fixed refusal/diagnostic token delimited by backticks, or the unquoted `-`; delimiters are not part of the token. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in
 `«…»`; `-` means no requirement here. Neither `word` nor `log` defines an otherwise unspecified stdout/stderr representation.
 
 The four last cells retain the former normative prose table, whole: condition, outcome, diagnostic rule, caller action. Generators use the
@@ -36,8 +36,8 @@ and does not keep a second catalogue. No OpenAPI lookup is required for a lesson
 this catalogue, `(chapter,row)` addresses are consecutive in their chapter, names are unique, and the closed cells agree with their
 preserved source cells. A specified code/word cannot be broadened merely because the source cell uses prose.
 
-Examples (TABs in the actual TSV): `2.1 / 1 / load_text / call / - / word refused:text`; `2.3 / 2 / manifest_changed / process / exit 0`;
-`2.4 / 14 / secrets_unknown_family / cli / exit 1 / word unknown-row-form`. The exit-0 control outcome is not a failed installation.
+Examples (TABs in the actual TSV): ``2.1 / 1 / load_text / call / - / word `refused:text` ``; `2.3 / 2 / manifest_changed / process / exit 0`;
+``2.4 / 14 / secrets_unknown_family / cli / exit 1 / word `unknown-row-form` ``. The exit-0 control outcome is not a failed installation.
 
 ## Internal finite deletion profile
 

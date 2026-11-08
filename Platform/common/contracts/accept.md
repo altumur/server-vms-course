@@ -239,7 +239,7 @@ knock:          {name, last, times, key, fingerprint, pinned, keys_rev, class, b
   keys_rev:     the rev of the set the member holds, or null
   class:        class of the body; out of form or absent — server; a person sees it and confirms it by admitting (P/08.3 N1.1a)
   batch?:       the name of the batch: a knock with a valid batch signature, the batch fit or not (the section «The batch knock»)
-  limit:        at most 64 knocking ones, in the memory of the process domain; the oldest by last is evicted
+  limit:        at most KNOCKS knocking ones (P/08 forms/runtime-constants.tsv, row KNOCKS), in the memory of the process domain; the oldest by last is evicted
 ```
 
 ## The batch knock

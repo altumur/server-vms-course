@@ -28,21 +28,21 @@
 Окружение собирает раннер `w2c-run.sh` в порядке P/02.4 N1.2: значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` →
 файл подсистемы, раньше прочитанное побеждает; файлы — разбором, не `source` ([договор файла окружения](../../common/ru/contracts/env-file.md); [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
 
-| Переменная | Смысл | Умолчание | Норма |
+| Переменная | Смысл и фаза | Источник входа | Норма |
 |---|---|---|---|
-| `W2C_ROLE` | роль `resource`; не та роль команды раннера — код 2 | задаёт юнит | [P/02.4] N1.2 |
-| `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/resource.sock` | `file://<PLATFORM_DIR>/config` (профиль коробки одной реализации) | [P/02.4] N1.2 |
-| `PLATFORM_DIR` | корень состояния | `/data/platform` | [P/02.4] N1.2 |
-| `RESOURCE_ROOT` / `EVENTS` | корень деревьев событий; в нём же замки присутствия `.workers/` | `<PLATFORM_DIR>/events` | [P/02.4] N1.2 «Канал настройки», [журнал событий], [замок присутствия] |
-| `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов двери объектов и копий тел | `<PLATFORM_DIR>/objects` | [P/02.4] N1.2, [P/05] N1.1 |
-| `RESOURCE_HOST`, `RESOURCE_PORT` | адрес двери ресурса; юнит не пишет — умолчание процесса; задан в `w2c.env` — адрес привязки (вне петли — только с комплектом, ADR-0075 доп. 2026-10-26 (6) п. 2); при `mtls` цепочка — лист, затем его центр ([договор сертификата роли](../../common/ru/contracts/role-certificate.md) `server`; ревью норм ADR-0075, Claude fd85ea8cc, S-2, S-3) | `127.0.0.1`, `8090` | [P/02.4] N1.1, N1.2, N1.6 |
-| `RESOURCE_URL` | адрес двери, который ресурс пишет в строку двери; IP-литерал вне петли (порог петли [договора сертификата роли](../../common/ru/contracts/role-certificate.md) `loopback`: `ip`) — ресурс при старте пишет строку журнала; у `https://` клиенты откажут `ip_address`, у `http://` — ошибка настройки, видимая отказом соединения (ADR-0075 доп. 2026-10-26 (4) п. 6) | — | [P/02.4] N1.2, [P/05] N1.4 `door_row` |
-| `RESOURCE_TLS` | дверь по TLS | — | [P/02.4] N1.2, N1.6 |
-| `SERVER_NAME` | свой сервер: ключ пульса и строки двери; не по грамматике — код 2 | короткий hostname | [P/02.4] N1.2 |
-| `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [P/02.4] N1.2 |
-| `BUILD` | слово сборки в пульсе | `dev` | [P/02.4] N1.2 |
-| `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/resource` | `/etc/w2c/tls` | [P/02.4] N1.2, N1.6 |
-| `W2C_ENV` | файл общих настроек | `/etc/w2c/w2c.env` | [P/02.4] N1.2 |
+| `W2C_ROLE` | роль `resource`; не та роль команды раннера — код 2 | [daemon-flags.tsv](../forms/daemon-flags.tsv), `W2C_ROLE` | [P/02.4] N1.2 |
+| `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/resource.sock` | [daemon-flags.tsv](../forms/daemon-flags.tsv), `PLATFORM_STORE` | [P/02.4] N1.2 |
+| `PLATFORM_DIR` | корень состояния | [daemon-flags.tsv](../forms/daemon-flags.tsv), `PLATFORM_DIR` | [P/02.4] N1.2 |
+| `RESOURCE_ROOT` / `EVENTS` | корень деревьев событий; в нём же замки присутствия `.workers/` | [daemon-flags.tsv](../forms/daemon-flags.tsv), `RESOURCE_ROOT` / `EVENTS` | [P/02.4] N1.2 «Канал настройки», [журнал событий], [замок присутствия] |
+| `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов двери объектов и копий тел | [daemon-flags.tsv](../forms/daemon-flags.tsv), `OBJECTS` / `PLATFORM_OBJECTS` | [P/02.4] N1.2, [P/05] N1.1 |
+| `RESOURCE_HOST`, `RESOURCE_PORT` | адрес двери ресурса; юнит не пишет — умолчание процесса; задан в `w2c.env` — адрес привязки (вне петли — только с комплектом, ADR-0075 доп. 2026-10-26 (6) п. 2); при `mtls` цепочка — лист, затем его центр ([договор сертификата роли](../../common/ru/contracts/role-certificate.md) `server`; ревью норм ADR-0075, Claude fd85ea8cc, S-2, S-3) | [daemon-flags.tsv](../forms/daemon-flags.tsv), `RESOURCE_HOST`, `RESOURCE_PORT` | [P/02.4] N1.1, N1.2, N1.6 |
+| `RESOURCE_URL` | адрес двери, который ресурс пишет в строку двери; IP-литерал вне петли (порог петли [договора сертификата роли](../../common/ru/contracts/role-certificate.md) `loopback`: `ip`) — ресурс при старте пишет строку журнала; у `https://` клиенты откажут `ip_address`, у `http://` — ошибка настройки, видимая отказом соединения (ADR-0075 доп. 2026-10-26 (4) п. 6) | [daemon-flags.tsv](../forms/daemon-flags.tsv), `RESOURCE_URL` | [P/02.4] N1.2, [P/05] N1.4 `door_row` |
+| `RESOURCE_TLS` | дверь по TLS | [daemon-flags.tsv](../forms/daemon-flags.tsv), `RESOURCE_TLS` | [P/02.4] N1.2, N1.6 |
+| `SERVER_NAME` | свой сервер: ключ пульса и строки двери; не по грамматике — код 2 | [daemon-flags.tsv](../forms/daemon-flags.tsv), `SERVER_NAME` | [P/02.4] N1.2 |
+| `BOX_ID` | коробка | [daemon-flags.tsv](../forms/daemon-flags.tsv), `BOX_ID` | [P/02.4] N1.2 |
+| `BUILD` | слово сборки в пульсе | [daemon-flags.tsv](../forms/daemon-flags.tsv), `BUILD` | [P/02.4] N1.2 |
+| `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/resource` | [daemon-flags.tsv](../forms/daemon-flags.tsv), `W2C_TLS_DIR` | [P/02.4] N1.2, N1.6 |
+| `W2C_ENV` | файл общих настроек | [daemon-flags.tsv](../forms/daemon-flags.tsv), `W2C_ENV` | [P/02.4] N1.2 |
 
 ## Флаги
 
@@ -83,7 +83,7 @@
 
 - **Готовность** — порт `RESOURCE_PORT` и строка `platform/doors/<host>`; раннер стенда ждёт обоих ([Стенд], [P/05]
   N1.4).
-- **Пульс** — каждые 10 с; строка двери — каждые 15 с; проход — каждые 600 с, шаг дольше `PULSE_LIMIT` даёт
+- **Пульс** — каждые HEARTBEAT_EVERY; строка двери — каждые ALIVE_EVERY договора наблюдения; проход — каждые PASS_EVERY, шаг дольше `PULSE_LIMIT` даёт
   `pass_stalled` ([P/05] N1.4, «Решает реализация» п. 7 — значение `PULSE_LIMIT`).
 - **SIGTERM/SIGKILL** — состояние в строках и файлах; после возврата сервера ресурс тянет свои закрытые бакеты от соседей
   (`restore`, [P/05] N1.4 «Bucket restore»).
@@ -104,3 +104,5 @@
 - Корень событий у стенда нескольких серверов на одном `{data}` — ни один стенд так не устроен: у каждого сервера свой
   `{data}`.
 - Значение `PULSE_LIMIT` — решает реализация ([P/05] «Решает реализация» п. 7).
+
+Числовой источник собственных уставок — [runtime-constants.tsv](../forms/runtime-constants.tsv). Типы и умолчания входов — только названные строки daemon-flags, без второго реестра.

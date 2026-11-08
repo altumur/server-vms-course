@@ -24,17 +24,17 @@
    ]
   },
   "iat": {
-   "$ref": "#/$defs/common.time",
-   "description": "iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2; ADR-0100 §3)",
+   "type": "number",
+   "description": "iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2; ADR-0100 §3) Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.",
    "x-codec": [
-    "time"
+    "number"
    ]
   },
   "exp": {
-   "$ref": "#/$defs/common.time",
-   "description": "the term of the same token",
+   "type": "number",
+   "description": "the term of the same token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.",
    "x-codec": [
-    "time"
+    "number"
    ]
   },
   "created_at": {

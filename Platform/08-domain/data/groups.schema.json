@@ -77,7 +77,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 N1.9 «Versions»; ADR-0094 B4)",
+   "description": "Current write counter: required on every existing row, 1 at creation and +1 per write; absent or unreadable revision uses the family whole-row unreadable outcome, never reset to 0/1 (P/08.0 N1.9).",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -86,14 +86,15 @@
  },
  "additionalProperties": false,
  "required": [
-  "name",
-  "title",
-  "comment",
-  "members",
-  "joined",
-  "source",
-  "at",
-  "by"
+   "name",
+   "title",
+   "comment",
+   "members",
+   "joined",
+   "source",
+   "at",
+   "by",
+   "revision"
  ],
  "$defs": {
   "common.book_missing": {

@@ -541,7 +541,10 @@
         "refused": "refused",
         "min": "min",
         "s": "s"
-      }
+      },
+      "notIntegerField": "not a safe integer, nothing sent",
+      "domainReadIncomplete": "The domain view was not read completely: {error}",
+      "domainViewIncomplete": "The domain view is incomplete."
     },
     ru: {
       "unsaved": "\u041d\u0435\u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d\u043d\u044b\u0435 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u043e\u0433\u043e \u043e\u0431\u044a\u0435\u043a\u0442\u0430",
@@ -1066,7 +1069,10 @@
         "refused": "\u043e\u0442\u043a\u0430\u0437\u0430\u043b",
         "min": "\u043c\u0438\u043d",
         "s": "\u0441"
-      }
+      },
+      "notIntegerField": "\u043d\u0435 \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0435 \u0446\u0435\u043b\u043e\u0435, \u043d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u043e",
+      "domainReadIncomplete": "\u0412\u0438\u0434 \u0434\u043e\u043c\u0435\u043d\u0430 \u043f\u0440\u043e\u0447\u0438\u0442\u0430\u043d \u043d\u0435 \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e: {error}",
+      "domainViewIncomplete": "\u0412\u0438\u0434 \u0434\u043e\u043c\u0435\u043d\u0430 \u043d\u0435\u043f\u043e\u043b\u043e\u043d."
     }
   };
 
@@ -1149,7 +1155,19 @@
     const newKey = () => (crypto.randomUUID ? crypto.randomUUID() : "k-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
     C.retryWaits = [2000, 3000, 5000];
     C.timeoutMs = 20000;
-    const remembers = (method, path) => method === "POST" && st.subs.some(s => path === s.base + "/" + s.manifest.rows);
+    const requestPath = path => String(path).split("?")[0];
+    const catalogueRoute = path => {
+      if (!catalogueKnown) return null;
+      const p = requestPath(path); if (!p.startsWith("/")) return null;
+      const seg = p.slice(1).split("/");
+      const explicit = catalogue.find(s => (s.base || "/" + s.name) === "/" + seg[0]);
+      const sub = explicit || catalogue.find(s => !s.base);
+      return sub ? { sub, rest: explicit ? seg.slice(1) : seg } : null;
+    };
+    const remembers = (method, path) => {
+      const r = catalogueRoute(path);
+      return method === "POST" && !!r && r.rest.length === 1 && r.rest[0] === r.sub.manifest.rows;
+    };
     const failure = (msg, r, d) => { const e = new Error(msg); e.status = r ? r.status : undefined; e.body = d; return e; };
     async function send(method, path, body, key, ifMatch) {
       const text = body === undefined ? undefined : JSON.stringify(body);
@@ -1190,22 +1208,25 @@
         await sleep(Number.isFinite(after) && after >= 0 ? after * 1000 : C.retryWaits[i]);
       }
     }
-    // opts.ifMatch (integer ≥ 1) — If-Match only on the doors that read it: a unit's row, a table's row, the settings of
-    // P/06.6 (P/06.1 N2 «Versions»). Any other door would write without CAS; any other method, path, field of opts or value
-    // is refused before a request (P/07 N1.5 api; ADR-0091 addendum (28), (29); ADR-0094 B4). /manifest does not name the tables:
-    // a table is known by the shape of its path, one or two segments that are neither unit.rows nor a platform door.
-    const unitRowPath = path => st.subs.some(s => { const p = s.base + "/" + s.manifest.rows + "/"; return path.startsWith(p) && path.length > p.length && !path.slice(p.length).includes("/"); });
-    const PLATFORM_DOORS = new Set(["console", "changes", "session", "events", "marks", "servers", "policy", "drain", "schema", "where", "unplaceable", "manifest", "mounts", "metrics", "resources", "domain", "api", "platform", "healthz", "requests", "asked", "next_id"]);
+    // P/06.5 routes; only pathname is classified. Original request/retry bytes remain with send.
+    const unitRowPath = path => {
+      const r = catalogueRoute(path);
+      return !!r && r.rest.length === 2 && r.rest[0] === r.sub.manifest.rows && !!r.rest[1];
+    };
+    // Materialized from P/02.1 $defs.tableName.not.enum; no independent door roster.
+    const TABLE_EXCLUDED = new Set(["platform","spec","manifest","next_id","slots","epoch","idem","policy","placement","workers","controller","decommissioned","decommission-pending","holds","requests","asked","sweep","servers","where","unplaceable","drain","events","marks","console","audit","session","mounts","healthz","changes","metrics","resources","schema","domain","api","heartbeats","contenders","snapshot","blobs","commands","state","folders","memberof","operations","opsteps","opdone","opcount","opbusy","operations-turn","operations-epoch","snapshot-tables"]);
+    const TABLE_NAME = new RegExp("^(?:[a-z][a-z0-9_-]{0,31})$");
     const tablePath = (path, n) => {
-      const seg = path.split("/").slice(1), mounted = st.subs.find(s => s.base && s.base === "/" + seg[0]), sub = mounted || st.subs.find(s => !s.base);
-      const rest = mounted ? seg.slice(1) : seg;
-      return !!sub && rest.length === n && rest.every(Boolean) && rest[0] !== sub.manifest.rows && !PLATFORM_DOORS.has(rest[0]);
+      const r = catalogueRoute(path);
+      return !!r && r.rest.length === n && r.rest.every(Boolean)
+        && r.rest[0] !== r.sub.manifest.rows && TABLE_NAME.test(r.rest[0]) && !TABLE_EXCLUDED.has(r.rest[0]);
     };
     const settingsPath = (method, path) => {
-      const p = path.split("?")[0];
+      const p = requestPath(path);
       if (p === "/drain") return method === "POST" || method === "DELETE";
       if (/^\/servers\/[^/]+\/labels$/.test(p) || /^\/domain\/placement\/[^/]+\/[^/]+$/.test(p)) return method === "PUT" || method === "DELETE";
-      return method === "PUT" && (p === "/schema" || p === "/policy" || st.subs.some(s => p === s.base + "/policy"));
+      const r = catalogueRoute(path);
+      return method === "PUT" && (p === "/schema" || p === "/policy" || (!!r && r.rest.length === 1 && r.rest[0] === "policy"));
     };
     const readsIfMatch = (method, path) => unitRowPath(path) ? method === "PUT" || method === "DELETE"
       : (method === "POST" && tablePath(path, 1)) || (method === "DELETE" && tablePath(path, 2)) || settingsPath(method, path);
@@ -1356,9 +1377,13 @@
 
     // -- refs ------------------------------------------------------------------------------------------------
     const unitRef = (sub, id) => "unit:" + sub.name + "/" + id;
-    // a worker of /servers — the root subsystem's (CONSOLE_ROOT): worker:<sub>/<w>
-    const workerRef = w => "worker:" + st.root + "/" + w;
-    const workerOf = ref => { const r = String(ref || ""), p = "worker:" + st.root + "/"; return st.root && r.startsWith(p) ? r.slice(p.length) : r.startsWith("worker:") ? "" : null; };
+    // The request profile supplies sub; the WorkerRow itself is returned unchanged.
+    const workerRef = (sub, w) => "worker:" + sub + "/" + w;
+    const workerOf = ref => {
+      const r = String(ref || ""); if (!r.startsWith("worker:")) return null;
+      const slash = r.indexOf("/", 7);
+      return { sub: slash < 0 ? "" : r.slice(7, slash), name: slash < 0 ? "" : r.slice(slash + 1) };
+    };
     function parseUnit(ref) {
       const m = /^unit:([^/]+)\/(.+)$/.exec(String(ref || "")); if (!m) return null;
       const sub = st.subs.find(s => s.name === m[1]); if (!sub) return null;
@@ -1367,7 +1392,7 @@
     function objectOf(ref) {
       const u = parseUnit(ref); if (u) return u.row;
       if (String(ref).startsWith("server:")) return st.servers[String(ref).slice(7)] || null;
-      const wk = workerOf(ref); if (wk !== null) { for (const s2 of Object.values(st.servers)) for (const w2 of s2.workers || []) if (w2.worker === wk) return w2; return null; }
+      const wk = workerOf(ref); if (wk !== null) { const hit = workerIndex.get(JSON.stringify([wk.sub, wk.name])); return hit ? hit.row : null; }
       if (String(ref).startsWith("member:")) return ((st.dom && st.dom.members) || []).find(m => m.name === String(ref).slice(7)) || null;
       if (ref === "domain") return st.dom;
       return null;
@@ -1409,7 +1434,7 @@
     $(".pc-theme").onchange = e => setTheme(e.target.value);
     let pollTimer = null;
     // /manifest not read yet (a 5xx, the network): each poll asks again, not while the login is up (a 401 waits for it)
-    const tick = async () => { if (!manifestRead) { if (!$(".pc-login").hidden || !await readManifests()) return; paintRail(); paintAside(); } await load(); if (manifestRead) readyNow(C); };
+    const tick = async () => { if (!manifestRead) { if (!$(".pc-login").hidden || !await readManifests()) return; paintRail(); paintAside(); } else if (!catalogueKnown && $(".pc-login").hidden) { await readManifests(); paintRail(); paintAside(); } await load(); if (manifestRead) readyNow(C); };
     const setPoll = s => { clearInterval(pollTimer); pollTimer = setInterval(tick, s * 1000); };
     $(".pc-reload").onclick = () => load();
     const userMenu = on => { show($(".pc-upop"), on); $(".pc-upop").hidden = false; $(".pc-ubtn").classList.toggle("on", on); $(".pc-ubtn").setAttribute("aria-expanded", on ? "true" : "false"); };
@@ -1534,12 +1559,13 @@
     }
     const railOn = () => sectionList().some(s => s.id === st.section) ? st.section : LAYOUT_OF[st.section] || st.section;
     function goSection(id) {
+      const target = sectionList().find(s => s.id === id); if (target && target.off) return;
       if (id === "units") { st.section = keep("pc.layout") === "servers" ? "servers" : "units"; } else st.section = id;
       st.sel = null; paintRail(); paintAside(); paintMain(); if (st.section === "access") loadAccess();
     }
     function paintRail() {
       const on = railOn();
-      $(".pc-rail").innerHTML = sectionList().map(s => `<button type="button" class="asw${on === s.id ? " on" : ""}${s.bottom ? " asw-bottom" : ""}${s.off ? " is-off" : ""}" data-s="${h(s.id)}" role="tab" aria-selected="${on === s.id}" title="${h(s.off ? s.label + ": " + s.off : s.label)}">${ic(s.icon)}<span class="asw-lb">${h(cap(s.label))}</span></button>`).join("");
+      $(".pc-rail").innerHTML = sectionList().map(s => `<button type="button" class="asw${on === s.id ? " on" : ""}${s.bottom ? " asw-bottom" : ""}${s.off ? " is-off" : ""}" data-s="${h(s.id)}" role="tab" aria-selected="${on === s.id}"${s.off ? ' disabled aria-disabled="true"' : ""} title="${h(s.off ? s.label + ": " + s.off : s.label)}">${ic(s.icon)}<span class="asw-lb">${h(cap(s.label))}</span></button>`).join("");
       $(".pc-rail").querySelectorAll("button[data-s]").forEach(b => { b.onclick = () => goSection(b.dataset.s); });
       paintHeader();
     }
@@ -1727,22 +1753,34 @@
       };
       return [...(kids[""] || [])].sort().map(p => node(p, 0)).join("") + ((direct[""] || []).length ? node("", 0) : "");
     }
-    // The units a worker carries, and the units no worker carries.
-    const carried = w => st.subs.filter(s => !aboutOf(s)).flatMap(s => (st.units[s.name] || []).filter(u => u.worker === w).map(u => ({ s, u })));
+    // Unit knowledge is scoped to a successfully read, displayed subsystem.
+    const carried = (name, w) => {
+      const s = st.subs.find(x => x.name === name);
+      return s && unitReads.has(name) ? (st.units[name] || []).filter(u => u.worker === w).map(u => ({ s, u })) : null;
+    };
+    const workersAt = name => [...workerIndex.values()].filter(x => x.server === name);
+    const workersKnown = () => catalogueKnown && !workerAmbiguous && catalogue.every(s => workerProfiles.get(s.name) !== null && workerProfiles.has(s.name));
+    const workerLines = entries => entries.map(e => { const w = e.row; return `<div class="it" data-ref="${h(workerRef(e.sub, w.worker))}"><span>${ic("svcs")}</span><span>${h(e.sub + "/" + w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels === null ? " · " + h(W.labelsUnread) : w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`; }).join("");
     function serverRows(depth) {
-      return Object.keys(st.servers).sort().map(n => {
-        const s = st.servers[n], ref = "server:" + n, q = st.q.trim().toLowerCase();
-        const workers = (s.workers || []).map(w => {
-          const wref = workerRef(w.worker), list = carried(w.worker), vis = list.filter(x => !filtering() || unitMatches(x.s, x.u));
-          if (filtering() && !String(w.worker).toLowerCase().includes(q) && !vis.length) return "";
-          const open = list.length > 0 && (st.open.has(wref) || filtering());
-          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap), cnt: list.length, has: list.length > 0, open, off: w.state === "stale" })
+      if (domainOnly) return "";
+      const names = [...new Set([...Object.keys(st.servers), ...[...workerIndex.values()].map(x => x.server)])].sort();
+      if (!names.length && !workersKnown()) return `<div class="n"><span class="nm sub">${h(W.unknownW)}</span></div>`;
+      return names.map(n => {
+        const s = workerProfiles.get(st.root) ? st.servers[n] || null : null, ref = "server:" + n, q = st.q.trim().toLowerCase(), entries = workersAt(n);
+        const workers = entries.map(e => {
+          const w = e.row, wref = workerRef(e.sub, w.worker), list = carried(e.sub, w.worker), known = list !== null;
+          const vis = (list || []).filter(x => !filtering() || unitMatches(x.s, x.u));
+          if (filtering() && !String(w.worker).toLowerCase().includes(q) && !e.sub.toLowerCase().includes(q) && !vis.length) return "";
+          const open = known && list.length > 0 && (st.open.has(wref) || filtering());
+          return nrow({ ref: wref, depth: depth + 1, icon: "svcs", name: e.sub + "/" + w.worker, tags: tagHtml(`${w.load}/${w.capacity}`, W.loadCap), cnt: known ? list.length : W.unknownW, has: known && list.length > 0, open, off: w.state === "stale" })
             + (open ? (filtering() ? vis : list).map(x => unitRow(x.s, x.u, depth + 2)).join("") : "");
-        }).join("") + extraRows(nodesOf("server", ref, s), depth + 1);
+        }).join("") + (workersKnown() ? "" : `<div class="n"><span class="nm sub">${h(W.unknownW)}</span></div>`)
+          + extraRows(nodesOf("server", ref, s), depth + 1);
         if (filtering() && !n.toLowerCase().includes(q) && !workers) return "";
-        const held = (s.workers || []).reduce((k, w) => k + carried(w.worker).length, 0);
+        const lists = entries.map(e => carried(e.sub, e.row.worker));
+        const held = workersKnown() && lists.every(x => x !== null) ? lists.reduce((k, x) => k + x.length, 0) : W.unknownW;
         const open = st.open.has(ref) || filtering(), d = decorOf(ref);
-        return nrow({ ref, depth, iconHtml: d.iconHtml || ic("server"), name: n, tags: tagHtml(s.resource || "—", W.resource) + d.tags, cnt: held, has: !!workers, open, off: s.resource === "silent", cls: "srv" }) + (open ? workers : "");
+        return nrow({ ref, depth, iconHtml: d.iconHtml || ic("server"), name: n, tags: tagHtml(s ? s.resource || "—" : W.unknownW, W.resource) + d.tags, cnt: held, has: !!workers, open, off: !!s && s.resource === "silent", cls: "srv" }) + (open ? workers : "");
       }).join("");
     }
     function unplacedRow(depth) {
@@ -1775,7 +1813,7 @@
       const el = $(".pc-tree"); if (!el) return;
       paintFavs();
       let html = "";
-      if (st.loadErr && !st.subs.length) html = `<div class="n"><span class="nm sub">${h(W.noConsole)}</span></div>`;
+      if (st.loadErr && !st.subs.length && !domainOnly) html = `<div class="n"><span class="nm sub">${h(W.noConsole)}</span></div>`;
       else if (st.section === "units") {
         html = st.subs.filter(s => !aboutOf(s)).map(sub => {
           const units = st.units[sub.name] || [], tr = display(sub).tree || {};
@@ -1789,8 +1827,12 @@
           // the domain is the root: this cluster's servers, the other members, the shared places, the unplaced
           const open = !st.shut.has("domain") || filtering();
           const kids = serverRows(1) + memberRows(1) + extraRows(nodesOf("servers"), 1) + unplacedRow(1);
-          html = nrow({ ref: "domain", depth: 0, icon: "domain", name: cap(W.domainWord || W.domain), tags: tagHtml(`${Object.keys(st.servers).length + (v.members || []).filter(m => domainOnly || !m.holder).length} ${W.srvShort}`), has: true, open, off: v.complete === false, cls: "srv" }) + (open ? kids : "");
-        } else html = serverRows(0) + extraRows(nodesOf("servers"), 0) + unplacedRow(0);
+          html = nrow({ ref: "domain", depth: 0, icon: "domain", name: cap(W.domainWord || W.domain), tags: tagHtml(`${workerProfiles.get(st.root) ? Object.keys(st.servers).length + (v.members || []).filter(m => domainOnly || !m.holder).length : domainOnly ? (v.members || []).length : h(W.unknownW)} ${W.srvShort}`), has: true, open, off: v.complete === false, cls: "srv" }) + (open ? kids : "");
+        } else {
+          const note = domainObservation.phase === "error" ? W.domainReadIncomplete.replace("{error}", domainObservation.error) : W.loading;
+          html = (domainObservation.phase === "absent" ? "" : `<div class="n"><span class="nm sub">${h(note)}</span></div>`)
+            + serverRows(0) + extraRows(nodesOf("servers"), 0) + unplacedRow(0);
+        }
       } else if (st.section === "access") {
         const a = st.acc;
         html = !a ? `<div class="n n-empty">${h(W.loading)}</div>` : a.users.filter(u => !filtering() || u.name.toLowerCase().includes(st.q.trim().toLowerCase())).map(u => nrow({ ref: "person:" + u.name, icon: "user", name: u.name, off: u.disabled })).join("")
@@ -1879,7 +1921,7 @@
       }
       if (r.startsWith("server:") || r.startsWith("member:") || r === "unplaced") return srv;
       if (r === "domain") return domainOnly ? [] : [[W.byServers, "layout:servers"]];
-      if (r.startsWith("worker:")) { const wk = workerOf(r), n = Object.keys(st.servers).find(k => (st.servers[k].workers || []).some(w => w.worker === wk)); return n ? srv.concat([[n, "server:" + n]]) : srv; }
+      if (r.startsWith("worker:")) { const wk = workerOf(r), hit = wk && workerIndex.get(JSON.stringify([wk.sub, wk.name])); return hit ? srv.concat([[hit.server, "server:" + hit.server]]) : srv; }
       if (/^(person|grants):/.test(r)) return [[cap(W.access), "section:access"]];
       return null;
     }
@@ -1984,6 +2026,7 @@
     function paintMainInner() {
       const el = $(".pc-main");
       const own = shell.sections.find(s => s.id === st.section);
+      if (own && own.off) { el.innerHTML = `<h1>${h(own.label)}</h1><p class="sub">${h(own.off)}</p>`; return; }
       if (own) { el.innerHTML = ""; const host = document.createElement("div"); host.className = "pc-card"; el.appendChild(seed(host)); own.render(host); return; }
       if (st.section === "journal") return paintJournal(el);
       const ref = st.sel;
@@ -2008,7 +2051,7 @@
       if (String(ref).startsWith("group:")) return paintGroup(el, ref);
       if (ref === "domain") return paintDomain(el, ref);
       if (ref === "unplaced") return paintUnplaced(el);
-      if (ref.startsWith("member:")) return paintMember(el, ref, ref.slice(7));
+      if (ref.startsWith("member:")) return objectOf(ref) ? paintMember(el, ref, ref.slice(7)) : paintDomain(el, "domain");
       if (ref.startsWith("person:")) return paintPerson(el, ref, ref.slice(7));
       if (ref.startsWith("grants:")) return paintGrants(el, ref, ref.slice(7));
       const cardOf = (shell.cards || {})[String(ref).split(":")[0]];
@@ -2035,74 +2078,84 @@
       bar.querySelectorAll("button").forEach(b => { b.onclick = () => { st.tab[kind] = b.dataset.tab; paintMain(); }; });
     }
 
-    // One field, as the product console draws it: its title over the control (display.fields; its help as the
-    // control's tip). Every control carries the field's value under its name, so the form reads them all alike
-    // (formBody): a bool is a switch over a hidden checkbox; the field the tree groups by is the box of its groups
-    // over a hidden input; another list is its items, comma-separated; a field with a set of values (enum) is a
-    // select, its values in the words of display.options when it has them; a secret is an empty password field whose hint says whether one is set; a field
-    // the page has an editor for is the editor's slot.
+    // Typed controls preserve list elements and integer input until local validation.
     const fieldTitle = (sub, name) => (display(sub).fields || {})[name] || name;
     const fldRo = (title, value) => `<div><label>${h(title)}</label><input type="text" value="${h(value ?? "")}" readonly disabled></div>`;
+    const listStrings = value => Array.isArray(value) && value.every(x => typeof x === "string");
+    const listText = (row, value) => row ? JSON.stringify(value) : "";
+    function listBox(sub, f, row, value, dis) {
+      const items = listStrings(value) ? value : [], v = listText(row, value);
+      return `<div class="pc-list" data-list="${h(f.name)}"><label>${h(fieldTitle(sub, f.name))}</label>
+        <input type="hidden" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${dis}>
+        ${items.map((x, i) => `<div class="pc-row"><input type="text" value="${h(x)}" data-list-index="${i}"${dis}>${dis ? "" : `<button type="button" class="btn s" data-list-remove="${i}">${h(cap(W.removeShort))}</button>`}</div>`).join("")}
+        ${dis ? "" : `<button type="button" class="btn s pc-list-add">＋ ${h(W.add)}</button>`}
+        <div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div></div>`;
+    }
     function fieldInput(sub, f, row) {
       const d = display(sub), help = (d.field_help || {})[f.name], title = fieldTitle(sub, f.name), tip = help ? ` title="${h(help)}"` : "";
       const dis = C.may("edit", row ? unitRef(sub, row.id) : null) && !(row && f.fixed) ? "" : " disabled";
       const ed = row && f.fixed ? null : ((shell.editors || {}).unit || {})[f.name];
-      const v = row ? (f.type === "list" ? (row[f.name] || []).join(", ") : (row[f.name] ?? "")) : "";
+      const v = row ? (f.type === "list" ? (row[f.name] ?? []) : (row[f.name] ?? "")) : (f.type === "list" ? [] : "");
       if (f.type === "bool") {
         const on = row ? !!row[f.name] : !!f.default;
         return `<div class="ln ln-sw"><div>${h(title)}</div><div class="sw${on ? " on" : ""}" data-sw="${h(f.name)}"${tip}></div><input type="checkbox" name="${h(f.name)}" hidden${on ? " checked" : ""}${dis}></div>`;
       }
-      if (ed) return `<div class="pc-field" style="grid-column:1/-1"${tip}><input type="hidden" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"><div class="pc-editor" data-editor="${h(f.name)}"></div></div>`;
-      // a json field: its value as indented text; the module reads it back before it is sent (formBody) and says «not
-      // JSON» under the field — the door takes the value, never JSON text in a string
+      if (ed) {
+        const t = f.type === "list" ? listText(row, v) : v;
+        return `<div class="pc-field" style="grid-column:1/-1"${tip}><input type="hidden" name="${h(f.name)}" value="${h(t)}" data-orig="${h(t)}"${dis}><div class="pc-editor" data-editor="${h(f.name)}"></div><div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div></div>`;
+      }
+      // JSON fields retain their existing semantic parse at submission.
       if (f.type === "json") {
         const t = row && row[f.name] != null ? JSON.stringify(row[f.name], null, 2) : "";
         return `<div style="grid-column:1/-1"><label>${h(title)} — JSON</label><textarea name="${h(f.name)}" rows="6" spellcheck="false" style="width:100%;font-family:ui-monospace,monospace" data-orig="${h(t)}"${tip}${dis}>${h(t)}</textarea><div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div></div>`;
       }
       if (isSecret(f.name)) return `<div><label>${h(title)}</label><input type="password" name="${h(f.name)}" autocomplete="new-password" placeholder="${row ? h(row[f.name] ? W.setKeeps : W.notSet) : ""}"${tip}${dis}></div>`;
       if (f.type === "list" && f.name === (d.tree || {}).group_by) return groupsBox(sub, f, row, v, dis);
-      if (f.type === "list") {
-        const opts = f.name === "labels" ? [...new Set(Object.values(st.servers).flatMap(s2 => s2.labels || s2.labels_node || []))].sort() : [];
-        return `<div><label>${h(title)}</label><input type="text" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${opts.length ? ` list="pc-dl-${h(f.name)}"` : ""}${tip}${dis}>${opts.length ? `<datalist id="pc-dl-${h(f.name)}">${opts.map(o => `<option value="${h(o)}">`).join("")}</datalist>` : ""}</div>`;
-      }
-      // the values a field takes are the manifest's (enum); display.options are only their words
+      if (f.type === "list") return listBox(sub, f, row, v, dis);
+      // The enum and display.options remain the manifest's values and words.
       const vals0 = Array.isArray(f.enum) ? f.enum : f.schema && Array.isArray(f.schema.enum) ? f.schema.enum : null;
       if (vals0) {
         const words = (d.options || {})[f.name] || {}, cur = row ? String(row[f.name] ?? "") : String(f.default ?? "");
         const vals = vals0.map(String); if (cur && !vals.includes(cur)) vals.push(cur);
-        const shown = cur || vals[0] || "";   // what the select shows is what the row has: not a change
+        const shown = cur || vals[0] || "";
         return `<div><label>${h(title)}</label><select name="${h(f.name)}" data-orig="${h(row ? shown : "")}"${tip}${dis}>${vals.map(x => `<option value="${h(x)}"${x === shown ? " selected" : ""}>${h(words[x] || x)}</option>`).join("")}</select></div>`;
       }
-      const num = f.type === "int" || f.type === "float";
-      return `<div><label>${h(title)}</label><input type="${num ? "number" : "text"}" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${f.type === "float" ? ' step="any"' : ""}${!row && f.default != null ? ` placeholder="${h(f.default)}"` : ""}${tip}${dis}></div>`;
+      return `<div><label>${h(title)}</label><input type="${f.type === "float" ? "number" : "text"}" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${f.type === "int" ? ' inputmode="decimal"' : ""}${f.type === "float" ? ' step="any"' : ""}${!row && f.default != null ? ` placeholder="${h(f.default)}"` : ""}${tip}${dis}>${f.type === "int" ? `<div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div>` : ""}</div>`;
     }
-    // The field the tree groups by: the groups the unit is in, each with «Remove», and a select of the others to add
-    // it to; a new group is one more value (it lives while a unit carries it).
-    function groupsBox(sub, f, row, v, dis) {
-      const list = v.split(",").map(x => x.trim()).filter(Boolean), tr = display(sub).tree || {}, sep = tr.nested_by;
+    function groupsBox(sub, f, row, value, dis) {
+      const list = listStrings(value) ? value : [], v = listText(row, value), tr = display(sub).tree || {}, sep = tr.nested_by;
       const all = new Set();
       for (const x of [...(st.units[sub.name] || []).flatMap(u => Array.isArray(u[f.name]) ? u[f.name] : []), ...extraGroups(sub)]) { const p = sep ? String(x).split(sep).filter(Boolean) : [String(x)]; for (let i = 1; i <= p.length; i++) all.add(p.slice(0, i).join(sep || "")); }
       const others = [...all].filter(p => !list.includes(p)).sort();
-      return `<div class="fold-box pc-groups" style="grid-column:1/-1" data-groups="${h(f.name)}"><label>${h(fieldTitle(sub, f.name))}</label><input type="hidden" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}">
-        ${list.map(p => `<div class="it fold-it"><span>${ic("folder")}</span><span style="flex:1;min-width:0">${h(p)}</span>${dis ? "" : `<button type="button" class="btn s" data-ungroup="${h(p)}">${h(cap(tr.remove || W.removeShort))}</button>`}</div>`).join("")
+      return `<div class="fold-box pc-groups" style="grid-column:1/-1" data-groups="${h(f.name)}"><label>${h(fieldTitle(sub, f.name))}</label><input type="hidden" name="${h(f.name)}" value="${h(v)}" data-orig="${h(v)}"${dis}>
+        ${list.map((p, i) => `<div class="it fold-it"><span>${ic("folder")}</span><span style="flex:1;min-width:0">${h(p)}</span>${dis ? "" : `<button type="button" class="btn s" data-ungroup="${i}">${h(cap(tr.remove || W.removeShort))}</button>`}</div>`).join("")
           || `<p class="sub" style="margin:0 0 8px">${h(tr.not_in || W.inNoGroup.replace("{g}", cap(tr.no_group || W.noGroup)))}</p>`}
-        ${dis ? "" : `<div class="fold-add"><select class="pc-addgroup"${others.length ? "" : " disabled"}><option value="">${h(others.length ? tr.add_to || W.addToGroup + "…" : tr.no_others || W.noOtherGroups)}</option>${others.map(p => `<option value="${h(p)}">${h(p)}</option>`).join("")}</select><button type="button" class="btn s pc-newgroup">＋ ${h(tr.new_group || W.newGroup)}</button></div>`}</div>`;
+        ${dis ? "" : `<div class="fold-add"><select class="pc-addgroup"${others.length ? "" : " disabled"}><option value="">${h(others.length ? tr.add_to || W.addToGroup + "…" : tr.no_others || W.noOtherGroups)}</option>${others.map(p => `<option value="${h(p)}">${h(p)}</option>`).join("")}</select><button type="button" class="btn s pc-newgroup">＋ ${h(tr.new_group || W.newGroup)}</button></div>`}
+        <div class="nt err pc-ferr" data-ferr="${h(f.name)}" hidden></div></div>`;
     }
     function wireGroups(form) {
-      form.querySelectorAll("[data-groups]").forEach(box => {
-        const hid = box.querySelector('input[type="hidden"]');
-        const set = list => { hid.value = [...new Set(list.filter(Boolean))].join(", "); hid.dispatchEvent(new Event("input", { bubbles: true })); redraw(); };
-        const items = () => hid.value.split(",").map(x => x.trim()).filter(Boolean);
+      form.querySelectorAll("[data-groups], [data-list]").forEach(box => {
+        const hid = box.querySelector('input[type="hidden"]'); if (!hid || hid.disabled) return;
+        const group = box.dataset.groups !== undefined, name = group ? box.dataset.groups : box.dataset.list;
+        const items = () => { const a = hid.value === "" ? [] : JSON.parse(hid.value); if (!listStrings(a)) throw new Error(W.refused); return a; };
+        const change = list => { hid.value = JSON.stringify(list); delete hid.dataset.invalid; hid.dispatchEvent(new Event("input", { bubbles: true })); };
         const redraw = () => {
           const sub = st.subs.find(s => form.dataset.sub === s.name); if (!sub) return;
-          const f = sub.manifest.fields.find(x => x.name === box.dataset.groups);
-          const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, f, null, hid.value, "");
+          const f = sub.manifest.fields.find(x => x.name === name);
+          const tmp = document.createElement("div"); tmp.innerHTML = (group ? groupsBox : listBox)(sub, f, {}, items(), "");
           const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(hid); box.replaceWith(nb); box = nb; wire();
         };
+        const remove = index => { const a = items(); a.splice(index, 1); change(a); redraw(); };
         const wire = () => {
-          box.querySelectorAll("[data-ungroup]").forEach(b => { b.onclick = () => set(items().filter(x => x !== b.dataset.ungroup)); });
-          const sel = box.querySelector(".pc-addgroup"); if (sel) sel.onchange = () => { if (sel.value) set(items().concat([sel.value])); };
-          const nb = box.querySelector(".pc-newgroup"); if (nb) nb.onclick = async () => { const r = await C.dialog(W.newGroup, [{ name: "name", label: W.newName }], W.add); if (r && r.name.trim()) set(items().concat([r.name.trim()])); };
+          if (!group) {
+            box.querySelectorAll("[data-list-index]").forEach(input => { input.oninput = () => { const a = items(); a[Number(input.dataset.listIndex)] = input.value; change(a); }; });
+            box.querySelectorAll("[data-list-remove]").forEach(b => { b.onclick = () => remove(Number(b.dataset.listRemove)); });
+            const add = box.querySelector(".pc-list-add"); if (add) add.onclick = () => { change(items().concat([""])); redraw(); };
+            return;
+          }
+          box.querySelectorAll("[data-ungroup]").forEach(b => { b.onclick = () => remove(Number(b.dataset.ungroup)); });
+          const sel = box.querySelector(".pc-addgroup"); if (sel) sel.onchange = () => { if (sel.selectedIndex > 0) { change(items().concat([sel.value])); redraw(); } };
+          const nb = box.querySelector(".pc-newgroup"); if (nb) nb.onclick = async () => { const r = await C.dialog(W.newGroup, [{ name: "name", label: W.newName }], W.add); if (r && typeof r.name === "string") { change(items().concat([r.name])); redraw(); } };
         };
         wire();
       });
@@ -2122,31 +2175,62 @@
     function wireEditors(form, sub, ref, row) {
       const eds = (shell.editors || {}).unit || {};
       form.querySelectorAll("[data-editor]").forEach(host => {
-        const name = host.dataset.editor, hid = form.elements[name], render = eds[name]; if (!render || !hid) return;
-        try { render(host, ref, row, hid.value, v => { hid.value = v == null ? "" : String(v); hid.dispatchEvent(new Event("input", { bubbles: true })); }); } catch (e) { host.textContent = String(e); }
+        const name = host.dataset.editor, hid = form.elements[name], render = eds[name], f = sub.manifest.fields.find(x => x.name === name); if (!render || !hid || !f) return;
+        try {
+          const value = f.type === "list" ? (hid.value === "" ? null : JSON.parse(hid.value)) : hid.value;
+          render(host, ref, row, value, v => {
+            if (hid.disabled) return;
+            if (f.type === "list") {
+              if (v != null && !listStrings(v)) { hid.dataset.invalid = "1"; return; }
+              hid.value = v == null ? "" : JSON.stringify(v); delete hid.dataset.invalid;
+            } else hid.value = v == null ? "" : String(v);
+            hid.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+        } catch (e) { host.textContent = String(e); }
       });
     }
-    // A form into a body: bools always; an empty input omitted (default on create, unchanged on edit); on edit a
-    // field left as the row showed it is not sent (the row comes with its secrets masked); a secret that reads as
-    // the mask is never sent. A json field is read here: its value goes (an object, a list, a number, a "string"); text
-    // that is not JSON is said under its field and nothing is sent (null back).
+    // Establish integrality before binary64 conversion, so rounded fractions are never accepted as integers.
+    function integerInput(v) {
+      const m = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$/.exec(v);
+      if (!m) return null;
+      const fraction = m[3] === undefined ? m[4] || "" : m[3];
+      let digits = ((m[2] || "") + fraction).replace(/^0+/, ""); if (!digits) return 0;
+      const exponent = m[5] === undefined ? 0 : Number(m[5]); if (!Number.isSafeInteger(exponent)) return null;
+      const scale = fraction.length - exponent;
+      if (scale > 0) {
+        if (scale >= digits.length || !/^0*$/.test(digits.slice(digits.length - scale))) return null;
+        digits = digits.slice(0, digits.length - scale);
+      } else {
+        if (digits.length - scale > 16) return null;
+        digits += "0".repeat(-scale);
+      }
+      if (digits.length > 16) return null;
+      const n = Number(m[1] + digits); return Number.isSafeInteger(n) ? n : null;
+    }
     function formBody(sub, form, editing) {
       const out = {}, bad = [];
       form.querySelectorAll("[data-ferr]").forEach(x => { x.hidden = true; x.textContent = ""; });
+      const fail = (f, message) => { bad.push({ name: f.name, message }); const x = [...form.querySelectorAll("[data-ferr]")].find(y => y.dataset.ferr === f.name); if (x) { x.textContent = message; x.hidden = false; } };
       for (const f of sub.manifest.fields) {
         const el = form.elements[f.name]; if (!el) continue;
         if (f.type === "bool") { out[f.name] = el.checked; continue; }
         const v = el.value;
+        if (el.dataset.invalid) { fail(f, W.refused); continue; }
         if (v === "") continue;
         if (editing && el.dataset.orig !== undefined && v === el.dataset.orig) continue;
         if (isSecret(f.name) && v === MASK) continue;
         if (f.type === "json") {
-          try { out[f.name] = JSON.parse(v); } catch (e) { bad.push(f.name); const x = [...form.querySelectorAll("[data-ferr]")].find(y => y.dataset.ferr === f.name); if (x) { x.textContent = W.notJsonField + ": " + e.message; x.hidden = false; } }
+          try { out[f.name] = JSON.parse(v); } catch (e) { fail(f, W.notJsonField + ": " + e.message); }
           continue;
         }
-        out[f.name] = f.type === "list" ? v.split(",").map(x => x.trim()).filter(Boolean) : f.type === "int" ? parseInt(v, 10) : f.type === "float" ? Number(v) : v;
+        if (f.type === "list") {
+          try { const a = JSON.parse(v); if (!listStrings(a)) throw new Error(W.refused); out[f.name] = a; } catch (e) { fail(f, W.refused); }
+          continue;
+        }
+        if (f.type === "int") { const n = integerInput(v); if (n === null) fail(f, W.notIntegerField); else out[f.name] = n; continue; }
+        out[f.name] = f.type === "float" ? Number(v) : v;
       }
-      if (bad.length) { const e = form.querySelector(".pc-err"); if (e) e.textContent = bad.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.notJsonField; return null; }
+      if (bad.length) { const e = form.querySelector(".pc-err"); if (e) e.textContent = bad.every(x => sub.manifest.fields.find(f => f.name === x.name).type === "json") ? bad.map(x => fieldTitle(sub, x.name)).join(", ") + ": " + W.notJsonField : bad.map(x => fieldTitle(sub, x.name) + ": " + x.message).join("; "); return null; }
       return out;
     }
     // A unit's state in a word, and as a badge: running, waiting for a place, switched off, silent, or its phase.
@@ -2232,7 +2316,7 @@
           <div class="pc-row"><button type="submit" class="btn pri">${h(W.create)}</button></div><div class="nt err pc-err"></div></form>`;
       const form = el.querySelector("form");
       const gf = (display(sub).tree || {}).group_by;
-      if (st.newInto && gf && form.elements[gf]) { form.elements[gf].value = st.newInto; const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, sub.manifest.fields.find(f => f.name === gf), { [gf]: [st.newInto], id: "" }, st.newInto, ""); const box = form.querySelector(`[data-groups="${gf}"]`); if (box) { const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(form.elements[gf]); box.replaceWith(nb); } }
+      if (st.newInto && gf && form.elements[gf]) { form.elements[gf].value = JSON.stringify([st.newInto]); const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, sub.manifest.fields.find(f => f.name === gf), { [gf]: [st.newInto], id: "" }, [st.newInto], ""); const box = form.querySelector(`[data-groups="${gf}"]`); if (box) { const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(form.elements[gf]); box.replaceWith(nb); } }
       wireGroups(form); wireSwitches(form, sub, null);
       form.onsubmit = async e => {
         e.preventDefault(); form.querySelector(".pc-err").textContent = ""; unmarkFields(form);
@@ -2408,18 +2492,24 @@
     const gb = n => n ? (n / 1073741824).toFixed(1) + " " + W.gbW : "—";
     // A server: its resource and what it carries; drain, decommission, its labels; its workers; then the page's.
     function paintServer(el, ref, name) {
-      const s = st.servers[name] || {}, workers = s.workers || [], r0 = st.subs[0];
-      const held = workers.reduce((k, w) => k + carried(w.worker).length, 0), sp = s.space || {};
+      const s = st.servers[name], workerEntries = workersAt(name), workers = workerEntries.map(e => e.row), r0 = null;
+      const workerCount = workersKnown() ? workers.length : W.unknownW;
+      if (!s || !workerProfiles.get(st.root)) {
+        el.innerHTML = `<h1>${h(name)} <small>${h(W.server)}</small></h1><p class="sub">${h(W.unknownW)}</p>${card(h(W.workersCap), workerLines(workerEntries) + (workersKnown() ? "" : `<p class="sub">${h(W.unknownW)}</p>`))}`;
+        el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); }); return;
+      }
+      const lists = workerEntries.map(e => carried(e.sub, e.row.worker));
+      const held = workersKnown() && lists.every(x => x !== null) ? lists.reduce((k, x) => k + x.length, 0) : W.unknownW, sp = s.space || {};
       el.innerHTML = `<h1>${h(name)} <small>${h(W.server)}</small></h1>
         ${card(h(W.serverCap), `<span class="bd${s.resource === "live" ? "" : " off"}">${h(W.resourceIs)}: ${h(s.resource || "—")}</span>
           ${st.drain && st.drain.draining === name ? ` <span class="bd off">${h(W.drainingBd)}</span>` : ""}
           ${s.placeable === false ? `<div class="nt err" style="margin-top:10px">${h(W.notPlaceable)}: ${h(s.why || "")}</div>` : ""}
-          <div class="mx" style="margin-top:10px">${mc(W.workersN, workers.length)}${mc(r0 ? (display(r0).held || cap(unitWord(r0, true))) : W.units, held)}${sp.total ? mc(W.diskFree, gb(sp.free)) + mc(W.diskTotal, gb(sp.total)) : ""}</div>
+          <div class="mx" style="margin-top:10px">${mc(W.workersN, workerCount)}${mc(r0 ? (display(r0).held || cap(unitWord(r0, true))) : W.units, held)}${sp.total ? mc(W.diskFree, gb(sp.free)) + mc(W.diskTotal, gb(sp.total)) : ""}</div>
           ${s.resource_url || s.build || s.events ? `<div class="g" style="margin-top:10px">${s.resource_url ? fldRo(W.resourceIs, s.resource_url) : ""}${s.build ? fldRo(W.buildW, s.build) : ""}${s.events ? fldRo(W.eventsOnDisk, s.events) : ""}</div>` : ""}
           ${s.resource_heard_at ? `<p class="sub" style="margin-top:8px">${h(W.heard)} ${h(fmt(s.resource_heard_at))}</p>` : ""}`)}
         ${heldCard()}
         <section class="pc-drain"></section><section class="pc-decom"></section><section class="pc-labels"></section>
-        ${card(h(W.workersCap), workers.map(w => `<div class="it" data-ref="${h(workerRef(w.worker))}"><span>${ic("svcs")}</span><span>${h(w.worker)}<small>${h(w.load)}/${h(w.capacity)} · ${h(w.state)}${w.labels === null ? " · " + h(W.labelsUnread) : w.labels ? " · " + h(w.labels) : ""}</small></span>${w.idle_by_policy ? `<span class="bd mu">${h(W.idle)}</span>` : ""}</div>`).join("") || `<p class="sub">${h(W.noWorkers)}</p>`, `<span class="sub" style="font-weight:400">${workers.length}</span>`)}`;
+        ${card(h(W.workersCap), workerLines(workerEntries) + (workersKnown() ? (workers.length ? "" : `<p class="sub">${h(W.noWorkers)}</p>`) : `<p class="sub">${h(W.unknownW)}</p>`), `<span class="sub" style="font-weight:400">${h(workerCount)}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
       const mv = el.querySelector('[data-a="move"]');
       if (mv) mv.onclick = async () => {
@@ -2538,18 +2628,19 @@
         try { await C.api("DELETE", "/servers/" + encodeURIComponent(name) + "/decommission"); await load(); paintMain(); } catch (err) { C.toast(W.refused + ": " + err.message); }
       };
     }
-    function paintWorker(el, ref, name) {
-      let info = null, server = null;
-      for (const [n, s2] of Object.entries(st.servers)) for (const w of s2.workers || []) if (w.worker === name) { info = w; server = n; }
-      const units = carried(name), r0 = st.subs[0];
-      if (!info) { el.innerHTML = `<h1>${h(name)}</h1><p class="sub">${h(W.workerSilent)}</p>`; return; }
-      el.innerHTML = `<h1>${h(name)} <small>${h(W.worker)}</small></h1>
+    function paintWorker(el, ref, identity) {
+      const name = identity ? identity.name : "", sub = identity ? identity.sub : "";
+      const entry = workerIndex.get(JSON.stringify([sub, name]));
+      if (!entry) { el.innerHTML = `<h1>${h(sub + "/" + name)}</h1><p class="sub">${h(W.unknownW)}</p>`; return; }
+      const info = entry.row, server = entry.server, profile = workerProfiles.get(sub);
+      const units = carried(sub, name), r0 = st.subs.find(s => s.name === sub);
+      el.innerHTML = `<h1>${h(sub + "/" + name)} <small>${h(W.worker)}</small></h1>
         ${card(h(cap(W.worker)), `<span class="bd${info.state === "live" ? "" : " off"}">${h(info.state)}</span>
           <div class="mx" style="margin-top:10px">${mc(W.loadW, info.load)}${mc(W.capW, info.capacity)}${mc(W.freeW, Math.max(0, info.capacity - info.load))}</div>
           <div class="g" style="margin-top:10px">${fldRo(cap(W.server), server || "—")}${fldRo(W.labelsW, info.labels === null ? W.labelsUnread : (info.labels || "—"))}</div>
-          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (st.policy && st.policy.servers) || ""))}</p>` : ""}`)}
+          ${info.idle_by_policy ? `<p class="sub">${h(W.idleNote.replace("{p}", (profile && profile.policy && profile.policy.servers) || ""))}</p>` : ""}`)}
         ${slotHtml(info)}
-        ${card(h(W.holdsW + " " + (r0 ? unitWord(r0, true) : W.units)), units.map(x => `<div class="it" data-ref="${h(unitRef(x.s, x.u.id))}"><span>${decorOf(unitRef(x.s, x.u.id)).iconHtml || ic("x")}</span><span>${h(label(x.s, x.u))}<small>${h(stateOf(x.u)[0])}</small></span>${stateBadge(x.u)}</div>`).join("") || `<p class="sub">${h(W.carriesNone)}</p>`, `<span class="sub" style="font-weight:400">${units.length}</span>`)}`;
+        ${card(h(W.holdsW + " " + (r0 ? unitWord(r0, true) : W.units)), (units || []).map(x => `<div class="it" data-ref="${h(unitRef(x.s, x.u.id))}"><span>${decorOf(unitRef(x.s, x.u.id)).iconHtml || ic("x")}</span><span>${h(label(x.s, x.u))}<small>${h(stateOf(x.u)[0])}</small></span>${stateBadge(x.u)}</div>`).join("") || `<p class="sub">${h(units === null ? W.unknownW : W.carriesNone)}</p>`, `<span class="sub" style="font-weight:400">${h(units === null ? W.unknownW : units.length)}</span>`)}`;
       el.querySelectorAll(".it[data-ref]").forEach(n => { n.onclick = () => go(n.dataset.ref); });
       pageBlocks("worker", el, ref, info);
       tabsOf("worker", el, ref, info);
@@ -2633,9 +2724,8 @@
     }
     function domAgeNote() {
       const v = st.dom; if (!v) return "";
-      if (domStale()) return `<div class="nt err">${h(W.domSilentNote.replace("{a}", v.age != null ? Math.round(v.age) + " " + W.n.s : W.longAgo))}</div>`;
-      if (v.complete === false) { const down = (v.members || []).filter(m => !m.holder && m.state !== "ok").map(m => m.name); return `<div class="nt err">${h(W.listIncomplete.replace("{m}", down.join(", ")))}</div>`; }
-      return "";
+      const stale = domStale() ? `<div class="nt err">${h(W.domSilentNote.replace("{a}", v.age != null ? Math.round(v.age) + " " + W.n.s : W.longAgo))}</div>` : "";
+      return stale + (domainObservation.normalIncomplete ? `<div class="nt err">${h(W.domainViewIncomplete)}</div>` : "");
     }
     // The alarms of a day, one line per kind and what it is about (of; without it, the unit that said it): the
     // newest of them, how many, since when, from which members — a storm of one kind does not hide the others.
@@ -2654,7 +2744,7 @@
     // domain's page), its access, its keys.
     function paintDomain(el, ref) {
       const v = st.dom, admin = C.may("admin", "domain");
-      if (!v) { el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1>${card(h(cap(W.domainWord)), `<p class="sub">${h(W.noDomain)}</p>`)}`; return; }
+      if (!v) { const message = domainObservation.phase === "absent" ? W.noDomain : domainObservation.phase === "error" ? W.domainReadIncomplete.replace("{error}", domainObservation.error) : W.loading; el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1>${card(h(cap(W.domainWord)), `<p class="sub">${h(message)}</p>`)}`; return; }
       if (v.term && v.term.deposed) { el.innerHTML = `<h1>${h(cap(W.domainWord))}</h1><div class="pc-general">${termCard(v)}</div>`; wireTerm(el, v); return; }
       if (!domainOnly && st.domShared == null) loadDomShared().then(() => { if (st.sel === "domain") refreshMain(); });
       const list = v.member_list || { rev: 0 }, ms = v.members || [];
@@ -2866,7 +2956,7 @@
     function editsCard(v) {
       if (!v.pending && !v.outcomes) return "";
       const rows = [];
-      for (const [c, list] of Object.entries(v.pending || {})) for (const e of list || []) rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(e.what || e.id || "")}<small>${h(W.takenAt)} ${h(fmt(e.at))}</small></span><span class="bd wait">${h(W.waitsPub)}</span></div>`);
+      for (const [c, count] of Object.entries(v.pending || {})) rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)}<small>${h(W.kfPending)}</small></span><span class="bd wait">${h(count === null ? W.unknownW : count)}</span></div>`);
       for (const [c, list] of Object.entries(v.outcomes || {})) for (const o of list || []) { const ok = o.status >= 200 && o.status < 300;
         rows.push(`<div class="it" style="cursor:default"><span>${ic("server")}</span><span>${h(c)} · ${h(o.what || o.id || "")}<small>${h(fmt(o.at))}${o.error ? " · " + h(o.error) : ""}</small></span><span class="bd${ok ? "" : " off"}">${h(ok ? W.appliedW : W.refusedStatus.replace("{s}", o.status))}</span></div>`); }
       return card(h(W.editsW), `<p class="sub">${h(W.editsNote)}</p>` + (rows.join("") || `<p class="sub">${h(W.noEdits)}</p>`));
@@ -3105,22 +3195,127 @@
     }
 
     // -- data --------------------------------------------------------------------------------------------------
-    async function readManifests() { try { await loadManifests(); manifestRead = true; return true; } catch (e) { st.loadErr = e.message; return false; } }
+    let catalogue = [], catalogueKnown = false;
+    let workerProfiles = new Map(), workerIndex = new Map(), unitReads = new Set(), workerAmbiguous = false;
+    let domainObservation = { phase: "loading", value: null, error: "", normalIncomplete: false }, domainLastKnown = null;
+    const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+    async function readWorkerProfiles(rootDoc) {
+      const profiles = new Map(), index = new Map(); let ambiguous = false;
+      const roster = catalogueKnown ? catalogue : catalogue.filter(s => !s.base);
+      for (const sub of roster) {
+        let doc = !sub.base ? rootDoc : null;
+        if (sub.base) { try { doc = await getJSON(sub.base + "/servers"); } catch (e) { doc = null; } }
+        if (!doc || !doc.servers || typeof doc.servers !== "object" || Array.isArray(doc.servers)) doc = null;
+        profiles.set(sub.name, doc);
+        if (!doc || !catalogueKnown) continue;
+        const local = new Map(); let localAmbiguous = false;
+        try {
+          for (const [server, row] of Object.entries(doc.servers)) {
+            if (!row || typeof row !== "object" || Array.isArray(row) || (hasOwn(row, "workers") && !Array.isArray(row.workers))) throw new Error(W.refused);
+            for (const w of row.workers || []) {
+              if (!w || typeof w !== "object" || Array.isArray(w) || typeof w.worker !== "string") throw new Error(W.refused);
+              const key = JSON.stringify([sub.name, w.worker]);
+              // Ambiguous duplicate identity is unknown, never first/last short-name selection.
+              if (local.has(key)) { local.set(key, null); localAmbiguous = true; } else local.set(key, { sub: sub.name, server, row: w });
+            }
+          }
+        } catch (e) { profiles.set(sub.name, null); continue; }
+        for (const [key, value] of local) index.set(key, value);
+        ambiguous = ambiguous || localAmbiguous;
+      }
+      workerProfiles = profiles;
+      workerIndex = new Map([...index].filter(([, value]) => value !== null));
+      workerAmbiguous = ambiguous;
+    }
+    async function domainPage(path) {
+      const r = await fetch(path);
+      if (r.status === 401) { let why = ""; try { const d = await r.clone().json(); why = d && (d.detail || d.error) || ""; } catch (e) {} showLogin(why); }
+      const value = await r.json();
+      return { status: r.status, value };
+    }
+    async function readDomainView() {
+      const members = new Map(), units = new Map(), contested = new Map(), reports = new Map(), pending = new Map(), outcomes = new Map();
+      const present = new Set(), cursors = new Set(), unreadParts = new Set();
+      let head = null, unreadPresent = false, normalIncomplete = false, path = "/domain";
+      try {
+        for (;;) {
+          const response = await domainPage(path), page = response.value;
+          if (response.status !== 200) {
+            if (head === null && response.status === 404 && page && page.error === "no domain here") return { phase: "absent", value: null, error: "", normalIncomplete: false };
+            throw failure(page && (page.detail || page.error) || String(response.status), { status: response.status }, page);
+          }
+          if (!page || typeof page !== "object" || Array.isArray(page)) throw new Error(W.refused);
+          if (head === null) { head = { ...page }; for (const k of ["members", "units", "contested", "reports", "pending", "outcomes", "cursor", "unread"]) delete head[k]; }
+          normalIncomplete = normalIncomplete || page.complete === false;
+          if (hasOwn(page, "members")) { present.add("members"); for (const m of page.members) members.set(m.name, m); }
+          if (hasOwn(page, "units")) {
+            present.add("units");
+            for (const [sub, rows] of Object.entries(page.units)) {
+              if (!units.has(sub)) units.set(sub, new Map());
+              for (const u of rows) units.get(sub).set(JSON.stringify([u.cluster, u.id]), u);
+            }
+          }
+          if (hasOwn(page, "contested")) {
+            present.add("contested");
+            for (const [sub, refs] of Object.entries(page.contested)) {
+              if (!contested.has(sub)) contested.set(sub, new Map());
+              for (const [ref, claimants] of Object.entries(refs)) contested.get(sub).set(ref, claimants);
+            }
+          }
+          for (const [name, map] of [["reports", reports], ["pending", pending], ["outcomes", outcomes]]) {
+            if (!hasOwn(page, name)) continue;
+            present.add(name); for (const [member, value] of Object.entries(page[name])) map.set(member, value);
+          }
+          if (hasOwn(page, "unread")) {
+            unreadPresent = true;
+            for (const part of page.unread) unreadParts.add(part);
+            normalIncomplete = true;
+          }
+          if (!hasOwn(page, "cursor")) break;
+          const cursor = page.cursor;
+          if (typeof cursor !== "string" || !cursor || cursors.has(cursor)) throw new Error(W.refused);
+          cursors.add(cursor); path = "/domain?cursor=" + encodeURIComponent(cursor);
+        }
+        const value = { ...head };
+        if (present.has("members")) value.members = [...members.values()];
+        if (present.has("units")) value.units = Object.fromEntries([...units].map(([sub, rows]) => [sub, [...rows.values()]]));
+        if (present.has("contested")) value.contested = Object.fromEntries([...contested].map(([sub, refs]) => [sub, Object.fromEntries(refs)]));
+        for (const [name, map] of [["reports", reports], ["pending", pending], ["outcomes", outcomes]]) if (present.has(name)) value[name] = Object.fromEntries(map);
+        if (unreadPresent) value.unread = [...unreadParts];
+        domainLastKnown = value;
+        return { phase: "normal", value, error: "", normalIncomplete };
+      } catch (e) {
+        // Previously assembled observations stay private. No prefix is published as a success.
+        return { phase: "error", value: null, error: e && e.message || W.refused, normalIncomplete: false, lastKnown: domainLastKnown };
+      }
+    }
+    async function readManifests() { try { await loadManifests(); manifestRead = true; return true; } catch (e) { catalogueKnown = false; workerProfiles = new Map(); workerIndex = new Map(); st.loadErr = e.message; return false; } }
     async function loadManifests() {
       const subs = [];
       const rootManifest = await getJSON("/manifest");
-      if (rootManifest && rootManifest.rows) subs.push({ name: rootManifest.name, base: "", manifest: rootManifest });   // the holder has no root (§10a)
+      const rootlessHolder = domainOnly && rootManifest && rootManifest.name === "" && rootManifest.rows === null;
+      if (!rootManifest || (!rootlessHolder && (!rootManifest.rows || !rootManifest.name))) throw new Error(W.refused);
+      if (rootManifest && rootManifest.rows) subs.push({ name: rootManifest.name, base: "", manifest: rootManifest });
       st.root = rootManifest && rootManifest.rows ? rootManifest.name : null;
+      let complete = false;
       try {
         const m = await getJSON("/mounts");
-        for (const [n, manifest] of Object.entries(m.mounts || {})) if (manifest && manifest.rows) subs.push({ name: manifest.name || n, base: "/" + n, manifest });
-      } catch (e) { /* one console, one manifest */ }
-      st.catalog = subs.map(s => s.name);   // every subsystem of this console, whatever this page shows
+        if (!m || !m.mounts || typeof m.mounts !== "object" || Array.isArray(m.mounts)) throw new Error(W.refused);
+        for (const [n, manifest] of Object.entries(m.mounts)) {
+          if (!manifest || !manifest.rows || !manifest.name) throw new Error(W.refused);
+          if (manifest.name === st.root) { if (n !== st.root) throw new Error(W.refused); continue; }
+          subs.push({ name: manifest.name, base: "/" + n, manifest });
+        }
+        complete = true;
+      } catch (e) { /* An unconfirmed catalogue is not an empty confirmed mounted roster. */ }
+      catalogue = complete ? subs : subs.filter(s => !s.base); catalogueKnown = complete;
+      st.catalog = catalogue.map(s => s.name);
       const want = opts.subsystems;
-      st.subs = Array.isArray(want) ? subs.filter(s => want.includes(s.name)) : subs;
+      st.subs = Array.isArray(want) ? catalogue.filter(s => want.includes(s.name)) : catalogue;
     }
     async function load(quiet) {
       if (domainOnly) return loadHolder();
+      const readUnits = new Set();
       for (const sub of st.subs) {
         try {
           const d = await getJSON(sub.base + "/" + sub.manifest.rows);
@@ -3128,10 +3323,18 @@
           const by = {};
           for (const c of d.configured || []) by[c.id] = { ...c, phase: "silent", worker_state: "stale" };
           for (const r of d.rows || []) by[r.id] = { ...by[r.id], worker_state: undefined, ...r };   // heard of: its own word on staleness
+          readUnits.add(sub.name);
           st.units[sub.name] = Object.values(by).sort((a, b) => (typeof a.id === "number" ? a.id - b.id : String(a.id).localeCompare(String(b.id))));
         } catch (e) { st.units[sub.name] = st.units[sub.name] || []; if (sub === st.subs[0]) st.loadErr = e.message; }
       }
-      try { const d = await getJSON("/servers"); st.servers = d.servers || {}; st.policy = d.policy || {}; } catch (e) { /* no servers to show */ }
+      unitReads = readUnits;
+      let rootDoc = null, rootServers = null, rootConfirmed = false;
+      try {
+        const d = await getJSON("/servers");
+        if (!d || !d.servers || typeof d.servers !== "object" || Array.isArray(d.servers)) throw new Error(W.refused);
+        rootDoc = d; rootServers = d.servers; rootConfirmed = true; st.servers = d.servers; st.policy = d.policy || {};
+      } catch (e) { /* Preserve last-known UI data; this invocation did not confirm the root. */ }
+      await readWorkerProfiles(rootDoc);
       pruneLocalGroups();
       st.unplaceable = {};
       for (const sub of st.subs) { try { const d = await getJSON(sub.base + "/unplaceable"); st.unplaceable[sub.name] = Array.isArray(d) ? d : (d && d.units) || []; } catch (e) { st.unplaceable[sub.name] = []; } }
@@ -3145,7 +3348,7 @@
       st.shared = shared;
       try { const d = await getJSON("/drain"); st.drain = d || st.drain; } catch (e) { /* a console with no drain */ }
       try { st.schema = await getJSON("/schema"); } catch (e) { st.schema = null; }
-      try { st.dom = await getJSON("/domain"); } catch (e) { st.dom = null; }
+      const observedDomain = await readDomainView(); domainObservation = observedDomain; st.dom = observedDomain.value;
       if (st.dom) { try { st.alarms = await getJSON("/domain/alarms"); } catch (e) { st.alarms = null; } }
       await loadDomShared();
       try { st.held = await getJSON("/api/held"); } catch (e) { st.held = null; }
@@ -3153,10 +3356,10 @@
       paintHeader();
       // the same data is the same picture: an idle poll touches neither the tree nor the card (no flicker, the scroll,
       // the hover, the selection stay); a card or tab of the page's own is its data's, refreshed as it says
-      const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared, st.domShared]);   // [course leads] st.shared
+      const fp = JSON.stringify([st.units, st.servers, st.policy, st.dom, st.alarms, st.held, st.drain, st.unplaceable, st.schema, st.loadErr, st.shared, st.domShared, [...workerProfiles], catalogueKnown, [...unitReads], domainObservation.phase, domainObservation.error, domainObservation.normalIncomplete]);   // [course leads] st.shared
       const same = fp === st.fp; st.fp = fp;
       repaint(!same, quiet ? !same && !pageOwnsCard() : !same || pageOwnsCard());
-      emit("refresh", { units: st.units, servers: st.servers, domain: st.dom });
+      if (rootConfirmed) emit("refresh", { units: st.units, servers: rootServers, domain: observedDomain.value });
     }
 
     // A poll's repaint never lands under a pressed button: the element pressed would be replaced between the press and
@@ -3175,13 +3378,13 @@
     }
     // At the holder: the domain's view, its alarms, its shared settings — nothing of a cluster's.
     async function loadHolder() {
-      try { st.dom = await getJSON("/domain"); st.loadErr = null; } catch (e) { st.dom = null; st.loadErr = e.message; }
+      const observedDomain = await readDomainView(); domainObservation = observedDomain; st.dom = observedDomain.value; st.loadErr = observedDomain.phase === "error" ? observedDomain.error : null;
       if (st.dom) { try { st.alarms = await getJSON("/domain/alarms"); } catch (e) { st.alarms = null; } }
       await loadDomShared();
       paintHeader();
-      const fp = JSON.stringify([st.dom, st.alarms, st.domShared, st.loadErr]), same = fp === st.fp; st.fp = fp;
+      const fp = JSON.stringify([st.dom, st.alarms, st.domShared, st.loadErr, domainObservation.phase, domainObservation.error, domainObservation.normalIncomplete]), same = fp === st.fp; st.fp = fp;
       repaint(!same, !same);
-      emit("refresh", { domain: st.dom });
+      emit("refresh", { domain: observedDomain.value });
     }
     // The feed (P/07 N1.4 changes; P/06.1 N2 «Change feed»; ADR-0094 B2): the number is taken before the rows are read,
     // so an edit between the two is told, not lost. A message or a reset reads the data at once; the module never applies a

@@ -9,7 +9,7 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 Implement the process of the cluster console in the language `<LANG>`: the units door, the write of secrets, the guard, requests and the merge
 of events, observations and the operator doors — by the six chapters of the lesson, the cluster console in the domain — by chapter 6.7 of the late layer
 (after the lessons P/08–P/10), cluster folders and group operations — by chapters 6.8 and 6.9; pass the acceptance N5 of the chapters and close their readiness checklists. In all 146 norms: P/06.1-01…35,
-P/06.2-01…-06 and P/06.2-08…-11 (the number 07 is empty: the former norm went to P/02.4 — `id-map.tsv`), P/06.3-01…08,
+P/06.2-01…-06 and P/06.2-08…-11 (number07 is unused), P/06.3-01…08,
 P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, P/06.9-01…18.
 
 - **6.1.** The unit row and the operations on it — the units door of the console; the bounded blob door, the tables and the maintained
