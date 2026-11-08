@@ -1115,6 +1115,23 @@
     }
    ],
    "status": "already-normative"
+  },
+  {
+   "class": "canonical-writing",
+   "definition": "Canonical writing of a body value into its row: scalars, top-level null, number by JCS, length by the written text, canonical JSON of dicts and lists, the value of a json field as is, JSON_CEILING, not-JSON refusals, round trip",
+   "sources": [
+    "Platform/06-console/vectors/requests-body/requests_body.tsv:12-40 (header comment, judge table)"
+   ],
+   "anchors": [
+    {
+     "path": "Platform/06-console/vectors/requests-body/README.md",
+     "section": "## Rules",
+     "needle": "The writing rules (the same text stays in the header comment of the table",
+     "req": null
+    }
+   ],
+   "status": "moved-to-norm",
+   "note": "ADR-0133 addendum (4) item 3 pass; the README (rule class) goes to M, the table keeps the same comment. Commit e2463d20b."
   }
  ],
  "checked_classes": [

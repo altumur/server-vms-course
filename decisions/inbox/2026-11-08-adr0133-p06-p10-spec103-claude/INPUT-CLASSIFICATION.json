@@ -1,0 +1,1169 @@
+{
+ "format": 1,
+ "adr": "ADR-0133 addendum (4) items 2–3; INPUT-CLASSIFICATION-SUPPLEMENT 2026-11-08",
+ "owner": "spec103-claude",
+ "scope": "P06–P10 Source (not ru/)",
+ "pin": "e2463d20b59fb9ede4d7077b1e180be7ceb9eb1c",
+ "note": "Inbox material for SRC; not a source text and not exported to M. blob = Git blob at pin after the split; a class names what was found before the split, after_split what goes to M. moved_to names the judge-only table that now carries the text (J-only; not to be repeated in M).",
+ "classification_rule": "rule: only protocol/form/order, names and counts of cases allowed; case: only case answers, no rule absent from a norm; mixed: both — split before export. An expected answer is the literal outcome tied to a named case/step; stated rules with a scenario pointer stay.",
+ "counts": {
+  "acceptance_readme": {
+   "rule": 2,
+   "mixed": 21
+  },
+  "vectors_readme": {
+   "rule": 4,
+   "mixed": 10
+  },
+  "case_files": 0,
+  "norms": {
+   "mixed": 20,
+   "rule": 4
+  }
+ },
+ "by_lesson": {
+  "P06": {
+   "rule": 4,
+   "mixed": 14,
+   "case": 0
+  },
+  "P07": {
+   "rule": 0,
+   "mixed": 0,
+   "case": 0,
+   "note": "no acceptance/vectors README; norms have no scenario table"
+  },
+  "P08": {
+   "rule": 2,
+   "mixed": 12,
+   "case": 0
+  },
+  "P09": {
+   "rule": 0,
+   "mixed": 3,
+   "case": 0
+  },
+  "P10": {
+   "rule": 0,
+   "mixed": 2,
+   "case": 0
+  }
+ },
+ "files": [
+  {
+   "path": "Platform/06-console/acceptance/1/README.md",
+   "blob_before": "ada753bdeb0b851cac81809eab693c4448367ade",
+   "blob": "95f16f2bb604b40aed870a06fcdad1f016b76a95",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/1/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     52,
+     60
+    ],
+    [
+     67,
+     69
+    ],
+    [
+     79,
+     83
+    ],
+    [
+     114,
+     132
+    ],
+    [
+     140,
+     158
+    ],
+    [
+     160,
+     172
+    ],
+    [
+     201,
+     215
+    ],
+    [
+     217,
+     224
+    ],
+    [
+     237,
+     255
+    ],
+    [
+     257,
+     273
+    ],
+    [
+     275,
+     291
+    ],
+    [
+     295,
+     301
+    ],
+    [
+     309,
+     313
+    ],
+    [
+     315,
+     331
+    ],
+    [
+     333,
+     375
+    ],
+    [
+     381,
+     391
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/2/README.md",
+   "blob_before": "6dc4ad705bb206d3a049cd521a25083d5063dcab",
+   "blob": "4e03ed51b3a3b1baf04a269cbef567efeb503c2f",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/2/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     54,
+     58
+    ],
+    [
+     60,
+     70
+    ],
+    [
+     72,
+     89
+    ],
+    [
+     111,
+     138
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/3/README.md",
+   "blob_before": "efc1ee9733d1911914c9507ba24b544761f09dc0",
+   "blob": "11b5301e4c969de148a9c89e2efbfab8b874dd54",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/3/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     27,
+     32
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/4/README.md",
+   "blob_before": "3f5ade9bcd01402b18d12ac23715115ba6c2ec69",
+   "blob": "67c457c7f431c7e4fec22fe4497dc55bd66c3fa0",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/4/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     42,
+     48
+    ],
+    [
+     58,
+     77
+    ],
+    [
+     79,
+     90
+    ],
+    [
+     92,
+     100
+    ],
+    [
+     120,
+     126
+    ],
+    [
+     132,
+     134
+    ],
+    [
+     142,
+     146
+    ],
+    [
+     158,
+     162
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/5/README.md",
+   "blob_before": "9e6130e15baf1f72d4cc5160d57339f7b0b1c824",
+   "blob": "1e0001a3de1a912006da3795772349bdcdf6435f",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/5/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     28,
+     28
+    ],
+    [
+     34,
+     39
+    ],
+    [
+     42,
+     62
+    ],
+    [
+     75,
+     88
+    ],
+    [
+     94,
+     95
+    ],
+    [
+     119,
+     120
+    ],
+    [
+     127,
+     129
+    ],
+    [
+     142,
+     148
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/6/README.md",
+   "blob_before": "1f6f1f1afbc117dabf6ba63dc1648e27a62696b8",
+   "blob": "c349734f78f6218ee70607e0662e4286b44c3ee8",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/6/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     52,
+     55
+    ],
+    [
+     57,
+     61
+    ],
+    [
+     84,
+     102
+    ],
+    [
+     112,
+     126
+    ],
+    [
+     135,
+     161
+    ],
+    [
+     179,
+     182
+    ],
+    [
+     186,
+     193
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/7/README.md",
+   "blob_before": "ad399c02778823f12dcd895040aa57ca4779ea09",
+   "blob": "9bd450fb9933ab55cf137dbe1353963794633a6e",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/7/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     36,
+     44
+    ],
+    [
+     48,
+     54
+    ],
+    [
+     56,
+     59
+    ],
+    [
+     61,
+     64
+    ],
+    [
+     74,
+     79
+    ],
+    [
+     101,
+     105
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/8/README.md",
+   "blob_before": "16cbf6294bb0fdb212d4b1e1216f289fbb372b41",
+   "blob": "a2fe637eb681b59520801963d8388c9d2911c1a3",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/8/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     23,
+     29
+    ],
+    [
+     41,
+     47
+    ],
+    [
+     55,
+     59
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/acceptance/9/README.md",
+   "blob_before": "e889442edbf21439d655a1006e4752716ae0571c",
+   "blob": "599fffc417853963e9745c7c55950ba65f6bebb4",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/06-console/acceptance/9/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     18,
+     34
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/0/README.md",
+   "blob_before": "7ebd417c46ce0d776939249da9368abf236cfcaa",
+   "blob": "7ebd417c46ce0d776939249da9368abf236cfcaa",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "только указатель на швы, случаев нет"
+  },
+  {
+   "path": "Platform/08-domain/acceptance/1/README.md",
+   "blob_before": "24e1e343736558c61dbbcae7a1b45bc5ce03b42c",
+   "blob": "c3108a8434bb50c66e69c013be03dc69a4fe40a8",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/1/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     33,
+     40
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/2/README.md",
+   "blob_before": "d425726d749cf0060d4f58b095feb9a3c8df40bb",
+   "blob": "d425726d749cf0060d4f58b095feb9a3c8df40bb",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "только указатель на швы, случаев нет"
+  },
+  {
+   "path": "Platform/08-domain/acceptance/3/README.md",
+   "blob_before": "0ccfe473d352ab7595f176233eb463659fe230db",
+   "blob": "dea5e8cbb186a8133dde3a7002f7ebbd8a80ef5a",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/3/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     41,
+     56
+    ],
+    [
+     69,
+     73
+    ],
+    [
+     75,
+     77
+    ],
+    [
+     100,
+     103
+    ],
+    [
+     107,
+     109
+    ],
+    [
+     117,
+     141
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/4/README.md",
+   "blob_before": "057c91c37a386e8f617b62e2e77d5d98c04b3b07",
+   "blob": "c986da9f78a532037e01cfebb2f9ca018ea5ffea",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/4/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     32,
+     37
+    ],
+    [
+     40,
+     62
+    ],
+    [
+     75,
+     140
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/5/README.md",
+   "blob_before": "f0776dc7af9371849a88cb953b04a127ae7887ec",
+   "blob": "7ef8167965cb7c9cda17f14e9db265f90c5f3f46",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/5/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     39,
+     55
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/6/README.md",
+   "blob_before": "bbc3555cb813c64772c2176d2ee9a32e503c186a",
+   "blob": "0f98a5dc3151f75f895501aa3d72ba0e1a7bc52d",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/6/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     34,
+     72
+    ],
+    [
+     82,
+     84
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/7/README.md",
+   "blob_before": "b62d608b146df183890478c99eb617b89495f68b",
+   "blob": "63629dc9201c0135978757129c1b3fa8d9828b08",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/7/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     11,
+     11
+    ],
+    [
+     39,
+     54
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/8/README.md",
+   "blob_before": "28ed1b6fbfa0d513e70dfd620b04b9c03fd525aa",
+   "blob": "c6da970cae4d268c865574cc24b8ed5e8359eca2",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/8/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     29,
+     34
+    ],
+    [
+     40,
+     55
+    ],
+    [
+     67,
+     81
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/9/README.md",
+   "blob_before": "0d3edd4687ed51ddcb996ecbb6d17287abb92b2e",
+   "blob": "54656975b0e13d3c972da8d978c9251872c92546",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/9/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     23,
+     38
+    ],
+    [
+     50,
+     54
+    ]
+   ]
+  },
+  {
+   "path": "Platform/08-domain/acceptance/10/README.md",
+   "blob_before": "b1df479cae7a0861ae8460db9623870219c2c2bb",
+   "blob": "0afe19508bc07a8d0ddfa5f5d34be49e91cbacc3",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/08-domain/acceptance/10/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     20,
+     53
+    ]
+   ]
+  },
+  {
+   "path": "Platform/09-agent/acceptance/1/README.md",
+   "blob_before": "5f4df6b962e97fa80bc2cca3a62ea5d04cb30393",
+   "blob": "854c9ac31f379362bedbde1500d95ba521457941",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/09-agent/acceptance/1/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     48,
+     60
+    ],
+    [
+     67,
+     70
+    ],
+    [
+     76,
+     95
+    ],
+    [
+     99,
+     119
+    ],
+    [
+     127,
+     164
+    ],
+    [
+     181,
+     212
+    ]
+   ]
+  },
+  {
+   "path": "Platform/09-agent/acceptance/2/README.md",
+   "blob_before": "8e4264d9e0c4f761fcc0c70d83b98cc7abe19b1e",
+   "blob": "2a20f12c9c6dce3fd96a00dde0febe2c2d5c317a",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/09-agent/acceptance/2/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     31,
+     40
+    ],
+    [
+     42,
+     51
+    ]
+   ]
+  },
+  {
+   "path": "Platform/10-domain-console/acceptance/README.md",
+   "blob_before": "8921016bac3e5b559e9356fc6622cdb52a463801",
+   "blob": "82aed531395470b712aa74fd8f0bf4e2d34e8949",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
+   "moved_to": "Platform/10-domain-console/acceptance/scenarios.tsv",
+   "moved_ranges_en": [
+    [
+     27,
+     29
+    ],
+    [
+     34,
+     52
+    ],
+    [
+     74,
+     103
+    ],
+    [
+     110,
+     121
+    ]
+   ]
+  },
+  {
+   "path": "Platform/06-console/vectors/contender-projection/README.md",
+   "blob_before": "bdc773e913df393b1fc41829b64356d682e1d3c6",
+   "blob": "b0d518bcac2a388636eb7e50eb8175bef27d6723",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## `cases.tsv`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../common/contracts/observation.md",
+    "../../../common/vectors/contender-fresh/README.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.5-console.norms.md"
+   ],
+   "moved_to": "Platform/06-console/vectors/contender-projection/cases.tsv"
+  },
+  {
+   "path": "Platform/06-console/vectors/key-families/README.md",
+   "blob_before": "817110c870bbe207a8e8a74cb6f16cab089c872a",
+   "blob": "9017d7f5429516602facfc2e2b07bb377dce141c",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## `cases.tsv`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../02-installer/spec/02.1-installer.norms.md",
+    "../../../common/acceptance/README.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.7-console.norms.md"
+   ],
+   "moved_to": "Platform/06-console/vectors/key-families/cases.tsv"
+  },
+  {
+   "path": "Platform/06-console/vectors/metrics/README.md",
+   "blob_before": "63727468b2debe0b6a76f2b1e2801e5e52417abc",
+   "blob": "029b2d9128c398c0e08fc34cd9582c7fcb539599",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## `cases.tsv`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.5-console.norms.md"
+   ],
+   "moved_to": "Platform/06-console/vectors/metrics/cases.tsv"
+  },
+  {
+   "path": "Platform/06-console/vectors/op-step/README.md",
+   "blob_before": "1d9f1a8ed8db8fcc6e3ec27570c99ddb9ef9ae7f",
+   "blob": "1d9f1a8ed8db8fcc6e3ec27570c99ddb9ef9ae7f",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "форма таблиц и протокол; перечень случаев без ответов",
+   "sections": [
+    "## `key.tsv`",
+    "## `expected.tsv`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../common/acceptance/README.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.9-console.norms.md"
+   ]
+  },
+  {
+   "path": "Platform/06-console/vectors/reap/README.md",
+   "blob_before": "a3a3b5b3ce47098fa5dbc86f65ff7d00047259eb",
+   "blob": "9c15903a75ab6566867c5f65775077ac525c1f5c",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## `cases.tsv`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../common/contracts/request-mark.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.4-console.norms.md"
+   ],
+   "moved_to": "Platform/06-console/vectors/reap/cases.tsv"
+  },
+  {
+   "path": "Platform/06-console/vectors/request-digest/README.md",
+   "blob_before": "4ba1d5a140bf9d24cc4e3b58afd57c8de0e31ff5",
+   "blob": "4ba1d5a140bf9d24cc4e3b58afd57c8de0e31ff5",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "разделы Rules и команда стенда, случаев с ответами нет",
+   "sections": [
+    "## `digest.tsv`",
+    "## Rules",
+    "## The stand command `request-digest`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../common/acceptance/README.md",
+    "../../../common/contracts/request-mark.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.4-console.norms.md",
+    "../requests-body/README.md"
+   ]
+  },
+  {
+   "path": "Platform/06-console/vectors/requests-body/README.md",
+   "blob_before": "5441b3033396f45ff338d0545117a6660b89f27b",
+   "blob": "ce72d061937d8c62ad3794fe4863fb7f634ee52e",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол стенда и правила записи (подняты из комментария таблицы, см. lifted_definitions)",
+   "sections": [
+    "## `requests_body.tsv`",
+    "## Stand",
+    "## Rules",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../03-worker/spec/03.6-worker.norms.md",
+    "../../../common/acceptance/README.md",
+    "../../../common/contracts/object-client.md",
+    "../../../common/vectors/fault/README.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.1-console.norms.md",
+    "../../spec/06.4-console.norms.md"
+   ]
+  },
+  {
+   "path": "Platform/06-console/vectors/resolve/README.md",
+   "blob_before": "c161474ee28bdac97818ca8ef2daae3bbbabb145",
+   "blob": "dce9958a61dfe1b1340e06f7e5b28cccd8abcedb",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Files",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../02-installer/spec/02.1-installer.norms.md",
+    "../../../08-domain/spec/08.9-domain.norms.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../spec/06.7-console.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/06-console/vectors/resolve/cases.tsv"
+  },
+  {
+   "path": "Platform/06-console/vectors/rid/README.md",
+   "blob_before": "59931c249238d6c571b8cbd4c0e13df671429ca4",
+   "blob": "59931c249238d6c571b8cbd4c0e13df671429ca4",
+   "class_found": "rule",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "грамматика и команда стенда; счётчики строк",
+   "sections": [
+    "## `rid.tsv`",
+    "## Rule",
+    "## `template.tsv`",
+    "## The stand command `rid`",
+    "## Run",
+    "## Vector wire"
+   ],
+   "links": [
+    "../../../03-worker/spec/03.6-worker.norms.md",
+    "../../../05-resource/spec/05-resource.norms.md",
+    "../../../common/acceptance/README.md",
+    "../../../common/contracts/request-mark.md",
+    "../../../common/vectors/wire.md",
+    "../../../common/vectors/wire.tsv",
+    "../../data/asked.schema.json",
+    "../../spec/06.4-console.norms.md"
+   ]
+  },
+  {
+   "path": "Platform/08-domain/vectors/assemble/README.md",
+   "blob_before": "a9550706bfa6f4de0aab2a93bb65b648bd7fed61",
+   "blob": "ec8ef0fde105c06dd8ccef704432a2f499e1b64f",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Inputs, keys and manifests",
+    "## Files"
+   ],
+   "links": [
+    "../../../common/acceptance/README.md",
+    "../../../common/contracts/domain-envelopes.md",
+    "../../../common/contracts/may.md",
+    "../../../common/data/testsub/testsub.subsystem.yaml",
+    "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "../../../common/vectors/domain-token/README.md#keys",
+    "../../spec/08.5-domain.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/08-domain/vectors/assemble/cases.tsv"
+  },
+  {
+   "path": "Platform/08-domain/vectors/issue/README.md",
+   "blob_before": "76500d30c504f29ac1079b4b067e566cc9b73fef",
+   "blob": "023abe4092ad5ca0709b7272b869f8197f4ff728",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Inputs",
+    "## Files"
+   ],
+   "links": [
+    "../../../02-installer/spec/02.1-installer.norms.md",
+    "../../../common/acceptance/README.md",
+    "../../../common/data/testsub/testsub.subsystem.yaml",
+    "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "../../spec/08.7-domain.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/08-domain/vectors/issue/cases.tsv"
+  },
+  {
+   "path": "Platform/08-domain/vectors/view/README.md",
+   "blob_before": "172ec07f1ab46ace56d94c9a6ee3e598bc6c80de",
+   "blob": "795b9165af173e6a88b4a6987fcc28585a35a194",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Inputs and manifests",
+    "## Files"
+   ],
+   "links": [
+    "../../../common/acceptance/README.md",
+    "../../../common/data/testsub/testsub.subsystem.yaml",
+    "../../../common/data/testsub/testsub2.subsystem.yaml",
+    "../../spec/08-domain.api.openapi.yaml",
+    "../../spec/08.1-domain.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/08-domain/vectors/view/cases.tsv"
+  },
+  {
+   "path": "Platform/09-agent/vectors/follow/README.md",
+   "blob_before": "15cb3147638389d2555f76120dd8f67a0ccac6e8",
+   "blob": "87d9572b4a4955f8fde6011a852cf6995bc16c27",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Keys",
+    "## Files"
+   ],
+   "links": [
+    "../../../common/contracts/record.md",
+    "../../../common/vectors/record/README.md",
+    "../../spec/09.1-agent.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/09-agent/vectors/follow/cases.tsv"
+  },
+  {
+   "path": "Platform/10-domain-console/vectors/alarms/README.md",
+   "blob_before": "35b1ce20c35593966a26de21226ef13fb0f9f7dc",
+   "blob": "4e42281795285210cd43032a355f7c109a78a052",
+   "class_found": "mixed",
+   "after_split": "rule (идёт в M целым blob)",
+   "basis": "протокол/формы входа и выхода остаются; перечни случаев с ответами и журнал источника вынесены в cases.tsv",
+   "sections": [
+    "## Run",
+    "## Input",
+    "## Files",
+    "## P/10 review neighbours"
+   ],
+   "links": [
+    "../../../08-domain/spec/08.9-domain.norms.md",
+    "../../../09-agent/spec/09.1-agent.norms.md",
+    "../../spec/10-domain-console.norms.md",
+    "cases.tsv"
+   ],
+   "moved_to": "Platform/10-domain-console/vectors/alarms/cases.tsv"
+  }
+ ],
+ "norms": [
+  {
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "blob": "7b490d8a32ab1e7a5fc001d2b255deb28cb9721b",
+   "blob_before": "b143f00af42fa8683ab51a1de6aeaeb939573ed3",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.2-console.norms.md",
+   "blob": "0eb481f389241abbcbe4943c0263899cb94f8b7f",
+   "blob_before": "8db6aeaf06b67f6906d862f527254d2b5b49850d",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.3-console.norms.md",
+   "blob": "b640e167057dcc2a4691f161b97b5de87dc71d07",
+   "blob_before": "5f34a117c2870d2a24cab1ff79d2936c890e947c",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.4-console.norms.md",
+   "blob": "856d291e000a0d5871e5ca78df767d72519b8e07",
+   "blob_before": "f946b74c9971982f77dd286dc0808e90ad1d7525",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "blob": "a3ad9988866eb900830bbccd5a29d69071986188",
+   "blob_before": "1f38a61136c4978efd822315537e7953f2fb3cbe",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.6-console.norms.md",
+   "blob": "dfb3afb2f302127b8eab54496c8a80ba5e729adb",
+   "blob_before": "9b12e18d102ed39d609a5eb47303a2b0694dffb7",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.7-console.norms.md",
+   "blob": "ef2e0009b8b3da891d5a0c8aa003ae278c368ed9",
+   "blob_before": "193860d2905eacd62fb4a184109ccd1a9a45c7db",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.8-console.norms.md",
+   "blob": "5b73492c651e1e335b9f048acdec2ae55e831ce8",
+   "blob_before": "6e1d53834b65bac45a10ad085bcd21291a94c57e",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/06-console/spec/06.9-console.norms.md",
+   "blob": "de21909e7b6f7a28f9091543047acecd7f5379e7",
+   "blob_before": "75a7333bd173300be1264aa379ace0b5a9aadae7",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.0-domain.norms.md",
+   "blob": "6572117e928184261bf2f9573f418213dadafb73",
+   "blob_before": "6572117e928184261bf2f9573f418213dadafb73",
+   "class_found": "rule",
+   "after_split": "rule",
+   "basis": "случаев с ответами в таблице N5 нет"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+   "blob": "3a78be048f61d25dbd56f4c6c9166c524aaa0664",
+   "blob_before": "3a78be048f61d25dbd56f4c6c9166c524aaa0664",
+   "class_found": "rule",
+   "after_split": "rule",
+   "basis": "случаев с ответами в таблице N5 нет"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.10-domain.norms.md",
+   "blob": "f66252e121c9f0ebe197e03efe8c7fbe2ed9eca7",
+   "blob_before": "74462311f94d55b439069361d4b8226d192d9318",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+   "blob": "2b3d9129585b32918a707bcbb6c30d5053573b57",
+   "blob_before": "2b3d9129585b32918a707bcbb6c30d5053573b57",
+   "class_found": "rule",
+   "after_split": "rule",
+   "basis": "случаев с ответами в таблице N5 нет"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+   "blob": "39a5485547fec7300d541386bc433359c8b08d54",
+   "blob_before": "e7612a6039b133387823288c7255fa222ab34a66",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+   "blob": "73d92b9f9a06c2a7deac4ad5835c01f301a9031a",
+   "blob_before": "a3dbf6b691437a1a9bcb7bec1eb8c9cea225eb5e",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.5-domain.norms.md",
+   "blob": "1e943855b80a2870acd15a0b9640b59a5f330140",
+   "blob_before": "b97dba45c24536e7f200a14d3b31838d65f0aefe",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+   "blob": "543f978d4dc2fdc988e3160ffd1049db2360f67e",
+   "blob_before": "f2cc54422d461f39fd68b79233f296f64293250c",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.7-domain.norms.md",
+   "blob": "c18cf26f174a0f888b66a4e63975ee3774b76679",
+   "blob_before": "3e715fbd49463fdf4504646e48a7e3bf994b6061",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+   "blob": "6b23cfe3be4aa0c625b1882970d7fe3605783615",
+   "blob_before": "686aa5232652b26fb626780be4c199627875fa7b",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.9-domain.norms.md",
+   "blob": "c35345085fa3114a73243a84d52f1fc317142970",
+   "blob_before": "33d02c97855e45ed889ae47581557e853bf9d790",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/09-agent/spec/09.1-agent.norms.md",
+   "blob": "61036d43420c9f137b544475a6d06feeb4c35b95",
+   "blob_before": "eeff295b4f27c3d4deb9896907b87b50853dd8d9",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+   "blob": "b28992717e1640a0f3287a9649c2f32762dfe0b2",
+   "blob_before": "2cf9799b148b8ac9544a1eab585e80177b764db6",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+   "blob": "74e2c3a102e75fb60173dafbec0157dd9305b5d2",
+   "blob_before": "779fa9801521e1a9474223930320b8068a124476",
+   "class_found": "mixed",
+   "after_split": "rule",
+   "basis": "таблица N5 сценариев: описания и ожидаемые исходы вынесены, остаются номер, имя сценария и ссылка на нормы"
+  },
+  {
+   "path": "Platform/07-console-module/spec/07-console-module.norms.md",
+   "blob": "880c522814449c219b2c5795740de177d8cfe29c",
+   "blob_before": "880c522814449c219b2c5795740de177d8cfe29c",
+   "class_found": "rule",
+   "after_split": "rule",
+   "basis": "случаев с ответами в таблице N5 нет"
+  }
+ ],
+ "lifted_definitions": [
+  {
+   "path": "Platform/06-console/vectors/requests-body/README.md",
+   "section": "## Rules",
+   "definition": "The canonical writing rules of a body value (scalars, null at top level, length by written text, canonical JSON of dicts/lists, value of a json field as is, ceiling JSON_CEILING, not-JSON refusals) — previously only the header comment of requests_body.tsv (judge table) with a pointer from the README",
+   "source": "Platform/06-console/vectors/requests-body/requests_body.tsv lines 12–40 (header comment, kept)",
+   "note": "ADR-0133 addendum (1) pattern; RU mirror same section"
+  }
+ ],
+ "residual_for_architect": [
+  "Norm prose lines tying a named scenario to an outcome that stayed because they restate a rule with a scenario pointer (allowed as name/pointer): 06.1 N5 evidence table lines ~1123, 1126, 1127; 06.5 lines ~799, 811; 06.6 lines ~564, 577; 08.8 line ~883; 09.2 line ~232 (line numbers before split commit shift by removed lines). If the Architect reads these as expected answers, they split the same way.",
+  "Platform/08-domain/spec/08.1 N5 table «Where | № / case | What | Norms» (vector/stand coverage with outcomes, ~line 747 on) was not rewritten: it is not the numbered scenario table; decision needed.",
+  "Acceptance README «Sleeps» tables keep outcome-flavoured reasons (absence checks); treated as stand protocol under ADR-0080 addendum (17), not case answers.",
+  "Platform/06-console/forms/numeric-loader.cases.tsv and forms/deletion-body-witnesses.json are case-like carriers under forms/: *.cases.* matches the excluded pattern of addendum (4) item 3, the witnesses json is a form-side case list; filter decision for SRC (not edited here)."
+ ],
+ "limits": [
+  "Rules-only check of moved material was by reading and targeted grep of norms, not an exhaustive proof that every sentence moved has a norm counterpart; the moved text stays verbatim in the judge tables, so nothing is lost.",
+  "Acceptance READMEs were classified line by line; norm files only for the N5 table and scenario-answer ties, not for the normative text itself (norm text is rule by definition)."
+ ],
+ "not_filter": "Filter itself is SRC work; this list gives classes and blobs only."
+}
