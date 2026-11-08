@@ -69,11 +69,6 @@ separately. The other evidence is N5 of the norms of the chapter, «Evidence out
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-Waiting for an event is `@until`. The remaining sleeps are a check of absence or the time before an action; the length is the smallest by the deadlines of N1.2 of [chapter 3.2](../../spec/03.2-worker.norms.md) and N1.2 of chapter 3.3:
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 02/10 | 12 s | absence: an edit of the row does not raise the epoch; the worker would see a new revision within LEASE_EVERY ≈ 8.3 s and the pass POLL ~2 s |
-| 06/9 | 12 s | time before an action: the worker must see the empty assignment (the lease step ≈ 8.3 s and a pass) before `c6` is created again; its heartbeat is an object, the stand of the chapter does not read it |
+The generic meanings of `@sleep` and `@until` are defined in the [common stand protocol](../../../common/acceptance/README.md#dictionary-of-directives-and-doors). Scenario-specific wait steps, durations and reasons are kept in the [judge-only case instructions](sleeps.cases.md).
 
 SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
