@@ -84,7 +84,3 @@ For the ordinary substitution of requests.key strings are needed; :int accepts a
 This is a subject of a check of the norms/data and of a future stand, not a performed test of an implementation.
 
 The bounds of :int per P/02.1: binary64, the modulus is not more than 2^53−1; bool/null/string/non-numeric/non-finite/out of bounds — 400, not a language cast. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and the canonical decimal result without an exponent.
-
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-The scenarios have no sleeps.

@@ -212,3 +212,9 @@ scenario	step	request	expect
 # N5 row 10: numeric parameters of `GET /events` (P/06 coverage audit, the second pass): `limit` `01`, `+1`, `%2B1`, `1e2`, 0, 10001 — 400 `detail: limit`; `from` `-0`, `.5`, `to` `1.`, `00.5` — 400 with the name; `limit=%31`, `to=1.5` — 200
 # N5 row 11: an append without a holder (VMS request «request term»): three requests of `testsub2` took `per_person`, the fourth — 429; a row with an age beyond `ttl` + `REAP_AFTER` — the reaper publishes `expired` with `ended_by: reaper`, the unit exists; the row stays, then after settle it is removed, the reservation is released — the same fourth request 202; a young row without a mark also stays
 # N5 row 12: the term of table rows (ADR-0094 step 3b): `testsub2`, the table `scraps`, `delete_after` 35: the row is not removed by the first reaper pass; it is removed by the term, it is not in the store; a rewritten row stands in that minute and is removed later; a row of a table without a term stands
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# The scenarios have no sleeps.
+#
