@@ -4,15 +4,15 @@ This English text is the canonical `spec/production-acceptance.md`; the Russian 
 
 ## Norms and execution boundary
 
-The owners are [P/01.1](01.1-store.norms.md) (input phases, replay, persistence cost and stage-qualified outcomes), [P/01.3](01.3-store.norms.md) (copy, immutable output and stop), the [HTTP contract](01-store.api.openapi.yaml) and [refusal catalogue](../forms/refusals.tsv). This contract assigns acceptance; it adds no platform route beyond that API, no operational flag, no profile2/assembly1 field and no adapter DSL.
+The owners are [P/01.1](01.1-store.norms.md) (input phases, replay, persistence cost and stage-qualified outcomes), [P/01.3](01.3-store.norms.md) (copy, immutable output, stop, door waits and resources), the [HTTP contract](01-store.api.openapi.yaml) and [refusal catalogue](../forms/refusals.tsv). This contract assigns acceptance; it adds no platform route beyond that API, no operational flag, no profile2/assembly1 field and no adapter DSL.
 
 Functional scenarios, compilation and an engineering Raft group run do not establish production qualification. Each applicable group below requires independent observations on the same identified candidate under a declared, agreed workload/resource envelope. Missing input, finite budget or qualified binding is blocked/NotExecuted for the dependent group; inactive fault/latch injection is an instrumentation error. A timeout of the judge, forced kill, producer counter, EIO text or library return is not PASS. No candidate execution is claimed by publishing this document.
 
 ## Qualified inputs
 
-Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet: agree finite positive values for them before a dependent case runs. The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.
+Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet. Each of them, like the budgets of [P/01.3](01.3-store.norms.md) R035 and R036, is a finite positive budget declared by the implementation, and the probe of a dependent case receives its value as input from the environment (ADR-0130 Addendum (5) item 3). The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults.
 
-The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.
+The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. The age is measured by admission time (R141). GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink.
 
 ## First approved budgets
 
@@ -96,6 +96,26 @@ The environment and the method are not budgets. The first budgets were set for a
 ## Public executable probes
 
 The [store probes](../probes/README.md) are eight public observation checkers over these groups. They cover partial slices and judge supplied observations only. They are no production result and no implementation input.
+
+### Probe debt
+
+The checks below have no executable probe yet. Until one exists, each stays checked by reading, and its group is blocked/NotExecuted for production qualification, not a success (ADR-0130 Addendum (13)). Runner writes the probes and their negative controls; this table names the debt and adds no route, flag or value. A capacity input comes from the environment (ADR-0130 Addendum (5) item 3). A clock input comes through the `clock` binding of [D7](../../common/acceptance/README.md#d7-test-side-evidence-bindings) (ADR-0130 Addendum (11)); until that binding is supplied, the dependent case is `MissingBinding`/`NOTEXEC`.
+
+| Missing check | Norm | Input |
+|---|---|---|
+| RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted | P/01.3 R034 | qualified stop observer and actual manager configuration |
+| RUN-F01, RUN-F02, RUN-F04, executable | P/01.1 R144 | qualified fault-stage binding |
+| Loss of the leader after sending; a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |
+| Interrupted `import` in a group: start, holding writers, continuation through `admin.sock` of the leader, `recover` after the loss of a majority | P/01.3 N1.3 `import` | group stand with an interruption |
+| Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 N3 R021 | qualified interruption point |
+| Full disk and exhausted descriptors | P/01.3 R036 | capacity input from the environment |
+| Leader change and snapshot with different clocks; `admission_ahead` | P/01.3 N1.3 `admission`; P/01.1 R070 | D7 `clock` binding |
+| Response-write budget; commit wait under a live leader | P/01.3 R035 | slow reader and slow commit from the environment |
+| Door attempts against `-leader-wait`; all voters unreachable | P/01.3 R035 | group stand |
+| Replay-processing limit | P/01.3 R035 | overload input from the environment |
+| `admin.sock` limit when the ordinary limits are exhausted | P/01.3 R008 | connection exhaustion from the environment |
+| Temporary `backup` file after failure, cancellation and a killed run | P/01.3 R018 | qualified fault binding |
+| Age of the `id` memory by admission time | P/01.1 R141 | D7 `clock` binding |
 
 ## Evidence and outcomes
 

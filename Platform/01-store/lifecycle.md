@@ -67,7 +67,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 | What | How | Norm |
 |---|---|---|
 | SIGTERM | stop admission, bound/cancel I/O, classify admitted work and release resources within the declared orderly-stop budget below the actual manager deadline; no automatic budget from an example | [P/01.3 Snapshot output and orderly stop](spec/01.3-store.norms.md#snapshot-output-and-orderly-stop); P/02.4 N1.1 |
-| data-directory ownership | atomic for one process; after orderly exit or `SIGKILL` former ownership needs no manual cleanup and alone does not forbid start; `start_format` and unfinished `import`/`restore` remain | P/01.3 N1.3 «Data-directory ownership»; `start_data_dir_owned`, `local_data_dir_owned` in the form |
+| data-directory ownership | atomic for one process; after orderly exit or `SIGKILL` former ownership needs no manual cleanup and alone does not forbid start; `start_format` and, on a box, unfinished `import`/`restore` remain | P/01.3 N1.3 «Data-directory ownership»; `start_data_dir_owned`, `local_data_dir_owned` in the form |
 | restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | readiness | the socket is open; `After=configstore.service` at the others is an order, not readiness: each process itself waits for a reliable read | P/02.4 N3 «server start», «Races» |
 | durability | the barriers are switched off neither by the environment nor by an operation flag | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |
