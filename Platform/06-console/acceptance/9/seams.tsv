@@ -1,4 +1,4 @@
-# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; the runner executes this file through the seam adapter; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-round-unknown-auth-copy	1	CALL console-op-round {"unfinished":true,"token_expired":false,"run_age_s":100,"revoked_read":"unconfirmed","disabled_read":"unconfirmed"}	{"cancel_written":false,"defer_to_next_tick":true}
 s02-step-unreadable-not-run	1	CALL console-op-step {"step":"unreadable","turn":"valid_current","predecessor":"confirmed_ok"}	{"outcome_state":"fail","outcome_code":"not_run","backend_calls":0}

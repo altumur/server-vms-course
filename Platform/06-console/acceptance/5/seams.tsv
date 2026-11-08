@@ -1,4 +1,4 @@
-# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; the runner executes this file through the seam adapter; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-observation-first-read-unknown	1	CALL console-where-memory {"prior_confirmed_place":false,"place_read":"unconfirmed"}	{"status":503,"location_from_memory":false,"has_door":false}
 s02-observation-known-place-lapse	1	CALL console-where-memory {"prior_confirmed_place":true,"place_read":"unconfirmed","heartbeat_read":"unconfirmed"}	{"status":200,"location_from_memory":true,"lapse":true,"has_door":false}

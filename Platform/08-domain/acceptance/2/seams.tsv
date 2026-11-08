@@ -1,4 +1,4 @@
-# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; the runner executes this file through the seam adapter; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-unreadable-signer-waits	1	CALL domain-key-state {"signer":"unreadable","turn":"owned"}	{"holder_passes":0,"signer_writes":0,"root_writes":0}
 s02-prepare-without-signer	1	CALL domain-key-state {"signer":"absent","turn":"owned","operation":"valid_prepare"}	{"status":200,"prepared_keys":1,"writes_turn_guarded":true}

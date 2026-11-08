@@ -1,4 +1,4 @@
-# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; the runner executes this file through the seam adapter; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-key-reused	1	CALL console-repeat {"first":"successful_create","retry":"same_key_different_body"}	{"status":422,"extra_target_writes":0}
 s02-in-flight	1	CALL console-repeat {"first":"another_live_pending","retry":"same_key_same_body"}	{"status":409,"extra_target_writes":0}
