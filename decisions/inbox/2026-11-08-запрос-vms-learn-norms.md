@@ -1,6 +1,9 @@
 # Учебная ветвь V11: только текст норм ADR-VMS-0004
 
-Автор — «Спецификация VMS». Ветка `vms/v11-learn-norms-20261108`, полная база `c8eafc05626112db4c2003b416f762055deaef65`; дерево `/Users/murat/w2c/wt-vms-v11-learn-norms-20261108`. Прежняя ветка V11 English/history и её дерево заморожены и не менялись. Это следующая отдельно порученная владельцем доля, не продолжение правок c8.
+**Текущая сдача — trusted forward, а не черновик c8.** Ветка `vms/v11-learn-norms-15d-20261108`, exact base `15d34e11f6a89f94b2cd2ab35e6bf4d9ab9ef4a5`, дерево `/Users/murat/w2c/wt-vms-v11-learn-norms-15d-20261108`. Проверенный source tip `c3205d26e31b2c1d174c55e6aaefce4ec5e749e1`; последний последующий коммит этой ветки сохраняет только current forward-квитанцию/отчёт, точный опубликованный tip сообщается в native-квитанции. Нормативные байты тождественны72b. Актуальный итог доверенного checker — **9 ERROR /7 EXC**, exit1; старых reader-path gaps нет. Разделы ниже до «Trusted-forward15d» описывают ИСТОРИЧЕСКИЙ черновик: его100/62 и3reader gaps не являются нынешним результатом.
+
+
+Исторический черновик автора «Спецификация VMS». Ветка `vms/v11-learn-norms-20261108`, полная база `c8eafc05626112db4c2003b416f762055deaef65`; дерево `/Users/murat/w2c/wt-vms-v11-learn-norms-20261108`. Прежняя ветка V11 English/history и её дерево заморожены и не менялись. Это следующая отдельно порученная владельцем доля, не продолжение правок c8.
 
 ## Основание и граница
 
@@ -100,3 +103,60 @@ Authority snapshot SHA256 `3352ee131b9485b5ab20c1bfd414f93ba595a80c7e860ad87ee3e
 «Консоль» — согласовать fork/contract patch со стабильным каталогом и typed answer.learn; после этого отдельный разрешённый перепин. Входы приёмки/пакеты/включение обучения — только отдельно открытый шаг5 ADR-VMS-0004 и ADR-VMS-0003. Старое обязательство отдельной вкладки заменено утверждённым same-tab правилом в этой норм-доле. Туры/подготовленные главы об ассистенте — у «Консоли», не написаны обходом scope. Независимого нормативного ревью, runtime/SUT/model/генерационных запусков здесь нет; авторские структурные проверки не доказывают исполнимость будущего договора или изоляцию браузера.
 
 Содержательная доля зафиксирована `ef4c8478b`: все проверенные нормативные байты после полного прогона сохранены. Staged boundary, pre-commit/commit-msg hooks и range `c8eafc05626112db4c2003b416f762055deaef65..ef4c8478b --tree` — exit0; fetch origin main выполнен перед публикацией. Следующий коммит уточняет только эту квитанцию и точный охват byte identity V11.11/V11.13; рабочие блоки V11.12 прежние, сам файл дополнен N1.5.
+
+## Trusted-forward15d: текущая авторская сдача
+
+Принятая owner база15d содержит c8 и tools3e4bcdbc8; её VMS-квитанция —0 ERROR/7 EXC. Это отдельный plain Git worktree, не новая Orca/CLI агентская сессия. Helpers завершили работу ещё в прежнем черновике; они не переключались и не писали в старые пути после forward. Старые c8/72b ветки и деревья не изменялись нами.
+
+Обычный `git cherry-pick -x` только двух разрешённых коммитов, без whole parents/rebase/force:
+
+| Draft | Forward |
+|---|---|
+| `ef4c8478ba34344f5bf05e62a9534e9a07dc0831` | `b707e9219107d1709bee416d4bfb65fca487f97b` |
+| `72b75223d11f4e4fbea3b55ecbc4a69f571a140e` | `c3205d26e31b2c1d174c55e6aaefce4ec5e749e1` |
+
+Все14 VMS текстовых файлов байтами тождественны72b. Исторические meaningful source/byte/lexical/route/UI проверки переиспользованы как доказательства тех же байтов; старые archives/vectors/model/SUT программы не повторялись. Новая проверка существующего `en_mirror` из доверенной15d:7 пар compare, forced count_steps=True —0 сообщений, exit0. Link proof159 целей применим к тем же VMS source paths/anchors; текущий check_spec не дал ошибок ссылок. Никаких дополнительных source/contract/asset/fixture правок при forward нет.
+
+Фактическая команда с доверенным checker15d/3e4:
+
+```sh
+uv run --no-project --python 3.12 --with-requirements skills/lesson-spec/scripts/requirements.txt python -B skills/lesson-spec/scripts/check_spec.py --scope vms --strict-coverage --vms-evidence /Users/murat/w2c/cammeta-status/spec-vms-learn-20261108/forward15d-proof/final-vms
+```
+
+Exit1: **9 ERROR /7 EXC**. Область — VMS по неизменённому PLATFORM_PIN3d8; общий Platform result здесь не запускался и не наследуется. Accepted owner baseline15d0/7 названа как её квитанция; черновая100/62 под другим checker не используется для текущего сравнения. Старые missing-id-map/journal-path ошибки исчезли. Точные нынешние diagnostics:
+
+```
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.1-backend.norms.md: checklist id V/11.1-08 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.1-backend.norms.md: checklist id V/11.1-09 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.1-backend.norms.md: checklist id V/11.1-10 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.7-backend.norms.md: checklist id V/11.7-10 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.9-backend.norms.md: checklist id V/11.9-06 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.10-backend.norms.md: checklist id V/11.10-06 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/ru/spec/11.12-backend.norms.md: checklist id V/11.12-04 is not in the column new of decisions/history/vms/id-map.tsv
+ERROR VMS_CANONICAL VMS/11-backend/README.md: exact source carrier SHA256 mismatch; no byte changes allowed
+ERROR VMS_CANONICAL VMS/11-backend/spec/11.7-backend.norms.md: exact source carrier SHA256 mismatch; no byte changes allowed
+```
+
+Семь checklist IDs добавлены согласно convention без перенумерации. Новый reader теперь требует их в историческом `decisions/history/vms/id-map.tsv`; они не потеряны при переносе, это новые IDs learn-доли. Координатору передан конкретный вопрос: сохраняет ли историческая correspondence map роль обязательного индекса для новых норм; рекомендация — решить это у владельца правил, не удалять IDs и не дописывать новые исторические «прежние нормы» без полномочия. Координатор подтвердил рекомендацию: архив оставить byte-exact, историческое происхождение learn не выдумывать, карту не расширять и новые IDs не удалять. Вопрос владельцу/tools — проверять исторические связи без требования, чтобы новые IDs были в старой карте; его доставляет root после exact tip. Это не оставшийся вопрос о тексте learn. Карта и инструменты здесь не менялись.
+
+Два carrier diagnostics ожидаемы после разрешённых source edits: доверенный checker закрепляет полный raw-file SHA, даже если Cyrillic role не поменялась. Точные пары для отдельного решения owner/tools:
+
+| Carrier | Current SHA256 | Cyrillic role |
+|---|---|---|
+| `VMS/11-backend/README.md` | `bdcdc26457b7e01a22f3e260be61933b9b80dfe45f8f31b5f56e33baa481b91c` | 166 букв, только прежние literal examples; English prose addition |
+| `VMS/11-backend/spec/11.7-backend.norms.md` | `bfe95b2d1435aa127667bdf524ef848085c21c84e61f36c1cdb54cc566e4844b` | 333→364; +31 буква только в6 предписанных ADR004(2) router cues |
+
+Шесть cues: «как…», «покажи как…», «научи…», «где…», «есть ли…», «какие…». Они прямо требуются ADR-VMS-0004 доп.(2)п.1; не удалялись/не экранировались ради нуля. Все остальные изменённые EN нормы/инструкция добавляют0 Cyrillic letters. Историческая c8 inventory и новая `cyrillic-new-cues.json` применимы байтами; unexplained owned prose нет. Named exception rows/hashes, budgets, checker, навыки и live Platform не правились. Никакого PASS/READY по нынешним9ошибкам не заявляется.
+
+### Forward roster и сохранность
+
+Ровно те же14 VMS source/mirror файлов в историческом roster выше, плюс этот inbox report и собственный ХОД. Вся16-file доля — только learn text и авторская отчётность. V10, V11.11/V11.13, все acceptance/harness/vector/data inputs, API/shell/manifest/served set, PLATFORM_PIN, Source/Platform/tools/skills и decisions/history map не изменены против15d. API `answer.learn` по-прежнему отсутствует; согласование Console и отдельный repin/supply/step5 остаются будущей работой. Same-tab замена старого отдельнойtab требования сохранена как самостоятельная утверждённая норма.
+
+Доверенный checker SHA256 `07f118a54bbf0d7f9c98be6a70ebfe80c7779281d19ead6b2ae3e31011c1b915`; check_cyrillic SHA256 `6dbd26234983ad124614c5f0e31311d571a9d9ccf4bb2580bef4746ff45bac4c`. Свежие доказательства: `/Users/murat/w2c/cammeta-status/spec-vms-learn-20261108/forward15d-proof/`:
+
+| Proof | SHA256 |
+|---|---|
+| `forward-identity.json` | `49e98ee660f019989373951997191b549baea87134e2d0a34f640f8a816757b4` |
+| `targeted-checks.json` | `d5938bac504c3cc142da6a7bb45e714c76f1c8b97f21e86bba56fd467c3ffd0f` |
+| `final-vms-check.log` | `3d0d0dd7eb5264cdd4f67a26d15d2986cdf6cdb7759edbb7206650de796fd720` |
+| `diagnostics.json` | `5b3a23edfdab4d73811edf3d16bd91353051f00bb4b93170f785dad7aabb1e2f` |

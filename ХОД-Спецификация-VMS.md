@@ -629,3 +629,5 @@
 2026-11-08 — English/history V11 завершены в авторском охвате:30 пар/strict steps PASS, pinned assets и literal payloads сохранены; full strict100ERROR/62EXC против99/62 baseline112b, только reader gaps map+2journal вместо2old hash messages. READY не заявлен; [карта происхождения, переносов и проверки](decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md).
 
 2026-11-08 — Отдельная learn-норм-доля ADR-VMS-0004(1),(2) после frozen c8: six-type router, catalogue-only tools, same-tab/isolation, future answer.learn gate;7 EN/RU pairs/strictsteps/159links PASS, fullstrict100ERROR/62EXC без новых противc8. Без новых acceptanceinputs/harness/пакетов/READY. [Отчёт](decisions/inbox/2026-11-08-запрос-vms-learn-norms.md).
+
+2026-11-08 — Learn trusted forward на принятую15d/tools3e4: ef4→b707e9219,72b→c3205d26e;14 VMS text files byteexact draft. Доверенный scopeVMSstrict9ERROR/7EXC:7 новых checklist IDs vs historical map +2 namedSHA; old3reader paths исправлены.7 EN/RU pairs/strictsteps PASS, tools/map не правились, README/11.7 hashes и6mandated cues переданы координатору. [Текущий отчёт](decisions/inbox/2026-11-08-запрос-vms-learn-norms.md).
