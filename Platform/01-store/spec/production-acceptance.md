@@ -91,6 +91,10 @@ The environment and the method are not budgets. The first budgets were set for a
 | `fault_stage_receipt` | Independent activation/effect/barrier and recoverable-or-unknown classification, tied to public state/id/reopen. |
 | `copy_transport_evidence` | Independent HTTP headers/framing/completion plus whole JSONL grammar, atomic publication and prior-file preservation. |
 
+## Public executable probes
+
+The [store probes](../probes/README.md) are eight public observation checkers over these groups. They cover partial slices and judge supplied observations only. They are no production result and no implementation input.
+
 ## Evidence and outcomes
 
 Separate actual protocol output/state/replay from test-only instrumentation. Qualify each storage/clock/progress/fault binding independently with activated-stage receipts and negative controls; do not infer physical durability from ordinary process restart or SIGKILL. Complete recoverable bytes must be proved before judging the R144 ambiguous_barrier branch. Compare whole batch/id state, and admission metadata separately. An absent binding is not proof that an implementation is wrong or successful.
