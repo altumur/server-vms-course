@@ -1489,7 +1489,9 @@ def build(root=ROOT):
         if fname == "common_test.go":
             continue                                   # помощники — в helpers_test.go
         files[f"go/vectortests/{fname}"] = gofmt(text).encode("utf-8")
-        inv.append((fname, "translated"))
+    for name, table in known:
+        _, _, rows = common_vectors.read(root, name, table)
+        inv.extend((f"common/{name} {table} {no}", "translated") for no, _ in rows)
     if uses_extra:
         files["go/vectortests/compare_test.go"] = gofmt(COMPARE_GO.replace('"normgen/vectoradapter"',
                                                                             f'"{GO_MODULE}/vectoradapter"')).encode("utf-8")
@@ -1574,10 +1576,13 @@ def provenance():
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
-    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
+    common_forms = {ROOT / rel for name, table in known
+                    for rel in [common_vectors.read(ROOT, name, table)[0],
+                                *(rel for rel, _ in common_vectors.fixtures(ROOT, name).values())]}
+    forms = sorted({read_table(ROOT, d)[1] for d in decls} | common_forms) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
     if any(d.get("_form") for d in decls):
         forms.append(ROOT / "Platform/common/vectors/wire.tsv")
-    hand = ["vector_consumers.py", "consumer_vectors.py"]
+    hand = ["vector_consumers.py", "consumer_vectors.py", "common_vectors.py"]
     if any(d.get("_form") for d in decls):
         hand += ["wire.py", "wire_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go"]
     return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
