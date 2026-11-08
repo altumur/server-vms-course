@@ -1,7 +1,7 @@
 """Generate lesson vectors and unified-command inputs (ADR-0125 addendum(5), item 5).
 
   python3 tools/normgen/gen_vectors.py --lesson 02-installer [<out>]
-The roster combines local stages.tsv vectors gates with common consumers.tsv packages. P/02 and P/06 use wire.tsv via wire.py for inputs, fixtures, expectations and comparisons; wire_vectors/wire_api_p06 declare Go signatures. Validate complete native responses, then compare/assert rules. Other lessons use wire_draft. journal/modes.tsv describes layout only.
+The roster combines local stages.kit.tsv vectors gates with common consumers.tsv packages. P/02 and P/06 use wire.tsv via wire.py for inputs, fixtures, expectations and comparisons; wire_vectors/wire_api_p06 declare Go signatures. Validate complete native responses, then compare/assert rules. Other lessons use wire_draft. journal/modes.tsv describes layout only.
 
 The unified bin/vectors {input} command maps {format, package, table, case, variant, cells, files} frames to {exit_code, stdout_b64, stderr_b64}. Stand commands bin/vectors stand <key> {input} use native exits and single-line JSON+LF or raw stdout. One YOURS adapter file per package returns Answer{Code, Value, Raw}. Emit vectoradapter types/scaffolds, vectortests, vectorcmd, cmd/vectors and vectors/<package>/<table> judge inputs. test_gen_vectors.py checks default failures without panic, passing fixture adapters and mutants."""
 import base64
@@ -120,13 +120,13 @@ def plan(root=ROOT):
     except consumer_vectors.wire.WireError as exc:
         raise GenError(str(exc)) from None
     declared = {(d["package"], d["table"]) for d in decls}
-    stages_path = Path(root) / L.rel / "forms/stages.tsv"
+    stages_path = Path(root) / L.rel / "forms/stages.kit.tsv"
     stages = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n")
               if ln and not ln.startswith("#")] if stages_path.is_file() else [[]]   # Historical P/06 sources before forms have no stages.
     own = sorted({m for r in stages[1:] for m in re.findall(r"vectors:([a-z0-9-]+)", r[4])})
     for pkg in own:
         if not any(p == f"{L.key}/{pkg}" for p, _ in declared):
-            raise GenError(f"stages.tsv gate vectors:{pkg}: no declaration of its wire")
+            raise GenError(f"stages.kit.tsv gate vectors:{pkg}: no declaration of its wire")
     known = common_vectors.composition(L.key, root, known_only=True)
     for pkg, table in lesson_consumers(root):
         if (pkg, table) in SKIP or (pkg, table) in SKIP_LESSON.get(L.key, {}) or (pkg, table) in declared \

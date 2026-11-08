@@ -69,7 +69,7 @@ class Export(unittest.TestCase):
 
     def test_inputs_are_the_export(self):
         """The vectortests header must name the export's stages.tsv SHA, not the course's."""
-        stages = (self.specs / "Platform/01-store/forms/stages.tsv").read_bytes()
+        stages = (self.specs / "Platform/01-store/forms/stages.kit.tsv").read_bytes()
         doc = (self.dst / "01-store/internal/vectortests/doc.go").read_text(encoding="utf-8")
         self.assertIn(hashlib.sha256(stages).hexdigest(), doc)
 

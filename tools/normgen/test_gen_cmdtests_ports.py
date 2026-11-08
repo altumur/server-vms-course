@@ -25,7 +25,7 @@ def ports(lesson):
 def seam_steps(lesson):
     """Independently read stage-selected seam (scenario, step, port, input, expectation) rows."""
     les = ROOT / "Platform" / lesson
-    rows = [ln.split("\t") for ln in (les / "forms/stages.tsv").read_text(encoding="utf-8").split("\n")
+    rows = [ln.split("\t") for ln in (les / "forms/stages.kit.tsv").read_text(encoding="utf-8").split("\n")
             if ln and not ln.startswith("#")]
     head = rows[0]
     out = []
@@ -142,7 +142,7 @@ class Ports(unittest.TestCase):
 
     def stage_of(self, lesson):
         les = ROOT / "Platform" / lesson
-        rows = [ln.split("\t") for ln in (les / "forms/stages.tsv").read_text(encoding="utf-8").split("\n")
+        rows = [ln.split("\t") for ln in (les / "forms/stages.kit.tsv").read_text(encoding="utf-8").split("\n")
                 if ln and not ln.startswith("#")]
         head, out = rows[0], set()
         for r in rows[1:]:

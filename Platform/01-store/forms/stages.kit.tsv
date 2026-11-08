@@ -1,0 +1,29 @@
+# The stages of the implementation of lesson P/01 (ADR-0126, addendum (1)): one possible order, a plan, not a norm. The norms are read in full
+# by the rule of the implementer (the implementation README, «Inputs»); the advice is in the README, the checklist — «Done when».
+# gate — a list of checks separated by «;», the stage is closed when all of them hold (ADR-0126 addendum (7) item 3); a check is
+# <kind>:<argument>[:<argument>] without spaces: tests:<chapter>:<scenarios|*>[:seams] — the tests of kit B (the part stagetests) from the
+# named scenarios of acceptance/<chapter>/scenarios.tsv, translated by their prefix, or of seams.tsv with :seams (ADR-0125 addendum (4)
+# items 1, 2, 7; ADR-0126 addendum (7) items 1, 2); vectors:<package>
+# — the vectors of the lesson through the vector command of the implementation; build — the build of the profile; accept:<chapter>:<scenarios|*>
+# — the named scenarios of acceptance/<chapter>/scenarios.tsv (comma-separated) or * (all applicable) pass whole; named scenarios run without
+# the chapter-wide probes of the stand (the common acceptance README «Instance»), * — the full run of the target. A stage is closed when its
+# gate and the gates of all former stages hold. weight — the relative weight 1–5; kit — the parts of kit B that close the stage whole (checked by the first move; red — a defect of the kit, stop); parts — the parts of kit B
+# the stage uses (the stage is given to the model as usual, the parts are named in the note of the milestone); both comma-separated of writecheck,
+# door, flags, refusals, vectors, stagetests, launch (the generators of ADR-0125; launch — the daemon frame, ADR-0083 addendum (95)
+# item 3), - — none (ADR-0126 addenda (2) item 1, (4), (7) item 4);
+# depends — the n of former stages, comma-separated, - — none; when — CEL over the keys of the profile, empty — always applicable.
+# The one-box daemon work is split into daemon_doors (24 acceptance steps, weight 1), then daemon_copy (51 steps, weight 3).
+# Functional gates and engineering group preparation are separate from production qualification: spec/production-acceptance.md.
+# Its independent qualified workload, finite budgets and storage/time/fault/stream observations are not inferred from these gates; absent bindings stay NotExecuted.
+n	stage	goal	norms	gate	weight	kit	parts	depends	when
+1	model	The pure checks of the data model and the write command: key, items, cas, guard, id, the order of the checks	P/01.1 N1; P/01.1 N2.1; forms/write-checks.tsv	vectors:write-checks	2	writecheck	-	-	
+2	launch	The daemon frame of kit B (the part launch: the flags by the form, the flat sockets, the FORMAT mark, the door over the Handler of the model) over an empty core answers one route; the core comes at store_core	P/01.3 N1.3; forms/daemon-flags.tsv; P/01.1 N2	accept:1.1:01-absent	2	launch	launch	1	
+3	jcs	The canonical JSON text (RFC 8785) of the documents the store compares and signs by bytes	P/01.1 N1 id; vectors/jcs	vectors:jcs	1	-	-	-	
+4	store_core	The chosen store in memory: the procedures of N3 step by step — the guard before cas, the id memory, the admission time, the batch	P/01.1 N3	tests:1.1:01-absent,02-create-once,03-read-back,04-stale-cas,05-unconditional,06-delete,07-no-reuse,08-list,09-guard,10-guard-absent,11-guard-before-cas,12-id,28-admission,30-id-fingerprint,31-delete-cas-id-order,33-batch-all-or-nothing,34-batch-create-edit-delete,35-batch-guards,36-batch-repeat,37-batch-times;tests:1.1:s1-id-memory-time-alone,s2-admission-equal,s3-admission-monotone,s4-parallel-cas:seams;tests:1.1:s7-admitted-single-refusals,s8-admitted-batch-refusals,s10-binary64-boundary,s11-binary64-fingerprint,s12-zero-version-not-absence:seams	3	-	door,refusals,stagetests	1,2,3	
+5	http	The doors of chapter 1.1: routes, the parsing of N2.1, the limits, the refusals of N4	P/01.1 N2; P/01.1 N4; forms/refusals.tsv	accept:1.1:*	4	-	door,refusals	4	
+6	rights_eval	The evaluator of the rights file on the vectors: the form of N1.2, the patterns, never	P/01.2 N1.2; P/01.2 N1.3	vectors:rights-evaluator	2	-	-	2	
+7	rights	The rights at the doors: the check order of N3, /v1/list, /v1/rights, the refusals of N4	P/01.2 N2; P/01.2 N3; P/01.2 N4	accept:1.2:*	3	-	-	5,6	
+8	daemon_doors	The daemon on one box: status, the service doors, the metrics, the id memory	P/01.3 N1.3; P/01.3 N2; P/01.3 N3; P/01.3 N4	accept:1.3:04-store-metrics,15-service-doors,16-status-no-api,23-service-door-forms,24-service-door-methods,21-id-memory;tests:1.3:s7-loopback-api-no-tls,s8-loopback-join-needs-tls,s9-public-api-needs-tls:seams	1	-	stagetests	5	true
+9	daemon_copy	The daemon on one box: the copy (backup, import, restore), a foreign directory, the id memory in copies	P/01.3 N1.3; P/01.3 N2; P/01.3 N3; P/01.3 N4	accept:1.3:10-foreign-dir,11-copy,12-copy-refused,14-copy-ids;tests:1.3:s10-import-floor-resume:seams	3	-	stagetests	8	true
+10	durable	A file-based store: indivisibility, versions, the durability barriers, an unreadable row, a restart	P/01.1 N1; P/01.1 «Implementation decides»; P/01.3 N1.3	tests:1.1:s5-reopen-id-admission,s6-reopen-batch:seams;accept:1.3:08-floor-replay,19-version-restart,20-spoil-row,22-spoil-row-guard,30-batch-restart;tests:1.1:s9-reopen-refused-admission:seams;tests:1.1:s13-replay-put-admission,s14-replay-delete-admission,s15-replay-batch-admission:seams;tests:1.1:s16-mismatched-put-admission,s17-mismatched-delete-admission,s18-mismatched-batch-admission,s19-admission-binary64-fraction:seams	3	-	stagetests	9	
+11	group	The raft group: join and leave, the door without a vote, recover, the copy and the batch in a group (the store group stand)	P/01.3 N1.3; P/01.3 N3	accept:1.3:07-group-size,17-group-members,18-group-recover,25-group-door-status,26-group-door-role,27-group-import-door-row,28-group-recover-peers,29-group-import-clock,31-group-batch	5	-	-	9,10	keys.store_build != 'box'
