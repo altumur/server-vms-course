@@ -168,7 +168,8 @@ exports	422	NO_RECORDING	<поле>	11.20 Н1.2 item 5: /cameras/i without a pri
 exports	403	PERMISSION_DENIED	/cameras/i	11.20 Н1.2 item 6: no edit on exp, edit without admin (params.reason: privacy), a live frame without live viewing; a refused batch row
 exports	403	PERMISSION_DENIED	-	11.20 Н1.4: a request to another's part without admin; Н1.6: a link not to the author, where 403
 exports	422	PASSWORD_REQUIRED	/password	11.20 Н1.2 item 7: a camera without admin and no password (ADR-0117 § 4 item 2)
-exports	403	SUPERVISOR_REJECTED	/supervisor	11.20 Н1.2 item 8, «Supervisor»: no supervisor when required (params.reason: required), the author, 401, deny, ok: false of /domain/verify
+exports	403	SUPERVISOR_REQUIRED	/supervisor	11.20 Н1.2 item 8, the check, the repeat (Н1.5): supervision and no supervisor (the contract 0fbdd12)
+exports	403	SUPERVISOR_REJECTED	/supervisor	11.20 Н1.2 item 8, «Supervisor», the check, the repeat: the author, 401, deny, ok: false of /domain/verify
 exports	409	BUSY	-	11.20 Н1.2 item 9: unfinished orders of the person — EXPORT_ACTIVE_PER_USER or more
 exports	409	OTHER_CLUSTER	-	11.20 Н1.2 item 5: a camera of another cluster, params.url
 exports	409	DEVICE_OFFLINE	-	11.20 Н1.2 item 10: a live frame from a camera with status.link offline

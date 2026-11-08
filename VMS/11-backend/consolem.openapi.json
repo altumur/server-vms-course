@@ -6463,7 +6463,7 @@
           "export"
         ],
         "summary": "Проверить заказ",
-        "description": "Без запуска: ошибки у полей, перекодирование, оценка, имена файлов, отрезки без записи. Ответ всегда 200, если тело по схеме.",
+        "description": "Без запуска: ошибки у полей, перекодирование, оценка, имена файлов, отрезки без записи. Отказы надзора — в errors, те же SUPERVISOR_REQUIRED и SUPERVISOR_REJECTED, что у createExport. Ответ всегда 200, если тело по схеме.",
         "requestBody": {
           "required": true,
           "content": {
@@ -6572,7 +6572,7 @@
           "export"
         ],
         "summary": "Выгрузить",
-        "description": "202 и задание: части по камерам и записям идут рядом со своими записями. Кадр — то же задание, обычно готово за секунды. Камеры — по uid (ExportCamera.uid): нет объекта — 404 NOT_FOUND, вид без vms.camera/1 — 422 NOT_SUPPORTED, field — /cameras/i. Нет EXPORT или права на камеру — 403 PERMISSION_DENIED, field — /cameras/i. Без пароля при политике — 422 PASSWORD_REQUIRED. Записи нет ни в одном отрезке — 422 NO_RECORDING. Пределы — 422 LIMIT_EXCEEDED. Активных заданий больше limits.maxActivePerUser — 409 BUSY. Камера другого кластера — 409 OTHER_CLUSTER; живой кадр с камеры без связи — 409 DEVICE_OFFLINE.",
+        "description": "202 и задание: части по камерам и записям идут рядом со своими записями. Кадр — то же задание, обычно готово за секунды. Камеры — по uid (ExportCamera.uid): нет объекта — 404 NOT_FOUND, вид без vms.camera/1 — 422 NOT_SUPPORTED, field — /cameras/i. Нет EXPORT или права на камеру — 403 PERMISSION_DENIED, field — /cameras/i. Маска обязательна, а система её не делает — 403 PERMISSION_DENIED, params.reason: privacy; field — /cameras/i или нет; окно пишет текст ExportGrant.refusal. Без пароля при политике — 422 PASSWORD_REQUIRED; система может этого кода не отдавать никогда, окно на него не полагается. Надзор (ExportGrant.supervisorRequired) и нет supervisor — 403 SUPERVISOR_REQUIRED; супервизор указан, но не подходит — 403 SUPERVISOR_REJECTED; field — /supervisor. Записи нет ни в одном отрезке — 422 NO_RECORDING. Пределы — 422 LIMIT_EXCEEDED. Активных заданий больше limits.maxActivePerUser — 409 BUSY. Камера другого кластера — 409 OTHER_CLUSTER; живой кадр с камеры без связи — 409 DEVICE_OFFLINE.",
         "requestBody": {
           "required": true,
           "content": {
@@ -6758,7 +6758,7 @@
           "export"
         ],
         "summary": "Повторить неудачные части",
-        "description": "Новое задание с retryOf и теми же настройками; пароль присылается заново. Неудачных частей нет — 409 NOT_RUNNABLE.",
+        "description": "Новое задание с retryOf и теми же настройками; пароль и супервизор присылаются заново, прежний супервизор не действует. Надзор (ExportGrant.supervisorRequired) и нет supervisor — 403 SUPERVISOR_REQUIRED; супервизор не подходит — 403 SUPERVISOR_REJECTED; field — /supervisor. Неудачных частей нет — 409 NOT_RUNNABLE.",
         "parameters": [
           {
             "name": "exportId",
@@ -6781,6 +6781,24 @@
                   "password": {
                     "type": "string",
                     "writeOnly": true
+                  },
+                  "supervisor": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "login",
+                      "password"
+                    ],
+                    "description": "Как ExportCreate.supervisor: надзор проверяется заново",
+                    "properties": {
+                      "login": {
+                        "type": "string"
+                      },
+                      "password": {
+                        "type": "string",
+                        "writeOnly": true
+                      }
+                    }
                   }
                 }
               }
@@ -9312,7 +9330,7 @@
           "archiveEncryption": "Шифрование хранилища (encrypted: true в ArchiveCreate и ArchivePatch)",
           "assist": "Ассистент конфигурирования (POST /assist/turns): без него режим ассистента в интерфейсе скрыт",
           "accessCatalogs": "Каталоги LDAP: Access.catalogs, UserGroup.source, AccessUser.catalogId, POST /access/catalogs/{id}/sync. Без неё каталогов в интерфейсе нет, непустое значение — 422 NOT_SUPPORTED, field — путь поля",
-          "accessSupervision": "Подтверждение входа и экспорта второй ролью: Role.supervision. Без неё значение не по умолчанию — 422 NOT_SUPPORTED",
+          "accessSupervision": "Правка Role.supervision в разделе прав: кто подтверждает вход и экспорт. Без неё значение не по умолчанию — 422 NOT_SUPPORTED. Надзор над выгрузкой от неё не зависит: его признак — ExportGrant.supervisorRequired",
           "accessLoginSchedule": "Расписание входа: Role.loginSchedule. Без неё значение не 0 — 422 NOT_SUPPORTED",
           "accessSessions": "Лимиты сессий: AccessUser.webSessions, mobileSessions. Без неё значение не 0 — 422 NOT_SUPPORTED",
           "accessDepth": "Глубина просмотра архива: RoleGlobal.depth. Без неё значение не 0 — 422 NOT_SUPPORTED",
@@ -9995,7 +10013,8 @@
           "NO_RECORDING",
           "LIMIT_EXCEEDED",
           "EXPORT_EXPIRED",
-          "SUPERVISOR_REJECTED"
+          "SUPERVISOR_REJECTED",
+          "SUPERVISOR_REQUIRED"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
         "x-enum-descriptions": {
@@ -10038,11 +10057,12 @@
           "FINGERPRINT_MISMATCH": "Отпечаток приёма не совпал с Server.fingerprint",
           "OTHER_NETWORK": "Раздача камеры создана для другой сети. params.labels — метки раздачи (409). Кто вправе — PUT /units/{uid}/live, остальные ждут конца срока раздачи",
           "NO_PRIMARY": "Основной записи своего кластера нет: закрепить некуда (409)",
-          "PASSWORD_REQUIRED": "Политика требует пароль на выгрузку (422)",
+          "PASSWORD_REQUIRED": "Политика требует пароль на выгрузку (422). Система может не отдавать его никогда",
           "NO_RECORDING": "В отрезке нет записи (422), field — /periods/i",
           "LIMIT_EXCEEDED": "Предел выгрузки: params.limit — какой, params.max — сколько можно (422)",
           "EXPORT_EXPIRED": "Файл выгрузки удалён по сроку (410)",
-          "SUPERVISOR_REJECTED": "Супервизор не подтвердил (403), field: /supervisor"
+          "SUPERVISOR_REJECTED": "Супервизор указан, но не подходит (403), field: /supervisor: неверный пароль, нет прав на камеру, сам автор или не из роли супервизоров",
+          "SUPERVISOR_REQUIRED": "Нужен супервизор, а его нет в теле (403), field: /supervisor"
         }
       },
       "ObjectsDeleteRequest": {
@@ -15289,7 +15309,7 @@
           "password": {
             "type": "string",
             "writeOnly": true,
-            "description": "ZIP AES-256, у pdf — пароль PDF. В ответах и журнале нет. Нужен по политике и не прислан — 422 PASSWORD_REQUIRED, field: /password"
+            "description": "ZIP AES-256, у pdf — пароль PDF. В ответах и журнале нет. Нужен по политике и не прислан — 422 PASSWORD_REQUIRED, field: /password; система может этого кода не отдавать"
           },
           "comment": {
             "type": "string"
@@ -15301,7 +15321,7 @@
               "login",
               "password"
             ],
-            "description": "Подтверждение второго человека (accessSupervision). Отказ — 403 SUPERVISOR_REJECTED, field: /supervisor",
+            "description": "Подтверждение второго человека. Поле принимается всегда, когда объявлен createExport, и от accessSupervision не зависит; нужно при ExportGrant.supervisorRequired. Нет поля — 403 SUPERVISOR_REQUIRED, не подходит — 403 SUPERVISOR_REJECTED, field: /supervisor",
             "properties": {
               "login": {
                 "type": "string"
@@ -15905,14 +15925,15 @@
           },
           "passwordRequired": {
             "type": "boolean",
-            "description": "Нет ALLOW_UNPROTECTED_EXPORT: без пароля — 422 PASSWORD_REQUIRED"
+            "description": "Нет ALLOW_UNPROTECTED_EXPORT: нужен пароль. Без пароля — 422 PASSWORD_REQUIRED; система может вместо этого отказать раньше (refusal), окно на этот код не полагается"
           },
           "privacyForced": {
             "type": "boolean",
             "description": "Нет ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE: маску ставит сервер"
           },
           "supervisorRequired": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Единственный признак надзора над выгрузкой: окно показывает поля супервизора и шлёт supervisor, от accessSupervision не зависит"
           },
           "watermark": {
             "type": "boolean"
@@ -15924,11 +15945,11 @@
           },
           "refusal": {
             "type": "string",
-            "description": "Почему нельзя совсем, словами: защита нужна по политике, а система её не умеет"
+            "description": "Почему нельзя совсем, словами: защита нужна по политике, а система её не умеет. При refusal и privacyForced окно показывает отказ и не просит пароль: с паролем заказ всё равно не пройдёт"
           },
           "devices": {
             "type": "array",
-            "description": "Камеры из ids запроса, по uid",
+            "description": "Камеры из ids запроса, по uid. Камера без права на вид заказа (archive: false для архива, live: false для живого кадра) остаётся в заказе с меткой у строки, заказ получит отказ сервера",
             "items": {
               "type": "object",
               "additionalProperties": false,
