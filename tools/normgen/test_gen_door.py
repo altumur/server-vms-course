@@ -13,6 +13,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.parse import parse_qsl
 
 import jsonschema
@@ -112,8 +113,21 @@ class Doc:
                         else:
                             names = [f"{name}{code}"]
                             self.inline[names[0]] = s
+                    headers = r.get("headers", {})
+                    if type(headers) is not dict:
+                        raise ValueError("response headers must be a mapping")
+                    header_schemas, required_headers = {}, set()
+                    for key, header in headers.items():
+                        if (type(key) is not str or type(header) is not dict or
+                                type(header.get("schema")) is not dict or
+                                type(header.get("required", False)) is not bool):
+                            raise ValueError("malformed source header declaration")
+                        header_schemas[key] = copy.deepcopy(header["schema"])
+                        if header.get("required", False):
+                            required_headers.add(key)
                     declared[int(code)] = {"media": media, "schemas": self.expand(names),
-                                           "headers": sorted(r.get("headers") or {})}
+                                           "headers": sorted(headers), "header_schemas": header_schemas,
+                                           "required_headers": sorted(required_headers)}
                 params = [p for p in o.get("parameters") or []]
                 body = None
                 if "requestBody" in o:
@@ -149,10 +163,37 @@ class Doc:
             root = dict(name_or_node, components=self.doc["components"])
         return Validator(root)
 
+    def header_validator(self, op, code, name):
+        schema = self.op(op)["declared"][code]["header_schemas"][name]
+        return self.validator(schema)
+
     def resolve(self, node):
         while isinstance(node, dict) and "$ref" in node:
             node = self.schemas[node["$ref"].split("/")[-1]]
         return node
+
+
+def source_required_probe_headers(response):
+    """Supply declared required constants to the private observer; expected wire values stay Source-owned."""
+    from test_gen_machine import CheckingError
+    options, headers = {}, []
+    fields = {"Retry-After": "retry", "Allow": "allow", "Content-Length": "content_length",
+              "Transfer-Encoding": "transfer_encoding"}
+    for name in response["required_headers"]:
+        schema = response["header_schemas"][name]
+        if name not in fields or "const" not in schema:
+            raise CheckingError("no declared private-observer input for required Source header " + name)
+        value = schema["const"]
+        if name == "Retry-After":
+            if type(value) is not int:
+                raise CheckingError("required Retry-After is not an integer constant")
+            options[fields[name]] = True
+        else:
+            if type(value) is not str:
+                raise CheckingError("required Source header is not a string constant")
+            options[fields[name]] = True if name == "Allow" else value
+        headers.append([name, str(value)])
+    return options, headers
 
 
 # ---------------------------------------------------------------- schema-shaped values
@@ -331,6 +372,96 @@ class Loader(unittest.TestCase):
                 yamlsub.load(text)
 
 
+class CoverageProjectionControls(unittest.TestCase):
+    """Synthetic private frames exercise the unchanged independent Source coverage check."""
+
+    def setUp(self):
+        self.source = yaml.safe_load(SPEC.read_text(encoding="utf-8"))
+        self.doc = Doc(copy.deepcopy(self.source))
+        self.table = []
+        for op in self.doc.ops:
+            self.table.append(dict(op=op["op"], method=op["method"], path=op["path"],
+                query=[p["name"] for p in op["params"]],
+                body=[n for n in op["body"] or [] if n not in EXCLUDED],
+                writecheck=[n for n in op["body"] or [] if n in EXCLUDED], body_required=op["body_required"],
+                declared={str(code): {"schemas": list(r["schemas"]), "headers": list(r["headers"])}
+                          for code, r in op["declared"].items()}))
+        self.head = next(i for i, op in enumerate(self.doc.ops) if op["path"] == "/v1/copy" and op["method"] == "HEAD")
+        self.get = next(i for i, op in enumerate(self.doc.ops) if op["path"] == "/v1/copy" and op["method"] == "GET")
+
+    def check_coverage(self, table):
+        target = Generated("test_coverage")
+        target.d = self.doc
+        known = (set(self.doc.schemas) - EXCLUDED) | set(self.doc.inline)
+        def probe(**request):
+            if request["cmd"] == "table":
+                return {"ops": table}
+            if request["cmd"] == "check":
+                return {"known": request["schema"] in known}
+            raise RuntimeError("CheckingError: unexpected synthetic probe request")
+        target.probe = probe
+        target.test_coverage()
+
+    def test_canonical_empty_array_and_body_bearing_head_source_neighbour(self):
+        self.check_coverage(self.table)
+        changed = copy.deepcopy(self.source)
+        response = changed["paths"]["/v1/copy"]["get"]["responses"]["400"]
+        if "$ref" in response:
+            response = changed["components"]["responses"][response["$ref"].split("/")[-1]]
+        changed["paths"]["/v1/copy"]["head"]["responses"]["400"]["content"] = copy.deepcopy(response["content"])
+        changed["paths"]["/v1/copy"]["head"]["responses"]["404"] = copy.deepcopy(
+            changed["paths"]["/v1/copy"]["get"]["responses"]["404"])
+        head = next(op for op in Doc(changed).ops if op["path"] == "/v1/copy" and op["method"] == "HEAD")
+        self.assertTrue(head["declared"][400]["schemas"])
+        self.assertIsNotNone(head["declared"][400]["media"])
+        self.assertEqual(self.doc.ops[self.head]["declared"][400]["schemas"], [])
+
+    def test_null_wrong_type_or_invented_schema_is_not_empty_source_absence(self):
+        self.check_coverage(self.table)
+        for value in (None, {}, "", 0, ["UnexpectedBody"]):
+            actual = copy.deepcopy(self.table)
+            actual[self.head]["declared"]["400"]["schemas"] = value
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                self.check_coverage(actual)
+
+    def test_missing_or_extra_status_and_missing_schema_member_are_not_hidden(self):
+        self.check_coverage(self.table)
+        missing = copy.deepcopy(self.table)
+        del missing[self.head]["declared"]["400"]
+        extra = copy.deepcopy(self.table)
+        extra[self.head]["declared"]["299"] = {"schemas": [], "headers": []}
+        for value in (missing, extra):
+            with self.assertRaises(AssertionError):
+                self.check_coverage(value)
+        malformed = copy.deepcopy(self.table)
+        del malformed[self.head]["declared"]["400"]["schemas"]
+        with self.assertRaises(KeyError):  # Incomplete service frame; not a semantic mutant kill.
+            self.check_coverage(malformed)
+
+    def test_body_bearing_source_schema_cannot_be_removed_or_null(self):
+        self.check_coverage(self.table)
+        self.assertTrue(self.table[self.get]["declared"]["200"]["schemas"])
+        for value in ([], None):
+            actual = copy.deepcopy(self.table)
+            actual[self.get]["declared"]["200"]["schemas"] = value
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                self.check_coverage(actual)
+
+    def test_bodyless_and_body_bearing_header_omissions_or_additions_are_red(self):
+        self.check_coverage(self.table)
+        for index, code in ((self.head, "405"), (self.get, "405"), (self.get, "200")):
+            self.assertTrue(self.table[index]["declared"][code]["headers"])
+            for value in (None, [], ["Unexpected-Header"]):
+                actual = copy.deepcopy(self.table)
+                actual[index]["declared"][code]["headers"] = value
+                with self.subTest(index=index, code=code, value=value), self.assertRaises(AssertionError):
+                    self.check_coverage(actual)
+        unexpected = copy.deepcopy(self.table)
+        unexpected[self.head]["declared"]["400"]["headers"] = ["Unexpected-Header"]
+        with self.assertRaises(AssertionError):
+            self.check_coverage(unexpected)
+
+
 class Generated(DoorBase):
     def test_out_up_to_date(self):
         """Require exact fresh apidoor output with the current OpenAPI SHA header."""
@@ -368,6 +499,40 @@ class Generated(DoorBase):
         for n in EXCLUDED:
             self.assertFalse(self.probe(cmd="check", schema=n, json="null")["known"], n)
 
+    def test_no_content_table_and_body_header_boundaries(self):
+        """Private table arrays preserve Source absence, body shape and declared headers."""
+        actual = {row["op"]: row for row in self.probe(cmd="table")["ops"]}
+        no_content = [(op, code, response) for op in self.d.ops for code, response in op["declared"].items()
+                      if response["media"] is None]
+        self.assertTrue(no_content, "actual Source must exercise a no-content declaration")
+        for op, code, response in no_content:
+            with self.subTest(op=op["op"], code=code):
+                declaration = actual[op["op"]]["declared"][str(code)]
+                self.assertIs(type(declaration["schemas"]), list)
+                self.assertEqual(declaration["schemas"], [])
+                self.assertEqual(sorted(declaration["headers"] or []), response["headers"])
+                options, headers = source_required_probe_headers(response)
+                nil = self.probe(cmd="answer", op=op["op"], code=code, no_body=True, **options)
+                self.assertEqual(nil["resp"], {"code": code, "header": headers or None, "body": ""})
+                body = self.probe(cmd="answer", op=op["op"], code=code, json="{}", **options)
+                self.assertTrue("answer_error" in body or "encode_error" in body, body)
+                if "Allow" in response["required_headers"]:
+                    absent = self.probe(cmd="answer", op=op["op"], code=code, no_body=True,
+                                        **dict(options, allow=False))
+                    self.assertIn("encode_error", absent)
+                elif "Allow" not in response["headers"]:
+                    extra = self.probe(cmd="answer", op=op["op"], code=code, no_body=True,
+                                       **dict(options, allow=True))
+                    self.assertIn("encode_error", extra)
+        stream = next(op for op in self.d.ops if op["path"] == "/v1/copy" and op["method"] == "GET")
+        response = stream["declared"][200]
+        self.assertTrue(actual[stream["op"]]["declared"]["200"]["schemas"])
+        self.assertIsNotNone(response["media"])
+        value = "first\nsecond é\n"
+        options, _ = source_required_probe_headers(response)
+        accepted = self.probe(cmd="answer", op=stream["op"], code=200, json=json.dumps(value), **options)
+        self.assertEqual(base64.b64decode(accepted["resp"]["body"]), value.encode("utf-8"))
+
     def test_routes(self):
         """Test every method/path: foreign paths return404 with its schema; unsupported methods return405 when declared."""
         paths = {}
@@ -396,7 +561,13 @@ class Generated(DoorBase):
         self.assertEqual(r["op"], "", where)
         resp = r["resp"]
         self.assertEqual(resp["code"], code, where)
-        self.assertEqual(resp["header"], [["Content-Type", declared["media"]]], where)
+        _, required = source_required_probe_headers(declared)
+        if not declared["schemas"]:
+            self.assertIsNone(declared["media"], where)
+            self.assertEqual(resp["header"], required or None, where)
+            self.assertEqual(base64.b64decode(resp["body"]), b"", where)
+            return
+        self.assertEqual(resp["header"], [["Content-Type", declared["media"]], *required], where)
         body = json.loads(base64.b64decode(resp["body"]))
         self.assertEqual(sum(self.valid(n, body) for n in declared["schemas"]), 1, where)
 
@@ -434,13 +605,20 @@ class Generated(DoorBase):
         seen = 0
         for o in self.d.ops:
             for code, r in o["declared"].items():
+                options, required = source_required_probe_headers(r)
+                if not r["schemas"]:
+                    self.assertIsNone(r["media"], f"{o['op']} {code}: bodyless Source response")
+                    got = self.probe(cmd="answer", op=o["op"], code=code, no_body=True, **options)
+                    self.assertIn("resp", got, f"{o['op']} {code}: {got}")
+                    self.assertEqual(got["resp"], {"code": code, "header": required or None, "body": ""})
+                    seen += 1
                 for name in r["schemas"]:
                     vals = self.samples(name)
                     self.assertTrue(vals, f"no valid sample of {name}")
                     for value in vals:
                         hits = sum(self.valid(n, value) for n in r["schemas"])
                         text = json.dumps(value, ensure_ascii=False)
-                        got = self.probe(cmd="answer", op=o["op"], code=code, json=text)
+                        got = self.probe(cmd="answer", op=o["op"], code=code, json=text, **options)
                         where = f"{o['op']} {code} {name}: {text[:200]}"
                         if hits == 1 and "not representable" in got.get("answer_error", ""):
                             # Reject integers outside int64 or values inexact in binary64 number fields instead of truncating silently.
@@ -452,14 +630,14 @@ class Generated(DoorBase):
                         self.assertIn("resp", got, where)
                         resp = got["resp"]
                         raw = base64.b64decode(resp["body"])
-                        self.assertEqual(resp["header"], [["Content-Type", r["media"]]], where)
+                        self.assertEqual(resp["header"], [["Content-Type", r["media"]], *required], where)
                         if r["media"] == "application/json":
                             self.assertEqual(json.loads(raw), value, where)
                             self.assertTrue(ordered_ok(self.d, self.d.node(name),
                                                        json.loads(raw, object_pairs_hook=pairs_hook)), where)
                         else:
                             self.assertEqual(raw.decode("utf-8"), value, where)
-                        retry = self.probe(cmd="answer", op=o["op"], code=code, json=text, retry=True)
+                        retry = self.probe(cmd="answer", op=o["op"], code=code, json=text, **dict(options, retry=True))
                         if "Retry-After" in r["headers"]:
                             self.assertEqual(retry["resp"]["header"][-1], ["Retry-After", "1"], where)
                         else:
@@ -476,9 +654,10 @@ class Generated(DoorBase):
                         vals = self.samples(name, 2, small=True)
                         if not vals or sum(self.valid(n, vals[0]) for n in r["schemas"]) != 1:
                             continue
-                        got = self.probe(cmd="answer", op=o["op"], code=code, json=json.dumps(vals[0]),
-                                         via_op=other["op"], via_code=code)
                         mine = o["declared"].get(code)
+                        options, _ = source_required_probe_headers(mine) if mine else ({}, [])
+                        got = self.probe(cmd="answer", op=o["op"], code=code, json=json.dumps(vals[0]),
+                                         via_op=other["op"], via_code=code, **options)
                         if mine and name in mine["schemas"]:
                             self.assertIn("resp", got, f"{o['op']} {code} {name}")
                         else:
@@ -491,11 +670,12 @@ class Generated(DoorBase):
             for code, r in o["declared"].items():
                 if code < 400:
                     continue
+                options, _ = source_required_probe_headers(r)
                 for name in r["schemas"]:
                     for value in self.samples(name, 5, small=True):
                         fields = {k: v for k, v in value.items() if k not in ("kind", "error")}
                         got = self.probe(cmd="refuse", op=o["op"], code=code, kind=value["kind"], msg="m",
-                                         fields=fields)
+                                         fields=fields, **options)
                         full = dict(fields, kind=value["kind"], error="m")
                         hits = [s for s in r["schemas"] if self.valid(s, full)]
                         if len(hits) == 1:
@@ -869,6 +1049,475 @@ class Mutations(unittest.TestCase):
             change(doc)
             with self.assertRaises(gen_door.GenError, msg=f"case {k}"):
                 gen_door.emit(doc, "mutant", "0" * 64, Path(self.tmp.name) / f"r{k}" / "p01-1")
+
+
+Z21_COPY_OBSERVER = r'''package apidoor
+import (
+    "encoding/base64"
+    "encoding/json"
+    "os"
+    "sort"
+    "testing"
+)
+type z21Probe struct { ID, Kind, Method, Header string; Code int; Value any; Body any; NilBody, Allow, Retry bool; CL, TE *string }
+type z21Row struct { ID string `json:"id"`; OK bool `json:"ok"`; Code int `json:"code"`; Body string `json:"body"`; Headers [][2]string `json:"headers"`; Error string `json:"error"` }
+type z21Meta struct { Media string `json:"media"`; Schemas, Headers, Required []string }
+func z21Op(method string) Op { for _,o:=range Operations {if o.Path=="/v1/copy" && o.Method==method{return o.Op}};return 0 }
+func TestZ21CopyObserver(t *testing.T) {
+    raw,err:=os.ReadFile("z21_input.json");if err!=nil{t.Fatal(err)}
+    var probes []z21Probe
+    if err=json.Unmarshal(raw,&probes);err!=nil{t.Fatal(err)}
+    meta:=map[string]map[int]z21Meta{}
+    for _,method:=range []string{"GET","HEAD"} {
+        values:=map[int]z21Meta{}
+        for code,s:=range responses[z21Op(method)] {
+            schemas:=append([]string{},s.schemas...);headers:=append([]string{},s.headers...);required:=append([]string{},s.required...)
+            sort.Strings(headers);sort.Strings(required)
+            values[code]=z21Meta{s.media,schemas,headers,required}
+        }
+        meta[method]=values
+    }
+    rows:=make([]z21Row,0,len(probes))
+    for _,p:=range probes {
+        row:=z21Row{ID:p.ID,Headers:[][2]string{}}
+        op:=z21Op(p.Method)
+        if p.Kind=="header" {
+            check:=responses[op][p.Code].headerChecks[p.Header]
+            row.OK=check==nil || check(p.Value,"")==nil
+        } else {
+            var a Answer
+            var err error
+            if p.NilBody {a=Answer{Code:p.Code}} else {a,err=AnswerOf(op,p.Code,p.Body)}
+            if err==nil {
+                a.Allow=p.Allow;a.RetryAfter=p.Retry;a.ContentLength=p.CL;a.TransferEncoding=p.TE
+                var response *Response
+                response,err=Encode(op,a)
+                if err==nil {row.OK=true;row.Code=response.Code;row.Body=base64.StdEncoding.EncodeToString(response.Body);row.Headers=append([][2]string{},response.Header...)}
+            }
+            if err!=nil {row.Error=err.Error()}
+        }
+        rows=append(rows,row)
+    }
+    frame:=struct{Version,Declared,Completed int; Meta map[string]map[int]z21Meta; Rows []z21Row}{1,len(probes),len(rows),meta,rows}
+    f,err:=os.OpenFile("z21_observed.json",os.O_CREATE|os.O_EXCL|os.O_WRONLY,0600);if err!=nil{t.Fatal(err)}
+    if err=json.NewEncoder(f).Encode(frame);err!=nil{t.Fatal(err)}
+    if err=f.Close();err!=nil{t.Fatal(err)}
+}
+'''
+
+
+def read_copy_door_frame(raw, ids):
+    """Validate the whole private observation before any Source comparison."""
+    from test_gen_machine import CheckingError
+    if type(ids) is not list or not ids or any(type(i) is not str or not i for i in ids) or len(set(ids)) != len(ids):
+        raise CheckingError("missing or ambiguous expected copy observation identities")
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise CheckingError("duplicate copy observation member")
+            value[key] = item
+        return value
+    def bad_number(value):
+        raise CheckingError("non-JSON observation number")
+    try:
+        raw.decode("utf-8", "strict").encode("utf-8", "strict")
+        frame = json.loads(raw, object_pairs_hook=unique, parse_constant=bad_number)
+        # Reject escaped lone surrogates in every parsed string, too.
+        json.dumps(frame, ensure_ascii=False).encode("utf-8", "strict")
+    except (ValueError, UnicodeError, TypeError, RecursionError) as exc:
+        raise CheckingError("invalid copy observation JSON/UTF-8") from exc
+    if (type(frame) is not dict or set(frame) != {"Version", "Declared", "Completed", "Meta", "Rows"} or
+            type(frame["Version"]) is not int or frame["Version"] != 1 or
+            any(type(frame[k]) is not int or frame[k] != len(ids) for k in ("Declared", "Completed")) or
+            type(frame["Rows"]) is not list or len(frame["Rows"]) != len(ids) or
+            type(frame["Meta"]) is not dict or set(frame["Meta"]) != {"GET", "HEAD"}):
+        raise CheckingError("copy observation envelope is incomplete or has wrong identity")
+    for expected, row in zip(ids, frame["Rows"]):
+        if (type(row) is not dict or set(row) != {"id", "ok", "code", "body", "headers", "error"} or
+                type(row["id"]) is not str or row["id"] != expected or type(row["ok"]) is not bool or
+                type(row["code"]) is not int or row["code"] < 0 or type(row["body"]) is not str or
+                type(row["error"]) is not str or type(row["headers"]) is not list or
+                any(type(pair) is not list or len(pair) != 2 or any(type(x) is not str for x in pair)
+                    for pair in row["headers"]) or len({p[0] for p in row["headers"]}) != len(row["headers"])):
+            raise CheckingError("copy observation row has wrong shape/order/identity")
+        try:
+            base64.b64decode(row["body"], validate=True)
+        except (ValueError, TypeError) as exc:
+            raise CheckingError("copy observation body is not base64") from exc
+    for values in frame["Meta"].values():
+        if type(values) is not dict or not values:
+            raise CheckingError("missing operation metadata")
+        for code, value in values.items():
+            if (not re.fullmatch(r"[1-5][0-9][0-9]", code) or type(value) is not dict or
+                    set(value) != {"media", "Schemas", "Headers", "Required"} or type(value["media"]) is not str or
+                    any(type(value[k]) is not list or any(type(x) is not str for x in value[k]) or
+                        len(set(value[k])) != len(value[k]) for k in ("Schemas", "Headers", "Required"))):
+                raise CheckingError("malformed operation metadata")
+    return frame
+
+
+def run_copy_door_observer(module, probes):
+    from test_gen_machine import CheckingError, complete_go_tests
+    pkg = module / "apidoor"
+    try:
+        (pkg / "z21_copy_test.go").write_text(Z21_COPY_OBSERVER, encoding="utf-8")
+        (pkg / "z21_input.json").write_text(json.dumps(probes, ensure_ascii=True), encoding="utf-8")
+        done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^TestZ21CopyObserver$", "./apidoor"],
+                              cwd=module, env=GOENV, capture_output=True, timeout=120)
+        observed = SimpleNamespace(returncode=done.returncode, stdout=done.stdout.decode("utf-8", "strict"),
+                                   stderr=done.stderr.decode("utf-8", "strict"))
+        if complete_go_tests(observed, ["TestZ21CopyObserver"], "normgen/p01-1/apidoor"):
+            raise CheckingError("private observer failed before obtaining observations")
+        return read_copy_door_frame((pkg / "z21_observed.json").read_bytes(), [p["ID"] for p in probes])
+    except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+        raise CheckingError("copy observer cannot produce a complete report") from exc
+
+
+class Z21ProbeHeaderControls(unittest.TestCase):
+    """Synthetic private-observer input projection; no producer or Source execution."""
+    def test_optional_headers_keep_old_empty_arguments_and_required_constants_are_source_owned(self):
+        response = {"required_headers": [], "header_schemas": {"Retry-After": {"const": 1}}}
+        self.assertEqual(source_required_probe_headers(response), ({}, []))
+        response = {"required_headers": ["Allow"], "header_schemas": {"Allow": {"type": "string", "const": "GET"}}}
+        self.assertEqual(source_required_probe_headers(response), ({"allow": True}, [["Allow", "GET"]]))
+        changed = copy.deepcopy(response)
+        changed["header_schemas"]["Allow"]["const"] = "SOURCE-WITNESS"
+        self.assertEqual(source_required_probe_headers(changed)[1], [["Allow", "SOURCE-WITNESS"]])
+
+    def test_unknown_nonconstant_and_wrongly_typed_required_headers_are_checking_errors(self):
+        from test_gen_machine import CheckingError
+        for name, schema in (("Unknown", {"const": "x"}), ("Allow", {"type": "string"}),
+                             ("Allow", {"const": True}), ("Retry-After", {"const": True})):
+            with self.subTest(name=name, schema=schema), self.assertRaises(CheckingError):
+                source_required_probe_headers({"required_headers": [name], "header_schemas": {name: schema}})
+
+
+class Z21PrivateDoorprobe(unittest.TestCase):
+    """Private recorder/library checks; no backend, HTTP server or generated implementation claim."""
+    source_root = ROOT
+    code_root = ROOT
+
+    @classmethod
+    def setUpClass(cls):
+        from test_gen_core import z21_ready_p01
+        from test_gen_machine import CheckingError
+        cls.output = output_lesson.output_root()
+        cls.output_receipt = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+        cls.ready = z21_ready_p01(cls.output, cls.source_root, cls.code_root,
+                                 expected_manifest_sha256=cls.output_receipt)
+        cls.doc = Doc(yaml.safe_load((cls.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml").read_text()))
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-private-doorprobe-")
+        cls.addClassCleanup(cls.tmp.cleanup)
+        try:
+            cls.probe = Probe(build_probe(cls.ready["p01-1"], cls.tmp.name))
+        except (AssertionError, OSError, subprocess.SubprocessError) as exc:
+            raise CheckingError("private doorprobe compile/start failed") from exc
+
+    @classmethod
+    def tearDownClass(cls):
+        from test_gen_core import z21_ready_p01
+        from test_gen_machine import CheckingError
+        cls.probe.close()
+        if cls.probe.proc.returncode != 0:
+            raise CheckingError("private doorprobe did not finish normally")
+        z21_ready_p01(cls.output, cls.source_root, cls.code_root, expected_manifest_sha256=cls.output_receipt)
+
+    def test_complete_source_table_and_every_dispatch_method(self):
+        actual = self.probe(cmd="table")["ops"]
+        self.assertEqual([(o["op"], o["method"], o["path"]) for o in actual],
+                         [(o["op"], o["method"], o["path"]) for o in self.doc.ops])
+        for got, source in zip(actual, self.doc.ops):
+            self.assertEqual(got["declared"], {str(c): {"schemas": r["schemas"] or None, "headers": r["headers"] or None}
+                                             for c, r in source["declared"].items()})
+            query = []
+            for p in source["params"]:
+                self.assertTrue(self.doc.validator(p["schema"]).is_valid("a"), "normal input does not satisfy Source")
+                query.append(p["name"] + "=a")
+            got = self.probe(cmd="dispatch", op=source["op"], query="&".join(query))
+            self.assertEqual(got["method"], source["op"])
+            self.assertIsNone(got["error"])
+            self.assertEqual(got["query"], {p["name"]: base64.b64encode(b"a").decode() for p in source["params"]} or None)
+
+    def test_copy_raw_string_header_schemas_required_allow_and_bodyless_head(self):
+        source = {o["method"]: o for o in self.doc.ops if o["path"] == "/v1/copy"}
+        self.assertEqual(set(source), {"GET", "HEAD"})
+        get, head = source["GET"], source["HEAD"]
+        raw = "one\né\n"
+        for field, header, value in (("content_length", "Content-Length", str(len(raw.encode()))),
+                                     ("transfer_encoding", "Transfer-Encoding", "CHUNKED")):
+            self.assertTrue(self.doc.header_validator(get["op"], 200, header).is_valid(value))
+            got = self.probe(cmd="answer", op=get["op"], code=200, json=json.dumps(raw), **{field: value})
+            self.assertEqual(got["resp"], {"code": 200, "header": [["Content-Type", get["declared"][200]["media"]], [header, value]],
+                                           "body": base64.b64encode(raw.encode()).decode()})
+        for field, header, value in (("content_length", "Content-Length", "-1"),
+                                     ("transfer_encoding", "Transfer-Encoding", "gzip")):
+            self.assertFalse(self.doc.header_validator(get["op"], 200, header).is_valid(value))
+            self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=200, json=json.dumps(raw), **{field: value}))
+        fault_name = get["declared"][405]["schemas"][0]
+        fault = {"kind": self.doc.node(fault_name)["properties"]["kind"]["const"], "error": "witness"}
+        self.assertTrue(self.doc.validator(fault_name).is_valid(fault))
+        options, required = source_required_probe_headers(get["declared"][405])
+        got = self.probe(cmd="answer", op=get["op"], code=405, json=json.dumps(fault), **options)
+        self.assertEqual(got["resp"]["header"], [["Content-Type", get["declared"][405]["media"]], *required])
+        self.assertEqual(json.loads(base64.b64decode(got["resp"]["body"])), fault)
+        self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=405, json=json.dumps(fault)))
+        got = self.probe(cmd="refuse", op=get["op"], code=405, kind=fault["kind"], msg=fault["error"], **options)
+        self.assertEqual(json.loads(base64.b64decode(got["resp"]["body"])), fault)
+        self.assertEqual(got["resp"]["header"], [["Content-Type", get["declared"][405]["media"]], *required])
+        for code, response in head["declared"].items():
+            self.assertEqual(response["schemas"], [])
+            options, required = source_required_probe_headers(response)
+            got = self.probe(cmd="answer", op=head["op"], code=code, no_body=True, **options)
+            self.assertEqual(got, {"resp": {"code": code, "header": required or None, "body": ""}, "schema": ""})
+        self.assertIn("answer_error", self.probe(cmd="answer", op=head["op"], code=400, json=json.dumps(fault)))
+        self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=200, no_body=True))
+
+
+class Z21CopySource(unittest.TestCase):
+    """Independent source projection. These Python controls execute no generated implementation."""
+
+    source_root = ROOT
+
+    def setUp(self):
+        path = self.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml"
+        self.source = yaml.safe_load(path.read_text(encoding="utf-8"))
+        self.doc = Doc(self.source)
+
+    def response(self, method, code):
+        value = self.source["paths"]["/v1/copy"][method]["responses"][str(code)]
+        if "$ref" in value:
+            value = self.source["components"]["responses"][value["$ref"].split("/")[-1]]
+        return value
+
+    def copy_op(self, method):
+        return next(op for op in self.doc.ops if op["path"] == "/v1/copy" and op["method"] == method.upper())
+
+    def test_full_actual_header_projection_including_requiredness(self):
+        self.assertEqual({m for m in self.source["paths"]["/v1/copy"]}, {"get", "head"})
+        for method in ("get", "head"):
+            op = self.copy_op(method)
+            self.assertEqual(set(op["declared"]), {int(c) for c in self.source["paths"]["/v1/copy"][method]["responses"]})
+            for code, actual in op["declared"].items():
+                header = self.response(method, code).get("headers", {})
+                with self.subTest(method=method, code=code):
+                    self.assertEqual(actual["headers"], sorted(header))
+                    self.assertEqual(actual["header_schemas"], {n: h["schema"] for n, h in header.items()})
+                    self.assertEqual(actual["required_headers"], sorted(n for n, h in header.items() if h.get("required", False)))
+        self.assertEqual(self.copy_op("get")["declared"][200]["required_headers"], [])
+
+    def test_copy_stream_and_unsupported_head_keep_their_source_shapes(self):
+        get = self.copy_op("get")["declared"][200]
+        raw = self.response("get", 200)["content"]
+        self.assertEqual(get["media"], next(iter(raw)))
+        self.assertEqual(raw[get["media"]]["schema"]["type"], "string")
+        self.assertEqual(len(get["schemas"]), 1)
+        schema = self.doc.node(get["schemas"][0])
+        self.assertEqual(schema, raw[get["media"]]["schema"])
+        # The API scalar is opaque UTF-8/LF data, not one decoded JSON object or a copy-format proof.
+        self.assertTrue(self.doc.validator(schema).is_valid('first\nsecond é\n'))
+        self.assertFalse(self.doc.validator(schema).is_valid({"first": "second"}))
+        for code, response in self.copy_op("head")["declared"].items():
+            with self.subTest(head=code):
+                self.assertNotIn("content", self.response("head", code))
+                self.assertIsNone(response["media"])
+                self.assertEqual(response["schemas"], [])
+        self.assertNotIn(200, self.copy_op("head")["declared"])
+
+    def test_typed_header_neighbours_use_actual_schema(self):
+        op = self.copy_op("get")["op"]
+        # These are typed schema values. HTTP field framing/CRLF rejection is a separate transport proof.
+        cases = [(200, "Content-Length", ["0", "001", "123"], ["", "-1", "1.0", "1e3", "a", 1, True]),
+                 (200, "Transfer-Encoding", ["chunked", "CHUNKED", "cHuNkEd"],
+                  ["gzip", "chunked,gzip", "chunked ", 1, True]),
+                 (405, "Allow", ["GET"], ["get", "HEAD", "GET, HEAD", 1, True]),
+                 (503, "Retry-After", [1], [0, 2, 1.0, True, "1"])]
+        for code, header, good, bad in cases:
+            validator = self.doc.header_validator(op, code, header)
+            for value in good:
+                with self.subTest(code=code, header=header, good=value):
+                    self.assertTrue(validator.is_valid(value))
+            for value in bad:
+                with self.subTest(code=code, header=header, bad=value):
+                    self.assertFalse(validator.is_valid(value))
+
+    def test_malformed_header_declarations_are_source_errors(self):
+        for headers in (None, [], False, 0, "", {1: {"schema": {"type": "string"}}},
+                        {"X": {"schema": None}}, {"X": {"schema": []}},
+                        {"X": {"schema": {"type": "string"}, "required": 1}}):
+            changed = copy.deepcopy(self.source)
+            changed["paths"]["/v1/copy"]["get"]["responses"]["200"]["headers"] = headers
+            with self.subTest(headers=headers), self.assertRaises(ValueError):
+                Doc(changed)
+
+    def test_shared_404_is_required_except_for_fully_bodyless_head(self):
+        # Establish the physical source neighbour before rejecting owned copies.
+        def build(doc, label):
+            return gen_door.build_go(gen_door.Spec(doc, label), label, "0" * 64)
+        build(copy.deepcopy(self.source), "actual source")
+        missing = copy.deepcopy(self.source)
+        del missing["paths"]["/v1/status"]["get"]["responses"]["404"]
+        self.assertIn("405", missing["paths"]["/v1/status"]["get"]["responses"])
+        with self.assertRaisesRegex(gen_door.GenError, "404"):
+            build(missing, "non-HEAD without shared 404")
+        body = copy.deepcopy(self.source)
+        body["paths"]["/v1/copy"]["head"]["responses"]["400"]["content"] = {
+            "application/json": {"schema": {"$ref": "#/components/schemas/BadRequestFault"}}}
+        with self.assertRaisesRegex(gen_door.GenError, "404"):
+            build(body, "body-bearing HEAD without shared 404")
+
+
+class Z21CopyCompiled(unittest.TestCase):
+    """Selected component readback; no HTTP server, source admission or storage-provider claim."""
+    source_root = ROOT
+    code_root = ROOT
+
+    @classmethod
+    def setUpClass(cls):
+        from test_gen_core import z21_ready_p01
+        cls.output = output_lesson.output_root()
+        cls.output_receipt = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+        cls.ready = z21_ready_p01(cls.output, cls.source_root, cls.code_root,
+                                 expected_manifest_sha256=cls.output_receipt)
+        cls.doc = Doc(yaml.safe_load((cls.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml").read_text()))
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-copy-door-")
+
+    @classmethod
+    def tearDownClass(cls):
+        from test_gen_core import z21_ready_p01
+        cls.tmp.cleanup()
+        z21_ready_p01(cls.output, cls.source_root, cls.code_root, expected_manifest_sha256=cls.output_receipt)
+
+    def module(self, name):
+        target = Path(self.tmp.name) / name
+        target.mkdir()
+        shutil.copy(self.ready["p01-1"] / "go/go.mod", target / "go.mod")
+        shutil.copytree(self.ready["p01-1"] / "go/apidoor", target / "apidoor")
+        return target
+
+    def probes(self):
+        probes, expected = [], []
+        def add(kind="encode", method="GET", code=200, ok=True, body=None, headers=None, **kw):
+            identity = f"copy-{len(probes) + 1:03d}"
+            probes.append(dict(ID=identity, Kind=kind, Method=method, Code=code, **kw))
+            expected.append(dict(id=identity, ok=ok, code=code if kind == "encode" else 0, body=body, headers=headers))
+        op = next(o for o in self.doc.ops if o["path"] == "/v1/copy" and o["method"] == "GET")["op"]
+        for header, values in (("Content-Length", ["0", "001", "123", "", "-1", "1.2", 1, True]),
+                               ("Transfer-Encoding", ["chunked", "CHUNKED", "cHuNkEd", "gzip", "chunked,gzip", 1, True])):
+            validator = self.doc.header_validator(op, 200, header)
+            for value in values:
+                add(kind="header", Header=header, Value=value, ok=validator.is_valid(value))
+        raw = "first\nsecond é\n"
+        media = self.doc.op(op)["declared"][200]["media"]
+        add(Body=raw, body=raw.encode(), headers={"Content-Type": media})
+        add(Body={"first": "second"}, ok=False)
+        for field, header, values in (("CL", "Content-Length", ["0", "001", "", "-1"]),
+                                       ("TE", "Transfer-Encoding", ["CHUNKED", "chunked", "gzip"])):
+            validator = self.doc.header_validator(op, 200, header)
+            for value in values:
+                add(Body=raw, **{field: value}, ok=validator.is_valid(value), body=raw.encode(),
+                    headers={"Content-Type": media, header: value})
+        fault = {"kind": "badrequest", "error": ""}
+        for method in ("GET", "HEAD"):
+            source_op = next(o for o in self.doc.ops if o["path"] == "/v1/copy" and o["method"] == method)
+            required = source_op["declared"][405]["required_headers"]
+            for allow in (False, True):
+                add(method=method, code=405, Body=fault, NilBody=method == "HEAD", Allow=allow,
+                    ok=allow or "Allow" not in required,
+                    body=b"" if method == "HEAD" else json.dumps(fault, separators=(",", ":")).encode(),
+                    headers=({} if method == "HEAD" else {"Content-Type": "application/json"}) |
+                            ({"Allow": "GET"} if allow else {}))
+        add(method="HEAD", code=400, NilBody=True, body=b"", headers={})
+        add(method="HEAD", code=400, Body=fault, ok=False)
+        for retry in (False, True):
+            value = {"kind": "unavailable", "error": ""}
+            add(code=503, Body=value, Retry=retry, body=json.dumps(value, separators=(",", ":")).encode(),
+                headers={"Content-Type": "application/json"} | ({"Retry-After": "1"} if retry else {}))
+        return probes, expected
+
+    def differences(self, frame, expected):
+        differences = []
+        for method in ("GET", "HEAD"):
+            op = next(o for o in self.doc.ops if o["path"] == "/v1/copy" and o["method"] == method)
+            want = {str(code): {"media": r["media"] or "", "Schemas": r["schemas"], "Headers": r["headers"],
+                                "Required": r["required_headers"]} for code, r in op["declared"].items()}
+            if frame["Meta"][method] != want:
+                differences.append("source-metadata-" + method)
+        for actual, want in zip(frame["Rows"], expected):
+            if actual["ok"] != want["ok"]:
+                differences.append(want["id"] + "-acceptance")
+            elif actual["ok"] and (actual["code"] != want["code"] or actual["error"]):
+                differences.append(want["id"] + "-status-or-error")
+            elif actual["ok"] and want["body"] is not None and (
+                    base64.b64decode(actual["body"], validate=True) != want["body"] or
+                    dict(actual["headers"]) != want["headers"]):
+                differences.append(want["id"] + "-wire-bytes-or-headers")
+        return differences
+
+    def test_actual_response_metadata_headers_raw_stream_and_bodyless_head(self):
+        probes, expected = self.probes()
+        self.assertEqual(self.differences(run_copy_door_observer(self.module("normal"), probes), expected), [])
+
+    def test_compiled_valid_mutants_require_complete_source_disagreements(self):
+        probes, expected = self.probes()
+        self.assertEqual(self.differences(run_copy_door_observer(self.module("mutant-baseline"), probes), expected), [])
+        mutations = {
+            "length-check-removed": ('"Content-Length": chkCopyGet200HeaderContentLength', '"Content-Length": nil'),
+            "encoding-check-removed": ('"Transfer-Encoding": chkCopyGet200HeaderTransferEncoding', '"Transfer-Encoding": nil'),
+            "allow-not-required": ('required: []string{"Allow"}', 'required: []string{}'),
+            "copy-stream-json-quoted": ('func (x CopyGet200) appendJSON(b []byte) []byte { return append(b, x...) }',
+                                         'func (x CopyGet200) appendJSON(b []byte) []byte { return appendString(b, string(x)) }'),
+            "successful-status-replaced": ('return &Response{Code: a.Code, Header: header, Body: body}, nil',
+                                             'return &Response{Code: 299, Header: header, Body: body}, nil'),
+        }
+        for name, (before, after) in mutations.items():
+            with self.subTest(mutant=name):
+                module = self.module(name)
+                path = module / "apidoor/door.go"
+                text = path.read_text()
+                self.assertGreater(text.count(before), 0, "missing mutation anchor")
+                path.write_text(text.replace(before, after), encoding="utf-8")
+                self.assertTrue(self.differences(run_copy_door_observer(module, probes), expected), "surviving mutant " + name)
+
+    def test_observer_compile_error_is_not_a_semantic_mismatch(self):
+        from test_gen_machine import CheckingError
+        module = self.module("compile-error")
+        path = module / "apidoor/door.go"
+        path.write_text(path.read_text() + "\nnot valid Go\n")
+        with self.assertRaises(CheckingError):
+            run_copy_door_observer(module, self.probes()[0])
+
+
+class Z21CopyFrameControls(unittest.TestCase):
+    def test_partial_extra_duplicate_type_and_utf8_are_checking_errors(self):
+        from test_gen_machine import CheckingError
+        normal = {"Version": 1, "Declared": 1, "Completed": 1,
+                  "Meta": {m: {"400": {"media": "", "Schemas": [], "Headers": [], "Required": []}} for m in ("GET", "HEAD")},
+                  "Rows": [{"id": "one", "ok": True, "code": 0, "body": "", "headers": [], "error": ""}]}
+        encoded = json.dumps(normal).encode()
+        self.assertEqual(read_copy_door_frame(encoded, ["one"]), normal)
+        changes = [lambda f: f.update(Version=True), lambda f: f.update(Completed=0),
+                   lambda f: f.update(Rows=[]), lambda f: f["Rows"].append(copy.deepcopy(f["Rows"][0])),
+                   lambda f: f["Rows"][0].update(id="foreign"), lambda f: f["Rows"][0].update(ok=1),
+                   lambda f: f["Rows"][0].update(body="???"), lambda f: f["Rows"][0].update(headers=[["x", "a"], ["x", "b"]]),
+                   lambda f: f["Meta"]["GET"]["400"].update(Required=False)]
+        for mutate in changes:
+            changed = copy.deepcopy(normal); mutate(changed)
+            with self.subTest(mutate=repr(changed)), self.assertRaises(CheckingError):
+                read_copy_door_frame(json.dumps(changed).encode(), ["one"])
+        for raw in (encoded + b"{}", b'{"Version":1,"Version":1}', b'"\xff"', b'{"x":NaN}', b'{"x":"\\ud800"}',
+                    b"[" * 2000 + b"]" * 2000):
+            with self.subTest(raw=raw), self.assertRaises(CheckingError):
+                read_copy_door_frame(raw, ["one"])
+        for ids in ([], ["one", "one"], [True], "one"):
+            with self.subTest(ids=ids), self.assertRaises(CheckingError):
+                read_copy_door_frame(encoded, ids)
+
+    def test_missing_observer_destination_is_a_checking_error_before_execution(self):
+        from test_gen_machine import CheckingError
+        with tempfile.TemporaryDirectory(prefix="z21-observer-path-") as tmp:
+            with self.assertRaises(CheckingError):
+                run_copy_door_observer(Path(tmp) / "absent", [{"ID": "one"}])
 
 
 if __name__ == "__main__":

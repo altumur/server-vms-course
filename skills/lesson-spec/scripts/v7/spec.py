@@ -607,7 +607,7 @@ def family_readers(root, row, cache):
     if k not in cache:
         from v7 import stack
         _, _, doc, _, outcomes = load_family(root, row)
-        cache[k] = (stack.Family(doc, row["kind"]), outcomes)
+        cache[k] = (stack.Family(doc, row["kind"], family_template=row["key"]), outcomes)
     return readers_of(cache[k][1])
 
 
@@ -634,10 +634,21 @@ def family_value(kind, text):
 
 
 def judge_family(fam, template, key, kind, text, mode):
-    """Чтение экземпляра: ключ не по шаблону — отказ строки целиком KEY_REFUSED, значение не судится; иначе — стек В7."""
+    """Check catalog identity and concrete key before any value parsing or scalar decode."""
+    from v7 import stack
+    if fam.family_template != template.template:
+        raise SpecError("Family identity does not match its catalog template")
+    if type(key) is not str:
+        raise SpecError("a concrete family key is required")
     if not template.matches(key):
         return {"verdict": "refused", "paths": list(KEY_REFUSED)}
-    return fam.judge(family_value(kind, text), mode)
+    try:
+        fam._writer_binding(mode, key)
+        return fam.judge(family_value(kind, text), mode, key=key)
+    except stack.Bad:
+        return {"verdict": "refused", "paths": list(KEY_REFUSED)}
+    except ValueError as exc:
+        raise SpecError("family writer binding: %s" % exc) from exc
 
 
 def judge_row(root, row, kind, mode, text, paths, outs, cache, template, key):
@@ -646,7 +657,7 @@ def judge_row(root, row, kind, mode, text, paths, outs, cache, template, key):
     k = (row["key"], row["kind"])
     if k not in cache:
         _, _, doc, _, outcomes = load_family(root, row)
-        cache[k] = (stack.Family(doc, kind), outcomes)
+        cache[k] = (stack.Family(doc, kind, family_template=row["key"]), outcomes)
     fam, outcomes = cache[k]
     v = judge_family(fam, template, key, kind, text, mode)
     got = ({r: [o.path for o in outcomes_for(outcomes, v["paths"], r)] for r in readers_of(outcomes)}

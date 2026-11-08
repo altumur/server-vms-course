@@ -96,7 +96,18 @@ func (s *store) version() string {
 	return strconv.FormatUint(s.next, 10)
 }
 
+func copyHead(op apidoor.Op) bool {
+	bodyless := false
+	// BEGIN CopyHead
+	bodyless = op == apidoor.OpCopyHead
+	// END CopyHead
+	return bodyless
+}
+
 func refuse(op apidoor.Op, code int, kind, msg string, fields map[string]any) apidoor.Answer {
+	if copyHead(op) {
+		return apidoor.Answer{Code: code}
+	}
 	a, err := apidoor.Refuse(op, code, kind, msg, fields)
 	if err != nil {
 		log.Printf("stubstore: refuse %v %d %s: %v", op, code, kind, err)
@@ -245,6 +256,24 @@ func (s *store) Metrics(c *call) apidoor.Answer {
 	return apidoor.Answer{Code: 200, Body: apidoor.Metrics200("configstore_doors 1\n")}
 }
 
+// BEGIN CopyGet
+// CopyGet never claims to produce a consistent snapshot: this stub has no store core.
+func (s *store) CopyGet(c *call) apidoor.Answer {
+	if c.sock != "admin" {
+		return refuse(apidoor.OpCopyGet, 403, "forbidden", "admin.sock only", nil)
+	}
+	return refuse(apidoor.OpCopyGet, 503, "unavailable", "stub has no snapshot", nil)
+}
+
+// END CopyGet
+
+// BEGIN CopyHead
+func (s *store) CopyHead(c *call) apidoor.Answer {
+	return apidoor.Answer{Code: 405, Allow: true}
+}
+
+// END CopyHead
+
 // QueryRefused selects the refusal for an out-of-form query, specified only in prose in OpenAPI (P/01.1 N2.1):
 // duplicates and missing values give badrequest; values outside the Key schema (including invalid UTF-8) give badkey.
 func (s *store) QueryRefused(c *call, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
@@ -286,7 +315,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := &call{sock: h.sock}
-	if h.sock != "admin" && r.Header.Get("X-Configstore-Role") != "" {
+	if !copyHead(op) && h.sock != "admin" && r.Header.Get("X-Configstore-Role") != "" {
 		h.answer(w, op, refuse(op, 403, "forbidden", "role header on a role socket", nil))
 		return
 	}

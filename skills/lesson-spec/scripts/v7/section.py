@@ -119,10 +119,18 @@ def bare(p):
 class SchemaSection:
     """Таблицы одной схемы. family — схема семьи: определения `common.*` раскрыты на месте (как у диалекта)."""
 
-    def __init__(self, doc, family=False, lang="ru"):
+    def __init__(self, doc, family=False, lang="ru", family_template=None):
         self.doc, self.family, self.lang = doc, family, lang
+        self.family_template = family_template
+        contextual = family_template == "domain/deleting/<name>"
+        profiles = ("person_writer", "role_writer")
+        declared = any(name in doc.get("$defs", {}) for name in profiles)
+        if contextual or declared:
+            if not contextual or any(type(doc.get("$defs", {}).get(name)) is not dict for name in profiles):
+                raise ValueError("contextual writer definitions require their exact catalog identity and both profiles")
         tr(lang, "", "")
-        self.defs = {k: v for k, v in doc.get("$defs", {}).items() if k != "writer"}
+        self.defs = {k: v for k, v in doc.get("$defs", {}).items()
+                     if k != "writer" and not (contextual and k in profiles)}
         uses = {}
 
         def count(x):
@@ -143,6 +151,9 @@ class SchemaSection:
         count({k: v for k, v in doc.items() if k != "$defs"})
         for v in self.defs.values():
             count(v)
+        if contextual:
+            for name in profiles:
+                count(doc["$defs"][name])
         self.uses = uses
         self.recursive = {k for k in self.defs if self.reaches(k, k)}
         own = [k for k in self.defs if uses.get(k, 0) != 1 or k in self.recursive]
@@ -488,11 +499,41 @@ class SchemaSection:
                 out += [self.t("Правила:", "Rules:"), ""] + self.rules_text(rules) + [""]
         return out
 
+    def _contextual_writer_body(self):
+        """Display the fixed key conditions without turning local profiles into unconditional roots."""
+        if self.family_template != "domain/deleting/<name>":
+            return []
+        defs = self.doc.get("$defs", {})
+        if type(defs.get("writer")) is not dict or any(type(defs.get(name)) is not dict
+                                                      for name in ("person_writer", "role_writer")):
+            raise ValueError("contextual writer source is incomplete")
+        out = []
+        for label, name in (("domain/deleting/<name>", "person_writer"),
+                            ("domain/deleting/role:<name>", "role_writer")):
+            profile = defs[name]
+            writer_kind = (self.t("метки человека", "of a person mark") if name == "person_writer"
+                           else self.t("метки роли", "of a role mark"))
+            out += [self.t("Только у писателя %s с ключом `%s` (`#/$defs/%s`):",
+                           "Only at the writer %s with key `%s` (`#/$defs/%s`):") % (writer_kind, label, name), "",
+                    self.t("| Ключ | Тип и границы | Обязательность |", "| Key | Type and bounds | Required |"),
+                    "|---|---|---|"]
+            if "const" in profile:
+                out.append("| `%s` | const `%s` | — |" % (self.t("<корень>", "<root>"),
+                           code_cell(json.dumps(profile["const"], ensure_ascii=False, separators=(",", ":")))))
+            for field, node in profile.get("properties", {}).items():
+                required = self.t("обязательно", "required") if field in profile.get("required", []) else self.t("необязательно", "optional")
+                out.append("| `%s` | %s | %s |" % (code_cell(field), cell(self.kind(node)), required))
+            if profile.get("additionalProperties") is False:
+                out.append(self.t("| прочие имена | не допускаются | — |", "| other names | refused | — |"))
+            out += [""]
+        return out
+
     def writer_body(self):
         """Ограничения писателя (`$defs.writer`, ADR-0092 п. 15): место → слова."""
+        contextual = self._contextual_writer_body()
         w = self.doc.get("$defs", {}).get("writer")
         if not w:
-            return []
+            return contextual
         wdefs = w.get("$defs", {})
         rows = []
 
@@ -535,11 +576,11 @@ class SchemaSection:
                 rec(s["items"], "%s[]" % path, stack)
         rec({k: v for k, v in w.items() if k != "$defs"}, "", ())
         if not rows:
-            return []
+            return contextual
         out = [self.t("Только у писателя (`$defs.writer`):", "Only at the writer (`$defs.writer`):"), "",
                self.t("| Ключ | Ещё и |", "| Key | Also |"), "|---|---|"]
         out += ["| `%s` | %s |" % (code_cell(p), cell(x)) for p, x in rows]
-        return out + [""]
+        return out + [""] + contextual
 
 
 # ---------------------------------------------------------------- раздел «Форма» P/02.1
@@ -637,7 +678,7 @@ def build_families_section(norms, root, families, lang="ru"):
                   "Schema — [`%s`](%s), outcomes — [`%s`](%s); form version %s; norm — %s.") % (
                     schema_path.name, lk(schema_path.resolve().relative_to(root)), outcomes_path.name,
                     lk(outcomes_path.resolve().relative_to(root)), row["version"], row["norm"]), ""]
-        sec = SchemaSection(doc, family=True, lang=lang)
+        sec = SchemaSection(doc, family=True, lang=lang, family_template=row["key"])
         out += sec.root_body(head=None)
         out += sec.writer_body()
         out += sec.defs_body(head=None)

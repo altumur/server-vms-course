@@ -169,7 +169,7 @@ def v7_cases(lesson, base_rows):
         if not (spec.is_v7_family(row) and row["owner"][2:4] == lesson):
             continue
         _, _, doc, _, outcomes = spec.load_family(ROOT, row)
-        fam, tmpl = stack.Family(doc, row["kind"]), templates[(row["key"], row["kind"])]
+        fam, tmpl = stack.Family(doc, row["kind"], family_template=row["key"]), templates[(row["key"], row["kind"])]
         bases = {r["mode"]: r for r in base_rows if r["family"] == row["key"] and r["note"] == "base"}
         if set(bases) != {"writer", "reader"}:
             raise SystemExit(f"family_judge: {row['key']}: no base rows of both modes in the vectors")

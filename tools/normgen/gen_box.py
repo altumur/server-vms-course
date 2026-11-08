@@ -808,8 +808,10 @@ Connect `admin.Env.Copy` to a `box.CopyControl` with the ACTUAL store Dir/Ceilin
 For import/restore the target directory is `f.Dir`. Backup has no -dir flag: its Dir must be the LIVE daemon's actual
 data directory, not the empty CLI field; missing Dir refuses. Ceiling is the operative row ceiling (zero uses the
 normative default), not a guessed limit from an unrelated process.
-The opener gives the actual live store for backup (through YOUR admin transport), or an exclusive stopped target for
-box import/restore; it also supplies close. No private socket protocol or storage format is chosen by the kit.
+The opener gives the actual live store for backup, or an exclusive stopped target for box import/restore; it also
+supplies close. When Source declares admin-only HTTP copy, live backup must follow that contract. This port does not implement or
+qualify HTTP framing/completion, the snapshot provider, its lock scope or its budgets. The host supplies that
+connection; the kit chooses no storage format or private alias for that public copy contract.
 Use the existing `launch.App.Admin` hook to call `admin.Run` with that environment. Fresh Backup/Import/Restore wrappers
 delegate when Copy is connected; existing YOURS wrappers remain yours and can call the same port. Without a connection
 they fail explicitly. You still implement the storage/CLI transport connection; this kit is not a complete store core.

@@ -9,7 +9,9 @@ import (
 )
 
 // CopyControl implements admin.CopyOps without choosing your storage format or
-// private admin transport. Open connects the actual live store for backup, or an
+// transport implementation. Live backup follows Source's transport contract,
+// including admin-only HTTP copy when declared. Open does not qualify framing or snapshots.
+// Open connects the actual live store for backup, or an
 // exclusive stopped target for import/restore; close releases it. Construct a
 // control per command, using that command's -dir, -max-value and wall clock.
 type CopyControl struct {

@@ -86,8 +86,10 @@ class Param:
 
 
 class Resp:
-    def __init__(self, code, media, schemas, headers):
+    def __init__(self, code, media, schemas, headers, header_schemas=None, required_headers=()):
         self.code, self.media, self.schemas, self.headers = code, media, schemas, headers
+        self.header_schemas = header_schemas or {}
+        self.required_headers = list(required_headers)
 
 
 class Op:
@@ -153,6 +155,9 @@ class Spec:
         for op in self.ops:
             for p in op.params:
                 self.walk(p.schema, f"{op.method} {op.path} query {p.name}")
+            for response in op.responses.values():
+                for header, schema in response.header_schemas.items():
+                    self.walk(schema, f"{op.method} {op.path} {response.code} header {header}")
 
     @staticmethod
     def code(code, where):
@@ -223,13 +228,22 @@ class Spec:
                 names = [f"{op.name}{code}"]
                 self.inline[names[0]] = schema
             schemas = names
-        headers = {}
+        headers, header_schemas, required_headers = {}, {}, []
         for hname, h in (r.get("headers") or {}).items():
             hs = h.get("schema") or {}
-            if "const" not in hs or isinstance(hs["const"], (dict, list)) or hs["const"] is None:
-                raise GenError(f"{where}: {code}: header {hname}: only a header with a const value is in the subset")
-            headers[hname] = hs["const"]
-        return Resp(code, media, schemas, headers)
+            base = self.resolve(hs, f"{where}: {code}: header {hname}")
+            if "const" in base:
+                if isinstance(base["const"], (dict, list)) or base["const"] is None:
+                    raise GenError(f"{where}: {code}: header {hname}: a scalar const value is required")
+            elif base.get("type") != "string":
+                raise GenError(f"{where}: {code}: header {hname}: a scalar const or string schema is required")
+            if type(h.get("required", False)) is not bool:
+                raise GenError(f"{where}: {code}: header {hname}: required must be boolean")
+            headers[hname] = base.get("const")
+            header_schemas[hname] = hs
+            if h.get("required", False):
+                required_headers.append(hname)
+        return Resp(code, media, schemas, headers, header_schemas, required_headers)
 
     def walk(self, node, where):
         """Reject unknown schema keywords so a constraint cannot disappear silently."""
@@ -788,9 +802,12 @@ switch op {
                    + "}\nreturn \"Op(\" + strconv.Itoa(int(op)) + \")\"\n}\n")
 
     # Routing refusals.
-    not_found = {(tuple(op.responses[404].schemas), op.responses[404].media) for op in spec.ops if 404 in op.responses}
-    if len(not_found) != 1 or any(404 not in op.responses for op in spec.ops):
-        raise GenError(f"{spec.name}: every operation must declare one and the same 404 (the answer for an unknown path)")
+    needs404 = [op for op in spec.ops if op.method != "HEAD" or any(r.schemas for r in op.responses.values())]
+    not_found = {(tuple(op.responses[404].schemas), op.responses[404].media)
+                 for op in needs404 if 404 in op.responses}
+    if len(not_found) != 1 or any(404 not in op.responses for op in needs404):
+        raise GenError(f"{spec.name}: every non-HEAD or body-bearing HEAD operation must declare the same 404 "
+                       "(the answer for an unknown path)")
     nf_schemas, nf_media = next(iter(not_found))
     nf_schemas = expand(list(nf_schemas))
     if len(nf_schemas) != 1:
@@ -800,14 +817,23 @@ switch op {
         paths.setdefault(op.path, []).append(op)
     wrong = {}
     for path, ops in paths.items():
-        has405 = [405 in op.responses for op in ops]
+        # HEAD can explicitly declare a bodyless error; it is not the body schema
+        # of an unsupported non-HEAD method on the same path.
+        method_ops = [op for op in ops if op.method != "HEAD"] or ops
+        has405 = [405 in op.responses for op in method_ops]
         if any(has405) and not all(has405):
             raise GenError(f"{spec.name}: {path}: 405 is declared by some operations of the path only")
         code = 405 if all(has405) else 404
-        rs = {(tuple(expand(op.responses[code].schemas)), op.responses[code].media) for op in ops}
+        if any(code not in op.responses for op in method_ops):
+            raise GenError(f"{spec.name}: {path}: the {code} method refusal is not declared")
+        rs = {(tuple(expand(op.responses[code].schemas)), op.responses[code].media) for op in method_ops}
         if len(rs) != 1 or len(next(iter(rs))[0]) != 1:
             raise GenError(f"{spec.name}: {path}: the {code} answer must be one schema for all operations")
-        wrong[path] = (code, next(iter(rs))[0][0], next(iter(rs))[1])
+        required = {tuple((h, op.responses[code].headers[h]) for h in op.responses[code].required_headers)
+                    for op in method_ops}
+        if len(required) != 1 or any(v is None for hs in required for _, v in hs):
+            raise GenError(f"{spec.name}: {path}: method refusal requires common constant headers")
+        wrong[path] = (code, next(iter(rs))[0][0], next(iter(rs))[1], next(iter(required)))
 
     def literal(schema, msg):
         node = g.schemas[schema]
@@ -831,13 +857,20 @@ switch op {
              "func Route(method, target string) (Op, string, *Response) {",
              "path, query, _ := strings.Cut(target, \"?\")", "switch path {"]
     for path, ops in paths.items():
-        code, schema, media = wrong[path]
+        code, schema, media, required = wrong[path]
         route.append(f"case {go_str(path)}:")
         route.append("switch method {")
         for op in ops:
             route.append(f"case {go_str(op.method)}:\nreturn Op{op.name}, query, nil")
         route.append("}")
-        route.append(f"return 0, \"\", routeRefusal({code}, {go_str(media)}, {literal(schema, 'no such method')})")
+        refusal = f"routeRefusal({code}, {go_str(media)}, {literal(schema, 'no such method')})"
+        if required:
+            route.append("refusal := " + refusal)
+            for header, value in required:
+                route.append(f"refusal.Header = append(refusal.Header, [2]string{{{go_str(header)}, {go_str(str(value))}}})")
+            route.append('return 0, "", refusal')
+        else:
+            route.append(f"return 0, \"\", {refusal}")
     route.append("}")
     route.append(f"return 0, \"\", routeRefusal(404, {go_str(nf_media)}, {literal(nf_schemas[0], 'no route')})\n}}\n")
     route.append("func routeRefusal(code int, media string, b Body) *Response {\n"
@@ -850,18 +883,26 @@ switch op {
             for h in r.headers:
                 if h not in header_names:
                     header_names.append(h)
+    dynamic_headers = {h for op in spec.ops for r in op.responses.values() for h, v in r.headers.items() if v is None}
+    typed_headers = bool(dynamic_headers or any(r.required_headers for op in spec.ops for r in op.responses.values()))
     answer = ['// Answer contains status, a generated body(nil for none) and headers declared by '
               r'''OpenAPI
 // true enables a header only on operations declaring it.''',
               "type Answer struct {", "Code int", "Body Body"]
     for h in header_names:
+        if h in dynamic_headers:
+            if any(h in r.headers and r.headers[h] is not None for op in spec.ops for r in op.responses.values()):
+                raise GenError(f"header {h}: mixed constant and dynamic headers are not in the subset")
+            answer.append(f"{camel(h)} *string // {h}: nil when absent; checked by the operation's schema")
+            continue
         consts = sorted({str(op.responses[c].headers[h]) for op in spec.ops for c in op.responses
                          if h in op.responses[c].headers})
         if len(consts) != 1:
             raise GenError(f"header {h}: different const values")
         answer.append(f"{camel(h)} bool // {h}: {consts[0]}")
     answer.append("}\n")
-    answer.append("type responseSpec struct {\nmedia string\njson bool\nschemas []string\nheaders []string\n}\n")
+    answer.append("type responseSpec struct {\nmedia string\njson bool\nschemas []string\nheaders []string\n" +
+                  ("required []string\nheaderChecks map[string]func(any, string) *Violation\n" if typed_headers else "") + "}\n")
     table = ['// responses maps operation->status->declared media, schemas and headers.',
              "var responses = map[Op]map[int]responseSpec{"]
     for op in spec.ops:
@@ -871,16 +912,38 @@ switch op {
             sch = expand(r.schemas)
             js = "true" if r.media and (r.media == "application/json" or r.media.endswith("+json")) else "false"
             hs = ", ".join(go_str(h) for h in r.headers)
+            extra = ""
+            if typed_headers:
+                req = ", ".join(go_str(h) for h in r.required_headers)
+                checks = []
+                for h, schema in r.header_schemas.items():
+                    if h in dynamic_headers:
+                        chk = g.chk(schema, f"chk{op.name}{code}Header{camel(h)}", f"{op.method} {op.path} {code} header {h}")
+                        if chk:
+                            checks.append(f"{go_str(h)}: {chk}")
+                extra = f", required: []string{{{req}}}, headerChecks: map[string]func(any, string) *Violation{{{', '.join(checks)}}}"
             table.append(f"{code}: {{media: {go_str(r.media or '')}, json: {js}, "
-                         f"schemas: []string{{{', '.join(go_str(x) for x in sch)}}}, headers: []string{{{hs}}}}},")
+                         f"schemas: []string{{{', '.join(go_str(x) for x in sch)}}}, headers: []string{{{hs}}}{extra}}},")
         table.append("},")
     table.append("}\n")
     hconst = {h: str(next(op.responses[c].headers[h] for op in spec.ops for c in op.responses
-                          if h in op.responses[c].headers)) for h in header_names}
+                          if h in op.responses[c].headers)) for h in header_names if h not in dynamic_headers}
     hdr_lines = "".join(f"if a.{camel(h)} {{\nif !declared(spec.headers, {go_str(h)}) {{\n"
                         f"return nil, fmt.Errorf(\"door: %v %d: header {h} is not declared\", op, a.Code)\n}}\n"
                         f"header = append(header, [2]string{{{go_str(h)}, {go_str(hconst[h])}}})\n}}\n"
-                        for h in header_names)
+                        for h in header_names if h not in dynamic_headers)
+    for h in (name for name in header_names if name in dynamic_headers):
+        field, quoted = camel(h), go_str(h)
+        hdr_lines += (f"if a.{field} != nil {{\nif !declared(spec.headers, {quoted}) {{\n"
+                      f"return nil, fmt.Errorf(\"door: %v %d: header {h} is not declared\", op, a.Code)\n}}\n"
+                      f"if check := spec.headerChecks[{quoted}]; check != nil {{\n"
+                      f"if e := check(*a.{field}, \"\"); e != nil {{ return nil, fmt.Errorf(\"door: header {h}: %v\", e) }}\n}}\n"
+                      f"header = append(header, [2]string{{{quoted}, *a.{field}}})\n}}\n")
+    if typed_headers:
+        for h in header_names:
+            absent = f"a.{camel(h)} == nil" if h in dynamic_headers else f"!a.{camel(h)}"
+            hdr_lines += (f"if declared(spec.required, {go_str(h)}) && {absent} {{\n"
+                          f"return nil, fmt.Errorf(\"door: %v %d: required header {h} is absent\", op, a.Code)\n}}\n")
     encode = [
         "func declared(names []string, name string) bool {\nfor _, n := range names {\nif n == name {\nreturn true\n}\n}\n"
         "return false\n}\n",
