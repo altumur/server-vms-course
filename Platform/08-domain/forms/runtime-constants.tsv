@@ -54,3 +54,4 @@ REVOKED_WORDS_CAMERA	4	count	P/08.2-R010	Executed revoked words per camera membe
 REVOKED_WORDS_SERVER	256	count	P/08.2-R010	Executed revoked words per server member per day; REVOKED_WORDS selects the row by member class.
 PBKDF2_ITERATIONS	600000	count	P/08.4-R004	PBKDF2-HMAC-SHA256 iterations in the password hash and same-cost dummy check; hash encoding remains the password-hash contract.
 SHARED_OBJECTS_KEEP	5	count	P/08.9-R003	Newest signed shared-document objects retained by the holder.
+RELAY_MEMBERS_MAX	5000	count	P/08.3-R006	Maximum member names in one relay-members writer row; excess writer409 relay full, reader unavailable without truncation. P10 reads this owner limit.

@@ -9,7 +9,7 @@ section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the 
 M11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
 the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (M11/08 sc. 05); sc. 10–16 —
 the second pass (Gemini, the section below); sc. 17–19 — after it (the section «Scenarios 17–19»). Scenario 04
-of the acceptance of M11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (27 rows). The other scenarios
+of the acceptance of M11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (the current corpus). The other scenarios
 of M11/08 and M11/11 — at their chapters (the cluster console — chapter P/06.7; the shared document — [the acceptance of chapter 8.9](../../08-domain/acceptance/9/README.md);
 the agent side — [the acceptance of chapter 9.1](../../09-agent/acceptance/1/README.md)). The forms of foreign doors — their owners.
 
@@ -46,7 +46,7 @@ Scenario 05 compares the JavaScript response bytes with the same [P/07 console.j
   its own read door (`GET /domain`) answers. After `@restart domain` and the readiness of the process (the login `signer`, as sc. 04 of the acceptance of
   [chapter 8.10](../../08-domain/acceptance/10/README.md)) the same edit — 200 `rev: 1`: the broken one is not applied.
 - **Scenario 09** — silence (N1.3 `pass`): the process `domain` is frozen (`@on hold @freeze domain`, the pause ≈ the term «Wait»
-  of the row `PUT /domain/topology` — 5 s, the freeze limit 120 s) — 502 `did not answer` (no answer within `FORWARD_WAIT`). The edit under
+  of the row `PUT /domain/topology` — its `FORWARD_WAIT`, the freeze limit 120 s) — 502 `did not answer` (no answer within `FORWARD_WAIT`). The edit under
   silence is one the process would refuse (`via: {m1: m1}` — 409 «through itself», P/08.3 N1.2): should it read it after `@thaw`,
   there is no write; the control — the edit `base_rev: 0` gives `rev: 1`. That the 502 does not come earlier than the term — by reading (the acceptance does not measure
   the answer time).
@@ -94,12 +94,12 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
   the `rev` of the mark, and the directive `@on … @spoil object` takes the key as it is.
 - **Scenario 15** — before the gate (N2, N1.4 «accept by a console», N1.5 `session`): without a token (`@person -`) a path with a segment
   `.` or `.%2E` — 404 `not a domain route`, not 401 (steps 3, 4); an incoming `X-User: root` is stripped — without a token 401, `/session`
-  is anonymous, without `user` (steps 5, 6); with the token of `root` an incoming `X-User: forged` does not change the identity, `/session` carries the grants
-  `domain/grants/domain` (`[{cap, scope}]`, the first administrator, step 8). `X-Operator: console` — by reading (until the TLS stand).
+  is anonymous, without `user` (steps 5, 6); with the token of `root` an incoming `X-User: forged` does not change the identity, `/session` reports the resulting session:
+  `domain/grants/domain`: the first administrator gets admin through `domain/roles/admin`, without a direct grant line; step 8 keeps `grants: []`. `X-Operator: console` — by reading (until the TLS stand).
 - **Scenario 16** — the rule «Unreadable row» of the gate (N1.5, N4 `unavailable`): `domain/disabled`, `domain/revoked`
   (`no_revocations`), `domain/grants/domain`, `domain/keys` out of form — 503 `unavailable`, not 401/403; after each (except
   the last) the former value by the form — `GET /domain` 200 again: each 503 is from its own row. The former values: `names` —
-  `"[]"` (none is disabled), `jtis` — `""` (an empty string by the form of the contract `keys`; the row `domain/revoked` without revocations may also be absent), the grants of the domain door — the row of the first administrator. No row
+  `"[]"` (none is disabled), `jtis` — `""` (an empty string by the form of the contract `keys`; the row `domain/revoked` without revocations may also be absent), the grants of the domain door — the original empty `{lines: []}` document; the first administrator remains assigned through the admin role. No row
   `domain/keys` with a trace of the domain (`shut`) — by reading: the stand cannot delete it.
 
 ## Scenarios 17–19
@@ -148,4 +148,4 @@ The returned JSON normalizes actual observations: `refused` means a non-success 
 
 [seams.tsv](seams.tsv) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
 
-The review adds eight alarms neighbours (35 rows total) and 34 effect CALL steps; the original 27 alarms rows and all 48 original CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.
+The review added eight alarms neighbours and 34 effect CALL steps. The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

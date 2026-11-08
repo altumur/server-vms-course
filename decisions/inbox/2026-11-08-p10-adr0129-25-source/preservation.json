@@ -1,0 +1,30 @@
+{
+  "base": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+  "Source24_current_before_exact_f0b_1d0f_where_declared": true,
+  "parent_reanchor": {
+    "utc": "2026-11-08T12:11:54.429331+00:00",
+    "current_parent": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+    "previous_map": "CURRENT-PARENT-REANCHOR-a118575b.json",
+    "previous_parent": "a118575b97dc658149ed3b68d39b2e475ea2668c",
+    "Source30_before_mode_blob_exact": true,
+    "branch": "spec103/p10-adr0129-25-33a3c234",
+    "WT": "/home/pilot/wt-spec103-p10-adr0129-25-33a3c234",
+    "selected_authority": "fd6d0c3f62ee1577dd436e088164352b05194839 ADR0129(29)6/7",
+    "wholeforeign_parent_adoption": false,
+    "current_Code37_CP6_preserved": true,
+    "tools_snapshot_auto_adoption": false,
+    "Source_tracked_writes": 0
+  },
+  "protected": [
+    "current Code37 and CP6/source literal followup",
+    "Source21/Source591/17production groups",
+    "common15/P03/P04/P05/P06S08/P07/P09",
+    "Source/VMS/tools/skills",
+    "all nonowned Git entries"
+  ],
+  "protected_dead_band": "Field and requested-rebalance P04R010 threshold0.10 unchanged; distinct from ordinary N3 placement. No P04/VMS/corpus changes.",
+  "raise_schema": "Only selected legacy live schema<N/admission/window removed; current ownSCHEMA<N409/unknown409/unconfirmed503/no-write/GETPUTCAS/revision/ETag/IfMatch/replay/step4 retained; no SCHEMA2",
+  "no_fullforeign_parent_adoption": true,
+  "old38_61_83_40_32_corpora_program_archive_replay": false,
+  "no_models_stand_SUT_Go_HTTP_or_trial_pin_changes": true
+}

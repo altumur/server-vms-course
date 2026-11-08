@@ -116,7 +116,7 @@ scenario	step	request	expect
 16-gate-rows-unreadable	11	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	12	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "not json"}}	200
 16-gate-rows-unreadable	13	holder GET /domain	503 {"error": "unavailable"}
-16-gate-rows-unreadable	14	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "{\"lines\":[{\"by\":\"root\",\"cap\":\"admin\",\"scope\":\"*\",\"subject\":\"root\",\"until\":0}]}"}}	200
+16-gate-rows-unreadable	14	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "{\"lines\":[]}"}}	200
 16-gate-rows-unreadable	15	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	16	member hold store POST /v1/write {"op": "put", "key": "domain/keys", "items": {"doc": "not json"}}	200
 16-gate-rows-unreadable	17	holder GET /domain	503 {"error": "unavailable"}

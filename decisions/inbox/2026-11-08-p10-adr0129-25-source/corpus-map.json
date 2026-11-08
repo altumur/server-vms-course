@@ -1,0 +1,32 @@
+{
+  "base": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+  "new25_changed_cells": [
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "line": 119,
+      "scenario": "16-gate-rows-unreadable",
+      "step": "14",
+      "column": "request",
+      "old": "member hold store POST /v1/write {\"op\": \"put\", \"key\": \"domain/grants/domain\", \"items\": {\"doc\": \"{\\\"lines\\\":[{\\\"by\\\":\\\"root\\\",\\\"cap\\\":\\\"admin\\\",\\\"scope\\\":\\\"*\\\",\\\"subject\\\":\\\"root\\\",\\\"until\\\":0}]}\"}}",
+      "new": "member hold store POST /v1/write {\"op\": \"put\", \"key\": \"domain/grants/domain\", \"items\": {\"doc\": \"{\\\"lines\\\":[]}\"}}",
+      "expect_unchanged": "200",
+      "first_identifiers_preserved": true
+    }
+  ],
+  "other_scenario_rows_byte_exact": true,
+  "scenario15_step8_grants_empty_preserved": true,
+  "accepted429_alarms": {
+    "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+    "pin": "429858a9d9dc4127acb22ef6c3fef75b5d301a69",
+    "rows": 37,
+    "exit2": 15,
+    "raw_exact_accepted429": true,
+    "not_new_finding_or_rerun": true
+  },
+  "family08": {
+    "unchanged": true,
+    "no_rows_added": true,
+    "relay_existing_cases": "8 named matching rows inspected as direct count-limit neighbours only; no whole family execution"
+  },
+  "new_runtime_cases_ports_or_DSL": false
+}

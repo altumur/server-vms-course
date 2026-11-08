@@ -9,6 +9,7 @@
    ]
   },
   "members": {
+   "maxProperties": 5000,
    "description": "member — key, JSON text",
    "type": "object",
    "additionalProperties": {

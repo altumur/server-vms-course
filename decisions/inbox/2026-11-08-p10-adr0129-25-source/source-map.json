@@ -1,0 +1,586 @@
+{
+  "status": "AUTHOR_SOURCE_COMPONENT_REVIEW_ONLY",
+  "base": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+  "Source_paths": 30,
+  "Source_records": [
+    {
+      "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "6b99f2001d0162d6c3bc3b5a0d59aef92774d8ca",
+        "sha256": "f7722ad42f72b3d250b878e0edede09377274853cba3d86a06411761eaa85380",
+        "bytes": 150273,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "dcf4b2bad30eb97a935ce334187f7a287a8f99e3",
+        "sha256": "6068112059b4c98f3213cab3af60af6673b84a124337cab570fcb3c5e8743e8f",
+        "bytes": 150308,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "76d52e338d435737c532571ebab20dc4bfb096a3",
+        "sha256": "7aae92312ef8dcbc36ea59b83e20120ab1f97c7d34da40e6bf5ac073a27f5560",
+        "bytes": 115910,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "5f1c0335ff0566cc8c9d9180538e2b5fbb2ea07a",
+        "sha256": "708d6bd66a15204a5c822ae9f75cee245f1c6f2103d6f2de62b904300a654672",
+        "bytes": 115922,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "97a261ccbaf3a70a3c0c912f1e5e21cce8edef85",
+        "sha256": "c88c8b2d6c29c83616936acd46037631124620a166518cb6c9145941fa8aec83",
+        "bytes": 87591,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "069ca7daa2aab0a3301fe2da693c36858760af25",
+        "sha256": "0203b290ebdb7cca4f587a61213deda1a23f74bd8e25b4b776cc8f4f2bb28d75",
+        "bytes": 85998,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/06-console/spec/06.6-console.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "530e7f4d7797ef6f66b5072cb7039ea906c455f7",
+        "sha256": "8546d663f9e56d4bb6803d0a29cb52a6b44cded90d9e1487cb56c29474571c5f",
+        "bytes": 69284,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "69fd73c86553a769b7bb83cbfd5a81f3245f694a",
+        "sha256": "745b946451a3758ecf9cc2538f898f56006e71d107c80e1ab56155cb84ec6846",
+        "bytes": 68291,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/data/relay-members.schema.json",
+      "kind": "Source",
+      "before": {
+        "blob": "4099935d542127766636cd91da50584cd294ce92",
+        "sha256": "7bb618718846a377634aea28a9505f8fc92b0862539e2b50fbad070be930469c",
+        "bytes": 28666,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "f5da16d287c92ff5f2dfa82837e069ec8c88e21c",
+        "sha256": "caa05f7b1597ee03b0993f90510d990119d3e26f6e912795c4b7687949fa9565",
+        "bytes": 28692,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/forms/runtime-constants.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "b52a0117a252abfa085e31de2d5a0c770e65bbe5",
+        "sha256": "cc1d063be8e9c0c9f0c9e02ce0660f2ec6b221902ad89e6430281869c90d7477",
+        "bytes": 7120,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "29dd533130b056b3b71ee2611c51ec290b9a90ce",
+        "sha256": "b4e7c56293a87067927cb5122776dc20597f10425497d1ca108f153f1845e73f",
+        "bytes": 7311,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "1ea136c17de481514f80086e0e77bd48ad188c92",
+        "sha256": "a15206e447b0b058b33ea5fdbf80fb74d55450e69a40c9bafac2644c2d159a9b",
+        "bytes": 133432,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "02d5671cac95557313aea36f386dc1706a782af7",
+        "sha256": "bee73f5df74b88476f098c32561a7ad41c440b58ea6c2124c9db9293fa68dd49",
+        "bytes": 133565,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "405a5f73ad6ad4d90ca4d444f69a1d6644078181",
+        "sha256": "c7cb0d92383d1b919561f6843168e6d973f1e0570274924dc0ce374ddae49bf7",
+        "bytes": 78629,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "61467424fb6e38462256ad925e63c1a257b5ab80",
+        "sha256": "a7c8edddb93112308d734306112dee774f7a0bf6307d69408f9cad0c5d9d96f8",
+        "bytes": 79247,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/spec/08-domain.api.openapi.yaml",
+      "kind": "Source",
+      "before": {
+        "blob": "862b513d4df5d29b9a3de26df599609886cc99e0",
+        "sha256": "c9e41d69e5686587df9efa08276ff0d970243099fa5306bd1998e0d50544fdac",
+        "bytes": 173611,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "ae0bf597e4a9213905914cc3ed866e8912273d30",
+        "sha256": "866b4e89e74d0c63e09c049adbfce76d46886d08c52f61c164c96e8eeb316760",
+        "bytes": 178278,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "b9b935232d7e29c04f37045540c804fe9cf5d702",
+        "sha256": "344b91d410e5dd86c5985fccb564de270e31ae37ffed6fd119256cf6253b3cf0",
+        "bytes": 107696,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "61893a98cce3a9f18a343aa536a1ef8ccdfbbd5e",
+        "sha256": "e7d8410668f4cbb5c47ed9df3c66d8f413b4f6f424fd9095fe4bffe684a7f692",
+        "bytes": 107791,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "feebcf6583f6e689a2280e4edaee320cf3469734",
+        "sha256": "2a926a5e0c4d7c4809457e4354632181a960c96824e0a49dd8e22fdbc54e6214",
+        "bytes": 63573,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "073688d22321828305921a5d2bf0deb17e1df104",
+        "sha256": "6a901e9b710726966fed985b44382d4b4d5a96845656da102ba9a142b9df107e",
+        "bytes": 63974,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "7726ed17564f5abff5eaa61a4782e02826c08dee",
+        "sha256": "28b95466fb93b14c9d2b4844ceea3e74a9f575b69a5acfa93f0c5828d5e6ff60",
+        "bytes": 19680,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "8921016bac3e5b559e9356fc6622cdb52a463801",
+        "sha256": "d9c74d2ccb91ed3ea177d8ee31c4d330105118bb0a1d11ac0089fbb1c13e21f5",
+        "bytes": 20006,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "576181aec80e156b60bf89c68ca360140a2ebeec",
+        "sha256": "7aea6a05b375021609c114a44e6de75f0d435884058822f9d7fd58f511e11995",
+        "bytes": 15376,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "216315f309cfb91b1d34d1df3a41331ac3e27b02",
+        "sha256": "fac67cadb70e92d2fd1953988b667e11d462cff2efef60fb68dd2d61bd39ee3f",
+        "bytes": 15292,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/forms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "9e05424d9698db8cd47cb9612d41d3e5be4d297c",
+        "sha256": "db15332448a21906480ae6d4c00f5de0b093ce79f35cddfc4d302314ca1250d6",
+        "bytes": 16571,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "58695d79c4bf13417822711c8b3fb84ce727ae7a",
+        "sha256": "a5594b0e83d9be640417f84b624722328585807a5c3de0590c7aace44b68ce26",
+        "bytes": 16709,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/forms/refusals.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "2e84659f747efc649f0fbd4d0d2a1dfe1ed84966",
+        "sha256": "a471ad79b307f4a9e9af61e8d497fa2eb358ba4bd213e60fb794243abcb5d565",
+        "bytes": 9873,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "e0597faa5a4eba8bb653d7cd8803054ea320e4ab",
+        "sha256": "f55e928546ab8be05d82526f8a4dca272f8c1304228deb557775d4bc23df9cd8",
+        "bytes": 10345,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/forms/runtime-constants.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "a59c1cf773e42826bf59c047f744d393504a5eee",
+        "sha256": "10312965f39be845cd85cbbe23911a0ab9ead7fb2daf43ad3f86e3a2ee0692d6",
+        "bytes": 633,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "2a6342541b68bbb83c8124a18a1d151563284829",
+        "sha256": "8f636f0be95d93314b3025c27cd1622f095be26d3c53e09551558d464a63bc26",
+        "bytes": 511,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/lifecycle.md",
+      "kind": "Source",
+      "before": {
+        "blob": "80bd4af6d4b2aac109dc0ff398d0a1899a1d4851",
+        "sha256": "56cee30789e5f8ba3f92a79c5e037b12c15df275aa3bf02e3e5ede556cd24ca2",
+        "bytes": 7046,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "786347cf04080d6da7ad73463a01cb04246d63af",
+        "sha256": "6db3552336de4e10a577fda0b204106f8817636690e5c8f60c7c81df88b36b17",
+        "bytes": 7905,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/acceptance/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "34f3630b12fe6bccd3a2a38c17d3fb107eeba5cf",
+        "sha256": "67ee736aabb93abc3074516fb1badb02df6f9596a463f373f9110ef741f78fd4",
+        "bytes": 25783,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "07b72981dcbb8c6dc1ff9120e13a9b2b28b71673",
+        "sha256": "b471ccd73ed7c03fb472d765304142e9f4d11d6c2e7eb3ab5abbc52163b2da10",
+        "bytes": 26355,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/forms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "b777c7f44f77e115196b4a3f4892e68a880ebb6e",
+        "sha256": "137abed7cf0a060c8c020a490e7a5bc2071790bafeb009598f28a274f741f610",
+        "bytes": 23245,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "61d1dcfdd610f57b8e849d94fd9cf8fbbe37fbf9",
+        "sha256": "908d6a767581ab9cfbc31edf4b8b1640f0496200e8187084e4f5c2c32da56b70",
+        "bytes": 23388,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/lifecycle.md",
+      "kind": "Source",
+      "before": {
+        "blob": "c8a084bfa0a718877b87cd47a0cd7aa398d18455",
+        "sha256": "3e6fd72c1786036293e9c09a248f33adbfca4bd168307ae86fa45e4c69cf17a8",
+        "bytes": 8685,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "d4a01e7217e5ac8919632d55c27de6d7e5bde2b6",
+        "sha256": "033551b9cb26e69c68acbab00e5adc0edb268a590a8e74e26d351efd8c01f898",
+        "bytes": 9858,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "177b4c7f0902ccf62245e8546f3bffacf7cc08b0",
+        "sha256": "3f798e888d6b8efee254495b2fefc015a58119b753a6206a82f439b3172ca917",
+        "bytes": 8829,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "251eb6ed1b6a097e5b9ae343a12537f9036ea9fe",
+        "sha256": "2287f483e1098ff65fd3dba3597dd860f464740372fcb111e62e44544a889b96",
+        "bytes": 8782,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "5ac406bb85c340b9661569c8eb12012ff2ebb0f2",
+        "sha256": "be0edcb676bade96e86625bbc000229fc018d36841083b2ed0d4df6b4d15ab53",
+        "bytes": 94662,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "4cdf13f66922142e6e6a6b81cd4cbcc9c8a36888",
+        "sha256": "fdd2dec5c9132de90168c213849e17a4acbd3fff5c1bf8c6a5b0c0d1f0dd18fd",
+        "bytes": 96957,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/ru/vectors/alarms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "6566ed4ac07fd8e257429aec8e8ff5dbcffca873",
+        "sha256": "83573eafabbeead89f96d0197cb981f5001a6fd8bafcf52f59e4aaafd33ba0c3",
+        "bytes": 11360,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "f2bcff3b3828d4929d5d6859848a577a93f7ffa4",
+        "sha256": "4ebf8861f457af3de4f6bc25d834f955b2fb68f2a50ed38b5ac2e017ba7bc56a",
+        "bytes": 11494,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "d1621322a785b1b51536a4d6bb8967fcf53c0330",
+        "sha256": "5d207b7961635857187fdc82876eeaa3a64861e3b42294514d956ef63e73319e",
+        "bytes": 6737,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "ba8303bc7002e2cfda1ff412c1c7735ffaeca0fa",
+        "sha256": "dc8fd75e63bd187988b6a428d5d4bf568447f21c9f609ada48f75916814a2b20",
+        "bytes": 6663,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+      "kind": "Source",
+      "before": {
+        "blob": "090a64a77f0aa7e4d747e046edbf902a707264e7",
+        "sha256": "4c7923209b1851f79a08ed7dbd777bf9833d3cc90718c3182a78f870c379e375",
+        "bytes": 285385,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "10f54b38b73c5e4be31a04f12a1e75dddb0b5de8",
+        "sha256": "aa226154c7fc013cd1ed34a5f49ac9fd5bc0e4c2caeaa4cee69cc050a5d610df",
+        "bytes": 318683,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "kind": "Source",
+      "before": {
+        "blob": "8a31aeb0bdd3c5c3873ee082b829229e43d7655c",
+        "sha256": "69e28af27e9c1a543a7a29f2c3fb993bbf486ab76b044f5e42f0f8bc1b263ac1",
+        "bytes": 75191,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "13fa0362b17ca95c0e16f14e294a1dbefb36aa1b",
+        "sha256": "47ad7b026b00e5f7fdea11966930e3892ddb0ca4044c82e4df07def7ddb61741",
+        "bytes": 76731,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/vectors/alarms/README.md",
+      "kind": "Source",
+      "before": {
+        "blob": "6ca4bcdf29485f67d7aa108e94f0e055d5b0c6df",
+        "sha256": "36b6580b689c02763e150561f02ff920657e6fc6697688386980e727027331e6",
+        "bytes": 9813,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "35b1ce20c35593966a26de21226ef13fb0f9f7dc",
+        "sha256": "e055721548bd91c1dd0c2e8412bd8e341806bc8e9c2e6ec9e2ca905e398678f2",
+        "bytes": 9895,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+      "kind": "Source",
+      "before": {
+        "blob": "0f7199dbfed74ef743be67185481ead8128a9faa",
+        "sha256": "e63524704b38c736648fec95d208e62f3b794e022dbbc83c39ea3eb33af5ffde",
+        "bytes": 22718,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "7c8fa557bbfc830319c59f6f7cc80c5a223762c8",
+        "sha256": "29506c5585b0ddc222d0888f27c2687144fb67b1968bfd4380c8ea6b39cbdc7b",
+        "bytes": 24535,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/common/contracts/schema.md",
+      "kind": "Source",
+      "before": {
+        "blob": "3a1c18449fd84cf51f36d3c1ccf1df15a97c8eaa",
+        "sha256": "232deba23b2a4de360bb3ada493bd96db3d6c125987d2f106b3fe6c321348a2c",
+        "bytes": 6545,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "31ff407dc54df9d951784dbe0509ebba759bfb0b",
+        "sha256": "040486ff943922516b1f2ad5201b4080ab295ad378c39e9cb9049ea6d4a72c5b",
+        "bytes": 6545,
+        "mode": "100644"
+      }
+    },
+    {
+      "path": "Platform/common/ru/contracts/schema.md",
+      "kind": "Source",
+      "before": {
+        "blob": "15798d8d9ca95676ef81fc78307ab3069faa32f9",
+        "sha256": "d5b55c734e1dd2d17cdac0f97bb4385ec446d6b208fb646e6bf69de0d4a83c7f",
+        "bytes": 8627,
+        "mode": "100644"
+      },
+      "after": {
+        "blob": "cdb2cbd2bd418af822899a2bfc2787bcb006e7d6",
+        "sha256": "8fe97313719d890f7924dba00d3615b23d2736fc6740edacb1a17b7df4db673d",
+        "bytes": 8641,
+        "mode": "100644"
+      }
+    }
+  ],
+  "accepted_component": {
+    "pin": "429858a9d9dc4127acb22ef6c3fef75b5d301a69",
+    "receipt_sha256": "8bb3f6d459b4f9023bd9fbb06c8d15bd371aab9881ff600943ff6b608806fa8f",
+    "imported_Source_paths": 15,
+    "old_metadata_and_parents_not_adopted": true
+  },
+  "new25": {
+    "text_blocks": 47,
+    "API10_blocks": 24,
+    "API08_blocks": 1
+  },
+  "closed_preserved": [
+    "C1 mandatory silent_after both variants",
+    "C2 exact accepted37 alarm rows/15 exit2",
+    "C9 scalar disposition not reopened",
+    "M4 own-versus-forwarded words"
+  ],
+  "modified_Req": [
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R002",
+      "old_sha256": "2b7687ebfa16fc8157b8c6e034b7dadec5c613fcb39f696483af479d0edbc416",
+      "new_sha256": "d6af610e9d9030a60ad13371da585f6352f77abc089ebe436193f9bfd34ef674"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R003",
+      "old_sha256": "de868c65e093bdacfa735399e28f7aaa8fbcc23fa9aa1e973ffc392ae8a3b6f3",
+      "new_sha256": "930a4a3e2e5ad0dd20fcee394f845a26216e843dee12f8103e5a97ab0874e615"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R004",
+      "old_sha256": "379fb833692f188f4c40aa6d682501a9dd7b4bf26753b7c7edef3987ae2be83c",
+      "new_sha256": "4da44d89ff026b8c6721f590e8f202ed741cceeb2dbfd43f8069bfde1407af7e"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R005",
+      "old_sha256": "6a1149b57f7f0bf161c67164f6fdb03b59f8f55e976fffbac62bbb6de29ac62b",
+      "new_sha256": "ce1a3492af6f33d86fcbc33727db022ccd6e0d62fbc2a2e3f60dd67158187d75"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R009",
+      "old_sha256": "c2a827542b8a55c636d39568859b0128403e0748ff2125ca4fd96e78892d8e78",
+      "new_sha256": "3fa1842da74917832b70ac06349e5cc8b7865749e8f949b1ec85062737f7ac67"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R011",
+      "old_sha256": "47c9681eba433410912181f7542463815359872de0e0433ed956778bbd6d1252",
+      "new_sha256": "c8601f3e2e2276002c1f2ac29e79ef2b18064dfb48ff17b254d7b2a7a6588cb6"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R014",
+      "old_sha256": "55c48fb6d136a7c6f33ceaa9fea79f444405308a1de1608f65b7ac66dcb78721",
+      "new_sha256": "922f7d1f9bf78e86423970157fab3db48c1e19b1c8e069b50cc77630e4b70364"
+    },
+    {
+      "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
+      "id": "P/10-R016",
+      "old_sha256": "c4a589d8831e24a00d90859999a25b4e4830561e45cdc0f5f7a336d384212281",
+      "new_sha256": "1c7f999ed55a9d8d5c3d293577f432cefe44e9dd57bc4e439d80bba9cf328f4b"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.norms.md",
+      "id": "P/08.3-R006",
+      "old_sha256": "2f1e1a97aadba1f953c932828d9f302a3e070cc4e73d3ea07d5621fa605826e0",
+      "new_sha256": "298e4d6738dbc0d73537b7936ef56a8e3725ebd76b528276d46bb5f40188d2d2"
+    },
+    {
+      "path": "Platform/08-domain/spec/08.6-domain.norms.md",
+      "id": "P/08.6-R010",
+      "old_sha256": "405efafba308a6c5201f644a7d6d4f3309ae0c7f65a697e99aa5f6bef7c16676",
+      "new_sha256": "d1f8391d2461f312187f4ac2836911514dac339f1038e2ecd20062038fabfbb6"
+    },
+    {
+      "path": "Platform/06-console/spec/06.6-console.norms.md",
+      "id": "P/06.6-R004",
+      "old_sha256": "4041be74064732de28160277a9ba13071911631dcd349f09eebbae1371642dc7",
+      "new_sha256": "86926495b3c73a5d7ba62412985104b69e728e460ad494c0527f58101e072e32"
+    },
+    {
+      "path": "Platform/06-console/spec/06.6-console.norms.md",
+      "id": "P/06.6-R011",
+      "old_sha256": "bf1c00a5484f9cb2c14d1966e594aafa234601e671a5fe1b5ca9d8192b9d62c2",
+      "new_sha256": "8606408978273b4be42488dfdefd78464c4d3c5ebc4400cdfe2bb1bddeb8bf4b"
+    }
+  ],
+  "new_Req_ids": [],
+  "metadata_state": "review",
+  "accepted_applied": false,
+  "new_grammar_or_Code": false,
+  "new_constants": "RELAY_MEMBERS_MAX5000 ownership moves P10 -> P08 existing integer class; no changed value",
+  "no_candidate_native_or_SUT_execution": true,
+  "Source_READY": false,
+  "GATE": false
+}

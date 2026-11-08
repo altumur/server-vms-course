@@ -1,0 +1,341 @@
+{
+  "base": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+  "API10_new_blocks": [
+    {
+      "label": "C11:/domain/relays/{relay}:404",
+      "path": [
+        "paths",
+        "/domain/relays/{relay}",
+        "get",
+        "responses",
+        "404"
+      ],
+      "start": 5122,
+      "end": 5167,
+      "old": "        '404': {description: No such member}\n",
+      "new": "        '404':\n          description: 'No such member Existing own-door error word: no such member; N1.2 and the closed N4 word list.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Refusal'\n"
+    },
+    {
+      "label": "C11:/domain/{sub}/kept/{name}:404",
+      "path": [
+        "paths",
+        "/domain/{sub}/kept/{name}",
+        "get",
+        "responses",
+        "404"
+      ],
+      "start": 6736,
+      "end": 6794,
+      "old": "        '404': {description: Name not declared or no row}\n",
+      "new": "        '404':\n          description: 'Name not declared or no row Existing own-door error word: no such path; N1.2 and the closed N4 word list.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Refusal'\n"
+    },
+    {
+      "label": "M6:/domain/{sub}/tables/{table}",
+      "path": [
+        "paths",
+        "/domain/{sub}/tables/{table}",
+        "get",
+        "responses",
+        "200"
+      ],
+      "start": 8394,
+      "end": 8620,
+      "old": "        '200':\n          description: Object as is\n          content:\n            application/json:\n              schema:\n                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberTable'\n",
+      "new": "        '200':\n          description: Object as is\n          content:\n            application/json:\n              schema:\n                $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberTable\n          headers:\n            ETag:\n              description: Quoted sha256 of this served body, separately for each response; N1.2a.\n              schema:\n                type: string\n"
+    },
+    {
+      "label": "M6:/domain/{sub}/{rows}",
+      "path": [
+        "paths",
+        "/domain/{sub}/{rows}",
+        "get",
+        "responses",
+        "200"
+      ],
+      "start": 11204,
+      "end": 11503,
+      "old": "        '200':\n          description: Units of the subsystem by (cluster, id)\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Unit'\n",
+      "new": "        '200':\n          description: Units of the subsystem by (cluster, id)\n          content:\n            application/json:\n              schema:\n                type: array\n                items:\n                  $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Unit\n          headers:\n            X-Cursor:\n              description: Opaque continuation for a paged view read; omitted at the end and for cluster/part single-row mode; N1.2a.\n              schema:\n                type: string\n            X-Withheld:\n              description: Count hidden because an input is unavailable under the existing visibility rule; N1.2a.\n              schema:\n                type: integer\n                minimum: 0\n"
+    },
+    {
+      "label": "C8:members:get",
+      "path": [
+        "paths",
+        "/domain/members",
+        "get"
+      ],
+      "start": 20781,
+      "end": 21664,
+      "old": "    get:\n      summary: Member list and those knocking (N1.2b)\n      description: Answered by the domain console itself (P/10-07); POST — pass to the process.\n      responses:\n        '200':\n          headers:\n            ETag:\n              $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/headers/ETag'\n          description: 'List and those knocking: rev, term?, members — doc of the row domain/member-rows/<part>; knocking — view.knocking\n            (N1.2b; C10-MEMBERS-SOURCE-01)'\n          content:\n            application/json:\n              schema:\n                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MembersView'\n        '400': *id001\n        '401': *id002\n        '403': *id003\n        '404':\n          $ref: '#/components/responses/NoDomain'\n        '503':\n          $ref: '#/components/responses/ReadUnavailable'\n",
+      "new": "    get:\n      summary: Member list and those knocking (N1.2b)\n      description: Answered by the domain console itself (P/10-07); POST — pass to the process.\n      responses:\n        '200':\n          description: 'MembersView of P/10 N1.2b: members, parts with exact Row.index strings, knocking, count when present,\n            and optional cursor. Up to DOMAIN_PAGE_MEMBERS per page. The list has no ETag; row-version ETag belongs to a one-row\n            door.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MembersView\n        '400':\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/BadBody\n        '401':\n          $ref: '#/components/responses/Unauthenticated'\n        '403':\n          $ref: '#/components/responses/Forbidden'\n        '404':\n          $ref: '#/components/responses/NoDomain'\n        '503':\n          $ref: '#/components/responses/ReadUnavailable'\n      parameters:\n      - name: cursor\n        in: query\n        required: false\n        schema:\n          type: string\n        description: Opaque continuation returned by this MembersView door; return unchanged. Without it start the traversal of\n          P/10 N1.2b.\n"
+    },
+    {
+      "label": "C8:members:head",
+      "path": [
+        "paths",
+        "/domain/members",
+        "head"
+      ],
+      "start": 21664,
+      "end": 22209,
+      "old": "    head:\n      summary: 'HEAD: the same code and headers as for GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'\n      responses:\n        '200':\n          description: as for GET, without a body\n        '400':\n          description: as for GET, without a body\n        '401':\n          description: as for GET, without a body\n        '403':\n          description: as for GET, without a body\n        '404':\n          description: as for GET, without a body\n        '503':\n          description: as for GET, without a body\n",
+      "new": "    head:\n      summary: 'HEAD: the same code and headers as for GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'\n      responses:\n        '200':\n          description: as for GET, without a body\n        '400':\n          description: as for GET, without a body\n        '401':\n          description: as for GET, without a body\n        '403':\n          description: as for GET, without a body\n        '404':\n          description: as for GET, without a body\n        '503':\n          description: as for GET, without a body\n      parameters:\n      - name: cursor\n        in: query\n        required: false\n        schema:\n          type: string\n        description: Opaque continuation returned by this MembersView door; return unchanged. Without it start the traversal of\n          P/10 N1.2b.\n"
+    },
+    {
+      "label": "C4:/domain/partial/close",
+      "path": [
+        "paths",
+        "/domain/partial/close",
+        "post"
+      ],
+      "start": 28406,
+      "end": 28802,
+      "old": "    post:\n      summary: End of the «from nothing» collection (chapter 8.8 N1.8a; the right admin of the domain)\n      responses:\n        '200': {description: 'Pass to the process', content: {application/json: {schema: {type: object, additionalProperties: true}}}}\n        '401': {description: No identity}\n        '403': {description: No right admin}\n        '404': {description: No collection}\n",
+      "new": "    post:\n      operationId: passPartialClose\n      summary: 'Pass to the domain process: partialClose'\n      description: The existing N1.3 console/role admission applies. Pass the method, path with query, body and forwarding headers\n        to P/08 partialClose and serve its complete response as received. No local reconstruction or bare default.\n      responses:\n        '400':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '401':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 401 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole401'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '403':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 403 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole403'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '404':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 404 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/NotADomainRoute'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '408':\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody\n        '413':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '502':\n          $ref: '#/components/responses/PassBroke'\n        '503':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 503 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrUnavailable/content/application~1json/schema\n        '200':\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1partial~1close/post/responses/200\n"
+    },
+    {
+      "label": "C11:/domain/folders/{id}/units:400",
+      "path": [
+        "paths",
+        "/domain/folders/{id}/units",
+        "get",
+        "responses",
+        "400"
+      ],
+      "start": 29953,
+      "end": 29994,
+      "old": "        '400': {description: Bad cursor}\n",
+      "new": "        '400':\n          description: 'Bad cursor Existing own-door error word: refused; N1.2 and the closed N4 word list.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Refusal'\n"
+    },
+    {
+      "label": "C11:/domain/folders/{id}/units:404",
+      "path": [
+        "paths",
+        "/domain/folders/{id}/units",
+        "get",
+        "responses",
+        "404"
+      ],
+      "start": 30075,
+      "end": 30115,
+      "old": "        '404': {description: No folder}\n",
+      "new": "        '404':\n          description: 'No folder Existing own-door error word: no such path; N1.2 and the closed N4 word list.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/Refusal'\n"
+    },
+    {
+      "label": "C4:/domain/batches/{name}",
+      "path": [
+        "paths",
+        "/domain/batches/{name}",
+        "delete"
+      ],
+      "start": 32612,
+      "end": 33079,
+      "old": "    delete:\n      summary: Revocation of a batch (chapter 8.3 N1.1b; the right admin of the domain)\n      parameters:\n      - {name: name, in: path, required: true, schema: {type: string}}\n      responses:\n        '200': {description: 'Pass to the process', content: {application/json: {schema: {type: object, additionalProperties: true}}}}\n        '401': {description: No identity}\n        '403': {description: No right admin}\n        '404': {description: No batch}\n",
+      "new": "    delete:\n      operationId: passBatchRevoke\n      summary: 'Pass to the domain process: batchRevoke'\n      description: The existing N1.3 console/role admission applies. Pass the method, path with query, body and forwarding headers\n        to P/08 batchRevoke and serve its complete response as received. No local reconstruction or bare default.\n      responses:\n        '400':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '401':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/GateOrRole401'\n        '403':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/GateOrRole403'\n        '404':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 404 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/NotADomainRoute'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '408':\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody\n        '413':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '502':\n          $ref: '#/components/responses/PassBroke'\n        '503':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 503 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '200':\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batches~1{batch}/delete/responses/200\n      parameters:\n      - name: name\n        in: path\n        required: true\n        schema:\n          type: string\n"
+    },
+    {
+      "label": "C4:/domain/issued/{sub}/{kind}/{ref}",
+      "path": [
+        "paths",
+        "/domain/issued/{sub}/{kind}/{ref}",
+        "delete"
+      ],
+      "start": 33116,
+      "end": 33744,
+      "old": "    delete:\n      summary: Revocation of the tokens of a target of kind keep (P/08.2 N1.6a; the right admin of the domain)\n      parameters:\n      - {name: sub, in: path, required: true, schema: {type: string}}\n      - {name: kind, in: path, required: true, schema: {type: string}}\n      - {name: ref, in: path, required: true, schema: {type: string}}\n      responses:\n        '200': {description: 'Pass to the process', content: {application/json: {schema: {type: object, additionalProperties: true}}}}\n        '401': {description: No identity}\n        '403': {description: No right admin}\n        '404': {description: No row}\n",
+      "new": "    delete:\n      operationId: passIssuedRevoke\n      summary: 'Pass to the domain process: issuedRevoke'\n      description: The existing N1.3 console/role admission applies. Pass the method, path with query, body and forwarding headers\n        to P/08 issuedRevoke and serve its complete response as received. No local reconstruction or bare default.\n      responses:\n        '400':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '401':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/GateOrRole401'\n        '403':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/GateOrRole403'\n        '404':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.\n            Transition 3: the P/08 owner response 404 as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/NotADomainRoute'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n        '408':\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/SlowBody\n        '413':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n        '502':\n          $ref: '#/components/responses/PassBroke'\n        '503':\n          description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and N4.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n        '200':\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1issued~1{sub}~1{kind}~1{ref}/delete/responses/200\n        '409':\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1issued~1{sub}~1{kind}~1{ref}/delete/responses/409\n      parameters:\n      - name: sub\n        in: path\n        required: true\n        schema:\n          type: string\n      - name: kind\n        in: path\n        required: true\n        schema:\n          type: string\n      - name: ref\n        in: path\n        required: true\n        schema:\n          type: string\n"
+    },
+    {
+      "label": "C5:alarms:get",
+      "path": [
+        "paths",
+        "/domain/alarms",
+        "get"
+      ],
+      "start": 64139,
+      "end": 65371,
+      "old": "    get:\n      summary: Alarms of the members (N1.8)\n      description: The function alarms (N3) on the pages of the latest reports, the history and the witnesses (P/10-06).\n      responses:\n        '200':\n          description: '{since, until, events, members, complete, sentence}'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/AlarmsView'\n        '400':\n          $ref: '#/components/responses/AlarmsWindow'\n        '401': *id002\n        '403': *id003\n        '503': *id004\n      parameters: &id006\n      - name: since\n        in: query\n        required: false\n        schema:\n          type: number\n        description: \"Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).\"\n      - name: until\n        in: query\n        required: false\n        schema:\n          type: number\n        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default\n          — now (N1.8 door).\n",
+      "new": "    get:\n      summary: Alarms of the members (N1.8)\n      description: The function alarms (N3) on the pages of the latest reports, the history and the witnesses (P/10-06).\n      responses:\n        '200':\n          description: '{since, until, events, members, complete, sentence}'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/AlarmsView'\n        '400':\n          $ref: '#/components/responses/AlarmsWindow'\n        '401':\n          $ref: '#/components/responses/Unauthenticated'\n        '403':\n          $ref: '#/components/responses/Forbidden'\n        '503':\n          $ref: '#/components/responses/GuardShut'\n        '404':\n          $ref: '#/components/responses/NoDomain'\n      parameters:\n      - name: since\n        in: query\n        required: false\n        schema:\n          type: number\n        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric\n          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).\n      - name: until\n        in: query\n        required: false\n        schema:\n          type: number\n        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric\n          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now (N1.8 door).\n"
+    },
+    {
+      "label": "C5:alarms:head",
+      "path": [
+        "paths",
+        "/domain/alarms",
+        "head"
+      ],
+      "start": 65371,
+      "end": 65867,
+      "old": "    head:\n      summary: 'HEAD: the same code and headers as GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'\n      responses:\n        '200':\n          description: as at GET, without a body\n        '400':\n          description: as at GET, without a body\n        '401':\n          description: as at GET, without a body\n        '403':\n          description: as at GET, without a body\n        '503':\n          description: as at GET, without a body\n      parameters: *id006\n",
+      "new": "    head:\n      summary: 'HEAD: the same code and headers as GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'\n      responses:\n        '200':\n          description: as at GET, without a body\n        '400':\n          description: as at GET, without a body\n        '401':\n          description: as at GET, without a body\n        '403':\n          description: as at GET, without a body\n        '503':\n          description: as at GET, without a body\n        '404':\n          description: Same 404 code and headers as GET, without a body (no domain here).\n      parameters:\n      - name: since\n        in: query\n        required: false\n        schema:\n          type: number\n        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric\n          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).\n      - name: until\n        in: query\n        required: false\n        schema:\n          type: number\n        description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric\n          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now (N1.8 door).\n"
+    },
+    {
+      "label": "C3:/domain/edits:401",
+      "path": [
+        "paths",
+        "/domain/edits",
+        "post",
+        "responses",
+        "401"
+      ],
+      "start": 229828,
+      "end": 229900,
+      "old": "        '401':\n          $ref: '#/components/responses/Unauthenticated'\n",
+      "new": "        '401':\n          description: no identity — the gate of the domain console (N1.5, error denied) or the TLS role door without a client certificate\n            (N1.4 server.role, error no_role)\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole401'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits:403",
+      "path": [
+        "paths",
+        "/domain/edits",
+        "post",
+        "responses",
+        "403"
+      ],
+      "start": 229900,
+      "end": 230309,
+      "old": "        '403':\n          description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the\n            TLS role door: no_role, wrong_role, bad_chain (N1.4 server.role). Transition 3: response 403 of P/08 keptEdits,\n            as received.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/GateOrRole403'\n",
+      "new": "        '403':\n          description: 'Transition 2: access refusal — the gate of the domain console (N1.5, error denied) or the TLS role door: no_role,\n            wrong_role, bad_chain (N1.4 server.role). Transition 3: response 403 of P/08 keptEdits, as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole403'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits:404",
+      "path": [
+        "paths",
+        "/domain/edits",
+        "post",
+        "responses",
+        "404"
+      ],
+      "start": 230309,
+      "end": 230734,
+      "old": "        '404':\n          description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route,\n            before the gate and not passed on (the forwarding contract «Domain doors»). Transition 3: response 404\n            of P/08 keptEdits, as received.'\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/NotADomainRoute'\n",
+      "new": "        '404':\n          description: 'Transition 2: a path with a segment . or .. (including in percent form) — not a domain route, before the gate\n            and not passed on (the forwarding contract «Domain doors»). Transition 3: response 404 of P/08 keptEdits, as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/NotADomainRoute'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits:413",
+      "path": [
+        "paths",
+        "/domain/edits",
+        "post",
+        "responses",
+        "413"
+      ],
+      "start": 230846,
+      "end": 231253,
+      "old": "        '413':\n          description: \"Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size here. Transition 3: response 413 of P/08 keptEdits, as received.\"\n          content:\n            application/json:\n              schema:\n                $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n",
+      "new": "        '413':\n          description: 'Transition 2: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service\n            fields limit/size here. Transition 3: response 413 of P/08 keptEdits, as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/BodyRefused/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits:503",
+      "path": [
+        "paths",
+        "/domain/edits",
+        "post",
+        "responses",
+        "503"
+      ],
+      "start": 231319,
+      "end": 231785,
+      "old": "        '503':\n          description: \"Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 keptEdits, as received.\"\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n",
+      "new": "        '503':\n          description: 'Transition 2: gate shut or confirmed access data unavailable. Transition 3: response 503 of P/08 keptEdits,\n            as received.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits/stranded:401",
+      "path": [
+        "paths",
+        "/domain/edits/stranded",
+        "post",
+        "responses",
+        "401"
+      ],
+      "start": 233602,
+      "end": 233674,
+      "old": "        '401':\n          $ref: '#/components/responses/Unauthenticated'\n",
+      "new": "        '401':\n          description: no identity — the gate of the domain console (N1.5, error denied) or the TLS role door without a client certificate\n            (N1.4 server.role, error no_role)\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole401'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits/stranded:403",
+      "path": [
+        "paths",
+        "/domain/edits/stranded",
+        "post",
+        "responses",
+        "403"
+      ],
+      "start": 233674,
+      "end": 233740,
+      "old": "        '403':\n          $ref: '#/components/responses/Forbidden'\n",
+      "new": "        '403':\n          description: 'access refusal — the gate of the domain console (N1.5, error denied) or the TLS role door: no_role, wrong_role,\n            bad_chain (N1.4 server.role)'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/GateOrRole403'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits/stranded:404",
+      "path": [
+        "paths",
+        "/domain/edits/stranded",
+        "post",
+        "responses",
+        "404"
+      ],
+      "start": 233740,
+      "end": 233812,
+      "old": "        '404':\n          $ref: '#/components/responses/NotADomainRoute'\n",
+      "new": "        '404':\n          description: a path with a segment . or .. (including in percent form) — not a domain route, before the gate and not passed\n            on (the forwarding contract «Domain doors»)\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: '#/components/schemas/NotADomainRoute'\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits/stranded:413",
+      "path": [
+        "paths",
+        "/domain/edits/stranded",
+        "post",
+        "responses",
+        "413"
+      ],
+      "start": 233924,
+      "end": 234037,
+      "old": "        '413':\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/responses/LargeBody\n",
+      "new": "        '413':\n          description: The body is larger than the console limit (chapter 6.5 N4); P/01.1 does not add its service fields limit/size\n            here.\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/BodyRefused/content/application~1json/schema\n"
+    },
+    {
+      "label": "C3:/domain/edits/stranded:503",
+      "path": [
+        "paths",
+        "/domain/edits/stranded",
+        "post",
+        "responses",
+        "503"
+      ],
+      "start": 234103,
+      "end": 234510,
+      "old": "        '503':\n          description: 'Transition 2: gate shut or confirmed access data unavailable.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n",
+      "new": "        '503':\n          description: 'Transition 2: gate shut or confirmed access data unavailable.'\n          content:\n            application/json:\n              schema:\n                anyOf:\n                - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema\n"
+    },
+    {
+      "label": "M7:console-owner-table-refs",
+      "path": [
+        "components",
+        "pathItems"
+      ],
+      "start": 291419,
+      "end": 291419,
+      "old": "",
+      "new": "  pathItems:\n    PassTableEditCollection:\n      description: Forward only the catalogue-bound TableEditCollection of P/08; N1.3 and the owner table-edit contract.\n      parameters:\n      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub\n      - name: table\n        in: path\n        required: true\n        schema:\n          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName\n      post:\n        operationId: passTableEditCreate\n        summary: Pass existing domain.edit_tables POST to P/08\n        description: N1.3 forwarding of the catalogue-selected table door. Request and transition-3 response bodies belong to\n          P/08 components.pathItems/TableEditCollection; preserve current admission, rights and forwarding headers. No unit\n          domain.edit body is substituted.\n        parameters:\n        - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey\n        requestBody:\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditCollection/post/requestBody\n        responses:\n          '202':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditCollection/post/responses/202\n          '400':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n          '401':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/GateOrRole401'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n          '403':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/GateOrRole403'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n          '404':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/NotADomainRoute'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n          '408':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditCollection/post/responses/408\n          '409':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditCollection/post/responses/409\n          '413':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/BodyRefused/content/application~1json/schema\n          '422':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditCollection/post/responses/422\n          '502':\n            $ref: '#/components/responses/PassBroke'\n          '503':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditCreate response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                  - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema\n    PassTableEditItem:\n      description: Forward only the catalogue-bound TableEditItem of P/08; N1.3 and the owner table-edit contract.\n      parameters:\n      - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub\n      - name: table\n        in: path\n        required: true\n        schema:\n          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName\n      - name: name\n        in: path\n        required: true\n        schema:\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/TableRowName\n      - name: cluster\n        in: query\n        required: true\n        schema:\n          $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName\n      delete:\n        operationId: passTableEditDelete\n        summary: Pass existing domain.edit_tables DELETE to P/08\n        description: N1.3 forwarding of the catalogue-selected table door. Request and transition-3 response bodies belong to\n          P/08 components.pathItems/TableEditItem; preserve current admission, rights and forwarding headers. No unit domain.edit\n          body is substituted.\n        parameters:\n        - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey\n        responses:\n          '202':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditItem/delete/responses/202\n          '400':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n          '401':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/GateOrRole401'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n          '403':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/GateOrRole403'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema\n          '404':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: '#/components/schemas/NotADomainRoute'\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused/content/application~1json/schema\n          '408':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditItem/delete/responses/408\n          '409':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditItem/delete/responses/409\n          '413':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/ConsoleRefusal\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/BodyRefused/content/application~1json/schema\n          '422':\n            $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/pathItems/TableEditItem/delete/responses/422\n          '502':\n            $ref: '#/components/responses/PassBroke'\n          '503':\n            description: 'Transition 2: the existing domain-console parsing, gate, role or forwarding refusal; N1.3–N1.5 and\n              N4. Transition 3: P/08 tableEditDelete response as received.'\n            content:\n              application/json:\n                schema:\n                  anyOf:\n                  - $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied\n                  - $ref: ../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable\n                  - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema\n"
+    }
+  ],
+  "API08_new_blocks": [
+    {
+      "label": "M7:owner-table-PathItems",
+      "path": [
+        "components",
+        "pathItems"
+      ],
+      "start": 172748,
+      "end": 172748,
+      "old": "",
+      "new": "  pathItems:\n    TableEditCollection:\n      description: Concrete route /domain/{sub}/{table} after literal catalogue substitution. This PathItem is not an open catalogue-admission\n        rule; remove substituted path parameters on both levels, retaining existing operation/header/rights identities.\n      parameters:\n      - $ref: '#/components/parameters/Sub'\n      - name: table\n        in: path\n        required: true\n        schema:\n          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName\n      post:\n        operationId: tableEditCreate\n        summary: Existing domain.edit_tables member-table write; P/08.6 N1.3\n        parameters:\n        - $ref: '#/components/parameters/IdempotencyKey'\n        - $ref: '#/components/parameters/XW2CClient'\n        requestBody:\n          required: true\n          content:\n            application/json:\n              schema:\n                type: object\n                required:\n                - cluster\n                additionalProperties: true\n                description: cluster is required; remaining fields are only domain.edit_tables.<table> of this manifest. Existing\n                  P/08.6 N1.3 value checks and table_platform_fields exclusions apply, including its author-owned server field;\n                  the schema does not invent manifest fields/defaults.\n                properties:\n                  cluster:\n                    $ref: '#/components/schemas/MemberName'\n        responses:\n          '408':\n            $ref: '#/components/responses/BodyRefused'\n          '413':\n            $ref: '#/components/responses/BodyRefused'\n          '202':\n            $ref: '#/components/responses/Kept'\n          '400':\n            $ref: '#/components/responses/Refused'\n          '401':\n            $ref: '#/components/responses/Denied'\n          '403':\n            $ref: '#/components/responses/Denied'\n          '404':\n            $ref: '#/components/responses/Refused'\n          '409':\n            $ref: '#/components/responses/Refused'\n          '422':\n            $ref: '#/components/responses/Refused'\n          '503':\n            $ref: '#/components/responses/Refused503'\n        description: Catalogue-bound template /domain/{sub}/{table}. Select table from domain.edit_tables of the loaded manifest.\n          A table does not require domain.ref. Apply P/08.6 N1.3 admission/order/values/secrets and the existing target-cluster\n          write right; never treat these fields as domain.edit unit fields.\n    TableEditItem:\n      description: Concrete route /domain/{sub}/{table}/{name} after literal catalogue substitution. This PathItem is not an\n        open catalogue-admission rule; remove substituted path parameters on both levels, retaining existing operation/header/rights\n        identities.\n      parameters:\n      - $ref: '#/components/parameters/Sub'\n      - name: table\n        in: path\n        required: true\n        schema:\n          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName\n      - name: name\n        in: path\n        required: true\n        schema:\n          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/TableRowName\n      - name: cluster\n        in: query\n        required: true\n        schema:\n          $ref: '#/components/schemas/MemberName'\n      delete:\n        operationId: tableEditDelete\n        summary: Existing domain.edit_tables member-table removal; P/08.6 N1.3\n        parameters:\n        - $ref: '#/components/parameters/IdempotencyKey'\n        - $ref: '#/components/parameters/XW2CClient'\n        responses:\n          '408':\n            $ref: '#/components/responses/BodyRefused'\n          '413':\n            $ref: '#/components/responses/BodyRefused'\n          '202':\n            $ref: '#/components/responses/Kept'\n          '400':\n            $ref: '#/components/responses/Refused'\n          '401':\n            $ref: '#/components/responses/Denied'\n          '403':\n            $ref: '#/components/responses/Denied'\n          '404':\n            $ref: '#/components/responses/Refused'\n          '409':\n            $ref: '#/components/responses/Refused'\n          '422':\n            $ref: '#/components/responses/Refused'\n          '503':\n            $ref: '#/components/responses/Refused503'\n        description: Catalogue-bound template /domain/{sub}/{table}/{name}. Select table from domain.edit_tables of the loaded\n          manifest. A table does not require domain.ref. Apply P/08.6 N1.3 admission/order/values/secrets and the existing target-cluster\n          write right; never treat these fields as domain.edit unit fields.\n"
+    }
+  ],
+  "existing_owner_error_bindings": "P08 shared Denied/Refused/BodyRefused/Refused503 are physical typed owner carriers where old per-operation declarations have only prose or inherit identity; no guessed body/schema and no runtime fallback",
+  "table_ownership": "P08 components.pathItems.TableEditCollection/Item precede P10 PassTableEditCollection/Item refs; loaded domain.edit_tables selects actual literals, no duplicate equivalent public path. Table DELETE required cluster, no invented unit DELETE body/refusal; preserve current norm/header/rights/provenance",
+  "S08_M8": "Existing standard PathItem class only; no new generator/Code/grammar or wholesale unrelated forwarding factorization",
+  "targeted_refs_and_bodies": "54 distinct new literal refs resolved and 10 Source-owner body positives; source static checks only, not consumer/runtime qualification"
+}

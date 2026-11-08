@@ -1,0 +1,17 @@
+{
+  "base": "33a3c2342c63adb923b84e4608fba338bea32a5c",
+  "name": "RELAY_MEMBERS_MAX",
+  "value": 5000,
+  "unit": "count",
+  "old_owner": "Platform/10-domain-console/forms/runtime-constants.tsv P/10-R004",
+  "current_owner": "Platform/08-domain/forms/runtime-constants.tsv P/08.3-R006",
+  "norm": "P08.3 N1.2 writer409 relay full / reader unavailable without truncation",
+  "decoded_schema_pointer": "Platform/08-domain/data/relay-members.schema.json#/properties/members/maxProperties",
+  "existing_P10_API_maxItems_disposition": "unchanged C9 source scalar; future equality extension J-P08-02 remains separate",
+  "boundary_checks": [
+    4999,
+    5000,
+    5001
+  ],
+  "boundary_limit": "Only decoded schema count checks with short values; no promise that every5000-name row fits independent P01 byte ceiling or a real backend; budgetsNULL"
+}

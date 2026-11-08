@@ -1,0 +1,202 @@
+{
+  "status": "CURRENT_ADR29_NARROW_BRANCH_SELECTED",
+  "published_authority": "fd6d0c3f62ee1577dd436e088164352b05194839 ADR0129(29)6/7",
+  "declaration": {
+    "utc": "2026-11-08T12:02:03.198398+00:00",
+    "status": "EXACT_3AM_NARROW_BRANCH_CHILD_DECLARED_BEFORE_TRACKED_SOURCE_EDITS",
+    "parent": "a118575b97dc658149ed3b68d39b2e475ea2668c",
+    "authority": "ADR0129(28) plus direct Architect clarification in this session",
+    "Architect_word_verbatim": "R011 — да, узкая ветка. Снять только сравнение live schema < N и текст допуска/обслуживания старых сборок (абзац Admission и таблицу фаз, связанные слова о silent old builds в 02.4): при SCHEMA=1 форма пульса даёт schema ≥ 1, писателя такого состояния нет. Сохранить: свой SCHEMA < N → 409, unknown schema → 409 (нынешний сбой формы пульса, не старая сборка), неподтверждённое чтение → 503 без записи, GET/PUT/CAS/ETag/идемпотентность, шаг 4. Запишу в следующем дополнении ADR-0129. ACK не нужен.",
+    "question_resolved_sha256": "298a0e96aece5b29b749dc3d6055e0cbf2ff5841efecc74610338b965125659f",
+    "historical27_consumer_map_preserved": true,
+    "Source_records": [
+      {
+        "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+        "before": {
+          "sha256": "f7722ad42f72b3d250b878e0edede09377274853cba3d86a06411761eaa85380",
+          "blob": "6b99f2001d0162d6c3bc3b5a0d59aef92774d8ca",
+          "bytes": 150273,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "6068112059b4c98f3213cab3af60af6673b84a124337cab570fcb3c5e8743e8f",
+          "blob": "dcf4b2bad30eb97a935ce334187f7a287a8f99e3",
+          "bytes": 150308,
+          "mode": "100644"
+        }
+      },
+      {
+        "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+        "before": {
+          "sha256": "7aae92312ef8dcbc36ea59b83e20120ab1f97c7d34da40e6bf5ac073a27f5560",
+          "blob": "76d52e338d435737c532571ebab20dc4bfb096a3",
+          "bytes": 115910,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "708d6bd66a15204a5c822ae9f75cee245f1c6f2103d6f2de62b904300a654672",
+          "blob": "5f1c0335ff0566cc8c9d9180538e2b5fbb2ea07a",
+          "bytes": 115922,
+          "mode": "100644"
+        }
+      },
+      {
+        "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+        "before": {
+          "sha256": "c88c8b2d6c29c83616936acd46037631124620a166518cb6c9145941fa8aec83",
+          "blob": "97a261ccbaf3a70a3c0c912f1e5e21cce8edef85",
+          "bytes": 87591,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "0203b290ebdb7cca4f587a61213deda1a23f74bd8e25b4b776cc8f4f2bb28d75",
+          "blob": "069ca7daa2aab0a3301fe2da693c36858760af25",
+          "bytes": 85998,
+          "mode": "100644"
+        }
+      },
+      {
+        "path": "Platform/06-console/spec/06.6-console.norms.md",
+        "before": {
+          "sha256": "8546d663f9e56d4bb6803d0a29cb52a6b44cded90d9e1487cb56c29474571c5f",
+          "blob": "530e7f4d7797ef6f66b5072cb7039ea906c455f7",
+          "bytes": 69284,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "745b946451a3758ecf9cc2538f898f56006e71d107c80e1ab56155cb84ec6846",
+          "blob": "69fd73c86553a769b7bb83cbfd5a81f3245f694a",
+          "bytes": 68291,
+          "mode": "100644"
+        }
+      },
+      {
+        "path": "Platform/common/contracts/schema.md",
+        "before": {
+          "sha256": "232deba23b2a4de360bb3ada493bd96db3d6c125987d2f106b3fe6c321348a2c",
+          "blob": "3a1c18449fd84cf51f36d3c1ccf1df15a97c8eaa",
+          "bytes": 6545,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "040486ff943922516b1f2ad5201b4080ab295ad378c39e9cb9049ea6d4a72c5b",
+          "blob": "31ff407dc54df9d951784dbe0509ebba759bfb0b",
+          "bytes": 6545,
+          "mode": "100644"
+        }
+      },
+      {
+        "path": "Platform/common/ru/contracts/schema.md",
+        "before": {
+          "sha256": "d5b55c734e1dd2d17cdac0f97bb4385ec446d6b208fb646e6bf69de0d4a83c7f",
+          "blob": "15798d8d9ca95676ef81fc78307ab3069faa32f9",
+          "bytes": 8627,
+          "mode": "100644"
+        },
+        "after": {
+          "sha256": "8fe97313719d890f7924dba00d3615b23d2736fc6740edacb1a17b7df4db673d",
+          "blob": "cdb2cbd2bd418af822899a2bfc2787bcb006e7d6",
+          "bytes": 8641,
+          "mode": "100644"
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "path": "Platform/06-console/spec/06.6-console.norms.md",
+        "id": "3am-raise-description-no-old-window",
+        "old": "raise:    only the operator, PUT /schema?version=N in the maintenance window of N3; back — a refusal; its own build and all live processes understand ≥ N\n",
+        "new": "raise:    only the operator, PUT /schema?version=N by N3; back — a refusal; current SCHEMA, unknown-heartbeat and confirmed-read guards, then CAS\n"
+      },
+      {
+        "path": "Platform/06-console/spec/06.6-console.norms.md",
+        "id": "3am-remove-only-known-live-schema-less-than-N",
+        "old": "   any with schema < N or an unknown one → 409 «still running: …»; the read of the heartbeats of this pass is not confirmed\n",
+        "new": "   any with an unknown schema → 409 «still running: …»; the read of the heartbeats of this pass is not confirmed\n"
+      },
+      {
+        "path": "Platform/06-console/spec/06.6-console.norms.md",
+        "id": "3am-remove-old-build-admission-and-phase-table-preserve-CAS",
+        "old": "**Admission.** The operator forbids the starts and writes of the former builds for the whole window, including silent servers; updates the whole known membership and leaves one compatible console for the raise. The heartbeats are a check of the observed membership, not a proof of the absence of an old process. Without this admission a concurrent raise is outside the profile of the lesson. After a successful CAS the starts of only the updated builds can be opened. Two admins are still protected by CAS: the loser re-reads the state and does not announce success.\n\n| Phase | Admission/transition | Refusal |\n|---|---|---|\n| Open installation | The operator closes the starts of old builds, stops their writers | Failed to confirm the stop — do not raise |\n| Maintenance | A full read of the schema and of the known processes; N is admitted by its own build | An unknown read — 503; incompatibility — 409 |\n| CAS | Fix the version; on a break re-read | Do not take a break for a rollback |\n| Done | Return only compatible builds | An old build refuses to start |\n\n",
+        "new": "Two admins are still protected by CAS: the loser re-reads the state and does not announce success.\n\n"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+        "id": "3am-upgrade-last-write-without-old-build-window",
+        "old": "  4. last — the schema raise window of P/06.6 N3 «raise_schema» (including silent old builds), then PUT /schema?version=N; it does not go back\n",
+        "new": "  4. last — PUT /schema?version=N by P/06.6 N3 «raise_schema»: current request, SCHEMA, heartbeat and confirmed-read guards, then CAS; it does not go back\n"
+      },
+      {
+        "path": "Platform/common/contracts/schema.md",
+        "id": "3am-current-schema-owner-reference",
+        "old": "a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`, the maintenance window) is with the\n",
+        "new": "a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`) is with the\n"
+      },
+      {
+        "path": "Platform/common/contracts/schema.md",
+        "id": "3am-remove-stale-maintenance-window-claim",
+        "old": "Their race with the start is excluded by the maintenance window of P/06.6 N3 «raise_schema».",
+        "new": "At the current SCHEMA = 1 this write does not change the understood layout; a transition requires a separate decision."
+      },
+      {
+        "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+        "id": "3am-raise-description-no-old-window",
+        "old": "raise:    только оператор, PUT /schema?version=N в окне обслуживания N3; назад — отказ; своя сборка и все живые процессы понимают ≥ N\n",
+        "new": "raise:    только оператор, PUT /schema?version=N по N3; назад — отказ; нынешние проверки SCHEMA, неизвестного пульса и подтверждённости чтения, затем CAS\n"
+      },
+      {
+        "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+        "id": "3am-remove-only-known-live-schema-less-than-N",
+        "old": "   любой со schema < N или неизвестной → 409 «still running: …»; чтение пульсов этого прохода не подтверждено\n",
+        "new": "   любой с неизвестной schema → 409 «still running: …»; чтение пульсов этого прохода не подтверждено\n"
+      },
+      {
+        "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
+        "id": "3am-remove-old-build-admission-and-phase-table-preserve-CAS",
+        "old": "**Допуск.** Оператор запрещает старты и записи прежних сборок на всё окно, включая молчащие серверы; обновляет весь известный состав и оставляет одну совместимую консоль для подъёма. Пульсы — проверка наблюдённого состава, не доказательство отсутствия старого процесса. Без этого допуска конкурентный подъём вне профиля урока. После успешного CAS можно открывать старты только обновлённых сборок. Два admin всё равно защищены CAS: проигравший перечитывает состояние, не объявляет успех.\n\n| Фаза | Допуск/переход | Отказ |\n|---|---|---|\n| Открытая установка | Оператор закрывает старты старых сборок, останавливает их писателей | Не удалось подтвердить остановку — не поднимать |\n| Обслуживание | Полное чтение схемы и известных процессов; N допускается своей сборкой | Неизвестное чтение — 503; несовместимость — 409 |\n| CAS | Зафиксировать версию; при обрыве перечитать | Не считать обрыв откатом |\n| Завершено | Вернуть только совместимые сборки | Старая сборка отказывается стартовать |\n\n",
+        "new": "Два admin всё равно защищены CAS: проигравший перечитывает состояние, не объявляет успех.\n\n"
+      },
+      {
+        "path": "Platform/02-installer/ru/spec/02.4-installer.norms.md",
+        "id": "3am-upgrade-last-write-without-old-build-window",
+        "old": "  4. последним — окно подъёма схемы P/06.6 N3 «поднять_схему» (включая молчащие старые сборки), затем PUT /schema?version=N; назад не идёт\n",
+        "new": "  4. последним — PUT /schema?version=N по P/06.6 N3 «поднять_схему»: нынешние проверки запроса, SCHEMA, пульса и подтверждённости чтения, затем CAS; назад не идёт\n"
+      },
+      {
+        "path": "Platform/common/ru/contracts/schema.md",
+        "id": "3am-current-schema-owner-reference",
+        "old": "изменения поведения; у них — ссылки сюда. Подъём схемы оператором (`raise`, `PUT /schema`, окно обслуживания) — у\n",
+        "new": "изменения поведения; у них — ссылки сюда. Подъём схемы оператором (`raise`, `PUT /schema`) — у\n"
+      },
+      {
+        "path": "Platform/common/ru/contracts/schema.md",
+        "id": "3am-remove-stale-maintenance-window-claim",
+        "old": "Их гонка со стартом исключена окном обслуживания P/06.6 N3 «поднять_схему».",
+        "new": "При нынешнем SCHEMA = 1 эта запись не меняет понимаемую раскладку; переход требует отдельного решения."
+      }
+    ],
+    "Source_paths": 6,
+    "new_Req_ids": false,
+    "preserved": [
+      "own SCHEMA<N409",
+      "unknown-schema409",
+      "unconfirmed-read503/no write",
+      "GET/PUT/CAS/revision/ETag/IfMatch/idempotency",
+      "step4",
+      "all schema forms, endpoints, outcomes, scenario/vector bytes",
+      "dead_band/P04/VMS"
+    ],
+    "new_refusal_or_SCHEMA2": false,
+    "Source_tracked_writes": 0,
+    "Code_native_models_runs": 0
+  },
+  "historical27_consumer_map_sha256": "de4743c433c85c807d7a5faabe0f78f61358f9dc349c83fe26653f03bef1f885",
+  "historical_root_readout_sha256": "713f79b786d077630aa7210387618b87f20e94f2349a59ca20007f58ec865e0b",
+  "dead_band": {
+    "field_unchanged": true,
+    "requested_rebalance_P04_R010_threshold_preserved": "0.10",
+    "ordinary_N3_placement_does_not_consume": true,
+    "Source_P04_VMS_corpus_changes": 0,
+    "Architect_disposition_sha256": "a3912b8eaddd35cb305c70dde912a43df5519d0b429c7e23c30611dff417f205"
+  }
+}

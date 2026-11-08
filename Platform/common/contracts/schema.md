@@ -14,7 +14,7 @@ N3 «Process start».
 
 Moved from P/06.6 N1.1a (the lines `platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`) and the common block «start
 of the controller, the worker, the resource or the console — schema check» (P/06.6, P/03.2, P/04, P/05 N3; formerly M10/10 N3) without
-a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`, the maintenance window) is with the
+a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`) is with the
 owner, P/06.6 N1.1a, N3 «raise_schema».
 
 Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
@@ -57,7 +57,7 @@ read platform/schema: absent → own SCHEMA; not a number → do not start; vers
 worker: after the renewal of the slot — P/03.2 N3 «schema check by the worker»
 ```
 
-**Boundary.** The daemon of the row store does not interpret the layout of a subsystem and is not blocked by this check: otherwise the store could not be opened for reading/repairing the schema; its own format is P/01.1 and P/01.3 N1.3 (the daemon `configstore`: `member.json`, `backup`/`restore`). The check on renewal exists at the worker; it does not prove the safety of all other processes. Their race with the start is excluded by the maintenance window of P/06.6 N3 «raise_schema». A read failure — wait for availability without work; a reliably damaged/too new schema — a start refusal with code 2.
+**Boundary.** The daemon of the row store does not interpret the layout of a subsystem and is not blocked by this check: otherwise the store could not be opened for reading/repairing the schema; its own format is P/01.1 and P/01.3 N1.3 (the daemon `configstore`: `member.json`, `backup`/`restore`). The check on renewal exists at the worker; it does not prove the safety of all other processes. At the current SCHEMA = 1 this write does not change the understood layout; a transition requires a separate decision. A read failure — wait for availability without work; a reliably damaged/too new schema — a start refusal with code 2.
 
 ## Vectors
 

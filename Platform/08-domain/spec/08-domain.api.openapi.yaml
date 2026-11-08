@@ -3800,3 +3800,110 @@ components:
           - must_match
           - unique
           - garbled
+  pathItems:
+    TableEditCollection:
+      description: Concrete route /domain/{sub}/{table} after literal catalogue substitution. This PathItem is not an open catalogue-admission
+        rule; remove substituted path parameters on both levels, retaining existing operation/header/rights identities.
+      parameters:
+      - $ref: '#/components/parameters/Sub'
+      - name: table
+        in: path
+        required: true
+        schema:
+          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+      post:
+        operationId: tableEditCreate
+        summary: Existing domain.edit_tables member-table write; P/08.6 N1.3
+        parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/XW2CClient'
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - cluster
+                additionalProperties: true
+                description: cluster is required; remaining fields are only domain.edit_tables.<table> of this manifest. Existing
+                  P/08.6 N1.3 value checks and table_platform_fields exclusions apply, including its author-owned server field;
+                  the schema does not invent manifest fields/defaults.
+                properties:
+                  cluster:
+                    $ref: '#/components/schemas/MemberName'
+        responses:
+          '408':
+            $ref: '#/components/responses/BodyRefused'
+          '413':
+            $ref: '#/components/responses/BodyRefused'
+          '202':
+            $ref: '#/components/responses/Kept'
+          '400':
+            $ref: '#/components/responses/Refused'
+          '401':
+            $ref: '#/components/responses/Denied'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            $ref: '#/components/responses/Refused'
+          '409':
+            $ref: '#/components/responses/Refused'
+          '422':
+            $ref: '#/components/responses/Refused'
+          '503':
+            $ref: '#/components/responses/Refused503'
+        description: Catalogue-bound template /domain/{sub}/{table}. Select table from domain.edit_tables of the loaded manifest.
+          A table does not require domain.ref. Apply P/08.6 N1.3 admission/order/values/secrets and the existing target-cluster
+          write right; never treat these fields as domain.edit unit fields.
+    TableEditItem:
+      description: Concrete route /domain/{sub}/{table}/{name} after literal catalogue substitution. This PathItem is not an
+        open catalogue-admission rule; remove substituted path parameters on both levels, retaining existing operation/header/rights
+        identities.
+      parameters:
+      - $ref: '#/components/parameters/Sub'
+      - name: table
+        in: path
+        required: true
+        schema:
+          $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+      - name: name
+        in: path
+        required: true
+        schema:
+          $ref: ../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/TableRowName
+      - name: cluster
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/MemberName'
+      delete:
+        operationId: tableEditDelete
+        summary: Existing domain.edit_tables member-table removal; P/08.6 N1.3
+        parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/XW2CClient'
+        responses:
+          '408':
+            $ref: '#/components/responses/BodyRefused'
+          '413':
+            $ref: '#/components/responses/BodyRefused'
+          '202':
+            $ref: '#/components/responses/Kept'
+          '400':
+            $ref: '#/components/responses/Refused'
+          '401':
+            $ref: '#/components/responses/Denied'
+          '403':
+            $ref: '#/components/responses/Denied'
+          '404':
+            $ref: '#/components/responses/Refused'
+          '409':
+            $ref: '#/components/responses/Refused'
+          '422':
+            $ref: '#/components/responses/Refused'
+          '503':
+            $ref: '#/components/responses/Refused503'
+        description: Catalogue-bound template /domain/{sub}/{table}/{name}. Select table from domain.edit_tables of the loaded
+          manifest. A table does not require domain.ref. Apply P/08.6 N1.3 admission/order/values/secrets and the existing target-cluster
+          write right; never treat these fields as domain.edit unit fields.

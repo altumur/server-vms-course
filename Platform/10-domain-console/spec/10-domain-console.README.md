@@ -7,7 +7,7 @@ This file is for the agent (or the human) who writes code by the lesson. The exp
 ## Task
 
 Implement the process `domainconsole` on the holder's box in the language `<LANG>`; pass the acceptance of N5 and close the readiness
-checklist. There are 17 norms in all: P/10-01…17; the map to former ids is `id-map.tsv` (historical record). The lesson is assembled from
+checklist. There are 17 norms in all: P/10-01…17; The lesson is assembled from
 the lessons M11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, ADR-0083 addendum (1), (14)). The process `domain` is
 lesson [P/08](../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../09-agent/spec/09-agent.README.md), the forwarding
 of the cluster console is chapter P/06.7.
@@ -39,7 +39,7 @@ decides» of the norms.
 **On a divergence.** Name the norm id, the input, the initial state, the expected and the obtained outcome. An implementation defect is
 an output that does not match the expectation on an acceptance input. An acceptance defect is an expectation that diverges from the norm. A norm gap is an input
 for which the norm gives no unambiguous outcome: record the place and a counterexample and hand it to «Specification» with a proposal.
-The instructions introduce no new refusal. Record a change of acceptance in `corrections.tsv` (historical correction record) of the lesson.
+The instructions introduce no new refusal. The source owner records acceptance changes in the lesson change record.
 
 ## What to create
 
@@ -83,7 +83,7 @@ of the identity at the process are lesson P/08; the forwarding of the cluster co
 
 ## Done when
 
-- Scenarios 02, 05–19 of the acceptance of the lesson pass; the vector `alarms` — 27 rows, rows 15, 17–23 — code 2.
+- Scenarios 02, 05–19 of the acceptance of the lesson pass; the vector `alarms` — 37 rows, rows 15, 17–23, 31–37 — code 2.
 - The description of the implementation names the command `alarms`.
 - The normative checklist P/10-01…17 is closed; the items «checked by reading» (P/10-03, -10, -11, -15, -16 and parts of the others by N5)
   are named separately.
