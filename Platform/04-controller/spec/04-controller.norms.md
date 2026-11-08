@@ -413,7 +413,7 @@ Schema — [`placement.schema.json`](../data/placement.schema.json), outcomes �
 | `rev` | string; matching `[1-9][0-9]*` in full | required |  | a decimal integer ≥ 1; +1 for each write of the row |
 | `manifest_rev` | string; matching `[1-9][0-9]*` in full | required |  | Required manifest revision under which the current intent completion wrote this decision. A missing value is unreadable and is never stamped or repaired; newer-revision protection remains P/04 N3 manifest_rev. |
 
-Only at the writer (`$defs.writer`):
+Reader and writer bounds (`$defs.writer`, applied by root `allOf`):
 
 | Key | Also |
 |---|---|
@@ -695,7 +695,7 @@ Schema — [`snapshot.schema.json`](../data/snapshot.schema.json), outcomes — 
 | `.<name>[].server` | string or null | required |  | the worker's server |
 | `.<name>[].<name>` | any value | optional |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 N1.1a |
 
-Only at the writer (`$defs.writer`):
+Reader and writer bounds (`$defs.writer`, applied by root `allOf`):
 
 | Key | Also |
 |---|---|
@@ -726,7 +726,7 @@ Schema — [`snapshot-unplaced.schema.json`](../data/snapshot-unplaced.schema.js
 | `.<name>[].server` | string or null | required |  | the worker's server; an unplaced one has none |
 | `.<name>[].<name>` | any value | optional |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 N1.1a |
 
-Only at the writer (`$defs.writer`):
+Reader and writer bounds (`$defs.writer`, applied by root `allOf`):
 
 | Key | Also |
 |---|---|

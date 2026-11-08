@@ -366,7 +366,7 @@ Active intent — принятое общее решение для members, п�
 | `rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | a decimal integer ≥ 1; +1 for each write of the row |
 | `manifest_rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | Required manifest revision under which the current intent completion wrote this decision. A missing value is unreadable and is never stamped or repaired; newer-revision protection remains P/04 N3 manifest_rev. |
 
-Только у писателя (`$defs.writer`):
+Пределы читателя и писателя (`$defs.writer`, применены корневым `allOf`):
 
 | Ключ | Ещё и |
 |---|---|
@@ -648,7 +648,7 @@ Active intent — принятое общее решение для members, п�
 | `.<имя>[].server` | строка или null | обязателен |  | the worker's server |
 | `.<имя>[].<имя>` | любое значение | необязателен |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 N1.1a |
 
-Только у писателя (`$defs.writer`):
+Пределы читателя и писателя (`$defs.writer`, применены корневым `allOf`):
 
 | Ключ | Ещё и |
 |---|---|
@@ -679,7 +679,7 @@ Active intent — принятое общее решение для members, п�
 | `.<имя>[].server` | строка или null | обязателен |  | the worker's server; an unplaced one has none |
 | `.<имя>[].<имя>` | любое значение | необязателен |  | a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 N1.1a |
 
-Только у писателя (`$defs.writer`):
+Пределы читателя и писателя (`$defs.writer`, применены корневым `allOf`):
 
 | Ключ | Ещё и |
 |---|---|
