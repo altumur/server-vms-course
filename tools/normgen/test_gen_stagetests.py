@@ -250,6 +250,12 @@ def synthetic_root(tmp, scen, seams=None):
     (root / "Platform/01-store/forms").mkdir(parents=True)
     (root / "Platform/01-store/forms/stages.tsv").write_text(STAGES, encoding="utf-8")
     (root / "Platform/01-store/forms/refusals.tsv").write_text(REFUSALS, encoding="utf-8")
+    # The adapter reads the declared API even when these grammar probes use
+    # synthetic scenarios. Supply that input rather than a producer fallback.
+    relative_api = "Platform/01-store/spec/01-store.api.openapi.yaml"
+    api = root / relative_api
+    api.parent.mkdir(parents=True)
+    api.write_bytes((ROOT / relative_api).read_bytes())
     head = ["scenario\tstep\trequest\texpect"]
     (acc / "scenarios.tsv").write_text("\n".join(head + ["\t".join(r) for r in scen]) + "\n", encoding="utf-8")
     if seams is not None:
@@ -379,6 +385,31 @@ class StageTests(unittest.TestCase):
             r = synthetic_root(self.sub(f"b{len(list(self.sub('.').glob('b*')))}"), [("s", "1", "GET /x", "200 {}")], seams)
             with self.subTest(seams=seams), self.assertRaises(gen_stagetests.GenError):
                 gen_stagetests.build(r, stages_text=with_gate("tests:1.1:p1:seams"), transitional={})
+
+    def test_synthetic_fixture_supplies_exact_current_api(self):
+        relative = "Platform/01-store/spec/01-store.api.openapi.yaml"
+        original = (ROOT / relative).read_bytes()
+        root = synthetic_root(self.sub("api-closure"), [("g1", "1", "GET /v1/get?key=acc/g/x", "200 {}")])
+        self.assertEqual((root / relative).read_bytes(), original)
+        _, rows = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:g1"), transitional={})
+        self.assertEqual({r[0].split("/", 2)[2]: r[3] for r in rows}["g1/1"], "translated")
+        self.assertEqual((ROOT / relative).read_bytes(), original)
+        self.assertEqual((root / relative).read_bytes(), original)
+
+    def test_synthetic_fixture_missing_or_malformed_api_is_refused(self):
+        relative = "Platform/01-store/spec/01-store.api.openapi.yaml"
+        original = (ROOT / relative).read_bytes()
+        root = synthetic_root(self.sub("api-required"), [("g1", "1", "GET /v1/get?key=acc/g/x", "200 {}")])
+        _, rows = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:g1"), transitional={})
+        self.assertEqual({r[0].split("/", 2)[2]: r[3] for r in rows}["g1/1"], "translated")
+        api = root / relative
+        api.unlink()
+        with self.assertRaisesRegex(gen_stagetests.GenError, "stage adapter API"):
+            gen_stagetests.build(root, stages_text=with_gate("tests:1.1:g1"), transitional={})
+        api.write_bytes(b"openapi: [unterminated\n")
+        with self.assertRaisesRegex(gen_stagetests.GenError, "stage adapter API"):
+            gen_stagetests.build(root, stages_text=with_gate("tests:1.1:g1"), transitional={})
+        self.assertEqual((ROOT / relative).read_bytes(), original)
 
     def test_at_is_data(self):
         """Treat @ in keys/values/bodies as data unless grammar and position declare a directive (Codex C5)."""

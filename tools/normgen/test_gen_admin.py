@@ -3,6 +3,7 @@ import lesson as output_lesson
 import contextlib
 import io
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -255,16 +256,18 @@ class Z21BackupSource(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        from test_gen_core import z21_ready_p01
         cls.output = output_lesson.output_root()
-        cls.ready = output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
-                                                code_root=cls.code_root, profiles=("p01-1",))
+        cls.output_receipt = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+        cls.ready = z21_ready_p01(cls.output, cls.source_root, cls.code_root,
+                                 expected_manifest_sha256=cls.output_receipt)
         cls.tmp = tempfile.TemporaryDirectory(prefix="z21-admin-")
 
     @classmethod
     def tearDownClass(cls):
+        from test_gen_core import z21_ready_p01
         cls.tmp.cleanup()
-        output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
-                                    code_root=cls.code_root, profiles=("p01-1",))
+        z21_ready_p01(cls.output, cls.source_root, cls.code_root, expected_manifest_sha256=cls.output_receipt)
 
     def test_backup_comments_bind_actual_copy_contract_and_all_three_causes(self):
         import csv

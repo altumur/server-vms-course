@@ -985,24 +985,116 @@ class SourceSchemaReader:
         return mapping()
 
 
+    # Explicit private Source-owner input, independent of Source-root layout and
+    # producer output. Verified copies may be selected on an individual reader.
+    P06_OPERATION_IDENTITY_INPUT = Path(
+        "/home/pilot/coord103-src/z21-p06-operation-identity-current-binding-a08-20261108/immutable-input")
+    P06_CURRENT_API_SHA256 = "a64e0b92ab0fba1581309ef88f2b62fcaa3d29521f06e8d64126e64b3469f8d2"
+    P06_BINDING_SHA256 = "301877bb8402fc1f02ca5273161b2d943be6d4f139b4208c331fdc823b868751"
+    P06_WITNESS_SHA256 = "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19"
+
+    def _p06_identity_records(self, witness, binding):
+        """Validate stable Source identities; historical schema digests are not current oracles."""
+        heads = [("/folders", "OpHeadFolders"), ("/folders/{id}", "OpHeadFoldersById"),
+                 ("/{sub}/operations/{id}", "OpHeadBySubOperationsById"),
+                 ("/changes", "OpHeadChanges"), ("/{sub}/next_id", "OpHeadBySubNextId"),
+                 ("/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart")]
+        appended = {"/paths/" + self.escape(route) + "/head": (symbol, ordinal)
+                    for ordinal, (route, symbol) in enumerate(heads, 141)}
+        if (type(witness) is not dict or type(witness.get("records")) is not list or
+                len(witness["records"]) != 146 or type(binding) is not dict or
+                type(binding.get("records")) is not list or len(binding["records"]) != 146 or
+                binding.get("Source_pin") != "a08ef6ef101514c926e68d3fb00c8d121da60e01" or
+                type(binding.get("current_API")) is not dict or
+                binding["current_API"].get("path") != "Platform/06-console/spec/06-console.api.openapi.yaml" or
+                binding["current_API"].get("sha256") != self.P06_CURRENT_API_SHA256 or
+                type(binding.get("immutable_original_witness")) is not dict or
+                binding["immutable_original_witness"].get("sha256") != self.P06_WITNESS_SHA256):
+            raise CheckingError("incomplete/wrong current Source identity binding")
+        counts = {"original140": 140, "existing_HEAD": 6, "current_total": 146, "current_API_slots": 146}
+        if (type(binding.get("counts")) is not dict or binding["counts"] != counts or
+                any(type(value) is not int for value in binding["counts"].values())):
+            raise CheckingError("mistyped/incomplete Source identity counts")
+        original, old_heads, old_symbols, old_ordinals = {}, {}, set(), set()
+        for row in witness["records"]:
+            if type(row) is not dict or type(row.get("member_of_original140")) is not bool:
+                raise CheckingError("mistyped historical Source identity record")
+            pointer, symbol = row.get("after_pointer"), row.get("actual_adapter_Op")
+            if type(pointer) is not str or type(symbol) is not str:
+                raise CheckingError("missing historical Source identity")
+            if row["member_of_original140"]:
+                ordinal = row.get("logical_ordinal_original140")
+                if (type(ordinal) is not int or not 1 <= ordinal <= 140 or pointer in original or
+                        symbol in old_symbols or ordinal in old_ordinals):
+                    raise CheckingError("duplicate/mistyped historical Source identity")
+                original[pointer] = (symbol, ordinal)
+                old_symbols.add(symbol)
+                old_ordinals.add(ordinal)
+            else:
+                if (pointer in old_heads or pointer not in appended or
+                        row.get("logical_ordinal_original140") is not None or symbol != appended[pointer][0]):
+                    raise CheckingError("changed historical appended HEAD identity")
+                old_heads[pointer] = symbol
+        if len(original) != 140 or old_ordinals != set(range(1, 141)) or set(old_heads) != set(appended):
+            raise CheckingError("incomplete historical Source identities")
+        identities, symbols, ordinals = {}, set(), set()
+        fields = {"member_of_original140", "after_pointer", "method", "actual_adapter_Op",
+                  "logical_ordinal_original140", "logical_ordinal_current146"}
+        for row in binding["records"]:
+            if type(row) is not dict or set(row) != fields:
+                raise CheckingError("incomplete current Source identity record")
+            pointer, symbol, ordinal = row["after_pointer"], row["actual_adapter_Op"], row["logical_ordinal_current146"]
+            if (type(pointer) is not str or type(symbol) is not str or not re.fullmatch(r"Op[A-Za-z0-9_]+", symbol) or
+                    type(ordinal) is not int or not 1 <= ordinal <= 146 or
+                    type(row["method"]) is not str or row["method"] not in {m.upper() for m in self.METHODS} or
+                    not pointer.endswith("/" + row["method"].lower()) or
+                    not pointer.startswith(("/paths/", "/components/pathItems/")) or
+                    self.fragment(pointer) != pointer or type(row["member_of_original140"]) is not bool):
+                raise CheckingError("mistyped current Source operation identity")
+            if pointer in identities or symbol in symbols or ordinal in ordinals:
+                raise CheckingError("duplicate current Source operation identity")
+            if row["member_of_original140"]:
+                if (type(row["logical_ordinal_original140"]) is not int or
+                        row["logical_ordinal_original140"] != ordinal or original.get(pointer) != (symbol, ordinal)):
+                    raise CheckingError("current binding changed an original140 Source identity")
+            elif (row["logical_ordinal_original140"] is not None or appended.get(pointer) != (symbol, ordinal)):
+                raise CheckingError("current binding changed an approved HEAD identity")
+            identities[pointer] = (symbol, ordinal)
+            symbols.add(symbol)
+            ordinals.add(ordinal)
+        if set(identities) != set(original) | set(appended) or ordinals != set(range(1, 147)):
+            raise CheckingError("incomplete current146 Source identity set")
+        return identities
+
+    def _p06_operation_identities(self):
+        packet = Path(self.P06_OPERATION_IDENTITY_INPUT)
+        try:
+            if not packet.is_absolute() or packet.is_symlink() or not packet.is_dir():
+                raise CheckingError("Source identity input must be an explicit regular absolute directory")
+            values = []
+            for name, expected in (("operation-map.json", self.P06_WITNESS_SHA256),
+                                   ("CURRENT-API-BINDING.json", self.P06_BINDING_SHA256)):
+                file = packet / name
+                if file.is_symlink() or not file.is_file():
+                    raise CheckingError("missing/nonregular Source identity input: " + name)
+                raw = file.read_bytes()
+                if hashlib.sha256(raw).hexdigest() != expected:
+                    raise CheckingError("Source identity input changed: " + name)
+                values.append(json.loads(raw))
+            if (self.source.relative_to(self.root).as_posix() != "Platform/06-console/spec/06-console.api.openapi.yaml" or
+                    hashlib.sha256(self.source.read_bytes()).hexdigest() != self.P06_CURRENT_API_SHA256):
+                raise CheckingError("current Source API identity changed")
+        except (OSError, UnicodeError, ValueError, TypeError) as exc:
+            raise CheckingError("Source operation identity input unavailable") from exc
+        return self._p06_identity_records(*values)
+
     def operation_declarations(self):
         """Enumerate source slots, retaining coordinates independently of object/cache identity."""
-        import hashlib
         doc = self.document(self.source)
         slots = [(route, "/paths/" + self.escape(route), "") for route in doc.get("paths", {})]
-        witness = None
+        identities = None
         if self.owner(self.source) == 6:
-            api_sha = "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e"
-            mapfile = self.root / "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json"
-            try:
-                raw = mapfile.read_bytes()
-                if (hashlib.sha256(raw).hexdigest() !=
-                        "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19" or
-                        hashlib.sha256(self.source.read_bytes()).hexdigest() != api_sha):
-                    raise CheckingError("source operation identity witness changed")
-                witness = json.loads(raw)
-            except (OSError, ValueError) as exc:
-                raise CheckingError("source operation identity witness unavailable") from exc
+            identities = self._p06_operation_identities()
             standard = {"UnitsCollection": "/{rows}", "UnitItem": "/{rows}/{id}",
                         "TableCollection": "/{table}", "TableItem": "/{table}/{name}",
                         "PassRoot": "/{pass}", "ConsoleFile": "/{sub}/{file}"}
@@ -1010,23 +1102,6 @@ class SourceSchemaReader:
             if set(items) != set(standard):
                 raise CheckingError("missing/extra standard source PathItem")
             slots += [(route, "/components/pathItems/" + name, name) for name, route in standard.items()]
-        identities = {}
-        if witness is not None:
-            for row in witness["records"]:
-                if row.get("member_of_original140"):
-                    pointer = row["after_pointer"]
-                    if pointer in identities:
-                        raise CheckingError("ambiguous source operation identity")
-                    identities[pointer] = (row["actual_adapter_Op"], row["logical_ordinal_original140"])
-            heads = [("/folders", "OpHeadFolders"), ("/folders/{id}", "OpHeadFoldersById"),
-                     ("/{sub}/operations/{id}", "OpHeadBySubOperationsById"),
-                     ("/changes", "OpHeadChanges"), ("/{sub}/next_id", "OpHeadBySubNextId"),
-                     ("/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart")]
-            # The six appended identities are approved Source assignments, never generated metadata.
-            for ordinal, (route, symbol) in enumerate(heads, 141):
-                identities["/paths/" + self.escape(route) + "/head"] = (symbol, ordinal)
-            if len(identities) != 146:
-                raise CheckingError("incomplete source identity witness")
         out, seen = [], set()
         for route, declaration, component in slots:
             item, file, pointer = self.resolve_object(self.source, declaration, "path")
@@ -1038,19 +1113,19 @@ class SourceSchemaReader:
                 if (route, method) in seen:
                     raise CheckingError("duplicate logical source operation")
                 seen.add((route, method))
-                if witness is not None and source_pointer not in identities:
+                if identities is not None and source_pointer not in identities:
                     raise CheckingError("source operation has no immutable identity")
                 parameters = []
                 for owner, values in ((pointer, item.get("parameters", [])),
                                       (operation_pointer, item[method].get("parameters", []))):
                     for i, value in enumerate(values):
                         parameters.append((value, file, owner + "/parameters/" + str(i)))
-                symbol, ordinal = identities.get(source_pointer, (None, None))
+                symbol, ordinal = (identities or {}).get(source_pointer, (None, None))
                 out.append(dict(route=route, method=method, component=component, file=file,
                                 item=item, operation=item[method], item_pointer=pointer,
                                 pointer=operation_pointer, declaration=source_pointer,
                                 parameters=parameters, symbol=symbol, ordinal=ordinal))
-        if witness is not None and {r["declaration"] for r in out} != set(identities):
+        if identities is not None and {r["declaration"] for r in out} != set(identities):
             raise CheckingError("uncovered source operation identity")
         return out
 
@@ -1120,13 +1195,33 @@ class SourceSchemaReader:
             raise CheckingError("unsupported actual parameter value")
         return mapping()
 
-    def output_bindings(self, module):
-        """Pair source operation coordinates with actual route/body table identities."""
+    def response_declarations(self):
+        """Read complete response slots from Source, before observing emitted tables."""
+        responses = []
+        for operation in self.operation_declarations():
+            values = operation["operation"].get("responses")
+            if type(values) is not dict or not values:
+                raise CheckingError("nonempty Source response declarations required")
+            for status in values:
+                if type(status) is not str or not (re.fullmatch(r"[1-5][0-9]{2}", status) or status == "default"):
+                    raise CheckingError("unsupported Source response status coordinate")
+                response, file, pointer = self.resolve_object(operation["file"],
+                    operation["pointer"] + "/responses/" + self.escape(status), "response")
+                content = response.get("content", {})
+                if (type(content) is not dict or
+                        any(type(media) is not str or not media or type(value) is not dict
+                            for media, value in content.items())):
+                    raise CheckingError("mistyped Source response content declaration")
+                responses.append(dict(operation=operation, status=status, file=file, pointer=pointer,
+                                      content=content, bodyless=not content))
+        return responses
+
+    def output_operations(self, module, declarations=None):
+        """Bind actual operation symbols to the complete typed Source method/path set."""
         try:
             routes = (Path(module) / "apidoor/routes.go").read_text(encoding="utf-8")
-            bodies = (Path(module) / "apidoor/bodies.go").read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
-            raise CheckingError("cannot read actual body binding metadata") from exc
+            raise CheckingError("cannot read actual operation identities") from exc
         ops = {}
         for raw_key, op in re.findall(r'^\s*("(?:\\.|[^"\\])*"):\s+(Op[A-Za-z0-9_]+),\s*$', routes, re.M):
             label = json.loads(raw_key)
@@ -1135,12 +1230,26 @@ class SourceSchemaReader:
                 if (path, method.lower()) in ops:
                     raise CheckingError("duplicate actual operation identity")
                 ops[path, method.lower()] = op
+        declarations = self.operation_declarations() if declarations is None else declarations
+        if (set(ops) != {(r["route"], r["method"]) for r in declarations} or
+                len(set(ops.values())) != len(ops)):
+            raise CheckingError("missing/extra/aliased actual route operation")
+        for record in declarations:
+            if record["symbol"] is not None and ops[record["route"], record["method"]] != record["symbol"]:
+                raise CheckingError("actual operation renamed its source identity")
+        return ops
+
+    def output_bindings(self, module):
+        """Pair source operation coordinates with actual route/body table identities."""
+        try:
+            bodies = (Path(module) / "apidoor/bodies.go").read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise CheckingError("cannot read actual body binding metadata") from exc
+        declarations = self.operation_declarations()
+        ops = self.output_operations(module, declarations)
         request = self.literal_table(bodies, "requestSchemas")
         response = self.literal_table(bodies, "responseSchemas")
         expected = {}
-        declarations = self.operation_declarations()
-        if set(ops) != {(r["route"], r["method"]) for r in declarations}:
-            raise CheckingError("missing/extra actual route operation")
         for record in declarations:
             route, method = record["route"], record["method"]
             op = ops[route, method]
@@ -1219,7 +1328,179 @@ class SourceSchemaReader:
             raise CheckingError("mistyped actual binding table") from exc
         if set(actual) != set(expected) or any(type(name) is not str for name in actual.values()):
             raise CheckingError("incomplete/extra actual body bindings")
-        return [(name, *expected[key]) for key, name in actual.items()]
+        bindings = [(name, *expected[key]) for key, name in actual.items()]
+        # Priority routes have a separate path-schema table. Its route/name
+        # identities bind exact Source slots; emitted definition names are opaque.
+        path_sources = {}
+        for record in declarations:
+            if "x-route-priority" not in record["item"]:
+                continue
+            merged, declared = {}, set()
+            for node, file, pointer in record["parameters"]:
+                prm, base, ptr = self.resolve_object(file, pointer, "parameter")
+                if prm.get("in") == "path":
+                    if type(prm.get("name")) is not str or not prm["name"] or "schema" not in prm:
+                        raise CheckingError("incomplete source path parameter")
+                    level = (file, pointer.rsplit("/parameters/", 1)[0], prm["name"])
+                    if level in declared:
+                        raise CheckingError("ambiguous source path parameter declaration")
+                    declared.add(level)
+                    merged[prm["name"]] = (base, ptr + "/schema")
+            for name, coordinate in merged.items():
+                path_sources.setdefault((record["route"], name), set()).add(coordinate)
+        path_tables = re.findall(r"\bvar\s+pathSchemas\s*=", bodies)
+        if path_sources or path_tables:
+            if len(path_tables) != 1:
+                raise CheckingError("missing/duplicate actual path-schema table")
+            path_table = self.literal_table(bodies, "pathSchemas")
+            path_actual = {}
+            for route, values in path_table.items():
+                if (type(route) is not str or type(values) is not dict or not values or
+                        any(type(name) is not str or not name or type(value) is not str or not value
+                            for name, value in values.items())):
+                    raise CheckingError("mistyped/empty actual path-schema binding")
+                for name, value in values.items():
+                    path_actual[route, name] = value
+            if set(path_actual) != set(path_sources):
+                raise CheckingError("missing/extra actual path-schema binding")
+            for key, name in path_actual.items():
+                bindings.extend((name, *coordinate) for coordinate in sorted(path_sources[key]))
+        return bindings
+
+
+def source_response_probes(reader, module):
+    """Expected response boundaries come solely from complete Source slots and validators."""
+    declarations = reader.response_declarations()
+    bodyless = [row for row in declarations if row["bodyless"]]
+    if not declarations:
+        raise CheckingError("empty Source response coverage")
+    cases = []
+    def add(row, role, value, expected, *, media="", encode=False, empty=False, code=None, unknown=False):
+        operation = row["operation"]
+        statuses = operation["operation"]["responses"]
+        if code is None:
+            code = int(row["status"]) if row["status"] != "default" else next(
+                n for n in range(100, 600) if str(n) not in statuses)
+        cases.append(dict(route=operation["route"], method=operation["method"], code=code, media=media,
+                          value=value, expected=expected, encode=encode, empty=empty, unknown=unknown, role=role,
+                          source=str(row["file"]) + "#" + row["pointer"]))
+    for row in bodyless:
+        add(row, "no-content-nil", None, True)
+        add(row, "no-content-nonnil", {"unexpected": True}, False)
+        add(row, "no-content-encode-nil", None, True, encode=True, empty=True)
+        add(row, "no-content-encode-nonnil", {"unexpected": True}, False, encode=True)
+    # One discriminating content/media neighbour, plus every actual body-bearing
+    # HEAD and every declared media without schema. None is a bodyless shortcut.
+    ordinary_media_done = False
+    media_targets = 0
+    media_neighbours = []
+    for row in declarations:
+        for media, obj in row["content"].items():
+            special = row["operation"]["method"] == "head" or "schema" not in obj
+            if ordinary_media_done and not special:
+                continue
+            if "schema" not in obj:
+                candidates = [{"source": "é"}, None] if media == "application/json" or media.endswith("+json") else ["source-é\n"]
+                validator = None
+            else:
+                pointer = row["pointer"] + "/content/" + reader.escape(media) + "/schema"
+                validator = reader.validator_at(row["file"], pointer)
+                def proposal_shape(file, pointer, active=()):
+                    # Resolve only typed Source schema edges for candidate construction.
+                    # This is not a schema oracle: every candidate is checked against
+                    # the complete unmodified Source registry below.
+                    key = (file, pointer)
+                    if key in active:
+                        return {}  # A finite proposal, never a recursive-schema verdict.
+                    node = reader.at(file, pointer, "schema")
+                    if type(node) is bool:
+                        return {} if node else {"not": {}}
+                    active = (*active, key)
+                    shaped = copy.deepcopy(node)
+                    shaped.pop("$defs", None)  # All reachable proposal refs are expanded explicitly.
+                    for keyword in reader.SCHEMA_MAPS:
+                        if keyword == "$defs" or keyword not in node:
+                            continue
+                        names = node[keyword]
+                        if keyword == "properties" and "required" in node:
+                            names = {k: v for k, v in names.items() if k in node["required"]}
+                        shaped[keyword] = {k: proposal_shape(file, pointer + "/" + keyword + "/" + reader.escape(k), active)
+                                           for k in names}
+                    for keyword in reader.SCHEMA_LISTS:
+                        if keyword in node:
+                            shaped[keyword] = [proposal_shape(file, pointer + "/" + keyword + "/" + str(i), active)
+                                               for i in range(len(node[keyword]))]
+                    for keyword in reader.SCHEMA_SINGLE:
+                        if keyword in node:
+                            shaped[keyword] = proposal_shape(file, pointer + "/" + keyword, active)
+                    if "$ref" in node:
+                        target, fragment, _ = reader._reference(file, pointer, node["$ref"], "schema", (file,))
+                        resolved = proposal_shape(target, fragment, active)
+                        del shaped["$ref"]
+                        shaped = {"allOf": [resolved, shaped]}
+                    # Flatten nested proposal composition so the existing small
+                    # value sampler sees inherited required fields and constants.
+                    if "allOf" in shaped:
+                        parts = []
+                        for part in shaped["allOf"]:
+                            if type(part) is dict and "allOf" in part:
+                                parts.extend(part["allOf"])
+                                sibling = {k: v for k, v in part.items() if k != "allOf"}
+                                if sibling:
+                                    parts.append(sibling)
+                            else:
+                                parts.append(part)
+                        shaped["allOf"] = parts
+                    return shaped
+                from jsonschema import Draft202012Validator
+                class ProposalValues(Gen):
+                    def values(self, schema, depth=0):
+                        values = super().values(schema, depth)
+                        # Rank locally valid proposals before constructing their
+                        # parents. This is not the original Source oracle below.
+                        local = Draft202012Validator(schema)
+                        return sorted(values, key=lambda value: not local.is_valid(value))
+                try:
+                    candidates = ProposalValues({}, random.Random(36)).values(proposal_shape(row["file"], pointer))
+                except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
+                    candidates = []  # Candidate construction is not an expected verdict.
+            valid = [value for value in candidates if validator is None or validator.is_valid(value)]
+            if not valid:
+                if special:
+                    raise CheckingError(f"no Source-valid body-bearing HEAD/schema-less media neighbour: {row['file']}#{row['pointer']} {media}")
+                continue
+            value = valid[0]
+            add(row, "declared-media", value, True, media=media)
+            add(row, "declared-media-encode", value, True, media=media, encode=True)
+            # Empty-media maps intentionally ignore a media label. Unknown-media
+            # rejection is tested on a declared content/media response instead.
+            unknown = "application/x-review103-undeclared"
+            if unknown in row["content"]:
+                raise CheckingError("unknown-media probe unexpectedly declared")
+            add(row, "unknown-media", value, False, media=unknown)
+            add(row, "unknown-media-encode", value, False, media=unknown, encode=True)
+            ordinary_media_done = True
+            media_targets += 1
+            media_neighbours.append((row, media, value))
+    if not ordinary_media_done:
+        raise CheckingError("missing Source-valid declared/unknown-media coverage")
+    neighbours = [(row, "", None) for row in bodyless] + media_neighbours
+    first, media, value = neighbours[0]
+    add(first, "unknown-operation", value, False, media=media, unknown=True)
+    for row, media, value in neighbours:
+        statuses = row["operation"]["operation"]["responses"]
+        if "default" not in statuses:
+            unknown = next(n for n in range(100, 600) if str(n) not in statuses)
+            add(row, "unknown-status", value, False, media=media, code=unknown)
+            break
+    # Only now read actual operation names. Missing status-table rows cannot
+    # remove expected cases or turn this test into a zero-case success.
+    ops = reader.output_operations(module)
+    for case in cases:
+        case["op"] = None if case.pop("unknown") else ops[case["route"], case["method"]]
+    return cases, dict(source_responses=len(declarations),bodyless=len(bodyless),media_targets=media_targets,
+                       body_bearing_HEAD=sum(row["operation"]["method"] == "head" and bool(row["content"]) for row in declarations),
+                       schema_less_media=sum("schema" not in obj for row in declarations for obj in row["content"].values()))
 
 
 # Synthetic schemas make keywords observable: the lesson's open Unit makes unevaluatedProperties redundant
@@ -1416,6 +1697,38 @@ class DoorBodiesBase:
         got = read_report(cases, go_process(self.fresh, "./cmd/judgeparams"))
         bad = disagree(cases, got, want)
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(cases)} parameter verdicts disagree")
+
+    def test_declared_response_body_boundaries(self):
+        """Every Source no-content status requires nil body; content/media remain distinct."""
+        spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
+        reader = SourceSchemaReader(ROOT, spec)
+        cases, coverage = source_response_probes(reader, self.fresh)
+        if not cases:
+            raise CheckingError("empty declared response proof")
+        module = (self.fresh / "go.mod").read_text().split()[1]
+        program = ["package main", "import (", '"encoding/json"', '"fmt"', '"os"',
+                   json.dumps(module + "/apidoor"), ")", "func main(){enc:=json.NewEncoder(os.Stdout)"]
+        for identity, case in enumerate(cases, 1):
+            op = "apidoor.Op(0)" if case["op"] is None else "apidoor." + case["op"]
+            raw = json.dumps(json.dumps(case["value"], ensure_ascii=True, allow_nan=False))
+            call = f'{op},{case["code"]},{json.dumps(case["media"])},value'
+            program.append('{var value any; if err:=json.Unmarshal([]byte(' + raw + '),&value);err!=nil{fmt.Fprintln(os.Stderr,err);os.Exit(2)}')
+            if case["encode"]:
+                condition = "violation==nil && len(body)==0" if case["empty"] else "violation==nil"
+                program.append(f'body,violation:=apidoor.EncodeResponse({call});_ = body; result:={condition}')
+            else:
+                program.append(f'result:=apidoor.CheckResponse({call})==nil')
+            program.append(f'if err:=enc.Encode(map[string]any{{"id":{identity},"result":result}});err!=nil{{fmt.Fprintln(os.Stderr,err);os.Exit(2)}}' + '}')
+        program.append('}')
+        try:
+            directory = self.fresh / "cmd/judge_response_boundaries"
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / "main.go").write_text("\n".join(program) + "\n", encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise CheckingError("cannot prepare response-boundary service") from exc
+        got = read_report(cases, go_process(self.fresh, "./cmd/judge_response_boundaries"))
+        bad = disagree(cases, got, lambda case: case["expected"])
+        self.assertEqual(bad[:3], [], f"{len(bad)} complete Source response boundary mismatches; {coverage}")
 
     def test_api(self):
         if self.LESSON != "06-console":
@@ -2036,6 +2349,263 @@ class SourceSchemaReaderControls(unittest.TestCase):
             reader.compare({"other-root": {"type": "integer"}}, [("other-root", 1)], bindings)
 
 
+    def path_parameter_fixture(self, external=False, override=False, unsafe=False):
+        target = {"type": "string", "pattern": "^[a-z]{2}$"}
+        if unsafe:
+            target.update(default={"$ref": "https://not-source.invalid/default"},
+                          examples=[{"$ref": "../../99-missing/schema.json"}])
+        parameter = {"name": "digest", "in": "path", "required": True, "schema": target}
+        if unsafe:
+            parameter["example"] = {"$ref": "https://not-source.invalid/parameter"}
+        item = {"x-route-priority": 1, "parameters": [parameter],
+                "get": {"responses": {"200": {"description": "ok"}}}}
+        route = "/blobs/{digest}"
+        if external:
+            self.schema({"type": "string", "pattern": "^[a-z]{2}$"}, owner="common", name="digest")
+            parameter["schema"] = {"$ref": "../data/digest.schema.json"}
+            self.api("common", components={"parameters": {"Digest": parameter}})
+            item["parameters"] = [{"$ref": "../../common/contracts/shared.api.openapi.yaml#/components/parameters/Digest"}]
+        if override:
+            item["get"]["parameters"] = [{"name": "digest", "in": "path", "required": True,
+                                             "schema": {"type": "integer", "minimum": 2}}]
+        spec = self.api(owner="05-resource", schemas={}, paths={route: item})
+        module = self.root / "actual-path-go"
+        (module / "apidoor").mkdir(parents=True)
+        (module / "apidoor/routes.go").write_text('var ops = map[string]Op{\n"/blobs/{digest} GET": OpBlob,\n}\n')
+        text = ('var requestSchemas = map[Op]map[string]string{}\n'
+                'var responseSchemas = map[Op]map[string]map[string]string{}\n'
+                'var pathSchemas = map[string]map[string]string{\n'
+                '"/blobs/{digest}": {"digest": "opaque-path-root"},\n}\n')
+        (module / "apidoor/bodies.go").write_text(text)
+        return SourceSchemaReader(self.root, spec), module, text, target
+
+    def test_34_path_parameter_binds_exact_slot_without_a_definition_name_convention(self):
+        reader, module, _, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        self.assertEqual(bindings, [("opaque-path-root", reader.source,
+            "/paths/~1blobs~1{digest}/parameters/0/schema")])
+        cases = [("opaque-path-root", value) for value in ("ab", "a", "ABC", 2)]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        self.assertTrue(reader.compare({"opaque-path-root": {"type": "string"}}, cases, bindings))
+
+    def test_35_path_parameter_missing_extra_duplicate_type_and_wrong_bindings_fail(self):
+        reader, module, text, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-path-root", value) for value in ("ab", "a")]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        row = '"/blobs/{digest}": {"digest": "opaque-path-root"},'
+        mutants = [text.replace(row, ''), text.replace(row, row + '\n' + row),
+                   text.replace('"digest": "opaque-path-root"', '"other": "opaque-path-root"'),
+                   text.replace('"/blobs/{digest}":', '"/other/{digest}":'),
+                   text.replace('"opaque-path-root"', 'true'),
+                   text.replace('"opaque-path-root"', '""'),
+                   text.replace('{"digest": "opaque-path-root"}', '{}'),
+                   text.replace('{"digest": "opaque-path-root"}', '"opaque-path-root"'),
+                   text.replace('pathSchemas', 'notPathSchemas'), text + text,
+                   text.replace('"digest": "opaque-path-root"',
+                                '"digest": "opaque-path-root", "extra": "opaque-path-root"')]
+        for mutant in mutants:
+            with self.subTest(mutant=mutant):
+                self.assertNotEqual(mutant, text)
+                (module / "apidoor/bodies.go").write_text(mutant)
+                with self.assertRaises(CheckingError):
+                    reader.output_bindings(module)
+        (module / "apidoor/bodies.go").write_text(text.replace('"opaque-path-root"', '"wrong-root"'))
+        wrong = reader.output_bindings(module)
+        with self.assertRaises(CheckingError):
+            reader.compare({"opaque-path-root": schema}, cases, wrong)
+        (module / "apidoor/bodies.go").write_text(text)
+        with self.assertRaises(CheckingError):
+            reader.compare({"opaque-path-root": schema, "unbound": {}}, cases + [("unbound", {})], bindings)
+
+    def test_36_path_parameter_reference_preserves_owner_and_each_uri_base(self):
+        reader, module, _, _ = self.path_parameter_fixture(external=True)
+        bindings = reader.output_bindings(module)
+        common = self.root / "Platform/common/contracts/shared.api.openapi.yaml"
+        self.assertEqual(bindings, [("opaque-path-root", common, "/components/parameters/Digest/schema")])
+        target = self.root / "Platform/common/data/digest.schema.json"
+        cases = [("opaque-path-root", value) for value in ("ab", "a", 1)]
+        self.assertEqual(reader.compare({"opaque-path-root": {"type": "string", "pattern": "^[a-z]{2}$"}},
+                                        cases, bindings), [])
+        self.assertIn(target, reader.provenance)
+        # An external future owner is not made legal by a parameter/table binding.
+        changed = common.read_text().replace('../data/digest.schema.json',
+                                            '../../10-domain-console/data/digest.schema.json')
+        common.write_text(changed)
+        self.schema({"type": "string"}, owner="10-domain-console", name="digest")
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, reader.source)
+
+    def test_37_operation_path_parameter_override_uses_its_own_source_coordinate(self):
+        reader, module, _, _ = self.path_parameter_fixture(override=True)
+        bindings = reader.output_bindings(module)
+        self.assertEqual(bindings, [("opaque-path-root", reader.source,
+            "/paths/~1blobs~1{digest}/get/parameters/0/schema")])
+        cases = [("opaque-path-root", value) for value in (2, 1, "ab")]
+        self.assertEqual(reader.compare({"opaque-path-root": {"type": "integer", "minimum": 2}},
+                                        cases, bindings), [])
+        self.assertTrue(reader.compare({"opaque-path-root": {"type": "string", "pattern": "^[a-z]{2}$"}},
+                                       cases, bindings))
+
+    def test_38_path_parameter_examples_and_defaults_remain_instance_data(self):
+        reader, module, _, schema = self.path_parameter_fixture(unsafe=True)
+        self.assertFalse(reader.edges)
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-path-root", value) for value in ("ab", "a", {"$ref": "https://instance.invalid"})]
+        self.assertEqual(reader.compare({"opaque-path-root": schema}, cases, bindings), [])
+        # The identical unsafe reference in an actual Schema Object is refused.
+        spec = self.api(owner="05-resource", schemas={"Root": {"$ref": "https://not-source.invalid/schema"}})
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, spec)
+
+
+    def test_39_missing_or_ambiguous_source_path_declarations_are_errors(self):
+        reader, module, _, schema = self.path_parameter_fixture()
+        bindings = reader.output_bindings(module)
+        self.assertEqual(reader.compare({"opaque-path-root": schema},
+                         [("opaque-path-root", "ab"), ("opaque-path-root", "a")], bindings), [])
+        original = reader.document(reader.source)
+        for variant in ("missing-parameter", "missing-schema", "duplicate", "wrong-name"):
+            doc = copy.deepcopy(original)
+            parameters = doc["paths"]["/blobs/{digest}"]["parameters"]
+            if variant == "missing-parameter":
+                parameters.clear()
+            elif variant == "missing-schema":
+                del parameters[0]["schema"]
+            elif variant == "duplicate":
+                parameters.append(copy.deepcopy(parameters[0]))
+            else:
+                parameters[0]["name"] = "other"
+            self.write(str(reader.source.relative_to(self.root)), doc, yaml=True)
+            with self.subTest(variant=variant), self.assertRaises(CheckingError):
+                SourceSchemaReader(self.root, reader.source).output_bindings(module)
+
+
+    def response_fixture(self, optional_ref=False):
+        source = self.api(paths={
+            "/x": {"get": {"responses": {
+                "200": {"description": "declared media, no schema", "content": {"application/json": {}}},
+                "204": {"description": "absent content"},
+                "404": {"description": "empty content", "content": {}}}}},
+            "/head": {"head": {"responses": {"200": {"description": "body-bearing HEAD", "content": {
+                "application/json": {"schema": {"type": "object", "properties": {"ok": {"const": True}},
+                                                "required": ["ok"]}}}}}}}})
+        if optional_ref:
+            self.schema({"type": "integer", "minimum": 0}, owner="common", name="optional")
+            import yamlsub
+            doc = yamlsub.load(source.read_text(), source.name)
+            schema = doc["paths"]["/head"]["head"]["responses"]["200"]["content"]["application/json"]["schema"]
+            schema["properties"]["more"] = {"$ref": "../../common/data/optional.schema.json"}
+            self.write(str(source.relative_to(self.root)), doc, yaml=True)
+        module = self.root / "actual-responses"
+        (module / "apidoor").mkdir(parents=True)
+        routes = 'var ops=map[string]Op{\n"/x GET": OpX,\n"/head HEAD": OpHead,\n}\n'
+        (module / "apidoor/routes.go").write_text(routes)
+        return SourceSchemaReader(self.root, source), module, routes
+
+    def test_40_no_content_cases_precede_actual_response_tables_and_do_not_disappear(self):
+        reader, module, _ = self.response_fixture()
+        cases, coverage = source_response_probes(reader, module)
+        self.assertEqual(coverage, {"source_responses": 4, "bodyless": 2, "media_targets": 2,
+                                   "body_bearing_HEAD": 1, "schema_less_media": 1})
+        no_content = [case for case in cases if case["role"].startswith("no-content")]
+        self.assertEqual(len(no_content), 8)
+        self.assertEqual({(case["method"], case["code"]) for case in no_content}, {("get", 204), ("get", 404)})
+        self.assertTrue(any(case["method"] == "head" and case["role"] == "declared-media" for case in cases))
+        self.assertTrue(any(case["code"] == 200 and case["method"] == "get" and
+                            case["value"] is not None and case["expected"] for case in cases))
+        (module / "apidoor/bodies.go").write_text("var responseSchemas=map[Op]map[string]map[string]string{}\n")
+        self.assertEqual(source_response_probes(reader, module), (cases, coverage))
+        self.assertTrue({"unknown-operation", "unknown-status", "unknown-media"} <= {case["role"] for case in cases})
+
+    def test_41_response_probe_missing_extra_or_aliased_operation_is_checking_error(self):
+        reader, module, routes = self.response_fixture()
+        cases, _ = source_response_probes(reader, module)
+        self.assertGreater(len(cases), 8)
+        for mutant in (routes.replace('"/x GET": OpX,', ''),
+                       routes.replace('"/x GET": OpX,', '"/x GET": OpX,\n"/extra GET": OpExtra,'),
+                       routes.replace('OpHead', 'OpX'),
+                       routes.replace('"/x GET": OpX,', '"/x GET": OpX,\n"/x GET": OpX,')):
+            self.assertNotEqual(mutant, routes)
+            (module / "apidoor/routes.go").write_text(mutant)
+            with self.subTest(mutant=mutant), self.assertRaises(CheckingError):
+                source_response_probes(reader, module)
+
+    def test_42_body_bearing_head_or_schema_less_media_is_not_no_content(self):
+        reader, module, _ = self.response_fixture()
+        declarations = reader.response_declarations()
+        self.assertEqual([(r["status"], r["bodyless"]) for r in declarations],
+                         [("200", False), ("204", True), ("404", True), ("200", False)])
+        document = copy.deepcopy(reader.document(reader.source))
+        del document["paths"]["/x"]["get"]["responses"]["204"]
+        del document["paths"]["/x"]["get"]["responses"]["404"]
+        self.write(str(reader.source.relative_to(self.root)), document, yaml=True)
+        cases, coverage = source_response_probes(SourceSchemaReader(self.root, reader.source), module)
+        self.assertEqual(coverage["bodyless"], 0)
+        self.assertGreater(len(cases), 0)
+        self.assertFalse(any(case["role"].startswith("no-content") for case in cases))
+        self.assertTrue(any(case["role"] == "declared-media" for case in cases))
+
+
+    def test_43_optional_reference_only_affects_candidates_not_full_source_validator(self):
+        reader, module, _ = self.response_fixture(optional_ref=True)
+        cases, _ = source_response_probes(reader, module)
+        head = [case for case in cases if case["method"] == "head" and case["role"] == "declared-media"]
+        self.assertEqual(len(head), 1)
+        pointer = "/paths/~1head/head/responses/200/content/application~1json/schema"
+        validator = reader.validator_at(reader.source, pointer)
+        self.assertTrue(validator.is_valid(head[0]["value"]))
+        self.assertFalse(validator.is_valid({"ok": True, "more": "wrong type"}))
+        self.assertFalse(validator.is_valid({"ok": False}))
+        self.assertIn(self.root / "Platform/common/data/optional.schema.json", reader.provenance)
+
+
+    def test_44_response_candidate_preserves_schema_like_literal_instance_data(self):
+        reader, module, _ = self.response_fixture()
+        document = copy.deepcopy(reader.document(reader.source))
+        literal = {"properties": {"literal": 1}, "required": [], "$ref": "https://not-a-schema.invalid/data"}
+        document["paths"]["/head"]["head"]["responses"]["200"]["content"]["application/json"]["schema"] = {"const": literal}
+        self.write(str(reader.source.relative_to(self.root)), document, yaml=True)
+        cases, _ = source_response_probes(SourceSchemaReader(self.root, reader.source), module)
+        self.assertEqual([case["value"] for case in cases if case["method"] == "head" and
+                          case["role"] == "declared-media"], [literal])
+
+
+    def test_45_nested_source_composition_keeps_required_values_and_reference_bases(self):
+        reader, module, _ = self.response_fixture(optional_ref=True)
+        document = copy.deepcopy(reader.document(reader.source))
+        schema = document["paths"]["/head"]["head"]["responses"]["200"]["content"]["application/json"]["schema"]
+        document["components"]["schemas"]["BaseResponse"] = schema
+        document["components"]["schemas"]["ExtendedResponse"] = {
+            "allOf": [{"$ref": "#/components/schemas/BaseResponse"}, {"properties": {"ok": {"const": True}}}]}
+        document["paths"]["/head"]["head"]["responses"]["200"]["content"]["application/json"]["schema"] = {
+            "allOf": [{"$ref": "#/components/schemas/ExtendedResponse"},
+                      {"properties": {"state": {"const": "ready"}}, "required": ["state"]}]}
+        self.write(str(reader.source.relative_to(self.root)), document, yaml=True)
+        full = SourceSchemaReader(self.root, reader.source)
+        cases, _ = source_response_probes(full, module)
+        head = next(case["value"] for case in cases if case["method"] == "head" and case["role"] == "declared-media")
+        validator = full.validator_at(full.source, "/paths/~1head/head/responses/200/content/application~1json/schema")
+        self.assertTrue(validator.is_valid(head))
+        self.assertEqual(head["state"], "ready")
+        self.assertFalse(validator.is_valid(dict(head, state="wrong")))
+        self.assertFalse(validator.is_valid(dict(head, more="wrong type")))
+
+
+    def test_46_response_proposals_respect_required_string_patterns_before_object_sampling(self):
+        reader, module, _ = self.response_fixture()
+        document = copy.deepcopy(reader.document(reader.source))
+        schema = document["paths"]["/head"]["head"]["responses"]["200"]["content"]["application/json"]["schema"]
+        schema["properties"]["ok"] = {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$"}
+        self.write(str(reader.source.relative_to(self.root)), document, yaml=True)
+        full = SourceSchemaReader(self.root, reader.source)
+        cases, _ = source_response_probes(full, module)
+        head = next(case["value"] for case in cases if case["method"] == "head" and case["role"] == "declared-media")
+        validator = full.validator_at(full.source, "/paths/~1head/head/responses/200/content/application~1json/schema")
+        self.assertTrue(validator.is_valid(head))
+        self.assertFalse(validator.is_valid(dict(head, ok="lower")))
+
+
     def test_33_existing_ndjson_line_schema_is_a_typed_source_edge(self):
         spec = ROOT / "Platform/05-resource/spec/05-resource.api.openapi.yaml"
         reader = SourceSchemaReader(ROOT, spec)
@@ -2048,6 +2618,219 @@ class SourceSchemaReaderControls(unittest.TestCase):
             "x-line-schema": {"$ref": "https://not-a-source.invalid/data"}}}})
         local = SourceSchemaReader(self.root, fixture)
         self.assertEqual(local.edges, {})
+
+
+class SourceOperationIdentityControls(unittest.TestCase):
+    """Current P06 Source identities and isolated checking guards; no generator or Go."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.source = ROOT / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        cls.packet = SourceSchemaReader.P06_OPERATION_IDENTITY_INPUT
+        cls.reader = SourceSchemaReader(ROOT, cls.source)
+        # A normal physical current-Source baseline precedes every checking control.
+        cls.baseline = cls.reader.operation_declarations()
+        if len(cls.baseline) != 146:
+            raise CheckingError("current146 identity baseline is incomplete")
+        cls.raw_inputs = {}
+        for name, expected in (("operation-map.json", SourceSchemaReader.P06_WITNESS_SHA256),
+                               ("CURRENT-API-BINDING.json", SourceSchemaReader.P06_BINDING_SHA256)):
+            raw = (cls.packet / name).read_bytes()
+            if hashlib.sha256(raw).hexdigest() != expected:
+                raise CheckingError("Source identity input changed after baseline")
+            cls.raw_inputs[name] = raw
+        cls.witness = json.loads(cls.raw_inputs["operation-map.json"])
+        cls.binding = json.loads(cls.raw_inputs["CURRENT-API-BINDING.json"])
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="source-operation-identity-")
+        self.addCleanup(self.temp.cleanup)
+        self.directory = Path(self.temp.name)
+
+    def packet_copy(self):
+        packet = self.directory / "identity-input"
+        packet.mkdir(exist_ok=True)
+        for name, raw in self.raw_inputs.items():
+            path = packet / name
+            if path.is_symlink() or path.is_dir():
+                if path.is_symlink():
+                    path.unlink()
+                else:
+                    path.rmdir()
+            path.write_bytes(raw)
+        return packet
+
+    def test_00_actual_current146_keeps_original140_and_six_head_assignments(self):
+        actual = {r["declaration"]: (r["symbol"], r["ordinal"], r["method"].upper()) for r in self.baseline}
+        expected = {r["after_pointer"]: (r["actual_adapter_Op"], r["logical_ordinal_current146"], r["method"])
+                    for r in self.binding["records"]}
+        self.assertEqual(actual, expected)
+        self.assertEqual(len({r["symbol"] for r in self.baseline}), 146)
+        self.assertEqual({r["ordinal"] for r in self.baseline}, set(range(1, 147)))
+        self.assertEqual(sum(r["member_of_original140"] for r in self.binding["records"]), 140)
+        self.assertEqual(sum(r["ordinal"] > 140 for r in self.baseline), 6)
+
+    def test_01_pathitem_parameters_keep_each_declaration_and_schema_base(self):
+        items = [r for r in self.baseline if r["component"]]
+        expected = {r["after_pointer"] for r in self.binding["records"]
+                    if r["after_pointer"].startswith("/components/pathItems/")}
+        self.assertEqual({r["declaration"] for r in items}, expected)
+        self.assertEqual({r["component"] for r in items},
+                         {"UnitsCollection", "UnitItem", "TableCollection", "TableItem", "PassRoot", "ConsoleFile"})
+        inherited = []
+        for record in items:
+            for node, file, pointer in record["parameters"]:
+                if pointer.startswith(record["item_pointer"] + "/parameters/"):
+                    inherited.append(pointer)
+                    prm, base = self.reader.parameter(node, file,
+                        (record["symbol"], record["route"], record["method"]), (file, pointer))
+                    self.assertEqual(file, self.source)
+                    self.assertIs(self.reader.at(file, pointer, "parameter"), node)
+                    if "schema" in prm:
+                        coordinates = self.reader._locations(prm["schema"], base, "schema")
+                        self.assertTrue(coordinates)
+                        for schema_file, schema_pointer in coordinates:
+                            self.assertIs(self.reader.at(schema_file, schema_pointer, "schema"), prm["schema"])
+        self.assertTrue(inherited)
+
+    def test_02_verified_external_copy_is_selected_without_a_source_sidecar(self):
+        packet = self.packet_copy()
+        sidecar = ROOT / "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json"
+        read_bytes = Path.read_bytes
+        def no_source_sidecar(path):
+            if path == sidecar:
+                raise AssertionError("Source-root sidecar must not be consulted")
+            return read_bytes(path)
+        with patch.object(self.reader, "P06_OPERATION_IDENTITY_INPUT", packet), \
+                patch.object(Path, "read_bytes", no_source_sidecar):
+            self.assertEqual(self.reader.operation_declarations(), self.baseline)
+        for name, raw in self.raw_inputs.items():
+            self.assertEqual((packet / name).read_bytes(), raw)
+        self.assertIn(b"b4073b39", self.raw_inputs["operation-map.json"])
+        self.assertNotIn(SourceSchemaReader.P06_CURRENT_API_SHA256.encode(), self.raw_inputs["operation-map.json"])
+
+    def test_03_missing_changed_and_nonregular_identity_inputs_are_checking_errors(self):
+        packet = self.packet_copy()
+        for name in self.raw_inputs:
+            for variant in ("missing", "changed", "invalid-json", "directory", "symlink"):
+                self.packet_copy()
+                path = packet / name
+                path.unlink()
+                if variant == "changed":
+                    path.write_bytes(self.raw_inputs[name] + b" ")
+                elif variant == "invalid-json":
+                    path.write_bytes(b"{")
+                elif variant == "directory":
+                    path.mkdir()
+                elif variant == "symlink":
+                    path.symlink_to(self.packet / name)
+                with self.subTest(name=name, variant=variant), \
+                        patch.object(self.reader, "P06_OPERATION_IDENTITY_INPUT", packet), self.assertRaises(CheckingError):
+                    self.reader.operation_declarations()
+        self.packet_copy()
+        alias = self.directory / "packet-alias"
+        alias.symlink_to(packet, target_is_directory=True)
+        for path in (alias, Path("relative-input"), self.directory / "absent"):
+            with self.subTest(packet=path), patch.object(self.reader, "P06_OPERATION_IDENTITY_INPUT", path), \
+                    self.assertRaises(CheckingError):
+                self.reader.operation_declarations()
+
+    def test_04_changed_or_wrong_current_api_is_a_checking_error(self):
+        # This narrow physical input guard does not parse/materialize another Source graph.
+        root = self.directory / "owned-source"
+        source = root / "Platform/06-console/spec/06-console.api.openapi.yaml"
+        source.parent.mkdir(parents=True)
+        raw = self.source.read_bytes()
+        source.write_bytes(raw)
+        reader = object.__new__(SourceSchemaReader)
+        reader.root, reader.source = root, source
+        reader.P06_OPERATION_IDENTITY_INPUT = self.packet_copy()
+        self.assertEqual(len(reader._p06_operation_identities()), 146)
+        source.write_bytes(raw + b"\n")
+        with self.assertRaises(CheckingError):
+            reader._p06_operation_identities()
+        source.write_bytes(raw)
+        wrong = source.with_name("other.api.openapi.yaml")
+        source.rename(wrong)
+        reader.source = wrong
+        with self.assertRaises(CheckingError):
+            reader._p06_operation_identities()
+        reader.source = source
+        with self.assertRaises(CheckingError):
+            reader._p06_operation_identities()
+
+    def test_05_bound_record_shape_types_counts_and_duplicates_are_checking_errors(self):
+        self.assertEqual(len(self.reader._p06_identity_records(self.witness, self.binding)), 146)
+        mutations = []
+        for field, value in (("member_of_original140", 1), ("method", None),
+                             ("logical_ordinal_current146", True), ("logical_ordinal_original140", True),
+                             ("actual_adapter_Op", "OpWrong"), ("after_pointer", "/paths/~1wrong/get")):
+            changed = copy.deepcopy(self.binding)
+            changed["records"][0][field] = value
+            mutations.append(changed)
+        for field in ("after_pointer", "actual_adapter_Op", "logical_ordinal_current146"):
+            changed = copy.deepcopy(self.binding)
+            changed["records"][1][field] = changed["records"][0][field]
+            mutations.append(changed)
+        for variant in ("missing", "extra", "missing-field", "extra-field", "counts", "Source", "API", "witness"):
+            changed = copy.deepcopy(self.binding)
+            if variant == "missing":
+                changed["records"].pop()
+            elif variant == "extra":
+                changed["records"].append(copy.deepcopy(changed["records"][0]))
+            elif variant == "missing-field":
+                del changed["records"][0]["method"]
+            elif variant == "extra-field":
+                changed["records"][0]["unexpected"] = True
+            elif variant == "counts":
+                changed["counts"]["current_total"] = 145
+            elif variant == "Source":
+                changed["Source_pin"] = "0" * 40
+            elif variant == "API":
+                changed["current_API"]["sha256"] = "0" * 64
+            else:
+                changed["immutable_original_witness"]["sha256"] = "0" * 64
+            mutations.append(changed)
+        for changed in mutations:
+            with self.subTest(changed=changed["records"][:2]), self.assertRaises(CheckingError):
+                self.reader._p06_identity_records(self.witness, changed)
+
+    def test_06_original140_and_appended_head_changes_are_checking_errors(self):
+        for variant in ("old-missing", "old-duplicate", "old-bool", "old-symbol", "head-symbol", "head-ordinal"):
+            witness, binding = copy.deepcopy(self.witness), copy.deepcopy(self.binding)
+            if variant == "old-missing":
+                witness["records"].pop(0)
+            elif variant == "old-duplicate":
+                witness["records"][1] = copy.deepcopy(witness["records"][0])
+            elif variant == "old-bool":
+                witness["records"][0]["logical_ordinal_original140"] = True
+            elif variant == "old-symbol":
+                witness["records"][0]["actual_adapter_Op"] = "OpChanged"
+            elif variant == "head-symbol":
+                binding["records"][-1]["actual_adapter_Op"] = "OpChanged"
+            else:
+                binding["records"][-1]["logical_ordinal_current146"] = 140
+            with self.subTest(variant=variant), self.assertRaises(CheckingError):
+                self.reader._p06_identity_records(witness, binding)
+
+    def test_07_missing_extra_and_changed_source_slots_are_checking_errors(self):
+        original = self.reader.document(self.source)
+        for variant in ("missing-operation", "extra-operation", "missing-PathItem"):
+            doc = copy.deepcopy(original)
+            if variant == "missing-operation":
+                del doc["components"]["pathItems"]["UnitsCollection"]["get"]
+            elif variant == "extra-operation":
+                doc["components"]["pathItems"]["UnitsCollection"]["trace"] = {"responses": {"200": {"description": "ok"}}}
+            else:
+                del doc["components"]["pathItems"]["ConsoleFile"]
+            # An explicitly injected owned document tests the enumerator's guard,
+            # separately from physical input authentication and semantic comparison.
+            real_document = self.reader.document
+            def owned_document(file):
+                return doc if Path(file) == self.source else real_document(file)
+            with self.subTest(variant=variant), patch.object(self.reader, "document", side_effect=owned_document), \
+                    self.assertRaises(CheckingError):
+                self.reader.operation_declarations()
 
 
 for _lesson, _slug in LESSONS.items():

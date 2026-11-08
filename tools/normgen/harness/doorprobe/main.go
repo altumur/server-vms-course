@@ -21,20 +21,24 @@ import (
 )
 
 type request struct {
-	Cmd     string
-	Method  string
-	Target  string
-	Schema  string
-	JSON    string
-	Op      string
-	Code    int
-	ViaOp   string `json:"via_op"`
-	ViaCode int    `json:"via_code"`
-	Retry   bool
-	Kind    string
-	Msg     string
-	Fields  json.RawMessage
-	Query   string
+	Cmd              string
+	Method           string
+	Target           string
+	Schema           string
+	JSON             string
+	Op               string
+	Code             int
+	ViaOp            string `json:"via_op"`
+	ViaCode          int    `json:"via_code"`
+	Retry            bool
+	Allow            bool
+	ContentLength    *string `json:"content_length"`
+	TransferEncoding *string `json:"transfer_encoding"`
+	NoBody           bool    `json:"no_body"`
+	Kind             string
+	Msg              string
+	Fields           json.RawMessage
+	Query            string
 }
 
 func decode(text string) (any, error) {
@@ -98,12 +102,20 @@ func (probe) List(c *record, q apidoor.ListQuery) apidoor.Answer {
 	c.method, c.query = "List", map[string]any{"prefix": b64(q.Prefix)}
 	return apidoor.Answer{}
 }
-func (probe) Write(c *record, body []byte) apidoor.Answer { c.method = "Write"; return apidoor.Answer{} }
-func (probe) Rights(c *record) apidoor.Answer             { c.method = "Rights"; return apidoor.Answer{} }
-func (probe) Status(c *record) apidoor.Answer             { c.method = "Status"; return apidoor.Answer{} }
-func (probe) Join(c *record, body []byte) apidoor.Answer  { c.method = "Join"; return apidoor.Answer{} }
-func (probe) Leave(c *record, body []byte) apidoor.Answer { c.method = "Leave"; return apidoor.Answer{} }
-func (probe) Metrics(c *record) apidoor.Answer            { c.method = "Metrics"; return apidoor.Answer{} }
+func (probe) Write(c *record, body []byte) apidoor.Answer {
+	c.method = "Write"
+	return apidoor.Answer{}
+}
+func (probe) Rights(c *record) apidoor.Answer            { c.method = "Rights"; return apidoor.Answer{} }
+func (probe) Status(c *record) apidoor.Answer            { c.method = "Status"; return apidoor.Answer{} }
+func (probe) Join(c *record, body []byte) apidoor.Answer { c.method = "Join"; return apidoor.Answer{} }
+func (probe) Leave(c *record, body []byte) apidoor.Answer {
+	c.method = "Leave"
+	return apidoor.Answer{}
+}
+func (probe) CopyGet(c *record) apidoor.Answer  { c.method = "CopyGet"; return apidoor.Answer{} }
+func (probe) CopyHead(c *record) apidoor.Answer { c.method = "CopyHead"; return apidoor.Answer{} }
+func (probe) Metrics(c *record) apidoor.Answer  { c.method = "Metrics"; return apidoor.Answer{} }
 func (probe) QueryRefused(c *record, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
 	c.method, c.qerr = "QueryRefused", e
 	return apidoor.Answer{}
@@ -137,24 +149,36 @@ func run(req request) any {
 		e, known := apidoor.CheckSchema(req.Schema, v)
 		return map[string]any{"known": known, "violation": violation(e)}
 	case "answer":
-		v, err := decode(req.JSON)
-		if err != nil {
-			return map[string]any{"error": err.Error()}
-		}
 		via, code := req.Op, req.Code
 		if req.ViaOp != "" {
 			via, code = req.ViaOp, req.ViaCode
 		}
-		a, err := apidoor.AnswerOf(opByName(via), code, v)
+		var a apidoor.Answer
+		var err error
+		if req.NoBody {
+			a = apidoor.Answer{Code: code}
+		} else {
+			var v any
+			v, err = decode(req.JSON)
+			if err != nil {
+				return map[string]any{"error": err.Error()}
+			}
+			a, err = apidoor.AnswerOf(opByName(via), code, v)
+		}
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
 		a.Code, a.RetryAfter = req.Code, req.Retry
+		a.Allow, a.ContentLength, a.TransferEncoding = req.Allow, req.ContentLength, req.TransferEncoding
+		schema := ""
+		if a.Body != nil {
+			schema = a.Body.SchemaName()
+		}
 		r, err := apidoor.Encode(opByName(req.Op), a)
 		if err != nil {
-			return map[string]any{"encode_error": err.Error(), "schema": a.Body.SchemaName()}
+			return map[string]any{"encode_error": err.Error(), "schema": schema}
 		}
-		return map[string]any{"resp": response(r), "schema": a.Body.SchemaName()}
+		return map[string]any{"resp": response(r), "schema": schema}
 	case "refuse":
 		fields := map[string]any{}
 		if len(req.Fields) > 0 {
@@ -168,6 +192,8 @@ func run(req request) any {
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
+		a.RetryAfter, a.Allow = req.Retry, req.Allow
+		a.ContentLength, a.TransferEncoding = req.ContentLength, req.TransferEncoding
 		r, err := apidoor.Encode(opByName(req.Op), a)
 		if err != nil {
 			return map[string]any{"encode_error": err.Error()}

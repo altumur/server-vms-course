@@ -173,6 +173,29 @@ class Doc:
         return node
 
 
+def source_required_probe_headers(response):
+    """Supply declared required constants to the private observer; expected wire values stay Source-owned."""
+    from test_gen_machine import CheckingError
+    options, headers = {}, []
+    fields = {"Retry-After": "retry", "Allow": "allow", "Content-Length": "content_length",
+              "Transfer-Encoding": "transfer_encoding"}
+    for name in response["required_headers"]:
+        schema = response["header_schemas"][name]
+        if name not in fields or "const" not in schema:
+            raise CheckingError("no declared private-observer input for required Source header " + name)
+        value = schema["const"]
+        if name == "Retry-After":
+            if type(value) is not int:
+                raise CheckingError("required Retry-After is not an integer constant")
+            options[fields[name]] = True
+        else:
+            if type(value) is not str:
+                raise CheckingError("required Source header is not a string constant")
+            options[fields[name]] = True if name == "Allow" else value
+        headers.append([name, str(value)])
+    return options, headers
+
+
 # ---------------------------------------------------------------- schema-shaped values
 
 STRINGS = ["", "a", "1", "0", "01", "42", "18446744073709551615", "123456789012345678901", "/x", "a/../b", "..foo",
@@ -414,7 +437,13 @@ class Generated(DoorBase):
         self.assertEqual(r["op"], "", where)
         resp = r["resp"]
         self.assertEqual(resp["code"], code, where)
-        self.assertEqual(resp["header"], [["Content-Type", declared["media"]]], where)
+        _, required = source_required_probe_headers(declared)
+        if not declared["schemas"]:
+            self.assertIsNone(declared["media"], where)
+            self.assertEqual(resp["header"], required or None, where)
+            self.assertEqual(base64.b64decode(resp["body"]), b"", where)
+            return
+        self.assertEqual(resp["header"], [["Content-Type", declared["media"]], *required], where)
         body = json.loads(base64.b64decode(resp["body"]))
         self.assertEqual(sum(self.valid(n, body) for n in declared["schemas"]), 1, where)
 
@@ -452,13 +481,20 @@ class Generated(DoorBase):
         seen = 0
         for o in self.d.ops:
             for code, r in o["declared"].items():
+                options, required = source_required_probe_headers(r)
+                if not r["schemas"]:
+                    self.assertIsNone(r["media"], f"{o['op']} {code}: bodyless Source response")
+                    got = self.probe(cmd="answer", op=o["op"], code=code, no_body=True, **options)
+                    self.assertIn("resp", got, f"{o['op']} {code}: {got}")
+                    self.assertEqual(got["resp"], {"code": code, "header": required or None, "body": ""})
+                    seen += 1
                 for name in r["schemas"]:
                     vals = self.samples(name)
                     self.assertTrue(vals, f"no valid sample of {name}")
                     for value in vals:
                         hits = sum(self.valid(n, value) for n in r["schemas"])
                         text = json.dumps(value, ensure_ascii=False)
-                        got = self.probe(cmd="answer", op=o["op"], code=code, json=text)
+                        got = self.probe(cmd="answer", op=o["op"], code=code, json=text, **options)
                         where = f"{o['op']} {code} {name}: {text[:200]}"
                         if hits == 1 and "not representable" in got.get("answer_error", ""):
                             # Reject integers outside int64 or values inexact in binary64 number fields instead of truncating silently.
@@ -470,14 +506,14 @@ class Generated(DoorBase):
                         self.assertIn("resp", got, where)
                         resp = got["resp"]
                         raw = base64.b64decode(resp["body"])
-                        self.assertEqual(resp["header"], [["Content-Type", r["media"]]], where)
+                        self.assertEqual(resp["header"], [["Content-Type", r["media"]], *required], where)
                         if r["media"] == "application/json":
                             self.assertEqual(json.loads(raw), value, where)
                             self.assertTrue(ordered_ok(self.d, self.d.node(name),
                                                        json.loads(raw, object_pairs_hook=pairs_hook)), where)
                         else:
                             self.assertEqual(raw.decode("utf-8"), value, where)
-                        retry = self.probe(cmd="answer", op=o["op"], code=code, json=text, retry=True)
+                        retry = self.probe(cmd="answer", op=o["op"], code=code, json=text, **dict(options, retry=True))
                         if "Retry-After" in r["headers"]:
                             self.assertEqual(retry["resp"]["header"][-1], ["Retry-After", "1"], where)
                         else:
@@ -494,9 +530,10 @@ class Generated(DoorBase):
                         vals = self.samples(name, 2, small=True)
                         if not vals or sum(self.valid(n, vals[0]) for n in r["schemas"]) != 1:
                             continue
-                        got = self.probe(cmd="answer", op=o["op"], code=code, json=json.dumps(vals[0]),
-                                         via_op=other["op"], via_code=code)
                         mine = o["declared"].get(code)
+                        options, _ = source_required_probe_headers(mine) if mine else ({}, [])
+                        got = self.probe(cmd="answer", op=o["op"], code=code, json=json.dumps(vals[0]),
+                                         via_op=other["op"], via_code=code, **options)
                         if mine and name in mine["schemas"]:
                             self.assertIn("resp", got, f"{o['op']} {code} {name}")
                         else:
@@ -509,11 +546,12 @@ class Generated(DoorBase):
             for code, r in o["declared"].items():
                 if code < 400:
                     continue
+                options, _ = source_required_probe_headers(r)
                 for name in r["schemas"]:
                     for value in self.samples(name, 5, small=True):
                         fields = {k: v for k, v in value.items() if k not in ("kind", "error")}
                         got = self.probe(cmd="refuse", op=o["op"], code=code, kind=value["kind"], msg="m",
-                                         fields=fields)
+                                         fields=fields, **options)
                         full = dict(fields, kind=value["kind"], error="m")
                         hits = [s for s in r["schemas"] if self.valid(s, full)]
                         if len(hits) == 1:
@@ -1012,6 +1050,106 @@ def run_copy_door_observer(module, probes):
         raise CheckingError("copy observer cannot produce a complete report") from exc
 
 
+class Z21ProbeHeaderControls(unittest.TestCase):
+    """Synthetic private-observer input projection; no producer or Source execution."""
+    def test_optional_headers_keep_old_empty_arguments_and_required_constants_are_source_owned(self):
+        response = {"required_headers": [], "header_schemas": {"Retry-After": {"const": 1}}}
+        self.assertEqual(source_required_probe_headers(response), ({}, []))
+        response = {"required_headers": ["Allow"], "header_schemas": {"Allow": {"type": "string", "const": "GET"}}}
+        self.assertEqual(source_required_probe_headers(response), ({"allow": True}, [["Allow", "GET"]]))
+        changed = copy.deepcopy(response)
+        changed["header_schemas"]["Allow"]["const"] = "SOURCE-WITNESS"
+        self.assertEqual(source_required_probe_headers(changed)[1], [["Allow", "SOURCE-WITNESS"]])
+
+    def test_unknown_nonconstant_and_wrongly_typed_required_headers_are_checking_errors(self):
+        from test_gen_machine import CheckingError
+        for name, schema in (("Unknown", {"const": "x"}), ("Allow", {"type": "string"}),
+                             ("Allow", {"const": True}), ("Retry-After", {"const": True})):
+            with self.subTest(name=name, schema=schema), self.assertRaises(CheckingError):
+                source_required_probe_headers({"required_headers": [name], "header_schemas": {name: schema}})
+
+
+class Z21PrivateDoorprobe(unittest.TestCase):
+    """Private recorder/library checks; no backend, HTTP server or generated implementation claim."""
+    source_root = ROOT
+    code_root = ROOT
+
+    @classmethod
+    def setUpClass(cls):
+        from test_gen_core import z21_ready_p01
+        from test_gen_machine import CheckingError
+        cls.output = output_lesson.output_root()
+        cls.output_receipt = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+        cls.ready = z21_ready_p01(cls.output, cls.source_root, cls.code_root,
+                                 expected_manifest_sha256=cls.output_receipt)
+        cls.doc = Doc(yaml.safe_load((cls.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml").read_text()))
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-private-doorprobe-")
+        cls.addClassCleanup(cls.tmp.cleanup)
+        try:
+            cls.probe = Probe(build_probe(cls.ready["p01-1"], cls.tmp.name))
+        except (AssertionError, OSError, subprocess.SubprocessError) as exc:
+            raise CheckingError("private doorprobe compile/start failed") from exc
+
+    @classmethod
+    def tearDownClass(cls):
+        from test_gen_core import z21_ready_p01
+        from test_gen_machine import CheckingError
+        cls.probe.close()
+        if cls.probe.proc.returncode != 0:
+            raise CheckingError("private doorprobe did not finish normally")
+        z21_ready_p01(cls.output, cls.source_root, cls.code_root, expected_manifest_sha256=cls.output_receipt)
+
+    def test_complete_source_table_and_every_dispatch_method(self):
+        actual = self.probe(cmd="table")["ops"]
+        self.assertEqual([(o["op"], o["method"], o["path"]) for o in actual],
+                         [(o["op"], o["method"], o["path"]) for o in self.doc.ops])
+        for got, source in zip(actual, self.doc.ops):
+            self.assertEqual(got["declared"], {str(c): {"schemas": r["schemas"] or None, "headers": r["headers"] or None}
+                                             for c, r in source["declared"].items()})
+            query = []
+            for p in source["params"]:
+                self.assertTrue(self.doc.validator(p["schema"]).is_valid("a"), "normal input does not satisfy Source")
+                query.append(p["name"] + "=a")
+            got = self.probe(cmd="dispatch", op=source["op"], query="&".join(query))
+            self.assertEqual(got["method"], source["op"])
+            self.assertIsNone(got["error"])
+            self.assertEqual(got["query"], {p["name"]: base64.b64encode(b"a").decode() for p in source["params"]} or None)
+
+    def test_copy_raw_string_header_schemas_required_allow_and_bodyless_head(self):
+        source = {o["method"]: o for o in self.doc.ops if o["path"] == "/v1/copy"}
+        self.assertEqual(set(source), {"GET", "HEAD"})
+        get, head = source["GET"], source["HEAD"]
+        raw = "one\né\n"
+        for field, header, value in (("content_length", "Content-Length", str(len(raw.encode()))),
+                                     ("transfer_encoding", "Transfer-Encoding", "CHUNKED")):
+            self.assertTrue(self.doc.header_validator(get["op"], 200, header).is_valid(value))
+            got = self.probe(cmd="answer", op=get["op"], code=200, json=json.dumps(raw), **{field: value})
+            self.assertEqual(got["resp"], {"code": 200, "header": [["Content-Type", get["declared"][200]["media"]], [header, value]],
+                                           "body": base64.b64encode(raw.encode()).decode()})
+        for field, header, value in (("content_length", "Content-Length", "-1"),
+                                     ("transfer_encoding", "Transfer-Encoding", "gzip")):
+            self.assertFalse(self.doc.header_validator(get["op"], 200, header).is_valid(value))
+            self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=200, json=json.dumps(raw), **{field: value}))
+        fault_name = get["declared"][405]["schemas"][0]
+        fault = {"kind": self.doc.node(fault_name)["properties"]["kind"]["const"], "error": "witness"}
+        self.assertTrue(self.doc.validator(fault_name).is_valid(fault))
+        options, required = source_required_probe_headers(get["declared"][405])
+        got = self.probe(cmd="answer", op=get["op"], code=405, json=json.dumps(fault), **options)
+        self.assertEqual(got["resp"]["header"], [["Content-Type", get["declared"][405]["media"]], *required])
+        self.assertEqual(json.loads(base64.b64decode(got["resp"]["body"])), fault)
+        self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=405, json=json.dumps(fault)))
+        got = self.probe(cmd="refuse", op=get["op"], code=405, kind=fault["kind"], msg=fault["error"], **options)
+        self.assertEqual(json.loads(base64.b64decode(got["resp"]["body"])), fault)
+        self.assertEqual(got["resp"]["header"], [["Content-Type", get["declared"][405]["media"]], *required])
+        for code, response in head["declared"].items():
+            self.assertEqual(response["schemas"], [])
+            options, required = source_required_probe_headers(response)
+            got = self.probe(cmd="answer", op=head["op"], code=code, no_body=True, **options)
+            self.assertEqual(got, {"resp": {"code": code, "header": required or None, "body": ""}, "schema": ""})
+        self.assertIn("answer_error", self.probe(cmd="answer", op=head["op"], code=400, json=json.dumps(fault)))
+        self.assertIn("encode_error", self.probe(cmd="answer", op=get["op"], code=200, no_body=True))
+
+
 class Z21CopySource(unittest.TestCase):
     """Independent source projection. These Python controls execute no generated implementation."""
 
@@ -1112,17 +1250,19 @@ class Z21CopyCompiled(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        from test_gen_core import z21_ready_p01
         cls.output = output_lesson.output_root()
-        cls.ready = output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
-                                                code_root=cls.code_root, profiles=("p01-1",))
+        cls.output_receipt = os.environ.get(output_lesson.OUTPUT_RECEIPT_ENV)
+        cls.ready = z21_ready_p01(cls.output, cls.source_root, cls.code_root,
+                                 expected_manifest_sha256=cls.output_receipt)
         cls.doc = Doc(yaml.safe_load((cls.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml").read_text()))
         cls.tmp = tempfile.TemporaryDirectory(prefix="z21-copy-door-")
 
     @classmethod
     def tearDownClass(cls):
+        from test_gen_core import z21_ready_p01
         cls.tmp.cleanup()
-        output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
-                                    code_root=cls.code_root, profiles=("p01-1",))
+        z21_ready_p01(cls.output, cls.source_root, cls.code_root, expected_manifest_sha256=cls.output_receipt)
 
     def module(self, name):
         target = Path(self.tmp.name) / name
