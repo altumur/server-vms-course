@@ -3,16 +3,99 @@ import lesson as output_lesson
 import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 OUT = output_lesson.output_root() / 'p01-1/go'
 ENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
+
+def z21_copy_contract(root):
+    """Read the actual copy header at its source owner, not generated constants."""
+    text = (Path(root) / "Platform/01-store/spec/01.3-store.norms.md").read_text(encoding="utf-8")
+    anchor = "<!-- req: P/01.3-R006 -->"
+    if text.count(anchor) != 1 or text.count("<!-- req: P/01.3-R034 -->") != 1:
+        raise ValueError("missing/ambiguous Source21 copy owner")
+    section = text.split(anchor, 1)[1].split("<!-- req:", 1)[0]
+    candidates = [s for s in re.findall(r"\{[^{}\n]*\}", section) if '"format"' in s and "<version>" in s]
+    if len(candidates) != 1:
+        raise ValueError("copy header requires one actual declaration")
+    header = json.loads(candidates[0].replace("<version>", '"source-version-slot"'))
+    if (set(header) != {"format", "version", "index"} or type(header["format"]) is not str or
+            not header["format"] or type(header["version"]) is not int or header["version"] <= 0 or
+            header["index"] != "source-version-slot"):
+        raise ValueError("malformed copy header source")
+    return header["format"], header["version"]
+
+
+Z21_BACKUP_TEST = r'''package box
+import("bytes";"encoding/json";"errors";"os";"path/filepath";"sync";"testing")
+// A unit host behind the existing port; it is not a qualified backend/provider.
+type z21Host struct{mu sync.Mutex;state CopyState;calls,snapshots int;guard func()error;after func();exit error}
+func(h *z21Host)WithCopyLock(fn func(CopyTxn)error)error{
+ h.mu.Lock();h.calls++;err:=fn(h);if err==nil&&h.guard!=nil{err=h.guard()};h.mu.Unlock()
+ if h.after!=nil{h.after()};if err!=nil{return err};return h.exit
+}
+func(h *z21Host)Snapshot()(CopyState,error){h.snapshots++;return h.state,nil}
+func(h *z21Host)BeginImport(ImportProgress)error{return errors.New("not an import fixture")}
+func(h *z21Host)WriteImport(Row)error{return errors.New("not an import fixture")}
+func(h *z21Host)FinishImport()error{return errors.New("not an import fixture")}
+func z21HostState()CopyState{return CopyState{Index:9,Rows:[]Row{{Key:"unit/a",Index:7,Items:map[string]string{"v":"before"}}}}}
+func z21Copy(t *testing.T,file string){
+ t.Helper();raw,err:=os.ReadFile(file);if err!=nil{t.Fatal(err)}
+ lines:=bytes.Split(raw,[]byte("\n"));if len(lines)!=3||len(lines[2])!=0{t.Fatal("incomplete/extra rows or missing LF")}
+ var head,row map[string]any
+ d:=json.NewDecoder(bytes.NewReader(lines[0]));d.UseNumber();if err=d.Decode(&head);err!=nil{t.Fatal(err)}
+ d=json.NewDecoder(bytes.NewReader(lines[1]));d.UseNumber();if err=d.Decode(&row);err!=nil{t.Fatal(err)}
+ if len(head)!=3||head["format"]!=@@FORMAT@@||head["version"]!=json.Number(@@VERSION@@)||head["index"]!="9"{t.Fatal("wrong header",head)}
+ items,ok:=row["items"].(map[string]any)
+ if len(row)!=3||row["key"]!="unit/a"||row["index"]!="7"||!ok||len(items)!=1||items["v"]!="before"{t.Fatal("snapshot alias/version changed",row)}
+ info,err:=os.Stat(file);if err!=nil||info.Mode().Perm()!=0600{t.Fatal("wrong copy mode",err)}
+}
+func TestZ21BackupSnapshotBaseline(t *testing.T){
+ h:=&z21Host{state:z21HostState()};file:=filepath.Join(t.TempDir(),"copy")
+ if err:=BackupCopy(h,file,t.TempDir());err!=nil{t.Fatal(err)};z21Copy(t,file)
+ if h.calls!=1||h.snapshots!=1{t.Fatal("not exactly one snapshot")}
+}
+func TestZ21BackupPublicationOutsideMutationLock(t *testing.T){
+ h:=&z21Host{state:z21HostState()};file:=filepath.Join(t.TempDir(),"copy");old:=[]byte("previous destination")
+ if err:=os.WriteFile(file,old,0600);err!=nil{t.Fatal(err)}
+ h.guard=func()error{raw,e:=os.ReadFile(file);if e!=nil{return e};if !bytes.Equal(raw,old){return errors.New("publication inside mutation lock")};return nil}
+ if err:=BackupCopy(h,file,t.TempDir());err!=nil{t.Fatal(err)};z21Copy(t,file)
+}
+func TestZ21BackupSnapshotDetachedBeforeRelease(t *testing.T){
+ h:=&z21Host{state:z21HostState()};file:=filepath.Join(t.TempDir(),"copy")
+ h.after=func(){h.mu.Lock();defer h.mu.Unlock();h.state.Index=99;h.state.Rows[0].Items["v"]="later"}
+ if err:=BackupCopy(h,file,t.TempDir());err!=nil{t.Fatal(err)};z21Copy(t,file)
+ if h.state.Rows[0].Items["v"]!="later"{t.Fatal("inactive host mutation")}
+}
+func TestZ21BackupLockExitFailureKeepsPublishedFile(t *testing.T){
+ failure:=errors.New("controlled lock-exit failure before output");h:=&z21Host{state:z21HostState(),exit:failure}
+ file:=filepath.Join(t.TempDir(),"copy");old:=[]byte("previous destination");if err:=os.WriteFile(file,old,0600);err!=nil{t.Fatal(err)}
+ if err:=BackupCopy(h,file,t.TempDir());!errors.Is(err,failure){t.Fatal("lost lock outcome",err)}
+ raw,err:=os.ReadFile(file);if err!=nil||!bytes.Equal(raw,old){t.Fatal("failed snapshot replaced destination",err)}
+}
+'''
+
+
+def z21_go_tests(module, names):
+    """Use only the existing accounting helper; its machine/routing oracle is not involved."""
+    from test_gen_machine import CheckingError, complete_go_tests
+    try:
+        done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^(" + "|".join(names) + ")$", "./box"],
+                              cwd=module, env=ENV, capture_output=True, timeout=120)
+        observed = SimpleNamespace(returncode=done.returncode, stdout=done.stdout.decode("utf-8", "strict"),
+                                   stderr=done.stderr.decode("utf-8", "strict"))
+    except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+        raise CheckingError(f"cannot obtain complete copy-library observations: {exc}") from exc
+    return complete_go_tests(observed, names, "normgen/p01-1/box"), observed
+
 
 SCENARIO_TEST = r'''package box
 import (
@@ -756,6 +839,91 @@ class CopyStorage(unittest.TestCase):
                     self.assertNotEqual(done.returncode, 0, name + " survived")
                     self.assertNotIn("build failed", done.stdout + done.stderr)
                     self.assertIn("--- FAIL:", done.stdout, "a compile error is not an executed killed mutant")
+
+
+class Z21CopyComponent(unittest.TestCase):
+    """Selected library/real-file tests only; no live daemon, storage qualification or HTTP proof."""
+
+    source_root = ROOT
+    code_root = ROOT
+    names = ("TestZ21BackupSnapshotBaseline", "TestZ21BackupPublicationOutsideMutationLock",
+             "TestZ21BackupSnapshotDetachedBeforeRelease", "TestZ21BackupLockExitFailureKeepsPublishedFile")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix="z21-copy-library-")
+        cls.addClassCleanup(cls.temp.cleanup)
+        manifest = output_lesson.output_manifest()
+        if manifest["context"]["kind"] not in ("current", "component"):
+            raise ValueError("Source21 library controls require an explicit current/component context")
+        ready = output_lesson.ready_outputs(source_root=cls.source_root, code_root=cls.code_root,
+                                            profiles=tuple(manifest["profiles"]))
+        if ready["p01-1"] / "go" != OUT:
+            raise ValueError("copy-library output pointer is not the validated P01 component")
+        format_, version = z21_copy_contract(cls.source_root)
+        cls.template = Z21_BACKUP_TEST.replace("@@FORMAT@@", json.dumps(format_)).replace("@@VERSION@@", json.dumps(str(version)))
+
+    @classmethod
+    def tearDownClass(cls):
+        # Checking/mutation tests never restore or write to the shared sealed set.
+        manifest = output_lesson.output_manifest()
+        output_lesson.ready_outputs(source_root=cls.source_root, code_root=cls.code_root,
+                                    profiles=tuple(manifest["profiles"]))
+
+    def module(self, name):
+        path = Path(self.temp.name) / name
+        path.mkdir()
+        CopyStorage.module(self, path)
+        (path / "box/copy_z21_test.go").write_text(self.template, encoding="utf-8")
+        return path
+
+    def test_normal_copy_library_has_complete_independent_observations(self):
+        module = self.module("normal")
+        failed, observed = z21_go_tests(module, self.names)
+        self.assertEqual(failed, [], observed.stdout + observed.stderr)
+
+    def test_valid_runtime_mutants_need_named_semantic_failures(self):
+        baseline = self.module("mutation-baseline")
+        failed, observed = z21_go_tests(baseline, self.names)
+        self.assertEqual(failed, [], "normal Source baseline must pass before mutants\n" + observed.stdout + observed.stderr)
+        source = (baseline / "box/copy_storage.go").read_text()
+        start, end = source.index("func BackupCopy("), source.index("\n// WriteCopyFile")
+        body = source[start:end]
+
+        def once(text, old, new):
+            self.assertEqual(text.count(old), 1, "the stated mutation needs one actual subject anchor")
+            return text.replace(old, new, 1)
+
+        inside = once(body, "\treturn WriteCopyFile(file, data)\n}", "\treturn nil\n}")
+        inside = once(inside, "\t\treturn nil\n\t})", "\t\treturn WriteCopyFile(file, data)\n\t})")
+        ignored = once(body, "if lockErr != nil {\n\t\treturn lockErr\n\t}", "if lockErr != nil {\n\t\t_ = lockErr\n\t}")
+        alias = once(body, "var data []byte", "var data []byte\n\tvar snapshot CopyState")
+        old_encode = ("data, err = EncodeCopy(state.Index, state.Rows)\n\t\tif err != nil {\n"
+                      "\t\t\treturn err\n\t\t}")
+        alias = once(alias, old_encode, "snapshot = state")
+        alias = once(alias, "\treturn WriteCopyFile(file, data)\n}",
+                     "\tdata, err := EncodeCopy(snapshot.Index, snapshot.Rows)\n\tif err != nil { return err }\n"
+                     "\treturn WriteCopyFile(file, data)\n}")
+        cases = (("output-under-lock", inside, "TestZ21BackupPublicationOutsideMutationLock"),
+                 ("lock-exit-ignored", ignored, "TestZ21BackupLockExitFailureKeepsPublishedFile"),
+                 ("snapshot-alias", alias, "TestZ21BackupSnapshotDetachedBeforeRelease"))
+        for name, changed, obligation in cases:
+            with self.subTest(mutant=name):
+                module = self.module(name)
+                (module / "box/copy_storage.go").write_text(source[:start] + changed + source[end:])
+                failed, observed = z21_go_tests(module, self.names)
+                self.assertIn(obligation, failed, "a normal survivor remains a gap\n" + observed.stdout + observed.stderr)
+
+    def test_real_compiler_error_and_zero_named_report_are_checking_errors(self):
+        from test_gen_machine import CheckingError
+        module = self.module("checking-error")
+        path = module / "box/copy_z21_test.go"
+        path.write_text(path.read_text() + "\nthis is not Go\n")
+        with self.assertRaises(CheckingError):
+            z21_go_tests(module, self.names)
+        module = self.module("zero-named-report")
+        with self.assertRaises(CheckingError):
+            z21_go_tests(module, ("TestZ21NoSuchTest",))
 
 
 if __name__ == "__main__":
