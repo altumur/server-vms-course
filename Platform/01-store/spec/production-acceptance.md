@@ -26,6 +26,8 @@ They are acceptance thresholds for the envelope below. They are not implementati
 | `WORKLOAD_ORDINARY` | 72 MiB; mean row about 18 KiB | ADR-0113, ordinary size |
 | `WORKLOAD_WORST` | 2 GiB | ADR-0113, worst size |
 
+For `WORKLOAD_ORDINARY` and `WORKLOAD_WORST`, volume is the sum of the canonical JCS byte lengths of each row's `items` value. Record raw JSONL, request and storage bytes separately; those raw bytes are outside these two workload-volume thresholds. Other budgets and the measurement definitions below are unchanged.
+
 The largest row is the `-max-value` default and the connection limits are the `-max-conns`, `-api-conns` and `-api-per-address` defaults of [daemon-flags.tsv](../forms/daemon-flags.tsv). The sustained write rate is `REPORT_RATE` of the [P/08 form](../../08-domain/forms/runtime-constants.tsv), in writes per second.
 
 | Name | Upper bound | Observed result | Case | Basis |
