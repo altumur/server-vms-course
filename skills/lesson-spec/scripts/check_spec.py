@@ -582,7 +582,7 @@ VMS_CATALOG = Path("VMS/common/data/catalog.tsv")
 # Platform lesson address.
 VMS_CATALOG_FIELDS = CATALOG_FIELDS + ["place"]
 VMS_LESSON = r"V/[0-9]{2}(?:\.(?:0|[1-9][0-9]?))?"
-VMS_IDMAP = Path("VMS/common/id-map.tsv")
+VMS_IDMAP = Path("decisions/history/vms/id-map.tsv")
 VMS_FROZEN = Path("tools/vms-boundary/source-vms.sha256")
 VMS_FROZEN_DIR = Path("Source/vms")
 # A chapter of a VMS lesson that waits for the decision of a request (ADR-0090 доп. (1) «Запрос»): its status line
@@ -2875,10 +2875,10 @@ class Check:
             self.markdown(readme, text)
         home = acceptance.parent.parent if entry else acceptance.parent
         moved = (home / "ru").is_dir() and home.parent in (self.root / "Platform", self.root / VMS_DIR)
-        # ADR-0083 (128): V11 is outside this relocation; no old-path fallback.
+        # Histories of both modules live under decisions/journal; no lesson-specific fallback.
         if home.parent == self.root / "Platform":
             journal = self.root / "decisions/journal/platform" / home.name
-        elif home.parent == self.root / VMS_DIR and home.name != "11-backend":
+        elif home.parent == self.root / VMS_DIR:
             journal = self.root / "decisions/journal/vms" / home.name
         else:
             journal = home / "journal"
@@ -3117,7 +3117,7 @@ class Check:
     # instruction count the whole lesson. An ADR-0085 pair next to chapter norms checks that chapter's corpus.
     def platform_lesson(self, lesson, vms=False):
         """`vms` — a lesson of the VMS module (ADR-0090 доп. (2)): VMS/NN-<имя>/NN-<имя>.md, ids V/NN.K-MM, its row in
-        VMS/common/lessons.tsv, id-map VMS/common/id-map.tsv; the checks of a Platform process (lessons.tsv process and
+        VMS/common/lessons.tsv, historical id-map decisions/history/vms/id-map.tsv; the checks of a Platform process (lessons.tsv process and
         unit, the catalog by the roles of a process, the canonical chapter) do not apply; a chapter waiting for a
         request is a stub (VMS_STUB)."""
         if not vms and not self.processes_checked:

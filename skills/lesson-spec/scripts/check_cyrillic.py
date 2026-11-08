@@ -20,9 +20,43 @@ DEBT = Path(__file__).resolve().parents[1] / "cyrillic-debt.tsv"
 # Course-side canonical source and generator homes; an export is checked in full.
 # ADR-0083 (115): Source holds immutable witnesses, not canonical inputs.
 SCOPES = ("Platform", "VMS", "tools/normgen")
-# ADR-0083 (128): V11 is excluded; this sole historical map waits for V11.
-# No letter budget: only the exact source/data-base 2a197ab0a bytes may remain.
-DEFERRED_FILES = {"VMS/common/id-map.tsv": "051e5dd75360a2645e0f1035a0c745d6e688175ca8436b0597683fcaa33048b0"}
+# ADR-VMS-0003 Decision2б: exact public upstream/literal carriers selected by
+# Sourcec8eafc05626112db4c2003b416f762055deaef65, source-owned inbox
+# decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md.
+# Each SHA binds the whole raw file, not a Cyrillic budget or a path pattern.
+EXACT_SOURCE_FILES = {
+    'VMS/11-backend/README.md': '2d77a4666410b1121226bdfd49e00c843bb15424d4d03800b62b438671fffd81',
+    'VMS/11-backend/acceptance/4/README.md': 'e5bfada38fd0b2db93b925c1398466c45bad46355137ac89c7363a5367154ee6',
+    'VMS/11-backend/acceptance/4/scenarios.tsv': 'c7f7c12b7c7d7f376fbf929731432f259220333cbbef234ec7028e1009a1cbfe',
+    'VMS/11-backend/acceptance/8/README.md': '954504f48ef6d17b6446819701be91c60f4288da21a84e1d77ca8c1fbd724217',
+    'VMS/11-backend/acceptance/8/scenarios.tsv': '14c16a8807b4ccd682c35bd4a0fc460e7088df7a04f0fa1e7085adf6ee6fa2bd',
+    'VMS/11-backend/backend.shell.html': '90e9cd59cb70207a785e23da943fb0785c9f80d382afecfae4d94a0bce9a05ff',
+    'VMS/11-backend/consolem.openapi.json': '200d203d4197776892e66a32126998bc8cf0b79a9986ef7ac144c6af230f7124',
+    'VMS/11-backend/data/mapping.tsv': '5cee4b13d073232991149f67d8b5457ee48fefcfd74a3a2b8394044bc693ac39',
+    'VMS/11-backend/data/profile-tests.tsv': 'f5265ab14f0166e9875667c2f652a02bcac1e52c16270b96082e6d5088081842',
+    'VMS/11-backend/harness/export/system.md': 'ea03b6af2ec417198fd82e7ac9780e1c8e7c7fa175b90ddb9f4ec72da1322c31',
+    'VMS/11-backend/harness/route/system.md': '79619d6b8e234e14621905b9bf37882788f8ae2482286775bb044eba960d8e8e',
+    'VMS/11-backend/harness/rules/words.json': 'b8346d50e7d96ec9d60d7d210e433dddc3c96eb71b29ce31f13ec777f4f69531',
+    'VMS/11-backend/harness/words.json': '839e11c287f09537587a9426a8311306bbc8f00da09491ca0c5a51143b5af5bd',
+    'VMS/11-backend/spec/11.11-backend.norms.md': '0ad89d2862e4461231aed5019d7d1bb24cb702e2ce4f7674aa89749558032b31',
+    'VMS/11-backend/spec/11.13-backend.norms.md': '1b2ff6fa33b54cdd2523c7f28f424f6a292aab48e45de1d2d16509737c0226e3',
+    'VMS/11-backend/spec/11.14-backend.norms.md': '89741b3e8ab7808750892a91d505d164f31ae46f9a04d27d3d0726485d79fdaf',
+    'VMS/11-backend/spec/11.15-backend.norms.md': 'b3a775e38a14f3c6dcd5c57819ef463b35ed1ff0762ecabe683e4cfa6f76ce60',
+    'VMS/11-backend/spec/11.2-backend.norms.md': 'a547c01f0689df032a0f5a6e08be517dda40f08742bb03a415813becc00573ad',
+    'VMS/11-backend/spec/11.3-backend.norms.md': '06dc4d60dc6a75ee3c9ec766cf42307b5a85684ec3f5e75a7f0c6350af9c1853',
+    'VMS/11-backend/spec/11.4-backend.norms.md': 'a1082d07605891af5f6ed86eff0edd99455e0c474b21c6dfd59b94947dc6cd53',
+    'VMS/11-backend/spec/11.6-backend.norms.md': 'c7312623acd199b743387731ca17601e3a491b7a086b25037ca744177c4232b9',
+    'VMS/11-backend/spec/11.7-backend.norms.md': '23e9ccc6b3bfb70ab839d9f16d9b7d4a19ee1911e41be0f5c56c7d53e51f4807',
+    'VMS/11-backend/spec/11.8-backend.norms.md': '8d99bcb4bab50805b69e16b09d09893f3d4c3bf414d34a6e32daa33aa9713513',
+    'VMS/11-backend/vectors/plan-check/README.md': 'ea5d2eb3ffea9cc7f58e6d604a56f1f9cb5aa68264f236e07567a6e57ca9253b',
+    'VMS/11-backend/vectors/plan-check/cases.json': '08f03de9e08482e1393cba4a9fd81a17cc8015d23edaf43c691ab368c728ae27',
+    'VMS/11-backend/vectors/plan-check/text.json': 'cb4479e0518477b195511e17b20f4185c7ba1570302539c8fc18efc48e4468d3',
+    'VMS/11-backend/vectors/plan-check/vms.console.json': '9ab2960f009d45939b1d96deaa951d2a79299c79246dab6ea331dae84cd482a7',
+    'VMS/11-backend/vectors/rules-neutral/README.md': 'a898f5384a9c5f33910c83e258e0e143020db5cacdf94f0e227c0465314cbd18',
+    'VMS/11-backend/vectors/rules-neutral/cases.json': 'f3c44c701ba5f02b08da7e9e1518ad30939085aec008a53a06e8a02835f3c308',
+    'VMS/11-backend/vectors/rules-words/README.md': '7cf0e4223a58a9c97ed73a53067ec5912fc0edf7ce687ffda60ab080a8d39629',
+    'VMS/11-backend/vectors/rules-words/cases.json': '486a14c79f40fc5f77526d53ca9c452ef8c25356fa3a8fc360a6c835bfe880a2',
+}
 EXPORT_MARKERS = ("Platform/COURSE_COMMIT", "VMS/COURSE_COMMIT")
 LOCALIZATION = "Platform/07-console-module/data/localization.tsv"
 HEADER = "kind\tpath\tletters"
@@ -36,14 +70,7 @@ LETTER_RANGES = ((0x0400, 0x0481), (0x048A, 0x052F), (0x1C80, 0x1C8A),
 LETTERS = re.compile("[" + "".join(chr(low) + "-" + chr(high) for low, high in LETTER_RANGES) + "]")
 
 
-def deferred(name):
-    # The whole V11 tree is outside the accepted VMS translation.
-    return name == "VMS/11-backend" or name.startswith("VMS/11-backend/")
-
-
 def scoped(name, *, export=False):
-    if deferred(name):
-        return False
     return export or any(name == scope or name.startswith(scope + "/") for scope in SCOPES)
 
 
@@ -76,7 +103,7 @@ def load_debt(path, *, export=False):
             errors.append(f"{path}:{line}: expected kind, path, letters")
             continue
         kind, name, count = cells
-        if not safe_name(name, export=export) or mirror(name + "/_") or name in DEFERRED_FILES or name in seen:
+        if not safe_name(name, export=export) or mirror(name + "/_") or name in EXACT_SOURCE_FILES or name in seen:
             errors.append(f"{path}:{line}: unsafe, excluded or duplicate path {name!r}")
             continue
         seen.add(name)
@@ -172,7 +199,7 @@ def source_files(root, *, export=False):
                 relative = path.relative_to(root).as_posix()
                 metadata = relative == ".git" if export else name in {".git", "__pycache__"}
                 if (metadata or
-                        deferred(relative) or mirror(relative + "/_")):
+                        mirror(relative + "/_")):
                     dirs.remove(name)
                 elif path.is_symlink():
                     raise OSError(f"symlink directory: {path.relative_to(root)}")
@@ -181,18 +208,18 @@ def source_files(root, *, export=False):
     return sorted(name for name in names if scoped(name, export=export))
 
 
-def deferred_file_error(root, name, data=None):
-    """Exact historical bytes, never a Cyrillic allowance or a new budget."""
+def exact_source_file_error(root, name, data=None):
+    """Identity of one explicitly named public carrier; no text or locale allowance."""
     path = Path(root) / name
     try:
         if path.resolve() != path.absolute() or not stat.S_ISREG(path.stat().st_mode):
-            raise OSError("deferred history must be a regular file without symlinks")
+            raise OSError("exact source carrier must be a regular file without symlinks")
         if data is None:
             data = path.read_bytes()
     except OSError as exc:
-        return f"{name}: cannot read deferred historical file: {exc}"
-    if hashlib.sha256(data).hexdigest() != DEFERRED_FILES[name]:
-        return f"{name}: deferred historical bytes differ from source/data-base 2a197ab0a; no new budget"
+        return f"{name}: cannot read exact source carrier: {exc}"
+    if hashlib.sha256(data).hexdigest() != EXACT_SOURCE_FILES[name]:
+        return f"{name}: exact source carrier SHA256 mismatch; no byte changes allowed"
     return None
 
 
@@ -244,15 +271,18 @@ def scan(root, *, export=None, source_scopes=None):
         names = source_files(root, export=export)
     except OSError as exc:
         return counts, [f"Cyrillic inventory: {exc}"], stats
+    # A deleted exact carrier must fail even in a Git-free projected view.
+    if (root / "VMS/11-backend").is_dir():
+        names = sorted(set(names) | set(EXACT_SOURCE_FILES))
     for name in names:
         if not selected(name) or mirror(name):
             continue
         path = root / name
-        if name in DEFERRED_FILES:
-            problem = deferred_file_error(root, name)
+        if name in EXACT_SOURCE_FILES:
+            problem = exact_source_file_error(root, name)
             if problem:
                 errors.append(problem)
-            stats["cyrillic_deferred_files"] += 1
+            stats["cyrillic_exact_source_files"] += 1
             continue
         try:
             # Never follow a tracked symlink (or a replaced parent) outside source.
@@ -294,8 +324,8 @@ def check(root, debt_path=DEBT, *, shrink=False, declare_ready=(), export=None, 
     for unit in sorted(ready | set(declare_ready)):
         if not safe_name(unit, export=export) or mirror(unit + "/_") or not (root / unit).is_dir() or (root / unit).resolve() != root / unit:
             errors.append(f"{unit}: ready unit must be an existing source directory in scope")
-        elif (unit == "VMS" or any(name == unit or name.startswith(unit + "/") for name in DEFERRED_FILES)):
-            errors.append(f"{unit}: ready unit includes excluded V11 or deferred historical source")
+        elif any(name == unit or name.startswith(unit + "/") for name in EXACT_SOURCE_FILES):
+            errors.append(f"{unit}: ready unit includes exact source carriers; their identity is not English readiness")
         elif any(name == unit or name.startswith(unit + "/") for name in counts):
             errors.append(f"{unit}: ready unit still has Cyrillic letters")
     for name, count in sorted(counts.items()):
@@ -331,7 +361,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--debt", type=Path, default=DEBT)
     parser.add_argument("--export", action="store_true", default=None,
-                        help="check every export file (auto with nested COURSE_COMMIT), except V11 and exact deferred history; require both equal pins")
+                        help="check every export file (auto with nested COURSE_COMMIT), with exact named carrier identities and human mirrors; require both equal pins")
     parser.add_argument("--shrink", action="store_true", help="only lower/remove existing debt")
     parser.add_argument("--ready", action="append", default=[], metavar="DIRECTORY", help="declare a clean unit ready (also shrinks)")
     args = parser.parse_args()

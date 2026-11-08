@@ -150,9 +150,9 @@ class PlatformPinBinding(unittest.TestCase):
         # A syntactically bad Platform catalog is loaded by the actual VMS Check.
         self.write("Platform/common/data/catalog.tsv", "wrong\theader\n")
         self.write("VMS/common/lessons.tsv", "# lesson\tdir\ttitle\tsubsystem\tstatus\n")
-        self.write("VMS/common/id-map.tsv", "old\tnew\tchapter\tsubject\tnote\n")
+        self.write("decisions/history/vms/id-map.tsv", "old\tnew\tchapter\tsubject\tnote\n")
         self.write("VMS/common/data/catalog.tsv", "key\tkind\towner\tops\treaders\twhen\tversion\tnorm\tplace\n")
-        self.git("add", "Platform/common/data/catalog.tsv", "VMS/common/lessons.tsv", "VMS/common/id-map.tsv", "VMS/common/data/catalog.tsv")
+        self.git("add", "Platform/common/data/catalog.tsv", "VMS/common/lessons.tsv", "decisions/history/vms/id-map.tsv", "VMS/common/data/catalog.tsv")
         self.git("commit", "-qm", "fixture broken promised dependency")
         bad_pin = self.git("rev-parse", "HEAD").decode().strip()
         self.write("VMS/PLATFORM_PIN", bad_pin + "\n")
@@ -339,19 +339,15 @@ paths:
     def test_real_candidate_and_live_reports_preserve_canonical_pass(self):
         import check_spec
         self.write("VMS/common/lessons.tsv", "# lesson\tdir\ttitle\tsubsystem\tstatus\n")
-        self.write("VMS/common/id-map.tsv", "\t".join(check_spec.IDMAP_FIELDS) + "\n")
+        self.write("decisions/history/vms/id-map.tsv", "\t".join(check_spec.IDMAP_FIELDS) + "\n")
         self.write("VMS/common/data/catalog.tsv", "\t".join(check_spec.VMS_CATALOG_FIELDS) + "\n")
         self.write("Platform/common/data/catalog.tsv", "broken proposed Platform dependency\n")
-        self.git("add", "VMS/common/lessons.tsv", "VMS/common/id-map.tsv", "VMS/common/data/catalog.tsv", "Platform/common/data/catalog.tsv")
+        self.git("add", "VMS/common/lessons.tsv", "decisions/history/vms/id-map.tsv", "VMS/common/data/catalog.tsv", "Platform/common/data/catalog.tsv")
         self.git("commit", "-qm", "fixture proposed incompatible Platform")
         candidate = self.git("rev-parse", "HEAD").decode().strip()
         args = self.checker_args(vms_evidence=self.work / "actual-repin-report", vms_candidate=candidate, vms_live=True)
         original = (self.root / "VMS/PLATFORM_PIN").read_bytes()
-        import check_cyrillic
-        # The isolated fixture declares its own historical map bytes, while
-        # retaining the production checksum guard's actual validation logic.
-        fixture_map = hashlib.sha256((self.root / "VMS/common/id-map.tsv").read_bytes()).hexdigest()
-        with patch.dict(check_cyrillic.DEFERRED_FILES, {"VMS/common/id-map.tsv": fixture_map}), redirect_stdout(StringIO()):
+        with redirect_stdout(StringIO()):
             report = check_spec._vms_reports(args, [])
         self.assertEqual([r["status"] for r in report["phases"]], ["PASS", "FAIL", "FAIL"], report["phases"][0]["errors"])
         self.assertEqual(report["canonical_status"], "PASS")
