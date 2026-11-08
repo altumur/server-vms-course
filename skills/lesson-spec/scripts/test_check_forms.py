@@ -118,19 +118,19 @@ class Forms(unittest.TestCase):
         self.assertTrue(self.flags())
 
     def test_stage_kit_parts(self):                     # kit и parts — только части перечня
-        self.assertEqual(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0], [])
-        self.edit("forms/stages.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
-        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
+        self.assertEqual(check_forms.check_stage_parts(self.lesson / "forms/stages.kit.tsv")[0], [])
+        self.edit("forms/stages.kit.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
+        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.kit.tsv")[0])
 
     def test_stage_depends(self):                       # depends — только прежние этапы; launch — часть пакета
-        self.edit("forms/stages.tsv", "\tlaunch\tlaunch\t1\t", "\tlaunch\tlaunch\t4\t")   # launch — этап 2 (bf64f4058)
-        self.assertTrue(any("depends" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
+        self.edit("forms/stages.kit.tsv", "\tlaunch\tlaunch\t1\t", "\tlaunch\tlaunch\t4\t")   # launch — этап 2 (bf64f4058)
+        self.assertTrue(any("depends" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.kit.tsv")[0]))
 
     def test_stage_gate(self):                          # gate списком, tests:<глава>:<сценарии>[:seams]
-        self.edit("forms/stages.tsv", "s4-parallel-cas:seams", "s9-nothing:seams")
-        self.assertTrue(any("s9-nothing" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
-        self.edit("forms/stages.tsv", "s9-nothing:seams", "s4-parallel-cas:seam")
-        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
+        self.edit("forms/stages.kit.tsv", "s4-parallel-cas:seams", "s9-nothing:seams")
+        self.assertTrue(any("s9-nothing" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.kit.tsv")[0]))
+        self.edit("forms/stages.kit.tsv", "s9-nothing:seams", "s4-parallel-cas:seam")
+        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.kit.tsv")[0])
 
     def test_req_anchors(self):                         # ADR-0122 доп. (1) п. 1: номера требований
         self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])
