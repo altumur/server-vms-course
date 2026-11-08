@@ -128,6 +128,7 @@ A profile describes those interfaces; it does not change their scenarios or expe
   `PLATFORM_STORE=configstore://<role socket>`, `CONSOLE_PORT={port}`, `RESOURCE_PORT={rport}`, `BOX_ID`, `SERVER_NAME`,
   `SECRETS_KEY={data}/etc/secrets/platform.key` — the ring per the layout of P/02.4 N1.1, created by the runner with the ring command before the first process; the worker name — by the argument `{name}`. The layout is per P/02.4 N1.2: the store
   `{data}/configstore`, the objects `{data}/objects`, the events `{data}/events`, the presence locks `{data}/events/.workers`.
+  In a composite stand, where the store runs together with other parts, the launch command of the store receives `-dir {data}/configstore`: `{data}` itself also holds the ring and the settings, so it is not the store directory.
   The event root of a server is derived unambiguously — `{data}/events` of its `PLATFORM_DIR` (the stand does not set `RESOURCE_ROOT` and
   `EVENTS`), so «Stand» has no separate key for the event root.
   The server settings file is `W2C_ENV={data}/etc/w2c/w2c.env` (P/02.4 N1.2: the directory `roles/` is next to `w2c.env`,

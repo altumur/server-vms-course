@@ -123,6 +123,7 @@ modules:
   `PLATFORM_STORE=configstore://<сокет роли>`, `CONSOLE_PORT={port}`, `RESOURCE_PORT={rport}`, `BOX_ID`, `SERVER_NAME`,
   `SECRETS_KEY={data}/etc/secrets/platform.key` — кольцо по раскладке P/02.4 N1.1, его создаёт раннер командой кольца до первого процесса; имя воркера — аргументом `{name}`. Раскладка — по P/02.4 N1.2: хранилище
   `{data}/configstore`, объекты `{data}/objects`, события `{data}/events`, замки присутствия `{data}/events/.workers`.
+  В составном стенде, где хранилище работает вместе с другими частями, команда запуска хранилища получает `-dir {data}/configstore`: в самом `{data}` лежат также кольцо и настройки, поэтому он не каталог хранилища.
   Корень событий сервера выводится однозначно — `{data}/events` его `PLATFORM_DIR` (стенд не задаёт `RESOURCE_ROOT` и
   `EVENTS`), поэтому отдельного ключа корня событий у «Стенда» нет.
   Файл настроек сервера — `W2C_ENV={data}/etc/w2c/w2c.env` (P/02.4 N1.2: каталог `roles/` — рядом с `w2c.env`,
