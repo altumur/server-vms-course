@@ -13,3 +13,4 @@ change	lesson	share	rev	state	sha	reviews	model
 0129-p01-v2-leader-wait	P/01	Спецификация	1	review	-	-	-
 0130-p01-production	P/01	Спецификация	1	review	-	-	-
 0130-p01-data-directory-ownership	P/01	Спецификация	1	review	-	-	-
+0130-p01-directory-ownership-atomic	P/01	Спецификация	1	review	-	-	-
