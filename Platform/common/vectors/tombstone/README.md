@@ -28,3 +28,5 @@ Who performs is by `op`: `peers` — the console (`06-console`, writes the tombs
 ## Vector wire
 
 The wire of `cases.tsv` is set by the `common/tombstone` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
+
+Public additional phase/race and existing-norm probe inputs are declared in [production obligation sequences](../production-obligations/README.md). They require Runner binding and do not change this package's existing command forms or historical rows; missing execution is NOTEXEC.

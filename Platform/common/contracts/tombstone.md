@@ -79,12 +79,16 @@ retired:   a neighbour from peers decommissioned after the tombstone was written
 rewrite:   an object with the same key is written at the deleter again after written (the resource gives the new write a written strictly greater than
            the written of the tombstone, P/05 N1.1 `written`; C05-WRITTEN-AFTER-GONE-01) — the tombstone is removed at once: without
            acknowledgements and without the term of 7 days (the key is live again; copies older than written are replaced by the new write; C06-BLOB-GC-33-01, the Architect's answer of 2026-10-25 (1));
-           «at once» — on the write: a write of the key (a new body of the console, a copy of a neighbour through the resource door) removes the tombstone by the same action, before
+           «at once» — on the write: a write of the key (a new body of the console, an owner-sourced copy through the resource door) removes the tombstone by the same action, before
            its answer, not by the resource pass — a read after the answer of the write does not see the tombstone (C05-GONE-REWRITE-AT-WRITE-01,
            the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/05 item 1)
 remove:    otherwise the tombstone is kept for at least 7 days and is removed only when all peers have acknowledged the deletion (peers ⊆ acked);
            an unknown outcome is not an acknowledgement
 ```
+
+## Production obligations
+
+ADR-0130 Addendum (10), MB1 and Q5: body copies originate only at the body owner. A resource MUST NOT relay a neighbour's copy, including an in-flight copy arriving after a `404` acknowledgement. Copy admission and tombstone comparison are one protected publication decision: a stale or equal source stamp cannot clear a tombstone or resurrect a removed body. Only an owner's genuine newer publication can take the existing `rewrite` path. A tombstone remains mandatory while any required acknowledgement or retention condition is unproved; a silent peer is not a waiver. Finite resource/admission budgets require visible existing refusal/backpressure, not deletion of required tombstones. Once all existing eligibility conditions are proved, cleanup is resumable and bounded by a finite positive implementation-declared budget under qualified workload.
 
 ## Vectors
 
@@ -94,3 +98,4 @@ remove or keep. The tombstone at the deleter — the listing `prefix=.gone/`, th
 sc. 45 of the acceptance of P/05 (the tombstone is put by `@put object`); the dropping of a copy by a neighbour — reading; a stand with two resources — system
 acceptance (P/05-11 — sc. 45 and by reading).
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

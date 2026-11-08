@@ -64,7 +64,7 @@ ops:       put_new — «write if absent» (conflict when it exists); get_at —
            a delete by the read index (another index → conflict, the object is untouched); append — append an event line to
            an open bucket (only its writer, the event journal contract); there are no other atomicities
 writer:    one directory — one writer; a write goes into the object directory of its own server (P/05 N1.1 cluster: a file on the server of
-           the writer); an FS error after admission is a write refusal, not a success and not «no file»
+           the writer); an FS error after admission is not a success and not «no file»; the publication phase determines refusal or unknown durability (Q1 below)
 key:       a non-empty relative path: non-empty segments, without exact `.`/`..`, backslash and control characters;
            prefix — the beginning of such a key, also emptiness or an ending `/`; it is not a full key
 ```
@@ -93,9 +93,13 @@ listing:   the closed form ObjectListing; only the keys of the door families und
 | the object is absent among those that answered | 404 `ResourceError` | without `X-Missing` — there is no object; with `X-Missing` — unknown, not «absent» |
 | the object exceeds Content-Length.maximum of the [P/05 HTTP form](../../05-resource/spec/05-resource.api.openapi.yaml) | 413 `ResourceError` | nothing: the door limit |
 | the lane is busy; the door is unavailable | 503 `ResourceError`, `Retry-After: 1` | repeat at the next step |
-| the write into the directory did not come through (`put_at`, `put_new`, `delete_at` — another index) | conflict | re-read and decide anew |
+| the condition of `put_at`, `put_new` or `delete_at` did not match (not an arbitrary filesystem failure) | conflict | re-read and decide anew |
 | the resource door did not answer (a break, no answer, a connection refusal) | — | the reading is unknown, not «absent» (like `no_reply` of the store client contract; C10-OBJECT-ADDRESS-32, the Architect's answer of 2026-10-25) |
 | a bare `cluster://`: the door row `platform/doors/<SERVER_NAME>` is absent, it does not read, the store did not answer | — | the reading is unknown, not «absent»; at the next access the row is read anew (P03-OBJECTS-DEFAULT-1FD, the Architect's decision of 2026-10-26) |
+
+## Production obligations
+
+ADR-0130 Addendum (10), Q1: a proven refusal before publication leaves the previous object intact. After `rename`, a failed durability barrier or lost answer leaves durability unknown; this is the existing outcome `unknown`, not proof of absence or a successful write. Do not promise rollback of published bytes or memory. For `put_new`, retain the exact key, intended bytes and create-once condition across resolution. A `conflict` alone proves no success: compare the existing operation index/version (including `(server, written)` where applicable) as well as key and bytes; identical bytes alone do not attribute the object to this attempt. For resolution, qualified readback must establish that exact intended object identity and its required durability; an absent, different, unreadable or unqualified readback leaves the outcome unknown. No new HTTP Fault is assigned to this local operation. The existing `ResourceError` and `ResourceDenied` door forms stay unchanged.
 
 ## Vectors
 
@@ -105,3 +109,4 @@ cluster:// — the door by the door row of its own server, no row, does not read
 resource overrides the row, P03-OBJECTS-DEFAULT-1FD); `read.tsv` — the class of the read outcome: the code, `X-Missing`, no
 answer → the object, absent, unknown, a refusal.
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

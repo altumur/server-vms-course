@@ -211,7 +211,12 @@ N1.2, the journal `audit` — the process of the role); the refusals of the writ
    the kinds named by the norms; there are no values of secrets («without the value» — without the value, the name of the field is admissible). The acceptance does not judge such
    lines; the contract introduces no new words.
 
+## Production obligations
+
+ADR-0130 Addendum (10), Q6: each writer MUST publish nondecreasing event stamps `t` across appends and restart, using its retained last published watermark and the current owner clock rule. Bucket selection uses that stamp; `occurred` keeps its existing meaning. Persist the watermark by an implementation-chosen local representation, without a new public field. All local deadlines use monotonic clocks. An uncertain forward or backward wall-clock jump MUST NOT justify early destructive pruning of buckets, keys, request marks or replay memory: defer pruning until eligibility is proved under the qualified clock environment. A forward stamp alone is not proof of elapsed retention. Deferred pruning remains subject to finite resource/admission budgets and visible existing refusal/backpressure, never unsafe deletion. Qualification supplies clock bounds; none are invented here.
+
 ## Vectors
 
 The package [`journal`](../vectors/journal/README.md): `bucket.tsv` (reading a bucket, a torn tail, unreadable lines), `names.tsv` (file names), `years.tsv` (the choice of a bucket), `append.tsv` (appending a line, the section «Writing a line» step 5; EJ-L03), `modes.tsv` (the modes of the events root, of the trees and of the buckets). (ADR-0083 addendum (32) item 2)
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

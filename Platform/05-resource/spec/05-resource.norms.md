@@ -24,6 +24,10 @@ module, «P/0N.K» is its chapter; «M10/N» without an address is a former less
 
 Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
+<!-- req: P/05-R058 -->
+
+The [common production obligations](../../common/contracts/production-obligations.md) apply to this owner (ADR-0130 Addendum (10)). Q1/Q5/Q6 and MB1: distinguish pre-effect refusal from unknown publication durability; retain required tombstones, defer unsafe pruning and copy bodies only from their owner. A neighbour copy is never a source for retransmission after `404`.
+
 ## N1 Form
 
 The positive integer settings owned by this lesson are [runtime-constants.tsv](../forms/runtime-constants.tsv); it is their numeric source. HTTP bounds/defaults stay in the [OpenAPI](05-resource.api.openapi.yaml), and high/low in the existing P/02 space form. ALIVE_EVERY/LOST_AFTER belong to the observation contract; JSON_DEPTH belongs to P/01. Equal values do not merge distinct budgets. WAIT_OBSERVE_MS / 1000 is the existing observation period in seconds. A pending ms reader/validator is a delivery dependency, not a waiver or a changed physical duration.
@@ -126,7 +130,7 @@ the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-
 <!-- req: P/05-R012 -->
 
 ```yaml
-mirror:   every local body — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled;
+mirror:   every owner-originated local body (a received copy is not a source) — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled;
           copies — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1 (log of cammeta-go, lesson 10 № 1); the row
           does not read — bodies are not copied in this pass, the reason is in the heartbeat (settings_unread: mirror; V7 item 3, the decision of the Architect of 2026-10-28, P1; line 20 of the list);
           reception: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>`

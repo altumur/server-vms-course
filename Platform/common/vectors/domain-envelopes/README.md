@@ -75,3 +75,5 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 The vectors are checked by reference X25519 (RFC 7748), HKDF-SHA256 (RFC 5869) and AES-256-GCM by the text of the contract, not by the code
 of implementations; on a discrepancy the contract is right, «Specification» corrects the vector.
+
+Public additional phase/race and existing-norm probe inputs are declared in [production obligation sequences](../production-obligations/README.md). They require Runner binding and do not change this package's existing command forms or historical rows; missing execution is NOTEXEC.

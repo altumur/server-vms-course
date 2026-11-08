@@ -73,6 +73,8 @@ any character (`[\s\S]`). The compilation in both engines is held by `check_spec
 **The writer and the reader of families** — one schema file: the constraints of the writer are in `$defs.writer`; the writer checks
 `allOf: [schema, $defs.writer]`, the reader — the schema (ADR-0092 item 15). The writer writes strictly, the reader reads tolerantly.
 
+Tolerant reading means the declared reader schema, including its explicit permitted forms. It does not authorize old-format compatibility, a wider write/read size bound or an unknown-value fallback; current-format rules and each family's existing outcomes remain authoritative (ADR-0129 addendum (12)).
+
 ## 4. Layer 1: the fine check of the text
 
 The rules — P/02.1 N1.1 `text` (ADR-0092 addendum (2): the list is closed, each rule has a corpus case): `bytes`, `tab`,
