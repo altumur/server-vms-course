@@ -9,10 +9,10 @@ in its description (the norms of P/01.1, «Implementation decides» item 10); th
 
 ### Layout by processes (stage C)
 
-An implementation of stage C is one micromodule per process (ADR-0083 addendum (5), (25) item 4; the request of cammeta-acceptance
-`format2 profile request (2026-10-23, for people)`, the Architect's consent of 2026-10-23). The form of the files is
-the section «format2 acceptance.yaml and assembly.yaml» of the README of the runner cammeta-acceptance (commit `0e597ca`); here is what
-follows from it for the stand. The scenarios and the expectations of acceptances do not change by this.
+An implementation uses one micromodule per process. The full generic forms of `acceptance.yaml` (profile version 2),
+`assembly.yaml` (composition version 1), substitutions, executable adapters and the vector envelope are defined once in
+[Acceptance profiles and assembly](PROFILE.md). The following sections assign the stand interfaces used by the lessons.
+A profile describes those interfaces; it does not change their scenarios or expectations.
 
 - **A profile per micromodule.** `acceptance.yaml` lies in the directory of the module; `module` is the lesson directory from
   [`Platform/lessons.tsv`](../../lessons.tsv) (`01-store` … `10-domain-console`); the profile has its own build (`build`),
@@ -53,24 +53,10 @@ follows from it for the stand. The scenarios and the expectations of acceptances
   by the rule above; two or more — native code 0 and a JSON object, the keys are the names of the expectation columns of the table,
   the values are per column, as in the TSV (`@absent` — there is no key); which columns are the expectation is named by the package
   README (the Architect's decision of 2026-10-27).
-- **The unified command of a vector package** (ACC-VECTORS-CONNECT-01/02, the Architect's decisions of 2026-10-26; the exact wire is
-  the section «The unified command of a vector package — ACC-VECTORS-CONNECT-01» of the README of the runner cammeta-acceptance, commit `ab1e77a`).
-  A process profile MAY declare `vectors`: a package name (the path from `Platform/` without `vectors/`, for example `common/may`) →
-  its own command with `{input}`. The entry is per package; only the tables and rows that the package README assigns to this
-  consumer are executed (the section «Who performs it»: a table or a row by a field — `may` `covers.tsv` only 06 and 10,
-  `events-merge` by `participant`); a foreign selection is not required. The input is a JSON file `{format, package, table, case,
-  variant, cells, files}`: only the input columns as the string of the source cell and the input fixtures of the README, without
-  expectations; the parsing of the cells and markers per the package README and the native object of its function are built by the
-  command of the implementation (for `values-by-type`, `rid`, `request-digest`, `covers` — their object from the README; the former
-  `stand` commands do not change). A key of `cells` is the name of an input column: for a table with a header — from the header,
-  for a table without a header — the field name from the package README (the input cell «as written» — `raw`: `log-mask`,
-  `secret-in`, `group-of`, `jcs`). A key of `files` is the file name of an input fixture, the last component of its path in the
-  README (`fields.yaml`, `testsub.subsystem.yaml`, `testsub2.subsystem.yaml`); the value is the bytes of the file as they are (the
-  inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27).
-  The answer is `{exit_code, stdout_b64, stderr_b64}` of the native outcome with the outer code 0; to the decoded bytes the runner
-  applies the contract of the table (whole, subset, raw id, `@exit 2`). There is no `vectors` entry for an assigned package —
-  `blocked`, not PASS. The coverage is reconciled by the full SHA of the export and the SHA of the table; a row number is an address
-  only within this pin.
+- **The unified vector command.** The optional profile map `vectors` and its complete input/output wire are defined in
+  [Acceptance profiles and assembly](PROFILE.md#unified-vector-command). A package README assigns its consumer, tables,
+  input columns, fixtures and directions; the implementation computes its own native result. A missing assigned entry is
+  `blocked`, not PASS. Coverage uses the full export SHA and table SHA; a source line is an address only within that pin.
 
 - **Launch command** — a template with substitutions: `{data}` — a new empty data directory of the instance; `{socket}` — the
   socket path of the store door (P/01.1); `{port}` — the HTTP port of the console on the loopback (lesson P/06 and the acceptances with the console stand); `{manifest}` — the directory

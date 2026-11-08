@@ -13,6 +13,10 @@ Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@forei
 `api@<id>` (sc. 07, 17, 18, 25–29, 31; the section «Store group stand» of the common README). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
 a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description.
 
+## Profile interface
+
+Use the `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the durable daemon and accepts the common stand's launch substitutions and the existing daemon flags of this chapter. `stand.backup` copies through `{socket}` to `{file}`; `stand.import` imports `{file}` into the stopped fresh `{data}` using `{index_base}`. Group operator calls use `stand.store-op` with `{socket}`, `{dir}`, `{id}`, `{tls}` and prepared `{args}`; row-corruption checks use `stand.spoil-row` with `{data}`, `{key}` and `{what}` as assigned by their existing stand contract. `keys.store_build` declares `raft` or `box` with the applicability below; omission or another value does not silently select one. The role header uses `keys.role_header`. Program names and wrappers belong to the implementation; operation semantics and the flags appended by the group stand remain those of the referenced norms and common stand.
+
 ## Stand
 
 The stand store is as in the acceptance of M10/11: schema 1, the manifest rows `testsub` and `testsub2` are written by the runner itself through `admin.sock`, without the installer

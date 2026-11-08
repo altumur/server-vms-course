@@ -6,6 +6,10 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) N5. `puts.tsv` has 87 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; 3 `calls_requests_*` — the entry `<s>/requests` of another subsystem (it is in the catalogue without `requests` — accepted; it is absent — a deferral) and of the own one, P/06.3 N1.9 (review of lesson P/02, S5); 3 `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2; the last two `calls_pulse_ok`, `calls_pulse_bad` — the declared heartbeat callback); the installation files are in `puts/`.
 The table and the files were moved from the acceptance of M10/2 (stage B) without changes; the loader corpus is [the acceptance of chapter 2.1](../1/README.md).
 
+## Profile interface
+
+Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.manifest-put` takes the prepared administrative `{socket}` and the candidate manifest `{file}` and runs the normal manifest installation, including the existing catalogue, file, write-order and unchanged-state rules. It returns the native installation outcome described below; it does not receive a deployment substitution or an expected table row. Store creation belongs to the selected `01-store` profile. The implementation chooses the executable wrapper and flags that expose this existing command contract. The explicitly unbound recovery obligation below stays unexecuted.
+
 ## puts.tsv
 
 The manifest installation `manifest put` of the implementation (N3 «Manifest change», the command name and argv — [`operator-commands.tsv`](../../forms/operator-commands.tsv)); the runner calls it
