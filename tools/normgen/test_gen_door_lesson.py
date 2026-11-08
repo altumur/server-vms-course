@@ -384,20 +384,34 @@ def _assert_s08_preservation():
     for relative, name, before_digest in _S08_MUTABLE:
         if (relative, name) not in present or not re.fullmatch("[0-9a-f]{64}", before_digest):
             raise CheckingError("missing canonical mutable block")
-    body = (HERE / "test_gen_door_bodies.py").read_text(encoding="utf-8")
+    body = (ROOT / "tools/normgen/test_gen_door_bodies.py").read_text(encoding="utf-8")
     if any(body.count(part) != 1 for part in _S08_PARAM_SLICES):
         raise CheckingError("old parameter/coercion/service source changed")
-    lesson_text = (HERE / "test_gen_door_lesson.py").read_text(encoding="utf-8")
+    lesson_text = (ROOT / "tools/normgen/test_gen_door_lesson.py").read_text(encoding="utf-8")
     lesson_lines = lesson_text.splitlines(keepends=True)
     methods = {cls.name + "." + fn.name: fn for cls in ast.parse(lesson_text).body if isinstance(cls, ast.ClassDef)
                for fn in cls.body if isinstance(fn, ast.FunctionDef)}
     for name, digest in _S08_PARTIAL:
         node = methods[name]
         raw = "".join(lesson_lines[node.lineno-1:node.end_lineno])
+        if name == "DoorLessonBase.test_mutants":
+            addition = "        if self.model.context:\n            return _test_source_route_mutants(self)\n"
+            if raw.count(addition) != 1:
+                raise CheckingError("active Source mutation delegate missing/duplicated")
+            raw = raw.replace(addition, "")
+        if name == "DoorLessonBase.test_probes":
+            for addition in (
+                    "        pr = _source_complete_probes(self.model, pr)\n",
+                    "        want = _source_applicable_want(self.model, want)\n",
+                    '        if self.model.context:\n            self.assertFalse(missed, f"mandatory source route coverage GAP: {sorted(missed)}")\n'):
+                if raw.count(addition) != 1:
+                    raise CheckingError("source coverage plumbing missing/duplicated")
+                raw = raw.replace(addition, "")
         raw = raw.replace("self._route_executor(self.fresh, pr)", "run(self.fresh, pr)")
         raw = raw.replace("self._route_executor(mod, pr)", "run(mod, pr)")
         raw = "".join(line for line in raw.splitlines(keepends=True)
-                      if "obj._route_executor = lambda mod, pr: run(mod, pr)" not in line)
+                      if "obj._route_executor = lambda mod, pr: run(mod, pr)" not in line and
+                      "obj.model.context = None  #" not in line)
         if _sha(raw.encode()) != digest:
             raise CheckingError("plumbing-only semantic/fixture block changed: " + name)
     for relative, name, digest in _S08_FROZEN + _S08_OLD_ASSIGNMENTS:
@@ -1355,27 +1369,189 @@ def _run_required_original_mutants(required, attempted, outcomes):
             raise AssertionError(f"{name} survives or lacks a distinguishing source witness")
 
 
+
+_PRIORITY_GO = r'''package apidoor
+import("encoding/json";"os";"testing")
+func TestReview103S08Priority(t *testing.T) {
+ var views []map[string]any
+ if err:=json.Unmarshal([]byte(__VIEWS__),&views);err!=nil{t.Fatal(err)}
+ var view map[string]any;for _,v:=range views{if v["name"]==__ROOT__{view=v}}
+ if view==nil{t.Fatal("missing declared root view")}
+ spec:=p06Bindings();if spec==nil{t.Fatal("missing private spec")}
+ bind:=func(id Op)p06Candidate{
+  var found *p06Operation
+  for i:=range spec.operations{if spec.operations[i].op==id{if found!=nil{t.Fatal("duplicate operation")};found=&spec.operations[i]}}
+  if found==nil{t.Fatal("missing operation")}
+  choices,err:=p06Choices(*found,view);if err!=nil{t.Fatal(err)};if len(choices)!=1{t.Fatal("priority fixture needs a single source choice")}
+  return p06Bind(*found,p06Server{mounted:false},__ROOT__,choices[0])
+ }
+ row,lit,free:=bind(Op(__ROW__)),bind(Op(__LITERAL__)),bind(Op(__FREE__))
+ if len(free.segments)!=2{t.Fatal("free source path shape")}
+ singleFree:=free;singleFree.segments=free.segments[1:]
+ file,err:=os.OpenFile(__REPORT__,os.O_WRONLY|os.O_CREATE|os.O_EXCL,0600);if err!=nil{t.Fatal(err)}
+ enc:=json.NewEncoder(file);emit:=func(v map[string]any){if err:=enc.Encode(v);err!=nil{file.Close();t.Fatal(err)}}
+ shared:=func(kind string,id int)map[string]any{return map[string]any{"kind":kind,"id":id,"run":__RUN__,"context":__CONTEXT__}}
+ start:=shared("start",0);start["count"]=7;emit(start)
+ for i,c:=range []p06Candidate{row,lit,free}{
+  ranks:=[]int{};for _,s:=range c.segments{ranks=append(ranks,s.rank)}
+  f:=shared("record",i+1);f["case"]=[]string{"unit-class","literal","free-path"}[i];f["ranks"]=ranks;f["priority"]=nil;emit(f)
+ }
+ for i,v:=range []int{p06MoreConcrete(lit,row),p06MoreConcrete(row,singleFree),p06MoreConcrete(singleFree,row),p06MoreConcrete(row,row)}{
+  f:=shared("record",i+4);f["case"]=[]string{"literal-over-class","class-over-free","free-under-class","equal-class"}[i];f["ranks"]=nil;f["priority"]=v;emit(f)
+ }
+ end:=shared("end",8);end["count"]=7;end["completed"]=7;emit(end)
+ if err:=file.Close();err!=nil{t.Fatal(err)}
+}
+'''
+
+
+def _priority_source_inputs(model):
+    """Pick declared Source operations; expected ranks are source-owned, not generated metadata."""
+    root = model.context["root"]
+    def one(path, component):
+        records = [r for r in model.declarations if r["method"] == "get" and
+                   r["route"] == path and r["component"] == component]
+        entries = [e for e in model.routes if e["p"]["path"] == path and
+                   e["owner"] == root and not e["prefixed"]]
+        if len(records) != 1 or len(entries) != 1:
+            raise CheckingError("ambiguous/missing Source priority fixture")
+        return records[0]["ordinal"], entries[0]["ranks"]
+    row, rr = one("/{rows}", "UnitsCollection")
+    literal, lr = one("/healthz", "")
+    free, fr = one("/folders/{id}", "")
+    if rr != [1] or lr != [2] or fr != [2, 0]:
+        raise CheckingError("Source literal/catalogue/free priority premise changed")
+    return dict(ROW=row, LITERAL=literal, FREE=free), [
+        dict(case="unit-class", ranks=rr, priority=None),
+        dict(case="literal", ranks=lr, priority=None),
+        dict(case="free-path", ranks=fr, priority=None),
+        dict(case="literal-over-class", ranks=None, priority=1),
+        dict(case="class-over-free", ranks=None, priority=1),
+        dict(case="free-under-class", ranks=None, priority=-1),
+        dict(case="equal-class", ranks=None, priority=0)]
+
+
+def _read_priority_report(raw, run_id, context):
+    frames = _ndjson(raw)
+    names = ["unit-class", "literal", "free-path", "literal-over-class", "class-over-free",
+             "free-under-class", "equal-class"]
+    if len(frames) != 9:
+        raise CheckingError("priority report is incomplete/extra")
+    for i, f in enumerate(frames):
+        fields = {"kind", "id", "run", "context"}
+        if i == 0:
+            fields |= {"count"}
+        elif i == 8:
+            fields |= {"count", "completed"}
+        else:
+            fields |= {"case", "ranks", "priority"}
+        _exact(f, fields)
+        if (type(f["id"]) is not int or f["id"] != i or f["run"] != run_id or
+                f["context"] != context or f["kind"] != ("start" if i == 0 else "end" if i == 8 else "record")):
+            raise CheckingError("priority report identity/order")
+        if i in (0, 8):
+            if type(f["count"]) is not int or f["count"] != 7:
+                raise CheckingError("priority count")
+            if i == 8 and (type(f["completed"]) is not int or f["completed"] != 7):
+                raise CheckingError("priority terminal incomplete")
+        elif f["case"] != names[i - 1]:
+            raise CheckingError("priority case identity")
+        elif i <= 3:
+            if (type(f["ranks"]) is not list or not f["ranks"] or
+                    any(type(v) is not int or v not in (0, 1, 2) for v in f["ranks"]) or f["priority"] is not None):
+                raise CheckingError("priority ranks type")
+        elif f["ranks"] is not None or type(f["priority"]) is not int or f["priority"] not in (-1, 0, 1):
+            raise CheckingError("priority comparison type")
+    return [{k: f[k] for k in ("case", "ranks", "priority")} for f in frames[1:-1]]
+
+
+def _observe_priority(case, source):
+    ids, expected_ranks = _priority_source_inputs(case.model)
+    nonce = os.urandom(16).hex()
+    module, report = case.tmp / ("priority-" + nonce), case.tmp / ("priority-" + nonce + ".ndjson")
+    _copy_owned(source, module)
+    replacements = dict(VIEWS=json.dumps((b"[" + b",".join(case.context["raw"]) + b"]").decode("utf8")),
+                        ROOT=json.dumps(case.context["root"]), REPORT=json.dumps(str(report)),
+                        RUN=json.dumps(nonce), CONTEXT=json.dumps(case.context["id"]),
+                        **{k: str(v) for k, v in ids.items()})
+    path = module / "apidoor/review103_s08_priority_test.go"
+    _new_path(path)
+    path.write_text(_go_template(_PRIORITY_GO, replacements), encoding="utf8")
+    snapshot = _tree_receipt(module)
+    try:
+        done = subprocess.run(["go", "test", "-json", "-count=1", "-run", "^TestReview103S08Priority$", "./apidoor"],
+                              cwd=module, env=GOENV, capture_output=True)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"priority observer process failed: {exc}") from exc
+    _complete_observer_go_test(done, test="TestReview103S08Priority")
+    _verify_tree(module, snapshot)
+    actual = _read_priority_report(_regular_bytes(report, mode=0o600), nonce, case.context["id"])
+    return [(w["case"], w, a) for w, a in zip(expected_ranks, actual) if w != a]
+
+
+def _active_s08_mutants(model, source):
+    """Apply the four existing error meanings to active S08 code, never a dead legacy table."""
+    source = Path(source)
+    rt = (source / "apidoor/routes_rt.go").read_text()
+    generated = (source / "apidoor/routes.go").read_text()
+    def replace_once(text, before, after):
+        if text.count(before) != 1:
+            raise CheckingError("active Source mutant anchor missing/ambiguous")
+        return text.replace(before, after)
+    prefix = replace_once(rt, "for _, server := range operation.servers {",
+                          "for _, server := range operation.servers {\n\t\t\tif server.mounted { continue }")
+    all405 = replace_once(rt, "if unanimous || best[0].file {", "if false && (unanimous || best[0].file) {")
+    record = next(r for r in model.declarations if r["route"] == "/folders/{id}" and r["method"] == "get")
+    marker = "{op: " + record["symbol"] + ","
+    start = generated.index(marker, generated.index("func p06Bindings"))
+    end = generated.index("\n", start)
+    line = generated[start:end]
+    changed = replace_once(line, '"id": paramCheck{minLen: 1,', '"id": paramCheck{minLen: 3,')
+    pattern = generated[:start] + changed + generated[end:]
+    rank = replace_once(rt, 'p06BoundSegment{literal: part, rank: 1, raw: c.file}',
+                        'p06BoundSegment{literal: part, rank: 0, raw: c.file}')
+    return {"prefix-lost": ("routes_rt.go", prefix), "all405": ("routes_rt.go", all405),
+            "pattern": ("routes.go", pattern), "rank": ("routes_rt.go", rank)}
+
+
+def _test_source_route_mutants(case):
+    inputs = _source_complete_probes(case.model, probes(case.model, random.Random(7)))
+    normal = case._route_executor(case.fresh, inputs)
+    case.assertEqual(disagree(inputs, normal, lambda p: expected(case.model, p)), [])
+    case.assertEqual(_observe_priority(case, case.fresh), [], "normal Source priority baseline disagrees")
+    outcomes = {}
+    for name, (filename, changed) in _active_s08_mutants(case.model, case.fresh).items():
+        with case.subTest(mutant=name):
+            module = case.tmp / ("s08-mut-" + name + "-" + os.urandom(8).hex())
+            _copy_owned(case.fresh, module)
+            (module / "apidoor" / filename).write_text(changed)
+            if name == "rank":
+                bad = _observe_priority(case, module)
+                channel = "compiled-private-bind-and-priority"
+            else:
+                got = case._route_executor(module, inputs)
+                bad = disagree(inputs, got, lambda p: expected(case.model, p))
+                channel = "public-Route"
+            outcomes[name] = dict(status="semantic-mismatch" if bad else "survivor", channel=channel,
+                                  mismatch_count=len(bad), first_named_mismatches=bad[:3])
+            case.assertTrue(bad, f"{name} survives")
+    case.s08_mutant_evidence = outcomes
+    (case.tmp / ("s08-mutant-evidence-" + os.urandom(8).hex() + ".json")).write_text(
+        json.dumps(outcomes, ensure_ascii=False, indent=2) + "\n", encoding="utf8")
+    _run_required_original_mutants({"prefix-lost", "all405", "pattern", "rank"}, set(outcomes),
+                                   {name: row["status"] for name, row in outcomes.items()})
+
+
 def _test_catalogue_observations(self):
     receipt = self._observer_receipt
     ids, inputs = _mandatory_observation_inputs(self.model)
     self.assertEqual(receipt["obligations"], ids, "mandatory obligations changed after baseline")
     self.assertEqual(_compare_observations(receipt["frames"], inputs, _source_projection(self.model),
                                           lambda p: _expected_route_observation(self.model, p)), [])
-    attempted, outcomes = set(), {}
-    executor = self._route_executor
-    def tracked(module, probes):
-        name = Path(module).name.removeprefix("mut-")
-        attempted.add(name)
-        got = executor(module, probes)
-        outcomes[name] = "semantic-mismatch" if disagree(probes, got, lambda p: expected(self.model, p)) else "survivor"
-        return got
-    self._route_executor = tracked
-    try:
-        self.test_mutants()             # original dictionary/inputs/applicability/loop unchanged
-        _run_required_original_mutants({"prefix-lost", "all405", "pattern", "rank"}, attempted, outcomes)
-    finally:
-        self._route_executor = executor
-    # second-kind pass is absent in this declared pair. It is a separate, explicit context GAP.
+    self.test_mutants()  # The active S08 delegate keeps the original noncontext loop intact.
+    evidence = self.s08_mutant_evidence
+    _run_required_original_mutants({"prefix-lost", "all405", "pattern", "rank"}, set(evidence),
+                                   {name: row["status"] for name, row in evidence.items()})
     self.s08_context_limits = {"second-kind-positive": "GAP", "admission/B1/N5": "UNKNOWN"}
 
 
@@ -1491,6 +1667,24 @@ def probes(model, rnd):
     return out
 
 
+
+def _source_complete_probes(model, original):
+    """Preserve every old probe; require every applicable source specialization too."""
+    if not model.context:
+        return original
+    _, mandatory = _mandatory_observation_inputs(model)
+    return list(original) + mandatory
+
+
+def _source_applicable_want(model, original):
+    if not model.context:
+        return original
+    # Empty root tables/pass do not become short routes; mounts remain separate.
+    # This is full Source/catalogue expansion, never a projection of observed Ops.
+    return {(entry["p"]["path"], method, entry["prefixed"])
+            for entry in model.routes for method in entry["p"]["ops"]}
+
+
 def expected(model, probe):
     r = model.route(*probe)
     if r[0] == "err":
@@ -1551,21 +1745,27 @@ class DoorLessonBase:
     def test_probes(self):
         rnd = random.Random(6)
         pr = probes(self.model, rnd)
+        pr = _source_complete_probes(self.model, pr)
         got = self._route_executor(self.fresh, pr)
         bad = disagree(pr, got, lambda p: expected(self.model, p))
         self.assertEqual(bad[:3], [], f"{len(bad)} of {len(pr)} probes disagree")
         hit_ops = {(g["path"], g["method"], g["prefixed"]) for g in got if "path" in g}
         want = {(p["path"], m, pre) for p in self.model.paths for m in p["ops"]
                 for pre in ((False, True) if p["prefixed"] else (False,))}
+        want = _source_applicable_want(self.model, want)
         missed = want - hit_ops
         # Allow at most10% probes shadowed by more-specific templates or lacking a sample.
         self.assertLessEqual(len(missed), len(want) // 10, f"probes reach too few operations: {sorted(missed)[:10]}")
+        if self.model.context:
+            self.assertFalse(missed, f"mandatory source route coverage GAP: {sorted(missed)}")
         codes = {g.get("err") for g in got}
         self.assertIn(404, codes)
         if any(p["all405"] for p in self.model.paths):
             self.assertIn(405, codes)
 
     def test_mutants(self):
+        if self.model.context:
+            return _test_source_route_mutants(self)
         rnd = random.Random(7)
         pr = probes(self.model, rnd)
         src = (self.fresh / "apidoor/routes.go").read_text()
@@ -1646,6 +1846,7 @@ class RouteServiceControls(unittest.TestCase):
         obj.tmp, obj.fresh = Path(directory), fresh
         obj._route_executor = lambda mod, pr: run(mod, pr)
         obj.model = Mock(paths=[{"prefixed": True}])
+        obj.model.context = None  # This service fixture models the noncontext executor.
         obj.model.templates.return_value = [({}, ["{rows}"], False), ({}, ["{free}"], False)]
         return obj
 
@@ -1787,6 +1988,7 @@ class RouteServiceControls(unittest.TestCase):
             obj = DoorLesson_p06("test_probes")
             obj._route_executor = lambda mod, pr: run(mod, pr)
             obj.model, obj.fresh = Mock(), Path("unused")
+            obj.model.context = None  # No catalogue or Source materialization in this service control.
             with self.assertRaises(CheckingError):
                 obj.test_probes()
             expected_call.assert_not_called()
@@ -2171,6 +2373,71 @@ class RouteServiceControls(unittest.TestCase):
                     _checked_observation(_mock_lifecycle(), path, td, snapshot, _mock_context(context),
                                          inputs, nonce, ["OpA", "OpB"], want, oracle)
                 compare.assert_not_called()
+
+
+    def test_source_coverage_retains_all_old_probes_and_requires_the_expansion(self):
+        from types import SimpleNamespace
+        old = [("GET", "/unchanged-old"), ("GET", "/unchanged-old")]
+        model = SimpleNamespace(context={"declared": True})
+        with patch(__name__ + "._mandatory_observation_inputs", return_value=(["one"], [("GET", "/source")])):
+            self.assertEqual(_source_complete_probes(model, old), old + [("GET", "/source")])
+        self.assertEqual(old, [("GET", "/unchanged-old"), ("GET", "/unchanged-old")])
+        unbound = SimpleNamespace(context=None)
+        self.assertIs(_source_complete_probes(unbound, old), old)
+        route = {"path": "/{table}", "ops": {"GET": {}, "HEAD": {}}}
+        model.routes = [{"p": route, "prefixed": True}]
+        want = _source_applicable_want(model, {("/{table}", "GET", False)})
+        self.assertEqual(want, {("/{table}", "GET", True), ("/{table}", "HEAD", True)})
+        self.assertIs(_source_applicable_want(unbound, old), old)
+
+
+    def priority_frames(self):
+        names = ["unit-class", "literal", "free-path", "literal-over-class", "class-over-free",
+                 "free-under-class", "equal-class"]
+        shared = lambda kind, i: dict(kind=kind, id=i, run="run", context="context")
+        frames = [dict(shared("start", 0), count=7)]
+        for i, name in enumerate(names, 1):
+            frames.append(dict(shared("record", i), case=name,
+                               ranks=([1], [2], [2, 0])[i - 1] if i <= 3 else None,
+                               priority=None if i <= 3 else (1, 1, -1, 0)[i - 4]))
+        frames.append(dict(shared("end", 8), count=7, completed=7))
+        return frames
+
+    def test_source_priority_report_is_complete_typed_and_context_bound(self):
+        frames = self.priority_frames()
+        self.assertEqual(len(_read_priority_report(_mock_ndjson(frames), "run", "context")), 7)
+        mutants = [frames[:-1], frames + [frames[-1]], [frames[0], *frames[2:], frames[1]]]
+        for index, field, value in [(1, "id", True), (1, "case", "foreign"), (2, "run", "foreign"),
+                                     (2, "context", "foreign"), (1, "ranks", [True]),
+                                     (1, "ranks", []), (1, "ranks", [3]), (4, "priority", True),
+                                     (4, "priority", 2), (8, "completed", 0), (8, "completed", True),
+                                     (0, "count", 0), (0, "kind", "end")]:
+            bad = copy.deepcopy(frames); bad[index][field] = value; mutants.append(bad)
+        for bad in mutants:
+            with self.subTest(frames=bad), self.assertRaises(CheckingError):
+                _read_priority_report(_mock_ndjson(bad), "run", "context")
+        for bad in (b"\xff", b"{}", b"{", _mock_ndjson(frames) + b"\n",
+                    _mock_ndjson(frames).replace(b'"id": 1', b'"id": 1, "id": 1', 1)):
+            with self.subTest(raw=bad), self.assertRaises(CheckingError):
+                _read_priority_report(bad, "run", "context")
+        changed = copy.deepcopy(frames); changed[1]["ranks"] = [0]
+        # A complete well-typed wrong value remains observable, not a checking refusal.
+        actual = _read_priority_report(_mock_ndjson(changed), "run", "context")
+        self.assertEqual(actual[0]["ranks"], [0])
+        self.assertNotEqual(actual[0]["ranks"], frames[1]["ranks"])
+
+    def test_source_priority_compile_errors_never_reach_semantic_receiver(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); source = root / "module"; (source / "apidoor").mkdir(parents=True)
+            case = SimpleNamespace(tmp=root, model=None, context=_mock_context())
+            ids = dict(ROW=1, LITERAL=2, FREE=3)
+            failed = subprocess.CompletedProcess(["synthetic-go"], 1, b"", b"compile error")
+            with patch(__name__ + "._priority_source_inputs", return_value=(ids, [])), \
+                    patch(__name__ + ".subprocess.run", return_value=failed), \
+                    patch(__name__ + "._read_priority_report") as receive, self.assertRaises(CheckingError):
+                _observe_priority(case, source)
+            receive.assert_not_called()
 
 
 class SchemaPositionControls(unittest.TestCase):
