@@ -1,0 +1,5 @@
+# argv: quint verify --main=turn_mut_anchor --invariant=singleConfident --max-steps=8 turn.qnt
+# exit: 0
+[ok] No violation found (5949ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

@@ -1,0 +1,38 @@
+# argv: quint verify --main=acc_mut_markfirst --invariant=markHasObject --max-steps=10 accept_gen.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  acc_mut_markfirst::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 0,
+      objs: Set(),
+      phase: 0,
+      rev: 0,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 1]
+{
+  acc_mut_markfirst::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[violation] Found an issue (233ms).
+error: found a counterexample

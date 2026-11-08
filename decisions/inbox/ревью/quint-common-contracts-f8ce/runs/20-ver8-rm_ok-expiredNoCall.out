@@ -1,0 +1,5 @@
+# argv: quint verify --main=rm_ok --invariant=expiredNoCall --max-steps=8 request_mark.qnt
+# exit: 0
+[ok] No violation found (367ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

@@ -1,0 +1,72 @@
+# argv: quint run --main=presence_ok --invariant=neverHolding --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 presence_lock.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 1,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 1]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 2]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "W", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "locked"
+    }
+}
+
+[State 3]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "W", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "holding"
+    }
+}
+
+[violation] Found an issue (12ms at 83 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2026 --backend=rust to reproduce.
+error: Invariant violated

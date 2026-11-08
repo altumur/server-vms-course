@@ -1,0 +1,146 @@
+# argv: quint verify --main=ts_any --invariant=noResurrection --max-steps=10 tombstone.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 0,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 1]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 2]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 3]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set(), old: false, on: true, written: 2 }
+    }
+}
+
+[State 4]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P2"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 5]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 1),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P2"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 6]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 1),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P2"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 7]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 1),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P1", "P2"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 8]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 1),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P1", "P2"), old: true, on: true, written: 2 }
+    }
+}
+
+[State 9]
+{
+  ts_any::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 1),
+      d: 0,
+      removals: 1,
+      removedAt: 2,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[violation] Found an issue (1234ms).
+error: found a counterexample

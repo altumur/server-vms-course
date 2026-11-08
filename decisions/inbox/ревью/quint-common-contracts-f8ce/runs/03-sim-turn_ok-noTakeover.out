@@ -1,0 +1,450 @@
+# argv: quint run --main=turn_ok --invariant=noTakeover --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 turn.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 1]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 1, "B" -> 1),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 2]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 1, "B" -> 1),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 0, rel: false, sentAt: 1, who: "A" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 3]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 2, "B" -> 2),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 0, rel: false, sentAt: 1, who: "A" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 4]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 2, "B" -> 2),
+      refused: 0,
+      replies: Set({ sentAt: 1, ver: 1, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 5]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set({ sentAt: 1, ver: 1, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 6]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 1, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 7]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 1, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 8]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 1, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 9]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "?", ver: -1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 10]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 3, "B" -> 3),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 11]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 4, "B" -> 4),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 12]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 5, "B" -> 5),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 13]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 5, "B" -> 5),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 1, rel: false, sentAt: 5, who: "B" }),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 14]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 5, "B" -> 5),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 1, rel: false, sentAt: 5, who: "B" }),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 15]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 6, "B" -> 6),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 1, rel: false, sentAt: 5, who: "B" }),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 16]
+{
+  turn_ok::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 6, "B" -> 6),
+      refused: 0,
+      replies: Set({ sentAt: 5, ver: 2, who: "B" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 3, holder: "A", ver: 1 },
+          "B" -> { at: 3, holder: "A", ver: 1 }
+        ),
+      takeovers: 1,
+      turnHolder: "B",
+      turnVer: 2,
+      writes: Set()
+    }
+}
+
+[violation] Found an issue (16ms at 63 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2026 --backend=rust to reproduce.
+error: Invariant violated

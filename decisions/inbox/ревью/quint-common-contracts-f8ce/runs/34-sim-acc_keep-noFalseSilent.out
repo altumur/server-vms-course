@@ -1,0 +1,232 @@
+# argv: quint run --main=acc_keep --invariant=noFalseSilent --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 accept_gen.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 0,
+      objs: Set(),
+      phase: 0,
+      rev: 0,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 1]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 1,
+      objs: Set(1),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 2]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 2,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 3]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 2,
+      rev: 1,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 4]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 5]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 6]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 7]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 8]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 9]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 10]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 1,
+      rev: 3,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 11]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 2,
+      rev: 3,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 12]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 13]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 1,
+      mark: 3,
+      n: 3,
+      objs: Set(2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[violation] Found an issue (11ms at 636 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x25c6 --backend=rust to reproduce.
+error: Invariant violated

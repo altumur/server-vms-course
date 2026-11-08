@@ -1,0 +1,392 @@
+# argv: quint run --main=acc_literal --invariant=noOldLeak --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 accept_gen.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 0,
+      objs: Set(),
+      phase: 0,
+      rev: 0,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 1]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 1,
+      objs: Set(1),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 2]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 2,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 3]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 1,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 4]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 5]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 6]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 7]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 8]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 9]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 10]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 11]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 12]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 13]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 14]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 2,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 15]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 1,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 16]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 2,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 17]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 2,
+      rev: 3,
+      rpc: 1,
+      rrev: 3
+    }
+}
+
+[State 18]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 3
+    }
+}
+
+[State 19]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 3,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 3
+    }
+}
+
+[State 20]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 4,
+      objs: Set(1, 2, 3, 4),
+      phase: 1,
+      rev: 4,
+      rpc: 0,
+      rrev: 3
+    }
+}
+
+[State 21]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 3,
+      n: 4,
+      objs: Set(1, 2, 3, 4),
+      phase: 1,
+      rev: 4,
+      rpc: 1,
+      rrev: 3
+    }
+}
+
+[State 22]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 4,
+      n: 4,
+      objs: Set(1, 2, 3, 4),
+      phase: 2,
+      rev: 4,
+      rpc: 1,
+      rrev: 3
+    }
+}
+
+[State 23]
+{
+  acc_literal::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 4,
+      n: 4,
+      objs: Set(1, 3, 4),
+      phase: 0,
+      rev: 4,
+      rpc: 1,
+      rrev: 3
+    }
+}
+
+[violation] Found an issue (11ms at 182 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2116 --backend=rust to reproduce.
+error: Invariant violated

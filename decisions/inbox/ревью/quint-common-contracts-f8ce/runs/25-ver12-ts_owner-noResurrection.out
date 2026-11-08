@@ -1,0 +1,5 @@
+# argv: quint verify --main=ts_owner --invariant=noResurrection --max-steps=12 tombstone.qnt
+# exit: 0
+[ok] No violation found (4265ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

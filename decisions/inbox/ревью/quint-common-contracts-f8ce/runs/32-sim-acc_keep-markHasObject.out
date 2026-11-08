@@ -1,0 +1,665 @@
+# argv: quint run --main=acc_keep --invariant=markHasObject --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 accept_gen.qnt
+# exit: 0
+An example execution:
+
+[State 0]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 0,
+      objs: Set(),
+      phase: 0,
+      rev: 0,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 1]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 1,
+      objs: Set(1),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 2]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 1,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 3]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 2,
+      objs: Set(1),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 4]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 2,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 5]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 0,
+      n: 3,
+      objs: Set(1),
+      phase: 1,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 6]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 3,
+      objs: Set(1),
+      phase: 2,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 7]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 3,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 0,
+      rrev: 0
+    }
+}
+
+[State 8]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 3,
+      objs: Set(1),
+      phase: 0,
+      rev: 1,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 9]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 1,
+      n: 4,
+      objs: Set(1, 2),
+      phase: 1,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 10]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 4,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 1,
+      rrev: 1
+    }
+}
+
+[State 11]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 4,
+      objs: Set(1, 2),
+      phase: 2,
+      rev: 2,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 12]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 4,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 0,
+      rrev: 1
+    }
+}
+
+[State 13]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: true,
+      falseSilent: 0,
+      mark: 2,
+      n: 4,
+      objs: Set(1, 2),
+      phase: 0,
+      rev: 2,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 14]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 1,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 15]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 1,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 16]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 1,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 17]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 18]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 19]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 20]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 21]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 22]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 23]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 24]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 25]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 26]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 27]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 28]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 29]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 30]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 31]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 32]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 33]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 34]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 35]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 36]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 37]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 38]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[State 39]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 1,
+      rrev: 2
+    }
+}
+
+[State 40]
+{
+  acc_keep::accept_gen::s:
+    {
+      cleaned: false,
+      falseSilent: 0,
+      mark: 2,
+      n: 5,
+      objs: Set(1, 2, 3),
+      phase: 0,
+      rev: 3,
+      rpc: 0,
+      rrev: 2
+    }
+}
+
+[ok] No violation found (10111ms at 9890 traces/second).
+Trace length statistics: max=41, min=11, average=39.15
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x165e068 --backend=rust to reproduce.

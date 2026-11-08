@@ -1,0 +1,78 @@
+# argv: quint verify --main=rm_mut_nomark --invariant=atMostOneCall --max-steps=8 request_mark.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 1]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 2]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set("H2"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set("H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 3]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set("H1", "H2"),
+      calls: 2,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set("H1", "H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[violation] Found an issue (272ms).
+error: found a counterexample

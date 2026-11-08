@@ -1,0 +1,536 @@
+# argv: quint run --main=presence_ok --invariant=noRetry --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 presence_lock.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 1,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 1]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 2]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "R", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 1,
+      rpc: "locked",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 3]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 4]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "W", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "locked"
+    }
+}
+
+[State 5]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 6]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 2,
+      wpc: "opened"
+    }
+}
+
+[State 7]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "W", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 2,
+      wpc: "locked"
+    }
+}
+
+[State 8]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "W", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 2,
+      wpc: "holding"
+    }
+}
+
+[State 9]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 10]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 2,
+      wpc: "opened"
+    }
+}
+
+[State 11]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "R", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 2,
+      retries: 0,
+      rfd: 2,
+      rpc: "locked",
+      wfd: 2,
+      wpc: "opened"
+    }
+}
+
+[State 12]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 2,
+      wpc: "opened"
+    }
+}
+
+[State 13]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 3,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 14]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 3,
+      wpc: "opened"
+    }
+}
+
+[State 15]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "W", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 3,
+      wpc: "locked"
+    }
+}
+
+[State 16]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 17]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 3,
+      wpc: "opened"
+    }
+}
+
+[State 18]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "R", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 3,
+      rpc: "locked",
+      wfd: 3,
+      wpc: "opened"
+    }
+}
+
+[State 19]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "R", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 3,
+      rpc: "locked",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 20]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "R", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 3,
+      rpc: "locked",
+      wfd: 3,
+      wpc: "opened"
+    }
+}
+
+[State 21]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 2,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "R", 4 -> ""),
+      next: 4,
+      path: 3,
+      retries: 0,
+      rfd: 3,
+      rpc: "locked",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 22]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 4,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 23]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "opened"
+    }
+}
+
+[State 24]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> "W"),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "locked"
+    }
+}
+
+[State 25]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 26]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "opened"
+    }
+}
+
+[State 27]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 28]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "opened"
+    }
+}
+
+[State 29]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 3,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> "R"),
+      next: 5,
+      path: 4,
+      retries: 0,
+      rfd: 4,
+      rpc: "locked",
+      wfd: 4,
+      wpc: "opened"
+    }
+}
+
+[State 30]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 4,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "opened"
+    }
+}
+
+[State 31]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 4,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> "W"),
+      next: 5,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 4,
+      wpc: "locked"
+    }
+}
+
+[State 32]
+{
+  presence_ok::presence_lock::s:
+    {
+      deleted: 4,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 5,
+      path: 0,
+      retries: 1,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[violation] Found an issue (12ms at 250 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x21b5 --backend=rust to reproduce.
+error: Invariant violated

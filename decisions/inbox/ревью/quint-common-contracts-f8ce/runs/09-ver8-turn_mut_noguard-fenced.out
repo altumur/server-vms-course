@@ -1,0 +1,214 @@
+# argv: quint verify --main=turn_mut_noguard --invariant=fenced --max-steps=8 turn.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 1]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 0, rel: false, sentAt: 0, who: "A" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 2]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 1, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 3]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 4]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 1, rel: false, sentAt: 0, who: "A" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 5]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 2, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 2,
+      writes: Set()
+    }
+}
+
+[State 6]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 2, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 2,
+      writes: Set({ guard: 1, who: "A" })
+    }
+}
+
+[State 7]
+{
+  turn_mut_noguard::turn::s:
+    {
+      applied: Set({ atVer: 2, guard: 1, holderAt: "A", who: "A" }),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 1 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 2, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "A",
+      turnVer: 2,
+      writes: Set()
+    }
+}
+
+[violation] Found an issue (2209ms).
+error: found a counterexample

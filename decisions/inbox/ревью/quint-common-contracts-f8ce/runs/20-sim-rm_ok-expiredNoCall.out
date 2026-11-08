@@ -1,0 +1,351 @@
+# argv: quint run --main=rm_ok --invariant=expiredNoCall --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 request_mark.qnt
+# exit: 0
+An example execution:
+
+[State 0]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 1]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 2]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 3]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: false
+    }
+}
+
+[State 4]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 5]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 6]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set("H1"),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 7]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set("H1"),
+      row: false,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 8]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: true,
+      lifes: 0,
+      mark: "performed",
+      pending: Set(),
+      row: false,
+      sawPerformed: true,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 9]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 10]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "none",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 11]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 12]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: true
+    }
+}
+
+[State 13]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "unknown",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: true
+    }
+}
+
+[State 14]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 1,
+      mark: "unknown",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 15]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: false,
+      lifes: 1,
+      mark: "unknown",
+      pending: Set("H1"),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 16]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: true,
+      lifes: 1,
+      mark: "performed",
+      pending: Set(),
+      row: true,
+      sawPerformed: true,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 17]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1"),
+      calls: 1,
+      late: true,
+      lifes: 1,
+      mark: "performed",
+      pending: Set(),
+      row: false,
+      sawPerformed: true,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 18]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 2,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[ok] No violation found (6846ms at 14607 traces/second).
+Trace length statistics: max=19, min=11, average=13.86
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x10b23fc --backend=rust to reproduce.

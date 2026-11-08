@@ -1,0 +1,102 @@
+# argv: quint verify --main=presence_mut_nostat --invariant=holderVisible --max-steps=10 presence_lock.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 1,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 0,
+      wpc: "idle"
+    }
+}
+
+[State 1]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 2]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 0,
+      lockBy: Map(1 -> "R", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 1,
+      retries: 0,
+      rfd: 1,
+      rpc: "locked",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 3]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "opened"
+    }
+}
+
+[State 4]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "W", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "locked"
+    }
+}
+
+[State 5]
+{
+  presence_mut_nostat::presence_lock::s:
+    {
+      deleted: 1,
+      lockBy: Map(1 -> "W", 2 -> "", 3 -> "", 4 -> ""),
+      next: 2,
+      path: 0,
+      retries: 0,
+      rfd: 0,
+      rpc: "idle",
+      wfd: 1,
+      wpc: "holding"
+    }
+}
+
+[violation] Found an issue (504ms).
+error: found a counterexample

@@ -1,0 +1,190 @@
+# argv: quint run --main=ts_mut_ack --invariant=ackMeansGone --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 tombstone.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 0,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 1]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 2]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 3]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P2"),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 4]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 2,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P2"),
+      stamp: 2,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 5]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P2"),
+      stamp: 3,
+      tomb: { acked: Set(), old: false, on: true, written: 3 }
+    }
+}
+
+[State 6]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P1", "P2"),
+      stamp: 3,
+      tomb: { acked: Set(), old: false, on: true, written: 3 }
+    }
+}
+
+[State 7]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P1", "P2"),
+      stamp: 3,
+      tomb: { acked: Set(), old: true, on: true, written: 3 }
+    }
+}
+
+[State 8]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P1"),
+      stamp: 3,
+      tomb: { acked: Set(), old: true, on: true, written: 3 }
+    }
+}
+
+[State 9]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 4,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P1"),
+      stamp: 4,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 10]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P1"),
+      stamp: 5,
+      tomb: { acked: Set(), old: false, on: true, written: 5 }
+    }
+}
+
+[State 11]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 5,
+      tomb: { acked: Set(), old: false, on: true, written: 5 }
+    }
+}
+
+[State 12]
+{
+  ts_mut_ack::tombstone::s:
+    {
+      copy: Map("P1" -> 1, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 5,
+      tomb: { acked: Set("P1"), old: false, on: true, written: 5 }
+    }
+}
+
+[violation] Found an issue (15ms at 1333 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x4213 --backend=rust to reproduce.
+error: Invariant violated

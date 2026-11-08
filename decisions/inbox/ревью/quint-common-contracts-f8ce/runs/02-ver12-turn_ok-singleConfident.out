@@ -1,0 +1,330 @@
+# argv: quint verify --main=turn_ok --invariant=singleConfident --max-steps=12 turn.qnt
+# exit: timeout
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /home/pilot/review103-claude-adr0130-quint/decisions/inbox/ревью/quint-common-contracts-f8ce/_apalache-out/server/2026-11-08T14-03-12_6201661910641551201
+# APALACHE version: 0.62.1 | build: a321771                       I@14:03:12.170
+Starting checker server on port 8822...                           I@14:03:12.172
+The Apalache server is running on port 8822. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@14:03:14.181
+PASS #1: TypeCheckerSnowcat                                       I@14:03:14.641
+ > Running Snowcat .::.                                           I@14:03:14.641
+ > Your types are purrfect!                                       I@14:03:15.616
+ > All expressions are typed                                      I@14:03:15.616
+PASS #2: ConfigurationPass                                        I@14:03:15.617
+  > Set the initialization predicate to q::init                   I@14:03:15.619
+  > Set the transition predicate to q::step                       I@14:03:15.619
+  > Set an invariant to q::inv                                    I@14:03:15.620
+PASS #3: DesugarerPass                                            I@14:03:15.623
+  > Desugaring...                                                 I@14:03:15.623
+PASS #4: InlinePass                                               I@14:03:15.629
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@14:03:15.630
+PASS #5: TemporalPass                                             I@14:03:15.664
+  > Rewriting temporal operators...                               I@14:03:15.665
+  > No temporal property specified, nothing to encode             I@14:03:15.665
+PASS #6: InlinePass                                               I@14:03:15.665
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@14:03:15.665
+PASS #7: PrimingPass                                              I@14:03:15.671
+  > Introducing q::initPrimed for q::init'                        I@14:03:15.673
+PASS #8: VCGen                                                    I@14:03:15.674
+  > Producing verification conditions from the invariant q::inv   I@14:03:15.674
+  > VCGen produced 1 verification condition(s)                    I@14:03:15.677
+PASS #9: PreprocessingPass                                        I@14:03:15.680
+  > Before preprocessing: unique renaming                         I@14:03:15.681
+ > Applying standard transformations:                             I@14:03:15.685
+  > PrimePropagation                                              I@14:03:15.685
+  > Desugarer                                                     I@14:03:15.688
+  > UniqueRenamer                                                 I@14:03:15.691
+  > Normalizer                                                    I@14:03:15.694
+  > SetMembershipSimplifier                                       I@14:03:15.698
+  > Keramelizer                                                   I@14:03:15.700
+  > After preprocessing: UniqueRenamer                            I@14:03:15.707
+PASS #10: TransitionFinderPass                                    I@14:03:15.711
+  > Found 1 initializing transitions                              I@14:03:15.719
+  > Found 13 transitions                                          I@14:03:15.726
+  > No constant initializer                                       I@14:03:15.727
+  > Applying unique renaming                                      I@14:03:15.727
+PASS #11: OptimizationPass                                        I@14:03:15.730
+ > Applying optimizations:                                        I@14:03:15.733
+  > ConstSimplifier                                               I@14:03:15.733
+  > ExprOptimizer                                                 I@14:03:15.739
+  > SetMembershipSimplifier                                       I@14:03:15.741
+  > ConstSimplifier                                               I@14:03:15.742
+PASS #12: AnalysisPass                                            I@14:03:15.747
+ > Marking skolemizable existentials and sets to be expanded...   I@14:03:15.750
+  > Skolemization                                                 I@14:03:15.750
+  > Expansion                                                     I@14:03:15.751
+  > Remove unused let-in defs                                     I@14:03:15.753
+ > Running analyzers...                                           I@14:03:15.755
+  > Introduced expression grades                                  I@14:03:15.758
+PASS #13: BoundedChecker                                          I@14:03:15.758
+State 0: Checking 1 state invariants                              I@14:03:16.002
+State 0: state invariant 0 holds.                                 I@14:03:16.021
+Step 0: picking a transition out of 1 transition(s)               I@14:03:16.022
+State 1: Checking 1 state invariants                              I@14:03:16.032
+State 1: state invariant 0 holds.                                 I@14:03:16.039
+Step 1: Transition #1 is disabled                                 I@14:03:16.052
+State 1: Checking 1 state invariants                              I@14:03:16.071
+State 1: state invariant 0 holds.                                 I@14:03:16.078
+Step 1: Transition #3 is disabled                                 I@14:03:16.088
+Step 1: Transition #4 is disabled                                 I@14:03:16.101
+Step 1: Transition #5 is disabled                                 I@14:03:16.112
+Step 1: Transition #6 is disabled                                 I@14:03:16.120
+Step 1: Transition #7 is disabled                                 I@14:03:16.123
+Step 1: Transition #8 is disabled                                 I@14:03:16.125
+Step 1: Transition #9 is disabled                                 I@14:03:16.126
+Step 1: Transition #10 is disabled                                I@14:03:16.128
+Step 1: Transition #11 is disabled                                I@14:03:16.129
+Step 1: Transition #12 is disabled                                I@14:03:16.131
+Step 1: picking a transition out of 2 transition(s)               I@14:03:16.131
+State 2: Checking 1 state invariants                              I@14:03:16.146
+State 2: state invariant 0 holds.                                 I@14:03:16.151
+Step 2: Transition #1 is disabled                                 I@14:03:16.159
+State 2: Checking 1 state invariants                              I@14:03:16.168
+State 2: state invariant 0 holds.                                 I@14:03:16.172
+Step 2: Transition #3 is disabled                                 I@14:03:16.181
+Step 2: Transition #4 is disabled                                 I@14:03:16.192
+Step 2: Transition #5 is disabled                                 I@14:03:16.202
+Step 2: Transition #6 is disabled                                 I@14:03:16.208
+State 2: Checking 1 state invariants                              I@14:03:16.215
+State 2: state invariant 0 holds.                                 I@14:03:16.220
+Step 2: Transition #8 is disabled                                 I@14:03:16.222
+Step 2: Transition #9 is disabled                                 I@14:03:16.224
+Step 2: Transition #10 is disabled                                I@14:03:16.225
+Step 2: Transition #11 is disabled                                I@14:03:16.227
+Step 2: Transition #12 is disabled                                I@14:03:16.228
+Step 2: picking a transition out of 3 transition(s)               I@14:03:16.229
+State 3: Checking 1 state invariants                              I@14:03:16.239
+State 3: state invariant 0 holds.                                 I@14:03:16.244
+State 3: Checking 1 state invariants                              I@14:03:16.251
+State 3: state invariant 0 holds.                                 I@14:03:16.256
+State 3: Checking 1 state invariants                              I@14:03:16.264
+State 3: state invariant 0 holds.                                 I@14:03:16.268
+Step 3: Transition #3 is disabled                                 I@14:03:16.275
+Step 3: Transition #4 is disabled                                 I@14:03:16.285
+Step 3: Transition #5 is disabled                                 I@14:03:16.294
+Step 3: Transition #6 is disabled                                 I@14:03:16.299
+State 3: Checking 1 state invariants                              I@14:03:16.305
+State 3: state invariant 0 holds.                                 I@14:03:16.309
+Step 3: Transition #8 is disabled                                 I@14:03:16.313
+State 3: Checking 1 state invariants                              I@14:03:16.321
+State 3: state invariant 0 holds.                                 I@14:03:16.326
+State 3: Checking 1 state invariants                              I@14:03:16.329
+State 3: state invariant 0 holds.                                 I@14:03:16.332
+Step 3: Transition #11 is disabled                                I@14:03:16.334
+Step 3: Transition #12 is disabled                                I@14:03:16.335
+Step 3: picking a transition out of 6 transition(s)               I@14:03:16.335
+State 4: Checking 1 state invariants                              I@14:03:16.351
+State 4: state invariant 0 holds.                                 I@14:03:16.356
+State 4: Checking 1 state invariants                              I@14:03:16.363
+State 4: state invariant 0 holds.                                 I@14:03:16.368
+State 4: Checking 1 state invariants                              I@14:03:16.377
+State 4: state invariant 0 holds.                                 I@14:03:16.382
+State 4: Checking 1 state invariants                              I@14:03:16.391
+State 4: state invariant 0 holds.                                 I@14:03:16.396
+State 4: Checking 1 state invariants                              I@14:03:16.408
+State 4: state invariant 0 holds.                                 I@14:03:16.413
+State 4: Checking 1 state invariants                              I@14:03:16.424
+State 4: state invariant 0 holds.                                 I@14:03:16.429
+State 4: Checking 1 state invariants                              I@14:03:16.439
+State 4: state invariant 0 holds.                                 I@14:03:16.445
+State 4: Checking 1 state invariants                              I@14:03:16.455
+State 4: state invariant 0 holds.                                 I@14:03:16.460
+State 4: Checking 1 state invariants                              I@14:03:16.466
+State 4: state invariant 0 holds.                                 I@14:03:16.471
+State 4: Checking 1 state invariants                              I@14:03:16.483
+State 4: state invariant 0 holds.                                 I@14:03:16.490
+State 4: Checking 1 state invariants                              I@14:03:16.497
+State 4: state invariant 0 holds.                                 I@14:03:16.502
+Step 4: Transition #11 is disabled                                I@14:03:16.505
+Step 4: Transition #12 is disabled                                I@14:03:16.506
+Step 4: picking a transition out of 11 transition(s)              I@14:03:16.506
+State 5: Checking 1 state invariants                              I@14:03:16.532
+State 5: state invariant 0 holds.                                 I@14:03:16.540
+State 5: Checking 1 state invariants                              I@14:03:16.549
+State 5: state invariant 0 holds.                                 I@14:03:16.555
+State 5: Checking 1 state invariants                              I@14:03:16.567
+State 5: state invariant 0 holds.                                 I@14:03:16.574
+State 5: Checking 1 state invariants                              I@14:03:16.586
+State 5: state invariant 0 holds.                                 I@14:03:16.593
+State 5: Checking 1 state invariants                              I@14:03:16.609
+State 5: state invariant 0 holds.                                 I@14:03:16.616
+State 5: Checking 1 state invariants                              I@14:03:16.632
+State 5: state invariant 0 holds.                                 I@14:03:16.639
+State 5: Checking 1 state invariants                              I@14:03:16.654
+State 5: state invariant 0 holds.                                 I@14:03:16.661
+State 5: Checking 1 state invariants                              I@14:03:16.677
+State 5: state invariant 0 holds.                                 I@14:03:16.684
+State 5: Checking 1 state invariants                              I@14:03:16.696
+State 5: state invariant 0 holds.                                 I@14:03:16.704
+State 5: Checking 1 state invariants                              I@14:03:16.718
+State 5: state invariant 0 holds.                                 I@14:03:16.729
+State 5: Checking 1 state invariants                              I@14:03:16.739
+State 5: state invariant 0 holds.                                 I@14:03:16.746
+State 5: Checking 1 state invariants                              I@14:03:16.755
+State 5: state invariant 0 holds.                                 I@14:03:16.761
+Step 5: Transition #12 is disabled                                I@14:03:16.765
+Step 5: picking a transition out of 12 transition(s)              I@14:03:16.766
+State 6: Checking 1 state invariants                              I@14:03:16.835
+State 6: state invariant 0 holds.                                 I@14:03:16.850
+State 6: Checking 1 state invariants                              I@14:03:16.867
+State 6: state invariant 0 holds.                                 I@14:03:16.882
+State 6: Checking 1 state invariants                              I@14:03:16.904
+State 6: state invariant 0 holds.                                 I@14:03:16.922
+State 6: Checking 1 state invariants                              I@14:03:16.943
+State 6: state invariant 0 holds.                                 I@14:03:16.958
+State 6: Checking 1 state invariants                              I@14:03:16.987
+State 6: state invariant 0 holds.                                 I@14:03:16.995
+State 6: Checking 1 state invariants                              I@14:03:17.014
+State 6: state invariant 0 holds.                                 I@14:03:17.025
+State 6: Checking 1 state invariants                              I@14:03:17.051
+State 6: state invariant 0 holds.                                 I@14:03:17.063
+State 6: Checking 1 state invariants                              I@14:03:17.100
+State 6: state invariant 0 holds.                                 I@14:03:17.124
+State 6: Checking 1 state invariants                              I@14:03:17.148
+State 6: state invariant 0 holds.                                 I@14:03:17.160
+State 6: Checking 1 state invariants                              I@14:03:17.191
+State 6: state invariant 0 holds.                                 I@14:03:17.211
+State 6: Checking 1 state invariants                              I@14:03:17.230
+State 6: state invariant 0 holds.                                 I@14:03:17.246
+State 6: Checking 1 state invariants                              I@14:03:17.270
+State 6: state invariant 0 holds.                                 I@14:03:17.284
+Step 6: Transition #12 is disabled                                I@14:03:17.300
+Step 6: picking a transition out of 12 transition(s)              I@14:03:17.301
+State 7: Checking 1 state invariants                              I@14:03:17.343
+State 7: state invariant 0 holds.                                 I@14:03:17.378
+State 7: Checking 1 state invariants                              I@14:03:17.424
+State 7: state invariant 0 holds.                                 I@14:03:17.450
+State 7: Checking 1 state invariants                              I@14:03:17.490
+State 7: state invariant 0 holds.                                 I@14:03:17.505
+State 7: Checking 1 state invariants                              I@14:03:17.531
+State 7: state invariant 0 holds.                                 I@14:03:17.561
+State 7: Checking 1 state invariants                              I@14:03:17.602
+State 7: state invariant 0 holds.                                 I@14:03:17.609
+State 7: Checking 1 state invariants                              I@14:03:17.660
+State 7: state invariant 0 holds.                                 I@14:03:17.669
+State 7: Checking 1 state invariants                              I@14:03:17.699
+State 7: state invariant 0 holds.                                 I@14:03:17.722
+State 7: Checking 1 state invariants                              I@14:03:17.777
+State 7: state invariant 0 holds.                                 I@14:03:17.820
+State 7: Checking 1 state invariants                              I@14:03:17.884
+State 7: state invariant 0 holds.                                 I@14:03:17.925
+State 7: Checking 1 state invariants                              I@14:03:17.956
+State 7: state invariant 0 holds.                                 I@14:03:18.045
+State 7: Checking 1 state invariants                              I@14:03:18.081
+State 7: state invariant 0 holds.                                 I@14:03:18.132
+State 7: Checking 1 state invariants                              I@14:03:18.189
+State 7: state invariant 0 holds.                                 I@14:03:18.215
+State 7: Checking 1 state invariants                              I@14:03:18.271
+State 7: state invariant 0 holds.                                 I@14:03:18.293
+Step 7: picking a transition out of 13 transition(s)              I@14:03:18.294
+State 8: Checking 1 state invariants                              I@14:03:18.392
+State 8: state invariant 0 holds.                                 I@14:03:18.519
+State 8: Checking 1 state invariants                              I@14:03:18.566
+State 8: state invariant 0 holds.                                 I@14:03:18.672
+State 8: Checking 1 state invariants                              I@14:03:18.755
+State 8: state invariant 0 holds.                                 I@14:03:18.780
+State 8: Checking 1 state invariants                              I@14:03:18.852
+State 8: state invariant 0 holds.                                 I@14:03:18.978
+State 8: Checking 1 state invariants                              I@14:03:19.045
+State 8: state invariant 0 holds.                                 I@14:03:19.061
+State 8: Checking 1 state invariants                              I@14:03:19.132
+State 8: state invariant 0 holds.                                 I@14:03:19.141
+State 8: Checking 1 state invariants                              I@14:03:19.198
+State 8: state invariant 0 holds.                                 I@14:03:19.340
+State 8: Checking 1 state invariants                              I@14:03:19.394
+State 8: state invariant 0 holds.                                 I@14:03:19.542
+State 8: Checking 1 state invariants                              I@14:03:19.636
+State 8: state invariant 0 holds.                                 I@14:03:19.748
+State 8: Checking 1 state invariants                              I@14:03:19.805
+State 8: state invariant 0 holds.                                 I@14:03:20.339
+State 8: Checking 1 state invariants                              I@14:03:20.424
+State 8: state invariant 0 holds.                                 I@14:03:20.559
+State 8: Checking 1 state invariants                              I@14:03:20.668
+State 8: state invariant 0 holds.                                 I@14:03:20.760
+State 8: Checking 1 state invariants                              I@14:03:20.856
+State 8: state invariant 0 holds.                                 I@14:03:20.935
+Step 8: picking a transition out of 13 transition(s)              I@14:03:20.937
+State 9: Checking 1 state invariants                              I@14:03:21.057
+State 9: state invariant 0 holds.                                 I@14:03:21.660
+State 9: Checking 1 state invariants                              I@14:03:21.725
+State 9: state invariant 0 holds.                                 I@14:03:22.341
+State 9: Checking 1 state invariants                              I@14:03:22.453
+State 9: state invariant 0 holds.                                 I@14:03:22.513
+State 9: Checking 1 state invariants                              I@14:03:22.622
+State 9: state invariant 0 holds.                                 I@14:03:23.270
+State 9: Checking 1 state invariants                              I@14:03:23.382
+State 9: state invariant 0 holds.                                 I@14:03:23.400
+State 9: Checking 1 state invariants                              I@14:03:23.549
+State 9: state invariant 0 holds.                                 I@14:03:23.562
+State 9: Checking 1 state invariants                              I@14:03:23.715
+State 9: state invariant 0 holds.                                 I@14:03:24.426
+State 9: Checking 1 state invariants                              I@14:03:24.711
+State 9: state invariant 0 holds.                                 I@14:03:25.257
+State 9: Checking 1 state invariants                              I@14:03:25.358
+State 9: state invariant 0 holds.                                 I@14:03:26.089
+State 9: Checking 1 state invariants                              I@14:03:26.215
+State 9: state invariant 0 holds.                                 I@14:03:28.474
+State 9: Checking 1 state invariants                              I@14:03:28.601
+State 9: state invariant 0 holds.                                 I@14:03:28.864
+State 9: Checking 1 state invariants                              I@14:03:29.006
+State 9: state invariant 0 holds.                                 I@14:03:29.290
+State 9: Checking 1 state invariants                              I@14:03:29.434
+State 9: state invariant 0 holds.                                 I@14:03:29.776
+Step 9: picking a transition out of 13 transition(s)              I@14:03:29.777
+State 10: Checking 1 state invariants                             I@14:03:29.974
+State 10: state invariant 0 holds.                                I@14:03:32.714
+State 10: Checking 1 state invariants                             I@14:03:32.830
+State 10: state invariant 0 holds.                                I@14:03:35.808
+State 10: Checking 1 state invariants                             I@14:03:35.982
+State 10: state invariant 0 holds.                                I@14:03:36.039
+State 10: Checking 1 state invariants                             I@14:03:36.211
+State 10: state invariant 0 holds.                                I@14:03:40.489
+State 10: Checking 1 state invariants                             I@14:03:40.675
+State 10: state invariant 0 holds.                                I@14:03:40.789
+State 10: Checking 1 state invariants                             I@14:03:40.981
+State 10: state invariant 0 holds.                                I@14:03:41.026
+State 10: Checking 1 state invariants                             I@14:03:41.176
+State 10: state invariant 0 holds.                                I@14:03:44.281
+State 10: Checking 1 state invariants                             I@14:03:44.568
+State 10: state invariant 0 holds.                                I@14:03:46.316
+State 10: Checking 1 state invariants                             I@14:03:46.470
+State 10: state invariant 0 holds.                                I@14:03:49.509
+State 10: Checking 1 state invariants                             I@14:03:49.663
+State 10: state invariant 0 holds.                                I@14:04:04.716
+State 10: Checking 1 state invariants                             I@14:04:04.923
+State 10: state invariant 0 holds.                                I@14:04:06.241
+State 10: Checking 1 state invariants                             I@14:04:06.447
+State 10: state invariant 0 holds.                                I@14:04:08.032
+State 10: Checking 1 state invariants                             I@14:04:08.543
+State 10: state invariant 0 holds.                                I@14:04:10.425
+Step 10: picking a transition out of 13 transition(s)             I@14:04:10.429
+State 11: Checking 1 state invariants                             I@14:04:10.694
+State 11: state invariant 0 holds.                                I@14:04:29.802
+State 11: Checking 1 state invariants                             I@14:04:30.031
+State 11: state invariant 0 holds.                                I@14:04:44.438
+State 11: Checking 1 state invariants                             I@14:04:44.673
+State 11: state invariant 0 holds.                                I@14:04:44.743
+State 11: Checking 1 state invariants                             I@14:04:45.091
+State 11: state invariant 0 holds.                                I@14:05:01.146
+State 11: Checking 1 state invariants                             I@14:05:01.769
+State 11: state invariant 0 holds.                                I@14:05:01.786
+State 11: Checking 1 state invariants                             I@14:05:01.988
+State 11: state invariant 0 holds.                                I@14:05:02.040
+State 11: Checking 1 state invariants                             I@14:05:03.185
+State 11: state invariant 0 holds.                                I@14:05:18.604
+State 11: Checking 1 state invariants                             I@14:05:18.873
+State 11: state invariant 0 holds.                                I@14:05:30.386
+State 11: Checking 1 state invariants                             I@14:05:30.631
+State 11: state invariant 0 holds.                                I@14:05:45.744
+State 11: Checking 1 state invariants                             I@14:05:46.348
+State 11: state invariant 0 holds.                                I@14:06:51.041
+State 11: Checking 1 state invariants                             I@14:06:51.390
+State 11: state invariant 0 holds.                                I@14:06:59.041
+State 11: Checking 1 state invariants                             I@14:06:59.414
+State 11: state invariant 0 holds.                                I@14:07:06.745
+State 11: Checking 1 state invariants                             I@14:07:07.319
+State 11: state invariant 0 holds.                                I@14:07:20.041
+Step 11: picking a transition out of 13 transition(s)             I@14:07:20.048
+State 12: Checking 1 state invariants                             I@14:07:20.366

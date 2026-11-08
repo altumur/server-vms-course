@@ -1,0 +1,98 @@
+# argv: quint run --main=rm_mut_nomark --invariant=atMostOneCall --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 request_mark.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 1]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 2]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "",
+      called: Set("H2"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set("H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 3]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H2"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set("H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 4]
+{
+  rm_mut_nomark::request_mark::s:
+    {
+      began: "H1",
+      called: Set("H1", "H2"),
+      calls: 2,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set("H1", "H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[violation] Found an issue (12ms at 583 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x24b0 --backend=rust to reproduce.
+error: Invariant violated

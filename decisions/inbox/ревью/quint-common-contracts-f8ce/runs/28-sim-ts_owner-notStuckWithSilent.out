@@ -1,0 +1,92 @@
+# argv: quint run --main=ts_owner --invariant=notStuckWithSilent --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 tombstone.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 0,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 1]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 1,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 1,
+      tomb: { acked: Set(), old: false, on: false, written: 0 }
+    }
+}
+
+[State 2]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set(), old: false, on: true, written: 2 }
+    }
+}
+
+[State 3]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set(),
+      stamp: 2,
+      tomb: { acked: Set("P1"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 4]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P2"),
+      stamp: 2,
+      tomb: { acked: Set("P1"), old: false, on: true, written: 2 }
+    }
+}
+
+[State 5]
+{
+  ts_owner::tombstone::s:
+    {
+      copy: Map("P1" -> 0, "P2" -> 0),
+      d: 0,
+      removals: 0,
+      removedAt: 0,
+      silent: Set("P2"),
+      stamp: 2,
+      tomb: { acked: Set("P1"), old: true, on: true, written: 2 }
+    }
+}
+
+[violation] Found an issue (12ms at 333 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2598 --backend=rust to reproduce.
+error: Invariant violated

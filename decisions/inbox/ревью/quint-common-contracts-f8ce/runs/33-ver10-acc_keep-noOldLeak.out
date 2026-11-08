@@ -1,0 +1,5 @@
+# argv: quint verify --main=acc_keep --invariant=noOldLeak --max-steps=10 accept_gen.qnt
+# exit: 0
+[ok] No violation found (591ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

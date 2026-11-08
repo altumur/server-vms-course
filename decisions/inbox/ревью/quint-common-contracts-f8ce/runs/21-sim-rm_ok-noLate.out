@@ -1,0 +1,170 @@
+# argv: quint run --main=rm_ok --invariant=noLate --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 request_mark.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: false,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 1]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "none",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 2]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: false
+    }
+}
+
+[State 3]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: false,
+      timedOut: true
+    }
+}
+
+[State 4]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "begun",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 5]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set(),
+      calls: 0,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set(),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 6]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set("H2"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set("H2"),
+      row: true,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 7]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set("H2"),
+      calls: 1,
+      late: false,
+      lifes: 0,
+      mark: "unknown",
+      pending: Set("H2"),
+      row: false,
+      sawPerformed: false,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[State 8]
+{
+  rm_ok::request_mark::s:
+    {
+      began: "H2",
+      called: Set("H2"),
+      calls: 1,
+      late: true,
+      lifes: 0,
+      mark: "performed",
+      pending: Set(),
+      row: false,
+      sawPerformed: true,
+      termExpired: true,
+      timedOut: true
+    }
+}
+
+[violation] Found an issue (12ms at 83 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2026 --backend=rust to reproduce.
+error: Invariant violated

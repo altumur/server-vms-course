@@ -1,0 +1,5 @@
+# argv: quint verify --main=turn_drift --invariant=onlyHolderWrites --max-steps=10 turn.qnt
+# exit: 0
+[ok] No violation found (27291ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

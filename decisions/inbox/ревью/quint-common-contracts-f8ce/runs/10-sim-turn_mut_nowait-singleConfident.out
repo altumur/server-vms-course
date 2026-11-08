@@ -1,0 +1,216 @@
+# argv: quint run --main=turn_mut_nowait --invariant=singleConfident --max-samples=100000 --max-steps=40 --seed=0x2026 --backend=rust --n-threads=8 turn.qnt
+# exit: 1
+An example execution:
+
+[State 0]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 1]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 0, rel: false, sentAt: 0, who: "B" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "",
+      turnVer: 0,
+      writes: Set()
+    }
+}
+
+[State 2]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: false, sentAt: 0, ver: 0 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 1, who: "B" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "B",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 3]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: true, sentAt: 0, ver: 1 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "", ver: 0 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "B",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 4]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: true, sentAt: 0, ver: 1 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "B", ver: 1 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "B",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 5]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: true, sentAt: 0, ver: 1 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set({ cas: 1, rel: false, sentAt: 0, who: "A" }),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "B", ver: 1 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 0,
+      turnHolder: "B",
+      turnVer: 1,
+      writes: Set()
+    }
+}
+
+[State 6]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: false, sentAt: 0, ver: 0 },
+          "B" -> { has: true, sentAt: 0, ver: 1 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set({ sentAt: 0, ver: 2, who: "A" }),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "B", ver: 1 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 1,
+      turnHolder: "A",
+      turnVer: 2,
+      writes: Set()
+    }
+}
+
+[State 7]
+{
+  turn_mut_nowait::turn::s:
+    {
+      applied: Set(),
+      belief:
+        Map(
+          "A" -> { has: true, sentAt: 0, ver: 2 },
+          "B" -> { has: true, sentAt: 0, ver: 1 }
+        ),
+      clock: Map("A" -> 0, "B" -> 0),
+      refused: 0,
+      replies: Set(),
+      reqs: Set(),
+      seen:
+        Map(
+          "A" -> { at: 0, holder: "B", ver: 1 },
+          "B" -> { at: 0, holder: "", ver: 0 }
+        ),
+      takeovers: 1,
+      turnHolder: "A",
+      turnVer: 2,
+      writes: Set()
+    }
+}
+
+[violation] Found an issue (17ms at 235 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x24b5 --backend=rust to reproduce.
+error: Invariant violated

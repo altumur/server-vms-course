@@ -1,0 +1,5 @@
+# argv: quint verify --main=presence_ok --invariant=holderVisible --max-steps=14 presence_lock.qnt
+# exit: 0
+[ok] No violation found (2193ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.
