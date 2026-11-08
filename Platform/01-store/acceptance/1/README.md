@@ -5,6 +5,10 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
 [`01.1-store.norms.md`](../../spec/01.1-store.norms.md) N5.
 
+## Profile interface
+
+The profile is `01-store` in the [generic profile and assembly contract](../../../common/acceptance/PROFILE.md). `stand.store1` starts a fresh store instance for this chapter: it consumes the assigned data directory, administrative socket, prepared rights file and the body/row test parameters through the common stand substitutions. Its ordinary side serves the published `acc` role. `keys.request_line_limit` names the implementation's request-line boundary; `keys.role_header` names its role-forwarding header where a probe needs one. The optional `adapters.door` exposes the same ordinary/admin operations through the persistent transport of the common contract; it does not replace raw HTTP checks. The JCS package uses the `vectors` entry assigned by its [wire form](../../../common/vectors/wire.tsv), not a guessed `stand.jcs` invocation. The implementation chooses its own executable names and flags and binds these responsibilities in its profile.
+
 ## `scenarios.tsv`
 
 The format is the dictionary of directives and doors of the common acceptance README. Specific to chapter 1.1:

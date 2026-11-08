@@ -16,6 +16,10 @@ Every scenario has fresh temporary roots; ring-file inputs are owned strings wit
 
 The source traces exercise the complete machine; these seven sampled poll scenarios are a smaller implementation regression. They do not prove the real rollout, get/install, store and console barriers, OS/service-manager effects, TLS, revocation, operator windows or remote-client behavior. Those retain the named checks of the norms and readiness checklist. The 947 loader cases, existing puts tables and rights acceptance remain separate. No implementation was run when preparing these seams.
 
+## Profile interface
+
+The [generic profile contract](../../../common/acceptance/PROFILE.md) does not make these generated CALL seams into a new public stand target. The `02-installer` vector interfaces `stand.workers-script`, `stand.platform-lists`, `stand.exec`, `stand.install-order` and `stand.env-line` each receive `{input}` with the exact native input and outcome assigned by their package rows in the [wire form](../../../common/vectors/wire.tsv) and package README. They call the implementation's own functions. `stand.ring` creates the ring at `{file}` through the existing secrets command; it is not a permission to replace an existing file. A `vectors` envelope is used only on a surface explicitly declared by that form, without inventing an alias for a native stand command. These declarations do not connect or execute the otherwise unbound seams.
+
 ## Inputs
 
 [`inputs/seam-bad.subsystem.yaml`](inputs/seam-bad.subsystem.yaml) is the owned fixture of `s1-put-invalid-source`: a YAML document with only `name`, missing the mandatory manifest structure. The scenario copies it with `@file`, calls the normal `manifest put`, and checks the refusal and unchanged source bytes. It is deliberately outside the accepted manifest corpus. The remaining file inputs are literal owned strings in the seam table.

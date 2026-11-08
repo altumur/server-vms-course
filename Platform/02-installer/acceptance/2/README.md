@@ -9,6 +9,10 @@ the chapter 2.2 canonical-view window of 2026-10-20, section 4 and the Architect
 any write, a view above the ceiling is a refusal of the installation as a whole, the write order is row, view, mark last. The bytes of the view are
 the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
 
+## Profile interface
+
+Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). The canonical-function package uses `stand.canonical` with `{input}`: the file path names the manifest input assigned by the package, and stdout contains exactly the canonical bytes of its [wire form](../../../common/vectors/wire.tsv). The installation checks below use `stand.manifest-put` with `{socket}` and `{file}`; the own command performs the normal installation rather than only printing a canonical view. Store launch parameters belong to the selected `01-store` profile. No complete positive-profile provider, sufficient B/V or recovery execution follows from declaring these commands.
+
 ## puts.tsv
 
 The format of `puts.tsv` of [chapter 2.3](../3/README.md) with a fourth column `canonical` and with directives between files. The installation is

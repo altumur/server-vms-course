@@ -30,6 +30,7 @@ vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  the vectors of the com
                            review analysis of stage B 8–10, № 22)
 contracts/gate-and-pass.api.openapi.yaml  the common body forms of the gate-and-pass contract (Denied; referenced by P/06, P/08, P/10)
 acceptance/README.md       the common acceptance stand: the dictionary of directives and doors, the domain stand
+acceptance/PROFILE.md      the complete generic acceptance profile v2 and assembly v1, substitutions, adapters and vector wire
 acceptance/system/         end-to-end scenarios of several micromodules
 acceptance/pass/           the pass of the second kind with the stand-in worker of the runner
 acceptance/ops/            the stand of group operations door.pass.operations (ADR-0095)
