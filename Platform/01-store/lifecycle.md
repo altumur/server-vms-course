@@ -66,7 +66,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 
 | What | How | Norm |
 |---|---|---|
-| SIGTERM | a stop; `TimeoutStopSec` 20–30 | P/02.4 N1.1 |
+| SIGTERM | stop admission, bound/cancel I/O, classify admitted work and release resources within the declared orderly-stop budget below the actual manager deadline; no automatic budget from an example | [P/01.3 Snapshot output and orderly stop](spec/01.3-store.norms.md#snapshot-output-and-orderly-stop); P/02.4 N1.1 |
 | restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | readiness | the socket is open; `After=configstore.service` at the others is an order, not readiness: each process itself waits for a reliable read | P/02.4 N3 «server start», «Races» |
 | durability | the barriers are switched off neither by the environment nor by an operation flag | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |

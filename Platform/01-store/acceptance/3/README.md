@@ -212,3 +212,7 @@ This is a subject of a manual check of the specification and of a future check o
 ## Non-default service body limit
 
 Use the existing fresh-stand body_limit parameter (the daemon -max-body), for example2097152 from the status-limit witness above. Let B be that actual limit reported by max_body. Send POST /metrics with one JSON object padded by JSON whitespace to exactly B entity bytes: the frame passes and the existing method outcome is405. At B+1 entity bytes the answer is413 before the method outcome, with BodyTooLargeFault.limit equal to B, not the row ceiling or the default of the flag. Repeat the oversized body at a service POST route: it is refused before JSON/body or membership work. Compare membership before/after; it is unchanged. Preserve the ordinary full Fault/header checks and the independent max_value observation. No new profile key, command spelling or request grammar is needed. These are raw HTTP probe obligations on the actual daemon, not a source/schema execution result.
+
+## Production qualification coverage
+
+The [production acceptance contract](../../spec/production-acceptance.md) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.

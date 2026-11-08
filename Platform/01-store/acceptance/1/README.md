@@ -151,3 +151,7 @@ The complete previous 15 seam scenarios / 239 steps remain byte-exact. s16–s18
 s19 starts at the existing clock2000000000. +0.0000001 is converted to the same binary64 value before max, so not_before2000000000 gives early. After a further +0.0003999, a bound2000000000.0002 passes. Roll back0.0004, reopen, and apply the same bound to another row: it still passes because the assigned fractional binary64 admission value survived. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.
 
 All four cases use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
+
+## Production qualification coverage
+
+The [production acceptance contract](../../spec/production-acceptance.md) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.

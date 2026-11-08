@@ -272,11 +272,7 @@ ConsoleRefusal, `detail` is the name of the parameter (a door with its own `deta
 (= « 1»), `%2B1` (= `+1`), `%201`, `1e3`, `-0`, `1_0`, `.5`, `limit=01` — 400; `%31` (= `1`) — accepted. The grammar of the resource
 door is its own (P/05 N1.3).
 
-**Early refusal.** A door that refuses before reading the whole body (`Content-Length` greater than the limit — `413`; any other
-  refusal before the body) sends the full answer with `Connection: close`, then reads and discards what is sent, without parsing, up to
-  the declared length, but no more than the volume and no longer than the drain term, and only after that closes the connection: a client
-  that still sends the body gets the answer, not a connection reset. The rule is one for all HTTP doors of the module (the console —
-  [P/06.5](../../06-console/spec/06.5-console.norms.md) N2 «Console request parsing», the bytes door — P/06.1 N2, the resource door — P/05 N2 «Query parsing»); the volume and the drain term are item 9 of «Implementation decides».
+**Early refusal.** Follow P/01.1 R050: send the complete refusal with `Connection: close` first, then discard raw HTTP-stream bytes without parsing/execution, bounded by the declared length when framing supplies one, the declared raw-byte limit and the absolute monotonic drain deadline. The interval starts after the complete refusal is sent; a trickle does not extend it and chunked discard does not wait for a terminal chunk. Then close; add no second refusal or executed pipelined request. The console ([P/06.5](../../06-console/spec/06.5-console.norms.md)), its bytes door (P/06.1) and the resource (P/05) keep their own outcomes and declared limits. This reference does not copy P/01 input-timeout responses/budgets onto them: console slow-body `408` and BODY_WAIT from headers remain owned here; forwarding, pass and stream response budgets are not replaced by a common P/01 response deadline.
 
 A body refusal at the doors of the console: chunked — 400, larger than the limit — 413, slow — 408, short — 400; the body ConsoleRefusal
 `{detail, error: denied}` (P/06.5 N4 the row «body»; GP-L03, the Architect's decision of 2026-10-28).

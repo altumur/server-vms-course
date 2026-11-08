@@ -58,7 +58,7 @@ The one-box daemon work is split into `daemon_doors` (the service doors and stat
 3. The HTTP layer and the mapping of the refusals of N4 ([`forms/refusals.tsv`](../forms/refusals.tsv)).
 4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling and body limit declared by the acceptance stand (N5), separately. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.
 5. If a file-based store is chosen: check indivisibility, versions, durability barriers, a damaged row (`Row.unreadable`). Run the scenarios again.
-6. Go through the checklist of chapter 1.1 (P/01.1-01…31); for the items «checked by reading», state in the implementation description where in the code this is ensured.
+6. Go through the checklist of chapter 1.1 (P/01.1-01…32); for the items «checked by reading», state in the implementation description where in the code this is ensured.
 
 ### Chapter 1.2 — the rights file and the evaluator
 
@@ -141,7 +141,7 @@ Chapter 1.3:
   per the acceptance README of chapter 1.1; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand (for the box build — not_applicable);
 - [ ] (SHOULD) the same scenarios are green through the in-process API for each data store;
 - [ ] the implementation description answers all items of the section «Implementation decides»;
-- [ ] each item of the checklists P/01.1-01…31, P/01.2-01…09, P/01.3-01…11 is either closed by a scenario, or the description states the place in the
+- [ ] each item of the checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 is either closed by a scenario, or the description states the place in the
   code; the reading evidence names the files and the checked subject (never, denials, trusted forwarding); reading does not
   prove fsync or failover — the results of the implementation or of an operator stand are needed;
 - [ ] `QUESTIONS.md` is empty or each question has been passed to the author of the norms.
@@ -156,3 +156,7 @@ Chapter 1.3:
 | an AI made a mistake and was corrected by a person | a row in `corrections-<K>.tsv` (historical correction record) of the chapter (ADR-0080 addendum 1) |
 
 An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; one byte above the effective `-max-body` — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.
+
+## Production qualification
+
+Read [production acceptance](production-acceptance.md) with the norms. Functional gates and the engineering group stage do not establish production qualification. State the declared workload/resources and finite budgets, then bind independent storage/time/fault/stream observations. Missing input or capability remains blocked/NotExecuted; no profile field, platform port or runtime flag is created by this declaration.
