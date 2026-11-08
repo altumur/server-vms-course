@@ -1,0 +1,269 @@
+$ quint verify --main=S_m_standin --max-steps=12 --invariant=NoStandinWriteAfterRelease --server-endpoint=localhost:8834 inst/S_m_standin.qnt
+exit 1
+
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/_apalache-out/server/2026-11-08T18-16-11_17219356246705859539
+# APALACHE version: 0.62.1 | build: a321771                       I@18:16:11.940
+Starting checker server on port 8834...                           I@18:16:11.943
+The Apalache server is running on port 8834. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@18:16:14.729
+PASS #1: TypeCheckerSnowcat                                       I@18:16:15.017
+ > Running Snowcat .::.                                           I@18:16:15.017
+ > Your types are purrfect!                                       I@18:16:15.543
+ > All expressions are typed                                      I@18:16:15.543
+PASS #2: ConfigurationPass                                        I@18:16:15.544
+  > Set the initialization predicate to q::init                   I@18:16:15.546
+  > Set the transition predicate to q::step                       I@18:16:15.546
+  > Set an invariant to q::inv                                    I@18:16:15.546
+PASS #3: DesugarerPass                                            I@18:16:15.553
+  > Desugaring...                                                 I@18:16:15.553
+PASS #4: InlinePass                                               I@18:16:15.560
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@18:16:15.560
+PASS #5: TemporalPass                                             I@18:16:15.600
+  > Rewriting temporal operators...                               I@18:16:15.600
+  > No temporal property specified, nothing to encode             I@18:16:15.600
+PASS #6: InlinePass                                               I@18:16:15.600
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@18:16:15.600
+PASS #7: PrimingPass                                              I@18:16:15.609
+  > Introducing q::initPrimed for q::init'                        I@18:16:15.610
+PASS #8: VCGen                                                    I@18:16:15.611
+  > Producing verification conditions from the invariant q::inv   I@18:16:15.612
+  > VCGen produced 1 verification condition(s)                    I@18:16:15.616
+PASS #9: PreprocessingPass                                        I@18:16:15.620
+  > Before preprocessing: unique renaming                         I@18:16:15.620
+ > Applying standard transformations:                             I@18:16:15.625
+  > PrimePropagation                                              I@18:16:15.625
+  > Desugarer                                                     I@18:16:15.627
+  > UniqueRenamer                                                 I@18:16:15.630
+  > Normalizer                                                    I@18:16:15.633
+  > SetMembershipSimplifier                                       I@18:16:15.635
+  > Keramelizer                                                   I@18:16:15.638
+  > After preprocessing: UniqueRenamer                            I@18:16:15.641
+PASS #10: TransitionFinderPass                                    I@18:16:15.645
+  > Found 1 initializing transitions                              I@18:16:15.658
+  > Found 3 transitions                                           I@18:16:15.667
+  > No constant initializer                                       I@18:16:15.668
+  > Applying unique renaming                                      I@18:16:15.668
+PASS #11: OptimizationPass                                        I@18:16:15.671
+ > Applying optimizations:                                        I@18:16:15.674
+  > ConstSimplifier                                               I@18:16:15.674
+  > ExprOptimizer                                                 I@18:16:15.678
+  > SetMembershipSimplifier                                       I@18:16:15.679
+  > ConstSimplifier                                               I@18:16:15.680
+PASS #12: AnalysisPass                                            I@18:16:15.682
+ > Marking skolemizable existentials and sets to be expanded...   I@18:16:15.684
+  > Skolemization                                                 I@18:16:15.684
+  > Expansion                                                     I@18:16:15.684
+  > Remove unused let-in defs                                     I@18:16:15.686
+ > Running analyzers...                                           I@18:16:15.687
+  > Introduced expression grades                                  I@18:16:15.690
+PASS #13: BoundedChecker                                          I@18:16:15.690
+State 0: Checking 1 state invariants                              I@18:16:15.938
+State 0: state invariant 0 holds.                                 I@18:16:15.941
+Step 0: picking a transition out of 1 transition(s)               I@18:16:15.943
+Step 1: Transition #0 is disabled                                 I@18:16:15.949
+Step 1: Transition #1 is disabled                                 I@18:16:15.955
+State 1: Checking 1 state invariants                              I@18:16:15.977
+State 1: state invariant 0 holds.                                 I@18:16:15.978
+Step 1: picking a transition out of 1 transition(s)               I@18:16:15.978
+Step 2: Transition #0 is disabled                                 I@18:16:15.981
+Step 2: Transition #1 is disabled                                 I@18:16:15.984
+State 2: Checking 1 state invariants                              I@18:16:15.999
+State 2: state invariant 0 holds.                                 I@18:16:16.000
+Step 2: picking a transition out of 1 transition(s)               I@18:16:16.000
+Step 3: Transition #0 is disabled                                 I@18:16:16.003
+Step 3: Transition #1 is disabled                                 I@18:16:16.006
+State 3: Checking 1 state invariants                              I@18:16:16.020
+State 3: state invariant 0 holds.                                 I@18:16:16.020
+Step 3: picking a transition out of 1 transition(s)               I@18:16:16.021
+Step 4: Transition #0 is disabled                                 I@18:16:16.024
+Step 4: Transition #1 is disabled                                 I@18:16:16.028
+State 4: Checking 1 state invariants                              I@18:16:16.042
+State 4: state invariant 0 holds.                                 I@18:16:16.043
+Step 4: picking a transition out of 1 transition(s)               I@18:16:16.043
+Step 5: Transition #0 is disabled                                 I@18:16:16.046
+Step 5: Transition #1 is disabled                                 I@18:16:16.049
+State 5: Checking 1 state invariants                              I@18:16:16.060
+State 5: state invariant 0 holds.                                 I@18:16:16.061
+Step 5: picking a transition out of 1 transition(s)               I@18:16:16.061
+Step 6: Transition #0 is disabled                                 I@18:16:16.063
+Step 6: Transition #1 is disabled                                 I@18:16:16.067
+State 6: Checking 1 state invariants                              I@18:16:16.077
+State 6: state invariant 0 holds.                                 I@18:16:16.077
+Step 6: picking a transition out of 1 transition(s)               I@18:16:16.078
+Step 7: Transition #0 is disabled                                 I@18:16:16.079
+Step 7: Transition #1 is disabled                                 I@18:16:16.081
+State 7: Checking 1 state invariants                              I@18:16:16.091
+Check the trace in: /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/_apalache-out/server/2026-11-08T18-16-11_17219356246705859539/violation1.tla, /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/_apalache-out/server/2026-11-08T18-16-11_17219356246705859539/MCviolation1.out, /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/_apalache-out/server/2026-11-08T18-16-11_17219356246705859539/violation1.json, /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/_apalache-out/server/2026-11-08T18-16-11_17219356246705859539/violation1.itf.json I@18:16:16.196
+State 7: state invariant 0 violated.                              I@18:16:16.196
+Found 1 error(s)                                                  I@18:16:16.197
+The outcome is: Error                                             I@18:16:16.200
+An example execution:
+
+[State 0]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 0,
+  S_m_standin::p03_stop::phase: "standin_stop",
+  S_m_standin::p03_stop::phaseEnds: 0,
+  S_m_standin::p03_stop::placeHeld: true,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: false
+}
+
+[State 1]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 0,
+  S_m_standin::p03_stop::phase: "before_all",
+  S_m_standin::p03_stop::phaseEnds: 1,
+  S_m_standin::p03_stop::placeHeld: true,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: false
+}
+
+[State 2]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 1,
+  S_m_standin::p03_stop::phase: "stop_units",
+  S_m_standin::p03_stop::phaseEnds: 13,
+  S_m_standin::p03_stop::placeHeld: true,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: false
+}
+
+[State 3]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 13,
+  S_m_standin::p03_stop::phase: "heartbeat",
+  S_m_standin::p03_stop::phaseEnds: 14,
+  S_m_standin::p03_stop::placeHeld: true,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: true
+}
+
+[State 4]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 14,
+  S_m_standin::p03_stop::phase: "place_go",
+  S_m_standin::p03_stop::phaseEnds: 15,
+  S_m_standin::p03_stop::placeHeld: true,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: true
+}
+
+[State 5]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 15,
+  S_m_standin::p03_stop::phase: "slot_go",
+  S_m_standin::p03_stop::phaseEnds: 27,
+  S_m_standin::p03_stop::placeHeld: false,
+  S_m_standin::p03_stop::slotHeld: true,
+  S_m_standin::p03_stop::slotReleased: false,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: true
+}
+
+[State 6]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: false,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 27,
+  S_m_standin::p03_stop::phase: "after_stop",
+  S_m_standin::p03_stop::phaseEnds: 28,
+  S_m_standin::p03_stop::placeHeld: false,
+  S_m_standin::p03_stop::slotHeld: false,
+  S_m_standin::p03_stop::slotReleased: true,
+  S_m_standin::p03_stop::standinOn: true,
+  S_m_standin::p03_stop::stoppedUnits: true
+}
+
+[State 7]
+{
+  S_m_standin::p03_stop::everBudgetPass: false,
+  S_m_standin::p03_stop::everFinalWriteOutside: false,
+  S_m_standin::p03_stop::everHungPastTimeout: false,
+  S_m_standin::p03_stop::everKilled: false,
+  S_m_standin::p03_stop::everStandinAfterRelease: true,
+  S_m_standin::p03_stop::everWriteAfterRelease: false,
+  S_m_standin::p03_stop::killAt: 240,
+  S_m_standin::p03_stop::lastRenew: 0,
+  S_m_standin::p03_stop::now: 28,
+  S_m_standin::p03_stop::phase: "done",
+  S_m_standin::p03_stop::phaseEnds: 29,
+  S_m_standin::p03_stop::placeHeld: false,
+  S_m_standin::p03_stop::slotHeld: false,
+  S_m_standin::p03_stop::slotReleased: true,
+  S_m_standin::p03_stop::standinOn: false,
+  S_m_standin::p03_stop::stoppedUnits: true
+}
+
+[violation] Found an issue (4901ms).
+Nov 08, 2026 6:16:14 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

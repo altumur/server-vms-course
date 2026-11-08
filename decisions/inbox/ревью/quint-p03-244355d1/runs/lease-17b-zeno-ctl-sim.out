@@ -1,0 +1,6844 @@
+$ quint run --backend=rust --main=L_zeno_ctl --max-samples=2000 --max-steps=200 --invariant=StepsBounded inst/L_zeno_ctl.qnt
+exit 0
+
+An example execution:
+
+[State 0]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 0,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: -100,
+      leaseSteps: 0,
+      lp: { ends: 0, k: "rec", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 1]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: -100,
+      leaseSteps: 0,
+      lp: { ends: 0, k: "rec", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 2]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: -100,
+      leaseSteps: 0,
+      lp: { ends: 0, k: "pump", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 3]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 0, k: "renew", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 1,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 4]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 0, k: "floor", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 2,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 5]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 0, k: "confirm", t0: 0, u: 0 },
+      nobody: false,
+      now: 0,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 6]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 0, k: "hb", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 7]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 1, k: "pause", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 0,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 8]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 1, k: "rec", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 9]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 0,
+      leaseSteps: 1,
+      lp: { ends: 1, k: "pump", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 10]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 1, k: "renew", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 4,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 11]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 1, k: "floor", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 5,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 12]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 1, k: "confirm", t0: 1, u: 0 },
+      nobody: false,
+      now: 1,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 13]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 1, k: "hb", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 14]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 2, k: "pause", t0: 1, u: -1 },
+      nobody: false,
+      now: 1,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 1,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 15]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 2, k: "rec", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 16]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 1,
+      leaseSteps: 2,
+      lp: { ends: 2, k: "pump", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 17]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 2, k: "renew", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 7,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 18]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 2, k: "floor", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 8,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 19]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 2, k: "confirm", t0: 2, u: 0 },
+      nobody: false,
+      now: 2,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 20]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 2, k: "hb", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 21]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 3, k: "pause", t0: 2, u: -1 },
+      nobody: false,
+      now: 2,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 2,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 22]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 3, k: "rec", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 23]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 2,
+      leaseSteps: 3,
+      lp: { ends: 3, k: "pump", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 24]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 3, k: "renew", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 10,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 25]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 3, k: "floor", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 26]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 3, k: "confirm", t0: 3, u: 0 },
+      nobody: false,
+      now: 3,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 27]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 3, k: "hb", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 28]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 4, k: "pause", t0: 3, u: -1 },
+      nobody: false,
+      now: 3,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 3,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 29]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 4, k: "rec", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 30]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 3,
+      leaseSteps: 4,
+      lp: { ends: 4, k: "pump", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 31]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 4, k: "renew", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 13,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 32]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 4, k: "floor", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 14,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 33]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 4, k: "confirm", t0: 4, u: 0 },
+      nobody: false,
+      now: 4,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 34]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 4, k: "hb", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 35]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 5, k: "pause", t0: 4, u: -1 },
+      nobody: false,
+      now: 4,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 4,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 36]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 5, k: "rec", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 37]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 4,
+      leaseSteps: 5,
+      lp: { ends: 5, k: "pump", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 38]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 5, k: "renew", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 16,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 39]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 5, k: "floor", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 17,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 40]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 5, k: "confirm", t0: 5, u: 0 },
+      nobody: false,
+      now: 5,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 41]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 5, k: "hb", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 42]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 6, k: "pause", t0: 5, u: -1 },
+      nobody: false,
+      now: 5,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 5,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 43]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 6, k: "rec", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 44]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 5,
+      leaseSteps: 6,
+      lp: { ends: 6, k: "pump", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 45]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 6, k: "renew", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 46]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 6, k: "floor", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 20,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 47]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 6, k: "confirm", t0: 6, u: 0 },
+      nobody: false,
+      now: 6,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 48]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 6, k: "hb", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 49]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 7, k: "pause", t0: 6, u: -1 },
+      nobody: false,
+      now: 6,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 6,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 50]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 7, k: "rec", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 51]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 6,
+      leaseSteps: 7,
+      lp: { ends: 7, k: "pump", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 52]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 7, k: "renew", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 22,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 53]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 7, k: "floor", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 54]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 7, k: "confirm", t0: 7, u: 0 },
+      nobody: false,
+      now: 7,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 55]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 7, k: "hb", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 56]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 8, k: "pause", t0: 7, u: -1 },
+      nobody: false,
+      now: 7,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 7,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 57]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 8, k: "rec", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 58]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 7,
+      leaseSteps: 8,
+      lp: { ends: 8, k: "pump", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 59]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 8, k: "renew", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 25,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 60]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 8, k: "floor", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 26,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 61]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 8, k: "confirm", t0: 8, u: 0 },
+      nobody: false,
+      now: 8,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 62]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 8, k: "hb", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 63]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 9, k: "pause", t0: 8, u: -1 },
+      nobody: false,
+      now: 8,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 8,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 64]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 9, k: "rec", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 65]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 8,
+      leaseSteps: 9,
+      lp: { ends: 9, k: "pump", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 66]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 9, k: "renew", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 28,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 67]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 9, k: "floor", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 29,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 68]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 9, k: "confirm", t0: 9, u: 0 },
+      nobody: false,
+      now: 9,
+      reqs: 30,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 69]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 9, k: "hb", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 30,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 70]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 10, k: "pause", t0: 9, u: -1 },
+      nobody: false,
+      now: 9,
+      reqs: 30,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 9,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 71]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 10, k: "rec", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 30,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 72]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 9,
+      leaseSteps: 10,
+      lp: { ends: 10, k: "pump", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 30,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 73]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 10, k: "renew", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 31,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 74]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 10, k: "floor", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 32,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 75]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 10, k: "confirm", t0: 10, u: 0 },
+      nobody: false,
+      now: 10,
+      reqs: 33,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 76]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 10, k: "hb", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 33,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 77]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 11, k: "pause", t0: 10, u: -1 },
+      nobody: false,
+      now: 10,
+      reqs: 33,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 10,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 78]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 11, k: "rec", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 33,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 79]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 10,
+      leaseSteps: 11,
+      lp: { ends: 11, k: "pump", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 33,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 80]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 11, k: "renew", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 34,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 81]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 11, k: "floor", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 35,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 82]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 11, k: "confirm", t0: 11, u: 0 },
+      nobody: false,
+      now: 11,
+      reqs: 36,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 83]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 11, k: "hb", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 36,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 84]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 12, k: "pause", t0: 11, u: -1 },
+      nobody: false,
+      now: 11,
+      reqs: 36,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 11,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 85]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 12, k: "rec", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 36,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 86]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 11,
+      leaseSteps: 12,
+      lp: { ends: 12, k: "pump", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 36,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 87]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 12, k: "renew", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 37,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 88]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 12, k: "floor", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 38,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 89]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 12, k: "confirm", t0: 12, u: 0 },
+      nobody: false,
+      now: 12,
+      reqs: 39,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 90]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 12, k: "hb", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 39,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 91]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 13, k: "pause", t0: 12, u: -1 },
+      nobody: false,
+      now: 12,
+      reqs: 39,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 12,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 92]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 13, k: "rec", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 39,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 93]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 12,
+      leaseSteps: 13,
+      lp: { ends: 13, k: "pump", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 39,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 94]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 13, k: "renew", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 40,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 95]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 13, k: "floor", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 41,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 96]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 13, k: "confirm", t0: 13, u: 0 },
+      nobody: false,
+      now: 13,
+      reqs: 42,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 97]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 13, k: "hb", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 42,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 98]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 14, k: "pause", t0: 13, u: -1 },
+      nobody: false,
+      now: 13,
+      reqs: 42,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 13,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 99]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 14, k: "rec", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 42,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 100]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 13,
+      leaseSteps: 14,
+      lp: { ends: 14, k: "pump", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 42,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 101]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 14, k: "renew", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 43,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 102]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 14, k: "floor", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 44,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 103]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 14, k: "confirm", t0: 14, u: 0 },
+      nobody: false,
+      now: 14,
+      reqs: 45,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 104]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 14, k: "hb", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 45,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 105]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 15, k: "pause", t0: 14, u: -1 },
+      nobody: false,
+      now: 14,
+      reqs: 45,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 14,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 106]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 15, k: "rec", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 45,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 107]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 14,
+      leaseSteps: 15,
+      lp: { ends: 15, k: "pump", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 45,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 108]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 15, k: "renew", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 46,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 109]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 15, k: "floor", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 47,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 110]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 15, k: "confirm", t0: 15, u: 0 },
+      nobody: false,
+      now: 15,
+      reqs: 48,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 111]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 15, k: "hb", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 48,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 112]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 16, k: "pause", t0: 15, u: -1 },
+      nobody: false,
+      now: 15,
+      reqs: 48,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 15,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 113]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 16, k: "rec", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 48,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 114]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 15,
+      leaseSteps: 16,
+      lp: { ends: 16, k: "pump", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 48,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 115]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 16, k: "renew", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 49,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 116]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 16, k: "floor", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 50,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 117]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 16, k: "confirm", t0: 16, u: 0 },
+      nobody: false,
+      now: 16,
+      reqs: 51,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 118]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 16, k: "hb", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 51,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 119]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 17, k: "pause", t0: 16, u: -1 },
+      nobody: false,
+      now: 16,
+      reqs: 51,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 16,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 120]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 17, k: "rec", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 51,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 121]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 16,
+      leaseSteps: 17,
+      lp: { ends: 17, k: "pump", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 51,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 122]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 17, k: "renew", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 52,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 123]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 17, k: "floor", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 53,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 124]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 17, k: "confirm", t0: 17, u: 0 },
+      nobody: false,
+      now: 17,
+      reqs: 54,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 125]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 17, k: "hb", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 54,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 126]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 18, k: "pause", t0: 17, u: -1 },
+      nobody: false,
+      now: 17,
+      reqs: 54,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 17,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 127]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 18, k: "rec", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 54,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 128]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 17,
+      leaseSteps: 18,
+      lp: { ends: 18, k: "pump", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 54,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 129]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 18, k: "renew", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 55,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 130]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 18, k: "floor", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 56,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 131]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 18, k: "confirm", t0: 18, u: 0 },
+      nobody: false,
+      now: 18,
+      reqs: 57,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 132]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 18, k: "hb", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 57,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 133]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 19, k: "pause", t0: 18, u: -1 },
+      nobody: false,
+      now: 18,
+      reqs: 57,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 18,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 134]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 19, k: "rec", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 57,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 135]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 18,
+      leaseSteps: 19,
+      lp: { ends: 19, k: "pump", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 57,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 136]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 19, k: "renew", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 58,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 137]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 19, k: "floor", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 59,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 138]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 19, k: "confirm", t0: 19, u: 0 },
+      nobody: false,
+      now: 19,
+      reqs: 60,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 139]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 19, k: "hb", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 60,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 140]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 20, k: "pause", t0: 19, u: -1 },
+      nobody: false,
+      now: 19,
+      reqs: 60,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 19,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 141]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 20, k: "rec", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 60,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 142]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 19,
+      leaseSteps: 20,
+      lp: { ends: 20, k: "pump", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 60,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 143]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 20, k: "renew", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 61,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 144]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 20, k: "floor", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 62,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 145]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 20, k: "confirm", t0: 20, u: 0 },
+      nobody: false,
+      now: 20,
+      reqs: 63,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 146]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 20, k: "hb", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 63,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 147]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 21, k: "pause", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 63,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 20,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 148]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 21, k: "rec", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 63,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 149]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 20,
+      leaseSteps: 21,
+      lp: { ends: 21, k: "pump", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 63,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 150]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 21, k: "renew", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 64,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 151]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 21, k: "floor", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 65,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 152]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 21, k: "confirm", t0: 21, u: 0 },
+      nobody: false,
+      now: 21,
+      reqs: 66,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 153]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 21, k: "hb", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 66,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 154]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 22, k: "pause", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 66,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 21,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 155]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 22, k: "rec", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 66,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 156]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 21,
+      leaseSteps: 22,
+      lp: { ends: 22, k: "pump", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 66,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 157]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 22, k: "renew", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 67,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 158]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 22, k: "floor", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 68,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 159]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 22, k: "confirm", t0: 22, u: 0 },
+      nobody: false,
+      now: 22,
+      reqs: 69,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 160]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 22, k: "hb", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 69,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 161]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 23, k: "pause", t0: 22, u: -1 },
+      nobody: false,
+      now: 22,
+      reqs: 69,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 22,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 162]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 23, k: "rec", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 69,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 163]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 22,
+      leaseSteps: 23,
+      lp: { ends: 23, k: "pump", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 69,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 164]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 23, k: "renew", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 70,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 165]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 23, k: "floor", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 71,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 166]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 23, k: "confirm", t0: 23, u: 0 },
+      nobody: false,
+      now: 23,
+      reqs: 72,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 167]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 23, k: "hb", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 72,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 168]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 24, k: "pause", t0: 23, u: -1 },
+      nobody: false,
+      now: 23,
+      reqs: 72,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 23,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 169]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 24, k: "rec", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 72,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 170]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 23,
+      leaseSteps: 24,
+      lp: { ends: 24, k: "pump", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 72,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 171]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 24, k: "renew", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 73,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 172]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 24, k: "floor", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 74,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 173]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 24, k: "confirm", t0: 24, u: 0 },
+      nobody: false,
+      now: 24,
+      reqs: 75,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 174]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 24, k: "hb", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 75,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 175]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 25, k: "pause", t0: 24, u: -1 },
+      nobody: false,
+      now: 24,
+      reqs: 75,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 24,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 176]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 25, k: "rec", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 75,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 177]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 24,
+      leaseSteps: 25,
+      lp: { ends: 25, k: "pump", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 75,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 178]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 25, k: "renew", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 76,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 179]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 25, k: "floor", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 77,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 180]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 25, k: "confirm", t0: 25, u: 0 },
+      nobody: false,
+      now: 25,
+      reqs: 78,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 181]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 25, k: "hb", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 78,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 182]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 26, k: "pause", t0: 25, u: -1 },
+      nobody: false,
+      now: 25,
+      reqs: 78,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 25,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 183]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 26, k: "rec", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 78,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 184]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 25,
+      leaseSteps: 26,
+      lp: { ends: 26, k: "pump", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 78,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 185]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 26, k: "renew", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 79,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 186]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 26, k: "floor", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 80,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 187]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 26, k: "confirm", t0: 26, u: 0 },
+      nobody: false,
+      now: 26,
+      reqs: 81,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 188]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 26, k: "hb", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 81,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 189]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 27, k: "pause", t0: 26, u: -1 },
+      nobody: false,
+      now: 26,
+      reqs: 81,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 26,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 190]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 27, k: "rec", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 81,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 191]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 26,
+      leaseSteps: 27,
+      lp: { ends: 27, k: "pump", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 81,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 192]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 27, k: "renew", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 82,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 193]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 27, k: "floor", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 83,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 194]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 27, k: "confirm", t0: 27, u: 0 },
+      nobody: false,
+      now: 27,
+      reqs: 84,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 195]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 27, k: "hb", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 84,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 196]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 28, k: "pause", t0: 27, u: -1 },
+      nobody: false,
+      now: 27,
+      reqs: 84,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 27,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 197]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 28, k: "rec", t0: 28, u: -1 },
+      nobody: false,
+      now: 28,
+      reqs: 84,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 28,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 198]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 27,
+      leaseSteps: 28,
+      lp: { ends: 28, k: "pump", t0: 28, u: -1 },
+      nobody: false,
+      now: 28,
+      reqs: 84,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 28,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 199]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 28,
+      leaseSteps: 29,
+      lp: { ends: 28, k: "renew", t0: 28, u: -1 },
+      nobody: false,
+      now: 28,
+      reqs: 85,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 28,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 200]
+{
+  L_zeno_ctl::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: true,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false),
+      ghostLost: Map(0 -> false),
+      ghostMissed: Map(0 -> false),
+      ghostSend: Map(0 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0),
+      leaseStart: 28,
+      leaseSteps: 29,
+      lp: { ends: 28, k: "floor", t0: 28, u: -1 },
+      nobody: false,
+      now: 28,
+      reqs: 86,
+      slotSend: 0,
+      sp: { ends: 1000000, k: "dead", t0: 0, u: -1 },
+      status: Map(0 -> "silent"),
+      stepBegan: 28,
+      stolen: Map(0 -> false),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[ok] No violation found (464ms at 4310 traces/second).
+Trace length statistics: max=201, min=201, average=201.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xfcdb04d5901801a6 --backend=rust to reproduce.

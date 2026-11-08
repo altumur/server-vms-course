@@ -1,0 +1,136 @@
+$ quint run --backend=rust --main=F_ok --max-samples=5000 --max-steps=20 --invariant=W_namelessPublished inst/F_ok.qnt
+exit 1
+
+An example execution:
+
+[State 0]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 1]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 2]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 3]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "waiting", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 4]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 90, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 5]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 6]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "nameless", since: 110, st: "seeking" },
+  F_ok::p03_forms::io:
+    [{ name: "publish", nums: [110, 110], strs: ["nameless"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[violation] Found an issue (29ms at 3414 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x131886af83a07511 --backend=rust to reproduce.
+error: Invariant violated

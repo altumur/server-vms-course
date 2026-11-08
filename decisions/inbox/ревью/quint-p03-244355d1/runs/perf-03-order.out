@@ -1,0 +1,2999 @@
+$ quint run --backend=rust --main=P_ok --max-samples=10000 --max-steps=60 --invariant=OrderInGroup inst/P_ok.qnt
+exit 0
+
+An example execution:
+
+[State 0]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 0,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 1]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 100,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 2]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 100,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 3]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 150,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 4]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 151,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 5]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 151,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 6]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 7]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 8]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 9]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 10]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 11]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 152,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 12]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 153,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 13]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 154,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 14]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 154,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 15]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 204,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 16]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 204,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 17]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 205,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 18]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 206,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 19]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 306,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 20]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 356,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 21]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 456,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 22]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 506,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 23]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 507,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 24]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 508,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 25]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 608,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 26]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 708,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 27]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 758,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 28]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 858,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 29]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 908,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 30]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1008,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 31]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1008,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 32]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1058,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 33]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1058,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 34]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1058,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 35]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1158,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 36]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1159,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 37]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1160,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 38]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1160,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 39]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1260,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 40]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1310,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 41]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1311,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 42]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1411,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 43]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 1511,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 44]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1511,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 45]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1611,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 46]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1711,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 47]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1711,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 48]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1811,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 49]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1811,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 50]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1812,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 51]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1812,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 52]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1812,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 53]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1813,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 54]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1813,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 55]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1813,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 56]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1813,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 57]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1863,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 58]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1863,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 59]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1863,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[State 60]
+{
+  P_ok::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: true,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "holder",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "expired"
+            }
+        ),
+      now: 1863,
+      takeAt: 151,
+      taken: true
+    }
+}
+
+[ok] No violation found (277ms at 36101 traces/second).
+Trace length statistics: max=61, min=61, average=61.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xc2d34351ac409226 --backend=rust to reproduce.

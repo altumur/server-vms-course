@@ -1,0 +1,156 @@
+$ quint run --backend=rust --main=P_m_wait --max-samples=10000 --max-steps=60 --invariant=TakeoverWaitHonored inst/P_m_wait.qnt
+exit 1
+
+An example execution:
+
+[State 0]
+{
+  P_m_wait::p03_perform::st:
+    {
+      active: Map(0 -> true, 1 -> false),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 0,
+      takeAt: -1,
+      taken: false
+    }
+}
+
+[State 1]
+{
+  P_m_wait::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> false),
+      callEnd: Map(0 -> 0, 1 -> 0),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> -1),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: -1,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 0,
+      takeAt: 0,
+      taken: true
+    }
+}
+
+[State 2]
+{
+  P_m_wait::p03_perform::st:
+    {
+      active: Map(0 -> false, 1 -> true),
+      busy: Map(0 -> false, 1 -> true),
+      callEnd: Map(0 -> 0, 1 -> 1),
+      callHung: Map(0 -> false, 1 -> false),
+      callRid: Map(0 -> -1, 1 -> 0),
+      callStart: Map(0 -> 0, 1 -> 0),
+      ghostDouble: false,
+      ghostEarlyClose: false,
+      ghostEarlyExpire: false,
+      ghostExpired: false,
+      ghostFirstCall1: 0,
+      ghostForeignClose: false,
+      ghostHungBlocked: false,
+      ghostLate: false,
+      ghostOutOfOrder: false,
+      ghostOverlap: false,
+      ghostSecondExpiredDuringHang: false,
+      ghostSelfClose: false,
+      marks:
+        Map(
+          0 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: 1,
+              late: false,
+              start: 0,
+              state: "begun"
+            },
+          1 ->
+            {
+              at: 0,
+              endedBy: "",
+              inst: -1,
+              late: false,
+              start: 0,
+              state: "none"
+            }
+        ),
+      now: 0,
+      takeAt: 0,
+      taken: true
+    }
+}
+
+[violation] Found an issue (22ms at 1455 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x63f5750b277efd98 --backend=rust to reproduce.
+error: Invariant violated

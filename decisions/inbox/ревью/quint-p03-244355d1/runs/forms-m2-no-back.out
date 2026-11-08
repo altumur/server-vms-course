@@ -1,0 +1,41 @@
+$ quint test --main=traces_no_back --max-samples=1 --match=^t_ traces_no_back.qnt
+exit 1
+
+
+  traces_no_back
+    ok t_cw_first_waiting_no_name_taken passed 1 test(s)
+    ok t_cw_refused_before_first_capture passed 1 test(s)
+    ok t_cw_refused_priority_after_loss passed 1 test(s)
+    ok t_cw_same_state_since_survives_clock_backward passed 1 test(s)
+    ok t_cw_state_change_resets_since passed 1 test(s)
+    ok t_cw_withdrawn_never_contends passed 1 test(s)
+    ok t_cw_not_due_does_not_publish passed 1 test(s)
+    1) t_cw_one_event_pair_per_loss_episode failed after 1 test(s)
+    ok t_tc_cache_used_without_asking passed 1 test(s)
+    ok t_tc_unopened_is_no_file passed 1 test(s)
+    ok t_tc_unknown_key_current_no_request passed 1 test(s)
+    ok t_tc_expired_receiver_replaces_after_accept passed 1 test(s)
+    ok t_tc_revoked_word_exact passed 1 test(s)
+    ok t_tc_same_jti_until_next_day passed 1 test(s)
+    ok t_tc_unknown_key_new_no_file_no_ask passed 1 test(s)
+    ok t_tc_new_expired_before_first_accept passed 1 test(s)
+    ok t_tc_new_revoked_before_first_accept passed 1 test(s)
+    ok t_tc_stale_recipient_results_do_not_promote passed 1 test(s)
+    ok t_tc_issue_failure_keeps_old_memory passed 1 test(s)
+    ok t_tc_same_jti_expired_is_not_revoked_word passed 1 test(s)
+
+  19 passing (519ms)
+  1 failed
+
+  1) t_cw_one_event_pair_per_loss_episode:
+       Error [QNT508]: Assertion failed
+        at /home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/traces_no_back.qnt:5:39
+        5:   action check(c: bool): bool = all { assert(c), cw' = cw, tc' = tc, io' = io }
+                                                 ^^^^^^^^^
+          at check(io == [{ name: "name_back", strs: [], nums: [] }] and cw.st == "holding" and cw.lostEp == false) (/home/pilot/review103-claude-adr0130-p03-quint/decisions/inbox/ревью/quint-p03-244355d1/traces_no_back.qnt:85:11)
+    Use --seed=0x7e040a8d97dfb8f3 --match=t_cw_one_event_pair_per_loss_episode to repeat.
+
+
+  Use --verbosity=3 to show executions.
+  Further debug with: quint test --verbosity=3 traces_no_back.qnt
+error: Tests failed

@@ -1,0 +1,20 @@
+trial	id	expect	actual	cause	resolution
+trial-1	lease-01-stepsum	violated	error	quint verify: сводный файл экземпляров превысил предел строки JSON Apalache (20 МБ)	экземпляры разнесены по файлам inst/
+trial-1	lease-02-stepsum-ctl	holds	error	то же	то же
+trial-1	lease-16-zeno	violated	error	то же	то же
+trial-1	lease-17-zeno-ctl	holds	error	то же	то же
+trial-1	lease-20b-window-verify	holds	error	то же	то же
+trial-1	lease-25-writealg	holds	error	то же	то же
+trial-1	lease-05-slowN	violated	holds	шаги цикла по 1 тику: первый шаг аренды не наступал в пределах max-steps (ложный holds)	длительности шагов 1 и 33 тика
+trial-1	lease-06-slowN-noStandin	violated	holds	то же	то же
+trial-1	lease-09-silN-ctl	holds	violated	контроль с DURS={1,100}: нарушение дал эффект суммы шагов (сумма шагов перекрывает окно), а не последовательное чтение	контроль и свойство с DURS={1,20}; эффект суммы шагов отдельно в lease-01
+trial-1	lease-11-silCeil	holds	violated	то же (DURS={1,100})	DURS={1,20}
+trial-1	lease-w1-lost	violated	holds	свидетель не достигнут распределением симуляции в L_any: событие FOREIGN завершает шаг	FOREIGN убран из L_any в отдельный экземпляр L_foreign
+trial-1	lease-w3-recovered	violated	holds	то же распределение: переключения связи происходят рано, до молчания шага	экземпляр L_recover с UPFLIP_NOT_BEFORE (см. trial-4)
+trial-1	lease-w7-slotterm	violated	holds	нет события потерянных записей в экземпляре	экземпляр L_writefault
+trial-2	lease-16-zeno	violated	error	конфигурация Apalache (ключ common)	конфигурация убрана, свой сервер запущен отдельно
+trial-2	lease-16-zeno	violated	holds	модельный артефакт: при нулевых длительностях время не растёт и первый шаг аренды не наступает (нужен назревший шаг)	начальное условие INIT_DUE=true только для L_zeno
+trial-4	lease-w3-recovered	violated	holds	распределение симуляции (FAULTS=2, обе смены связи рано)	UPFLIP_NOT_BEFORE=150 в L_recover
+trial-4	lease-w10-lost-silOff	violated	holds	FAULTS=2: связь возвращается раньше конца окна в симуляции	FAULTS=1 в L_silOff и L_silCeil (lease-10, lease-11 пересчитаны)
+trial-4	lease-w11-lost-silCeil	violated	holds	то же	то же
+all-1 (остановлено вручную)	lease-20b на L_any, 14 шагов	holds	n/a (остановлено >4 мин)	тяжёлый экземпляр для Apalache	заменено L_small, 12 шагов

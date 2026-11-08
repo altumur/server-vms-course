@@ -1,0 +1,96 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+forms-01-traces	traces_ok	traces-all	control	quint-test			MUT_FORM=ok	holds	holds	yes	1.6	runs/forms-01-traces.out
+forms-02-inv-sim	F_ok	FormsInv	property	quint-run-rust	40	5000	"MUT_FORM=""none"""	holds	holds	yes	1.1	runs/forms-02-inv-sim.out
+forms-02b-inv-verify	F_ok	FormsInv	property	quint-verify	10		"MUT_FORM=""none"""	holds	holds	yes	12.0	runs/forms-02b-inv-verify.out
+forms-w1-cooldown	F_ok	W_cooldown	witness	quint-run-rust	30	20000	"MUT_FORM=""none"""	violated	violated	yes	0.8	runs/forms-w1-cooldown.out
+forms-w2-nameless	F_ok	W_namelessPublished	witness	quint-run-rust	20	5000	"MUT_FORM=""none"""	violated	violated	yes	0.8	runs/forms-w2-nameless.out
+forms-m1-since-reset	traces_since_reset	traces-all	mutant	quint-test			MUT_FORM=since_reset	violated	violated	yes	1.8	runs/forms-m1-since-reset.out
+forms-m2-no-back	traces_no_back	traces-all	mutant	quint-test			MUT_FORM=no_back	violated	violated	yes	1.8	runs/forms-m2-no-back.out
+forms-m3-persist-early	traces_persist_early	traces-all	mutant	quint-test			MUT_FORM=persist_early	violated	violated	yes	1.7	runs/forms-m3-persist-early.out
+lease-01-stepsum-sim	L_stepsum	NoLost	property	quint-run-rust	40	5000		violated	violated	yes	0.9	runs/lease-01-stepsum-sim.out
+lease-01b-stepsum-verify	L_stepsum	NoLost	property	quint-verify	18			violated	violated	yes	23.6	runs/lease-01b-stepsum-verify.out
+lease-02-stepsum-ctl-sim	L_stepsum_ctl	NoLost	control	quint-run-rust	60	5000	DURS=Set(1,33);POLLS=Set(1,33)	holds	holds	yes	1.2	runs/lease-02-stepsum-ctl-sim.out
+lease-02b-stepsum-ctl-verify	L_stepsum_ctl	NoLost	control	quint-verify	16		DURS=Set(1,33);POLLS=Set(1,33)	holds	holds	yes	63.8	runs/lease-02b-stepsum-ctl-verify.out
+lease-03-hung	L_hung	NoLost	property	quint-run-rust	40	5000	DURS=Set(1,90,1800)	violated	violated	yes	0.9	runs/lease-03-hung.out
+lease-04-hung-fix-ctl	L_hung_ctl_fix	NoLost	control	quint-run-rust	40	5000	DURS=Set(1,90,1800);STANDIN_FROM_CONFIRM=true	holds	holds	yes	1.2	runs/lease-04-hung-fix-ctl.out
+lease-05-slowN	L_slowN	NoLost	property	quint-run-rust	60	5000	N=4;DURS=Set(1,33);POLLS=Set(1,33);LATS=Set(60);INIT_DELAY=Set(75)	violated	violated	yes	0.9	runs/lease-05-slowN.out
+lease-06-slowN-noStandin	L_slowN_noStandin	NoLost	property	quint-run-rust	60	5000	N=4;DURS=Set(1,33);POLLS=Set(1,33);LATS=Set(60);STANDIN=false	violated	violated	yes	0.9	runs/lease-06-slowN-noStandin.out
+lease-07-slowN-ctl	L_slowN_ctl	NoLost	control	quint-run-rust	60	5000	N=4;DURS=Set(1,33);POLLS=Set(1,33);LATS=Set(12);INIT_DELAY=Set(75)	holds	holds	yes	1.2	runs/lease-07-slowN-ctl.out
+lease-08-silN	L_silN	LostOnlyPastCeiling	property	quint-run-rust	60	5000	N=2;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(60);CEIL=-1;FAULTS=1;INIT_DELAY=Set(75)	violated	violated	yes	0.9	runs/lease-08-silN.out
+lease-09-silN-ctl	L_silN_ctl	LostOnlyPastCeiling	control	quint-run-rust	60	5000	DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(60);CEIL=-1;FAULTS=1;INIT_DELAY=Set(75)	holds	holds	yes	1.1	runs/lease-09-silN-ctl.out
+lease-10-silOff	L_silOff	LostOnlyPastCeiling	property	quint-run-rust	60	5000	HORIZON=2000;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);FAULTS=1	holds	holds	yes	1.2	runs/lease-10-silOff.out
+lease-11-silCeil	L_silCeil	LostOnlyPastCeiling	property	quint-run-rust	60	5000	HORIZON=2000;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);CEIL=120;FAULTS=1	holds	holds	yes	1.3	runs/lease-11-silCeil.out
+lease-12-wallCad	L_wallCad	NoLost	property	quint-run-rust	100	8000	DURS=Set(1,33);POLLS=Set(1,33);JUMPS=Set(-360);WALL_CADENCE=true	violated	violated	yes	1.0	runs/lease-12-wallCad.out
+lease-13-wallCad-ctl	L_wallCad_ctl	NoLost	control	quint-run-rust	100	5000	DURS=Set(1,33);POLLS=Set(1,33);JUMPS=Set(-360)	holds	holds	yes	1.4	runs/lease-13-wallCad-ctl.out
+lease-14-wallAge	L_wallAge	NoLost	property	quint-run-rust	80	5000	DURS=Set(1,1800);WAKES=Set(12);JUMPS=Set(-360);WALL_AGE=true;INIT_DELAY=Set(12)	violated	violated	yes	1.0	runs/lease-14-wallAge.out
+lease-15-wallAge-ctl	L_wallAge_ctl	NoLost	control	quint-run-rust	80	5000	DURS=Set(1,1800);WAKES=Set(12);JUMPS=Set(-360);INIT_DELAY=Set(12)	holds	holds	yes	1.4	runs/lease-15-wallAge-ctl.out
+lease-16-zeno	L_zeno	NoZenoAgain	property	quint-verify	18		DURS=Set(0);POLLS=Set(0);FAULTS=1;STANDIN=false;INIT_DELAY=Set(75);INIT_DUE=true	violated	violated	yes	16.0	runs/lease-16-zeno.out
+lease-17-zeno-ctl	L_zeno_ctl	StepsBounded	control	quint-verify	18		DURS=Set(0);FAULTS=1;STANDIN=false;INIT_DELAY=Set(75);POLL_MIN=1;INIT_DUE=true	holds	holds	yes	18.6	runs/lease-17-zeno-ctl.out
+lease-17b-zeno-ctl-sim	L_zeno_ctl	StepsBounded	control	quint-run-rust	200	2000	DURS=Set(0);FAULTS=1;STANDIN=false;INIT_DELAY=Set(75);POLL_MIN=1;INIT_DUE=true	holds	holds	yes	1.4	runs/lease-17b-zeno-ctl-sim.out
+lease-20-window	L_any	ActWithinWindowFromSend	property	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	holds	holds	yes	1.7	runs/lease-20-window.out
+lease-20b-window-verify	L_small	ActWithinWindowFromSend	property	quint-verify	12		DURS=Set(1,100);LATS=Set(0,60);CEIL=120;FAULTS=1;STEAL=true;WRITE_FAULT=true;INIT_DELAY=Set(75)	holds	holds	yes	150.7	runs/lease-20b-window-verify.out
+lease-21-slotterm	L_any	ActWithinSlotTerm	property	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	holds	holds	yes	1.6	runs/lease-21-slotterm.out
+lease-22-fencedstays	L_any	FencedStays	property	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	holds	holds	yes	1.6	runs/lease-22-fencedstays.out
+lease-23-loststays	L_any	LostStays	property	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	holds	holds	yes	1.5	runs/lease-23-loststays.out
+lease-24-missedlost	L_any	MissedIsLost	property	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	holds	holds	yes	1.6	runs/lease-24-missedlost.out
+lease-25-writealg	L_small	WriteOnlyInWindowOrCeiling	property	quint-verify	12		DURS=Set(1,100);LATS=Set(0,60);CEIL=120;FAULTS=1;STEAL=true;WRITE_FAULT=true;INIT_DELAY=Set(75)	holds	holds	yes	48.9	runs/lease-25-writealg.out
+lease-w1-lost	L_any	W_lost	witness	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	violated	violated	yes	1.3	runs/lease-w1-lost.out
+lease-w2-silent	L_any	W_silent	witness	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	violated	violated	yes	1.1	runs/lease-w2-silent.out
+lease-w3-recovered	L_recover	W_recovered	witness	quint-run-rust	100	8000	DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);CEIL=-1;FAULTS=2;UPFLIP_NOT_BEFORE=150	violated	violated	yes	0.9	runs/lease-w3-recovered.out
+lease-w4-standin	L_any	W_standin	witness	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	violated	violated	yes	0.9	runs/lease-w4-standin.out
+lease-w5-fenced	L_any	W_fenced	witness	quint-run-rust	80	8000	N=2;DURS=Set(1,20,100,160);POLLS=Set(1,20);LATS=Set(0,60);CEIL=120;FAULTS=2;STEAL=true;WRITE_FAULT=true	violated	violated	yes	0.9	runs/lease-w5-fenced.out
+lease-w6-nobody	L_foreign	W_nobody	witness	quint-run-rust	60	3000	N=2;DURS=Set(1,20);FOREIGN=true	violated	violated	yes	0.9	runs/lease-w6-nobody.out
+lease-w7-slotterm	L_writefault	W_slot_term_over	witness	quint-run-rust	100	8000	DURS=Set(1,100);STANDIN=false;WRITE_FAULT=true	violated	violated	yes	0.9	runs/lease-w7-slotterm.out
+lease-w8-silent-ctl-nonvacuous	L_silCeil	W_silent	witness	quint-run-rust	60	5000	HORIZON=2000;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);CEIL=120;FAULTS=1	violated	violated	yes	0.9	runs/lease-w8-silent-ctl-nonvacuous.out
+lease-w9-silN-silent	L_silN	W_silent	witness	quint-run-rust	60	5000	N=2;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(60);CEIL=-1;FAULTS=1;INIT_DELAY=Set(75)	violated	violated	yes	0.9	runs/lease-w9-silN-silent.out
+lease-w10-lost-silOff	L_silOff	W_lost	witness	quint-run-rust	80	8000	HORIZON=2000;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);FAULTS=1	violated	violated	yes	0.9	runs/lease-w10-lost-silOff.out
+lease-w11-lost-silCeil	L_silCeil	W_lost	witness	quint-run-rust	100	8000	HORIZON=2000;DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(0,12);CEIL=120;FAULTS=1	violated	violated	yes	1.0	runs/lease-w11-lost-silCeil.out
+lease-w12-steps-ctl	L_stepsum_ctl	W_leaseStep	witness	quint-run-rust	60	3000	DURS=Set(1,33);POLLS=Set(1,33)	violated	violated	yes	0.9	runs/lease-w12-steps-ctl.out
+lease-w13-silent-silN-ctl	L_silN_ctl	W_silent	witness	quint-run-rust	60	3000	DURS=Set(1,20);POLLS=Set(1,20);LATS=Set(60);CEIL=-1;FAULTS=1;INIT_DELAY=Set(75)	violated	violated	yes	0.9	runs/lease-w13-silent-silN-ctl.out
+lease-w14-standin-fix	L_hung_ctl_fix	W_standin	witness	quint-run-rust	40	3000	DURS=Set(1,90,1800);STANDIN_FROM_CONFIRM=true	violated	violated	yes	0.9	runs/lease-w14-standin-fix.out
+lease-m1-last-at-answer	L_m_lastAns	ActWithinWindowFromSend	mutant	quint-run-rust	40	5000	DURS=Set(1,149,300);LATS=Set(0,60);STANDIN=false;LAST_AT_ANSWER=true	violated	violated	yes	1.0	runs/lease-m1-last-at-answer.out
+lease-m2-slot-at-answer	L_m_slotAns	ActWithinSlotTerm	mutant	quint-run-rust	100	8000	DURS=Set(1,100);LATS=Set(0,60);STANDIN=false;WRITE_FAULT=true;SLOT_AT_ANSWER=true	violated	violated	yes	1.1	runs/lease-m2-slot-at-answer.out
+lease-m3-revive-fenced	L_m_fenced	FencedStays	mutant	quint-run-rust	40	5000	DURS=Set(1,100);STANDIN=false;STEAL=true;REVIVE_FENCED=true	violated	violated	yes	0.9	runs/lease-m3-revive-fenced.out
+lease-m4-revive-oversleep	L_m_oversleep	MissedIsLost	mutant	quint-run-rust	40	5000	STANDIN=false;REVIVE_OVERSLEPT=true	violated	violated	yes	0.9	runs/lease-m4-revive-oversleep.out
+stop-01-ok-verify	S_ok	NoWriteAfterRelease	property	quint-verify	12			holds	holds	yes	4.6	runs/stop-01-ok-verify.out
+stop-02-order	S_ok	PlaceBeforeSlot	property	quint-verify	12			holds	holds	yes	4.6	runs/stop-02-order.out
+stop-03-standin	S_ok	NoStandinWriteAfterRelease	property	quint-verify	12			holds	holds	yes	4.6	runs/stop-03-standin.out
+stop-04-done	S_ok	DoneReleased	property	quint-verify	12			holds	holds	yes	4.6	runs/stop-04-done.out
+stop-05-hang-killed	S_hang	KilledImpliesReleased	property	quint-verify	12		STEP_DUR=Set(1,12,600)	violated	violated	yes	4.5	runs/stop-05-hang-killed.out
+stop-06-hang50-killed	S_hang50	KilledImpliesReleased	property	quint-verify	12		STOP_TIMEOUT=600;STEP_DUR=Set(1,12,1800)	violated	violated	yes	4.5	runs/stop-06-hang50-killed.out
+stop-07-budget-ctl	S_budget_ctl	KilledImpliesReleased	control	quint-verify	12		STEP_DUR=Set(1,12,600);STEP_BUDGET=12	holds	holds	yes	4.6	runs/stop-07-budget-ctl.out
+stop-08-budget-used	S_budget_ctl	W_budget_used	witness	quint-verify	12		STEP_DUR=Set(1,12,600);STEP_BUDGET=12	violated	violated	yes	4.5	runs/stop-08-budget-used.out
+stop-09-flush	S_flush	FinalFlushInMayWrite	property	quint-verify	12		STOP_TIMEOUT=600;STEP_DUR=Set(1,400)	violated	violated	yes	5.5	runs/stop-09-flush.out
+stop-10-flush-ctl	S_flush_ctl	FinalFlushInMayWrite	control	quint-verify	12			holds	holds	yes	5.6	runs/stop-10-flush-ctl.out
+stop-11-budget-healthy	S_ok	PlaceBudgetGuaranteed	property	quint-verify	4			holds	holds	yes	4.5	runs/stop-11-budget-healthy.out
+stop-12-budget-stuck	S_age_stuck	PlaceBudgetGuaranteed	property	quint-verify	4		LAST_RENEW_AGE=Set(0,100,225)	violated	violated	yes	4.4	runs/stop-12-budget-stuck.out
+stop-w1-done	S_ok	W_done	witness	quint-verify	12			violated	violated	yes	5.4	runs/stop-w1-done.out
+stop-w2-killed	S_hang	W_killed	witness	quint-verify	12		STEP_DUR=Set(1,12,600)	violated	violated	yes	4.6	runs/stop-w2-killed.out
+stop-m1-slot-first	S_m_slotfirst	NoWriteAfterRelease	mutant	quint-verify	12		"ORDER_MUT=""slot_before_place"""	violated	violated	yes	4.6	runs/stop-m1-slot-first.out
+stop-m1b-slot-first-order	S_m_slotfirst	PlaceBeforeSlot	mutant	quint-verify	12		"ORDER_MUT=""slot_before_place"""	violated	violated	yes	4.9	runs/stop-m1b-slot-first-order.out
+stop-m2-standin-noreread	S_m_standin	NoStandinWriteAfterRelease	mutant	quint-verify	12		"ORDER_MUT=""standin_after_release"";STANDIN_REREAD=false"	violated	violated	yes	6.0	runs/stop-m2-standin-noreread.out
+stop-c1-standin-reread	S_standin_reread_ctl	NoStandinWriteAfterRelease	control	quint-verify	12		"ORDER_MUT=""standin_after_release"""	holds	holds	yes	4.5	runs/stop-c1-standin-reread.out
+perf-01-one-per-group	P_ok	OnePerGroupOfHolder	property	quint-verify	12			holds	holds	yes	27.3	runs/perf-01-one-per-group.out
+perf-01b-one-per-group-sim	P_ok	OnePerGroupOfHolder	property	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-01b-one-per-group-sim.out
+perf-02-takeover-wait	P_ok	TakeoverWaitHonored	property	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-02-takeover-wait.out
+perf-02b-takeover-wait-verify	P_ok	TakeoverWaitHonored	property	quint-verify	12			holds	holds	yes	26.4	runs/perf-02b-takeover-wait-verify.out
+perf-03-order	P_ok	OrderInGroup	property	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-03-order.out
+perf-04-noearly-close-0skew	P_ok	NoEarlyForeignClose	control	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-04-noearly-close-0skew.out
+perf-05-early-close-skew	P_skew	NoEarlyForeignClose	property	quint-run-rust	60	10000	SKEW=150	violated	violated	yes	0.7	runs/perf-05-early-close-skew.out
+perf-06-noearly-expire-0	P_ok	NoEarlyExpire	control	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-06-noearly-expire-0.out
+perf-07-early-expire-filer	P_fskew	NoEarlyExpire	property	quint-run-rust	60	10000	FSKEW=-150	violated	violated	yes	0.7	runs/perf-07-early-expire-filer.out
+perf-08-noself-close	P_ok	NoSelfForeignClose	property	quint-run-rust	60	10000		holds	holds	yes	1.0	runs/perf-08-noself-close.out
+perf-09-hung-blocks	P_hang_noexpire	HungDoesNotBlockForever	property	quint-run-rust	60	10000	HANG=true;TTL=10000;STEPS=Set(50,102,500)	violated	violated	yes	0.7	runs/perf-09-hung-blocks.out
+perf-w1-overlap	P_ok	W_overlap	witness	quint-run-rust	60	20000		violated	violated	yes	0.7	runs/perf-w1-overlap.out
+perf-w2-late	P_ok	W_late	witness	quint-run-rust	60	20000		violated	violated	yes	0.7	runs/perf-w2-late.out
+perf-w3-second-expired-during-hang	P_hang	W_secondExpiredDuringHang	witness	quint-run-rust	60	20000	HANG=true	violated	violated	yes	0.7	runs/perf-w3-second-expired-during-hang.out
+perf-w4-begun	P_ok	W_begun	witness	quint-run-rust	30	2000		violated	violated	yes	0.7	runs/perf-w4-begun.out
+perf-w5-unknown	P_ok	W_unknown	witness	quint-run-rust	60	10000		violated	violated	yes	0.7	runs/perf-w5-unknown.out
+perf-w6-performed	P_ok	W_performed	witness	quint-run-rust	30	2000		violated	violated	yes	0.7	runs/perf-w6-performed.out
+perf-w7-taken	P_ok	W_taken	witness	quint-run-rust	10	500		violated	violated	yes	0.7	runs/perf-w7-taken.out
+perf-w8-foreign-close	P_ok	W_foreignClose	witness	quint-run-rust	60	20000		violated	violated	yes	0.7	runs/perf-w8-foreign-close.out
+perf-w9-expired	P_ok	W_expired	witness	quint-run-rust	60	10000		violated	violated	yes	0.7	runs/perf-w9-expired.out
+perf-m1-no-busy	P_m_busy	OnePerGroupOfHolder	mutant	quint-run-rust	40	5000	NO_BUSY_CHECK=true	violated	violated	yes	0.7	runs/perf-m1-no-busy.out
+perf-m2-no-wait	P_m_wait	TakeoverWaitHonored	mutant	quint-run-rust	60	10000	NO_TAKEOVER_WAIT=true	violated	violated	yes	0.7	runs/perf-m2-no-wait.out
+perf-m3-order	P_m_order	OrderInGroup	mutant	quint-run-rust	40	5000	NO_ORDER=true	violated	violated	yes	0.7	runs/perf-m3-order.out
+perf-m4-self-close	P_m_selfclose	NoSelfForeignClose	mutant	quint-run-rust	60	10000	CLOSE_OWN_BEGUN=true	violated	violated	yes	0.7	runs/perf-m4-self-close.out

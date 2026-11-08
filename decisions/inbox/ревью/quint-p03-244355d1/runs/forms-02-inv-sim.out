@@ -1,0 +1,751 @@
+$ quint run --backend=rust --main=F_ok --max-samples=5000 --max-steps=40 --invariant=FormsInv inst/F_ok.qnt
+exit 0
+
+An example execution:
+
+[State 0]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 1]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "publish", nums: [90, 90], strs: ["refused"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 2]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 3]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 4]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 90, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 5]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 90, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 6]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 90, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 7]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 120, st: "seeking" },
+  F_ok::p03_forms::io:
+    [{ name: "publish", nums: [120, 120], strs: ["refused"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 8]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 9]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [{ name: "name_back", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 10]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 11]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 12]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 13]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 14]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [{ name: "name_back", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 15]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 16]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 17]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 18]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [{ name: "name_back", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 19]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 20]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 21]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 22]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 23]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 24]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 25]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 26]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 27]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 28]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 29]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 30]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 31]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "nameless", since: 120, st: "seeking" },
+  F_ok::p03_forms::io:
+    [{ name: "publish", nums: [120, 120], strs: ["nameless"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 32]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [{ name: "name_back", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 33]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 120, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 34]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "name_taken", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 35]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 110, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 36]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 110, st: "seeking" },
+  F_ok::p03_forms::io:
+    [{ name: "publish", nums: [110, 120], strs: ["refused"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 37]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 110, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 38]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: true, phase: "refused", since: 110, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 39]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 110, st: "holding" },
+  F_ok::p03_forms::io: [{ name: "name_back", nums: [], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 40]
+{
+  F_ok::p03_forms::cw:
+    { ever: true, lostEp: false, phase: "", since: 110, st: "holding" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[ok] No violation found (186ms at 26882 traces/second).
+Trace length statistics: max=41, min=41, average=41.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xda7cbabd2d72d422 --backend=rust to reproduce.

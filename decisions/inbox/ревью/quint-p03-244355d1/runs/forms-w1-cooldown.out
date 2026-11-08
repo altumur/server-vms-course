@@ -1,0 +1,172 @@
+$ quint run --backend=rust --main=F_ok --max-samples=20000 --max-steps=30 --invariant=W_cooldown inst/F_ok.qnt
+exit 1
+
+An example execution:
+
+[State 0]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 1]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 2]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "",
+      curJ: "",
+      revoked: "",
+      st: "loading",
+      usable: false
+    }
+}
+
+[State 3]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "",
+      st: "ready",
+      usable: true
+    }
+}
+
+[State 4]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "quiet" },
+  F_ok::p03_forms::io: [{ name: "request", nums: [], strs: ["ja"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "ja",
+      st: "asking",
+      usable: false
+    }
+}
+
+[State 5]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "", since: 0, st: "quiet" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "ja",
+      st: "asking",
+      usable: false
+    }
+}
+
+[State 6]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 120, st: "seeking" },
+  F_ok::p03_forms::io:
+    [{ name: "publish", nums: [120, 120], strs: ["refused"] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "ja",
+      st: "asking",
+      usable: false
+    }
+}
+
+[State 7]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [],
+  F_ok::p03_forms::tc:
+    {
+      blocked: -1,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "ja",
+      st: "asking",
+      usable: false
+    }
+}
+
+[State 8]
+{
+  F_ok::p03_forms::cw:
+    { ever: false, lostEp: false, phase: "refused", since: 120, st: "seeking" },
+  F_ok::p03_forms::io: [{ name: "same_jti_log", nums: [9], strs: [] }],
+  F_ok::p03_forms::tc:
+    {
+      blocked: 9,
+      candH: "",
+      candJ: "",
+      curH: "b",
+      curJ: "ja",
+      revoked: "ja",
+      st: "cooldown",
+      usable: false
+    }
+}
+
+[violation] Found an issue (102ms at 27451 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xa72d4fd94a98c73c --backend=rust to reproduce.
+error: Invariant violated

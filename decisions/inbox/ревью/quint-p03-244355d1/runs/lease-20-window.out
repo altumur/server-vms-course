@@ -1,0 +1,2764 @@
+$ quint run --backend=rust --main=L_any --max-samples=8000 --max-steps=80 --invariant=ActWithinWindowFromSend inst/L_any.qnt
+exit 0
+
+An example execution:
+
+[State 0]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 0,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 0, k: "rec", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false, 1 -> false),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 1]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 0,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 0, k: "rec", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 2]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 0,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 20, k: "pump", t0: 0, u: -1 },
+      nobody: false,
+      now: 0,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 0,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 3]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 0,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 21, k: "hb", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 20,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 4]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 21, k: "hb", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 20,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 5]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 1,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 21, k: "hb", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 20,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: false,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 6]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 21, k: "hb", t0: 20, u: -1 },
+      nobody: false,
+      now: 20,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 20,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 7]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 41, k: "pause", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 21,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: true
+    }
+}
+
+[State 8]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 41, k: "pause", t0: 21, u: -1 },
+      nobody: false,
+      now: 21,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 21,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 9]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 61, k: "rec", t0: 41, u: -1 },
+      nobody: false,
+      now: 41,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 41,
+      stolen: Map(0 -> false, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 10]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 61, k: "rec", t0: 41, u: -1 },
+      nobody: false,
+      now: 41,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 41,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 11]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 81, k: "pump", t0: 61, u: -1 },
+      nobody: false,
+      now: 61,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 75, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 61,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 12]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 81, k: "pump", t0: 61, u: -1 },
+      nobody: false,
+      now: 75,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 61,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 13]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 82, k: "hb", t0: 81, u: -1 },
+      nobody: false,
+      now: 81,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 81,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 14]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 102, k: "pause", t0: 82, u: -1 },
+      nobody: false,
+      now: 82,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 82,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 15]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 122, k: "rec", t0: 102, u: -1 },
+      nobody: false,
+      now: 102,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 102,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 16]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 0,
+      leaseSteps: 0,
+      lp: { ends: 123, k: "pump", t0: 122, u: -1 },
+      nobody: false,
+      now: 122,
+      reqs: 0,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 122,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 17]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 183, k: "renew", t0: 123, u: -1 },
+      nobody: false,
+      now: 123,
+      reqs: 1,
+      slotSend: 0,
+      sp: { ends: 150, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 18]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 183, k: "renew", t0: 123, u: -1 },
+      nobody: false,
+      now: 150,
+      reqs: 1,
+      slotSend: 0,
+      sp: { ends: 225, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 19]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 183, k: "floor", t0: 183, u: -1 },
+      nobody: false,
+      now: 183,
+      reqs: 2,
+      slotSend: 0,
+      sp: { ends: 225, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 20]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 243, k: "confirm", t0: 183, u: 0 },
+      nobody: false,
+      now: 183,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 225, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 21]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> false, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 243, k: "confirm", t0: 183, u: 0 },
+      nobody: false,
+      now: 225,
+      reqs: 3,
+      slotSend: 0,
+      sp: { ends: 300, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "confirmed", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 22]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: false,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 303, k: "confirm", t0: 243, u: 1 },
+      nobody: false,
+      now: 243,
+      reqs: 4,
+      slotSend: 0,
+      sp: { ends: 300, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 23]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> false),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 303, k: "confirm", t0: 243, u: 1 },
+      nobody: false,
+      now: 300,
+      reqs: 5,
+      slotSend: 0,
+      sp: { ends: 360, k: "renew", t0: 300, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "confirmed"),
+      stepBegan: 123,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 24]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 323, k: "hb", t0: 303, u: -1 },
+      nobody: false,
+      now: 303,
+      reqs: 5,
+      slotSend: 0,
+      sp: { ends: 360, k: "renew", t0: 300, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 303,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 25]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 343, k: "pause", t0: 323, u: -1 },
+      nobody: false,
+      now: 323,
+      reqs: 5,
+      slotSend: 0,
+      sp: { ends: 360, k: "renew", t0: 300, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 323,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 26]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 363, k: "rec", t0: 343, u: -1 },
+      nobody: false,
+      now: 343,
+      reqs: 5,
+      slotSend: 0,
+      sp: { ends: 360, k: "renew", t0: 300, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 343,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 27]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 363, k: "rec", t0: 343, u: -1 },
+      nobody: false,
+      now: 360,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 420, k: "confirm", t0: 360, u: 0 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 343,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 28]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> false, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 463, k: "pump", t0: 363, u: -1 },
+      nobody: false,
+      now: 363,
+      reqs: 6,
+      slotSend: 0,
+      sp: { ends: 420, k: "confirm", t0: 360, u: 0 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 363,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 29]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> false),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 463, k: "pump", t0: 363, u: -1 },
+      nobody: false,
+      now: 420,
+      reqs: 7,
+      slotSend: 0,
+      sp: { ends: 420, k: "confirm", t0: 420, u: 1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 363,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 30]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 123,
+      leaseSteps: 1,
+      lp: { ends: 463, k: "pump", t0: 363, u: -1 },
+      nobody: false,
+      now: 420,
+      reqs: 7,
+      slotSend: 0,
+      sp: { ends: 495, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 363,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 31]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 523, k: "renew", t0: 463, u: -1 },
+      nobody: false,
+      now: 463,
+      reqs: 8,
+      slotSend: 0,
+      sp: { ends: 495, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 32]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 523, k: "renew", t0: 463, u: -1 },
+      nobody: false,
+      now: 495,
+      reqs: 8,
+      slotSend: 0,
+      sp: { ends: 570, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 33]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 523, k: "floor", t0: 523, u: -1 },
+      nobody: false,
+      now: 523,
+      reqs: 9,
+      slotSend: 0,
+      sp: { ends: 570, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 34]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 583, k: "confirm", t0: 523, u: 0 },
+      nobody: false,
+      now: 523,
+      reqs: 10,
+      slotSend: 0,
+      sp: { ends: 570, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 35]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 583, k: "confirm", t0: 523, u: 0 },
+      nobody: false,
+      now: 570,
+      reqs: 10,
+      slotSend: 0,
+      sp: { ends: 645, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 36]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 583, k: "confirm", t0: 583, u: 1 },
+      nobody: false,
+      now: 583,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 645, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 463,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 37]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 683, k: "hb", t0: 583, u: -1 },
+      nobody: false,
+      now: 583,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 645, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 583,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 38]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 683, k: "hb", t0: 583, u: -1 },
+      nobody: false,
+      now: 645,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 720, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 583,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 39]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 684, k: "pause", t0: 683, u: -1 },
+      nobody: false,
+      now: 683,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 720, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 683,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 40]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 685, k: "rec", t0: 684, u: -1 },
+      nobody: false,
+      now: 684,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 720, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 684,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 41]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 463,
+      leaseSteps: 2,
+      lp: { ends: 686, k: "pump", t0: 685, u: -1 },
+      nobody: false,
+      now: 685,
+      reqs: 11,
+      slotSend: 0,
+      sp: { ends: 720, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 685,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 42]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 746, k: "renew", t0: 686, u: -1 },
+      nobody: false,
+      now: 686,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 720, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 686,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 43]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 746, k: "renew", t0: 686, u: -1 },
+      nobody: false,
+      now: 720,
+      reqs: 12,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 686,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 44]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 746, k: "floor", t0: 746, u: -1 },
+      nobody: false,
+      now: 746,
+      reqs: 13,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 686,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 45]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 746, k: "confirm", t0: 746, u: 0 },
+      nobody: false,
+      now: 746,
+      reqs: 14,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 686,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 46]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 746, k: "confirm", t0: 746, u: 1 },
+      nobody: false,
+      now: 746,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 686,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 47]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 766, k: "hb", t0: 746, u: -1 },
+      nobody: false,
+      now: 746,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 746,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 48]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 786, k: "pause", t0: 766, u: -1 },
+      nobody: false,
+      now: 766,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 766,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 49]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 886, k: "rec", t0: 786, u: -1 },
+      nobody: false,
+      now: 786,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 795, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 786,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 50]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 886, k: "rec", t0: 786, u: -1 },
+      nobody: false,
+      now: 795,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 870, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 786,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 51]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 886, k: "rec", t0: 786, u: -1 },
+      nobody: false,
+      now: 870,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 945, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 786,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 52]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 686,
+      leaseSteps: 3,
+      lp: { ends: 906, k: "pump", t0: 886, u: -1 },
+      nobody: false,
+      now: 886,
+      reqs: 15,
+      slotSend: 0,
+      sp: { ends: 945, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 886,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 53]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 966, k: "renew", t0: 906, u: -1 },
+      nobody: false,
+      now: 906,
+      reqs: 16,
+      slotSend: 0,
+      sp: { ends: 945, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 54]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 966, k: "renew", t0: 906, u: -1 },
+      nobody: false,
+      now: 945,
+      reqs: 16,
+      slotSend: 0,
+      sp: { ends: 1020, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 55]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1026, k: "floor", t0: 966, u: -1 },
+      nobody: false,
+      now: 966,
+      reqs: 17,
+      slotSend: 0,
+      sp: { ends: 1020, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 56]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1026, k: "floor", t0: 966, u: -1 },
+      nobody: false,
+      now: 1020,
+      reqs: 17,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 57]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1026, k: "confirm", t0: 1026, u: 0 },
+      nobody: false,
+      now: 1026,
+      reqs: 18,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 58]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1026, k: "confirm", t0: 1026, u: 1 },
+      nobody: false,
+      now: 1026,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 906,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 59]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1046, k: "hb", t0: 1026, u: -1 },
+      nobody: false,
+      now: 1026,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1026,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 60]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1047, k: "pause", t0: 1046, u: -1 },
+      nobody: false,
+      now: 1046,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1046,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 61]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1207, k: "rec", t0: 1047, u: -1 },
+      nobody: false,
+      now: 1047,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1095, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1047,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 62]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1207, k: "rec", t0: 1047, u: -1 },
+      nobody: false,
+      now: 1095,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1170, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1047,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 63]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1207, k: "rec", t0: 1047, u: -1 },
+      nobody: false,
+      now: 1170,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1245, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1047,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 64]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1367, k: "pump", t0: 1207, u: -1 },
+      nobody: false,
+      now: 1207,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1245, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1207,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 65]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1367, k: "pump", t0: 1207, u: -1 },
+      nobody: false,
+      now: 1245,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1320, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1207,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 66]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 906,
+      leaseSteps: 4,
+      lp: { ends: 1367, k: "pump", t0: 1207, u: -1 },
+      nobody: false,
+      now: 1320,
+      reqs: 19,
+      slotSend: 0,
+      sp: { ends: 1395, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1207,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 67]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1367, k: "renew", t0: 1367, u: -1 },
+      nobody: false,
+      now: 1367,
+      reqs: 20,
+      slotSend: 0,
+      sp: { ends: 1395, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1367,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 68]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1367, k: "floor", t0: 1367, u: -1 },
+      nobody: false,
+      now: 1367,
+      reqs: 21,
+      slotSend: 0,
+      sp: { ends: 1395, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1367,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 69]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1427, k: "confirm", t0: 1367, u: 0 },
+      nobody: false,
+      now: 1367,
+      reqs: 22,
+      slotSend: 0,
+      sp: { ends: 1395, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1367,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 70]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1427, k: "confirm", t0: 1367, u: 0 },
+      nobody: false,
+      now: 1395,
+      reqs: 22,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1367,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 71]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1427, k: "confirm", t0: 1427, u: 1 },
+      nobody: false,
+      now: 1427,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1367,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 72]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1428, k: "hb", t0: 1427, u: -1 },
+      nobody: false,
+      now: 1427,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1427,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 73]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1429, k: "pause", t0: 1428, u: -1 },
+      nobody: false,
+      now: 1428,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1428,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 74]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1430, k: "rec", t0: 1429, u: -1 },
+      nobody: false,
+      now: 1429,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1429,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 75]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1367,
+      leaseSteps: 5,
+      lp: { ends: 1450, k: "pump", t0: 1430, u: -1 },
+      nobody: false,
+      now: 1430,
+      reqs: 23,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1430,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 76]
+{
+  L_any::p03_lease::st:
+    {
+      again: false,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1450,
+      leaseSteps: 6,
+      lp: { ends: 1450, k: "renew", t0: 1450, u: -1 },
+      nobody: false,
+      now: 1450,
+      reqs: 24,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1450,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 77]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1450,
+      leaseSteps: 6,
+      lp: { ends: 1510, k: "floor", t0: 1450, u: -1 },
+      nobody: false,
+      now: 1450,
+      reqs: 25,
+      slotSend: 0,
+      sp: { ends: 1470, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1450,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 78]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1450,
+      leaseSteps: 6,
+      lp: { ends: 1510, k: "floor", t0: 1450, u: -1 },
+      nobody: false,
+      now: 1470,
+      reqs: 25,
+      slotSend: 0,
+      sp: { ends: 1545, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1450,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 79]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1450,
+      leaseSteps: 6,
+      lp: { ends: 1510, k: "confirm", t0: 1510, u: 0 },
+      nobody: false,
+      now: 1510,
+      reqs: 26,
+      slotSend: 0,
+      sp: { ends: 1545, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1450,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[State 80]
+{
+  L_any::p03_lease::st:
+    {
+      again: true,
+      everRecovered: false,
+      everSilent: false,
+      everStandin: true,
+      flips: 2,
+      foreignSlot: false,
+      ghostFenced: Map(0 -> true, 1 -> true),
+      ghostLost: Map(0 -> false, 1 -> false),
+      ghostMissed: Map(0 -> true, 1 -> true),
+      ghostSend: Map(0 -> 0, 1 -> 0),
+      ghostSlot: 0,
+      jumps: 0,
+      last: Map(0 -> 0, 1 -> 0),
+      leaseStart: 1450,
+      leaseSteps: 6,
+      lp: { ends: 1570, k: "confirm", t0: 1510, u: 1 },
+      nobody: false,
+      now: 1510,
+      reqs: 27,
+      slotSend: 0,
+      sp: { ends: 1545, k: "idle", t0: 0, u: -1 },
+      status: Map(0 -> "fenced", 1 -> "fenced"),
+      stepBegan: 1450,
+      stolen: Map(0 -> true, 1 -> true),
+      storeUp: true,
+      wallOff: 0,
+      writeUp: false
+    }
+}
+
+[ok] No violation found (741ms at 10796 traces/second).
+Trace length statistics: max=81, min=81, average=81.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xe38a887030696cf3 --backend=rust to reproduce.
