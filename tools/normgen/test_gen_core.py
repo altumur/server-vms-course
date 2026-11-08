@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -294,6 +295,147 @@ class Kit(unittest.TestCase):
         self.assertEqual(set(names), set(gen_core.OPS))
         extra = door.replace("\tMetrics(c C) Answer", "\tMetrics(c C) Answer\n\tPing(c C) Answer", 1)
         self.assertEqual(len(gen_core.handler_methods(extra)), len(names) + 1)
+
+
+def z21_source_requirement(root, chapter, identity):
+    text = (root / f"Platform/01-store/spec/01.{chapter}-store.norms.md").read_text(encoding="utf-8")
+    pattern = rf"<!-- req: {re.escape(identity)} -->\s*(.*?)(?=\n<!-- req:|\n#|\Z)"
+    matches = re.findall(pattern, text, re.S)
+    if len(matches) != 1 or not matches[0].strip():
+        raise ValueError("missing or ambiguous Source requirement " + identity)
+    # These generated prose comments retain a Markdown link's label, not its URL syntax.
+    paragraph = re.sub(r"\[([^\]\n]+)\]\([^\)\n]+\)", r"\1", matches[0])
+    return " ".join(paragraph.replace("**", "").strip().removeprefix("- ").split())
+
+
+def z21_assert_requirement_comment(text, identity, source, *, abbreviated=False):
+    """Compare the Source paragraph, never a producer-selected anchor list."""
+    # Remove Go comment prefixes; whitespace wrapping carries no semantic content.
+    comment = " ".join(re.sub(r"^//[ \t]*", "", text, flags=re.M).split())
+    wanted = source[:80] if abbreviated else source
+    if f"req: {identity} — {wanted}" not in comment:
+        raise AssertionError("missing or stale Source comment " + identity)
+
+
+Z21_CORE_TEST = r'''package coreadapter
+import (
+    "testing"
+    "normgen/p01-1/apidoor"
+)
+var _ Core = (*Store)(nil)
+type z21Core struct{*Store; brokenHead bool}
+func (s z21Core) CopyHead(Ctx) apidoor.Answer {if s.brokenHead{return apidoor.Answer{Code:299}};return apidoor.Answer{Code:$HEADCODE,Allow:true}}
+func TestZ21CoreCopyStubs(t *testing.T) {
+    s:=&Store{}
+    for _,p:=range []struct{op apidoor.Op;a apidoor.Answer}{{apidoor.OpCopyGet,s.CopyGet(nil)},{apidoor.OpCopyHead,s.CopyHead(nil)}} {
+        r,err:=apidoor.Encode(p.op,p.a)
+        if err!=nil || r.Code!=503 {t.Fatalf("existing not-in-stage stub: %v %v",r,err)}
+        if p.op==apidoor.OpCopyHead && len(r.Body)!=0{t.Fatal("HEAD stub has a body")}
+    }
+}
+func TestZ21HeadDispatchProjection(t *testing.T) {
+    c:=z21Core{Store:&Store{}}
+    code,h,body:=Handle(c,Config{BodyLimit:16},Call{Sock:"admin"},"HEAD","/v1/copy",nil,nil)
+    if code!=$HEADCODE || h["Allow"]!=$ALLOW || len(body)!=0 {t.Fatalf("HEAD projection: %d %v %q",code,h,body)}
+    context:=c.Context(Call{Sock:"admin"},map[string]string{"X-Test":"é"})
+    if context.Call.Sock!="admin" || context.Header["X-Test"]!="é" {t.Fatal("context identity changed")}
+}
+func TestZ21HeadEarlyAndErrorProjection(t *testing.T) {
+    for _,p:=range []struct{c z21Core;target string;body []byte;code int}{
+        {z21Core{Store:&Store{}},"/v1/copy",[]byte("oversize"),413},
+        {z21Core{Store:&Store{}},"/absent",nil,404},
+        {z21Core{Store:&Store{},brokenHead:true},"/v1/copy",nil,500},
+    } {
+        code,_,body:=Handle(p.c,Config{BodyLimit:1},Call{Sock:"admin"},"HEAD",p.target,nil,p.body)
+        if code!=p.code || len(body)!=0 {t.Fatalf("existing adapter branch: %d %q",code,body)}
+    }
+}
+func TestZ21GetIsNotHeadProjection(t *testing.T) {
+    code,_,body:=Handle(&Store{},Config{BodyLimit:16},Call{Sock:"admin"},"GET","/v1/copy",nil,nil)
+    if code!=503 || len(body)==0 {t.Fatalf("GET stub was changed by HEAD projection: %d %q",code,body)}
+}
+'''
+
+
+class Z21CoreSource(unittest.TestCase):
+    source_root = HERE.parent.parent
+    code_root = HERE.parent.parent
+    go_names = ["TestZ21CoreCopyStubs", "TestZ21HeadDispatchProjection", "TestZ21HeadEarlyAndErrorProjection",
+                "TestZ21GetIsNotHeadProjection"]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.output = output_lesson.output_root()
+        cls.ready = output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                                code_root=cls.code_root, profiles=("p01-1",))
+        cls.tmp = tempfile.TemporaryDirectory(prefix="z21-core-")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+        output_lesson.ready_outputs(output_root=cls.output, source_root=cls.source_root,
+                                    code_root=cls.code_root, profiles=("p01-1",))
+
+    def test_actual_source_comments_and_missing_stale_neighbours(self):
+        for file, chapter, identity, short in (("copyget", 3, "P/01.3-R033", False),
+                ("copyget", 3, "P/01.3-R034", False), ("copyhead", 3, "P/01.3-R033", False),
+                ("write", 1, "P/01.1-R148", True), ("frame", 1, "P/01.1-R147", False)):
+            relative = "go/frame/frame.go" if file == "frame" else f"core/coreadapter/{file}.go"
+            text = (self.ready["p01-1"] / relative).read_text()
+            source = z21_source_requirement(self.source_root, chapter, identity)
+            z21_assert_requirement_comment(text, identity, source, abbreviated=short)
+            with self.subTest(file=file, identity=identity):
+                for changed in (text.replace(identity, "P/00.0-R000"), text.replace(source[:30], "stale source", 1)):
+                    self.assertNotEqual(changed, text)
+                    with self.assertRaises(AssertionError):
+                        z21_assert_requirement_comment(changed, identity, source, abbreviated=short)
+
+    def module(self, name):
+        import yaml
+        path = Path(self.tmp.name) / name
+        shutil.copytree(self.ready["p01-1"] / "go", path)
+        # Explicitly overlay the generated editable scaffolds in this owned module only.
+        for item in (self.ready["p01-1"] / "core/coreadapter").glob("*.go"):
+            shutil.copy(item, path / "coreadapter" / item.name)
+        api = yaml.safe_load((self.source_root / "Platform/01-store/spec/01-store.api.openapi.yaml").read_text())
+        head = api["paths"]["/v1/copy"]["head"]["responses"]
+        self.assertNotIn("content", head["405"])
+        self.assertTrue(head["405"]["headers"]["Allow"]["required"])
+        allow = head["405"]["headers"]["Allow"]["schema"]["const"]
+        test = Z21_CORE_TEST.replace("$HEADCODE", str(int("405"))).replace("$ALLOW", json.dumps(allow))
+        (path / "coreadapter/z21_copy_test.go").write_text(test, encoding="utf-8")
+        return path
+
+    def run_module(self, module):
+        from test_gen_machine import CheckingError, complete_go_tests
+        try:
+            done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^(" + "|".join(self.go_names) + ")$",
+                                   "./coreadapter"], cwd=module, capture_output=True, timeout=120)
+            observed = SimpleNamespace(returncode=done.returncode, stdout=done.stdout.decode("utf-8", "strict"),
+                                       stderr=done.stderr.decode("utf-8", "strict"))
+        except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+            raise CheckingError("cannot obtain complete core-adapter report") from exc
+        return complete_go_tests(observed, self.go_names, "normgen/p01-1/coreadapter")
+
+    def test_compiled_scaffold_and_all_existing_head_projection_branches(self):
+        self.assertEqual(self.run_module(self.module("normal")), [])
+
+    def test_valid_adapter_and_copy_operation_mutants_need_named_failures(self):
+        self.assertEqual(self.run_module(self.module("mutant-baseline")), [])
+        cases = (("head-body", "coreadapter/coreadapter.go", 'if method == "HEAD" {', 'if method == "not-HEAD" {',
+                  "TestZ21HeadEarlyAndErrorProjection"),
+                 ("head-op", "coreadapter/copyhead.go", "return notInStage(apidoor.OpCopyHead)",
+                  "return notInStage(apidoor.OpCopyGet)", "TestZ21CoreCopyStubs"),
+                 ("get-op", "coreadapter/copyget.go", "return notInStage(apidoor.OpCopyGet)",
+                  "return notInStage(apidoor.OpCopyHead)", "TestZ21CoreCopyStubs"))
+        for name, file, before, after, killed_by in cases:
+            with self.subTest(mutant=name):
+                module = self.module(name)
+                path = module / file
+                text = path.read_text()
+                self.assertEqual(text.count(before), 1)
+                path.write_text(text.replace(before, after), encoding="utf-8")
+                self.assertIn(killed_by, self.run_module(module), "surviving compiled mutant " + name)
 
 
 if __name__ == "__main__":

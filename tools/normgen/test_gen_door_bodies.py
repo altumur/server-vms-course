@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+import hashlib
+from urllib.parse import quote, unquote_to_bytes, urljoin, urlsplit
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -321,6 +323,905 @@ def cases_for(defs, rnd):
     return out
 
 
+class SourceSchemaReader:
+    """Independent, offline source oracle; coordinates are declarations, never names or cache permissions."""
+
+    METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
+    SCHEMA_MAPS = ("properties", "patternProperties", "$defs", "dependentSchemas")
+    SCHEMA_LISTS = ("allOf", "anyOf", "oneOf", "prefixItems")
+    SCHEMA_SINGLE = ("items", "contains", "additionalProperties", "unevaluatedProperties",
+                     "unevaluatedItems", "propertyNames", "not", "if", "then", "else", "contentSchema", "x-line-schema")
+    ANNOTATIONS = {"title", "description", "$comment", "default", "examples", "$schema",
+                   "readOnly", "writeOnly", "deprecated", "discriminator", "xml", "externalDocs"}
+
+    def __init__(self, root, source):
+        self.root = Path(root).resolve()
+        self.platform = (self.root / "Platform").resolve()
+        self.source = self.physical(source)
+        self.docs, self.provenance = {}, {}
+        self.kinds, self.children, self.locations = {}, {}, {}
+        self.edges, self.visited, self.active = {}, set(), set()
+        self.parameters = {}
+        self.document(self.source)
+        self._walk(self.source, "", "schema" if self.is_json(self.source) else "document", (self.source,))
+
+    @staticmethod
+    def escape(token):
+        return str(token).replace("~", "~0").replace("/", "~1")
+
+    @staticmethod
+    def fragment(text):
+        if re.search(r"%(?![0-9a-fA-F]{2})", text):
+            raise CheckingError("malformed URI escape")
+        try:
+            text = unquote_to_bytes(text).decode("utf-8")
+        except UnicodeError as exc:
+            raise CheckingError("invalid URI UTF-8") from exc
+        if text and not text.startswith("/"):
+            raise CheckingError("unsupported fragment anchor")
+        if re.search(r"~(?![01])", text):
+            raise CheckingError("invalid JSON Pointer escape")
+        return text
+
+    def physical(self, path):
+        try:
+            path = Path(path).resolve(strict=True)
+        except (OSError, RuntimeError) as exc:
+            raise CheckingError(f"missing/invalid physical source: {path}") from exc
+        if not path.is_relative_to(self.platform) or not path.is_file():
+            raise CheckingError(f"source outside Platform or not a regular file: {path}")
+        self.owner(path)
+        return path
+
+    def owner(self, path):
+        relative = Path(path).relative_to(self.platform)
+        first = relative.parts[0]
+        if first == "common":
+            return None
+        if not re.fullmatch(r"[0-9]{2}-[a-z][a-z0-9-]*", first):
+            raise CheckingError(f"unowned physical resource: {path}")
+        if str(path).endswith(".api.openapi.yaml") and Path(path).name != first + ".api.openapi.yaml":
+            raise CheckingError(f"declared/physical OpenAPI owner mismatch: {path}")
+        return int(first[:2])
+
+    @staticmethod
+    def is_json(path):
+        return str(path).endswith(".schema.json")
+
+    @staticmethod
+    def _json_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise CheckingError(f"duplicate source JSON name: {key}")
+            result[key] = value
+        return result
+
+    @staticmethod
+    def _constant(value):
+        raise CheckingError(f"nonfinite source JSON: {value}")
+
+    @staticmethod
+    def _json_tree(node, ancestors=()):
+        if isinstance(node, (dict, list)):
+            if id(node) in ancestors:
+                raise CheckingError("cyclic source alias structure")
+            ancestors += (id(node),)
+            if isinstance(node, dict):
+                if any(type(key) is not str for key in node):
+                    raise CheckingError("source object keys must be strings")
+                values = node.values()
+            else:
+                values = node
+            for value in values:
+                SourceSchemaReader._json_tree(value, ancestors)
+        elif node is not None and type(node) not in (str, int, float, bool):
+            raise CheckingError("non-JSON source value")
+
+    def document(self, path):
+        path = self.physical(path)
+        try:
+            raw = path.read_bytes()
+            digest = hashlib.sha256(raw).hexdigest()
+            if path in self.docs:
+                if self.provenance[path] != digest:
+                    raise CheckingError(f"source changed after reading: {path}")
+                return self.docs[path]
+            text = raw.decode("utf-8")
+            if self.is_json(path):
+                doc = json.loads(text, object_pairs_hook=self._json_pairs, parse_constant=self._constant)
+                if type(doc) not in (dict, bool):
+                    raise CheckingError("standalone JSON resource is not a schema")
+            elif str(path).endswith(".api.openapi.yaml"):
+                import yamlsub
+                doc = yamlsub.load(text, path.name)
+                if type(doc) is not dict or not str(doc.get("openapi", "")).startswith("3.1."):
+                    raise CheckingError("source is not OpenAPI 3.1")
+            else:
+                raise CheckingError(f"unsupported source file type: {path}")
+            self._json_tree(doc)
+            if self.is_json(path):
+                self._check_schema(doc)
+            json.dumps(doc, ensure_ascii=False, allow_nan=False).encode("utf-8")
+            self.docs[path], self.provenance[path] = doc, digest
+            self._index(path, "", "schema" if self.is_json(path) else "document", doc)
+            return doc
+        except CheckingError:
+            raise
+        except Exception as exc:
+            raise CheckingError(f"cannot read source {path}: {exc}") from exc
+
+    def _index(self, path, pointer, kind, node):
+        key = (path, pointer)
+        if key in self.kinds:
+            if self.kinds[key] != kind:
+                raise CheckingError(f"ambiguous source position: {path}#{pointer}")
+            return
+        if kind == "schema":
+            if type(node) not in (dict, bool):
+                raise CheckingError(f"not a Schema Object: {path}#{pointer}")
+        elif type(node) is not dict:
+            raise CheckingError(f"not an OpenAPI {kind}: {path}#{pointer}")
+        self.kinds[key] = kind
+        self.locations.setdefault((path, id(node), kind), []).append(pointer)
+        self.children[(path, pointer, kind)] = []
+
+        def child(token, child_kind, value):
+            target = pointer + "/" + token
+            self.children[(path, pointer, kind)].append((target, child_kind))
+            self._index(path, target, child_kind, value)
+
+        def mapping(field, child_kind):
+            values = node.get(field, {})
+            if type(values) is not dict:
+                raise CheckingError(f"invalid {field} map at {path}#{pointer}")
+            for name, value in values.items():
+                child(self.escape(field) + "/" + self.escape(name), child_kind, value)
+
+        def sequence(field, child_kind):
+            values = node.get(field, [])
+            if type(values) is not list:
+                raise CheckingError(f"invalid {field} array at {path}#{pointer}")
+            for i, value in enumerate(values):
+                child(self.escape(field) + "/" + str(i), child_kind, value)
+
+        if type(node) is bool:
+            return
+        if kind == "schema":
+            for field in self.SCHEMA_MAPS:
+                mapping(field, "schema")
+            for field in self.SCHEMA_LISTS:
+                sequence(field, "schema")
+            for field in self.SCHEMA_SINGLE:
+                if field in node:
+                    child(field, "schema", node[field])
+        elif kind == "document":
+            dialect = node.get("jsonSchemaDialect")
+            if dialect not in (None, "https://spec.openapis.org/oas/3.1/dialect/base",
+                               "https://json-schema.org/draft/2020-12/schema"):
+                raise CheckingError("unsupported OpenAPI schema dialect")
+            mapping("paths", "path")
+            components = node.get("components", {})
+            if type(components) is not dict:
+                raise CheckingError("invalid components")
+            for field, child_kind in (("schemas", "schema"), ("parameters", "parameter"),
+                    ("responses", "response"), ("headers", "header"), ("requestBodies", "request"),
+                    ("examples", "example"), ("pathItems", "path"), ("callbacks", "callback"),
+                    ("links", "link"), ("securitySchemes", "security")):
+                values = components.get(field, {})
+                if type(values) is not dict:
+                    raise CheckingError(f"invalid components/{field}")
+                for name, value in values.items():
+                    child("components/" + field + "/" + self.escape(name), child_kind, value)
+        elif kind == "path":
+            sequence("parameters", "parameter")
+            for method in self.METHODS:
+                if method in node:
+                    child(method, "operation", node[method])
+        elif kind == "operation":
+            sequence("parameters", "parameter")
+            if "requestBody" in node:
+                child("requestBody", "request", node["requestBody"])
+            mapping("responses", "response")
+            mapping("callbacks", "callback")
+        elif kind in ("parameter", "header"):
+            if "schema" in node:
+                child("schema", "schema", node["schema"])
+            mapping("content", "media")
+            mapping("examples", "example")
+        elif kind in ("response", "request"):
+            mapping("content", "media")
+            if kind == "response":
+                mapping("headers", "header")
+                mapping("links", "link")
+        elif kind == "media":
+            if "schema" in node:
+                child("schema", "schema", node["schema"])
+            mapping("examples", "example")
+        elif kind == "callback" and "$ref" not in node:
+            for name, value in node.items():
+                if not name.startswith("x-"):
+                    child(self.escape(name), "path", value)
+
+    def value(self, path, pointer):
+        node = self.document(path)
+        for encoded in pointer.split("/")[1:] if pointer else []:
+            token = encoded.replace("~1", "/").replace("~0", "~")
+            try:
+                if type(node) is list:
+                    if not re.fullmatch(r"0|[1-9][0-9]*", token):
+                        raise CheckingError("invalid array pointer index")
+                    node = node[int(token)]
+                elif type(node) is dict:
+                    node = node[token]
+                else:
+                    raise CheckingError("pointer traverses a scalar")
+            except (KeyError, IndexError) as exc:
+                raise CheckingError(f"missing source pointer: {path}#{pointer}") from exc
+        return node
+
+    def at(self, path, pointer, kind):
+        path = self.physical(path)
+        self.document(path)
+        node = self.value(path, pointer)
+        actual_kind = self.kinds.get((path, pointer))
+        if actual_kind is None and any(p.startswith("x-") for p in pointer.split("/")[1:]):
+            # An explicitly entered extension gets its incoming type, not blanket recursive privilege.
+            if not any(p in ("default", "const", "enum", "example", "examples", "value")
+                       for p in pointer.split("/")[1:]):
+                self._index(path, pointer, kind, node)
+                actual_kind = kind
+        if actual_kind != kind:
+            raise CheckingError(f"wrong source kind {actual_kind}, expected {kind}: {path}#{pointer}")
+        if not self.is_json(path) and pointer == "" and kind != "document":
+            raise CheckingError("whole OpenAPI document is not a schema")
+        return node
+
+    def _late(self, source, pointer, target_owner):
+        parts = pointer.split("/")
+        if len(parts) < 3 or parts[1] != "paths" or self.is_json(source):
+            return False
+        door = parts[2].replace("~1", "/").replace("~0", "~")
+        description = self.document(source).get("paths", {}).get(door, {}).get("description", "")
+        chapter = re.search(r"\bchapter\s+([0-9]{1,2})\.([0-9]+)\b", description, re.I)
+        if not chapter or int(chapter[1]) != self.owner(source):
+            return False
+        directory = source.parent.parent
+        norm = directory / "spec" / f"{int(chapter[1]):02}.{chapter[2]}-{directory.name[3:]}.norms.md"
+        norm = self.physical(norm)
+        raw = norm.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        if norm in self.provenance and self.provenance[norm] != digest:
+            raise CheckingError("late declaration changed")
+        self.provenance[norm] = digest
+        header = raw.decode("utf-8").split("\n\n", 4)[:4]
+        found = re.search(r"late layer:\s*lessons?\s+([0-9 ,and]+)\s+introduce", "\n".join(header), re.I)
+        return bool(found and target_owner in {int(x) for x in re.findall(r"[0-9]+", found[1])})
+
+    def _reference(self, source, pointer, ref, kind, chain):
+        if type(ref) is not str:
+            raise CheckingError("source $ref must be a string")
+        try:
+            parsed = urlsplit(ref)
+        except ValueError as exc:
+            raise CheckingError("invalid reference URI") from exc
+        if (parsed.scheme or parsed.netloc or parsed.query or parsed.path.startswith(("/", "\\"))
+                or "\\" in parsed.path):
+            raise CheckingError("only offline relative references are supported")
+        if re.search(r"%(?![0-9a-fA-F]{2})", parsed.path):
+            raise CheckingError("invalid reference path escape")
+        try:
+            name = unquote_to_bytes(parsed.path).decode("utf-8")
+        except UnicodeError as exc:
+            raise CheckingError("invalid path UTF-8") from exc
+        target = self.physical(source.parent / name) if name else source
+        fragment = self.fragment(parsed.fragment)
+        if name and target == source:
+            raise CheckingError("own-file path reference requires a local fragment")
+        if self.is_json(target) and kind != "schema":
+            raise CheckingError("JSON Schema cannot replace an OpenAPI object")
+        if not self.is_json(target) and not fragment:
+            raise CheckingError("whole OpenAPI reference is unsupported")
+        if target != source:
+            origin_owner, target_owner = self.owner(source), self.owner(target)
+            allowed = target_owner is None or (origin_owner is not None and
+                (target_owner < origin_owner or (self.is_json(target) and target_owner == origin_owner)))
+            if not allowed and not (origin_owner is not None and target_owner is not None
+                                    and self._late(source, pointer, target_owner)):
+                raise CheckingError(f"forbidden owner transition: {source}#{pointer} -> {target}")
+            if target in chain:
+                raise CheckingError("cross-file reference cycle: " + " -> ".join(map(str, chain + (target,))))
+        # The owner/declaration check above always runs, including for cached resources and aliases.
+        self.document(target)
+        self.at(target, fragment, kind)
+        identity = (source, pointer, ref, kind)
+        if identity in self.edges and self.edges[identity] != (target, fragment):
+            raise CheckingError("physical reference target changed after reading")
+        self.edges[identity] = (target, fragment)
+        next_chain = chain + (target,) if target != source else chain
+        if target != source:
+            self._walk(target, "", "schema" if self.is_json(target) else "document", next_chain)
+        return target, fragment, next_chain
+
+    def _walk(self, path, pointer, kind, chain):
+        node = self.at(path, pointer, kind)
+        key = (path, pointer, kind)
+        if key in self.active or key in self.visited:
+            return
+        self.active.add(key)
+        if kind == "schema":
+            self._check_schema(node)
+        if type(node) is dict and "$ref" in node:
+            target, fragment, next_chain = self._reference(path, pointer, node["$ref"], kind, chain)
+            self._walk(target, fragment, kind, next_chain)
+        for child, child_kind in self.children[key]:
+            self._walk(path, child, child_kind, chain)
+        self.active.remove(key)
+        self.visited.add(key)
+
+    @staticmethod
+    def _check_schema(node):
+        from jsonschema import Draft202012Validator
+        if type(node) is dict:
+            if any(k in node for k in ("$id", "$anchor", "$dynamicRef", "$recursiveRef", "$dynamicAnchor")):
+                raise CheckingError("unsupported schema base/anchor/dynamic reference")
+            if node.get("$schema") not in (None, "https://json-schema.org/draft/2020-12/schema"):
+                raise CheckingError("unsupported JSON Schema dialect")
+        try:
+            Draft202012Validator.check_schema(node)
+        except Exception as exc:
+            raise CheckingError(f"invalid source Schema Object: {exc}") from exc
+
+    @staticmethod
+    def uri(path, pointer):
+        return Path(path).as_uri() + "#" + quote(pointer, safe="/~$")
+
+    def _source_graph_identity(self):
+        """Keep registry reuse bound to complete bytes and original physical targets.
+
+        A stat-only cache cannot prove Source immutability. Verify every document
+        and late-declaration byte digest, and resolve each nonlocal path again.
+        Permissions were checked per declaration by _walk/_reference; neither a
+        cached registry nor equal schema values confer another declaration's rights.
+        """
+        for file, held in list(self.provenance.items()):
+            if self.physical(file) != file:
+                raise CheckingError("physical source changed after reading")
+            if hashlib.sha256(file.read_bytes()).hexdigest() != held:
+                raise CheckingError(f"source changed after reading: {file}")
+        for (file, pointer, ref, kind), (target, fragment) in list(self.edges.items()):
+            name = urlsplit(ref).path
+            if name and self.physical(file.parent / unquote_to_bytes(name).decode("utf-8")) != target:
+                raise CheckingError("physical reference target changed after reading")
+        return (tuple(sorted((str(file), digest) for file, digest in self.provenance.items())),
+                tuple(sorted((str(file), pointer, ref, kind, str(target), fragment)
+                             for (file, pointer, ref, kind), (target, fragment) in self.edges.items())))
+
+    def validator_at(self, path, pointer):
+        from jsonschema import Draft202012Validator
+        from referencing import Registry, Resource
+        from referencing.jsonschema import DRAFT202012
+        path = self.physical(path)
+        self.document(path)
+        self._walk(path, pointer, "schema", (path,))
+        graph = self._source_graph_identity()
+        if graph != getattr(self, "_registry_graph", None):
+            def offline(uri):
+                raise CheckingError(f"unregistered resource; network disabled: {uri}")
+
+            # Complete original resources and URI aliases, with all declaration
+            # guards rerun for a new graph. Do not replay all edges for every scalar.
+            for (file, ptr, ref, kind), target in list(self.edges.items()):
+                self._reference(file, ptr, ref, kind, (file,))
+            resources = {file.as_uri(): file for file in self.docs}
+            pending = list(resources.items())
+            seen = set()
+            while pending:
+                base_uri, physical = pending.pop()
+                if (base_uri, physical) in seen:
+                    continue
+                seen.add((base_uri, physical))
+                for (file, ptr, ref, kind), (target, fragment) in self.edges.items():
+                    if file != physical:
+                        continue
+                    alias_uri = urlsplit(urljoin(base_uri, ref))._replace(fragment="").geturl()
+                    if alias_uri in resources and resources[alias_uri] != target:
+                        raise CheckingError("ambiguous physical resource URI")
+                    if alias_uri not in resources:
+                        resources[alias_uri] = target
+                        pending.append((alias_uri, target))
+            registry = Registry(retrieve=offline)
+            for uri, file in resources.items():
+                doc = self.document(file)
+                registry = registry.with_resource(uri, Resource(contents=doc, specification=DRAFT202012))
+            self._source_registry = registry
+            self._source_validators = {}
+            self._registry_graph = self._source_graph_identity()
+        key = (path, pointer)
+        if key in self._source_validators:
+            return self._source_validators[key]
+        validator = Draft202012Validator({"$ref": self.uri(path, pointer)}, registry=self._source_registry)
+
+        class CheckedValidator:
+            def is_valid(inner, instance):
+                try:
+                    return validator.is_valid(instance)
+                except Exception as exc:
+                    raise CheckingError(f"source oracle failed at {path}#{pointer}: {exc}") from exc
+        checked = CheckedValidator()
+        self._source_validators[key] = checked
+        return checked
+    def _locations(self, node, base, kind):
+        base = self.physical(base)
+        result = self.locations.get((base, id(node), kind), [])
+        if not result:
+            raise CheckingError("source object has no typed declaration coordinate")
+        return [(base, pointer) for pointer in result]
+
+    def resolve_object(self, path, pointer, kind):
+        seen = set()
+        chain = (path,)
+        while True:
+            if (path, pointer) in seen:
+                raise CheckingError("cyclic reference-only object")
+            seen.add((path, pointer))
+            node = self.at(path, pointer, kind)
+            if type(node) is not dict or "$ref" not in node:
+                return node, path, pointer
+            path, pointer, chain = self._reference(path, pointer, node["$ref"], kind, chain)
+
+    def parameter(self, node, base, binding, declaration=None):
+        op, route, method = binding
+        if declaration is None:
+            prefix = "/paths/" + self.escape(route) + "/"
+            locations = [(p, ptr) for p, ptr in self._locations(node, base, "parameter")
+                         if ptr.startswith(prefix) and
+                         (ptr[len(prefix):].startswith("parameters/") or
+                          ptr[len(prefix):].startswith(method + "/parameters/"))]
+        else:
+            # The caller carries the original source slot, including a component/alias occurrence.
+            p, ptr = declaration
+            p = self.physical(p)
+            if (p, ptr) not in self._locations(node, base, "parameter"):
+                raise CheckingError("parameter is not the declared source occurrence")
+            locations = [(p, ptr)]
+        if not locations:
+            raise CheckingError("parameter has no declaration for the operation")
+        resolved = [self.resolve_object(p, ptr, "parameter") for p, ptr in locations]
+        prm, file, pointer = resolved[0]
+        if "name" not in prm or "in" not in prm:
+            raise CheckingError("not a Parameter Object")
+        if any(value != prm or p != file for value, p, _ in resolved):
+            raise CheckingError("ambiguous operation parameter")
+        if "schema" in prm:
+            key = (op, prm["in"], prm["name"], id(prm["schema"]), file)
+            self.parameters.setdefault(key, set()).update((p, ptr + "/schema") for _, p, ptr in resolved)
+        return prm, file
+
+    def schema_type_node(self, node, base):
+        if type(node) is bool:
+            return node
+        values = []
+        for file, pointer in self._locations(node, base, "schema"):
+            seen = set()
+            value = node
+            siblings = {}
+            chain = (file,)
+            while type(value) is dict and "$ref" in value:
+                if (file, pointer) in seen:
+                    raise CheckingError("cyclic schema type alias")
+                seen.add((file, pointer))
+                siblings = dict({k: v for k, v in value.items() if k != "$ref"}, **siblings)
+                file, pointer, chain = self._reference(file, pointer, value["$ref"], "schema", chain)
+                value = self.at(file, pointer, "schema")
+            values.append(dict(value, **siblings) if type(value) is dict else value)
+        if any(value != values[0] for value in values):
+            raise CheckingError("ambiguous aliased parameter type")
+        return values[0]
+
+    def parameter_validator(self, op, place, name, schema, base):
+        coordinates = self.parameters.get((op, place, name, id(schema), self.physical(base)))
+        if not coordinates:
+            raise CheckingError("parameter schema has no exact source binding")
+        return self.validators(coordinates)
+
+    def validators(self, coordinates):
+        validators = [self.validator_at(p, ptr) for p, ptr in sorted(coordinates)]
+        if not validators:
+            raise CheckingError("empty source oracle cohort")
+
+        class Cohort:
+            def is_valid(inner, value):
+                got = [validator.is_valid(value) for validator in validators]
+                if len(set(got)) != 1:
+                    raise CheckingError("aliased source declarations disagree")
+                return got[0]
+        return Cohort()
+
+    def canonical(self, file, pointer):
+        seen = set()
+        chain = (file,)
+        while True:
+            if (file, pointer) in seen:
+                raise CheckingError("cyclic source alias")
+            seen.add((file, pointer))
+            node = self.at(file, pointer, "schema")
+            if type(node) is not dict or "$ref" not in node or any(
+                    key != "$ref" and key not in self.ANNOTATIONS and not key.startswith("x-") for key in node):
+                return file, pointer
+            file, pointer, chain = self._reference(file, pointer, node["$ref"], "schema", chain)
+
+    def bundle_origins(self, defs, bindings=()):
+        """Bind actual defs by independently known roots and paired source/actual schema edges."""
+        if type(defs) is not dict or not defs:
+            raise CheckingError("nonempty actual definitions required")
+        origins, pairs = {}, set()
+
+        def pair(actual, file, pointer):
+            file, pointer = self.canonical(file, pointer)
+            source = self.at(file, pointer, "schema")
+            key = (id(actual), file, pointer)
+            if key in pairs:
+                return
+            pairs.add(key)
+            self._check_schema(actual)
+            if type(actual) is dict and "$ref" in actual:
+                ref = actual["$ref"]
+                if type(ref) is not str or not ref.startswith("#/$defs/"):
+                    raise CheckingError("actual bundle reference is not a local definition")
+                token = self.fragment(ref[1:])[len("/$defs/"):]
+                if "/" in token:
+                    raise CheckingError("actual bundle reference is not a definition root")
+                name = token.replace("~1", "/").replace("~0", "~")
+                if type(source) is dict and "$ref" in source:
+                    target, fragment, _ = self._reference(file, pointer, source["$ref"], "schema", (file,))
+                    bind(name, target, fragment)
+                else:
+                    bind(name, file, pointer)
+            if type(actual) is dict and type(source) is dict:
+                for field in self.SCHEMA_MAPS:
+                    for name, child in actual.get(field, {}).items():
+                        if name not in source.get(field, {}):
+                            raise CheckingError("actual nested schema has no source origin")
+                        pair(child, file, pointer + "/" + field + "/" + self.escape(name))
+                for field in self.SCHEMA_LISTS:
+                    for i, child in enumerate(actual.get(field, [])):
+                        if i >= len(source.get(field, [])):
+                            raise CheckingError("actual schema composition has no source origin")
+                        pair(child, file, pointer + "/" + field + "/" + str(i))
+                for field in self.SCHEMA_SINGLE:
+                    if field in actual:
+                        if field not in source:
+                            raise CheckingError("actual schema child has no source origin")
+                        pair(actual[field], file, pointer + "/" + field)
+
+        def bind(name, file, pointer):
+            if name not in defs:
+                raise CheckingError(f"missing actual definition: {name}")
+            origin = self.canonical(file, pointer)
+            old = origins.setdefault(name, set())
+            if old and origin not in old:
+                previous = next(iter(old))
+                if previous[0] != origin[0] or self.at(*previous, "schema") is not self.at(*origin, "schema"):
+                    raise CheckingError(f"ambiguous actual definition origin: {name}")
+            if origin in old:
+                return
+            old.add(origin)
+            pair(defs[name], *origin)
+
+        for name in self.document(self.source).get("components", {}).get("schemas", {}):
+            if name in defs:
+                bind(name, self.source, "/components/schemas/" + self.escape(name))
+        for name, file, pointer in bindings:
+            bind(name, self.physical(file), pointer)
+        unknown = set(defs) - set(origins)
+        if unknown:
+            raise CheckingError(f"actual definitions without source coverage: {sorted(unknown)}")
+        return origins
+
+    def compare(self, defs, cases, bindings=()):
+        origins = self.bundle_origins(defs, bindings)
+        if not cases or set(name for name, _ in cases) != set(defs):
+            raise CheckingError("complete nonempty comparisons for every actual definition required")
+        expected = {name: self.validators(coordinates) for name, coordinates in origins.items()}
+        actual = oracle(defs)
+        bad = []
+        for name, value in cases:
+            try:
+                got = actual(name, value)
+            except Exception as exc:
+                raise CheckingError("actual bundle validator failed") from exc
+            want = expected[name].is_valid(value)
+            if want != got:
+                bad.append((name, value, want, got))
+        return bad
+
+    @staticmethod
+    def literal_table(text, name):
+        """Read actual generated table literals; never infer expected schemas from them."""
+        start = re.search(r"\bvar\s+" + re.escape(name) + r"\s*=\s*[^\n{]*\{", text)
+        if not start:
+            raise CheckingError(f"missing actual table: {name}")
+        pos = start.end() - 1
+
+        def token():
+            nonlocal pos
+            found = re.match(r'\s*("(?:\\.|[^"\\])*"|-?[0-9]+|[A-Za-z_][A-Za-z0-9_]*|[{}:,])', text[pos:])
+            if not found:
+                raise CheckingError("unsupported actual table literal")
+            pos += found.end()
+            return found[1]
+
+        def mapping():
+            if token() != "{":
+                raise CheckingError("expected actual table map")
+            out = {}
+            key = token()
+            while key != "}":
+                value_key = json.loads(key) if key.startswith('"') else key
+                if value_key in out or token() != ":":
+                    raise CheckingError("duplicate/malformed actual table key")
+                checkpoint = pos
+                value = token()
+                if value == "{":
+                    pos_restore(checkpoint)
+                    value = mapping()
+                elif value.startswith('"'):
+                    value = json.loads(value)
+                else:
+                    raise CheckingError("actual schema table value must be a string or map")
+                out[value_key] = value
+                following = token()
+                if following == "}":
+                    break
+                if following != ",":
+                    raise CheckingError("malformed actual table separator")
+                key = token()
+            return out
+
+        def pos_restore(value):
+            nonlocal pos
+            pos = value
+        return mapping()
+
+
+    def operation_declarations(self):
+        """Enumerate source slots, retaining coordinates independently of object/cache identity."""
+        import hashlib
+        doc = self.document(self.source)
+        slots = [(route, "/paths/" + self.escape(route), "") for route in doc.get("paths", {})]
+        witness = None
+        if self.owner(self.source) == 6:
+            api_sha = "b4073b39c35094aba8bd6cecefd0f63f5cc2c37abc867e72a0b81eaa4c7b189e"
+            mapfile = self.root / "decisions/inbox/2026-11-07-p06-s08-source/operation-map.json"
+            try:
+                raw = mapfile.read_bytes()
+                if (hashlib.sha256(raw).hexdigest() !=
+                        "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19" or
+                        hashlib.sha256(self.source.read_bytes()).hexdigest() != api_sha):
+                    raise CheckingError("source operation identity witness changed")
+                witness = json.loads(raw)
+            except (OSError, ValueError) as exc:
+                raise CheckingError("source operation identity witness unavailable") from exc
+            standard = {"UnitsCollection": "/{rows}", "UnitItem": "/{rows}/{id}",
+                        "TableCollection": "/{table}", "TableItem": "/{table}/{name}",
+                        "PassRoot": "/{pass}", "ConsoleFile": "/{sub}/{file}"}
+            items = doc.get("components", {}).get("pathItems", {})
+            if set(items) != set(standard):
+                raise CheckingError("missing/extra standard source PathItem")
+            slots += [(route, "/components/pathItems/" + name, name) for name, route in standard.items()]
+        identities = {}
+        if witness is not None:
+            for row in witness["records"]:
+                if row.get("member_of_original140"):
+                    pointer = row["after_pointer"]
+                    if pointer in identities:
+                        raise CheckingError("ambiguous source operation identity")
+                    identities[pointer] = (row["actual_adapter_Op"], row["logical_ordinal_original140"])
+            heads = [("/folders", "OpHeadFolders"), ("/folders/{id}", "OpHeadFoldersById"),
+                     ("/{sub}/operations/{id}", "OpHeadBySubOperationsById"),
+                     ("/changes", "OpHeadChanges"), ("/{sub}/next_id", "OpHeadBySubNextId"),
+                     ("/api/backup-part/{member}/{part}", "OpHeadApiBackupPartByMemberByPart")]
+            # The six appended identities are approved Source assignments, never generated metadata.
+            for ordinal, (route, symbol) in enumerate(heads, 141):
+                identities["/paths/" + self.escape(route) + "/head"] = (symbol, ordinal)
+            if len(identities) != 146:
+                raise CheckingError("incomplete source identity witness")
+        out, seen = [], set()
+        for route, declaration, component in slots:
+            item, file, pointer = self.resolve_object(self.source, declaration, "path")
+            for method in self.METHODS:
+                if method not in item:
+                    continue
+                operation_pointer = pointer + "/" + method
+                source_pointer = declaration + "/" + method
+                if (route, method) in seen:
+                    raise CheckingError("duplicate logical source operation")
+                seen.add((route, method))
+                if witness is not None and source_pointer not in identities:
+                    raise CheckingError("source operation has no immutable identity")
+                parameters = []
+                for owner, values in ((pointer, item.get("parameters", [])),
+                                      (operation_pointer, item[method].get("parameters", []))):
+                    for i, value in enumerate(values):
+                        parameters.append((value, file, owner + "/parameters/" + str(i)))
+                symbol, ordinal = identities.get(source_pointer, (None, None))
+                out.append(dict(route=route, method=method, component=component, file=file,
+                                item=item, operation=item[method], item_pointer=pointer,
+                                pointer=operation_pointer, declaration=source_pointer,
+                                parameters=parameters, symbol=symbol, ordinal=ordinal))
+        if witness is not None and {r["declaration"] for r in out} != set(identities):
+            raise CheckingError("uncovered source operation identity")
+        return out
+
+    @staticmethod
+    def parameter_table(text):
+        """Parse actual Go parameter records, independently of definition naming.
+
+        Only the literal table is actual metadata. Required source slots, types,
+        defaults and lexeme roles are derived separately from full OpenAPI.
+        """
+        matches = list(re.finditer(r"\bvar\s+paramSchemas\s*=\s*map\[Op\]\[\]paramSpec\s*\{", text))
+        if len(matches) != 1:
+            raise CheckingError("missing/ambiguous actual parameter schema table")
+        pos = matches[0].end() - 1
+        def token():
+            nonlocal pos
+            found = re.match(r'\s*("(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z0-9_]*|[{}:,&])', text[pos:])
+            if not found:
+                raise CheckingError("malformed actual parameter literal")
+            pos += found.end()
+            return found[1]
+        def mapping():
+            if token() != "{":
+                raise CheckingError("actual parameter map expected")
+            result = {}
+            key = token()
+            while key != "}":
+                if key in result or token() != ":":
+                    raise CheckingError("duplicate/malformed actual parameter field")
+                result[key] = value()
+                end = token()
+                if end == "}":
+                    break
+                if end != ",":
+                    raise CheckingError("malformed actual parameter separator")
+                key = token()
+            return result
+        def sequence():
+            if token() != "{":
+                raise CheckingError("actual parameter list expected")
+            result = []
+            nonlocal pos
+            checkpoint = pos
+            if token() == "}":
+                return result
+            pos = checkpoint
+            while True:
+                result.append(mapping())
+                end = token()
+                if end == "}":
+                    return result
+                if end != ",":
+                    raise CheckingError("malformed actual parameter list")
+        def value():
+            nonlocal pos
+            checkpoint = pos
+            item = token()
+            if item.startswith('"'):
+                return json.loads(item)
+            if item in ("true", "false"):
+                return item == "true"
+            if item == "&" and token() == "queryLexeme":
+                return mapping()
+            if item == "{":
+                pos = checkpoint
+                return sequence()
+            raise CheckingError("unsupported actual parameter value")
+        return mapping()
+
+    def output_bindings(self, module):
+        """Pair source operation coordinates with actual route/body table identities."""
+        try:
+            routes = (Path(module) / "apidoor/routes.go").read_text(encoding="utf-8")
+            bodies = (Path(module) / "apidoor/bodies.go").read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise CheckingError("cannot read actual body binding metadata") from exc
+        ops = {}
+        for raw_key, op in re.findall(r'^\s*("(?:\\.|[^"\\])*"):\s+(Op[A-Za-z0-9_]+),\s*$', routes, re.M):
+            label = json.loads(raw_key)
+            path, sep, method = label.rpartition(" ")
+            if sep and method.lower() in self.METHODS and path.startswith("/"):
+                if (path, method.lower()) in ops:
+                    raise CheckingError("duplicate actual operation identity")
+                ops[path, method.lower()] = op
+        request = self.literal_table(bodies, "requestSchemas")
+        response = self.literal_table(bodies, "responseSchemas")
+        expected = {}
+        declarations = self.operation_declarations()
+        if set(ops) != {(r["route"], r["method"]) for r in declarations}:
+            raise CheckingError("missing/extra actual route operation")
+        for record in declarations:
+            route, method = record["route"], record["method"]
+            op = ops[route, method]
+            if record["symbol"] is not None and op != record["symbol"]:
+                raise CheckingError("actual operation renamed its source identity")
+            file, operation_pointer = record["file"], record["pointer"]
+            operation = record["operation"]
+            if "requestBody" in operation:
+                value, base, ptr = self.resolve_object(file, operation_pointer + "/requestBody", "request")
+                for media, body in value.get("content", {}).items():
+                    if "schema" in body:
+                        expected["request", op, media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
+            for status in operation.get("responses", {}):
+                value, base, ptr = self.resolve_object(file, operation_pointer + "/responses/" + self.escape(status), "response")
+                for media, body in value.get("content", {}).items():
+                    if "schema" in body:
+                        expected["response", op, str(status), media] = (base, ptr + "/content/" + self.escape(media) + "/schema")
+        # Bind all query/header definition roots through their actual table,
+        # never by guessing the producer's dotted-name convention.
+        source_parameters = {}
+        for record in declarations:
+            op = ops[record["route"], record["method"]]
+            merged = {}
+            for node, file, pointer in record["parameters"]:
+                prm, base, ptr = self.resolve_object(file, pointer, "parameter")
+                if prm["in"] in ("query", "header"):
+                    merged[prm["in"], prm["name"]] = (prm, base, ptr)
+            for (place, name), (prm, base, ptr) in merged.items():
+                key = (op, place, name)
+                source_parameters[key] = (prm, base, ptr)
+        if source_parameters or re.search(r"\bvar\s+paramSchemas\b", bodies):
+            table = self.parameter_table(bodies)
+            seen, role_mismatches = set(), []
+            for op, values in table.items():
+                if op not in ops.values() or type(values) is not list or not values:
+                    raise CheckingError("extra/empty actual parameter operation")
+                for value in values:
+                    if (type(value) is not dict or
+                            set(value) not in ({"name", "in", "required", "schema", "def"},
+                                               {"name", "in", "required", "schema", "def", "lexeme"}) or
+                            any(type(value[k]) is not str for k in ("name", "in", "schema", "def")) or
+                            type(value["required"]) is not bool):
+                        raise CheckingError("mistyped actual parameter record")
+                    key = (op, value["in"], value["name"])
+                    if key in seen or key not in source_parameters:
+                        raise CheckingError("duplicate/extra actual parameter binding")
+                    seen.add(key)
+                    prm, base, ptr = source_parameters[key]
+                    schema = prm.get("schema", {})
+                    default = json.dumps(schema["default"], ensure_ascii=False) if "default" in schema else ""
+                    if (value["required"] != bool(prm.get("required")) or value["def"] != default or
+                            value.get("lexeme") != (dict(strip="", **prm["x-query-lexeme"])
+                                                     if "x-query-lexeme" in prm and "strip" not in prm["x-query-lexeme"]
+                                                     else prm.get("x-query-lexeme"))):
+                        role_mismatches.append(key)
+                    expected["parameter", *key] = (base, ptr + "/schema")
+            if seen != set(source_parameters):
+                raise CheckingError("missing actual parameter binding")
+            if role_mismatches:
+                raise AssertionError(f"complete actual parameter role/default mismatches source: {role_mismatches}")
+        else:
+            table = {}
+        actual = {}
+        for op, values in table.items():
+            for value in values:
+                actual["parameter", op, value["in"], value["name"]] = value["schema"]
+        try:
+            for op, values in request.items():
+                for media, name in values.items():
+                    actual["request", op, media] = name
+            for op, statuses in response.items():
+                for status, values in statuses.items():
+                    for media, name in values.items():
+                        actual["response", op, status, media] = name
+        except AttributeError as exc:
+            raise CheckingError("mistyped actual binding table") from exc
+        if set(actual) != set(expected) or any(type(name) is not str for name in actual.values()):
+            raise CheckingError("incomplete/extra actual body bindings")
+        return [(name, *expected[key]) for key, name in actual.items()]
+
+
 # Synthetic schemas make keywords observable: the lesson's open Unit makes unevaluatedProperties redundant
 # because additionalProperties:true is declared. Pair synthetic schemas with discriminating values.
 SYNTH = {
@@ -378,6 +1279,27 @@ class DoorBodiesBase:
         cls.defs = bundle_of(cls.fresh)["$defs"]
         cls.cases = cases_for(cls.defs, random.Random(36))
 
+    def setUp(self):
+        # A is the original generated output. Existing drivers and mutants write
+        # only B/C copies, and the original remains checked across every test.
+        from test_gen_door_lesson import (_tree_receipt, _verify_tree, _copy_owned,
+                                          CheckingError as SnapshotError)
+        cls = type(self)
+        try:
+            if "_body_original_snapshot" not in cls.__dict__:
+                cls._body_original_snapshot = _tree_receipt(cls.fresh)
+            _verify_tree(cls.fresh, cls._body_original_snapshot)
+            self.fresh = self.tmp / ("body-owned-" + os.urandom(16).hex())
+            _copy_owned(cls.fresh, self.fresh)
+        except SnapshotError as exc:
+            raise CheckingError(f"body immutable output/copy: {exc}") from exc
+        def unchanged():
+            try:
+                _verify_tree(cls.fresh, cls._body_original_snapshot)
+            except SnapshotError as exc:
+                raise CheckingError(f"body original output changed: {exc}") from exc
+        self.addCleanup(unchanged)
+
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tmp, ignore_errors=True)
@@ -389,75 +1311,12 @@ class DoorBodiesBase:
             self.assertEqual(kept.read_bytes(), (self.fresh / "apidoor" / name).read_bytes(), f"{kept} is stale")
 
     def test_bundle_equals_source(self):
-        """Require combined-schema verdicts to match original OpenAPI with external lesson refs."""
-        from jsonschema import Draft202012Validator
-        from referencing import Registry, Resource
-        from referencing.jsonschema import DRAFT202012
-        from urllib.parse import unquote, urldefrag, urljoin, urlparse
-        import yamlsub
+        """Compare every actual definition with its complete, independently bound source resource."""
         spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
-        docs = {}
-        for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):   # Resolve external refs through all export OpenAPI documents.
-            try:
-                docs[f.resolve()] = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
-            except yamlsub.YamlError:
-                continue                                      # Loader-unsupported constructs, not refs used by the lesson.
-        origins, visited = {}, set()
-
-        def document(path):
-            if path not in docs:
-                docs[path] = yamlsub.load(path.read_text(encoding="utf-8"), path.name)
-            return docs[path]
-
-        def references(node, base):
-            if isinstance(node, dict):
-                if "$ref" in node:
-                    uri, fragment = urldefrag(urljoin(base.as_uri(), node["$ref"]))
-                    target = Path(unquote(urlparse(uri).path)).resolve()
-                    self.assertTrue(target.is_relative_to(ROOT / "Platform"), uri)
-                    pointer = unquote(fragment)
-                    value = document(target)
-                    for token in pointer.lstrip("/").split("/") if pointer else []:
-                        key = token.replace("~1", "/").replace("~0", "~")
-                        value = value[int(key)] if isinstance(value, list) else value[key]
-                    origin = target.as_uri() + "#" + pointer
-                    # A response wrapper is not a schema with the same leaf name.
-                    # Nested schema properties (such as MembersDoc/rev) are schemas.
-                    if target != spec and pointer.startswith("/components/schemas/"):
-                        name = target.parent.parent.name[:2] + "." + key
-                        origins.setdefault(name, set()).add(origin)
-                    if origin not in visited:
-                        visited.add(origin)
-                        references(value, target)
-                for value in node.values():
-                    references(value, base)
-            elif isinstance(node, list):
-                for value in node:
-                    references(value, base)
-
-        references(document(spec.resolve()), spec.resolve())
-        reg = Registry()
-        for path, doc in docs.items():
-            reg = reg.with_resource(path.as_uri(), Resource(contents=doc, specification=DRAFT202012))
-        check = oracle(self.defs)
-        compared = 0
-        for name, schema in self.defs.items():
-            if "." in re.sub(r"^\d\d\.", "", name):
-                continue                                      # A name from a pointer outside components/schemas is checked by operation verdicts.
-            if re.match(r"\d\d\.", name):                   # External schema for lessonNN comes from its OpenAPI.
-                candidates = origins.get(name, set())
-                self.assertEqual(len(candidates), 1, f"{name}: missing or ambiguous source schema origin: {candidates}")
-                ref = next(iter(candidates))
-            elif "." in name:
-                continue                                      # Operation verdicts also verify inline body schemas.
-            else:
-                ref = f"{spec.resolve().as_uri()}#/components/schemas/{name}"
-            v = Draft202012Validator({"$ref": ref}, registry=reg)
-            for cname, value in self.cases:
-                if cname == name:
-                    self.assertEqual(v.is_valid(value), check(name, value), f"{name}: {json.dumps(value)[:200]}")
-                    compared += 1
-        self.assertGreater(compared, 2 * len([n for n in self.defs if "." not in n or re.match(r"\d\d\.", n)]))
+        reader = SourceSchemaReader(ROOT, spec)
+        bad = reader.compare(self.defs, self.cases, reader.output_bindings(self.fresh))
+        self.assertEqual(bad[:3], [], f"{len(bad)} combined-schema verdicts disagree with source")
+        self.assertGreater(len(self.cases), 2 * len(self.defs))
 
     def test_validate_against_oracle(self):
         check = oracle(self.defs)
@@ -482,36 +1341,20 @@ class DoorBodiesBase:
 
     def test_params(self):
         """Compare CheckParams with an independent model of OpenAPI query/header coercion and jsonschema."""
-        import yamlsub
-        from jsonschema import Draft202012Validator
-        from referencing import Registry, Resource
-        from referencing.jsonschema import DRAFT202012
         spec = ROOT / "Platform" / self.LESSON / "spec" / f"{self.LESSON}.api.openapi.yaml"
-        reg = Registry()
-        docs = {}
-        for f in sorted((ROOT / "Platform").rglob("*.api.openapi.yaml")):
-            try:
-                docs[f.resolve()] = yamlsub.load(f.read_text(encoding="utf-8"), f.name)
-            except yamlsub.YamlError:
-                continue
-            reg = reg.with_resource(f.resolve().as_uri(), Resource(contents=docs[f.resolve()], specification=DRAFT202012))
-        doc = docs[spec.resolve()]
+        reader = SourceSchemaReader(ROOT, spec)
         routes = (self.fresh / "apidoor/routes.go").read_text()
         cases = []
-        for path, item in doc["paths"].items():
-            for m in ("get", "put", "post", "delete", "patch", "head"):
-                if m not in item:
-                    continue
-                op = re.search(r'"' + re.escape(path) + " " + m.upper() + r'":\s+(Op\w+),', routes)[1]
-                for prm in item.get("parameters", []) + item[m].get("parameters", []):
-                    base = spec
-                    if "$ref" in prm:
-                        ref = prm["$ref"]
-                        f, _, ptr = ref.partition("#")
-                        base = (spec.parent / f).resolve() if f else spec
-                        prm = docs[Path(base).resolve()]
-                        for part in ptr.strip("/").split("/"):
-                            prm = prm[part]
+        for record in reader.operation_declarations():
+            path, m = record["route"], record["method"]
+            match = re.search(r'"' + re.escape(path) + " " + m.upper() + r'":\s+(Op\w+),', routes)
+            if match is None:
+                raise CheckingError("parameter operation absent from actual routes")
+            op = match[1]
+            if record["symbol"] is not None and op != record["symbol"]:
+                raise CheckingError("parameter operation changed source identity")
+            for prm, file, pointer in record["parameters"]:
+                    prm, base = reader.parameter(prm, file, (op, path, m), (file, pointer))
                     if prm["in"] not in ("query", "header"):
                         continue
                     sch = prm.get("schema", {})
@@ -524,13 +1367,7 @@ class DoorBodiesBase:
             self.skipTest("no query/header parameters")
 
         def node(sch, base):
-            while isinstance(sch, dict) and "$ref" in sch:
-                f, _, ptr = sch["$ref"].partition("#")
-                base = (Path(base).parent / f).resolve() if f else base
-                sch = docs[Path(base).resolve()]
-                for part in ptr.strip("/").split("/"):
-                    sch = sch[part]
-            return sch
+            return reader.schema_type_node(sch, base)
 
         def want(c):
             op, place, name, raw, sch, base, req, lex = c
@@ -559,11 +1396,7 @@ class DoorBodiesBase:
                     v = int(v)                           # A mathematically integral value such as1e3 is integer per Draft 2020-12.
             elif t == "boolean" and raw in ("true", "false"):
                 v = raw == "true"
-            ok = Draft202012Validator({"$ref": f"{Path(base).as_uri()}#" + ("" if "$ref" in sch else "")} if False else
-                                      dict(sch) if "$ref" not in sch else {"$ref": base.as_uri() + "#" + sch["$ref"].partition("#")[2]}
-                                      if not sch["$ref"].partition("#")[0] else
-                                      {"$ref": (Path(base).parent / sch["$ref"].partition("#")[0]).resolve().as_uri() + "#"
-                                       + sch["$ref"].partition("#")[2]}, registry=reg).is_valid(v)
+            ok = reader.parameter_validator(op, place, name, sch, base).is_valid(v)
             return ok
         prog = ["package main", "", "import (", '\t"encoding/json"', '\t"fmt"', '\t"os"',
                 f'\t"{(self.fresh / "go.mod").read_text().split()[1]}/apidoor"', ")", "", "func main() {",
@@ -734,6 +1567,487 @@ class BodyServiceControls(unittest.TestCase):
             with patch(__name__ + ".run_go", side_effect=lambda mod, cases: [oracle(bundle_of(mod)["$defs"])(*c) for c in cases]):
                 with self.assertRaisesRegex(AssertionError, "survives"):
                     obj.test_mutants()
+
+
+    def test_generated_original_is_immutable_and_each_body_service_gets_a_copy(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td); original = root / "original"; original.mkdir()
+            (original / "payload").write_bytes(b"original")
+            fixture = type("BodySnapshotFixture", (DoorBodiesBase, unittest.TestCase),
+                           {"fresh": original, "tmp": root, "runTest": lambda self: None})
+            first = fixture(); first.setUp()
+            (first.fresh / "payload").write_bytes(b"owned service instrumentation")
+            self.assertEqual((original / "payload").read_bytes(), b"original")
+            self.assertTrue(first.doCleanups())
+            second = fixture(); second.setUp()
+            self.assertNotEqual(first.fresh, second.fresh)
+            self.assertEqual((second.fresh / "payload").read_bytes(), b"original")
+            self.assertTrue(second.doCleanups())
+            (original / "payload").write_bytes(b"tamper")
+            with self.assertRaises(CheckingError):
+                fixture().setUp()
+
+
+class SourceSchemaReaderControls(unittest.TestCase):
+    """Python-only source/registry controls; generated output and Go are not invoked."""
+
+    BASELINE_RECEIPTS = []
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="source-reader-control-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write(self, relative, value, yaml=False):
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if yaml:
+            from io import StringIO
+            from ruamel.yaml import YAML
+            out = StringIO()
+            emitter = YAML()
+            emitter.width = 4096
+            emitter.dump(value, out)
+            path.write_text(out.getvalue(), encoding="utf-8")
+        else:
+            path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def api(self, owner="08-domain", schemas=None, paths=None, components=None):
+        doc = {"openapi": "3.1.0", "info": {"title": "owned control", "version": "1"},
+               "components": components or {"schemas": schemas if schemas is not None else
+                                              {"Root": {"type": "integer", "minimum": 0}}}, "paths": paths or {}}
+        directory = "common/contracts" if owner == "common" else owner + "/spec"
+        name = "shared" if owner == "common" else owner
+        return self.write(f"Platform/{directory}/{name}.api.openapi.yaml", doc, yaml=True)
+
+    def schema(self, value, owner="08-domain", name="target"):
+        if type(value) is dict:
+            value = dict({"$schema": "https://json-schema.org/draft/2020-12/schema"}, **value)
+        return self.write(f"Platform/{owner}/data/{name}.schema.json", value)
+
+    def reader(self, schema=...):
+        source = self.api(schemas={"Root": schema} if schema is not ... else None)
+        return SourceSchemaReader(self.root, source)
+
+    def late(self, target="08-domain", components=False, description="Chapter 6.7 N1.13"):
+        self.schema({"type": "string", "minLength": 1}, owner=target)
+        ref = {"$ref": f"../../{target}/data/target.schema.json"}
+        path = {"description": description, "get": {"responses": {"200": {
+            "description": "ok", "content": {"application/json": {"schema": ref}}}}}}
+        source = self.api(owner="06-console", paths={"/api/backup": path},
+                          schemas={"Also": ref} if components else {})
+        norm = self.root / "Platform/06-console/spec/06.7-console.norms.md"
+        norm.write_text("# P/06.7\n\n**A chapter of the late layer: lessons 8 and 10 introduce it**\n", encoding="utf-8")
+        return source, ref
+
+    def test_00_actual_four_positions_without_document_or_cache_injection(self):
+        source = ROOT / "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+        reader = SourceSchemaReader(ROOT, source)
+        edges = {(ptr, ref): target for (file, ptr, ref, kind), target in reader.edges.items()
+                 if file == source and kind == "schema" and ".schema.json" in ref}
+        prefixes = {"/components/schemas/HolderTopologyBody/properties/doc",
+                    "/components/schemas/HolderTopologyBody/properties/via/propertyNames",
+                    "/components/schemas/HolderTopologyBody/properties/via/additionalProperties",
+                    "/components/schemas/HolderBackupPartBody"}
+        self.assertEqual({p for p, _ in edges}, prefixes)
+        self.assertEqual(len(edges), 4)
+        common = ROOT / "Platform/common/data/common.schema.json"
+        backup = ROOT / "Platform/08-domain/data/backup-parts.schema.json"
+        for file in (common, backup):
+            self.assertEqual(reader.document(file), json.loads(file.read_bytes()))
+            self.assertEqual(reader.provenance[file], hashlib.sha256(file.read_bytes()).hexdigest())
+        full = reader.validator_at(source, "/components/schemas/HolderTopologyBody")
+        self.assertTrue(full.is_valid({"doc": {"rev": 0, "star": []}, "via": {"m1": "m2"}}))
+        self.assertFalse(full.is_valid({"doc": {"rev": 0, "star": []}, "via": {"": "m2"}}))
+        self.assertFalse(full.is_valid({"doc": {"rev": 0, "star": []}, "via": {"m1": ""}}))
+        part = reader.validator_at(source, "/components/schemas/HolderBackupPartBody")
+        good = {"part": "0000", "rev": 1, "state": {}, "objects": {}}
+        self.assertTrue(part.is_valid(good))
+        self.assertFalse(part.is_valid(dict(good, rev=0)))
+        self.assertFalse(part.is_valid({k: v for k, v in good.items() if k != "state"}))
+        self.BASELINE_RECEIPTS.append({"root": str(source), "json_positions": sorted(prefixes),
+                                      "files": {str(p): h for p, h in reader.provenance.items()}})
+
+    def test_01_actual_p10_reference_bearing_aliases_keep_each_coordinate(self):
+        source = ROOT / "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml"
+        reader = SourceSchemaReader(ROOT, source)
+        positions = []
+        for (file, identity, kind), pointers in reader.locations.items():
+            if file != source or len(pointers) < 2:
+                continue
+            node = reader.at(file, pointers[0], kind)
+            if type(node) is dict and "$ref" in node:
+                for pointer in pointers:
+                    self.assertIn((file, pointer, node["$ref"], kind), reader.edges)
+                    positions.append(pointer)
+        self.assertTrue(positions, "the current P10 aliases must actually be exercised")
+        self.BASELINE_RECEIPTS.append({"root": str(source), "alias_reference_positions": sorted(positions),
+                                      "files": {str(p): h for p, h in reader.provenance.items()}})
+
+    def test_02_root_json_and_transitive_local_source(self):
+        target = self.schema({"$defs": {"N": {"type": "integer", "minimum": 1}}, "$ref": "#/$defs/N"})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        validator = reader.validator_at(reader.source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid(1))
+        self.assertFalse(validator.is_valid(0))
+        self.assertIn(target, reader.provenance)
+
+    def test_03_boolean_schemas_are_not_scalar_errors(self):
+        for value in (True, False):
+            with self.subTest(schema=value):
+                self.schema(value)
+                reader = self.reader({"$ref": "../data/target.schema.json#"})
+                self.assertEqual(reader.validator_at(reader.source, "/components/schemas/Root").is_valid({}), value)
+
+    def test_04_early_p10_to_current_p09_pointer(self):
+        relative = "Platform/09-agent/data/alarms.schema.json"
+        target = self.root / relative
+        target.parent.mkdir(parents=True)
+        target.write_bytes((ROOT / relative).read_bytes())
+        source = self.api("10-domain-console", schemas={"Root": {
+            "$ref": "../../09-agent/data/alarms.schema.json#/properties/events/items/properties/id"}})
+        reader = SourceSchemaReader(self.root, source)
+        validator = reader.validator_at(source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid("a"))
+        self.assertFalse(validator.is_valid(""))
+        self.assertEqual(reader.provenance[target], hashlib.sha256((ROOT / relative).read_bytes()).hexdigest())
+
+    def test_05_exact_late_door_before_negative_neighbours(self):
+        source, _ = self.late()
+        reader = SourceSchemaReader(self.root, source)
+        pointer = "/paths/~1api~1backup/get/responses/200/content/application~1json/schema"
+        self.assertTrue(reader.validator_at(source, pointer).is_valid("x"))
+        self.assertFalse(reader.validator_at(source, pointer).is_valid(""))
+
+    def test_06_missing_chapter_and_wrong_declared_target(self):
+        for target, description in (("08-domain", "not a late declaration"), ("09-agent", "Chapter 6.7")):
+            with self.subTest(target=target, description=description):
+                source, _ = self.late(target, description=description)
+                with self.assertRaises(CheckingError):
+                    SourceSchemaReader(self.root, source)
+        source, _ = self.late()
+        (source.parent / "06.7-console.norms.md").write_text("# ordinary chapter\n", encoding="utf-8")
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, source)
+
+    def test_07_alias_under_door_and_components_does_not_inherit_permission(self):
+        source, ref = self.late(components=True)
+        target = self.root / "Platform/08-domain/data/target.schema.json"
+        read = Path.read_bytes
+        observations = []
+        def observe(path):
+            observations.append(path.resolve())
+            return read(path)
+        with patch.object(Path, "read_bytes", observe), self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, source)
+        self.assertIn(target, observations, "the allowed door must really have read its resource first")
+
+    def test_08_real_cache_fill_does_not_authorize_later_declaration(self):
+        source, _ = self.late(components=True)
+        own = self.reader({"$ref": "../data/target.schema.json"})
+        target = self.root / "Platform/08-domain/data/target.schema.json"
+        self.assertIn(target, own.docs)
+        with self.assertRaises(CheckingError):
+            own.validator_at(source, "/components/schemas/Also")
+        pointer = "/paths/~1api~1backup/get/responses/200/content/application~1json/schema"
+        self.assertTrue(own.validator_at(source, pointer).is_valid("x"))
+
+    def test_09_standalone_json_has_no_inherited_late_door(self):
+        source, _ = self.late()
+        self.schema({"type": "string"}, owner="09-agent")
+        self.schema({"$ref": "../../09-agent/data/target.schema.json"})
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, source)
+
+    def test_10_legal_reference_aliases_preserve_both_source_positions(self):
+        self.schema({"type": "integer"})
+        ref = {"$ref": "../data/target.schema.json"}
+        source = self.api(schemas={"A": ref, "B": ref})
+        reader = SourceSchemaReader(self.root, source)
+        wanted = {"/components/schemas/A", "/components/schemas/B"}
+        self.assertEqual({ptr for (file, ptr, value, _), _ in reader.edges.items()
+                          if file == source and value == ref["$ref"]}, wanted)
+        self.assertIs(reader.at(source, "/components/schemas/A", "schema"),
+                      reader.at(source, "/components/schemas/B", "schema"))
+
+    def test_11_cyclic_alias_structure_is_a_checking_error(self):
+        source = self.api()
+        source.write_text('openapi: 3.1.0\npaths: {}\ncomponents:\n  schemas:\n    X: &node\n      properties:\n        again: *node\n', encoding="utf-8")
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, source)
+
+    def test_12_common_cannot_read_a_lesson(self):
+        self.schema({"type": "string"})
+        source = self.api("common", schemas={"X": {"$ref": "../../08-domain/data/target.schema.json"}})
+        with self.assertRaises(CheckingError):
+            SourceSchemaReader(self.root, source)
+
+    def test_13_relative_base_is_the_actual_declaration_resource(self):
+        self.schema({"$ref": "nested/value.schema.json"})
+        self.write("Platform/08-domain/data/nested/value.schema.json", {"type": "string", "minLength": 2})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        validator = reader.validator_at(reader.source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid("ab"))
+        self.assertFalse(validator.is_valid("a"))
+
+    def test_14_network_absolute_query_and_missing_resources_are_errors(self):
+        target = self.schema({"type": "integer"})
+        for ref in ("https://invalid.example/schema", target.as_uri(), str(target),
+                    "//invalid.example/schema", "../data/target.schema.json?q=1", "../data/missing.schema.json",
+                    "../data/target.schema.json#/$defs/missing", "../data/target.schema.json#name"):
+            with self.subTest(ref=ref), self.assertRaises(CheckingError):
+                self.reader({"$ref": ref})
+
+    def test_15_physical_boundary_and_real_owner_follow_symlinks(self):
+        outside = self.root / "outside.schema.json"
+        outside.write_text('{"type":"integer"}', encoding="utf-8")
+        self.schema({"type": "integer"})
+        link = self.root / "Platform/08-domain/data/link.schema.json"
+        link.symlink_to(outside)
+        with self.assertRaises(CheckingError):
+            self.reader({"$ref": "../data/link.schema.json"})
+        link.unlink()
+        later = self.schema({"type": "integer"}, owner="09-agent")
+        link.symlink_to(later)
+        with self.assertRaises(CheckingError):
+            self.reader({"$ref": "../data/link.schema.json"})
+        link.unlink()
+        link.symlink_to(self.root / "Platform/08-domain/data/target.schema.json")
+        reader = self.reader({"$ref": "../data/link.schema.json"})
+        self.assertTrue(reader.validator_at(reader.source, "/components/schemas/Root").is_valid(1))
+
+    def test_16_cross_file_cycle_differs_from_local_recursion(self):
+        self.schema({"type": "object", "additionalProperties": False, "properties": {"next": {"$ref": "#"}}})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        validator = reader.validator_at(reader.source, "/components/schemas/Root")
+        self.assertTrue(validator.is_valid({"next": {}}))
+        self.assertFalse(validator.is_valid({"next": {"unexpected": 1}}))
+        self.schema({"$ref": "other.schema.json"})
+        self.schema({"$ref": "target.schema.json"}, name="other")
+        with self.assertRaises(CheckingError):
+            self.reader({"$ref": "../data/target.schema.json"})
+
+    def test_17_malformed_duplicate_nonfinite_and_scalar_json(self):
+        target = self.schema({"type": "integer"})
+        for content in (b'{bad}', b'{"type":"integer","type":"string"}', b'{"const":NaN}',
+                        b'{"const":Infinity}', b'"scalar"', b'1', b'null', b'[]', b'\xff'):
+            target.write_bytes(content)
+            with self.subTest(content=content), self.assertRaises(CheckingError):
+                self.reader({"$ref": "../data/target.schema.json"})
+
+    def test_18_schema_dialect_and_base_are_not_silently_changed(self):
+        for bad in ({"$schema": "http://json-schema.org/draft-07/schema#"}, {"$id": "https://other/"},
+                    {"$dynamicRef": "#x"}, {"$recursiveRef": "#"}, {"$anchor": "x"}):
+            with self.subTest(schema=bad), self.assertRaises(CheckingError):
+                self.reader(bad)
+
+    def test_19_source_cache_is_not_healed_after_input_changes(self):
+        target = self.schema({"type": "integer"})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        changed = b'{"type":"string"}'
+        target.write_bytes(changed)
+        with self.assertRaises(CheckingError):
+            reader.document(target)
+        self.assertEqual(target.read_bytes(), changed)
+
+    def test_20_actual_dotted_definition_is_covered_not_skipped(self):
+        reader = self.reader()
+        defs = {"Root": {"$ref": "#/$defs/internal.with.dots"},
+                "internal.with.dots": {"type": "integer", "minimum": 0}}
+        cases = [(name, value) for name in defs for value in (0, 1, -1)]
+        before = copy.deepcopy(defs)
+        self.assertEqual(reader.compare(defs, cases), [])
+        self.assertEqual(defs, before)
+        defs["internal.with.dots"]["minimum"] = -1
+        self.assertTrue(reader.compare(defs, cases))
+
+    def test_21_unmapped_ambiguous_and_empty_comparisons_are_errors(self):
+        reader = self.reader()
+        with self.assertRaises(CheckingError):
+            reader.compare({"Root": {"type": "integer"}, "hidden.name": True}, [("Root", 1)])
+        with self.assertRaises(CheckingError):
+            reader.compare({"Root": {"type": "integer"}}, [])
+        source = self.api(schemas={"A": {"type": "integer"}, "B": {"type": "integer"}})
+        reader = SourceSchemaReader(self.root, source)
+        with self.assertRaises(CheckingError):
+            reader.bundle_origins({"X": {"type": "integer"}},
+                                  [("X", source, "/components/schemas/A"), ("X", source, "/components/schemas/B")])
+
+    def test_22_proven_alias_origins_retain_every_coordinate(self):
+        schema = {"type": "integer"}
+        source = self.api(schemas={"A": schema, "B": schema})
+        reader = SourceSchemaReader(self.root, source)
+        bindings = [("same.actual", source, "/components/schemas/A"), ("same.actual", source, "/components/schemas/B")]
+        origins = reader.bundle_origins({"same.actual": {"type": "integer"}}, bindings)
+        self.assertEqual(len(origins["same.actual"]), 2)
+        self.assertEqual(reader.compare({"same.actual": {"type": "integer"}},
+                                        [("same.actual", v) for v in (0, 1, "x")], bindings), [])
+
+    def test_23_actual_metadata_tables_are_strict_and_are_not_the_oracle(self):
+        text = 'var requestSchemas = map[Op]map[string]string{\n OpOne: {"application/json": "Dotted.name"},\n}\n'
+        self.assertEqual(SourceSchemaReader.literal_table(text, "requestSchemas"),
+                         {"OpOne": {"application/json": "Dotted.name"}})
+        for wrong in (text.replace('"Dotted.name"', 'false'), text.replace('"application/json":', '"x": "x", "x":'),
+                      text.replace('requestSchemas', 'other'), text.replace(': {', ' {', 1)):
+            with self.subTest(text=wrong), self.assertRaises(CheckingError):
+                SourceSchemaReader.literal_table(wrong, "requestSchemas")
+
+    def test_24_binding_table_completeness_and_source_operation_identity(self):
+        source = self.api(schemas={}, paths={"/a": {"post": {"requestBody": {"content": {
+            "application/json": {"schema": {"type": "integer", "minimum": 1}}}}, "responses": {"200": {
+            "description": "ok", "content": {"application/json": {"schema": {"type": "string"}}}}}}}})
+        reader = SourceSchemaReader(self.root, source)
+        mod = self.root / "actual/apidoor"
+        mod.mkdir(parents=True)
+        (mod / "routes.go").write_text('"/a POST": OpOne,\n', encoding="utf-8")
+        tables = ('var requestSchemas = map[Op]map[string]string{OpOne: {"application/json": "Inline.request"},}\n'
+                  'var responseSchemas = map[Op]map[int]map[string]string{OpOne: {200: {"application/json": "Inline.response"}},}\n')
+        (mod / "bodies.go").write_text(tables, encoding="utf-8")
+        bindings = reader.output_bindings(mod.parent)
+        self.assertEqual({x[0] for x in bindings}, {"Inline.request", "Inline.response"})
+        defs = {"Inline.request": {"type": "integer", "minimum": 1}, "Inline.response": {"type": "string"}}
+        cases = [(name, v) for name in defs for v in (0, 1, "x")]
+        self.assertEqual(reader.compare(defs, cases, bindings), [])
+        (mod / "bodies.go").write_text(tables.replace('"Inline.response"', '"extra"').replace('200:', '201:'), encoding="utf-8")
+        with self.assertRaises(CheckingError):
+            reader.output_bindings(mod.parent)
+
+    def test_25_ref_sibling_constraints_belong_to_the_declaration_not_its_target(self):
+        self.schema({"type": "string"})
+        reader = self.reader({"$ref": "../data/target.schema.json", "minLength": 2})
+        defs = {"Root": {"$ref": "#/$defs/opaque.target", "minLength": 2},
+                "opaque.target": {"type": "string"}}
+        cases = [(name, value) for name in defs for value in ("", "a", "ab", 1)]
+        self.assertEqual(reader.compare(defs, cases), [])
+        actual = copy.deepcopy(defs)
+        del actual["Root"]["minLength"]
+        mismatch = reader.compare(actual, cases)
+        self.assertTrue(mismatch)
+        self.assertTrue(all(row[0] == "Root" for row in mismatch))
+
+
+    def test_26_cached_validator_rechecks_complete_source_bytes(self):
+        target = self.schema({"type": "string", "minLength": 1})
+        reader = self.reader({"$ref": "../data/target.schema.json"})
+        pointer = "/components/schemas/Root"
+        self.assertTrue(reader.validator_at(reader.source, pointer).is_valid("a"))
+        self.assertFalse(reader.validator_at(reader.source, pointer).is_valid(1))
+        target.write_text('{"type":"integer"}', encoding="utf-8")
+        with self.assertRaises(CheckingError):
+            reader.validator_at(reader.source, pointer)
+        self.assertEqual(target.read_text(), '{"type":"integer"}')
+
+    def test_27_cached_validator_rejects_equal_value_symlink_repin(self):
+        first = self.schema({"type": "integer"})
+        second = self.schema({"type": "integer"}, name="other")
+        alias = first.with_name("alias.schema.json")
+        alias.symlink_to(first.name)
+        reader = self.reader({"$ref": "../data/alias.schema.json"})
+        pointer = "/components/schemas/Root"
+        self.assertTrue(reader.validator_at(reader.source, pointer).is_valid(1))
+        alias.unlink()
+        alias.symlink_to(second.name)
+        with self.assertRaises(CheckingError):
+            reader.validator_at(reader.source, pointer)
+
+    def test_28_cached_validator_rechecks_late_declaration_bytes(self):
+        source, _ = self.late()
+        reader = SourceSchemaReader(self.root, source)
+        pointer = "/paths/~1api~1backup/get/responses/200/content/application~1json/schema"
+        self.assertTrue(reader.validator_at(source, pointer).is_valid("a"))
+        norm = self.root / "Platform/06-console/spec/06.7-console.norms.md"
+        norm.write_bytes(norm.read_bytes() + b"\nchanged declaration\n")
+        with self.assertRaises(CheckingError):
+            reader.validator_at(source, pointer)
+
+    def test_29_cached_registry_includes_a_new_explicit_schema_entry(self):
+        self.schema({"type": "integer", "minimum": 2})
+        source = self.api(schemas={"Root": {"type": "string"}})
+        import yamlsub
+        doc = yamlsub.load(source.read_text(), source.name)
+        doc["x-explicit"] = {"$ref": "../data/target.schema.json"}
+        self.write(str(source.relative_to(self.root)), doc, yaml=True)
+        reader = SourceSchemaReader(self.root, source)
+        self.assertTrue(reader.validator_at(source, "/components/schemas/Root").is_valid("a"))
+        target = reader.validator_at(source, "/x-explicit")
+        self.assertTrue(target.is_valid(2))
+        self.assertFalse(target.is_valid(1))
+
+
+    def parameter_fixture(self):
+        spec = self.api(paths={"/x": {"get": {
+            "parameters": [{"name": "n", "in": "query", "required": True,
+                            "schema": {"type": "integer", "minimum": 2}}],
+            "responses": {"200": {"description": "ok"}}}}})
+        module = self.root / "actual-go"
+        (module / "apidoor").mkdir(parents=True)
+        (module / "apidoor/routes.go").write_text('var ops = map[string]Op{\n"/x GET": OpX,\n}\n')
+        actual = ('var requestSchemas = map[Op]map[string]string{}\n'
+                  'var responseSchemas = map[Op]map[string]map[string]string{}\n'
+                  'var paramSchemas = map[Op][]paramSpec{\n'
+                  'OpX: {{name: "n", in: "query", required: true, schema: "opaque-root", def: ""}},\n}\n')
+        (module / "apidoor/bodies.go").write_text(actual)
+        return SourceSchemaReader(self.root, spec), module, actual
+
+    def test_30_actual_parameter_definitions_do_not_require_a_dotted_name_convention(self):
+        reader, module, text = self.parameter_fixture()
+        defs = {"opaque-root": {"type": "integer", "minimum": 2}}
+        bindings = reader.output_bindings(module)
+        self.assertEqual(reader.compare(defs, [("opaque-root", 2), ("opaque-root", 1)], bindings), [])
+        self.assertEqual(len(bindings), 1)
+
+    def test_31_parameter_table_missing_extra_duplicate_and_roles_fail(self):
+        reader, module, text = self.parameter_fixture()
+        row = 'OpX: {{name: "n", in: "query", required: true, schema: "opaque-root", def: ""}},'
+        changed = [text.replace(row, ''), text.replace(row, row + '\n' + row),
+                   text.replace('name: "n"', 'name: "unknown"'),
+                   text.replace('in: "query"', 'in: "path"'),
+                   text.replace('required: true', 'required: "true"'),
+                   text.replace('name: "n"', 'name: "n", name: "n"'),
+                   text.replace('schema: "opaque-root"', 'unexpected: "opaque-root"'),
+                   text.replace('schema: "opaque-root"', 'schema: true'),
+                   text.replace('paramSchemas', 'noParameterTable'), text + text]
+        for mutant in changed:
+            with self.subTest(mutant=mutant):
+                self.assertNotEqual(mutant, text)
+                (module / "apidoor/bodies.go").write_text(mutant)
+                with self.assertRaises(CheckingError):
+                    reader.output_bindings(module)
+        for mutant in (text.replace('required: true', 'required: false'),
+                       text.replace('def: ""', 'def: "2"')):
+            with self.subTest(semantic_metadata=mutant), self.assertRaises(AssertionError):
+                (module / "apidoor/bodies.go").write_text(mutant)
+                reader.output_bindings(module)
+        # An invalid later record wins over an earlier normal semantic mismatch.
+        mutant = text.replace('required: true', 'required: false').replace('}},', '}, {name: "extra"}},')
+        (module / "apidoor/bodies.go").write_text(mutant)
+        with self.assertRaises(CheckingError):
+            reader.output_bindings(module)
+        (module / "apidoor/bodies.go").write_text(text)
+        self.assertEqual(len(reader.output_bindings(module)), 1)
+
+    def test_32_bound_parameter_schema_wrong_value_is_a_semantic_mismatch(self):
+        reader, module, _ = self.parameter_fixture()
+        bindings = reader.output_bindings(module)
+        cases = [("opaque-root", 1), ("opaque-root", 2)]
+        self.assertTrue(reader.compare({"opaque-root": {"type": "integer", "minimum": 1}}, cases, bindings))
+        with self.assertRaises(CheckingError):
+            reader.compare({"other-root": {"type": "integer"}}, [("other-root", 1)], bindings)
+
+
+    def test_33_existing_ndjson_line_schema_is_a_typed_source_edge(self):
+        spec = ROOT / "Platform/05-resource/spec/05-resource.api.openapi.yaml"
+        reader = SourceSchemaReader(ROOT, spec)
+        pointer = "/paths/~1buckets~1{sub}~1{unit}/get/responses/200/content/application~1x-ndjson/schema/x-line-schema"
+        key = (spec, pointer, "#/components/schemas/BucketInfo", "schema")
+        self.assertEqual(reader.edges[key], (spec, "/components/schemas/BucketInfo"))
+        # The established extension is typed only in a Schema Object;
+        # identically shaped instance/example data remains opaque.
+        fixture = self.api(schemas={"Root": {"type": "object", "default": {
+            "x-line-schema": {"$ref": "https://not-a-source.invalid/data"}}}})
+        local = SourceSchemaReader(self.root, fixture)
+        self.assertEqual(local.edges, {})
 
 
 for _lesson, _slug in LESSONS.items():

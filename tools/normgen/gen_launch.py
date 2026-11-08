@@ -121,6 +121,10 @@ def frame_norms():
         if len(hits) != 1:
             raise GenError(f'{NORMS.name}: N2.1 item {start!r} — {len(hits)} found, want 1')
         out.append(f"//   req: {hits[0][0]} — {gen_core.brief(hits[0][1])}")
+    # Older Source lacks this paragraph; when present, carry its actual anchor.
+    for anchor, text in sec[2]:
+        if text.startswith("- **Input phase deadlines.**"):
+            out.append(f"//   req: {anchor} — {gen_core.plain(text)}")
     return "\n".join(out) + "\n"
 
 

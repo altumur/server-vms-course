@@ -5,6 +5,7 @@ Default module: out/p01-1/go; stdlib and Go 1.22 suffice. Reread refusals.tsv in
 
 Runner refusal steps on the door stub are the door judge's task. Result: refusals:P/N PASS|FAIL; exit 0=all pass, 1=failure, 2=judge startup error."""
 import argparse
+import csv
 import json
 import re
 import shutil
@@ -23,18 +24,153 @@ ACCEPTANCE = L.path("acceptance")
 WHOLE = {"1"}                 # Chapters comparing full bodies (acceptance1.1 README); others use subsets.
 
 
-def read_table():
-    lines = [x for x in TABLE.read_text(encoding="utf-8").splitlines() if not x.startswith("#")]
-    cols = lines[0].split("\t")
+class CheckingError(RuntimeError):
+    """The source or observation is unavailable, malformed or incomplete; never a semantic kill."""
+
+
+def read_table(path=None):
+    path = TABLE if path is None else Path(path)
+    lines = [x for x in path.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]
+    columns = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm"]
+    if not lines or lines[0].split("\t") != columns:
+        raise CheckingError("missing or malformed HTTP refusal catalogue header")
     rows = []
-    for x in lines[1:]:
-        r = dict(zip(cols, x.split("\t")))
+    names = set()
+    for cells in csv.reader(lines[1:], delimiter="\t", quoting=csv.QUOTE_NONE):
+        if len(cells) != len(columns):
+            raise CheckingError("malformed HTTP refusal catalogue row")
+        r = dict(zip(columns, cells))
+        if (not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in names or
+                not re.fullmatch(r"[0-9]+\.[0-9]+", r["chapter"]) or
+                not re.fullmatch(r"[1-9][0-9]*", r["row"])):
+            raise CheckingError("missing/duplicate name or malformed source coordinates")
+        names.add(r["name"])
         fields = [] if r["fields"] == "-" else r["fields"].split(",")
+        if any(not re.fullmatch(r"[a-z][a-z_]*\??", f) or f.rstrip("?") in ("kind", "error") for f in fields):
+            raise CheckingError(f"{r['name']}: malformed field token")
+        if len({f.rstrip("?") for f in fields}) != len(fields):
+            raise CheckingError(f"{r['name']}: duplicate field")
         r["req"] = {f for f in fields if not f.endswith("?")}
         r["opt"] = {f[:-1] for f in fields if f.endswith("?")}
-        r["code_n"] = int(r["code"]) if r["code"].isdigit() else (2 if r["code"] == "exit 2" else 1)
+        if r["surface"] == "http":
+            if not re.fullmatch(r"[1-5][0-9]{2}", r["code"]) or not re.fullmatch(r"[a-z]+", r["kind"]):
+                raise CheckingError(f"{r['name']}: malformed HTTP code/kind")
+            r["code_n"] = int(r["code"])
+        elif r["surface"] in ("start", "cli"):
+            if r["code"] not in ("exit 2", "exit !0") or any(r[k] != "-" for k in ("kind", "fields", "headers")):
+                raise CheckingError(f"{r['name']}: malformed process refusal")
+            r["code_n"] = 2 if r["code"] == "exit 2" else 1
+        else:
+            raise CheckingError(f"{r['name']}: unknown source surface")
+        r["header_pairs"] = []
+        if r["headers"] != "-":
+            for header in r["headers"].split(";"):
+                match = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", header)
+                if match is None:
+                    raise CheckingError(f"{r['name']}: malformed header")
+                r["header_pairs"].append([match[1], match[2]])
+        logs = [] if r["log"] == "-" else [x.strip() for x in re.findall(r"«[^«»]*»|[^,«»]+", r["log"]) if x.strip()]
+        r["log_names"] = [x for x in logs if not x.startswith("«")]
+        r["log_words"] = [x[1:-1] for x in logs if x.startswith("«")]
         rows.append(r)
+    if not rows:
+        raise CheckingError("the HTTP refusal source has no catalogue rows")
     return rows
+
+
+def _pairs(items):
+    result = {}
+    for key, value in items:
+        if key in result:
+            raise CheckingError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _constant(value):
+    raise CheckingError(f"nonfinite JSON constant: {value}")
+
+
+def _shape(value, keys):
+    if type(value) is not dict or set(value) != set(keys):
+        raise CheckingError("missing/extra/malformed private report members")
+
+
+def _strings(value):
+    if value is not None and (type(value) is not list or any(type(x) is not str for x in value)):
+        raise CheckingError("private report requires a string array or null")
+    for text in value or []:
+        _text(text)
+
+
+def _text(value):
+    if type(value) is not str:
+        raise CheckingError("private report requires text")
+    try:
+        value.encode("utf-8", "strict")
+    except UnicodeError as exc:
+        raise CheckingError("private report contains a non-scalar Unicode string") from exc
+
+
+def read_report(raw):
+    """Validate the whole service frame before comparing any generated metadata with Source."""
+    try:
+        if type(raw) is bytes:
+            raw = raw.decode("utf-8", "strict")
+        if type(raw) is not str:
+            raise CheckingError("private report is not UTF-8 text")
+        raw.encode("utf-8", "strict")
+        report = json.loads(raw, object_pairs_hook=_pairs, parse_constant=_constant)
+    except (UnicodeError, ValueError) as exc:
+        raise CheckingError(f"invalid private report: {exc}") from exc
+    _shape(report, ("version", "declared", "completed", "rows"))
+    if (type(report["version"]) is not int or report["version"] != 1 or
+            type(report["declared"]) is not int or report["declared"] < 0 or
+            type(report["completed"]) is not int or report["completed"] != report["declared"] or
+            type(report["rows"]) is not list or len(report["rows"]) != report["declared"]):
+        raise CheckingError("incomplete private catalogue observation")
+    for row in report["rows"]:
+        _shape(row, ("Chapter", "Row", "Name", "Surface", "Code", "Kind", "Fields", "Headers",
+                     "RetryAfter", "Log", "Words", "Norm", "probes"))
+        if (any(type(row[k]) is not str for k in ("Chapter", "Name", "Surface", "Kind", "Norm")) or
+                any(type(row[k]) is not int for k in ("Row", "Code")) or type(row["RetryAfter"]) is not bool):
+            raise CheckingError("mistyped observed catalogue scalar")
+        for key in ("Chapter", "Name", "Surface", "Kind", "Norm"):
+            _text(row[key])
+        for key in ("Log", "Words"):
+            _strings(row[key])
+        fields = row["Fields"] or []
+        if row["Fields"] is not None and type(row["Fields"]) is not list:
+            raise CheckingError("mistyped observed fields")
+        for field in fields:
+            _shape(field, ("Name", "Optional"))
+            if type(field["Name"]) is not str or type(field["Optional"]) is not bool:
+                raise CheckingError("mistyped observed field role")
+            _text(field["Name"])
+        if row["Headers"] is not None and type(row["Headers"]) is not list:
+            raise CheckingError("mistyped observed headers")
+        for header in row["Headers"] or []:
+            if type(header) is not list or len(header) != 2 or any(type(x) is not str for x in header):
+                raise CheckingError("mistyped observed header pair")
+            for value in header:
+                _text(value)
+        required = [f["Name"] for f in fields if not f["Optional"]]
+        all_fields = [f["Name"] for f in fields]
+        sets = [required] + ([all_fields] if len(required) != len(all_fields) else []) if row["Surface"] == "http" else []
+        probes = row["probes"] or []
+        if row["probes"] is not None and type(row["probes"]) is not list:
+            raise CheckingError("mistyped probe cohort")
+        if len(probes) != len(sets):
+            raise CheckingError("partial/extra observation of declared field cohorts")
+        for probe, expected_fields in zip(probes, sets):
+            _shape(probe, ("fields", "ints", "ops", "retry", "body"))
+            for key in ("fields", "ints", "ops"):
+                _strings(probe[key])
+            if ((probe["fields"] or []) != expected_fields or type(probe["retry"]) is not bool or
+                    type(probe["body"]) is not str):
+                raise CheckingError("wrong field-cohort identity or mistyped probe")
+            _text(probe["body"])
+    return report["rows"]
 
 
 def harness(module_dir, work):
@@ -43,10 +179,13 @@ def harness(module_dir, work):
     shutil.copy(HERE / "refusals/harness/main.go", hdir / "main.go")
     (hdir / "go.mod").write_text(f"module normgen/refusalharness\n\ngo 1.22\n\nrequire {L.go_module} v0.0.0\n\n"
                                  f"replace {L.go_module} => {Path(module_dir).resolve()}\n", encoding="utf-8")
-    done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, text=True, timeout=300)
-    if done.returncode:
-        raise SystemExit(f"refusal_judge: the harness: {done.stderr.strip()}")
-    return json.loads(done.stdout)
+    try:
+        done = subprocess.run(["go", "run", "."], cwd=hdir, capture_output=True, timeout=300)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"cannot execute the harness: {exc}") from exc
+    if type(done.returncode) is not int or done.returncode != 0 or done.stderr:
+        raise CheckingError(f"the harness did not complete normally: exit={done.returncode}, stderr={done.stderr!r}")
+    return read_report(done.stdout)
 
 
 def expectations():
@@ -206,9 +345,13 @@ def main(argv=None):
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
             print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
             return 2
-    rows = read_table()
-    with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
-        got = harness(a.module_dir, work)
+    try:
+        rows = read_table()
+        with tempfile.TemporaryDirectory(prefix="refusal-judge-") as work:
+            got = harness(a.module_dir, work)
+    except (CheckingError, OSError, ValueError, TypeError, KeyError, RecursionError) as exc:
+        print(f"refusal_judge: checking error: {exc}", file=sys.stderr)
+        return 2
     results = []
 
     def check(name, why):
@@ -222,25 +365,39 @@ def main(argv=None):
     for r in rows:
         g = by.get(r["name"])
         if not g:
+            check(f"catalogue {r['name']}", "the complete compiled catalogue has no such row")
+            if r["surface"] == "http":
+                sets = [r["req"]] + ([r["req"] | r["opt"]] if r["opt"] else [])
+                for fields in sets:
+                    check(f"door {r['name']} {sorted(fields)}", "the compiled catalogue has no such row")
             continue
         fields = {f["Name"]: f["Optional"] for f in g["Fields"] or []}
         want = {**{f: False for f in r["req"]}, **{f: True for f in r["opt"]}}
-        headers = [] if r["headers"] == "-" else [h.split(": ", 1) for h in r["headers"].split(";")]
+        headers = r["header_pairs"]
         diffs = [k for k, ok in (("chapter", g["Chapter"] == r["chapter"]), ("row", g["Row"] == int(r["row"])),
                                  ("surface", g["Surface"] == r["surface"]), ("code", g["Code"] == r["code_n"]),
                                  ("kind", g["Kind"] == ("" if r["kind"] == "-" else r["kind"])),
-                                 ("fields", fields == want), ("headers", (g["Headers"] or []) == headers),
-                                 ("retry", g["RetryAfter"] == any(h[0] == "Retry-After" for h in headers)))
+                                 ("fields", fields == want and len(g["Fields"] or []) == len(want)),
+                                 ("headers", (g["Headers"] or []) == headers),
+                                 ("retry", g["RetryAfter"] == any(h[0] == "Retry-After" for h in headers)),
+                                 ("log", (g["Log"] or []) == r["log_names"]),
+                                 ("words", (g["Words"] or []) == r["log_words"]),
+                                 ("norm", g["Norm"] == r["norm"]))
                  if not ok]
         check(f"catalogue {r['name']}", f"differs from the table in {diffs}" if diffs else None)
         if r["surface"] == "http":
-            for p in g["probes"]:
+            sets = [r["req"]] + ([r["req"] | r["opt"]] if r["opt"] else [])
+            for fields in sets:
                 why = None
-                if not p["ops"]:
+                candidates = [p for p in g["probes"] or [] if sorted(p["fields"] or []) == sorted(fields)]
+                p = candidates[0] if len(candidates) == 1 else None
+                if p is None:
+                    why = "no unambiguous observation for the source field cohort"
+                elif not p["ops"]:
                     why = f"apidoor.Refuse/Encode take the fields {p['fields'] or []} at no operation"
                 elif g["RetryAfter"] and not p["retry"]:
                     why = "no operation declares Retry-After for it"
-                check(f"door {r['name']} {sorted(p['fields'] or [])}", why)
+                check(f"door {r['name']} {sorted(fields)}", why)
     http = [r for r in rows if r["surface"] == "http"]
     for ch, sc, step, code, kind, fields in expectations():
         cands = [r for r in http if r["code_n"] == code and r["kind"] == kind]

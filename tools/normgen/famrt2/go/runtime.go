@@ -145,16 +145,111 @@ func (f *Family) Judge(key string, items Items, mode Mode) Result {
 	if !f.Matches(key) {
 		return Result{"refused", []string{""}}
 	}
-	return f.JudgeItems(items, mode)
+	return f.judgeItems(items, mode, &key)
 }
 
-// JudgeItems — the reading of items alone (the key is already the family's).
+// JudgeItems — keyless item reading; contextual writers must use Judge with a concrete key.
 func (f *Family) JudgeItems(items Items, mode Mode) Result {
+	return f.judgeItems(items, mode, nil)
+}
+
+// judgeItems keeps key presence private; the public keyless entry cannot prove a contextual writer.
+func (f *Family) judgeItems(items Items, mode Mode, key *string) Result {
 	f.once.Do(func() { f.sch, f.err = compile(f.Doc) })
 	if f.err != nil {
 		panic("families: the schema of " + f.Key + ": " + f.err.Error())
 	}
-	return f.sch.judgeRow(items, mode)
+	s := f.sch
+	defs, _ := s.doc["$defs"].(node)
+	_, person := defs["person_writer"]
+	_, role := defs["role_writer"]
+	if mode == Writer && (f.Key == "domain/deleting/<name>" || person || role) {
+		// Per-call regex work must not change the compiled family's cache or document.
+		local := *s
+		local.rx = map[string]*regexp.Regexp{}
+		s = &local
+	}
+	profile, validKey := f.writerProfile(s, key, mode)
+	if !validKey {
+		return Result{"refused", []string{""}}
+	}
+	return s.judgeRowBound(items, mode, profile)
+}
+
+// writerProfile uses only the catalog identity, key and mode, never the contents of items.
+func (f *Family) writerProfile(s *schema, key *string, mode Mode) (node, bool) {
+	if mode != Writer {
+		return nil, true
+	}
+	defs, _ := s.doc["$defs"].(node)
+	_, hasPerson := defs["person_writer"]
+	_, hasRole := defs["role_writer"]
+	if f.Key != "domain/deleting/<name>" && !hasPerson && !hasRole {
+		return nil, true
+	}
+	if f.Key != "domain/deleting/<name>" || f.Kind != "row" {
+		panic("families: writer profile identity mismatch")
+	}
+	person, personOK := defs["person_writer"].(node)
+	role, roleOK := defs["role_writer"].(node)
+	name, nameOK := defs["common.person_name"].(node)
+	time, timeOK := defs["common.time"].(node)
+	_, patternOK := name["pattern"].(string)
+	if !personOK || !roleOK || person["type"] != "object" || role["type"] != "object" ||
+		!nameOK || name["type"] != "string" || !patternOK || !timeOK || time["x-time"] != true || s.writer == nil {
+		panic("families: incomplete source for contextual writer")
+	}
+	if key == nil {
+		panic("families: contextual writer requires a concrete key")
+	}
+	suffix := strings.TrimPrefix(*key, "domain/deleting/")
+	profile := "person_writer"
+	if strings.HasPrefix(suffix, "role:") {
+		suffix = strings.TrimPrefix(suffix, "role:")
+		profile = "role_writer"
+	}
+	if !strings.HasPrefix(*key, "domain/deleting/") || !s.valid(name, suffix) {
+		return nil, false
+	}
+	return node{"$ref": "#/$defs/" + profile}, true
+}
+
+// rowRoot is a traversal view only: original root, common writer and profile records remain separate.
+func (s *schema) rowRoot(profile node) node {
+	if profile == nil {
+		return s.doc
+	}
+	root := node{}
+	for k, v := range s.doc {
+		root[k] = v
+	}
+	props := node{}
+	original := s.resolve(s.doc)
+	for i, chain := range [][]node{s.resolve(profile), original} {
+		for _, n := range chain {
+			if fields, ok := n["properties"].(node); ok {
+				for name, field := range fields {
+					if i == 0 {
+						allowed := true
+						for _, source := range original {
+							if names, ok := source["propertyNames"].(node); ok && !s.valid(names, name) {
+								allowed = false
+								break
+							}
+						}
+						if !allowed {
+							continue
+						}
+					}
+					if _, exists := props[name]; !exists {
+						props[name] = field
+					}
+				}
+			}
+		}
+	}
+	root["properties"] = props
+	return root
 }
 
 // JudgeText — the reading of an object or file family (kind object | file) by its key and text: object — a JSON text
@@ -1596,9 +1691,19 @@ func at(v any, path []any) (any, bool) {
 }
 
 func (s *schema) layer3(v any, mode Mode, decoded map[string]bool, fails *[][]any) any {
-	wmap := map[string]place{}
-	if mode == Writer && s.writer != nil {
-		s.writerPlaces(s.writer, v, nil, wmap)
+	return s.layer3Bound(v, mode, decoded, fails, nil)
+}
+
+func (s *schema) layer3Bound(v any, mode Mode, decoded map[string]bool, fails *[][]any, profile node) any {
+	var wmaps []map[string]place
+	if mode == Writer {
+		for _, writer := range []node{s.writer, profile} {
+			if writer != nil {
+				places := map[string]place{}
+				s.writerPlaces(writer, v, nil, places)
+				wmaps = append(wmaps, places)
+			}
+		}
 	}
 	mains := map[string][]node{}
 	visit := func(chain []node, x any, path []any) any {
@@ -1635,14 +1740,16 @@ func (s *schema) layer3(v any, mode Mode, decoded map[string]bool, fails *[][]an
 		mains[pointer(path)] = chain
 		return x
 	}
-	v = s.walk(s.doc, v, nil, visit)
+	v = s.walk(s.rowRoot(profile), v, nil, visit)
 	v = finite(v, nil, fails)
-	for k, p := range wmap {
-		x, ok := at(v, p.path)
-		if !ok {
-			continue
+	for _, places := range wmaps {
+		for k, p := range places {
+			x, ok := at(v, p.path)
+			if !ok {
+				continue
+			}
+			s.limits(p.chain, x, p.path, fails, mains[k])
 		}
-		s.limits(p.chain, x, p.path, fails, mains[k])
 	}
 	return v
 }
@@ -1650,12 +1757,16 @@ func (s *schema) layer3(v any, mode Mode, decoded map[string]bool, fails *[][]an
 // judgeRow — stack.Family.judge for kind row: items → decoded value, layer 3, JSON Schema (and $defs.writer for the
 // writer), the refusal places.
 func (s *schema) judgeRow(items Items, mode Mode) Result {
+	return s.judgeRowBound(items, mode, nil)
+}
+
+func (s *schema) judgeRowBound(items Items, mode Mode, profile node) Result {
 	if items == nil {
 		return Result{"refused", []string{""}}
 	}
 	var fails [][]any
 	decoded := map[string]bool{}
-	root := s.resolve(s.doc)
+	root := s.resolve(s.rowRoot(profile))
 	value := obj{}
 	for k, it := range items {
 		value[k] = it.Text
@@ -1687,10 +1798,13 @@ func (s *schema) judgeRow(items Items, mode Mode) Result {
 			}
 		}
 	}
-	v := s.layer3(value, mode, decoded, &fails)
+	v := s.layer3Bound(value, mode, decoded, &fails, profile)
 	recs := s.records(s.doc, v, nil, false)
 	if mode == Writer && s.writer != nil {
 		recs = append(recs, s.records(s.writer, v, nil, false)...)
+	}
+	if mode == Writer && profile != nil {
+		recs = append(recs, s.records(profile, v, nil, false)...)
 	}
 	paths := canonical(append(fails, norm(recs)...))
 	if len(paths) == 0 {

@@ -953,6 +953,7 @@ def sources(part, root=ROOT):
             paths.extend(directory / f for f in common_vectors.DECLS[name]["files"])
     elif part == "stagetests":
         paths.append(root / L.rel / "forms/refusals.tsv")
+        paths.append(root / L.rel / "spec" / L.openapi.name)
         for chapter in sorted((root / L.rel / "acceptance").iterdir()):
             paths.extend(p for p in (chapter / "scenarios.tsv", chapter / "seams.tsv") if p.is_file())
     else:

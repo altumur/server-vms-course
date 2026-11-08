@@ -197,7 +197,8 @@ def provenance(parts, files, judged):
                                                L.path("acceptance/3/seams.tsv")],
                                       "generator": NORMGEN / "gen_stagetests.py",
                                       "generators": [NORMGEN / p for p in ("gen_stagetests.py", "gen_tests.py", "gen_checks.py",
-                                                                          "gen_cmdtests.py", "tsv_input.py", "gate.py")],
+                                                                          "gen_cmdtests.py", "tsv_input.py", "gate.py",
+                                                                          "gen_door.py", "yamlsub.py")],
                                       "judge": NORMGEN / "scenario_judge.py"}),
     }
     out = {}
