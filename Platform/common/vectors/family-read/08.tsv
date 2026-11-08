@@ -1767,21 +1767,21 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 08-1766	domain/users/<name>	domain/users/w-1	row	reader	["admin", "domain"]	{"name":"a","how":"password","pwhash_secret":"a","disabled":"true","at":"1","by":"a,,b"}	ok	[]	{"admin": [], "domain": []}	item by: record 'a,,b'
 08-1767	domain/users/<name>	domain/users/w-1	row	writer	["domain", "admin"]	{"name":"a","how":"password","pwhash_secret":"a","disabled":"true","at":"1","by":" 1"}	ok	[]	[]	item by: record ' 1'
 08-1768	domain/users/<name>	domain/users/w-1	row	reader	["admin", "domain"]	{"name":"a","how":"password","pwhash_secret":"a","disabled":"true","at":"1","by":" 1"}	ok	[]	{"admin": [], "domain": []}	item by: record ' 1'
-08-1769	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{}	ok	[]	[]	base
+08-1769	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1"}	ok	[]	[]	base; valid person base at="1" (P/01.1-R007/R009); no mutation
 08-1770	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{}	ok	[]	{"domain": []}	base
 08-1771	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	null	refused	[""]	[]	root null
 08-1772	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
-08-1773	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"":"x"}	refused	[""]	[]	: name ''
+08-1773	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","":"x"}	refused	["","/"]	[]	: name ''; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1774	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"":"x"}	ok	[]	{"domain": []}	: name ''
-08-1775	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"Bad Name!":"x"}	refused	[""]	[]	: name 'Bad Name!'
+08-1775	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","Bad Name!":"x"}	refused	["","/Bad Name!"]	[]	: name 'Bad Name!'; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1776	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"Bad Name!":"x"}	ok	[]	{"domain": []}	: name 'Bad Name!'
-08-1777	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"a\n":"x"}	refused	[""]	[]	: name 'a\n'
+08-1777	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","a\n":"x"}	refused	["","/a\n"]	[]	: name 'a\n'; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1778	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"a\n":"x"}	ok	[]	{"domain": []}	: name 'a\n'
-08-1779	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"/x":"x"}	refused	[""]	[]	: name '/x'
+08-1779	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","/x":"x"}	refused	["","/~1x"]	[]	: name '/x'; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1780	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"/x":"x"}	ok	[]	{"domain": []}	: name '/x'
-08-1781	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"zz_extra":"x"}	refused	[""]	[]	: name 'zz_extra'
+08-1781	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","zz_extra":"x"}	refused	["","/zz_extra"]	[]	: name 'zz_extra'; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1782	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"zz_extra":"x"}	ok	[]	{"domain": []}	: name 'zz_extra'
-08-1783	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"n0":"x"}	refused	[""]	[]	: names over max_items
+08-1783	domain/deleting/<name>	domain/deleting/w-1	row	writer	["domain"]	{"at":"1","n0":"x"}	refused	["","/n0"]	[]	: names over max_items; valid person base at="1" (P/01.1-R007/R009); x-max-names and closed-profile paths
 08-1784	domain/deleting/<name>	domain/deleting/w-1	row	reader	["domain"]	{"n0":"x"}	ok	[]	{"domain": []}	: names over max_items
 08-1785	domain/disabled	domain/disabled	row	writer	["domain"]	{"names":"[\"a\"]"}	ok	[]	[]	base
 08-1786	domain/disabled	domain/disabled	row	reader	["console", "domain", "domainconsole"]	{"names":"[\"a\"]"}	ok	[]	{"console": [], "domain": [], "domainconsole": []}	base
