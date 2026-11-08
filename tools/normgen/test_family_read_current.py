@@ -19,6 +19,56 @@ def family(name, kind="row"):
 
 
 class CurrentFamilyControls(unittest.TestCase):
+    def test_source143_published_pending_and_outcomes_cells(self):
+        _, maximum, rules = family_refresh.source_rules(ROOT)
+        lines = (ROOT / spec.FAMILY_READ / "08.tsv").read_text().splitlines()
+        rows = {line.split("\t")[0]: dict(zip(spec.FR_HEADER, line.split("\t"))) for line in lines[1:]}
+        other = rows["08-1612"]
+        self.assertEqual(family_refresh.migrated(other, maximum, rules), other)
+        row = rows["08-1556"]
+        got = family_refresh.migrated(row, maximum, rules)
+        self.assertEqual(json.loads(got["outcome"]), {"domain": [""], "domainagent": [""]})
+        self.assertEqual({k:v for k,v in got.items() if k != "outcome"},
+                         {k:v for k,v in row.items() if k != "outcome"})
+
+    def test_source143_root_seq_and_bad_name_outcomes(self):
+        _, _, all_rules = family_refresh.source_rules(ROOT)
+        rules = all_rules["domain/pending/<member>"]
+        who = ["domain", "domainagent"]
+        cases = (([], []), (["/seq"], ["/seq"]), (["/bad-name"], ["/*"]),
+                 (["/seq", "/bad-name"], ["/seq"]), ([""], [""]),
+                 (["", "/seq"], [""]), (["", "/bad-name"], [""]),
+                 (["", "/seq", "/bad-name"], [""]))
+        for paths, expected in cases:
+            with self.subTest(paths=paths):
+                self.assertEqual(family_refresh.pending_reader_outcomes(rules, paths, who),
+                                 {role: expected for role in who})
+
+    def test_source143_pending_actual_reader_scope(self):
+        catalog = next(r for r in spec.read_catalog(ROOT) if r["key"] == "domain/pending/<member>")
+        _, _, doc, _, source_outcomes = spec.load_family(ROOT, catalog)
+        pending = stack.Family(doc, "row", family_template=catalog["key"])
+        lines = (ROOT / spec.FAMILY_READ / "08.tsv").read_text().splitlines()
+        sample = next(dict(zip(spec.FR_HEADER, line.split("\t"))) for line in lines[1:]
+                      if line.startswith("08-1555\t"))
+        edit = next(v for k,v in json.loads(sample["text"]).items() if k != "seq")
+        cases = ((50, False, False, [], []), (50, True, False, ["/seq"], ["/seq"]),
+                 (1, False, True, ["/bad-name"], ["/*"]),
+                 (51, False, False, [""], [""]), (51, True, False, ["", "/seq"], [""]),
+                 (51, False, True, ["", "/bad-name"], [""]),
+                 (51, True, True, ["", "/bad-name", "/seq"], [""]))
+        for count, bad_seq, bad_name, paths, outcome in cases:
+            with self.subTest(count=count, bad_seq=bad_seq, bad_name=bad_name):
+                value = {"seq": "bad" if bad_seq else "1",
+                         **{"e-%012x" % i: edit for i in range(count)}}
+                if bad_name:
+                    del value["e-%012x" % (count - 1)]
+                    value["bad-name"] = edit
+                got = pending.judge(value, "reader")
+                self.assertEqual(got["paths"], paths)
+                for role in ("domain", "domainagent"):
+                    self.assertEqual([o.path for o in spec.outcomes_for(source_outcomes, got["paths"], role)], outcome)
+
     def test_refresh_ledger_collision_before_read_and_external_neighbor(self):
         with tempfile.TemporaryDirectory() as directory:
             home = Path(directory)
