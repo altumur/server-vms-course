@@ -128,7 +128,7 @@ func run(req request) any {
 		for _, o := range apidoor.Operations {
 			declared := map[string]any{}
 			for code, d := range apidoor.Declared(o.Op) {
-				declared[fmt.Sprint(code)] = map[string]any{"schemas": d[0], "headers": d[1]}
+				declared[fmt.Sprint(code)] = map[string]any{"schemas": append([]string{}, d[0]...), "headers": d[1]}
 			}
 			ops = append(ops, map[string]any{"op": o.Op.String(), "method": o.Method, "path": o.Path, "query": o.Query,
 				"body": o.Body, "body_required": o.BodyRequired, "writecheck": o.Writecheck, "declared": declared})

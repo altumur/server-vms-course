@@ -372,6 +372,96 @@ class Loader(unittest.TestCase):
                 yamlsub.load(text)
 
 
+class CoverageProjectionControls(unittest.TestCase):
+    """Synthetic private frames exercise the unchanged independent Source coverage check."""
+
+    def setUp(self):
+        self.source = yaml.safe_load(SPEC.read_text(encoding="utf-8"))
+        self.doc = Doc(copy.deepcopy(self.source))
+        self.table = []
+        for op in self.doc.ops:
+            self.table.append(dict(op=op["op"], method=op["method"], path=op["path"],
+                query=[p["name"] for p in op["params"]],
+                body=[n for n in op["body"] or [] if n not in EXCLUDED],
+                writecheck=[n for n in op["body"] or [] if n in EXCLUDED], body_required=op["body_required"],
+                declared={str(code): {"schemas": list(r["schemas"]), "headers": list(r["headers"])}
+                          for code, r in op["declared"].items()}))
+        self.head = next(i for i, op in enumerate(self.doc.ops) if op["path"] == "/v1/copy" and op["method"] == "HEAD")
+        self.get = next(i for i, op in enumerate(self.doc.ops) if op["path"] == "/v1/copy" and op["method"] == "GET")
+
+    def check_coverage(self, table):
+        target = Generated("test_coverage")
+        target.d = self.doc
+        known = (set(self.doc.schemas) - EXCLUDED) | set(self.doc.inline)
+        def probe(**request):
+            if request["cmd"] == "table":
+                return {"ops": table}
+            if request["cmd"] == "check":
+                return {"known": request["schema"] in known}
+            raise RuntimeError("CheckingError: unexpected synthetic probe request")
+        target.probe = probe
+        target.test_coverage()
+
+    def test_canonical_empty_array_and_body_bearing_head_source_neighbour(self):
+        self.check_coverage(self.table)
+        changed = copy.deepcopy(self.source)
+        response = changed["paths"]["/v1/copy"]["get"]["responses"]["400"]
+        if "$ref" in response:
+            response = changed["components"]["responses"][response["$ref"].split("/")[-1]]
+        changed["paths"]["/v1/copy"]["head"]["responses"]["400"]["content"] = copy.deepcopy(response["content"])
+        changed["paths"]["/v1/copy"]["head"]["responses"]["404"] = copy.deepcopy(
+            changed["paths"]["/v1/copy"]["get"]["responses"]["404"])
+        head = next(op for op in Doc(changed).ops if op["path"] == "/v1/copy" and op["method"] == "HEAD")
+        self.assertTrue(head["declared"][400]["schemas"])
+        self.assertIsNotNone(head["declared"][400]["media"])
+        self.assertEqual(self.doc.ops[self.head]["declared"][400]["schemas"], [])
+
+    def test_null_wrong_type_or_invented_schema_is_not_empty_source_absence(self):
+        self.check_coverage(self.table)
+        for value in (None, {}, "", 0, ["UnexpectedBody"]):
+            actual = copy.deepcopy(self.table)
+            actual[self.head]["declared"]["400"]["schemas"] = value
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                self.check_coverage(actual)
+
+    def test_missing_or_extra_status_and_missing_schema_member_are_not_hidden(self):
+        self.check_coverage(self.table)
+        missing = copy.deepcopy(self.table)
+        del missing[self.head]["declared"]["400"]
+        extra = copy.deepcopy(self.table)
+        extra[self.head]["declared"]["299"] = {"schemas": [], "headers": []}
+        for value in (missing, extra):
+            with self.assertRaises(AssertionError):
+                self.check_coverage(value)
+        malformed = copy.deepcopy(self.table)
+        del malformed[self.head]["declared"]["400"]["schemas"]
+        with self.assertRaises(KeyError):  # Incomplete service frame; not a semantic mutant kill.
+            self.check_coverage(malformed)
+
+    def test_body_bearing_source_schema_cannot_be_removed_or_null(self):
+        self.check_coverage(self.table)
+        self.assertTrue(self.table[self.get]["declared"]["200"]["schemas"])
+        for value in ([], None):
+            actual = copy.deepcopy(self.table)
+            actual[self.get]["declared"]["200"]["schemas"] = value
+            with self.subTest(value=value), self.assertRaises(AssertionError):
+                self.check_coverage(actual)
+
+    def test_bodyless_and_body_bearing_header_omissions_or_additions_are_red(self):
+        self.check_coverage(self.table)
+        for index, code in ((self.head, "405"), (self.get, "405"), (self.get, "200")):
+            self.assertTrue(self.table[index]["declared"][code]["headers"])
+            for value in (None, [], ["Unexpected-Header"]):
+                actual = copy.deepcopy(self.table)
+                actual[index]["declared"][code]["headers"] = value
+                with self.subTest(index=index, code=code, value=value), self.assertRaises(AssertionError):
+                    self.check_coverage(actual)
+        unexpected = copy.deepcopy(self.table)
+        unexpected[self.head]["declared"]["400"]["headers"] = ["Unexpected-Header"]
+        with self.assertRaises(AssertionError):
+            self.check_coverage(unexpected)
+
+
 class Generated(DoorBase):
     def test_out_up_to_date(self):
         """Require exact fresh apidoor output with the current OpenAPI SHA header."""
@@ -408,6 +498,40 @@ class Generated(DoorBase):
             self.assertTrue(self.probe(cmd="check", schema=n, json="null")["known"], n)
         for n in EXCLUDED:
             self.assertFalse(self.probe(cmd="check", schema=n, json="null")["known"], n)
+
+    def test_no_content_table_and_body_header_boundaries(self):
+        """Private table arrays preserve Source absence, body shape and declared headers."""
+        actual = {row["op"]: row for row in self.probe(cmd="table")["ops"]}
+        no_content = [(op, code, response) for op in self.d.ops for code, response in op["declared"].items()
+                      if response["media"] is None]
+        self.assertTrue(no_content, "actual Source must exercise a no-content declaration")
+        for op, code, response in no_content:
+            with self.subTest(op=op["op"], code=code):
+                declaration = actual[op["op"]]["declared"][str(code)]
+                self.assertIs(type(declaration["schemas"]), list)
+                self.assertEqual(declaration["schemas"], [])
+                self.assertEqual(sorted(declaration["headers"] or []), response["headers"])
+                options, headers = source_required_probe_headers(response)
+                nil = self.probe(cmd="answer", op=op["op"], code=code, no_body=True, **options)
+                self.assertEqual(nil["resp"], {"code": code, "header": headers or None, "body": ""})
+                body = self.probe(cmd="answer", op=op["op"], code=code, json="{}", **options)
+                self.assertTrue("answer_error" in body or "encode_error" in body, body)
+                if "Allow" in response["required_headers"]:
+                    absent = self.probe(cmd="answer", op=op["op"], code=code, no_body=True,
+                                        **dict(options, allow=False))
+                    self.assertIn("encode_error", absent)
+                elif "Allow" not in response["headers"]:
+                    extra = self.probe(cmd="answer", op=op["op"], code=code, no_body=True,
+                                       **dict(options, allow=True))
+                    self.assertIn("encode_error", extra)
+        stream = next(op for op in self.d.ops if op["path"] == "/v1/copy" and op["method"] == "GET")
+        response = stream["declared"][200]
+        self.assertTrue(actual[stream["op"]]["declared"]["200"]["schemas"])
+        self.assertIsNotNone(response["media"])
+        value = "first\nsecond é\n"
+        options, _ = source_required_probe_headers(response)
+        accepted = self.probe(cmd="answer", op=stream["op"], code=200, json=json.dumps(value), **options)
+        self.assertEqual(base64.b64decode(accepted["resp"]["body"]), value.encode("utf-8"))
 
     def test_routes(self):
         """Test every method/path: foreign paths return404 with its schema; unsupported methods return405 when declared."""
