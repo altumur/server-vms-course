@@ -16,6 +16,7 @@ class SourceError(ValueError):
 
 
 _GO_DIRECTIVE = re.compile(r"//(?:go:|line | \+build\b|export )")
+_GO_REQUIREMENT = re.compile(r"//[ \t]*req:[ \t]*(P/[0-9]+\.[0-9]+-R[0-9]+)[ \t]*\Z")
 _PY_ENCODING = re.compile(r"#.*?coding[:=][ \t]*[-\w.]+")
 _PY_DIRECTIVE = re.compile(r"#[ \t]*(?:type:|noqa\b|fmt:)")
 
@@ -61,10 +62,11 @@ def _checked_header(header, prefix):
     return header
 
 
-def go_source(text, *, header=""):
+def go_source(text, *, header="", anchor_ids=None):
     if not isinstance(text, str) or not isinstance(header, str):
         raise SourceError("emitted Go source and header must be text")
     result, start, at, size = [], 0, 0, len(text)
+    known_anchors = None if anchor_ids is None else frozenset(anchor_ids)
     while at < size:
         char = text[at]
         if char in ('"', "'", "`"):
@@ -88,6 +90,12 @@ def go_source(text, *, header=""):
             end = size if end == -1 else end
             comment = text[at:end]
             if _GO_DIRECTIVE.match(comment):
+                at = end
+                continue
+            if known_anchors is not None and re.match(r"//[ \t]*req:", comment):
+                match = _GO_REQUIREMENT.fullmatch(comment)
+                if match is None or match[1] not in known_anchors:
+                    raise SourceError("requirement comment is not one exact existing source anchor")
                 at = end
                 continue
             result += [text[start:at], " "]

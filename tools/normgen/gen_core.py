@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import lesson  # noqa: E402 -- lesson selection (ADR-0125 addendum (5), item 2)
+import machine_source  # noqa: E402
 L = lesson.CURRENT
 DEFAULT_OUT = L.out
 NORMS = L.norms("1")
@@ -152,13 +153,6 @@ def pick(sec, how):
         end = next((j for j in range(start[0] + 1, len(items)) if items[j][1].startswith("- **")), len(items))
         return items[start[0]:end]
     return items
-
-
-def brief(text):
-    t = re.sub(r"\*\*|\[([^\]]+)\]\([^)]+\)", lambda m: m[1] or "", text)
-    t = re.sub(r"^(- |\d+\. )", "", t)
-    t = re.sub(r"\s+", " ", t).strip()
-    return t if len(t) <= LINE else t[:LINE - 1].rstrip() + "…"
 
 
 HANDLER = re.compile(r"^type Handler\[C any\] interface \{\n(.*?)^\}", re.M | re.S)
@@ -308,7 +302,7 @@ def identity_comment():
             text = m[1]
         if where:
             lines.append(f"//   spec/{path.name} {where}:")
-        lines += wrap(f"req: {anchor} — {plain(text)}", "//     ", "//       ")
+        lines.append(f"// req: {anchor}")
     path, expr = ORDER
     m = re.search(expr, path.read_text(encoding="utf-8"))
     if not m:
@@ -354,7 +348,7 @@ def stub_comment(name, chapter):
                 raise GenError(f"{path.name}: {anchor} — no text by {sel!r}")
             item = plain(m[1])
         lines.append(f"//   spec/{path.name} «{head}»:")
-        lines += wrap(f"req: {anchor} — {item}", "//     ", "//       ")
+        lines.append(f"// req: {anchor}")
         count += 1
     lines.append("//   the refusals — forms/refusals.tsv:")
     lines += refusal_lines(STUB_REFUSALS[name])
@@ -416,7 +410,7 @@ def render():
             lines.append(f"//   spec/{NORMS.name} {where + ' ' if where else ''}«{sec[0]}»"
                          + (" (the query items)" if how == "query" else "") + ":")
             for anchor, text in items:
-                lines.append(f"//     req: {anchor} — {brief(text)}")
+                lines.append(f"// req: {anchor}")
                 count += 1
         if name == "Write":
             lines.append('//   body first:writecheck.Check(body, c.Call.Sock, lim, allowed) applies the N2.1/N1 form '
@@ -433,6 +427,17 @@ def render():
         if rel in files:
             raise GenError(f"{rel}: two operations in one file")
         files[rel] = gofmt(METHOD_HEAD.replace("{name}", name).replace("{module}", GO_MODULE) + text)
+    paths = (NORMS, OPENAPI, NORMS_12, NORMS_13, REFUSALS, ACCEPT_2)
+    header = machine_source.identity_header("tools/normgen/gen_core.py",
+                    [(p.relative_to(ROOT).as_posix() if p.is_relative_to(ROOT) else p.name, sha(p))
+                     for p in paths], editable=True)
+    anchors = {a for p in (NORMS, NORMS_12, NORMS_13) for _, _, items in sections(p.read_text(encoding="utf-8"))
+               for a, _ in items}
+    try:
+        files = {name: gofmt(machine_source.go_source(text, header=header, anchor_ids=anchors))
+                 for name, text in files.items()}
+    except machine_source.SourceError as exc:
+        raise GenError(str(exc)) from exc
     return files, report
 
 
@@ -468,7 +473,8 @@ def provenance():
     sources = list(dict.fromkeys(p for src in sources for p in
                                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src])))
     return {"form": [entry(p) for p in sources], "generator": entry(Path(__file__).resolve()),
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)),
+                           entry(Path(machine_source.__file__))],
             "handwritten": [], "judge": entry(JUDGE)}
 
 
@@ -497,7 +503,7 @@ a `coreadapter.Core`). Everything compiles and runs from the start: the stage te
    (`@reopen` — `Close`, then `newStore` on the same directory sees what was written); take every time from `cfg.Now`.
 2. `get.go`, `list.go`, `write.go`, `queryrefused.go` — chapter 1.1. Above each method: the path in
    `Platform/01-store/spec/01.1-store.norms.md` (N3 «read», «list», «write», «delete», «write batch», «Admission time»,
-   «Replay by identifier»; N2.1 query items) and every `req: P/01.1-RNNN` anchor it must meet, with its first line.
+   «Replay by identifier»; N2.1 query items) and every exact `req: P/01.1-RNNN` anchor it must meet, without copied norm text.
    Write the body by those anchors, in that order. `Get` is a stub of the empty store (every key absent) so that stage
    `launch` stays green; it is not the read of N3.
 3. `write.go`: first `writecheck.Check(body, c.Call.Sock, lim, allowed)` (the form of the body — part writecheck), then
