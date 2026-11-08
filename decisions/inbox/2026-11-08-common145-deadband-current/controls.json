@@ -1,0 +1,39 @@
+[
+  {
+    "name": "Platform/04-controller/spec/04-controller.norms.md:exact_old_owner_literals",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/spec/04-controller.norms.md:requested_threshold0.10",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/spec/04-controller.norms.md:no_withdrawal_claim",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/spec/04-controller.norms.md:outside4literals_exact",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/ru/spec/04-controller.norms.md:exact_old_owner_literals",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/ru/spec/04-controller.norms.md:requested_threshold0.10",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/ru/spec/04-controller.norms.md:no_withdrawal_claim",
+    "pass": true
+  },
+  {
+    "name": "Platform/04-controller/ru/spec/04-controller.norms.md:outside4literals_exact",
+    "pass": true
+  },
+  {
+    "name": "affected_EN_RU",
+    "pass": true,
+    "errors": []
+  }
+]
