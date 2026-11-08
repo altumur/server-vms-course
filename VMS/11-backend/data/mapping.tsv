@@ -1,16 +1,16 @@
-# The mapping of the consolem kinds ↔ VMS subsystems (V/11.3; ADR-0094 A6; the contract 0.2.0, ADR-0116 addendum (9)). A foreign record — the same rows, the fields from the row of the domain view snapshot (V/11.3 Н1.2а). A row: the kind — a kind code of GET /kinds (several — by |, `*` — every kind of kinds.json, a case in brackets: knocking, builtin, edge, create, patch, probe; `archive.*` — the five storage kinds) or a contract schema outside the core; the field — a path in the record Unit (uid, kind, name, parentId, domainId, folders, children, version, status.link, secrets.<имя>, writable, properties.<имя>, status.observed.<имя>; of a kind action — params.<имя>, result.<имя>; of the kind description — x-archive) or a field of the schema → the subsystem and the place with us (`<sub>/<rows|tables>` or a console door), our field or a rule, the direction way (read, both, write, const, none), a note. The field `—` — the whole kind. The format and meaning of way — V/11.3 Н1.1; completeness — every field of the answer schemas and of the write bodies of the translated operations.
+# The mapping of the consolem kinds ↔ VMS subsystems (V/11.3; ADR-0094 A6; the contract 0.2.0, ADR-0116 addendum (9)). A foreign record — the same rows, the fields from the row of the domain view snapshot (V/11.3 N1.2a). A row: the kind — a kind code of GET /kinds (several — by |, `*` — every kind of kinds.json, a case in brackets: knocking, builtin, edge, create, patch, probe; `archive.*` — the five storage kinds) or a contract schema outside the core; the field — a path in the record Unit (uid, kind, name, parentId, domainId, folders, children, version, status.link, secrets.<name>, writable, properties.<name>, status.observed.<name>; of a kind action — params.<name>, result.<name>; of the kind description — x-archive) or a field of the schema → the subsystem and the place with us (`<sub>/<rows|tables>` or a console door), our field or a rule, the direction way (read, both, write, const, none), a note. The field `—` — the whole kind. The format and meaning of way — V/11.3 N1.1; completeness — every field of the answer schemas and of the write bodies of the translated operations.
 kind	field	vms	vms_field	way	note
-domain	—	GET /session	domain	read	the consolem domain = our domain (ADR-0110 addendum (4) item 1); one record; no field domain — the cluster's own record; null — not derived, 503 (V/11.3 Н1.2а)
-domain	uid	GET /session	UUID domain:<domain.root>; поля domain нет — UUID domain:<CLUSTER>	read	one record per domain; root is constant, does not depend on connectivity or the view; V/11.3 Н1.2, V/11.4 Н1.6
-domain	name	GET /session	domain.name; поля domain нет — CLUSTER	read
+domain	—	GET /session	domain	read	the consolem domain = our domain (ADR-0110 addendum (4) item 1); one record; no field domain — the cluster's own record; null — not derived, 503 (V/11.3 N1.2a)
+domain	uid	GET /session	UUID domain:<domain.root>; no domain field — UUID domain:<CLUSTER>	read	one record per domain; root is constant, does not depend on connectivity or the view; V/11.3 N1.2, V/11.4 N1.6
+domain	name	GET /session	domain.name; no domain field — CLUSTER	read
 domain	properties.license	—	""	const	consolem has no licences
-domain	status.link	GET /domain	200 или 403 — true; иначе false; вне домена — true	read	connectivity with the domain (V/11.3 Н1.2а)
+domain	status.link	GET /domain	200 or 403 — true; otherwise false; outside a domain — true	read	connectivity with the domain (V/11.3 N1.2a)
 domain	version	—	"1"	const	the visible fields of the domain do not change (online is connectivity, it does not move the version)
-server	—	GET /servers + GET /domain	—	read	own — an element of /servers of the console (P/06.6); foreign — members[].servers[] of the domain view, except collapsed members (V/11.3 Н1.3 «server»)
-server	uid	GET /servers + GET /domain	UUID server:<кластер>/<name>	read
+server	—	GET /servers + GET /domain	—	read	own — an element of /servers of the console (P/06.6); foreign — members[].servers[] of the domain view, except collapsed members (V/11.3 N1.3 «server»)
+server	uid	GET /servers + GET /domain	UUID server:<cluster>/<name>	read
 server	name	GET /servers + GET /domain	name	read
-server	status.observed.class	GET /domain	свой — "server", чужой — members[].class, нет — "server"	read	V/11.3 Н1.3
-server	status.link	GET /servers + GET /domain	state; чужой — online элемента	read	state live — true, otherwise false; foreign: no field — false
+server	status.observed.class	GET /domain	own — "server", foreign — members[].class, absent — "server"	read	V/11.3 N1.3
+server	status.link	GET /servers + GET /domain	state; foreign — the element's online	read	state live — true, otherwise false; foreign: no field — false
 server	domainId	GET /session	Domain.id	read
 server	properties.ip	—	""	const	the console has no server address
 server	properties.port	—	0	const
@@ -18,18 +18,18 @@ server	properties.role	—	"node"	const	there are no roles primary/node/standby:
 server	properties.allocated	—	true	const	the server is in the cluster; a knocking one — Server(knocking)
 server	status.observed.telemetry	—	{}	const	telemetry — ADR-0094 C (the resource heartbeat)
 server	status.observed.gpu	—	null	const
-server	status.observed.disks	GET /servers + GET /domain	disks первого по имени слота услышанного регистратора сервера; чужой — pulse.rec.disks элемента; нет — []	read	disk, sizeBytes, system (ADR-0111 item 2; V/02.4)
-server	properties.labels	GET /servers	labels элемента	both	foreign — no field; a write — PUT, DELETE /servers/<имя>/labels (V/11.4 Н1.19)
-server(patch)	properties.ip, properties.port, properties.role, properties.netmask, properties.gateway, properties.dns	—	—	none	422 NOT_SUPPORTED, field of that field (V/11.4 Н1.19)
-server	version	GET /servers + GET /domain	SHA-256 hex канонического JSON disks и labels; оба пусты — "1"	read	of the visible fields disks, labels change (online is connectivity); the same set of disks gives back the former value, a limit of V/11.3 Н1.3
+server	status.observed.disks	GET /servers + GET /domain	disks of the first heard recorder slot of the server by name; foreign — the element's pulse.rec.disks; absent — []	read	disk, sizeBytes, system (ADR-0111 item 2; V/02.4)
+server	properties.labels	GET /servers	the element's labels	both	foreign — no field; a write — PUT, DELETE /servers/<name>/labels (V/11.4 N1.19)
+server(patch)	properties.ip, properties.port, properties.role, properties.netmask, properties.gateway, properties.dns	—	—	none	422 NOT_SUPPORTED, field of that field (V/11.4 N1.19)
+server	version	GET /servers + GET /domain	SHA-256 hex of canonical JSON of disks and labels; both empty — "1"	read	of the visible fields disks, labels change (online is connectivity); the same set of disks gives back the former value, a limit of V/11.3 N1.3
 server	properties.netmask, properties.gateway, properties.dns	—	—	none	the server network is not with the console (features without serverNetwork)
-server(knocking)	—	GET /domain/members	элемент knocking	read	knocking, not yet a member (ADR-0110 addendum (6)); only to a domain viewer; fingerprint — by the row fingerprint below
+server(knocking)	—	GET /domain/members	the knocking element	read	knocking, not yet a member (ADR-0110 addendum (6)); only to a domain viewer; fingerprint — by the row fingerprint below
 server(knocking)	uid	GET /domain/members	UUID server:<name>/	read
 server(knocking)	name	GET /domain/members	name	read
-server(knocking)	status.observed.class	GET /domain/members	class	read	a person confirms by acceptance (P/08.3 Н1.1а)
+server(knocking)	status.observed.class	GET /domain/members	class	read	a person confirms by acceptance (P/08.3 N1.1a)
 server(knocking)	domainId	GET /session	Domain.id	read
 server(knocking)	properties.allocated	—	false	const
-server(knocking)	status.observed.fingerprint	GET /domain/members	fingerprint	read	a person compares it, the confirmation is AssignRequest.items[].fingerprint (V/11.4 Н1.14)
+server(knocking)	status.observed.fingerprint	GET /domain/members	fingerprint	read	a person compares it, the confirmation is AssignRequest.items[].fingerprint (V/11.4 N1.14)
 server(knocking)	status.link	—	unknown	const	not admitted into the domain: we do not judge connectivity
 server(knocking)	properties.ip	—	""	const
 server(knocking)	properties.port	—	0	const
@@ -41,257 +41,257 @@ server(knocking)	properties.labels	—	—	none	no labels yet
 server(knocking)	version	GET /domain/members	fingerprint	read	a new key — a new version; times, last do not move the version
 server(knocking)	properties.netmask, properties.gateway, properties.dns	—	—	none
 camera	—	cam/cameras + rec/recordings + det/units	—	both	assembly: the primary row type camera, its streams, recordings, detectors (V/11.4)
-camera	uid	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read	for every device: the first 12 bits are the member's part (V/11.4 Н1.6)
+camera	uid	cam/cameras	UUID device:<cluster>/cam/cameras/<id>	read	for every device: the first 12 bits are the member's part (V/11.4 N1.6)
 camera	kind	cam/cameras	type	read	the contract word without translation; set by POST /units, UnitPatch has no field
-camera	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	channels stated or the table not visible; V/11.3 Н1.3 «Дерево»; at creation — null or this id
+camera	parentId	cam/devices	the host's ipsrv exists — its id, otherwise null	read	channels stated or the table not visible; V/11.3 N1.3 "Tree"; at creation — null or this id
 camera	domainId	GET /session	Domain.id	read
-camera	properties.identifier	cam/cameras	id	read	the camera number (numeric, cam/next_id); at creation the counter issues it, a taken one — IDENTIFIER_TAKEN, a free one is skipped (V/11.4 Н1.2)
+camera	properties.identifier	cam/cameras	id	read	the camera number (numeric, cam/next_id); at creation the counter issues it, a taken one — IDENTIFIER_TAKEN, a free one is skipped (V/11.4 N1.2)
 camera	name	cam/cameras	name	both
-camera	properties.enabled	cam/cameras + cam/rule_state	enabled; пока действует выключение правилом — false	both	writing true on one disabled by a rule — the request cam disable with a deadline in the past, the row is not written (V/11.4 Н1.2)
+camera	properties.enabled	cam/cameras + cam/rule_state	enabled; false while disabling by a rule is in effect	both	writing true on one disabled by a rule — the request cam disable with a deadline in the past, the row is not written (V/11.4 N1.2)
 camera	properties.short	cam/cameras	short	both
-camera	properties.lat, properties.lon, properties.azimuth	cam/cameras	lat, lon, azimuth	both	null — not stated, 0 — a value; a value not of the form — no field (V/01.1 Н1.1)
-camera	properties.ip, properties.port	cam/cameras	source	both	the host and port of the address (the address contract url, P/06.1); V/11.3 Н1.3 «Адрес устройства»; a w2c camera — no field, a write is 422 NOT_SUPPORTED
-camera	properties.vendor, properties.model, properties.firmware	cam/cameras	source: сегменты пути ipint://	both	creation builds the address, an edit replaces a segment; another address — no fields, a write is 422 NOT_SUPPORTED (V/11.3 Н1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
-camera	properties.videoChannel	cam/devices	videos[<id>] + 1	both	the video channel index from 0, the contract count from 1; a write — source=<videoChannel − 1>; no index — no field (V/11.3 Н1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
-camera	properties.rtspUrl	cam/cameras	source	both	the address whole; with address fields in one body — 422 NOT_SUPPORTED, field of that field (V/11.3 Н1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
-camera	properties.res	cam/cameras	resolution	both	empty — no field; outside a nonempty resOptions — 422 VALIDATION_FAILED, field /properties/res (V/11.3 Н1.3)
+camera	properties.lat, properties.lon, properties.azimuth	cam/cameras	lat, lon, azimuth	both	null — not stated, 0 — a value; a value not of the form — no field (V/01.1 N1.1)
+camera	properties.ip, properties.port	cam/cameras	source	both	the host and port of the address (the address contract url, P/06.1); V/11.3 N1.3 "Device address"; a w2c camera — no field, a write is 422 NOT_SUPPORTED
+camera	properties.vendor, properties.model, properties.firmware	cam/cameras	source: ipint:// path segments	both	creation builds the address, an edit replaces a segment; another address — no fields, a write is 422 NOT_SUPPORTED (V/11.3 N1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
+camera	properties.videoChannel	cam/devices	videos[<id>] + 1	both	the video channel index from 0, the contract count from 1; a write — source=<videoChannel − 1>; no index — no field (V/11.3 N1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
+camera	properties.rtspUrl	cam/cameras	source	both	the address whole; with address fields in one body — 422 NOT_SUPPORTED, field of that field (V/11.3 N1.3); a w2c camera — no field, a write is 422 NOT_SUPPORTED
+camera	properties.res	cam/cameras	resolution	both	empty — no field; outside a nonempty resOptions — 422 VALIDATION_FAILED, field /properties/res (V/11.3 N1.3)
 camera	properties.fps	cam/cameras	fps	both	0 — no field
 camera	properties.codec	cam/heartbeats	codec	read	a heartbeat word, read only (ADR-0104 item 7); not part of the version
 camera	properties.login	cam/cameras	cred_username	both
 camera	secrets.password	cam/cameras	cred_secret	read	true — a secret is set; the value is not given out
-camera	properties.password	cam/cameras	cred_secret	write	no field — do not touch; null or "" — clear; a string — a new one (V/11.3 Н1.3)
-camera	properties.serverId	rec/heartbeats	сервер держателя основной записи <cam>; свёрнутая камера w2c — сервер приёмника: Unit GET /domain/rec/recordings с её ref и cluster назначения, UUID server:<cluster>/<server>	read	an observation, not part of the version; no holder, no receiver — no field, the group «Без сервера» (V/11.3 Н1.3 «Камера w2c»); at creation it is skipped without a write (V/11.3 Н1.1)
+camera	properties.password	cam/cameras	cred_secret	write	no field — do not touch; null or "" — clear; a string — a new one (V/11.3 N1.3)
+camera	properties.serverId	rec/heartbeats	server of the main recording holder <cam>; collapsed w2c camera — receiver server: Unit GET /domain/rec/recordings with its ref, the assigned cluster, and when other than offline; UUID server:<cluster>/<server>	read	an observation, not part of the version; no holder, no receiver — no field, the group «Without a server» (V/11.3 N1.3 "w2c camera"); at creation it is skipped without a write (V/11.3 N1.1)
 camera	status.link	cam/heartbeats	phase	read	running, idle or held — true; not part of the version
 camera	status.observed.fault	cam/heartbeats	device_state	read	a login refusal — auth, did not open or no connectivity — conn, otherwise — drv; the device answers — no field
 camera	status.observed.licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
-camera	properties.archiveId	rec/recordings	home основной <cam>	both	no primary — null; a volume backup, edge — 422 NOT_SUPPORTED, incidents — 422 VALIDATION_FAILED (admits), field /properties/archiveId (V/11.3 Н1.3)
-camera	properties.recordMode	rec/recordings + auto/scenarios	<cam>: enabled и replica_from; строка записи камеры	both	always — the primary enabled, replica_from empty; replica — the primary enabled, replica_from not empty; sched — a recording row with the condition time; motion — there is a recording row (ADR-0111 item 4); none — otherwise; writing replica without the source field — replica_from: device, a nonempty one does not change; other transitions — V/11.4 Н1.2
-camera	properties.retentionDays	rec/recordings	retention_days основной	both	0 — 422 NOT_SUPPORTED (V/11.3 Н1.3)
-camera	properties.minDepthDays	rec/recordings	min_depth_days основной, вниз до целого	both	greater than the retention — 422 VALIDATION_FAILED, field /properties/minDepthDays
-camera	properties.audioDeviceId	rec/recordings + cam/children	audio основной ↔ ребёнок mic с этим number; 0 — поля нет	both	null — 0; not a mic of this camera — 422 VALIDATION_FAILED, field /properties/audioDeviceId
-camera	properties.replicaFrom	rec/recordings	replica_from: device — null, имя — home той записи	both	only with recordMode replica (V/11.3 Н1.3)
-camera	status.observed.replicaLagSec	rec/heartbeats	replica_lag_s элемента основной, вниз до целого	read	only with replica; not part of the version
-camera	properties.extraArchives	rec/recordings	дополнительные <cam>-<том>, затем cam-<cam>-<том>	both	in the order of the volume name: {archiveId, recordMode none|always|replica by enabled and replica_from, stream}; the reserve when: offline reads as always, the contract has no word backup; a recording on a backup volume writes when: offline; cam-<cam>-<том> on edge — read only, the echo is skipped (V/11.3 Н1.3)
-camera	properties.stream	rec/recordings	stream основной <cam>: пусто — id основного потока	both	an id of a stream of the camera (the kind stream); writing the id of the primary — an empty field, another id — 422 VALIDATION_FAILED; no primary — no field (V/11.3 Н1.3)
-camera	properties.resOptions	cam/devices	resolutions хоста	read	no field, not read — no field: manual input
-camera	properties.labels	cam/cameras	labels	both	the label server:* is not given out, a write keeps it (V/11.3 Н1.3)
+camera	properties.archiveId	rec/recordings	home of the primary <cam>	both	no primary — null; a volume backup, edge — 422 NOT_SUPPORTED, incidents — 422 VALIDATION_FAILED (admits), field /properties/archiveId (V/11.3 N1.3)
+camera	properties.recordMode	rec/recordings + auto/scenarios	<cam>: enabled and replica_from; the camera's recording row	both	always — the primary enabled, replica_from empty; replica — the primary enabled, replica_from not empty; sched — a recording row with the condition time; motion — there is a recording row (ADR-0111 item 4); none — otherwise; writing replica without the source field — replica_from: device, a nonempty one does not change; other transitions — V/11.4 N1.2
+camera	properties.retentionDays	rec/recordings	retention_days of the primary	both	0 — 422 NOT_SUPPORTED (V/11.3 N1.3)
+camera	properties.minDepthDays	rec/recordings	min_depth_days of the primary, rounded down to an integer	both	greater than the retention — 422 VALIDATION_FAILED, field /properties/minDepthDays
+camera	properties.audioDeviceId	rec/recordings + cam/children	audio of the primary ↔ the mic child with this number; 0 — no field	both	null — 0; not a mic of this camera — 422 VALIDATION_FAILED, field /properties/audioDeviceId
+camera	properties.replicaFrom	rec/recordings	replica_from: device — null, a name — home of that recording	both	only with recordMode replica (V/11.3 N1.3)
+camera	status.observed.replicaLagSec	rec/heartbeats	replica_lag_s of the primary element, rounded down to an integer	read	only with replica; not part of the version
+camera	properties.extraArchives	rec/recordings	additional <cam>-<volume>, then cam-<cam>-<volume>	both	in the order of the volume name: {archiveId, recordMode none|always|replica by enabled and replica_from, stream}; the reserve when: offline reads as always, the contract has no word backup; a recording on a backup volume writes when: offline; cam-<cam>-<volume> on edge — read only, the echo is skipped (V/11.3 N1.3)
+camera	properties.stream	rec/recordings	stream of the primary <cam>: empty — the main stream id	both	an id of a stream of the camera (the kind stream); writing the id of the primary — an empty field, another id — 422 VALIDATION_FAILED; no primary — no field (V/11.3 N1.3)
+camera	properties.resOptions	cam/devices	the host's resolutions	read	no field, not read — no field: manual input
+camera	properties.labels	cam/cameras	labels	both	the label server:* is not given out, a write keeps it (V/11.3 N1.3)
 camera	properties.alarmKinds	cam/cameras	alarms	both
-camera	status.observed.faultText	cam/heartbeats	reason; нет — warning	read	the holder's words; not part of the version
-camera	status.observed.recordState, status.observed.recordReason	rec/heartbeats, auto/schedules	phase, reason элемента status[] основной <cam>; нет reason — слова replica_lost_s, over_quota; при sched — слова backend schedule is gone, schedule unread (V/11.3 Н1.3)	read	not part of the version
+camera	status.observed.faultText	cam/heartbeats	reason; absent — warning	read	the holder's words; not part of the version
+camera	status.observed.recordState, status.observed.recordReason	rec/heartbeats, auto/schedules	phase, reason of the status[] element of the primary <cam>; no reason — the words replica_lost_s, over_quota; for sched — the backend words schedule is gone, schedule unread (V/11.3 N1.3)	read	not part of the version
 camera	properties.ptz	cam/heartbeats	can.ptz	read	can not stated — no field; not part of the version
-camera	properties.presets	cam/preset_labels, cam/heartbeats	номера строк таблицы и can.preset_names, name — label строки, пустой — имя драйвера	read	a write — the operations /presets (V/11.4 Н1.16); not part of the version
-camera	properties.presetMax	cam/heartbeats	can.presets	read	can not stated — no field; not part of the version (V/11.4 Н1.16)
-camera	properties.detectorOptions	файл пакета device-catalog.json	detectors модели	read	V/11.3 Н1.3 «Варианты модели»; no model row — no field
-camera	properties.unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора, parent -	read	V/11.3 Н1.3 «Варианты модели»
-camera	children (det)	det/units	<cam>-<kind>[-<n>]	write	at creation only: child detectors (V/11.4 Н1.2); other children — 422 NOT_SUPPORTED, field /children
-camera	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства>.i<строка ipsrv>.s<cam/rule_state>.a<строка записи> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 addendum (4) item 1; the index — in the list element by B4
-camera	status.observed.armed	cam/rule_state	armed	read	no row — false; the row is not read — no field (V/11.3 Н1.3)
-camera	status.observed.disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; only if disabled_until is later than now, otherwise null; the row is not read — no field
+camera	properties.presets	cam/preset_labels, cam/heartbeats	table row numbers and can.preset_names; name — the row's label, empty — the driver's name	read	a write — the operations /presets (V/11.4 N1.16); not part of the version
+camera	properties.presetMax	cam/heartbeats	can.presets	read	can not stated — no field; not part of the version (V/11.4 N1.16)
+camera	properties.detectorOptions	the package file device-catalog.json	detectors of the model	read	V/11.3 N1.3 "Model options"; no model row — no field
+camera	properties.unitOptions	unit-templates.tsv + device-catalog.json	vendor templates, parent -	read	V/11.3 N1.3 "Model options"
+camera	children (det)	det/units	<cam>-<kind>[-<n>]	write	at creation only: child detectors (V/11.4 N1.2); other children — 422 NOT_SUPPORTED, field /children
+camera	version	cam/cameras + rec/recordings + det/units + cam/devices	concatenation c<camera-streams>.r<rec…>.d<det…>.h<device row>.i<ipsrv row>.s<cam/rule_state>.a<recording row> of the store indices of parts and tombstones (V/11.4 N1.1)	read	ADR-0094 addendum (4) item 1; the index — in the list element by B4
+camera	status.observed.armed	cam/rule_state	armed	read	no row — false; the row is not read — no field (V/11.3 N1.3)
+camera	status.observed.disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<cluster>/auto/scenarios/<id>; only if disabled_until is later than now, otherwise null; the row is not read — no field
 camera	status.observed.disabledByRuleAt	cam/rule_state	disabled_at	read	the same conditions; seconds → date-time UTC
-camera	properties.recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели и их встроенные этого вида	both	only with recordMode motion; no row — []; different kinds — 422 NOT_SUPPORTED (V/11.3 Н1.3)
-camera	status.observed.detectorKinds	det/units + cam/device_units	kind строк det/units с её cam, вне перечня other, и вид встроенных по detector-kinds.tsv, вне таблицы other; без повторов, порядок перечня контракта	read	disabled ones too; the filter noDetector — the same derivation (V/11.3 Н1.2б)
-camera	status.observed.archiveJobs	GET /domain	false у камеры-кластера и чужой, своя — поля нет	read	V/11.3 Н1.3; not part of the version
-camera	properties.recordScheduleId	auto/scenarios	schedule условия time строки записи	both	only with recordMode sched; none — 422 VALIDATION_FAILED (V/11.4 Н1.2)
-camera	properties.mac	—	—	none	at creation it is skipped without a write: the camera MAC comes only from discovery (ADR-0102 addendum (7) item 3; V/11.3 Н1.1)
-camera	properties.configMode	POST /units	разовый выбор при создании	write	current — writes nothing; default, template — V/11.4 Н1.2; not written into the row, no read; not at creation — current is skipped, otherwise 422 NOT_SUPPORTED (V/11.3 Н1.1)
-camera	properties.templateId	POST /units	id камеры-источника	write	only with configMode: template (V/11.4 Н1.2); not written into the row, no read; not at creation — 422 NOT_SUPPORTED, field /properties/templateId
+camera	properties.recordDetectorIds	auto/scenarios	the recording row's target: det/units rows of kind kind for the target cameras and their built-in detectors of this kind	both	only with recordMode motion; no row — []; different kinds — 422 NOT_SUPPORTED (V/11.3 N1.3)
+camera	status.observed.detectorKinds	det/units + cam/device_units	kind of det/units rows with its cam, other outside the list, and the built-in kind by detector-kinds.tsv, other outside the table; no duplicates, contract enumeration order	read	disabled ones too; the filter noDetector — the same derivation (V/11.3 N1.2b)
+camera	status.observed.archiveJobs	GET /domain	false for a camera-cluster and a foreign camera; own — no field	read	V/11.3 N1.3; not part of the version
+camera	properties.recordScheduleId	auto/scenarios	schedule of the recording row's time condition	both	only with recordMode sched; none — 422 VALIDATION_FAILED (V/11.4 N1.2)
+camera	properties.mac	—	—	none	at creation it is skipped without a write: the camera MAC comes only from discovery (ADR-0102 addendum (7) item 3; V/11.3 N1.1)
+camera	properties.configMode	POST /units	a one-time choice at creation	write	current — writes nothing; default, template — V/11.4 N1.2; not written into the row, no read; not at creation — current is skipped, otherwise 422 NOT_SUPPORTED (V/11.3 N1.1)
+camera	properties.templateId	POST /units	the source camera id	write	only with configMode: template (V/11.4 N1.2); not written into the row, no read; not at creation — 422 NOT_SUPPORTED, field /properties/templateId
 camera	properties.preRecordSec	—	—	none	a camera does not have them
 det	—	det/units	—	both	a camera detector (V/04.1), the key <cam>-<kind>, the second of a kind — <cam>-<kind>-<n>
-det	uid	det/units	UUID device:<кластер>/det/units/<ключ строки>	read
+det	uid	det/units	UUID device:<cluster>/det/units/<row key>	read
 det	kind	—	"det"	const
-det	parentId	det/units	cam — UUID device:<кластер>/cam/cameras/<cam>	read	at creation — parentId of the element items
+det	parentId	det/units	cam — UUID device:<cluster>/cam/cameras/<cam>	read	at creation — parentId of the element items
 det	domainId	GET /session	Domain.id	read
-det	properties.serverId	det/heartbeats	сервер держателя детектора	read	an observation, not part of the version; no holder — no field
-det	name	det/units	title; пусто — ключ строки	both	a free name, the key does not depend on it (V/11.3 Н1.3)
+det	properties.serverId	det/heartbeats	the detector holder's server	read	an observation, not part of the version; no holder — no field
+det	name	det/units	title; empty — the row key	both	a free name, the key does not depend on it (V/11.3 N1.3)
 det	properties.enabled	det/units	enabled	both
 det	status.link	det/heartbeats	phase	read	running — true; not part of the version
 det	properties.detectorKind	det/units	kind	read	part of the key: an edit — 422 NOT_SUPPORTED; required at creation — kind of the new row; motion, linecross — the worker registry (V/04.2)
-det	properties.sensitivity	det/units	params, ключ sensitivity JSON-объекта	both	the codec — V/11.3 Н1.3; params not an object — a write is 422 NOT_SUPPORTED, a read — no field
-det	properties.stream	det/units	stream: пусто — id основного потока камеры	both	as for a camera (V/11.3 Н1.3)
-det	properties.params	det/units	params как есть	both	empty — no field; the keys sensitivity, zone — the codec of V/11.3 Н1.3
-det	properties.zone	det/units	params, ключ zone; rect, polygon ещё растром в mask	both	V/11.3 Н1.3 «zone»; line — only linecross; not of the form — 422 VALIDATION_FAILED, field /properties/zone
+det	properties.sensitivity	det/units	params, the sensitivity key of the JSON object	both	the codec — V/11.3 N1.3; params not an object — a write is 422 NOT_SUPPORTED, a read — no field
+det	properties.stream	det/units	stream: empty — the camera's main stream id	both	as for a camera (V/11.3 N1.3)
+det	properties.params	det/units	params as is	both	empty — no field; the keys sensitivity, zone — the codec of V/11.3 N1.3
+det	properties.zone	det/units	params, the zone key; rect and polygon also as a raster in mask	both	V/11.3 N1.3 «zone»; line — only linecross; not of the form — 422 VALIDATION_FAILED, field /properties/zone
 det	properties.labels	det/units	labels	both	the row default — gpu (V/04.1)
 det	properties.alarmKinds	det/units	alarms	both
 det	status.observed.faultText	det/heartbeats	reason	read	not part of the version
 det	properties.builtin	—	false	const	a detector det/units is our model; a built-in one — the rows det(builtin)
-det	version	det/units	индекс хранилища строки	read	in the list element by B4; If-Match compares it (V/11.4)
+det	version	det/units	the row's store index	read	in the list element by B4; If-Match compares it (V/11.4)
 det	children, properties.template	—	—	none	a detector does not have them
-det(builtin)	—	cam/device_units	строка type det	both	a detector on the device (V/01.4 Н1.4в); creation, edit, removal — V/11.4 Н1.2; not part of folders
-det(builtin)	uid	cam/device_units	UUID device:<кластер>/cam/device_units/<id>	read
+det(builtin)	—	cam/device_units	the row of type det	both	a detector on the device (V/01.4 N1.4c); creation, edit, removal — V/11.4 N1.2; not part of folders
+det(builtin)	uid	cam/device_units	UUID device:<cluster>/cam/device_units/<id>	read
 det(builtin)	kind	—	"det"	const
-det(builtin)	parentId	cam/device_units	camera — UUID device:<кластер>/cam/cameras/<camera>	read	at creation — parentId of the element items
+det(builtin)	parentId	cam/device_units	camera — UUID device:<cluster>/cam/cameras/<camera>	read	at creation — parentId of the element items
 det(builtin)	domainId	GET /session	Domain.id	read
-det(builtin)	properties.serverId	cam/heartbeats	сервер держателя камеры	read	an observation, not part of the version
-det(builtin)	name	cam/device_units	title; нет — template	both
-det(builtin)	properties.enabled	cam/device_units	enabled	both	true while an incompatible one is enabled — 409 BUSY, field /properties/enabled (V/11.4 Н1.2)
-det(builtin)	status.link, status.observed.fault	cam/heartbeats	как у единицы: phase, device_state, units_down	read	not part of the version
-det(builtin)	properties.detectorKind	cam/device_units	template по detector-kinds.tsv	read	outside the table — other; at creation template chooses it (V/11.3 Н1.3); an edit — 422 NOT_SUPPORTED
+det(builtin)	properties.serverId	cam/heartbeats	the camera holder's server	read	an observation, not part of the version
+det(builtin)	name	cam/device_units	title; absent — template	both
+det(builtin)	properties.enabled	cam/device_units	enabled	both	true while an incompatible one is enabled — 409 BUSY, field /properties/enabled (V/11.4 N1.2)
+det(builtin)	status.link, status.observed.fault	cam/heartbeats	as for a unit: phase, device_state, units_down	read	not part of the version
+det(builtin)	properties.detectorKind	cam/device_units	template by detector-kinds.tsv	read	outside the table — other; at creation template chooses it (V/11.3 N1.3); an edit — 422 NOT_SUPPORTED
 det(builtin)	properties.template	cam/device_units	template	both	at creation only, from detectorOptions: outside them — 422 VALIDATION_FAILED, field /properties/template; UnitPatch does not carry the field
-det(builtin)	properties.zone	cam/device_units	zone	both	the holder passes the driver's visualElement (V/01.4 Н1.4в)
-det(builtin)	status.observed.faultText	cam/heartbeats	слово units_down строки	read	not part of the version
-det(builtin)	properties.sensitivity	cam/device_units	sensitivity	both	the model detector has no property — 422 NOT_SUPPORTED, field /properties/sensitivity (V/11.3 Н1.3)
+det(builtin)	properties.zone	cam/device_units	zone	both	the holder passes the driver's visualElement (V/01.4 N1.4c)
+det(builtin)	status.observed.faultText	cam/heartbeats	the row's units_down word	read	not part of the version
+det(builtin)	properties.sensitivity	cam/device_units	sensitivity	both	the model detector has no property — 422 NOT_SUPPORTED, field /properties/sensitivity (V/11.3 N1.3)
 det(builtin)	properties.builtin	—	true	const	at creation it chooses this row of the table
-det(builtin)	version	cam/device_units	индекс хранилища строки	read
+det(builtin)	version	cam/device_units	the row's store index	read
 det(builtin)	properties.stream, children, properties.alarmKinds, properties.labels, properties.params	—	—	none	only on a camera: no field
-ipsrv	—	cam/devices + cam/cameras	—	both	the host device: channels > 1 or a live row type ipsrv; one per host (V/11.3 Н1.3 «Дерево»)
-ipsrv	uid	cam/devices	UUID device:<кластер>/cam/devices/<хост>	read	from the host: setting up the row does not change the id
+ipsrv	—	cam/devices + cam/cameras	—	both	the host device: channels > 1 or a live row type ipsrv; one per host (V/11.3 N1.3 "Tree")
+ipsrv	uid	cam/devices	UUID device:<cluster>/cam/devices/<host>	read	from the host: setting up the row does not change the id
 ipsrv	kind	—	"ipsrv"	const
-ipsrv	properties.subtype	cam/devices + cam/children	channels и живые дети хоста: V/11.3 Н1.3	read	channels not stated — no field; at creation it is accepted and not stored
+ipsrv	properties.subtype	cam/devices + cam/children	channels and the host's live children: V/11.3 N1.3	read	channels not stated — no field; at creation it is accepted and not stored
 ipsrv	parentId	—	null	const
 ipsrv	domainId	GET /session	Domain.id	read
-ipsrv	name	cam/cameras	name строки ipsrv; строки нет — хост	both	the row is the source, of two — the smallest id; without a row a write is 422 NOT_SUPPORTED
-ipsrv	properties.enabled	cam/cameras	enabled строки ipsrv; строки нет — true	both	without a row a write is 422 NOT_SUPPORTED
-ipsrv	status.link	cam/heartbeats	phase строки; строки нет — любая камера хоста	read	running, idle or held — true; not part of the version
-ipsrv	properties.identifier	cam/cameras	id строки	read	no row — no field; at creation — as for a camera
-ipsrv	properties.short, properties.lat, properties.lon, properties.azimuth, properties.mac, properties.login	cam/cameras	short, lat, lon, azimuth, mac, cred_username строки	both	no row — no fields, a write is 422 NOT_SUPPORTED, field of that field
-ipsrv	secrets.password	cam/cameras	cred_secret строки	read	true — a secret is set; the value is not given out
-ipsrv	properties.password	cam/cameras	cred_secret строки	write	as for a camera; no row — 422 NOT_SUPPORTED
-ipsrv	properties.ip, properties.port, properties.vendor, properties.model, properties.firmware, properties.rtspUrl	cam/cameras	source строки	both	as for a camera; an address without source: does not match the address of the channel camera whose videoChannel is named; a host change, an address without a group — 422 NOT_SUPPORTED (V/11.3 Н1.3)
-ipsrv	properties.serverId	cam/heartbeats	сервер держателя строки	read	an observation; none — no field; at creation it is skipped without a write
-ipsrv	status.observed.fault, status.observed.licenseExceeded	cam/heartbeats	device_state, phase строки	read	as for a camera; no row — no fields
-ipsrv	version	cam/devices + cam/cameras	склейка h<строка устройства>.c<строка ipsrv>	read	a part without a row — empty (V/11.4 Н1.1)
-ipsrv	status.observed.derived	—	строки нет — true	read	there is a row — no field; PATCH, DELETE, folderIds — 422 NOT_SUPPORTED (V/11.3 Н1.3)
-ipsrv	properties.labels	cam/cameras	labels строки	both	no row — no field
-ipsrv	status.observed.faultText	cam/heartbeats	reason строки	read
-ipsrv	properties.unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора строки, parent -	read	no row — no field
-ipsrv	children	—	—	none	at creation it is skipped without a write: the holder finds the composition (V/11.3 Н1.1)
+ipsrv	name	cam/cameras	name of the ipsrv row; no row — the host	both	the row is the source, of two — the smallest id; without a row a write is 422 NOT_SUPPORTED
+ipsrv	properties.enabled	cam/cameras	enabled of the ipsrv row; no row — true	both	without a row a write is 422 NOT_SUPPORTED
+ipsrv	status.link	cam/heartbeats	phase of the row; no row — any camera of the host	read	running, idle or held — true; not part of the version
+ipsrv	properties.identifier	cam/cameras	the row id	read	no row — no field; at creation — as for a camera
+ipsrv	properties.short, properties.lat, properties.lon, properties.azimuth, properties.mac, properties.login	cam/cameras	short, lat, lon, azimuth, mac, cred_username of the row	both	no row — no fields, a write is 422 NOT_SUPPORTED, field of that field
+ipsrv	secrets.password	cam/cameras	cred_secret of the row	read	true — a secret is set; the value is not given out
+ipsrv	properties.password	cam/cameras	cred_secret of the row	write	as for a camera; no row — 422 NOT_SUPPORTED
+ipsrv	properties.ip, properties.port, properties.vendor, properties.model, properties.firmware, properties.rtspUrl	cam/cameras	source of the row	both	as for a camera; an address without source: does not match the address of the channel camera whose videoChannel is named; a host change, an address without a group — 422 NOT_SUPPORTED (V/11.3 N1.3)
+ipsrv	properties.serverId	cam/heartbeats	the row holder's server	read	an observation; none — no field; at creation it is skipped without a write
+ipsrv	status.observed.fault, status.observed.licenseExceeded	cam/heartbeats	device_state, phase of the row	read	as for a camera; no row — no fields
+ipsrv	version	cam/devices + cam/cameras	concatenation h<device row>.c<ipsrv row>	read	a part without a row — empty (V/11.4 N1.1)
+ipsrv	status.observed.derived	—	no row — true	read	there is a row — no field; PATCH, DELETE, folderIds — 422 NOT_SUPPORTED (V/11.3 N1.3)
+ipsrv	properties.labels	cam/cameras	labels of the row	both	no row — no field
+ipsrv	status.observed.faultText	cam/heartbeats	reason of the row	read
+ipsrv	properties.unitOptions	unit-templates.tsv + device-catalog.json	the row's vendor templates, parent -	read	no row — no field
+ipsrv	children	—	—	none	at creation it is skipped without a write: the holder finds the composition (V/11.3 N1.1)
 channel	—	cam/devices	channels	read	a derived record: n from 0 to channels − 1 of the host's ipsrv; no edit: 422 NOT_SUPPORTED — a property — field /properties/<p>, the name — /name; DELETE — /kind
-channel	uid	cam/devices	UUID device:<кластер>/cam/devices/<хост>#<n>	read
+channel	uid	cam/devices	UUID device:<cluster>/cam/devices/<host>#<n>	read
 channel	kind	—	"channel"	const
-channel	parentId	cam/devices	UUID ipsrv хоста	read
+channel	parentId	cam/devices	UUID of the host's ipsrv	read
 channel	domainId	GET /session	Domain.id	read
 channel	name	cam/devices	Канал <n + 1>	read
 channel	properties.channel	cam/devices	n + 1	read	the same count as videoChannel
 channel	properties.enabled	—	true	const
-channel	status.link	cam/heartbeats	как у ipsrv хоста	read	not part of the version
-channel	version	cam/devices	индекс хранилища строки	read	in the list element by B4
+channel	status.link	cam/heartbeats	as for the host's ipsrv	read	not part of the version
+channel	version	cam/devices	the row's store index	read	in the list element by B4
 channel	properties.short, children	—	—	none	a channel does not have them
-sensor|relay|mic|spk	—	cam/children + cam/child_settings	—	both	a finding of the holder and the operator's word (V/01.1 Н1.2а); only gone: false and a live owner; POST, DELETE — 422 NOT_SUPPORTED, field /kind
-sensor|relay|mic|spk	uid	cam/children	UUID device:<кластер>/cam/children/<camera>-<type>-<number>	read
+sensor|relay|mic|spk	—	cam/children + cam/child_settings	—	both	a finding of the holder and the operator's word (V/01.1 N1.2a); only gone: false and a live owner; POST, DELETE — 422 NOT_SUPPORTED, field /kind
+sensor|relay|mic|spk	uid	cam/children	UUID device:<cluster>/cam/children/<camera>-<type>-<number>	read
 sensor|relay|mic|spk	kind	cam/children	type	read	the contract word without translation
-sensor|relay|mic|spk	parentId	cam/children	хозяин camera — его id; хозяин ipsrv — id ipsrv хоста	read
+sensor|relay|mic|spk	parentId	cam/children	owner camera — its id; owner ipsrv — the host's ipsrv id	read
 sensor|relay|mic|spk	domainId	GET /session	Domain.id	read
-sensor|relay|mic|spk	name	cam/child_settings	title; нет — <type> <number>	both	PATCH merges: POST of the table is a full replacement (V/11.4 Н1.2)
-sensor|relay|mic|spk	properties.enabled	cam/child_settings	enabled; нет — true	both	a setting record; in effect, for mic, spk too (V/01.4 Н1.4а); null — 422 VALIDATION_FAILED
+sensor|relay|mic|spk	name	cam/child_settings	title; absent — <type> <number>	both	PATCH merges: POST of the table is a full replacement (V/11.4 N1.2)
+sensor|relay|mic|spk	properties.enabled	cam/child_settings	enabled; absent — true	both	a setting record; in effect, for mic, spk too (V/01.4 N1.4a); null — 422 VALIDATION_FAILED
 sensor|relay	properties.norm	cam/child_settings	norm	both	no field — no field in the answer; null — clear
-sensor|relay|mic|spk	properties.channel	cam/children	number	read	port io.input and output (V/01.4 Н1.4а)
-sensor|relay|mic|spk	status.link	cam/heartbeats	как у хозяина	read	not part of the version
-sensor|relay|mic|spk	version	cam/children + cam/child_settings	склейка k<строка ребёнка>.s<строка настройки>	read	no setting — empty (V/11.4 Н1.1)
+sensor|relay|mic|spk	properties.channel	cam/children	number	read	port io.input and output (V/01.4 N1.4a)
+sensor|relay|mic|spk	status.link	cam/heartbeats	as for the owner	read	not part of the version
+sensor|relay|mic|spk	version	cam/children + cam/child_settings	concatenation k<child row>.s<setting row>	read	no setting — empty (V/11.4 N1.1)
 sensor|relay|mic|spk	properties.short, properties.model, properties.path, children, properties.operations, properties.properties	—	—	none	a child does not have it: a write is 422 NOT_SUPPORTED, field of that field
-storage	—	cam/devices	строка с storage: true	read	a device archive, not a volume: one record per device (V/11.3 Н1.3); read only; an edit, DELETE — 422 NOT_SUPPORTED, field /kind; the card of a w2c camera — storage(edge)
-storage	uid	cam/devices	UUID device:<кластер>/cam/devices/<хост>#storage	read	other than that of the host's ipsrv
+storage	—	cam/devices	a row with storage: true	read	a device archive, not a volume: one record per device (V/11.3 N1.3); read only; an edit, DELETE — 422 NOT_SUPPORTED, field /kind; the card of a w2c camera — storage(edge)
+storage	uid	cam/devices	UUID device:<cluster>/cam/devices/<host>#storage	read	other than that of the host's ipsrv
 storage	kind	—	"storage"	const
-storage	parentId	cam/devices	channels 1 — камера хоста с наименьшим id; больше 1 — ipsrv хоста	read	V/11.3 Н1.3 «Дерево»
+storage	parentId	cam/devices	channels 1 — the host's camera with the smallest id; more than 1 — the host's ipsrv	read	V/11.3 N1.3 "Tree"
 storage	domainId	GET /session	Domain.id	read
 storage	name	—	"Встроенное хранилище"	const	a constant caption
 storage	properties.enabled	—	true	const
-storage	status.link	cam/heartbeats	запись устройства отвечает: как у ipsrv хоста	read	an observation, not part of the version
-storage	version	cam/devices	индекс хранилища строки	read
+storage	status.link	cam/heartbeats	the device record responds: as for the host's ipsrv	read	an observation, not part of the version
+storage	version	cam/devices	the row's store index	read
 storage	properties.short, properties.recordMode, properties.channel, properties.sizeBytes, children	—	—	none	a camera storage does not have them
-storage(edge)	—	rec/volumes	том edge члена с камерой w2c, наименьшее имя	read	one record per member (ADR-0111 items 6, 7); recordMode, sizeBytes are edited, DELETE — 422 NOT_SUPPORTED, field /kind (V/11.3 Н1.3)
+storage(edge)	—	rec/volumes	the edge volume of the member with a w2c camera, the smallest name	read	one record per member (ADR-0111 items 6, 7); recordMode, sizeBytes are edited, DELETE — 422 NOT_SUPPORTED, field /kind (V/11.3 N1.3)
 storage(edge)	properties.recordMode	rec/volumes	when: always — always, offline — backup	both	another word — 422 VALIDATION_FAILED, field /properties/recordMode
 storage(edge)	writable	—	["recordMode", "sizeBytes"]	const	the w2c card flag
-storage(edge)	uid	rec/volumes	UUID device:<кластер>/rec/volumes/<name>#storage	read
+storage(edge)	uid	rec/volumes	UUID device:<cluster>/rec/volumes/<name>#storage	read
 storage(edge)	kind	—	"storage"	const
-storage(edge)	parentId	cam/cameras	UUID device:<кластер>/cam/cameras/<id> строки cfw://local	read
+storage(edge)	parentId	cam/cameras	UUID device:<cluster>/cam/cameras/<id> of the cfw://local row	read
 storage(edge)	domainId	GET /session	Domain.id	read
 storage(edge)	name	—	"Встроенное хранилище"	const	a constant caption
 storage(edge)	properties.enabled	rec/volumes	enabled	read
-storage(edge)	status.link	rec/volumes	held_by не null	read	an observation, not part of the version
-storage(edge)	properties.sizeBytes	rec/volumes	quota_bytes	both	the card budget (ADR-0108 item 1); a smaller one — with confirmShrinkBytes (V/11.3 Н1.3)
-storage(edge)	properties.confirmShrinkBytes	rec/volumes	shrink_confirmed	write	equal to sizeBytes; not given out (V/11.3 Н1.3)
-storage(edge)	version	rec/volumes	индекс хранилища строки; чужая — revision	read
+storage(edge)	status.link	rec/volumes	held_by is not null	read	an observation, not part of the version
+storage(edge)	properties.sizeBytes	rec/volumes	quota_bytes	both	the card budget (ADR-0108 item 1); a smaller one — with confirmShrinkBytes (V/11.3 N1.3)
+storage(edge)	properties.confirmShrinkBytes	rec/volumes	shrink_confirmed	write	equal to sizeBytes; not given out (V/11.3 N1.3)
+storage(edge)	version	rec/volumes	the row's store index; foreign — revision	read
 storage(edge)	properties.short, properties.channel, children	—	—	none	a card does not have them
-eventsrc|acfa	—	cam/cameras	основная строка type eventsrc, acfa	both	the connection, events and commands of the holder; no children and no recording (V/01.1 Н1.1б)
-eventsrc|acfa	uid	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read
+eventsrc|acfa	—	cam/cameras	the main row of type eventsrc, acfa	both	the connection, events and commands of the holder; no children and no recording (V/01.1 N1.1b)
+eventsrc|acfa	uid	cam/cameras	UUID device:<cluster>/cam/cameras/<id>	read
 eventsrc|acfa	kind	cam/cameras	type	read	the contract word without translation
 eventsrc|acfa	parentId	—	null	const	a row; acfa with a parent is a unit, below
 eventsrc|acfa	domainId	GET /session	Domain.id	read
 eventsrc|acfa	properties.identifier	cam/cameras	id	read	as for a camera, with a check at creation
-eventsrc|acfa	name, properties.enabled, properties.short, properties.ip, properties.port, properties.vendor, properties.model, properties.firmware, properties.rtspUrl, properties.login	cam/cameras	как у камеры	both	as for a camera
+eventsrc|acfa	name, properties.enabled, properties.short, properties.ip, properties.port, properties.vendor, properties.model, properties.firmware, properties.rtspUrl, properties.login	cam/cameras	as for a camera	both	as for a camera
 eventsrc|acfa	secrets.password	cam/cameras	cred_secret	read	true — a secret is set; the value is not given out
 eventsrc|acfa	properties.password	cam/cameras	cred_secret	write	as for a camera
-eventsrc|acfa	status.link, status.observed.fault, status.observed.licenseExceeded	cam/heartbeats	phase, device_state строки	read	as for ipsrv; device_state lost — online false, fault conn; an observation, not part of the version
-eventsrc	properties.serverId	cam/cameras	метка server:<имя> поля labels, UUID server:<кластер>/<имя>; метки нет — сервер держателя	both	a write is a label, one server knows the till address; there is no move on a failure (V/11.3 Н1.3)
-eventsrc	properties.cameraId	cam/cameras	camera, UUID device:<кластер>/cam/cameras/<id>	both	the captions camera; not a camera or outside the listing — 422 VALIDATION_FAILED, field /properties/cameraId
-eventsrc	properties.words	cam/cameras	words	both	the source words and their colours as is (V/01.1 Н1.1г)
+eventsrc|acfa	status.link, status.observed.fault, status.observed.licenseExceeded	cam/heartbeats	phase, device_state of the row	read	as for ipsrv; device_state lost — online false, fault conn; an observation, not part of the version
+eventsrc	properties.serverId	cam/cameras	the label server:<name> in labels, UUID server:<cluster>/<name>; no label — the holder's server	both	a write is a label, one server knows the till address; there is no move on a failure (V/11.3 N1.3)
+eventsrc	properties.cameraId	cam/cameras	camera, UUID device:<cluster>/cam/cameras/<id>	both	the captions camera; not a camera or outside the listing — 422 VALIDATION_FAILED, field /properties/cameraId
+eventsrc	properties.words	cam/cameras	words	both	the source words and their colours as is (V/01.1 N1.1d)
 eventsrc	properties.overlayDelayMs	cam/cameras	overlay_delay_ms	both
 eventsrc	properties.overlayDurationSec	cam/cameras	overlay_duration_sec	both
-acfa	status.observed.serverId	cam/heartbeats	как у ipsrv	read	an observation; at creation it is skipped without a write
-eventsrc|acfa	version	cam/cameras	индекс хранилища строки	read
+acfa	status.observed.serverId	cam/heartbeats	as for ipsrv	read	an observation; at creation it is skipped without a write
+eventsrc|acfa	version	cam/cameras	the row's store index	read
 eventsrc|acfa	properties.labels	cam/cameras	labels	both	the label server:* is not given out, a write keeps it
-eventsrc|acfa	status.observed.faultText	cam/heartbeats	reason; нет — warning	read	V/01.2 Н1.2б
-acfa	properties.unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора, parent -	read
+eventsrc|acfa	status.observed.faultText	cam/heartbeats	reason; absent — warning	read	V/01.2 N1.2b
+acfa	properties.unitOptions	unit-templates.tsv + device-catalog.json	vendor templates, parent -	read
 eventsrc|acfa	children	—	—	none	no children: 422 NOT_SUPPORTED, field /children
 eventsrc|acfa	properties.path	—	—	none	the row eventsrc, acfa does not have them
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	—	cam/device_units	строка таблицы	both	an access control unit (V/01.1 Н1.2б); acfa — only with a parent, the row type controller; acfa without a parent — the row cam/cameras; relay of a child — by the row sensor|relay|mic|spk, the table tells them apart; creation and removal — V/11.4 Н1.2
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	uid	cam/device_units	UUID device:<кластер>/cam/device_units/<id>	read
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	—	cam/device_units	a table row	both	an access control unit (V/01.1 N1.2b); acfa — only with a parent, the row type controller; acfa without a parent — the row cam/cameras; relay of a child — by the row sensor|relay|mic|spk, the table tells them apart; creation and removal — V/11.4 N1.2
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	uid	cam/device_units	UUID device:<cluster>/cam/device_units/<id>	read
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	kind	cam/device_units	type; controller — acfa	read	the contract word without translation
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	parentId	cam/device_units	parent; нет — запись основной строки, у ipsrv — ipsrv хоста	both	at creation; an edit — 422 NOT_SUPPORTED, field /parentId
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	parentId	cam/device_units	parent; absent — the main row's record, for ipsrv — the host's ipsrv	both	at creation; an edit — 422 NOT_SUPPORTED, field /parentId
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	domainId	GET /session	Domain.id	read
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.identifier	cam/device_units	id	read	<строка>-<n>
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.identifier	cam/device_units	id	read	<row>-<n>
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	name	cam/device_units	title	both	none — <kind> <n>
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.enabled	cam/device_units	enabled	both
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.path	cam/device_units	address	both	the device word as is
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.model	cam/device_units	template	both	at creation it chooses the template; an edit — 422 NOT_SUPPORTED, field /properties/model
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.link, status.observed.fault	cam/heartbeats	phase, device_state строки, units_down	read	held, idle or running and no word — true; lost of the row or unit — false, fault conn; failed, refused — false, fault drv; not part of the version
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.observed.serverId, status.observed.licenseExceeded	cam/heartbeats	как у строки camera	read	an observation, not part of the version
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	version	cam/device_units	индекс хранилища строки	read
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.operations	device-catalog.json	operations элемента units её шаблона	read	a hint, the holder judges (V/11.4 Н1.17)
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.unitOptions	unit-templates.tsv + device-catalog.json	шаблоны с parent её шаблона	read
-acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.observed.faultText	cam/heartbeats	слово units_down строки	read
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.link, status.observed.fault	cam/heartbeats	phase, device_state of the row, units_down	read	held, idle or running and no word — true; lost of the row or unit — false, fault conn; failed, refused — false, fault drv; not part of the version
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.observed.serverId, status.observed.licenseExceeded	cam/heartbeats	as for the camera row	read	an observation, not part of the version
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	version	cam/device_units	the row's store index	read
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.operations	device-catalog.json	operations of the units element of its template	read	a hint, the holder judges (V/11.4 N1.17)
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.unitOptions	unit-templates.tsv + device-catalog.json	templates whose parent is its template	read
+acfa_sensor|acfa_lock|acfa_fence|relay|acfa	status.observed.faultText	cam/heartbeats	the row's units_down word	read
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	children	—	—	none	nested ones — as separate elements: 422 NOT_SUPPORTED, field /children
 acfa_sensor|acfa_lock|acfa_fence|relay|acfa	properties.short, properties.ip, properties.port, properties.vendor, properties.login, properties.channel, properties.firmware, properties.norm, properties.rtspUrl, properties.password, properties.labels, properties.properties	—	—	none	a unit does not have it: a write is 422 NOT_SUPPORTED, field of that field
 export|email|sms	—	—	—	none	there are no such kinds: they are not in GET /kinds; creation — 422 NOT_SUPPORTED, field /kind; outside the DriverPack tree (ADR-0102 item 1)
-folder	—	GET /domain/folders	элемент	both	a folder is a domain row, a copy at the member; outside a domain — GET /folders (P/08.5 Н1.8; V/11.4 Н1.7)
-folder	uid	GET /domain/folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6
+folder	—	GET /domain/folders	element	both	a folder is a domain row, a copy at the member; outside a domain — GET /folders (P/08.5 N1.8; V/11.4 N1.7)
+folder	uid	GET /domain/folders	UUID folder:platform/folders/<id>	read	V/11.4 N1.6
 folder	name	GET /domain/folders	name	both	a write — PUT /domain/folders/<id>, the domain administrator only
 folder	domainId	GET /session	Domain.id	read
 folder	parentId	GET /domain/folders	parent	read	"" — null; set at creation
-camera|det|ipsrv|eventsrc|acfa	folders	PUT /folders/<id>; в домене PUT /domain/memberof/…	members; folders	write	together up to selectMax, hidden ones stay in place (V/11.4 Н1.7)
-folder	version	GET /folders, GET /domain/folders	index	read	in a domain — index of the tree (V/11.4 Н1.7)
+camera|det|ipsrv|eventsrc|acfa	folders	PUT /folders/<id>; in a domain PUT /domain/memberof/…	members; folders	write	together up to selectMax, hidden ones stay in place (V/11.4 N1.7)
+folder	version	GET /folders, GET /domain/folders	index	read	in a domain — index of the tree (V/11.4 N1.7)
 folder(create)	name, domainId, parentId	POST /domain/folders	name, parent	write	another domainId — NOT_FOUND; outside a domain — POST /folders
-folder(patch)	name	PUT /domain/folders/<id>	name	write	outside a domain — PUT /folders/<id>; V/11.4 Н1.7
-archive.*	—	rec/volumes	—	both	a storage = one volume (a row of the table rec/volumes) and the recordings on it; the edge volume of a collapsed member is not given out: it is the storage of a w2c camera (V/11.3 Н1.3)
-archive.*	uid	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	other than that of the Volume of the same row (V/11.4 Н1.6)
+folder(patch)	name	PUT /domain/folders/<id>	name	write	outside a domain — PUT /folders/<id>; V/11.4 N1.7
+archive.*	—	rec/volumes	—	both	a storage = one volume (a row of the table rec/volumes) and the recordings on it; the edge volume of a collapsed member is not given out: it is the storage of a w2c camera (V/11.3 N1.3)
+archive.*	uid	rec/volumes	UUID archive:<cluster>/rec/volumes/<name>	read	other than that of the Volume of the same row (V/11.4 N1.6)
 archive.*	name	rec/volumes	name	read	the row key: at creation — the key of the new row; an edit — 422 NOT_SUPPORTED, field /name
-archive.*	kind	rec/volumes	archive.<kind>	read	set at creation (UnitCreate.kind): a storage kind of the kind table; outside it — 422 NOT_SUPPORTED, field /kind; incidents — admits: false (V/11.3 Н1.3)
-archive.*	properties.storage	rec/volumes	url: бакет — object, иное — block	read	the form value is accepted and not stored (ADR-0111 item 2)
-archive.*	properties.provider	rec/volumes	схема адреса бакета; не бакет — null	read
-archive.*	parentId	rec/volumes	server — UUID server:<кластер>/<server>; пусто — null	both	for a bucket it is accepted and not stored (ADR-0111 item 2)
-archive.*	domainId	GET /session	server пуст — Domain.id, иначе null	read	at creation — domainId of the body; one owner: a server or the domain
-archive.*	properties.retentionDays	rec/volumes	retention_days, нет — 30	both	the default of a new recording, existing ones do not change; 0 — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+archive.*	kind	rec/volumes	archive.<kind>	read	set at creation (UnitCreate.kind): a storage kind of the kind table; outside it — 422 NOT_SUPPORTED, field /kind; incidents — admits: false (V/11.3 N1.3)
+archive.*	properties.storage	rec/volumes	url: bucket — object, otherwise — block	read	the form value is accepted and not stored (ADR-0111 item 2)
+archive.*	properties.provider	rec/volumes	the bucket address scheme; not a bucket — null	read
+archive.*	parentId	rec/volumes	server — UUID server:<cluster>/<server>; empty — null	both	for a bucket it is accepted and not stored (ADR-0111 item 2)
+archive.*	domainId	GET /session	server empty — Domain.id, otherwise null	read	at creation — domainId of the body; one owner: a server or the domain
+archive.*	properties.retentionDays	rec/volumes	retention_days, absent — 30	both	the default of a new recording, existing ones do not change; 0 — 422 NOT_SUPPORTED (V/11.3 N1.3)
 archive.*	properties.encrypted	—	false	const	there is no volume encryption (features without archiveEncryption): true — 422 NOT_SUPPORTED
-archive.*	children[0] (volume)	rec/volumes	поля тома той же строки	write	at creation only: a volume = the same storage (the rows Volume); name of the first volume is accepted and not stored (ADR-0111 item 2)
-archive.*	properties.admits	rec/volumes	admits	both	no field — true; not Volume.enabled; incidents always false (V/11.3 Н1.3)
-archive.*	properties.recordMode	rec/volumes	when: always — always, offline — backup; нет — поля нет	both	edge only, the values of archiveModes; null clears when (V/11.3 Н1.3)
-archive.*	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	in the list element by B4; If-Match compares it
+archive.*	children[0] (volume)	rec/volumes	the volume fields of the same row	write	at creation only: a volume = the same storage (the rows Volume); name of the first volume is accepted and not stored (ADR-0111 item 2)
+archive.*	properties.admits	rec/volumes	admits	both	no field — true; not Volume.enabled; incidents always false (V/11.3 N1.3)
+archive.*	properties.recordMode	rec/volumes	when: always — always, offline — backup; absent — no field	both	edge only, the values of archiveModes; null clears when (V/11.3 N1.3)
+archive.*	version	rec/volumes + rec/recordings	concatenation v<volume index>.r<volume recording indices> (V/11.4 N1.1)	read	in the list element by B4; If-Match compares it
 volume	—	rec/volumes	—	both	a volume = the same storage; the edge volume of a collapsed member is not given out
-volume	uid	rec/volumes	UUID volume:<кластер>/rec/volumes/<name>	read
-volume	parentId	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	the storage of the same row
-volume	status.observed.heldBy	rec/volumes	held_by	read	a string or null: nobody or not confirmed (V/11.4 Н1.23)
-volume	status.observed.incidentsLost	rec/heartbeats	incidents_lost пульса держателя тома incidents	read	incidents only; empty — no field; an observation (V/11.4 Н1.23, V/02.7 Н1.5)
-volume	status.observed.incidentsAtRisk	rec/heartbeats	incidents_at_risk пульса держателя тома incidents	read	incidents only; empty — no field; an observation (V/11.4 Н1.23, V/02.7 Н1.5)
+volume	uid	rec/volumes	UUID volume:<cluster>/rec/volumes/<name>	read
+volume	parentId	rec/volumes	UUID archive:<cluster>/rec/volumes/<name>	read	the storage of the same row
+volume	status.observed.heldBy	rec/volumes	held_by	read	a string or null: nobody or not confirmed (V/11.4 N1.23)
+volume	status.observed.incidentsLost	rec/heartbeats	incidents_lost from the heartbeat of the incidents volume holder	read	incidents only; empty — no field; an observation (V/11.4 N1.23, V/02.7 N1.5)
+volume	status.observed.incidentsAtRisk	rec/heartbeats	incidents_at_risk from the heartbeat of the incidents volume holder	read	incidents only; empty — no field; an observation (V/11.4 N1.23, V/02.7 N1.5)
 volume	name	rec/volumes	name	read	the row key: an edit — 422 NOT_SUPPORTED, field /name
-volume	properties.disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	a write — file://<disk>/<Archive.id> (V/11.3 Н1.3)
+volume	properties.disk	rec/volumes	url: the file:// path without a final segment equal to Archive.id, otherwise the whole path; for a bucket — the scheme	both	a write — file://<disk>/<Archive.id> (V/11.3 N1.3)
 volume	properties.sizeBytes	rec/volumes	quota_bytes	both
-volume	status.observed.usedPercent	—	—	none	neither the row nor the heartbeat carries the volume fill: no field (the contract 0.2.0 — an optional observation; V/11.3 Н1.3)
-volume	properties.state	rec/volumes, rec/heartbeats	enabled: false — off, volume_missing пульса — broken, иначе ready	read	V/11.3 Н1.3
+volume	status.observed.usedPercent	—	—	none	neither the row nor the heartbeat carries the volume fill: no field (the contract 0.2.0 — an optional observation; V/11.3 N1.3)
+volume	properties.state	rec/volumes, rec/heartbeats	enabled: false — off, volume_missing in the heartbeat — broken, otherwise ready	read	V/11.3 N1.3
 volume	properties.enabled	rec/volumes	enabled	both	no field — true; false — state off
-volume	status.observed.shrinkPendingBytes	rec/heartbeats	shrink_pending элемента тома	read	none — no field; not part of the version (V/11.3 Н1.3)
-volume	properties.confirmShrinkBytes	rec/volumes	shrink_confirmed	write	equal to sizeBytes; not given out (V/11.3 Н1.3)
-volume	status.link	rec/volumes	held_by не null	read	the holder of the place (P/06.1 Н1.6): an observation, not part of the version
+volume	status.observed.shrinkPendingBytes	rec/heartbeats	shrink_pending of the volume element	read	none — no field; not part of the version (V/11.3 N1.3)
+volume	properties.confirmShrinkBytes	rec/volumes	shrink_confirmed	write	equal to sizeBytes; not given out (V/11.3 N1.3)
+volume	status.link	rec/volumes	held_by is not null	read	the holder of the place (P/06.1 N1.6): an observation, not part of the version
 volume	properties.keyId	rec/volumes	access_key	both	the bucket key
 volume	secrets.secret	rec/volumes	access_secret	read	true — a secret is set; the value is not given out
-volume	properties.secret	rec/volumes	access_secret	write	no field — do not touch; null or "" — clear; a string — a new one (V/11.3 Н1.3)
-volume	properties.bucket, properties.region, properties.path, properties.host, properties.port	rec/volumes	url	both	parts of the bucket address; region, bucket are required for a bucket (V/11.3 Н1.3)
-volume	properties.mode	rec/volumes	файл — dir; бакета — поля нет	read	the form value is accepted and not stored (ADR-0111 item 2; V/11.3 Н1.3)
-volume	properties.dir	rec/volumes	конечный сегмент пути file://; бакета — поля нет	read	as mode
+volume	properties.secret	rec/volumes	access_secret	write	no field — do not touch; null or "" — clear; a string — a new one (V/11.3 N1.3)
+volume	properties.bucket, properties.region, properties.path, properties.host, properties.port	rec/volumes	url	both	parts of the bucket address; region, bucket are required for a bucket (V/11.3 N1.3)
+volume	properties.mode	rec/volumes	file — dir; bucket — no field	read	the form value is accepted and not stored (ADR-0111 item 2; V/11.3 N1.3)
+volume	properties.dir	rec/volumes	the final file:// path segment; bucket — no field	read	as mode
 volume	properties.file	—	—	none	the form value is accepted and not stored (ADR-0111 item 2)
-volume	properties.login, properties.password, properties.proto, properties.endpoint, properties.style, properties.account	—	—	none	the volume address forms do not carry them (V/11.3 Н1.3)
-volume	version	rec/volumes	индекс хранилища строки	read	in the list element by B4; If-Match compares it (V/11.4)
-Rule	—	auto/scenarios	строка без hidden	both	ADR-0105; translation — V/11.3 Н1.3, a write — V/11.4 Н1.10
-Rule	id	auto/scenarios	UUID rule:<кластер>/auto/scenarios/<id>	read	the number is issued by auto/next_id
+volume	properties.login, properties.password, properties.proto, properties.endpoint, properties.style, properties.account	—	—	none	the volume address forms do not carry them (V/11.3 N1.3)
+volume	version	rec/volumes	the row's store index	read	in the list element by B4; If-Match compares it (V/11.4)
+Rule	—	auto/scenarios	a row without hidden	both	ADR-0105; translation — V/11.3 N1.3, a write — V/11.4 N1.10
+Rule	id	auto/scenarios	UUID rule:<cluster>/auto/scenarios/<id>	read	the number is issued by auto/next_id
 Rule	name	auto/scenarios	name	both
 Rule	enabled	auto/scenarios	enabled	both
 Rule	logOnly	auto/scenarios	log_only	both
@@ -308,219 +308,219 @@ Rule	owner	auto/scenarios	owner	both
 Rule	purpose	auto/scenarios	purpose	both
 Rule	allowChain	auto/scenarios	allow_chain	both
 Rule	validForSec	auto/scenarios	valid_for, 0 — 30	both	10…600, outside the bounds — 422 VALIDATION_FAILED, field validForSec
-Rule	status	auto/heartbeats	элемент status[] сценария: phase, reason, unfit, unchecked	read	an observation, not part of the version; enabled false, no heartbeat — no field (V/11.3 Н1.3)
+Rule	status	auto/heartbeats	the scenario's status[] element: phase, reason, unfit, unchecked	read	an observation, not part of the version; enabled false, no heartbeat — no field (V/11.3 N1.3)
 Rule	triggers	auto/scenarios	when	both	see RuleTrigger
 Rule	steps	auto/scenarios	then	both	see RuleAction; the branches yes, no; the depth — V/07.1
-Rule	serverId	auto/scenarios	server: UUID server:<кластер>/<имя> ↔ имя	both	data, the evaluator does not read it; outside the listing — 422 VALIDATION_FAILED
+Rule	serverId	auto/scenarios	server: UUID server:<cluster>/<name> ↔ name	both	data, the evaluator does not read it; outside the listing — 422 VALIDATION_FAILED
 Rule	labels	auto/scenarios	labels	both
-Rule	runAsRoleId	auto/scenarios	run_as_role: id роли ↔ имя (V/11.8 Н1.2)	both	the action is judged by the role's right (V/07.4)
+Rule	runAsRoleId	auto/scenarios	run_as_role: role id ↔ name (V/11.8 N1.2)	both	the action is judged by the role's right (V/07.4)
 Rule	createdAt	auto/scenarios	created_at	read	written by backend; empty — the least by the schema
 Rule	createdBy	auto/scenarios	created_by	read	written by backend; empty — the least by the schema
 Rule	changedAt	auto/scenarios	changed_at	read	written by backend; empty — the least by the schema
 Rule	changedBy	auto/scenarios	changed_by	read	written by backend; empty — the least by the schema
 Rule	mute	auto/rule_marks	mute	read	written by /rules/update; numbers ↔ date-time; expiry does not change the version
 Rule	order	auto/rule_marks	order	read	written by POST /rules, /rules/reorder; only among the rules of one evaluator
-Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<индекс отметки>	read	V/11.4 Н1.10
-Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; no field in the answer
-RuleTrigger	source	—	"unit"	const	the subsystem of the row — by the row event (V/11.13 Н1.4)
-RuleTrigger	event	auto/scenarios	when[].kind как есть; when[].sub: motion, linecross, lpr, disappeared, abandoned, crowd — det (покрывает и встроенный, V/07.2 Н1.3), segment.lost — rec, прочие — cam	both
-RuleTrigger	kinds	data:VMS/11-backend/data/rule-catalog.json#triggers	проверка по kinds строки с этим event; не хранится	write	a check only: reading gives no field — a limit (V/11.4 Н1.10)
+Rule	version	auto/scenarios + auto/rule_marks	s<row index>.m<mark index>	read	V/11.4 N1.10
+Rule	historyNote	auto/versions	note of the version row	write	RuleWrite: restore, undo; no field in the answer
+RuleTrigger	source	—	"unit"	const	the subsystem of the row — by the row event (V/11.13 N1.4)
+RuleTrigger	event	auto/scenarios	when[].kind as is; when[].sub: motion, linecross, lpr, disappeared, abandoned, crowd — det (also covers built-in detectors, V/07.2 N1.3), segment.lost — rec, others — cam	both
+RuleTrigger	kinds	data:VMS/11-backend/data/rule-catalog.json#triggers	check against kinds of the row with this event; not stored	write	a check only: reading gives no field — a limit (V/11.4 N1.10)
 RuleTrigger	implements	—	—	none
-RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	see RuleTarget
-RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у события unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; a number mismatch — RULE_INVALID (V/11.3 Н1.3)
-RuleTarget	include	auto/scenarios	target.include: {uid} объекта — device 7, child <cam>-<type>-<number>; {area: folder, uid} — id папки; {area: server, uid} — имя; {area: domain, uid} — CLUSTER	both	back — by the listings of the kind
-RuleTarget	exclude	auto/scenarios	target.exclude: uid ↔ строка цели	both
-RuleTarget	gone	auto/scenarios	target.gone	both	set by the cascade (V/11.4 Н1.10)
+RuleTrigger	target	auto/scenarios	when[].target; unit — a target with one device	both	see RuleTarget
+RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port digit string ↔ integer, from the target record; word as is; for event unit word ↔ event, unit — the cam/device_units key; other keys and types as is	both	template — 422 NOT_SUPPORTED; a number mismatch — RULE_INVALID (V/11.3 N1.3)
+RuleTarget	include	auto/scenarios	target.include: {uid} of an object — device 7, child <cam>-<type>-<number>; {area: folder, uid} — the folder id; {area: server, uid} — the name; {area: domain, uid} — CLUSTER	both	back — by the listings of the kind
+RuleTarget	exclude	auto/scenarios	target.exclude: uid ↔ target row	both
+RuleTarget	gone	auto/scenarios	target.gone	both	set by the cascade (V/11.4 N1.10)
 RuleTarget	fromEvent	auto/scenarios	target.from_event	both
-RuleCondition	kind, value	auto/scenarios	conditions[] как есть	both
+RuleCondition	kind, value	auto/scenarios	conditions[] as is	both
 RuleCondition	target	auto/scenarios	conditions[].target	both	see RuleTarget
 RuleCondition	scheduleId	auto/scenarios	conditions[].schedule	both
 RuleCondition	modeIds	auto/scenarios	conditions[].modes	both
 RuleAction	type, action	auto/scenarios	then[]: unitAction arm, disarm, preset, disable, output, unit ↔ cam; record ↔ rec record; detect, scan ↔ det; alarm ↔ auto alarm	both	an action outside unitActions of rule-catalog.json on an enabled rule — 422 NOT_SUPPORTED, field steps
-RuleAction	source, action	auto/scenarios	then[]: rule runrule ↔ auto runrule; прочие — данными	both
-RuleAction	target	auto/scenarios	then[].target; unit, cam — цель из одного устройства	both
+RuleAction	source, action	auto/scenarios	then[]: rule runrule ↔ auto runrule; others — as data	both
+RuleAction	target	auto/scenarios	then[].target; unit, cam — a target with one device	both
 RuleAction	params.preset	auto/scenarios	n	both	0 — 422 VALIDATION_FAILED
-RuleAction	params.port, params.minutes, params.priority, params.text, params.duration	auto/scenarios	те же поля	both	port 0 — 422 VALIDATION_FAILED; duration event — data, an enabled one — RULE_INVALID
-RuleAction	params.state	auto/scenarios	state: true ↔ closed, false ↔ open; true с params.pulseMs ↔ pulse с pulse_ms	both
-RuleAction	params.pulseMs, params.afterSec	auto/scenarios	pulse_ms; after_sec, у scan after	both
-RuleAction	params.archive	auto/scenarios	archive: id хранилища ↔ имя тома; у scan rec: запись камеры на этом томе ↔ её home	both
+RuleAction	params.port, params.minutes, params.priority, params.text, params.duration	auto/scenarios	the same fields	both	port 0 — 422 VALIDATION_FAILED; duration event — data, an enabled one — RULE_INVALID
+RuleAction	params.state	auto/scenarios	state: true ↔ closed, false ↔ open; true with params.pulseMs ↔ pulse with pulse_ms	both
+RuleAction	params.pulseMs, params.afterSec	auto/scenarios	pulse_ms; after_sec, after for scan	both
+RuleAction	params.archive	auto/scenarios	archive: storage id ↔ volume name; for scan rec: the camera's recording on this volume ↔ its home	both
 RuleAction	params.detectorKind	auto/scenarios	kind	both	detect, scan
 RuleAction	params.beforeSec	auto/scenarios	before	both	scan
 RuleAction	params.params	auto/scenarios	params	both	detect, scan
 RuleAction	params.operation	auto/scenarios	operation	both	the target is a device unit: unit, n of its row (V/07.1)
-RuleAction	ruleId	auto/scenarios	rule: UUID ↔ номер	both
-RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	те же поля в snake_case	both	data: the action is not declared
+RuleAction	ruleId	auto/scenarios	rule: UUID ↔ number	both
+RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	the same fields in snake_case	both	data: the action is not declared
 RuleWait	control, sec	auto/scenarios	then[]: wait	both
 RuleWaitEvent	control, event, sec, yes, no	auto/scenarios	then[]: wait_event	both	event — as RuleTrigger
-RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: id роли ↔ имя (V/11.8 Н1.2)	both	the answer — RulePrompt (V/11.4 Н1.10)
-RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: id роли ↔ имя, via, wait_min	both	the answer — RulePrompt (V/11.4 Н1.10)
-RuleFire	—	GET /events	fired, step журнала auto этого сценария	read	V/11.3 Н1.3; the answer of the door auto/test — the same form
-RuleFire	id	GET /events	UUID ruleFire:<кластер>/<firing>	read
-RuleFire	ruleId	GET /events	unit: rule:<кластер>/auto/scenarios/<id>	read
+RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: role id ↔ name (V/11.8 N1.2)	both	the answer — RulePrompt (V/11.4 N1.10)
+RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: role id ↔ name, via, wait_min	both	the answer — RulePrompt (V/11.4 N1.10)
+RuleFire	—	GET /events	fired, step of this scenario's auto journal	read	V/11.3 N1.3; the answer of the door auto/test — the same form
+RuleFire	id	GET /events	UUID ruleFire:<cluster>/<firing>	read
+RuleFire	ruleId	GET /events	unit: rule:<cluster>/auto/scenarios/<id>	read
 RuleFire	at	GET /events	occurred	read
-RuleFire	by, result, checks	GET /events	те же поля fired; waiting, а запуска нет — итог по шагам	read	V/11.3 Н1.3
+RuleFire	by, result, checks	GET /events	the same fields of fired; waiting but no run — the outcome from the steps	read	V/11.3 N1.3
 RuleFire	logOnly	GET /events	log_only	read	none — false
 RuleFire	sourceDeviceIds	GET /events	source	read
-RuleFire	events	GET /events	events: source — unit, sub по event; kind ↔ event, cam ↔ deviceId, occurred ↔ at	read
-RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — the field is not null; skip — result: skip; depth — the number of branches in step; label, note — {code, params}: role ↔ roleId, user ↔ login (V/11.3 Н1.3)
-RulePrompt	—	auto/scenarios	state.runs строки: шаг ask, уровень escalate; кроме log_only и until 0	read	own cluster (V/11.3 Н1.3)
-RulePrompt	id	auto/scenarios	UUID rulePrompt:<кластер>/<scenario>/<fire>/<step>[/<n>]	read
-RulePrompt	ruleId, fireId, step	auto/scenarios	строка, fire, step запуска	read	as RuleFire
-RulePrompt	kind, roleId	auto/scenarios	ask, escalate шага; role шага или уровня	read
-RulePrompt	text	auto/scenarios	text шага с подстановками vars запуска	read	escalate — empty
-RulePrompt	level	auto/scenarios	номер уровня с 1	read	ask — null
-RulePrompt	openedAt, until	auto/scenarios	vars.occurred, начало уровня; until запуска	read
-RulePrompt	canAnswer	GET /session	roleId шага среди role строк grants	read	V/11.4 Н1.10
-RulePromptAnswer	answer	auto/answers	yes, no как есть; ack ↔ ack:<уровень вопроса>	write	V/11.4 Н1.10
-RuleStatus	state, reason	auto/heartbeats	phase refused, непустые unfit, unchecked, иначе watching; reason	read	V/11.3 Н1.3
+RuleFire	events	GET /events	events: source — unit, sub by event; kind ↔ event, cam ↔ deviceId, occurred ↔ at	read
+RuleFire	steps	GET /events	step rows: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — the field is not null; skip — result: skip; depth — the number of branches in step; label, note — {code, params}: role ↔ roleId, user ↔ login (V/11.3 N1.3)
+RulePrompt	—	auto/scenarios	state.runs of the row: an ask step, an escalate level; except log_only and until 0	read	own cluster (V/11.3 N1.3)
+RulePrompt	id	auto/scenarios	UUID rulePrompt:<cluster>/<scenario>/<fire>/<step>[/<n>]	read
+RulePrompt	ruleId, fireId, step	auto/scenarios	the row, fire, step of the run	read	as RuleFire
+RulePrompt	kind, roleId	auto/scenarios	ask, escalate of the step; role of the step or level	read
+RulePrompt	text	auto/scenarios	text of the step with substitutions from the run's vars	read	escalate — empty
+RulePrompt	level	auto/scenarios	level number counted from 1	read	ask — null
+RulePrompt	openedAt, until	auto/scenarios	vars.occurred, the level start; until of the run	read
+RulePrompt	canAnswer	GET /session	roleId of the step among role of grants rows	read	V/11.4 N1.10
+RulePromptAnswer	answer	auto/answers	yes, no as is; ack ↔ ack:<question level>	write	V/11.4 N1.10
+RuleStatus	state, reason	auto/heartbeats	phase refused, nonempty unfit, unchecked, otherwise watching; reason	read	V/11.3 N1.3
 RuleVersion	—	auto/versions	<scenario>-<number>	read	written by the edit package (ADR-0106 item 7)
-RuleVersion	id	auto/versions	UUID ruleVersion:<кластер>/auto/versions/<scenario>-<number>	read
+RuleVersion	id	auto/versions	UUID ruleVersion:<cluster>/auto/versions/<scenario>-<number>	read
 RuleVersion	ruleId, number	auto/versions	scenario, number	read
-RuleVersion	at, by	auto/versions	штамп	read
+RuleVersion	at, by	auto/versions	stamp	read
 RuleVersion	note	auto/versions	note	read
-RuleVersion	rule	auto/versions	content текста JSON rule	read	was does not go out
-Schedule	—	auto/schedules	строка; встроенные — и без строки	both	V/11.4 Н1.11
+RuleVersion	rule	auto/versions	content of the rule JSON text	read	was does not go out
+Schedule	—	auto/schedules	a row; built-in ones — also without a row	both	V/11.4 N1.11
 Schedule	id	auto/schedules	id	read	a random UUID; built-in ones — schedule:builtin/always, /never
-Schedule	name, kind, week, valid, cycle, dates	auto/schedules	те же поля	both
+Schedule	name, kind, week, valid, cycle, dates	auto/schedules	the same fields	both
 Schedule	overrides	auto/schedules	overrides; dayGroupId ↔ day_group	both
 Schedule	astro	auto/schedules	astro; offsetStartMin ↔ offset_start_min, offsetEndMin ↔ offset_end_min, utcOffsetHours ↔ utc_offset_hours	both
-Schedule	owner	auto/schedules	owner; maintenanceWindow ↔ maintenance_window, UUID правила ↔ номер	both
+Schedule	owner	auto/schedules	owner; maintenanceWindow ↔ maintenance_window, rule UUID ↔ number	both
 Schedule	builtin	auto/schedules	builtin	read
-Schedule	version	auto/schedules	индекс строки; встроенное без строки — "1"	read
-DayGroup	id, name, rules	auto/day_groups	те же поля	both	id — read
-DayGroup	version	auto/day_groups	индекс строки	read
-Modes	—	auto/modes	строка all; нет — постоянная запись (V/11.3 Н1.3)	both
+Schedule	version	auto/schedules	row index; built-in without a row — "1"	read
+DayGroup	id, name, rules	auto/day_groups	the same fields	both	id — read
+DayGroup	version	auto/day_groups	row index	read
+Modes	—	auto/modes	the all row; absent — continuous recording (V/11.3 N1.3)	both
 Modes	items, otherwise	auto/modes	items, otherwise	both
-Modes	version	auto/modes	индекс строки; нет — "0"	read
-ObjectMode	id, name, system, color	auto/modes	те же поля items	both	the client sets the id; system ones of a constant record — mode:<system>
+Modes	version	auto/modes	row index; absent — "0"	read
+ObjectMode	id, name, system, color	auto/modes	the same fields of items	both	the client sets the id; system ones of a constant record — mode:<system>
 ObjectMode	scheduleId	auto/modes	items[].schedule	both
-ModeCurrent	modeId	auto/mode_current + GET /servers	mode действующей строки now; иначе object_mode вычислителя	read	V/11.4 Н1.11
-ModeCurrent	manual	auto/mode_current	{until} действующей строки; иначе null	read
+ModeCurrent	modeId	auto/mode_current + GET /servers	mode of the active now row; otherwise the evaluator's object_mode	read	V/11.4 N1.11
+ModeCurrent	manual	auto/mode_current	{until} of the active row; otherwise null	read
 ModeCurrentWrite	modeId, until	auto/mode_current	mode, until	write	null — removal of the row
-MaintenanceWindow	id, name, enabled	auto/windows	те же поля	both	id — read
+MaintenanceWindow	id, name, enabled	auto/windows	the same fields	both	id — read
 MaintenanceWindow	scheduleId	auto/windows	schedule	both
-MaintenanceWindow	ruleIds	auto/windows	rules: UUID ↔ номера, null — все	both
-MaintenanceWindow	version	auto/windows	индекс строки	read
-MaintenanceWindowCreate	schedule	auto/schedules	новая строка в пакете окна	write	owner — this window
+MaintenanceWindow	ruleIds	auto/windows	rules: UUID ↔ numbers, null — all	both
+MaintenanceWindow	version	auto/windows	row index	read
+MaintenanceWindowCreate	schedule	auto/schedules	a new row in the window batch	write	owner — this window
 JournalEvent	—	GET /events	—	read	the event row (the event log contract)
-JournalEvent	id	GET /events	UUID event:<кластер>/<id строки события>	read
+JournalEvent	id	GET /events	UUID event:<cluster>/<event row id>	read
 JournalEvent	at	GET /events	t	read	Unix seconds → date-time UTC
-JournalEvent	category	GET /events	журнал и класс	read	audit ↔ the log audit/console; alarm ↔ the class alarm; info ↔ the rest
-JournalEvent	text	GET /events	kind и of	read	«<kind> <of>»; of empty — «<kind>»
+JournalEvent	category	GET /events	the journal and class	read	audit ↔ the log audit/console; alarm ↔ the class alarm; info ↔ the rest
+JournalEvent	text	GET /events	kind and of	read	«<kind> <of>»; of empty — «<kind>»
 JournalEvent	kind	GET /events	kind	read
 JournalEvent	occurredAt	GET /events	occurred	read	none — no field
-JournalEvent	source	GET /events	подсистема of	read
-JournalEvent	deviceId	GET /events	запись устройства (uid) по of	read	another one — no field
-JournalEvent	fields	GET /events	поля строки сверх t, kind, id, of, class, occurred	read
-GET /journal	deviceId, source, from, to, limit	GET /events	unit, subsystem, from, to + 1, limit	write	V/11.3 Н1.3 «Журнал»
-GET /journal	truncated, withheldCount	GET /events	truncated больше 0; длина withheld	read	the door counts units, not rows: a limit
+JournalEvent	source	GET /events	the subsystem of of	read
+JournalEvent	deviceId	GET /events	the device record (uid) by of	read	another one — no field
+JournalEvent	fields	GET /events	row fields beyond t, kind, id, of, class, occurred	read
+GET /journal	deviceId, source, from, to, limit	GET /events	unit, subsystem, from, to + 1, limit	write	V/11.3 N1.3 "Journal"
+GET /journal	truncated, withheldCount	GET /events	truncated greater than 0; the length of withheld	read	the door counts units, not rows: a limit
 Me	userId	GET /session	UUID user:<user>	read
 Me	login, name	GET /session	user	read	who am I
 Me	serverTime, timezone	GET /session	server_time, timezone	read	the platform norm B6
-Reference	—	GET /manifest	перечисления полей	read
-Reference	deviceModels	файл пакета device-models.json	[{vendor, models}] из .rep DriverPack	read	a package data file next to worker (V/11.3 Н1.3); not a table; no file — []
-Reference	recordModes	—	["none", "always", "motion", "sched", "replica", "backup"]	const	sched — the condition time of a recording row (V/11.3 Н1.3); backup — the reserve on a failure, extraArchives only
+Reference	—	GET /manifest	field enumerations	read
+Reference	deviceModels	the package file device-models.json	[{vendor, models}] from .rep DriverPack	read	a package data file next to worker (V/11.3 N1.3); not a table; no file — []
+Reference	recordModes	—	["none", "always", "motion", "sched", "replica", "backup"]	const	sched — the condition time of a recording row (V/11.3 N1.3); backup — the reserve on a failure, extraArchives only
 Reference	serviceTypes, supportLevels, cloudProviders	—	[]	const	the product has no services, support levels or cloud providers; a bucket is a volume address
-Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0, "pageMax": 1000, "idsMax": 200, "selectMax": 500, "watchMax": 200, "scanPartsMax": 8, "scenariosMax": 1000}	const	there is no polling of server addresses (V/11.2 No. 10); pages — V/11.3 Н1.2б; scanPartsMax — a value per measurement; scenariosMax — maxItems V/07.5 Н1.1
-Reference	scenarioKinds	—	["io.input", "silent", "text", "unit"]	const	the event kinds of cam (kinds of the manifest): the trigger of a document scenario is cam only (V/07.5 Н1.2)
-Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","EXPORT","ALLOW_UNPROTECTED_EXPORT","ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"cam","levels":"cam"},{"key":"arch","levels":"arch"}],"globals":[],"folderFields":["cam"],"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"kindAccess":{"cam":"FULL","arch":"FULL"}}},{"id":"operator","rights":{"feat":[],"kindAccess":{"cam":"MON","arch":"FULL"}}},{"id":"viewer","rights":{"feat":[],"kindAccess":{"cam":"MON"}}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"joins":[{"kind":"cam","levels":["MON","ONLY_ARCHIVE"],"level":"ARCHIVE"}],"passwordPolicy":{"minLength":10,"letter":false,"digit":false,"notLogin":false}}	const	only what is translated: the classes cam, arch (V/11.8 Н1 «Classes»; V/11.2 Н1.5)
-Reference	export	GET /manifest	exp: the enumerations of settings, the limits of V/08.6 Н1.4	read	the export window reference ExportReference, limits.bookmarkPadSec 30 (V/11.20 Н1.8)
-Reference	capabilities	backend	объявление возможностей	read	operations — «translated» of V/11.2; features — V/11.2 Н1.5; the kinds and what is editable — GET /kinds and Unit.writable (V/11.14 Н1.1)
-Reference	serverLabels	GET /servers	метки серверов по порядку байтов без server:*	read	a read refusal — [], a log line
+Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0, "pageMax": 1000, "idsMax": 200, "selectMax": 500, "watchMax": 200, "scanPartsMax": 8, "scenariosMax": 1000}	const	there is no polling of server addresses (V/11.2 No. 10); pages — V/11.3 N1.2b; scanPartsMax — a value per measurement; scenariosMax — maxItems V/07.5 N1.1
+Reference	scenarioKinds	—	["io.input", "silent", "text", "unit"]	const	the event kinds of cam (kinds of the manifest): the trigger of a document scenario is cam only (V/07.5 N1.2)
+Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","EXPORT","ALLOW_UNPROTECTED_EXPORT","ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"cam","levels":"cam"},{"key":"arch","levels":"arch"}],"globals":[],"folderFields":["cam"],"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"kindAccess":{"cam":"FULL","arch":"FULL"}}},{"id":"operator","rights":{"feat":[],"kindAccess":{"cam":"MON","arch":"FULL"}}},{"id":"viewer","rights":{"feat":[],"kindAccess":{"cam":"MON"}}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"joins":[{"kind":"cam","levels":["MON","ONLY_ARCHIVE"],"level":"ARCHIVE"}],"passwordPolicy":{"minLength":10,"letter":false,"digit":false,"notLogin":false}}	const	only what is translated: the classes cam, arch (V/11.8 N1 «Classes»; V/11.2 N1.5)
+Reference	export	GET /manifest	exp: the enumerations of settings, the limits of V/08.6 N1.4	read	the export window reference ExportReference, limits.bookmarkPadSec 30 (V/11.20 N1.8)
+Reference	capabilities	backend	capability declaration	read	operations — «translated» of V/11.2; features — V/11.2 N1.5; the kinds and what is editable — GET /kinds and Unit.writable (V/11.14 N1.1)
+Reference	serverLabels	GET /servers	server labels in byte order without server:*	read	a read refusal — [], a log line
 Reference	ruleActions	—	data:VMS/11-backend/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose are not declared: there is no subject (ADR-0103 addendum (4)); duration event — the event has no end
 Reference	ruleConditions	—	data:VMS/11-backend/data/rule-catalog.json#conditions	const	online, recording, armed — the state at the moment of the decision (ADR-0105 item 3)
-Reference	ruleControls	—	data:VMS/11-backend/data/rule-catalog.json#controls	const	ask, escalate with the answer door (V/11.4 Н1.10)
+Reference	ruleControls	—	data:VMS/11-backend/data/rule-catalog.json#controls	const	ask, escalate with the answer door (V/11.4 N1.10)
 Reference	ruleStarts	—	data:VMS/11-backend/data/rule-catalog.json#starts	const	V/07.1 start
 Reference	ruleTargets	—	data:VMS/11-backend/data/rule-catalog.json#targets	const	V/07.1 target
-Reference	ruleCrossDomainActions	—	data:VMS/11-backend/data/rule-catalog.json#crossDomain	const	empty: a Rule from several clusters is not expressible (V/11.4 Н1.10)
+Reference	ruleCrossDomainActions	—	data:VMS/11-backend/data/rule-catalog.json#crossDomain	const	empty: a Rule from several clusters is not expressible (V/11.4 N1.10)
 Reference	layouts, monitors	—	[]	const	there are no client layouts and no video wall
-License	—	GET /domain/cam/books/licence	запись книги decision (V/01.7)	read	read only: no book — items empty (V/11.3 Н1.3)
+License	—	GET /domain/cam/books/licence	the decision book record (V/01.7)	read	read only: no book — items empty (V/11.3 N1.3)
 License	kind	—	"cameras"	const	acfa has no count of its own
-License	used	GET /domain/cam/books/licence	число licensed	read	the cameras of this cluster
+License	used	GET /domain/cam/books/licence	the licensed count	read	the cameras of this cluster
 License	total	GET /domain/cam/books/licence	units	read	for the whole domain
-Access	—	двери домена	снимок домена	both	by the viewer's grants, as a filter (V/11.8 Н1.1, Н1.10)
-Access	version	двери домена	a + SHA-256 индексов	read	V/11.8 Н1.1
-Access	roles	двери домена	V/11.8 Н1.1	both	RoleRow; the domain package; the role rights — lines, unit: — a package per cluster (V/11.8 Н1.5 item 5а)
+Access	—	domain doors	domain snapshot	both	by the viewer's grants, as a filter (V/11.8 N1.1, N1.10)
+Access	version	domain doors	a + SHA-256 of the indices	read	V/11.8 N1.1
+Access	roles	domain doors	V/11.8 N1.1	both	RoleRow; the domain package; the role rights — lines, unit: — a package per cluster (V/11.8 N1.5 item 5a)
 Access	catalogs	—	[]	const	there are no catalogs (ADR-0098 §8)
-Access	streamGrants	GET /domain/grants	строки subject = учётка: *, unit:cam/<id>, folder:<id>	both	V/11.8 Н1.11; * only in clusters of class server
-StreamGrant	account, all, folderIds, deviceIds	GET /domain/grants	V/11.8 Н1.11	both	folderIds reads as []
-AccessUser	hasPassword	GET /domain/users	how — password: true	read	V/11.8 Н1.1
-AccessUser	passwordByAdmin	GET /domain/users	password_by_admin	read	P/08.4 Н2; pw_by does not go out
+Access	streamGrants	GET /domain/grants	rows with subject = account: *, unit:cam/<id>, folder:<id>	both	V/11.8 N1.11; * only in clusters of class server
+StreamGrant	account, all, folderIds, deviceIds	GET /domain/grants	V/11.8 N1.11	both	folderIds reads as []
+AccessUser	hasPassword	GET /domain/users	how — password: true	read	V/11.8 N1.1
+AccessUser	passwordByAdmin	GET /domain/users	password_by_admin	read	P/08.4 N2; pw_by does not go out
 AccessUserWrite	hasPassword, passwordByAdmin	—	—	none	what is sent is not taken
-AccessUserWrite	password	domain/batch	fields.password записи kind user	write	V/11.8 Н1.5 item 6; not stored at backend
-AccessHistoryEntry	—	backend/history	entry	both	/access/history, /access/cell-history by pages (V/11.8 Н1.7); the records with the actor «система» — from role_spread at read (Н1.10)
-Operation	—	GET /backend/operations/<id>	запись	both	the author only (V/11.4 Н1.8)
-Operation	id	backend/operations	id в форме UUID 8-4-4-4-12	read
-Operation	state, total, done, ok, failed, cancelled	GET /backend/operations/<id>	те же поля	read
+AccessUserWrite	password	domain/batch	fields.password of a record of kind user	write	V/11.8 N1.5 item 6; not stored at backend
+AccessHistoryEntry	—	backend/history	entry	both	/access/history, /access/cell-history by pages (V/11.8 N1.7); the records with the actor «система» — from role_spread at read (N1.10)
+Operation	—	GET /backend/operations/<id>	record	both	the author only (V/11.4 N1.8)
+Operation	id	backend/operations	id in UUID form 8-4-4-4-12	read
+Operation	state, total, done, ok, failed, cancelled	GET /backend/operations/<id>	the same fields	read
 Operation	createdAt, finishedAt	GET /backend/operations/<id>	created_at, finished_at	read	seconds in RFC 3339 UTC
-Operation	retryOf	GET /backend/operations/<id>	retry_of в форме UUID	read
-Operation	revertOf, redoOf	backend/undo	revert_of, redo_of в форме UUID; нет — null	read	V/11.4 Н1.8, Н1.12
-Operation	single	backend/undo	single; строки нет — false	read	a write bypassing POST /operations (V/11.4 Н1.12)
-Operation	revertible, redoable	backend/undo	верх стопки; верх очереди повтора	read	computed at read (V/11.4 Н1.12)
+Operation	retryOf	GET /backend/operations/<id>	retry_of in UUID form	read
+Operation	revertOf, redoOf	backend/undo	revert_of, redo_of in UUID form; absent — null	read	V/11.4 N1.8, N1.12
+Operation	single	backend/undo	single; no row — false	read	a write bypassing POST /operations (V/11.4 N1.12)
+Operation	revertible, redoable	backend/undo	top of the stack; head of the redo queue	read	computed at read (V/11.4 N1.12)
 Operation	items	GET /backend/operations/<id>	items	read	OperationItem
-OperationItem	index	GET /backend/operations/<id>	номер элемента	read
-OperationItem	targetId	GET /backend/operations/<id>	items[].body.targetId	read	body — with service: true (P/06.9 Н2)
-OperationItem	state, code	GET /backend/operations/<id>	state, code	read	not_run — V/11.4 Н1.8
-OperationItem	version	GET /backend/operations/<id> + части цели	нынешняя версия цели, если отпечаток итога равен снимку	read	a finished operation, the last ok of the root; otherwise no field (V/11.4 Н1.8)
+OperationItem	index	GET /backend/operations/<id>	element number	read
+OperationItem	targetId	GET /backend/operations/<id>	items[].body.targetId	read	body — with service: true (P/06.9 N2)
+OperationItem	state, code	GET /backend/operations/<id>	state, code	read	not_run — V/11.4 N1.8
+OperationItem	version	GET /backend/operations/<id> + target parts	the current target version if the outcome fingerprint equals the snapshot	read	a finished operation, the last ok of the root; otherwise no field (V/11.4 N1.8)
 OperationItem	createdId	GET /backend/operations/<id>	created_id	read
-OperationItem	params	GET /backend/operations/<id>	field итога incompatible:<id> → {reason: incompatible, with}; folders → {reason: folders}	read	the result does not carry the detail fields (V/11.4 Н1.8, Н1.12)
-stream	—	cam/cameras	строка с main = id камеры	both	a stream of the camera: a part of its assembly, written with it (V/11.4 Н1.15; V/11.3 Н1.3 «Потоки»)
-stream	uid	cam/cameras	UUID device:<кластер>/cam/cameras/<id>; основной поток — device:<кластер>/cam/cameras/<id>#main	read	the main stream is the camera row; its own name keeps one uid per record (V/11.4 Н1.6)
+OperationItem	params	GET /backend/operations/<id>	field of the outcome incompatible:<id> → {reason: incompatible, with}; folders → {reason: folders}	read	the result does not carry the detail fields (V/11.4 N1.8, N1.12)
+stream	—	cam/cameras	a row with main = camera id	both	a stream of the camera: a part of its assembly, written with it (V/11.4 N1.15; V/11.3 N1.3 "Streams")
+stream	uid	cam/cameras	UUID device:<cluster>/cam/cameras/<id>; main stream — device:<cluster>/cam/cameras/<id>#main	read	the main stream is the camera row; its own name keeps one uid per record (V/11.4 N1.6)
 stream	kind	—	"stream"	const
-stream	parentId	cam/cameras	main — UUID камеры	read	set at creation (UnitCreate.parentId)
-stream	version	cam/cameras	индекс хранилища строки	read	in the list element by B4
-stream	properties.streamId	cam/cameras	id строки словом	read	V/11.3 Н1.3 «Потоки»
+stream	parentId	cam/cameras	main — the camera UUID	read	set at creation (UnitCreate.parentId)
+stream	version	cam/cameras	the row's store index	read	in the list element by B4
+stream	properties.streamId	cam/cameras	the row id as a string	read	V/11.3 N1.3 "Streams"
 stream	name	cam/cameras	profile	both
 stream	properties.res, properties.fps	cam/cameras	resolution, fps	both	as for a camera; the main one — the same fields of the camera row
-stream	properties.width, properties.height	cam/cameras	из resolution	read	empty — no fields
-stream	properties.codec, status.link	cam/heartbeats	codec, phase строки	read	not part of the version
-stream	properties.resOptions	cam/devices	resolutions хоста	read
-stream(create)	name, properties.res, properties.fps	cam/cameras	profile, resolution, fps	write	POST /units with parentId — the camera, PATCH /units/{uid} (V/11.4 Н1.15); backend builds source
-camera	properties.presets[].n, properties.presets[].name	cam/preset_labels, cam/heartbeats	номер, label, can.preset_names[n]	read	the caption is older than the driver name; neither — an empty string
-PresetWrite	name	—	—	none	not read: the name comes only from the driver (V/11.4 Н1.16)
-PtzMove	pan, tilt, zoom, focus	cam/ptz_moves	значение × 100, до целого	write	V/11.4 Н1.16; no field — 0
-PtzMove	ttlSec	—	—	write	only expiresAt of the answer: the holder's timeout PTZ_LEASE (V/11.4 Н1.16)
-PtzLease	expiresAt	—	сейчас + ttlSec	read
-LiveRequest	width, height	—	?width=<ш>&height=<в> whepUrl	write	V/03.3 Н1.2
-LiveResult	whepUrl, token, expiresAt	GET /live/where/<cam>	door: <url>/whep/<cam>, token, expires	read	the token does not get into the log and the rows (V/11.4 Н1.15)
+stream	properties.width, properties.height	cam/cameras	from resolution	read	empty — no fields
+stream	properties.codec, status.link	cam/heartbeats	codec, phase of the row	read	not part of the version
+stream	properties.resOptions	cam/devices	the host's resolutions	read
+stream(create)	name, properties.res, properties.fps	cam/cameras	profile, resolution, fps	write	POST /units with parentId — the camera, PATCH /units/{uid} (V/11.4 N1.15); backend builds source
+camera	properties.presets[].n, properties.presets[].name	cam/preset_labels, cam/heartbeats	number, label, can.preset_names[n]	read	the caption is older than the driver name; neither — an empty string
+PresetWrite	name	—	—	none	not read: the name comes only from the driver (V/11.4 N1.16)
+PtzMove	pan, tilt, zoom, focus	cam/ptz_moves	value × 100, rounded to an integer	write	V/11.4 N1.16; no field — 0
+PtzMove	ttlSec	—	—	write	only expiresAt of the answer: the holder's timeout PTZ_LEASE (V/11.4 N1.16)
+PtzLease	expiresAt	—	now + ttlSec	read
+LiveRequest	width, height	—	?width=<width>&height=<height> whepUrl	write	V/03.3 N1.2
+LiveResult	whepUrl, token, expiresAt	GET /live/where/<cam>	door: <url>/whep/<cam>, token, expires	read	the token does not get into the log and the rows (V/11.4 N1.15)
 camera	properties.detectorOptions[].template	device-catalog.json	detectors[].template	read
-camera	properties.detectorOptions[].name, properties.detectorOptions[].kind	detector-kinds.tsv	name, kind по driver, template; нет — template, other	read
+camera	properties.detectorOptions[].name, properties.detectorOptions[].kind	detector-kinds.tsv	name, kind by driver, template; absent — template, other	read
 camera	properties.detectorOptions[].sensitivityMin, properties.detectorOptions[].sensitivityMax	device-catalog.json	range	read	no range — no fields: there is no setting
 camera	properties.detectorOptions[].conflicts	device-catalog.json	conflicts	read
-det	properties.zone.shape, properties.zone.points	det/units, cam/device_units	ключ zone params, mask; поле zone встроенного	both	V/11.3 Н1.3 «zone»
+det	properties.zone.shape, properties.zone.points	det/units, cam/device_units	the zone key of params, mask; the zone field of a built-in detector	both	V/11.3 N1.3 «zone»
 camera|ipsrv|acfa	properties.unitOptions[].model, properties.unitOptions[].name	unit-templates.tsv	template	read
 camera|ipsrv|acfa	properties.unitOptions[].type	unit-templates.tsv	type; controller — acfa	read
 camera|ipsrv|acfa	properties.unitOptions[].events, properties.unitOptions[].operations	device-catalog.json	units[].events, operations	read	no key — no fields
-camera|ipsrv|acfa	properties.unitOptions[].properties	—	—	none	the holder does not pass properties other than address (V/01.4 Н1.4б)
-camera	properties.extraArchives[].archiveId, properties.extraArchives[].recordMode, properties.extraArchives[].stream	rec/recordings	см. camera properties.extraArchives	both
-camera	properties.extraArchives[].retentionDays, properties.extraArchives[].minDepthDays	rec/recordings	retention_days, min_depth_days вниз до целого	both	as for the primary
-camera	properties.extraArchives[].replicaFrom	rec/recordings	как properties.replicaFrom	both	only with recordMode replica
-camera	properties.extraArchives[].replicaLagSec	rec/heartbeats	replica_lag_s элемента записи, вниз до целого	read	only with replica; not part of the version
-camera	properties.extraArchives[].readOnly	rec/recordings	строка cam-<cam>-<том> — true, иначе поля нет	read	in a body — 422 NOT_SUPPORTED, field /properties/extraArchives (V/11.3 Н1.3)
+camera|ipsrv|acfa	properties.unitOptions[].properties	—	—	none	the holder does not pass properties other than address (V/01.4 N1.4b)
+camera	properties.extraArchives[].archiveId, properties.extraArchives[].recordMode, properties.extraArchives[].stream	rec/recordings	see camera properties.extraArchives	both
+camera	properties.extraArchives[].retentionDays, properties.extraArchives[].minDepthDays	rec/recordings	retention_days, min_depth_days rounded down to integers	both	as for the primary
+camera	properties.extraArchives[].replicaFrom	rec/recordings	as properties.replicaFrom	both	only with recordMode replica
+camera	properties.extraArchives[].replicaLagSec	rec/heartbeats	replica_lag_s of the recording element, rounded down to an integer	read	only with replica; not part of the version
+camera	properties.extraArchives[].readOnly	rec/recordings	row cam-<cam>-<volume> — true, otherwise no field	read	in a body — 422 NOT_SUPPORTED, field /properties/extraArchives (V/11.3 N1.3)
 camera	properties.extraArchives[].labels	rec/recordings	labels	both
-camera	properties.extraArchives[].state, properties.extraArchives[].reason	rec/heartbeats	phase, reason элемента status[] записи	read	not part of the version
-StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	the gateway door, V/11.4 Н1.18
-StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	the password once, it does not get into the log and the row (V/11.4 Н1.18)
-StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
-AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	backend has no state; the contract has no field of the turn type (ADR-0093 addendum (13))
-AssistEvent(answer)	text, context	—	V/11.7 Н1.7	read	the answer of explain, writes nothing
-AssistEvent(found)	text, context, conditions, ids, filter, total, truncated	—	V/11.7 Н1.8	read	backend counts ids by the fields of Device, by name; filter — AssistFoundFilter, total only on a full pass
-AssistTurnRequest	world	—	V/11.7 Н1.1	write	not accepted, 422: AssistWorld is the schema of the contract demo page
-AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read	type answer {text, context} — an answer to a question about the system, writes nothing (ADR-0093 addendum (13))
-AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	a plan of type rules; the write is by a person, V/11.13 Н1.7
-AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read
-AssistChange	field, before, after, why	—	V/11.7 Н1.3	read	a secret has no before
-OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 Н1.4, Н1.8
+camera	properties.extraArchives[].state, properties.extraArchives[].reason	rec/heartbeats	phase, reason of the recording's status[] element	read	not part of the version
+StreamAccount	name, disabled, at, by	live/accounts	the same fields	both	the gateway door, V/11.4 N1.18
+StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	the password once, it does not get into the log and the row (V/11.4 N1.18)
+StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 N1.18
+AssistTurnRequest	text, context, secrets	—	V/11.7 N1.1	write	backend has no state; the contract has no field of the turn type (ADR-0093 addendum (13))
+AssistEvent(answer)	text, context	—	V/11.7 N1.7	read	the answer of explain, writes nothing
+AssistEvent(found)	text, context, conditions, ids, filter, total, truncated	—	V/11.7 N1.8	read	backend counts ids by the fields of Device, by name; filter — AssistFoundFilter, total only on a full pass
+AssistTurnRequest	world	—	V/11.7 N1.1	write	not accepted, 422: AssistWorld is the schema of the contract demo page
+AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 N1.4	read	type answer {text, context} — an answer to a question about the system, writes nothing (ADR-0093 addendum (13))
+AssistRuleEdit	table, op, id, ref, body	—	V/11.13 N1.4	read	a plan of type rules; the write is by a person, V/11.13 N1.7
+AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 N1.3	read
+AssistChange	field, before, after, why	—	V/11.7 N1.3	read	a secret has no before
+OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 N1.4, N1.8
 OperationRequest	items	POST /backend/operations	items[].body, root, secret	write
 OperationRequest	expectedVersions	POST /backend/operations	items[].expected	write
-Discovery	—	cam/searches	строка <CLUSTER> кластера входа	read	V/11.4 Н1.9; discovery — V/01.8; another cluster — the entry through it (ADR-0111 item 9)
+Discovery	—	cam/searches	the <CLUSTER> row of the entry cluster	read	V/11.4 N1.9; discovery — V/01.8; another cluster — the entry through it (ADR-0111 item 9)
 Discovery	domainId	GET /session	Domain.id	read
-Discovery	state	cam/searches	idle, searching, done, stopped по строке и часам	read	V/11.4 Н1.9
-Discovery	progress	cam/searches	доля срока, целое	read	V/11.4 Н1.9
+Discovery	state	cam/searches	idle, searching, done, stopped by the row and the clock	read	V/11.4 N1.9
+Discovery	progress	cam/searches	fraction of the duration, an integer	read	V/11.4 N1.9
 Discovery	startedAt	cam/searches	started_at	read
-Discovery	finishedAt	cam/searches	until или stopped_at	read
-Discovery	candidates	cam/found	строки нынешнего search	read	V/11.4 Н1.9
-DiscoveryCandidate	id	cam/found	UUID candidate:<кластер>/cam/found/<h>	read	V/11.4 Н1.6
+Discovery	finishedAt	cam/searches	until or stopped_at	read
+Discovery	candidates	cam/found	rows of the current search	read	V/11.4 N1.9
+DiscoveryCandidate	id	cam/found	UUID candidate:<cluster>/cam/found/<h>	read	V/11.4 N1.6
 DiscoveryCandidate	type	—	"camera"	const	the driver does not tell the kind
 DiscoveryCandidate	name	cam/found	<vendor> <model>	read	the driver does not tell the name
 DiscoveryCandidate	ip	cam/found	ip	read
@@ -528,85 +528,85 @@ DiscoveryCandidate	port	cam/found	port	read
 DiscoveryCandidate	mac	cam/found	mac	read	no field — an empty string
 DiscoveryCandidate	vendor	cam/found	vendor	read
 DiscoveryCandidate	model	cam/found	model	read
-DiscoveryCandidate	support	cam/found	support	read	ok — there is a driver (V/01.8 Н1.2)
+DiscoveryCandidate	support	cam/found	support	read	ok — there is a driver (V/01.8 N1.2)
 DiscoveryCandidate	login, password	—	—	none	not given out: discovery does not pick them up (ADR-0103 addendum (1) item 3)
-camera(probe)	params.ip, params.port, params.vendor	cam/probes	ip, port, vendor	write	the kind action probe, POST /kinds/camera/actions/probe (V/01.8 Н1.3)
-camera(probe)	params.login, params.password	—	—	none	the bodies go no further, the row does not store them; a limit of V/01.8 Н1.3 (V/11.4 Н1.9)
-camera(probe)	result.model	cam/probe_replies	model	read	the first answer with model, otherwise null (V/11.4 Н1.9)
-archive.*	x-archive	—	kinds.json: x-archive вида	const	what a storage kind can: serverRequired, encryption, check, address, recordModes, replicaSource, serverWide, archiveModes, archiveModeDefault, admits — of the kind description (V/11.3 Н1.3 «x-archive of the storage kinds»; V/11.14 Н1.1)
-ArchiveScan	—	detjob/jobs	—	both	of its own cluster; outside the stack (V/11.4 Н1.20)
-ArchiveScan	id	detjob/jobs	UUID archive-scan:<кластер>/detjob/jobs/<name>	read
+camera(probe)	params.ip, params.port, params.vendor	cam/probes	ip, port, vendor	write	the kind action probe, POST /kinds/camera/actions/probe (V/01.8 N1.3)
+camera(probe)	params.login, params.password	—	—	none	the bodies go no further, the row does not store them; a limit of V/01.8 N1.3 (V/11.4 N1.9)
+camera(probe)	result.model	cam/probe_replies	model	read	the first answer with model, otherwise null (V/11.4 N1.9)
+archive.*	x-archive	—	kinds.json: x-archive of the kind	const	what a storage kind can: serverRequired, encryption, check, address, recordModes, replicaSource, serverWide, archiveModes, archiveModeDefault, admits — of the kind description (V/11.3 N1.3 «x-archive of the storage kinds»; V/11.14 N1.1)
+ArchiveScan	—	detjob/jobs	—	both	of its own cluster; outside the stack (V/11.4 N1.20)
+ArchiveScan	id	detjob/jobs	UUID archive-scan:<cluster>/detjob/jobs/<name>	read
 ArchiveScan	deviceId	detjob/jobs	cam	both	a camera of its own cluster
-ArchiveScan	archiveId	detjob/jobs	rec: home записи	both	a recording — a recording of the camera on the volume
+ArchiveScan	archiveId	detjob/jobs	rec: home of the recording	both	a recording — a recording of the camera on the volume
 ArchiveScan	detectorKind	detjob/jobs	kind	both
-ArchiveScan	from, to	detjob/jobs	from, to: секунды Unix ↔ RFC 3339	both	to not later than from — 422 VALIDATION_FAILED, field to
-ArchiveScan	params	detjob/jobs	params как есть	both
-ArchiveScan	mask	detjob/jobs	params, ключ zone; rect, polygon ещё растром в mask	both	the zone codec of the detector (V/11.3 Н1.3)
+ArchiveScan	from, to	detjob/jobs	from, to: Unix seconds ↔ RFC 3339	both	to not later than from — 422 VALIDATION_FAILED, field to
+ArchiveScan	params	detjob/jobs	params as is	both
+ArchiveScan	mask	detjob/jobs	params, the zone key; rect and polygon also as a raster in mask	both	the zone codec of the detector (V/11.3 N1.3)
 ArchiveScan	alarms, labels	detjob/jobs	alarms, labels	both
-ArchiveScan	state	detjob/jobs	end state.result, нет итога — running	read
-ArchiveScan	result	detjob/jobs	state.result элемента configured	read	none — null
-ArchiveScan	version	detjob/jobs	индекс строки, с итогом — ещё .done	read
-ArchiveScanResult	end, covered, asked, events, partial, why	detjob/jobs	поля state.result как есть	read
-ArchiveWatch	—	detedge/watches	—	both	of its own cluster; outside the stack (V/11.4 Н1.20)
-ArchiveWatch	id	detedge/watches	UUID archive-watch:<кластер>/detedge/watches/<name>	read
+ArchiveScan	state	detjob/jobs	end state.result, no outcome — running	read
+ArchiveScan	result	detjob/jobs	state.result of the configured element	read	none — null
+ArchiveScan	version	detjob/jobs	row index, with an outcome — also .done	read
+ArchiveScanResult	end, covered, asked, events, partial, why	detjob/jobs	state.result fields as is	read
+ArchiveWatch	—	detedge/watches	—	both	of its own cluster; outside the stack (V/11.4 N1.20)
+ArchiveWatch	id	detedge/watches	UUID archive-watch:<cluster>/detedge/watches/<name>	read
 ArchiveWatch	deviceId	detedge/watches	cam	both	does not change
 ArchiveWatch	detectorKind	detedge/watches	kind	both	does not change; the row key <cam>-<kind>
-ArchiveWatch	start, keep, enabled, params, alarms, labels	detedge/watches	поля строки	both
-ArchiveWatch	mask	detedge/watches	params, ключ zone; rect, polygon ещё растром в mask	both	the zone codec of the detector (V/11.3 Н1.3)
-ArchiveWatch	archiveId	detedge/watches	rec: home записи; нет — null	both	keep hits is required
-ArchiveWatch	preSec, postSec, joinSec	detedge/watches	pre, post, join вниз до целого	both
-ArchiveWatch	through	detedge/watches	through state.cursor, RFC 3339; нет — null	read	not part of the version
-ArchiveWatch	overrunSec	detedge/watches	overrun state.cursor вниз до целого; нет — 0	read	not part of the version
-ArchiveWatch	version	detedge/watches	индекс строки	read
+ArchiveWatch	start, keep, enabled, params, alarms, labels	detedge/watches	row fields	both
+ArchiveWatch	mask	detedge/watches	params, the zone key; rect and polygon also as a raster in mask	both	the zone codec of the detector (V/11.3 N1.3)
+ArchiveWatch	archiveId	detedge/watches	rec: home of the recording; absent — null	both	keep hits is required
+ArchiveWatch	preSec, postSec, joinSec	detedge/watches	pre, post, join rounded down to integers	both
+ArchiveWatch	through	detedge/watches	through state.cursor, RFC 3339; absent — null	read	not part of the version
+ArchiveWatch	overrunSec	detedge/watches	overrun of state.cursor rounded down to an integer; absent — 0	read	not part of the version
+ArchiveWatch	version	detedge/watches	row index	read
 StreamMessage	—	GET /changes	—	read	the change feed — norm B2 (chapter 5)
-camera|det|ipsrv|eventsrc|acfa	folders	GET /domain/memberof/<кластер>/<ссылка>; вне домена GET /folders?member=	folders	read	GET /units/{uid}; in a listing — none (V/11.3 Н1.3)
-camera	status.observed.recordingTarget	GET /domain/placement/rec/<ref>	serverId — первый сервер cluster; copies — первые серверы кластеров copies без origin карты	read	a write — RecordingTargetRequest; the chosen server is not stored (V/11.3 Н1.3, V/11.4 Н1.14)
-camera	status.observed.direct	GET domain	members[].url есть — true; нет — false	read	camera-cluster only (V/11.3 Н1.3)
-RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies — кластеры serverId из copies, плюс origin с томом edge	write	null clears the assignment; a repeat, two servers of one cluster, the primary's cluster — 422 field copies (V/11.4 Н1.14)
-*	writable	kinds.json + строки урока	name при rename вида; свойства строк both и write вида	read	given out at every record of a lesson kind, narrowed by the record (a w2c card, a camera-cluster, a foreign record without a link — V/11.3 Н1.1, Н1.3); an edit outside it — 422 NOT_SUPPORTED, field
-UnitBrief	—	/units страницами, /tree/children	запись; камера-кластер — единица вида	read	V/11.3 Н1.2б
-UnitBrief	uid, kind, domainId, name, brief.enabled, subtype	GET /units; GET domain/cam/cameras	поля записи; view	read	a camera-cluster: only main empty, class camera (V/11.3 Н1.2б)
-UnitBrief	status.link, status.observed.licenseExceeded	GET /units; GET domain/cam/cameras	поля записи; phase, state единицы	read	V/11.3 Н1.2б
-UnitBrief	status.observed.fault	GET /units; GET domain/cam/cameras	status.observed.fault записи; status.device_state	read	V/11.3 Н1.2б
-UnitBrief	version	GET /units; GET domain/cam/cameras	version записи; r<revision>	read	/objects/delete accepts both forms
-UnitBrief	parentId, brief.serverId	GET /units	поля записи; у камеры-кластера null	read	V/11.3 Н1.2б
-TreeNode	hasChildren	GET /units, GET /tree/children	дети есть; у камеры-кластера true	read	«может быть»: expanding reads the member's tables; Unit.hasChildren the same
-TreeNode	—	GET /tree/children	узел	read	V/11.3 Н1.2б
-TreeNode	id, kind, name, parentId, unit, icon, implements	GET /tree/children	запись; unalloc:<domainId> у нераспределённых; icon, implements — описание вида	read	unit — UnitBrief of the record (V/11.3 Н1.2б)
-TreePath	id, chains	GET /tree/paths	цепочки от корня	read	GET /domain/memberof/…, GET /domain/folders (V/11.3 Н1.2б)
-TreePathStep	id, kind, name	GET /tree/paths	запись	read
-RelayMember	name	GET domain/topology	элемент relays	read	V/11.3 Н1.2а
+camera|det|ipsrv|eventsrc|acfa	folders	GET /domain/memberof/<cluster>/<ref>; outside a domain GET /folders?member=	folders	read	GET /units/{uid}; in a listing — none (V/11.3 N1.3)
+camera	status.observed.recordingTarget	GET /domain/placement/rec/<ref>	serverId — the first server of cluster; copies — the first servers of the copies clusters without the card's origin	read	a write — RecordingTargetRequest; the chosen server is not stored (V/11.3 N1.3, V/11.4 N1.14)
+camera	status.observed.direct	GET domain	members[].url present — true; absent — false	read	camera-cluster only (V/11.3 N1.3)
+RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies — the clusters of serverId from copies, plus origin with an edge volume	write	null clears the assignment; a repeat, two servers of one cluster, the primary's cluster — 422 field copies (V/11.4 N1.14)
+*	writable	kinds.json + lesson rows	name for a kind with rename; properties of the kind's both and write rows	read	given out at every record of a lesson kind, narrowed by the record (a w2c card, a camera-cluster, a foreign record without a link — V/11.3 N1.1, N1.3); an edit outside it — 422 NOT_SUPPORTED, field
+UnitBrief	—	/units in pages, /tree/children	record; a camera-cluster — a unit of the view	read	V/11.3 N1.2b
+UnitBrief	uid, kind, domainId, name, brief.enabled, subtype	GET /units; GET domain/cam/cameras	record fields; view	read	a camera-cluster: only main empty, class camera (V/11.3 N1.2b)
+UnitBrief	status.link, status.observed.licenseExceeded	GET /units; GET domain/cam/cameras	record fields; phase, state of the unit	read	V/11.3 N1.2b
+UnitBrief	status.observed.fault	GET /units; GET domain/cam/cameras	status.observed.fault of the record; status.device_state	read	V/11.3 N1.2b
+UnitBrief	version	GET /units; GET domain/cam/cameras	version of the record; r<revision>	read	/objects/delete accepts both forms
+UnitBrief	parentId, brief.serverId	GET /units	record fields; null for a camera-cluster	read	V/11.3 N1.2b
+TreeNode	hasChildren	GET /units, GET /tree/children	children exist; true for a camera-cluster	read	"may have": expanding reads the member's tables; Unit.hasChildren the same
+TreeNode	—	GET /tree/children	node	read	V/11.3 N1.2b
+TreeNode	id, kind, name, parentId, unit, icon, implements	GET /tree/children	record; unalloc:<domainId> for unallocated servers; icon, implements — the kind description	read	unit — UnitBrief of the record (V/11.3 N1.2b)
+TreePath	id, chains	GET /tree/paths	chains from the root	read	GET /domain/memberof/…, GET /domain/folders (V/11.3 N1.2b)
+TreePathStep	id, kind, name	GET /tree/paths	record	read
+RelayMember	name	GET domain/topology	the relays element	read	V/11.3 N1.2a
 Relay	name	GET domain/relays	relay	read
-Relay	members	GET domain/relays	members	read	GET /domain/relays/<ретранслятор>, up to 5000
-ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 Н1.21
-ScenarioDoc	items	GET domain/shared/auto	fields.scenarios.value	both	settings.shared.auto.scenarios, V/07.5 Н1.1
+Relay	members	GET domain/relays	members	read	GET /domain/relays/<relay>, up to 5000
+ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 N1.21
+ScenarioDoc	items	GET domain/shared/auto	fields.scenarios.value	both	settings.shared.auto.scenarios, V/07.5 N1.1
 Scenario	name, enabled	GET domain/shared/auto	name, enabled	both
 Scenario	ratePerMinute	GET domain/shared/auto	rate_per_minute	both
-ScenarioWhen	deviceId	GET domain/shared/auto	(when.member, when.camera)	both	the record id V/11.4 Н1.6
+ScenarioWhen	deviceId	GET domain/shared/auto	(when.member, when.camera)	both	the record id V/11.4 N1.6
 ScenarioWhen	kind	GET domain/shared/auto	when.kind	both	reference.scenarioKinds
-ScenarioThen	deviceId	GET domain/shared/auto	(then.member, then.camera)	both	the record id V/11.4 Н1.6
+ScenarioThen	deviceId	GET domain/shared/auto	(then.member, then.camera)	both	the record id V/11.4 N1.6
 ScenarioThen	action, n, port	GET domain/shared/auto	then.action, then.n, then.port	both
 ScenarioThen	validForSec	GET domain/shared/auto	then.valid_for	both	the default 30
-ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared	read	the clusters of the document (V/07.5 Н1.6; V/11.4 Н1.21)
+ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared	read	the clusters of the document (V/07.5 N1.6; V/11.4 N1.21)
 ScenarioStatus	decidedWithout	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared, decided_without	read
-RoleRow	objectAccessCount	двери домена	ключи objectAccess	read	V/11.8 Н1.1
-RoleRow	spread	GET /domain	role_spread	read	V/11.8 Н1.10; a non-viewer has no field
-RoleObject	objectId, levels	двери домена	строки unit: роли	both	/access/roles/{id}/objects; a write — AccessChange roleObject
-AccessChange	kind, id, op, value	двери домена	черновик Н1.5 п. 1а	write	V/11.8 Н1.5
-AccessApplyRequest	version	двери домена	версия снимка	write	no If-Match (V/11.8 Н1.5)
-AccessApplyRequest	retryClusters	POST /domain/batch	kind grants, name — кластер	write	V/11.8 Н1.5 item 5а
-AccessApplyResult	notApplied	POST /domain/batch, PUT /domain/roles/<имя>/lines	отказ записи	read	V/11.8 Н1.5 item 5а
-AccessApplyResult	clusters	—	число кластеров правки	read	V/11.8 Н1.5 item 5а
-TimelineSpan	—	rec/timeline	двери записей и мест	read	V/11.4 Н1.22; spanId — without trust
-PlaybackResult	—	rec/segment	адрес куска с токеном	read	V/11.4 Н1.22; the bytes bypass backend
-TalkResult	—	cam/requests, live/where	просьба talk, адрес двери	write	V/11.4 Н1.15
-Hold	—	rec/keeps	ключ {cam}-{from:int}-{to:int}	both	V/11.4 Н1.23; id is the key itself
-Hold	states	GET /rec/heartbeats	keeps, volume	read	V/11.4 Н1.23; not named — not stated
-Bookmark	—	GET /events, POST /marks	kind: mark	both	V/11.4 Н1.24; no edit
-Bookmark	type, to	marks	the journal row kind: mark with to for a span	both	moment | span; a span without to or with to not later than occurred — 422 field to (V/11.4 Н1.24; ADR-0117 addendum (1) item 2)
-ArchiveFetchRequest	—	rec/requests	unit, from, to	write	V/11.4 Н1.25; a request for a day
-JournalEvent	cameraId	GET /events	камера строки	read	V/11.3 Н1.3; filled in journal.event
-Export	—	exp/parts	the leading part and the parts of an order (export)	both	an order is the parts of one export; written in one batch, read grouped (V/11.20 Н1.2, Н1.3)
-ExportPart	—	exp/parts	a part row: cam, rec, source, mode, periods, at, format, settings, cursor, result	read	V/11.20 Н1.3; V/08.6 Н1.1, Н1.3
-ExportGrant	—	GET /session	the grants of exp and of live viewing per camera	read	V/11.20 Н1.1; V/08.6 Н1.5
-RecordingDays	—	GET /rec/where	the timeline of the camera's own recordings, the days in the time zone of the system	read	V/11.20 Н1.7
+RoleRow	objectAccessCount	domain doors	objectAccess keys	read	V/11.8 N1.1
+RoleRow	spread	GET /domain	role_spread	read	V/11.8 N1.10; a non-viewer has no field
+RoleObject	objectId, levels	domain doors	unit: rows of the role	both	/access/roles/{id}/objects; a write — AccessChange roleObject
+AccessChange	kind, id, op, value	domain doors	draft N1.5 item 1a	write	V/11.8 N1.5
+AccessApplyRequest	version	domain doors	snapshot version	write	no If-Match (V/11.8 N1.5)
+AccessApplyRequest	retryClusters	POST /domain/batch	kind grants, name — cluster	write	V/11.8 N1.5 item 5a
+AccessApplyResult	notApplied	POST /domain/batch, PUT /domain/roles/<name>/lines	a write refusal	read	V/11.8 N1.5 item 5a
+AccessApplyResult	clusters	—	the number of clusters in the edit	read	V/11.8 N1.5 item 5a
+TimelineSpan	—	rec/timeline	recording and place doors	read	V/11.4 N1.22; spanId — without trust
+PlaybackResult	—	rec/segment	the piece address with a token	read	V/11.4 N1.22; the bytes bypass backend
+TalkResult	—	cam/requests, live/where	a talk request, the door address	write	V/11.4 N1.15
+Hold	—	rec/keeps	key {cam}-{from:int}-{to:int}	both	V/11.4 N1.23; id is the key itself
+Hold	states	GET /rec/heartbeats	keeps, volume	read	V/11.4 N1.23; not named — not stated
+Bookmark	—	GET /events, POST /marks	kind: mark	both	V/11.4 N1.24; no edit
+Bookmark	type, to	marks	the journal row kind: mark with to for a span	both	moment | span; a span without to or with to not later than occurred — 422 field to (V/11.4 N1.24; ADR-0117 addendum (1) item 2)
+ArchiveFetchRequest	—	rec/requests	unit, from, to	write	V/11.4 N1.25; a request for a day
+JournalEvent	cameraId	GET /events	the row's camera	read	V/11.3 N1.3; filled in journal.event
+Export	—	exp/parts	the leading part and the parts of an order (export)	both	an order is the parts of one export; written in one batch, read grouped (V/11.20 N1.2, N1.3)
+ExportPart	—	exp/parts	a part row: cam, rec, source, mode, periods, at, format, settings, cursor, result	read	V/11.20 N1.3; V/08.6 N1.1, N1.3
+ExportGrant	—	GET /session	the grants of exp and of live viewing per camera	read	V/11.20 N1.1; V/08.6 N1.5
+RecordingDays	—	GET /rec/where	the timeline of the camera's own recordings, the days in the time zone of the system	read	V/11.20 N1.7

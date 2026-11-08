@@ -1,5 +1,5 @@
 {
- "$comment": "The kind descriptions of the w2c kinds of the core (V/11.14 Н1.1; ADR-0116 addendum (9)). Lesson data of «Спецификация VMS»: reference basis: api/fixtures/demo.json of the fork at cb728a42cf2708bae186c95607d8edfcda6462fc (the same fixture bytes used for the existing lesson data) (the source of the profile tables of BACKEND.md), narrowed to the w2c translation: the properties are those of mapping.tsv (readOnly by way read and const, writeOnly by write), the capabilities, parents, children, actions and events — what backend translates. from — the places of the kind, write — none, row or assembly (V/11.14 Н1.1). backend gives out description as UnitKind of GET /kinds. profiles — the Profile entries of the reference set for the profiles the kinds implement: GET /kinds gives them as KindsList.profiles.",
+ "$comment": "The kind descriptions of the w2c kinds of the core (V/11.14 N1.1; ADR-0116 addendum (9)). Lesson data of the VMS specification author: reference basis: api/fixtures/demo.json of the fork at cb728a42cf2708bae186c95607d8edfcda6462fc (the same fixture bytes used for the existing lesson data) (the source of the profile tables of BACKEND.md), narrowed to the w2c translation: the properties are those of mapping.tsv (readOnly by way read and const, writeOnly by write), the capabilities, parents, children, actions and events — what backend translates. from — the places of the kind, write — none, row or assembly (V/11.14 N1.1). backend gives out description as UnitKind of GET /kinds. profiles — the Profile entries of the reference set for the profiles the kinds implement: GET /kinds gives them as KindsList.profiles.",
  "kinds": {
   "domain": {
    "from": "GET /session",
@@ -12,8 +12,8 @@
     },
     "label": {
      "key": "kind.domain",
-     "text": "Домен",
-     "lang": "ru"
+     "text": "Domain",
+     "lang": "en"
     },
     "icon": "domain",
     "parents": [
@@ -34,11 +34,11 @@
       "license": {
        "x-label": {
         "key": "field.license",
-        "text": "Лицензия",
-        "lang": "ru"
+        "text": "Licence",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Лицензия домена; пусто — общая"
+       "description": "Domain licence; empty — shared"
       }
      }
     }
@@ -55,8 +55,8 @@
     },
     "label": {
      "key": "kind.server",
-     "text": "Сервер",
-     "lang": "ru"
+     "text": "Server",
+     "lang": "en"
     },
     "icon": "server",
     "parents": [
@@ -87,18 +87,18 @@
       "allocated": {
        "x-label": {
         "key": "field.allocated",
-        "text": "Распределён",
-        "lang": "ru"
+        "text": "Allocated",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "false — сервер найден в сети домена, но ещё не добавлен («Нераспределённые»)",
+       "description": "false — the server was found on the domain network but has not been added yet (\"Unallocated\")",
        "readOnly": true
       },
       "dns": {
        "x-label": {
         "key": "field.dns",
         "text": "DNS",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
        "description": "DNS"
@@ -106,54 +106,54 @@
       "gateway": {
        "x-label": {
         "key": "field.gateway",
-        "text": "Шлюз",
-        "lang": "ru"
+        "text": "Gateway",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Шлюз"
+       "description": "Gateway"
       },
       "ip": {
        "x-label": {
         "key": "field.ip",
         "text": "IP",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string"
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Метки сервера: по ним размещаются камеры, детекторы, записи, правила"
+       "description": "Server labels: used to place cameras, detectors, recordings and rules"
       },
       "netmask": {
        "x-label": {
         "key": "field.netmask",
-        "text": "Маска сети",
-        "lang": "ru"
+        "text": "Netmask",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Маска сети"
+       "description": "Netmask"
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer"
       },
       "role": {
        "x-label": {
         "key": "field.role",
-        "text": "Роль",
-        "lang": "ru"
+        "text": "Role",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -161,22 +161,22 @@
         "node",
         "standby"
        ],
-       "description": "Основной, узел, резервный",
+       "description": "Primary, node, standby",
        "x-enum-labels": {
         "primary": {
          "key": "enum.role.primary",
-         "text": "Основной",
-         "lang": "ru"
+         "text": "Primary",
+         "lang": "en"
         },
         "node": {
          "key": "enum.role.node",
-         "text": "Узел",
-         "lang": "ru"
+         "text": "Node",
+         "lang": "en"
         },
         "standby": {
          "key": "enum.role.standby",
-         "text": "Резервный",
-         "lang": "ru"
+         "text": "Standby",
+         "lang": "en"
         }
        }
       }
@@ -195,8 +195,8 @@
     },
     "label": {
      "key": "kind.folder",
-     "text": "Папка",
-     "lang": "ru"
+     "text": "Folder",
+     "lang": "en"
     },
     "icon": "folder",
     "parents": [
@@ -236,8 +236,8 @@
     },
     "label": {
      "key": "kind.camera",
-     "text": "Камера",
-     "lang": "ru"
+     "text": "Camera",
+     "lang": "en"
     },
     "icon": "camera",
     "parents": [
@@ -278,8 +278,8 @@
      "class": "cam",
      "label": {
       "key": "access.cam",
-      "text": "Камеры",
-      "lang": "ru"
+      "text": "Cameras",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -297,8 +297,8 @@
       "alarmKinds": {
        "x-label": {
         "key": "field.alarmKinds",
-        "text": "Тревожные виды",
-        "lang": "ru"
+        "text": "Alarm kinds",
+        "lang": "en"
        },
        "type": "array",
        "items": {
@@ -313,20 +313,20 @@
          "unit"
         ]
        },
-       "description": "Что считать тревогой у камеры и детектора: варианты из reference.eventKinds. Это о классе события, а не о жизни тревоги"
+       "description": "What counts as an alarm for a camera and detector: options from reference.eventKinds. This describes the event class, not the alarm lifecycle"
       },
       "archiveId": {
        "x-label": {
         "key": "field.archiveId",
-        "text": "Архив",
-        "lang": "ru"
+        "text": "Archive",
+        "lang": "en"
        },
        "type": [
         "string",
         "null"
        ],
        "format": "uuid",
-       "description": "Основное хранилище записи",
+       "description": "Primary recording storage",
        "x-ref": {
         "implements": [
          "vms.archive/1"
@@ -337,15 +337,15 @@
       "audioDeviceId": {
        "x-label": {
         "key": "field.audioDeviceId",
-        "text": "Микрофон записи",
-        "lang": "ru"
+        "text": "Recording microphone",
+        "lang": "en"
        },
        "type": [
         "string",
         "null"
        ],
        "format": "uuid",
-       "description": "Какой микрофон пишется в архив: id записи mic этой камеры. null — первый микрофон",
+       "description": "Which microphone is recorded to the archive: the id of this camera's mic record. null — the first microphone",
        "x-ref": {
         "kinds": [
          "mic"
@@ -356,8 +356,8 @@
       "azimuth": {
        "x-label": {
         "key": "field.azimuth",
-        "text": "Азимут",
-        "lang": "ru"
+        "text": "Azimuth",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -367,11 +367,11 @@
       "codec": {
        "x-label": {
         "key": "field.codec",
-        "text": "Кодек",
-        "lang": "ru"
+        "text": "Codec",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Только чтение: что отдаёт устройство",
+       "description": "Read only: what the device supplies",
        "readOnly": true
       },
       "configMode": {
@@ -381,7 +381,7 @@
         "default",
         "template"
        ],
-       "description": "Разовый выбор при добавлении, в записи не хранится. current — на камере ничего не меняется; default — умолчания модели уходят на камеру, камера без модели — 422 VALIDATION_FAILED, field: configMode; template — копия с камеры templateId той же модели",
+       "description": "A one-time choice when adding, not stored in the row. current — change nothing on the camera; default — send the model defaults to the camera, a camera without a model — 422 VALIDATION_FAILED, field: configMode; template — copy from templateId, a camera of the same model",
        "x-immutable": true,
        "x-transient": true,
        "writeOnly": true
@@ -395,11 +395,11 @@
          "name",
          "kind"
         ],
-        "description": "Встроенный детектор, который умеет камера. Говорит драйвер",
+        "description": "A built-in detector supported by the camera. Reported by the driver",
         "properties": {
          "template": {
           "type": "string",
-          "description": "Шаблон: уходит в POST /devices у det"
+          "description": "Template: sent to POST /devices of det"
          },
          "name": {
           "type": "string"
@@ -415,18 +415,18 @@
            "lpr",
            "other"
           ],
-          "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template"
+          "description": "Detector kind. other — a kind outside the list; its caption is name from detectorOptions for template"
          },
          "sensitivityMin": {
           "type": "integer",
-          "description": "Нет поля — настройки нет: запись sensitivity — 422 NOT_SUPPORTED, поле скрыто"
+          "description": "No field — no setting: writing sensitivity — 422 NOT_SUPPORTED, the field is hidden"
          },
          "sensitivityMax": {
           "type": "integer"
          },
          "conflicts": {
           "type": "array",
-          "description": "Шаблоны, с которыми нельзя включить вместе на одном канале: 409 BUSY, params.reason: incompatible",
+          "description": "Templates that cannot be enabled together on one channel: 409 BUSY, params.reason: incompatible",
           "items": {
            "type": "string"
           }
@@ -434,22 +434,22 @@
         },
         "additionalProperties": false
        },
-       "description": "Только чтение: встроенные детекторы камеры. Нет поля — встроенный детектор не предлагать",
+       "description": "Read only: the camera's built-in detectors. No field — do not offer a built-in detector",
        "readOnly": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "extraArchives": {
        "x-label": {
         "key": "field.extraArchives",
-        "text": "Дополнительные архивы",
-        "lang": "ru"
+        "text": "Additional archives",
+        "lang": "en"
        },
        "type": "array",
        "items": {
@@ -481,33 +481,33 @@
            "backup",
            null
           ],
-          "description": "Режим записи. replica — забирать записи без постоянного потока. backup — живой поток только на время сбоя основной записи: только в extraArchives, на архиве, где это значение есть в recordModes его вида"
+          "description": "Recording mode. replica — fetch recordings without a continuous stream. backup — a live stream only while the primary recording fails: only in extraArchives, on an archive whose kind includes this value in recordModes"
          },
          "stream": {
           "type": [
            "string",
            "null"
           ],
-          "description": "Поток записи: id из Device.streams"
+          "description": "Recording stream: an id from Device.streams"
          },
          "labels": {
           "type": "array",
-          "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт",
+          "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording",
           "items": {
            "type": "string"
           }
          },
          "state": {
           "type": "string",
-          "description": "Только чтение: состояние записи"
+          "description": "Read only: recording state"
          },
          "reason": {
           "type": "string",
-          "description": "Только чтение: слово сервера о записи: почему не идёт, потеря минут, источник больше архива назначения"
+          "description": "Read only: the server's report on the recording: why it is not running, lost minutes, the source is larger than the destination archive"
          },
          "readOnly": {
           "type": "boolean",
-          "description": "Только чтение: архив на весь сервер (serverWide), строку показывает сервер. В запись такую строку не посылают: 422 NOT_SUPPORTED, field: extraArchives"
+          "description": "Read only: a server-wide archive (serverWide); the server supplies the row. Do not send such a row in a write: 422 NOT_SUPPORTED, field: extraArchives"
          },
          "replicaFrom": {
           "type": [
@@ -515,7 +515,7 @@
            "null"
           ],
           "format": "uuid",
-          "description": "Откуда забирает режим replica: null — встроенное хранилище камеры (у камеры w2c — её карта), иначе archiveId другого архива этой камеры, вид с replicaSource. С встроенного — только основной поток: другой — 422 NOT_SUPPORTED, field: stream. Из архива — только его поток: другой — 422 VALIDATION_FAILED, field: stream. Нет источника, архив забирает у самого себя, цикл — 422 VALIDATION_FAILED, field: replicaFrom. Источник сняли позже: запись ждёт и говорит причину, уже забранное живёт своим сроком",
+          "description": "The source for replica mode: null — the camera's built-in storage (its card for a w2c camera), otherwise archiveId of another archive of this camera whose kind has replicaSource. From built-in storage — only the main stream: another — 422 NOT_SUPPORTED, field: stream. From an archive — only its stream: another — 422 VALIDATION_FAILED, field: stream. No source, an archive fetching from itself, a cycle — 422 VALIDATION_FAILED, field: replicaFrom. If the source is removed later, the recording waits and reports the reason; recordings already fetched keep their own retention period",
           "x-ref": {
            "implements": [
             "vms.archive/1"
@@ -526,78 +526,78 @@
          "replicaLagSec": {
           "type": "integer",
           "minimum": 0,
-          "description": "Только чтение: на сколько секунд replica отстаёт от источника. Период выбирает сервер, настройки нет"
+          "description": "Read only: how many seconds replica lags behind its source. The server chooses the interval; there is no setting"
          },
          "retentionDays": {
           "type": "integer",
           "minimum": 0,
-          "description": "Срок хранения этой записи, дней; 0 — без ограничения. Поля нет — Archive.retentionDays: умолчание новой записи"
+          "description": "Retention period of this recording, in days; 0 — unlimited. No field — Archive.retentionDays: the default for a new recording"
          },
          "minDepthDays": {
           "type": "integer",
           "minimum": 0,
-          "description": "Наименьшая глубина этой записи, дней: ниже неё тревога. Больше срока — 422 VALIDATION_FAILED, field: minDepthDays"
+          "description": "Minimum depth of this recording, in days: an alarm below it. Greater than the retention period — 422 VALIDATION_FAILED, field: minDepthDays"
          }
         },
         "additionalProperties": false
        },
-       "description": "Дополнительные хранилища записи. Строки readOnly показывает сервер: архив на весь сервер работает со всеми его камерами"
+       "description": "Additional recording storage. The server supplies readOnly rows: a server-wide archive works with all its cameras"
       },
       "firmware": {
        "x-label": {
         "key": "field.firmware",
-        "text": "Драйвер",
-        "lang": "ru"
+        "text": "Driver",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Версия драйвера. Обновления прошивки нет"
+       "description": "Driver version. No firmware update"
       },
       "fps": {
        "x-label": {
         "key": "field.fps",
-        "text": "к/с",
-        "lang": "ru"
+        "text": "fps",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Частота кадров основного потока"
+       "description": "Main stream frame rate"
       },
       "identifier": {
        "x-label": {
         "key": "field.identifier",
-        "text": "Номер",
-        "lang": "ru"
+        "text": "Number",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер устройства в системе («16», «3/1» у канала регистратора)",
+       "description": "Device number in the system (\"16\", \"3/1\" for a recorder channel)",
        "x-search": true
       },
       "ip": {
        "x-label": {
         "key": "field.ip",
         "text": "IP",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес. У eventsrc — адрес сервера или имя кассы, у драйвера, что подключается сам, — адрес кассы; 0.0.0.0 и :: — 422 VALIDATION_FAILED, field: ip",
+       "description": "Address. For eventsrc — the server address or till name; for a driver that connects by itself — the till address; 0.0.0.0 and :: — 422 VALIDATION_FAILED, field: ip",
        "x-search": true
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+       "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording"
       },
       "lat": {
        "x-label": {
         "key": "field.lat",
-        "text": "Широта",
-        "lang": "ru"
+        "text": "Latitude",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -607,16 +607,16 @@
       "login": {
        "x-label": {
         "key": "field.login",
-        "text": "Имя пользователя",
-        "lang": "ru"
+        "text": "Username",
+        "lang": "en"
        },
        "type": "string"
       },
       "lon": {
        "x-label": {
         "key": "field.lon",
-        "text": "Долгота",
-        "lang": "ru"
+        "text": "Longitude",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -627,62 +627,62 @@
        "x-label": {
         "key": "field.mac",
         "text": "MAC",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "MAC. У камеры, источника событий и СКУД — только из поиска: при создании с candidateId, иначе принимается и не хранится; PATCH — 422 NOT_SUPPORTED. У ipsrv с записью устройства правится",
+       "description": "MAC. For a camera, event source and access control device — only from discovery: at creation with candidateId, otherwise accepted and not stored; PATCH — 422 NOT_SUPPORTED. Editable for ipsrv with a device row",
        "x-immutable": true
       },
       "minDepthDays": {
        "x-label": {
         "key": "field.minDepthDays",
-        "text": "Глубина не меньше, дней",
-        "lang": "ru"
+        "text": "Minimum depth, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Наименьшая глубина этой записи, дней: ниже неё тревога. Больше срока — 422 VALIDATION_FAILED, field: minDepthDays",
+       "description": "Minimum depth of this recording, in days: an alarm below it. Greater than the retention period — 422 VALIDATION_FAILED, field: minDepthDays",
        "minimum": 0
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-search": true
       },
       "password": {
        "x-label": {
         "key": "field.password",
-        "text": "Пароль",
-        "lang": "ru"
+        "text": "Password",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Новый пароль; в ответах его нет",
+       "description": "New password; absent from responses",
        "x-ui-widget": "password",
        "writeOnly": true
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer"
       },
       "preRecordSec": {
        "x-label": {
         "key": "field.preRecordSec",
-        "text": "Предзапись, с",
-        "lang": "ru"
+        "text": "Pre-recording, s",
+        "lang": "en"
        },
        "type": "integer"
       },
       "presetMax": {
        "type": "integer",
-       "description": "Только чтение: предел номера пресета",
+       "description": "Read only: maximum preset number",
        "minimum": 1,
        "readOnly": true
       },
@@ -701,24 +701,24 @@
          },
          "name": {
           "type": "string",
-          "description": "Имя: оператора или драйвера, имя оператора старше. Пустое — без подписи"
+          "description": "Name: from the operator or driver; the operator's name takes precedence. Empty — no caption"
          }
         },
         "additionalProperties": false
        },
-       "description": "Сохранённые номера. Имя пустое — пресет сохранён без подписи, форма показывает его номером. Имя оператора старше имени драйвера",
+       "description": "Saved numbers. An empty name means the preset is saved without a caption; the form shows its number. The operator's name takes precedence over the driver's name",
        "readOnly": true
       },
       "ptz": {
        "type": "boolean",
-       "description": "Только чтение: камера поворачивается. PTZ — свойство камеры, своей записи нет",
+       "description": "Read only: the camera can turn. PTZ is a camera property, with no record of its own",
        "readOnly": true
       },
       "recordDetectorIds": {
        "x-label": {
         "key": "field.recordDetectorIds",
-        "text": "Запись по детекторам",
-        "lang": "ru"
+        "text": "Recording by detectors",
+        "lang": "en"
        },
        "type": "array",
        "items": {
@@ -730,14 +730,14 @@
          ]
         }
        },
-       "description": "Детекторы, по которым пишется (recordMode=motion)",
+       "description": "Detectors that trigger recording (recordMode=motion)",
        "x-ui-widget": "ref"
       },
       "recordMode": {
        "x-label": {
         "key": "field.recordMode",
-        "text": "Когда писать",
-        "lang": "ru"
+        "text": "When to record",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -748,65 +748,65 @@
         "replica",
         "backup"
        ],
-       "description": "Режим записи. replica — забирать записи без постоянного потока. backup — живой поток только на время сбоя основной записи: только в extraArchives, на архиве, где это значение есть в recordModes его вида",
+       "description": "Recording mode. replica — fetch recordings without a continuous stream. backup — a live stream only while the primary recording fails: only in extraArchives, on an archive whose kind includes this value in recordModes",
        "x-enum-labels": {
         "none": {
          "key": "enum.recordMode.none",
-         "text": "Нет",
-         "lang": "ru"
+         "text": "None",
+         "lang": "en"
         },
         "always": {
          "key": "enum.recordMode.always",
-         "text": "Всегда",
-         "lang": "ru"
+         "text": "Always",
+         "lang": "en"
         },
         "motion": {
          "key": "enum.recordMode.motion",
-         "text": "По детектору",
-         "lang": "ru"
+         "text": "By detector",
+         "lang": "en"
         },
         "sched": {
          "key": "enum.recordMode.sched",
-         "text": "По расписанию",
-         "lang": "ru"
+         "text": "By schedule",
+         "lang": "en"
         },
         "replica": {
          "key": "enum.recordMode.replica",
-         "text": "Репликация",
-         "lang": "ru"
+         "text": "Replication",
+         "lang": "en"
         },
         "backup": {
          "key": "enum.recordMode.backup",
-         "text": "Резерв при сбое",
-         "lang": "ru"
+         "text": "Backup on failure",
+         "lang": "en"
         }
        }
       },
       "recordScheduleId": {
        "x-label": {
         "key": "field.recordScheduleId",
-        "text": "Расписание записи",
-        "lang": "ru"
+        "text": "Recording schedule",
+        "lang": "en"
        },
        "type": [
         "string",
         "null"
        ],
        "format": "uuid",
-       "description": "Расписание режима sched. У sched обязательно: нет — 422 VALIDATION_FAILED, field: recordScheduleId. Расписание сняли — запись ждёт и говорит причину"
+       "description": "Schedule for sched mode. Required for sched: absent — 422 VALIDATION_FAILED, field: recordScheduleId. If the schedule is removed, the recording waits and reports the reason"
       },
       "replicaFrom": {
        "x-label": {
         "key": "field.replicaFrom",
-        "text": "Откуда забирать",
-        "lang": "ru"
+        "text": "Fetch from",
+        "lang": "en"
        },
        "type": [
         "string",
         "null"
        ],
        "format": "uuid",
-       "description": "Откуда забирает режим replica: null — встроенное хранилище камеры (у камеры w2c — её карта), иначе archiveId другого архива этой камеры, вид с replicaSource. С встроенного — только основной поток: другой — 422 NOT_SUPPORTED, field: stream. Из архива — только его поток: другой — 422 VALIDATION_FAILED, field: stream. Нет источника, архив забирает у самого себя, цикл — 422 VALIDATION_FAILED, field: replicaFrom. Источник сняли позже: запись ждёт и говорит причину, уже забранное живёт своим сроком",
+       "description": "The source for replica mode: null — the camera's built-in storage (its card for a w2c camera), otherwise archiveId of another archive of this camera whose kind has replicaSource. From built-in storage — only the main stream: another — 422 NOT_SUPPORTED, field: stream. From an archive — only its stream: another — 422 VALIDATION_FAILED, field: stream. No source, an archive fetching from itself, a cycle — 422 VALIDATION_FAILED, field: replicaFrom. If the source is removed later, the recording waits and reports the reason; recordings already fetched keep their own retention period",
        "x-ref": {
         "implements": [
          "vms.archive/1"
@@ -818,11 +818,11 @@
       "res": {
        "x-label": {
         "key": "field.res",
-        "text": "Разрешение",
-        "lang": "ru"
+        "text": "Resolution",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Разрешение основного потока: ширина x высота, латинская x. Значение вне resOptions — 422 VALIDATION_FAILED",
+       "description": "Main stream resolution: width x height, Latin x. A value outside resOptions — 422 VALIDATION_FAILED",
        "pattern": "^[0-9]+x[0-9]+$"
       },
       "resOptions": {
@@ -830,37 +830,37 @@
        "items": {
         "type": "string"
        },
-       "description": "Только чтение: допустимые разрешения основного потока. Нет поля — ввод руками: до первого ответа устройства и у моделей без описания список неизвестен",
+       "description": "Read only: allowed main stream resolutions. No field — manual input: the list is unknown before the device's first response and for models without a description",
        "readOnly": true
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Срок хранения этой записи, дней; 0 — без ограничения. Поля нет — Archive.retentionDays: умолчание новой записи",
+       "description": "Retention period of this recording, in days; 0 — unlimited. No field — Archive.retentionDays: the default for a new recording",
        "minimum": 0
       },
       "rtspUrl": {
        "x-label": {
         "key": "field.rtspUrl",
-        "text": "Адрес RTSP",
-        "lang": "ru"
+        "text": "RTSP address",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
+       "description": "Camera address, readable and writable. Creating a camera without rtspUrl and without vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. A camera under a recorder needs no address: it is reached through the recorder"
       },
       "serverId": {
        "x-label": {
         "key": "field.serverId",
-        "text": "Сервер",
-        "lang": "ru"
+        "text": "Server",
+        "lang": "en"
        },
        "type": "string",
        "format": "uuid",
-       "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы. У eventsrc — запись: без него сервер выбирает система и предупреждает в faultText, переноса при падении нет",
+       "description": "Server: the server the camera and recorder are connected to (derived from recording storage), the detector computation server, the service server. Writable for eventsrc: without it the system chooses a server and warns in faultText; no move on failure",
        "x-ref": {
         "kinds": [
          "server"
@@ -871,26 +871,26 @@
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       },
       "stream": {
        "x-label": {
         "key": "field.stream",
-        "text": "Поток",
-        "lang": "ru"
+        "text": "Stream",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Поток записи камеры или поток, по которому считает детектор: id из Device.streams камеры"
+       "description": "Camera recording stream or the stream processed by the detector: an id from the camera's Device.streams"
       },
       "templateId": {
        "type": "string",
        "format": "uuid",
-       "description": "configMode: template. Копируются разрешение и частота кадров потоков, сами потоки, firmware. Адрес, логин, пароль, имя, записи, папки, детекторы, norm — нет. Другая модель или нет камеры — 422 VALIDATION_FAILED, field: templateId",
+       "description": "configMode: template. Copy stream resolution and frame rate, the streams themselves and firmware. Do not copy the address, login, password, name, recordings, folders, detectors or norm. A different model or no camera — 422 VALIDATION_FAILED, field: templateId",
        "x-immutable": true,
        "x-transient": true,
        "writeOnly": true
@@ -904,11 +904,11 @@
          "name",
          "type"
         ],
-        "description": "Единица СКУД, которую можно завести: шаблон драйвера",
+        "description": "An access control unit that can be created: a driver template",
         "properties": {
          "model": {
           "type": "string",
-          "description": "Шаблон: уходит в Device.model при создании"
+          "description": "Template: sent as Device.model at creation"
          },
          "name": {
           "type": "string"
@@ -934,7 +934,7 @@
            "email",
            "sms"
           ],
-          "description": "Вид устройства"
+          "description": "Device kind"
          },
          "properties": {
           "type": "array",
@@ -943,7 +943,7 @@
            "required": [
             "key"
            ],
-           "description": "Настройка единицы: ключ, варианты или значение по умолчанию",
+           "description": "Unit setting: a key, options or a default value",
            "properties": {
             "key": {
              "type": "string"
@@ -963,14 +963,14 @@
          },
          "events": {
           "type": "array",
-          "description": "Слова событий: варианты match.word у вида unit",
+          "description": "Event words: match.word options for kind unit",
           "items": {
            "type": "string"
           }
          },
          "operations": {
           "type": "array",
-          "description": "Команды шаблона",
+          "description": "Template commands",
           "items": {
            "type": "string"
           }
@@ -978,14 +978,14 @@
         },
         "additionalProperties": false
        },
-       "description": "Только чтение, у acfa и устройств, под которыми бывают единицы: какие единицы можно завести",
+       "description": "Read only, for acfa and devices that can have units: which units can be created",
        "readOnly": true
       },
       "vendor": {
        "x-label": {
         "key": "field.vendor",
-        "text": "Производитель",
-        "lang": "ru"
+        "text": "Vendor",
+        "lang": "en"
        },
        "type": "string",
        "x-search": true
@@ -993,11 +993,11 @@
       "videoChannel": {
        "x-label": {
         "key": "field.videoChannel",
-        "text": "Видеоканал",
-        "lang": "ru"
+        "text": "Video channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Видеоканал камеры регистратора, с 1"
+       "description": "Video channel of a recorder camera, counted from 1"
       }
      }
     },
@@ -1006,8 +1006,8 @@
       "id": "probe",
       "label": {
        "key": "action.camera.probe",
-       "text": "Определить модель",
-       "lang": "ru"
+       "text": "Detect model",
+       "lang": "en"
       },
       "execution": "instant",
       "scope": [
@@ -1034,7 +1034,7 @@
         },
         "login": {
          "type": "string",
-         "description": "Определить модель может только драйвер: без логина и пароля система вправе ответить model: null"
+         "description": "Only the driver can detect the model: without a login and password the system may answer model: null"
         },
         "password": {
          "type": "string"
@@ -1053,7 +1053,7 @@
           "string",
           "null"
          ],
-         "description": "Модель, которую сообщило устройство; null — не определилась"
+         "description": "The model reported by the device; null — not detected"
         }
        },
        "additionalProperties": false
@@ -1063,8 +1063,8 @@
       "id": "arm",
       "label": {
        "key": "action.camera.arm",
-       "text": "Взять на охрану",
-       "lang": "ru"
+       "text": "Arm",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1082,8 +1082,8 @@
       "id": "disarm",
       "label": {
        "key": "action.camera.disarm",
-       "text": "Снять с охраны",
-       "lang": "ru"
+       "text": "Disarm",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1101,8 +1101,8 @@
       "id": "preset",
       "label": {
        "key": "action.camera.preset",
-       "text": "Перейти на пресет",
-       "lang": "ru"
+       "text": "Go to preset",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1128,8 +1128,8 @@
       "id": "record",
       "label": {
        "key": "action.camera.record",
-       "text": "Записывать",
-       "lang": "ru"
+       "text": "Record",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1164,8 +1164,8 @@
       "id": "disable",
       "label": {
        "key": "action.camera.disable",
-       "text": "Выключить на время",
-       "lang": "ru"
+       "text": "Disable temporarily",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1191,8 +1191,8 @@
       "id": "detect",
       "label": {
        "key": "action.camera.detect",
-       "text": "Включить детектор на время",
-       "lang": "ru"
+       "text": "Enable detector temporarily",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1231,8 +1231,8 @@
       "id": "scan",
       "label": {
        "key": "action.camera.scan",
-       "text": "Проверить архив детектором",
-       "lang": "ru"
+       "text": "Scan archive with detector",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1278,8 +1278,8 @@
       "id": "alarm",
       "label": {
        "key": "action.camera.alarm",
-       "text": "Поднять тревогу",
-       "lang": "ru"
+       "text": "Raise alarm",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -1311,8 +1311,8 @@
       "id": "motion",
       "label": {
        "key": "event.motion",
-       "text": "Движение",
-       "lang": "ru"
+       "text": "Motion",
+       "lang": "en"
       },
       "ends": true,
       "right": {
@@ -1323,8 +1323,8 @@
       "id": "linecross",
       "label": {
        "key": "event.linecross",
-       "text": "Пересечение линии",
-       "lang": "ru"
+       "text": "Line crossing",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1334,8 +1334,8 @@
       "id": "abandoned",
       "label": {
        "key": "event.abandoned",
-       "text": "Оставленный предмет",
-       "lang": "ru"
+       "text": "Abandoned object",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1345,8 +1345,8 @@
       "id": "disappeared",
       "label": {
        "key": "event.disappeared",
-       "text": "Исчезновение предмета",
-       "lang": "ru"
+       "text": "Disappeared object",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1356,8 +1356,8 @@
       "id": "crowd",
       "label": {
        "key": "event.crowd",
-       "text": "Скопление людей",
-       "lang": "ru"
+       "text": "Crowd",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1367,8 +1367,8 @@
       "id": "lpr",
       "label": {
        "key": "event.lpr",
-       "text": "Номер",
-       "lang": "ru"
+       "text": "Number",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1378,8 +1378,8 @@
       "id": "silent",
       "label": {
        "key": "event.silent",
-       "text": "Обрыв потока камеры",
-       "lang": "ru"
+       "text": "Camera stream lost",
+       "lang": "en"
       },
       "right": {
        "level": "FULL"
@@ -1389,8 +1389,8 @@
       "id": "segment.lost",
       "label": {
        "key": "event.segment.lost",
-       "text": "Потеря записи",
-       "lang": "ru"
+       "text": "Recording lost",
+       "lang": "en"
       },
       "alarm": false,
       "right": {
@@ -1417,8 +1417,8 @@
     },
     "label": {
      "key": "kind.det",
-     "text": "Детектор",
-     "lang": "ru"
+     "text": "Detector",
+     "lang": "en"
     },
     "icon": "det",
     "parents": [
@@ -1445,8 +1445,8 @@
       "alarmKinds": {
        "x-label": {
         "key": "field.alarmKinds",
-        "text": "Тревожные виды",
-        "lang": "ru"
+        "text": "Alarm kinds",
+        "lang": "en"
        },
        "type": "array",
        "items": {
@@ -1461,17 +1461,17 @@
          "unit"
         ]
        },
-       "description": "Что считать тревогой у камеры и детектора: варианты из reference.eventKinds. Это о классе события, а не о жизни тревоги"
+       "description": "What counts as an alarm for a camera and detector: options from reference.eventKinds. This describes the event class, not the alarm lifecycle"
       },
       "builtin": {
        "type": "boolean",
-       "description": "Детектор работает на камере. Заводит оператор, потока на сервер не требует"
+       "description": "The detector runs on the camera. Created by the operator; requires no stream to the server"
       },
       "detectorKind": {
        "x-label": {
         "key": "field.detectorKind",
-        "text": "Вид детектора",
-        "lang": "ru"
+        "text": "Detector kind",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -1483,86 +1483,86 @@
         "lpr",
         "other"
        ],
-       "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template",
+       "description": "Detector kind. other — a kind outside the list; its caption is name from detectorOptions for template",
        "x-enum-labels": {
         "motion": {
          "key": "enum.detectorKind.motion",
-         "text": "Движение",
-         "lang": "ru"
+         "text": "Motion",
+         "lang": "en"
         },
         "linecross": {
          "key": "enum.detectorKind.linecross",
-         "text": "Пересечение линии",
-         "lang": "ru"
+         "text": "Line crossing",
+         "lang": "en"
         },
         "abandoned": {
          "key": "enum.detectorKind.abandoned",
-         "text": "Оставленный предмет",
-         "lang": "ru"
+         "text": "Abandoned object",
+         "lang": "en"
         },
         "disappeared": {
          "key": "enum.detectorKind.disappeared",
-         "text": "Исчезновение предмета",
-         "lang": "ru"
+         "text": "Disappeared object",
+         "lang": "en"
         },
         "crowd": {
          "key": "enum.detectorKind.crowd",
-         "text": "Скопление людей",
-         "lang": "ru"
+         "text": "Crowd",
+         "lang": "en"
         },
         "lpr": {
          "key": "enum.detectorKind.lpr",
-         "text": "Номер",
-         "lang": "ru"
+         "text": "Number",
+         "lang": "en"
         },
         "other": {
          "key": "enum.detectorKind.other",
-         "text": "Другой",
-         "lang": "ru"
+         "text": "Other",
+         "lang": "en"
         }
        }
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+       "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording"
       },
       "params": {
        "type": "string",
-       "description": "Настройки серверного детектора строкой"
+       "description": "Server detector settings as a string"
       },
       "sensitivity": {
        "x-label": {
         "key": "field.sensitivity",
-        "text": "Чувствительность",
-        "lang": "ru"
+        "text": "Sensitivity",
+        "lang": "en"
        },
        "type": "integer"
       },
       "serverId": {
        "x-label": {
         "key": "field.serverId",
-        "text": "Сервер",
-        "lang": "ru"
+        "text": "Server",
+        "lang": "en"
        },
        "type": "string",
        "format": "uuid",
-       "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы. У eventsrc — запись: без него сервер выбирает система и предупреждает в faultText, переноса при падении нет",
+       "description": "Server: the server the camera and recorder are connected to (derived from recording storage), the detector computation server, the service server. Writable for eventsrc: without it the system chooses a server and warns in faultText; no move on failure",
        "x-ref": {
         "kinds": [
          "server"
@@ -1573,22 +1573,22 @@
       "stream": {
        "x-label": {
         "key": "field.stream",
-        "text": "Поток",
-        "lang": "ru"
+        "text": "Stream",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Поток записи камеры или поток, по которому считает детектор: id из Device.streams камеры"
+       "description": "Camera recording stream or the stream processed by the detector: an id from the camera's Device.streams"
       },
       "template": {
        "type": "string",
-       "description": "det с builtin: true: шаблон из detectorOptions камеры. Задаётся при создании",
+       "description": "det with builtin: true: a template from the camera's detectorOptions. Set at creation",
        "x-immutable": true
       },
       "zone": {
        "x-label": {
         "key": "field.zone",
-        "text": "Зона",
-        "lang": "ru"
+        "text": "Zone",
+        "lang": "en"
        },
        "type": "object",
        "properties": {
@@ -1599,11 +1599,11 @@
           "polygon",
           "line"
          ],
-         "description": "rect, line — две точки, polygon — от трёх. Иначе 422 VALIDATION_FAILED, field: zone"
+         "description": "rect, line — two points; polygon — at least three. Otherwise 422 VALIDATION_FAILED, field: zone"
         },
         "points": {
          "type": "array",
-         "description": "Точки [x, y], доли кадра от 0 до 1",
+         "description": "Points [x, y], frame fractions from 0 to 1",
          "items": {
           "type": "array",
           "items": {
@@ -1619,7 +1619,7 @@
         "points"
        ],
        "additionalProperties": false,
-       "description": "Зона детектора, у встроенного и серверного. Нет поля — вся картинка"
+       "description": "Detector zone, for both built-in and server detectors. No field — the whole picture"
       }
      }
     }
@@ -1636,8 +1636,8 @@
     },
     "label": {
      "key": "kind.ipsrv",
-     "text": "IP-сервер",
-     "lang": "ru"
+     "text": "IP server",
+     "lang": "en"
     },
     "icon": "ipsrv",
     "parents": [
@@ -1670,8 +1670,8 @@
       "azimuth": {
        "x-label": {
         "key": "field.azimuth",
-        "text": "Азимут",
-        "lang": "ru"
+        "text": "Azimuth",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -1681,28 +1681,28 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "firmware": {
        "x-label": {
         "key": "field.firmware",
-        "text": "Драйвер",
-        "lang": "ru"
+        "text": "Driver",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Версия драйвера. Обновления прошивки нет"
+       "description": "Driver version. No firmware update"
       },
       "identifier": {
        "x-label": {
         "key": "field.identifier",
-        "text": "Номер",
-        "lang": "ru"
+        "text": "Number",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер устройства в системе («16», «3/1» у канала регистратора)",
+       "description": "Device number in the system (\"16\", \"3/1\" for a recorder channel)",
        "x-immutable": true,
        "x-search": true
       },
@@ -1710,30 +1710,30 @@
        "x-label": {
         "key": "field.ip",
         "text": "IP",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес. У eventsrc — адрес сервера или имя кассы, у драйвера, что подключается сам, — адрес кассы; 0.0.0.0 и :: — 422 VALIDATION_FAILED, field: ip",
+       "description": "Address. For eventsrc — the server address or till name; for a driver that connects by itself — the till address; 0.0.0.0 and :: — 422 VALIDATION_FAILED, field: ip",
        "x-immutable": true,
        "x-search": true
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+       "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording"
       },
       "lat": {
        "x-label": {
         "key": "field.lat",
-        "text": "Широта",
-        "lang": "ru"
+        "text": "Latitude",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -1743,16 +1743,16 @@
       "login": {
        "x-label": {
         "key": "field.login",
-        "text": "Имя пользователя",
-        "lang": "ru"
+        "text": "Username",
+        "lang": "en"
        },
        "type": "string"
       },
       "lon": {
        "x-label": {
         "key": "field.lon",
-        "text": "Долгота",
-        "lang": "ru"
+        "text": "Longitude",
+        "lang": "en"
        },
        "type": [
         "number",
@@ -1763,38 +1763,38 @@
        "x-label": {
         "key": "field.mac",
         "text": "MAC",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "MAC. У камеры, источника событий и СКУД — только из поиска: при создании с candidateId, иначе принимается и не хранится; PATCH — 422 NOT_SUPPORTED. У ipsrv с записью устройства правится"
+       "description": "MAC. For a camera, event source and access control device — only from discovery: at creation with candidateId, otherwise accepted and not stored; PATCH — 422 NOT_SUPPORTED. Editable for ipsrv with a device row"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-immutable": true,
        "x-search": true
       },
       "password": {
        "x-label": {
         "key": "field.password",
-        "text": "Пароль",
-        "lang": "ru"
+        "text": "Password",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Новый пароль; в ответах его нет",
+       "description": "New password; absent from responses",
        "x-ui-widget": "password",
        "writeOnly": true
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer",
        "x-immutable": true
@@ -1802,21 +1802,21 @@
       "rtspUrl": {
        "x-label": {
         "key": "field.rtspUrl",
-        "text": "Адрес RTSP",
-        "lang": "ru"
+        "text": "RTSP address",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
+       "description": "Camera address, readable and writable. Creating a camera without rtspUrl and without vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. A camera under a recorder needs no address: it is reached through the recorder"
       },
       "serverId": {
        "x-label": {
         "key": "field.serverId",
-        "text": "Сервер",
-        "lang": "ru"
+        "text": "Server",
+        "lang": "en"
        },
        "type": "string",
        "format": "uuid",
-       "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы. У eventsrc — запись: без него сервер выбирает система и предупреждает в faultText, переноса при падении нет",
+       "description": "Server: the server the camera and recorder are connected to (derived from recording storage), the detector computation server, the service server. Writable for eventsrc: without it the system chooses a server and warns in faultText; no move on failure",
        "x-immutable": true,
        "x-ref": {
         "kinds": [
@@ -1828,19 +1828,19 @@
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-immutable": true,
        "x-search": true
       },
       "subtype": {
        "x-label": {
         "key": "field.subtype",
-        "text": "Подтип",
-        "lang": "ru"
+        "text": "Subtype",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -1849,27 +1849,27 @@
         "sip",
         "mic"
        ],
-       "description": "Подтип IP-сервера (ipsrv). Сервер выводит его из описания устройства, выбор в мастере на него не влияет",
+       "description": "IP server subtype (ipsrv). The server derives it from the device description; the wizard choice does not affect it",
        "x-enum-labels": {
         "nvr": {
          "key": "enum.subtype.nvr",
-         "text": "NVR / видеорегистратор",
-         "lang": "ru"
+         "text": "NVR / video recorder",
+         "lang": "en"
         },
         "io": {
          "key": "enum.subtype.io",
-         "text": "I/O (датчики/реле)",
-         "lang": "ru"
+         "text": "I/O (sensors/relays)",
+         "lang": "en"
         },
         "sip": {
          "key": "enum.subtype.sip",
-         "text": "SIP / аудио",
-         "lang": "ru"
+         "text": "SIP / audio",
+         "lang": "en"
         },
         "mic": {
          "key": "enum.subtype.mic",
-         "text": "Микрофоны",
-         "lang": "ru"
+         "text": "Microphones",
+         "lang": "en"
         }
        },
        "x-immutable": true
@@ -1883,11 +1883,11 @@
          "name",
          "type"
         ],
-        "description": "Единица СКУД, которую можно завести: шаблон драйвера",
+        "description": "An access control unit that can be created: a driver template",
         "properties": {
          "model": {
           "type": "string",
-          "description": "Шаблон: уходит в Device.model при создании"
+          "description": "Template: sent as Device.model at creation"
          },
          "name": {
           "type": "string"
@@ -1913,7 +1913,7 @@
            "email",
            "sms"
           ],
-          "description": "Вид устройства"
+          "description": "Device kind"
          },
          "properties": {
           "type": "array",
@@ -1922,7 +1922,7 @@
            "required": [
             "key"
            ],
-           "description": "Настройка единицы: ключ, варианты или значение по умолчанию",
+           "description": "Unit setting: a key, options or a default value",
            "properties": {
             "key": {
              "type": "string"
@@ -1942,14 +1942,14 @@
          },
          "events": {
           "type": "array",
-          "description": "Слова событий: варианты match.word у вида unit",
+          "description": "Event words: match.word options for kind unit",
           "items": {
            "type": "string"
           }
          },
          "operations": {
           "type": "array",
-          "description": "Команды шаблона",
+          "description": "Template commands",
           "items": {
            "type": "string"
           }
@@ -1957,14 +1957,14 @@
         },
         "additionalProperties": false
        },
-       "description": "Только чтение, у acfa и устройств, под которыми бывают единицы: какие единицы можно завести",
+       "description": "Read only, for acfa and devices that can have units: which units can be created",
        "readOnly": true
       },
       "vendor": {
        "x-label": {
         "key": "field.vendor",
-        "text": "Производитель",
-        "lang": "ru"
+        "text": "Vendor",
+        "lang": "en"
        },
        "type": "string",
        "x-immutable": true,
@@ -2007,8 +2007,8 @@
     },
     "label": {
      "key": "kind.channel",
-     "text": "Канал",
-     "lang": "ru"
+     "text": "Channel",
+     "lang": "en"
     },
     "icon": "channel",
     "parents": [
@@ -2030,18 +2030,18 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)",
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)",
        "readOnly": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean",
        "readOnly": true
@@ -2049,11 +2049,11 @@
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       }
      }
@@ -2071,8 +2071,8 @@
     },
     "label": {
      "key": "kind.sensor",
-     "text": "Датчик",
-     "lang": "ru"
+     "text": "Sensor",
+     "lang": "en"
     },
     "icon": "sensor",
     "parents": [
@@ -2091,8 +2091,8 @@
      "class": "sens",
      "label": {
       "key": "access.sens",
-      "text": "Датчики",
-      "lang": "ru"
+      "text": "Sensors",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -2107,54 +2107,54 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)",
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)",
        "readOnly": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "norm": {
        "x-label": {
         "key": "field.norm",
-        "text": "Нормальное состояние",
-        "lang": "ru"
+        "text": "Normal state",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
         "open",
         "closed"
        ],
-       "description": "Нормальное состояние контакта: начало и конец тревоги считаются сравнением сигнала с ним",
+       "description": "Normal contact state: alarm start and end are determined by comparing the signal with it",
        "x-enum-labels": {
         "open": {
          "key": "enum.norm.open",
-         "text": "Разомкнуто",
-         "lang": "ru"
+         "text": "Open",
+         "lang": "en"
         },
         "closed": {
          "key": "enum.norm.closed",
-         "text": "Замкнуто",
-         "lang": "ru"
+         "text": "Closed",
+         "lang": "en"
         }
        }
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       }
      }
@@ -2164,8 +2164,8 @@
       "id": "io.input",
       "label": {
        "key": "event.io.input",
-       "text": "Вход",
-       "lang": "ru"
+       "text": "Input",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -2198,8 +2198,8 @@
     },
     "label": {
      "key": "kind.relay",
-     "text": "Реле",
-     "lang": "ru"
+     "text": "Relay",
+     "lang": "en"
     },
     "icon": "relay",
     "parents": [
@@ -2229,8 +2229,8 @@
      "class": "relay",
      "label": {
       "key": "access.relay",
-      "text": "Реле",
-      "lang": "ru"
+      "text": "Relay",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -2245,54 +2245,54 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)",
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)",
        "x-immutable": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-immutable": true,
        "x-search": true
       },
       "norm": {
        "x-label": {
         "key": "field.norm",
-        "text": "Нормальное состояние",
-        "lang": "ru"
+        "text": "Normal state",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
         "open",
         "closed"
        ],
-       "description": "Нормальное состояние контакта: начало и конец тревоги считаются сравнением сигнала с ним",
+       "description": "Normal contact state: alarm start and end are determined by comparing the signal with it",
        "x-enum-labels": {
         "open": {
          "key": "enum.norm.open",
-         "text": "Разомкнуто",
-         "lang": "ru"
+         "text": "Open",
+         "lang": "en"
         },
         "closed": {
          "key": "enum.norm.closed",
-         "text": "Замкнуто",
-         "lang": "ru"
+         "text": "Closed",
+         "lang": "en"
         }
        }
       },
@@ -2301,32 +2301,32 @@
        "items": {
         "type": "string"
        },
-       "description": "Только чтение, у единицы: команды. POST /devices/{id}/operations/{operation}, действие unit в правиле",
+       "description": "Read only, for a unit: commands. POST /devices/{id}/operations/{operation}, the unit action in a rule",
        "readOnly": true
       },
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
+       "description": "Export agent folder; the address of an access control unit in its access control system"
       },
       "properties": {
        "type": "object",
        "properties": {},
        "additionalProperties": true,
-       "description": "Настройки единицы СКУД: ключи — из unitOptions"
+       "description": "Access control unit settings: keys from unitOptions"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-immutable": true,
        "x-search": true
       }
@@ -2337,28 +2337,28 @@
       "id": "output",
       "label": {
        "key": "action.relay.output",
-       "text": "Выход",
-       "lang": "ru"
+       "text": "Output",
+       "lang": "en"
       },
       "execution": "instant",
       "params": {
        "type": "object",
-       "description": "Аргументы команды. Только у реле",
+       "description": "Command arguments. Only for a relay",
        "properties": {
         "state": {
          "type": "boolean",
-         "description": "true — замкнуть, false — разомкнуть"
+         "description": "true — close, false — open"
         },
         "pulseMs": {
          "type": "integer",
          "minimum": 1,
          "maximum": 60000,
-         "description": "Импульс: вернуть обратно через столько мс"
+         "description": "Pulse: return to the previous state after this many ms"
         },
         "port": {
          "type": "integer",
          "minimum": 0,
-         "description": "Необязательно. Номер выхода берётся из записи (channel); если поле есть, значит то же самое"
+         "description": "Optional. The output number comes from the row (channel); if the field is present it means the same thing"
         }
        },
        "additionalProperties": false,
@@ -2388,8 +2388,8 @@
       "id": "unit",
       "label": {
        "key": "action.relay.unit",
-       "text": "Команда единицы",
-       "lang": "ru"
+       "text": "Unit command",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -2416,8 +2416,8 @@
       "id": "unit",
       "label": {
        "key": "event.unit",
-       "text": "Единица СКУД",
-       "lang": "ru"
+       "text": "Access control unit",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -2445,8 +2445,8 @@
     },
     "label": {
      "key": "kind.mic",
-     "text": "Микрофон",
-     "lang": "ru"
+     "text": "Microphone",
+     "lang": "en"
     },
     "icon": "mic",
     "parents": [
@@ -2464,8 +2464,8 @@
      "class": "mic",
      "label": {
       "key": "access.mic",
-      "text": "Микрофоны",
-      "lang": "ru"
+      "text": "Microphones",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -2480,29 +2480,29 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)",
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)",
        "readOnly": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       }
      }
@@ -2520,8 +2520,8 @@
     },
     "label": {
      "key": "kind.spk",
-     "text": "Динамик",
-     "lang": "ru"
+     "text": "Speaker",
+     "lang": "en"
     },
     "icon": "spk",
     "parents": [
@@ -2541,8 +2541,8 @@
      "class": "spk",
      "label": {
       "key": "access.spk",
-      "text": "Динамики",
-      "lang": "ru"
+      "text": "Speakers",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -2556,29 +2556,29 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)",
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)",
        "readOnly": true
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       }
      }
@@ -2596,8 +2596,8 @@
     },
     "label": {
      "key": "kind.storage",
-     "text": "Встроенное хранилище",
-     "lang": "ru"
+     "text": "Built-in storage",
+     "lang": "en"
     },
     "icon": "storage",
     "parents": [
@@ -2614,15 +2614,15 @@
       "channel": {
        "x-label": {
         "key": "field.channel",
-        "text": "Канал",
-        "lang": "ru"
+        "text": "Channel",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)"
+       "description": "Input, output or channel number: within its kind, counted from 1. Numbered across the device, so a camera may start above 1 and have gaps (3, 7)"
       },
       "confirmShrinkBytes": {
        "type": "integer",
-       "description": "Второе подтверждение уменьшения карты камеры w2c: равно новому sizeBytes. Меньший sizeBytes без него — 422 VALIDATION_FAILED, field: sizeBytes; другое число — field: confirmShrinkBytes. Не хранится",
+       "description": "Second confirmation of shrinking a w2c camera card: equal to the new sizeBytes. A smaller sizeBytes without it — 422 VALIDATION_FAILED, field: sizeBytes; a different number — field: confirmShrinkBytes. Not stored",
        "minimum": 0,
        "x-transient": true,
        "writeOnly": true
@@ -2630,8 +2630,8 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean",
        "readOnly": true
@@ -2639,8 +2639,8 @@
       "recordMode": {
        "x-label": {
         "key": "field.recordMode",
-        "text": "Когда писать",
-        "lang": "ru"
+        "text": "When to record",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -2651,58 +2651,58 @@
         "replica",
         "backup"
        ],
-       "description": "Режим записи. replica — забирать записи без постоянного потока. backup — живой поток только на время сбоя основной записи: только в extraArchives, на архиве, где это значение есть в recordModes его вида",
+       "description": "Recording mode. replica — fetch recordings without a continuous stream. backup — a live stream only while the primary recording fails: only in extraArchives, on an archive whose kind includes this value in recordModes",
        "x-enum-labels": {
         "none": {
          "key": "enum.recordMode.none",
-         "text": "Нет",
-         "lang": "ru"
+         "text": "None",
+         "lang": "en"
         },
         "always": {
          "key": "enum.recordMode.always",
-         "text": "Всегда",
-         "lang": "ru"
+         "text": "Always",
+         "lang": "en"
         },
         "motion": {
          "key": "enum.recordMode.motion",
-         "text": "По детектору",
-         "lang": "ru"
+         "text": "By detector",
+         "lang": "en"
         },
         "sched": {
          "key": "enum.recordMode.sched",
-         "text": "По расписанию",
-         "lang": "ru"
+         "text": "By schedule",
+         "lang": "en"
         },
         "replica": {
          "key": "enum.recordMode.replica",
-         "text": "Репликация",
-         "lang": "ru"
+         "text": "Replication",
+         "lang": "en"
         },
         "backup": {
          "key": "enum.recordMode.backup",
-         "text": "Резерв при сбое",
-         "lang": "ru"
+         "text": "Backup on failure",
+         "lang": "en"
         }
        }
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       },
       "sizeBytes": {
        "x-label": {
         "key": "field.sizeBytes",
-        "text": "Объём",
-        "lang": "ru"
+        "text": "Size",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Объём встроенного хранилища. Устройство может его не сообщать: тогда поля нет. У карты камеры w2c правится"
+       "description": "Built-in storage size. The device may not report it: then the field is absent. Editable for a w2c camera card"
       }
      }
     }
@@ -2719,8 +2719,8 @@
     },
     "label": {
      "key": "kind.eventsrc",
-     "text": "Источник событий",
-     "lang": "ru"
+     "text": "Event source",
+     "lang": "en"
     },
     "icon": "eventsrc",
     "parents": [
@@ -2742,8 +2742,8 @@
      "class": "pos",
      "label": {
       "key": "access.pos",
-      "text": "POS и источники событий",
-      "lang": "ru"
+      "text": "POS and event sources",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -2758,15 +2758,15 @@
       "cameraId": {
        "x-label": {
         "key": "field.cameraId",
-        "text": "Камера титров",
-        "lang": "ru"
+        "text": "Caption camera",
+        "lang": "en"
        },
        "type": [
         "string",
         "null"
        ],
        "format": "uuid",
-       "description": "eventsrc: камера титров. Здесь только настройка: титры рисует клиент просмотра поверх живого видео и архива",
+       "description": "eventsrc: caption camera. Only the setting here: the viewing client draws captions over live video and the archive",
        "x-ref": {
         "implements": [
          "vms.camera/1"
@@ -2777,117 +2777,117 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "firmware": {
        "x-label": {
         "key": "field.firmware",
-        "text": "Драйвер",
-        "lang": "ru"
+        "text": "Driver",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Версия драйвера. Обновления прошивки нет"
+       "description": "Driver version. No firmware update"
       },
       "identifier": {
        "x-label": {
         "key": "field.identifier",
-        "text": "Номер",
-        "lang": "ru"
+        "text": "Number",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер устройства в системе («16», «3/1» у канала регистратора)",
+       "description": "Device number in the system (\"16\", \"3/1\" for a recorder channel)",
        "x-search": true
       },
       "ip": {
        "x-label": {
         "key": "field.ip",
         "text": "IP",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес. У eventsrc — адрес сервера или имя кассы, у драйвера, что подключается сам, — адрес кассы; 0.0.0.0 и :: — 422 VALIDATION_FAILED, field: ip",
+       "description": "Address. For eventsrc — the server address or till name; for a driver that connects by itself — the till address; 0.0.0.0 and :: — 422 VALIDATION_FAILED, field: ip",
        "x-search": true
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+       "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording"
       },
       "login": {
        "x-label": {
         "key": "field.login",
-        "text": "Имя пользователя",
-        "lang": "ru"
+        "text": "Username",
+        "lang": "en"
        },
        "type": "string"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-search": true
       },
       "overlayDelayMs": {
        "type": "integer",
-       "description": "Титры источника событий: задержка показа, мс",
+       "description": "Event source captions: display delay, ms",
        "minimum": 0
       },
       "overlayDurationSec": {
        "type": "integer",
-       "description": "Титры источника событий: сколько держать на экране, с",
+       "description": "Event source captions: display duration, s",
        "minimum": 0
       },
       "password": {
        "x-label": {
         "key": "field.password",
-        "text": "Пароль",
-        "lang": "ru"
+        "text": "Password",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Новый пароль; в ответах его нет",
+       "description": "New password; absent from responses",
        "x-ui-widget": "password",
        "writeOnly": true
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer"
       },
       "rtspUrl": {
        "x-label": {
         "key": "field.rtspUrl",
-        "text": "Адрес RTSP",
-        "lang": "ru"
+        "text": "RTSP address",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
+       "description": "Camera address, readable and writable. Creating a camera without rtspUrl and without vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. A camera under a recorder needs no address: it is reached through the recorder"
       },
       "serverId": {
        "x-label": {
         "key": "field.serverId",
-        "text": "Сервер",
-        "lang": "ru"
+        "text": "Server",
+        "lang": "en"
        },
        "type": "string",
        "format": "uuid",
-       "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы. У eventsrc — запись: без него сервер выбирает система и предупреждает в faultText, переноса при падении нет",
+       "description": "Server: the server the camera and recorder are connected to (derived from recording storage), the detector computation server, the service server. Writable for eventsrc: without it the system chooses a server and warns in faultText; no move on failure",
        "x-ref": {
         "kinds": [
          "server"
@@ -2898,18 +2898,18 @@
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       },
       "vendor": {
        "x-label": {
         "key": "field.vendor",
-        "text": "Производитель",
-        "lang": "ru"
+        "text": "Vendor",
+        "lang": "en"
        },
        "type": "string",
        "x-search": true
@@ -2934,7 +2934,7 @@
         },
         "additionalProperties": false
        },
-       "description": "Слова источника событий (POS) и их цвета"
+       "description": "Event source (POS) words and their colours"
       }
      }
     },
@@ -2943,8 +2943,8 @@
       "id": "text",
       "label": {
        "key": "event.text",
-       "text": "Текст источника",
-       "lang": "ru"
+       "text": "Source text",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -2980,12 +2980,12 @@
     "label": {
      "key": "kind.acfa",
      "text": "ACFA",
-     "lang": "ru"
+     "lang": "en"
     },
     "labelPlural": {
      "key": "kind.acfa.plural",
-     "text": "ACFA-устройства",
-     "lang": "ru"
+     "text": "ACFA devices",
+     "lang": "en"
     },
     "icon": "acfa",
     "parents": [
@@ -3018,8 +3018,8 @@
      "class": "acfa",
      "label": {
       "key": "access.acfa",
-      "text": "СКУД",
-      "lang": "ru"
+      "text": "Access control",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -3035,115 +3035,115 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "firmware": {
        "x-label": {
         "key": "field.firmware",
-        "text": "Драйвер",
-        "lang": "ru"
+        "text": "Driver",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Версия драйвера. Обновления прошивки нет"
+       "description": "Driver version. No firmware update"
       },
       "identifier": {
        "x-label": {
         "key": "field.identifier",
-        "text": "Номер",
-        "lang": "ru"
+        "text": "Number",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер устройства в системе («16», «3/1» у канала регистратора)",
+       "description": "Device number in the system (\"16\", \"3/1\" for a recorder channel)",
        "x-search": true
       },
       "ip": {
        "x-label": {
         "key": "field.ip",
         "text": "IP",
-        "lang": "ru"
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес. У eventsrc — адрес сервера или имя кассы, у драйвера, что подключается сам, — адрес кассы; 0.0.0.0 и :: — 422 VALIDATION_FAILED, field: ip",
+       "description": "Address. For eventsrc — the server address or till name; for a driver that connects by itself — the till address; 0.0.0.0 and :: — 422 VALIDATION_FAILED, field: ip",
        "x-search": true
       },
       "labels": {
        "x-label": {
         "key": "field.labels",
-        "text": "Метки",
-        "lang": "ru"
+        "text": "Labels",
+        "lang": "en"
        },
        "type": "array",
        "items": {
         "type": "string"
        },
-       "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+       "description": "Where it runs: server labels from reference.serverLabels. A server without the label will not take the recording"
       },
       "login": {
        "x-label": {
         "key": "field.login",
-        "text": "Имя пользователя",
-        "lang": "ru"
+        "text": "Username",
+        "lang": "en"
        },
        "type": "string"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-search": true
       },
       "password": {
        "x-label": {
         "key": "field.password",
-        "text": "Пароль",
-        "lang": "ru"
+        "text": "Password",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Новый пароль; в ответах его нет",
+       "description": "New password; absent from responses",
        "x-ui-widget": "password",
        "writeOnly": true
       },
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
+       "description": "Export agent folder; the address of an access control unit in its access control system"
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer"
       },
       "rtspUrl": {
        "x-label": {
         "key": "field.rtspUrl",
-        "text": "Адрес RTSP",
-        "lang": "ru"
+        "text": "RTSP address",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
+       "description": "Camera address, readable and writable. Creating a camera without rtspUrl and without vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. A camera under a recorder needs no address: it is reached through the recorder"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-search": true
       },
       "unitOptions": {
@@ -3155,11 +3155,11 @@
          "name",
          "type"
         ],
-        "description": "Единица СКУД, которую можно завести: шаблон драйвера",
+        "description": "An access control unit that can be created: a driver template",
         "properties": {
          "model": {
           "type": "string",
-          "description": "Шаблон: уходит в Device.model при создании"
+          "description": "Template: sent as Device.model at creation"
          },
          "name": {
           "type": "string"
@@ -3185,7 +3185,7 @@
            "email",
            "sms"
           ],
-          "description": "Вид устройства"
+          "description": "Device kind"
          },
          "properties": {
           "type": "array",
@@ -3194,7 +3194,7 @@
            "required": [
             "key"
            ],
-           "description": "Настройка единицы: ключ, варианты или значение по умолчанию",
+           "description": "Unit setting: a key, options or a default value",
            "properties": {
             "key": {
              "type": "string"
@@ -3214,14 +3214,14 @@
          },
          "events": {
           "type": "array",
-          "description": "Слова событий: варианты match.word у вида unit",
+          "description": "Event words: match.word options for kind unit",
           "items": {
            "type": "string"
           }
          },
          "operations": {
           "type": "array",
-          "description": "Команды шаблона",
+          "description": "Template commands",
           "items": {
            "type": "string"
           }
@@ -3229,14 +3229,14 @@
         },
         "additionalProperties": false
        },
-       "description": "Только чтение, у acfa и устройств, под которыми бывают единицы: какие единицы можно завести",
+       "description": "Read only, for acfa and devices that can have units: which units can be created",
        "readOnly": true
       },
       "vendor": {
        "x-label": {
         "key": "field.vendor",
-        "text": "Производитель",
-        "lang": "ru"
+        "text": "Vendor",
+        "lang": "en"
        },
        "type": "string",
        "x-search": true
@@ -3254,8 +3254,8 @@
       "id": "unit",
       "label": {
        "key": "event.unit",
-       "text": "Единица СКУД",
-       "lang": "ru"
+       "text": "Access control unit",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -3275,8 +3275,8 @@
       "id": "unit",
       "label": {
        "key": "action.acfa.unit",
-       "text": "Команда единицы",
-       "lang": "ru"
+       "text": "Unit command",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -3311,13 +3311,13 @@
     },
     "label": {
      "key": "kind.acfa_sensor",
-     "text": "Датчик ACFA",
-     "lang": "ru"
+     "text": "ACFA sensor",
+     "lang": "en"
     },
     "labelPlural": {
      "key": "kind.acfa_sensor.plural",
-     "text": "Датчики",
-     "lang": "ru"
+     "text": "Sensors",
+     "lang": "en"
     },
     "icon": "acfa_sensor",
     "parents": [
@@ -3345,8 +3345,8 @@
      "class": "acfa",
      "label": {
       "key": "access.acfa",
-      "text": "СКУД",
-      "lang": "ru"
+      "text": "Access control",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -3362,19 +3362,19 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-immutable": true,
        "x-search": true
       },
@@ -3383,32 +3383,32 @@
        "items": {
         "type": "string"
        },
-       "description": "Только чтение, у единицы: команды. POST /devices/{id}/operations/{operation}, действие unit в правиле",
+       "description": "Read only, for a unit: commands. POST /devices/{id}/operations/{operation}, the unit action in a rule",
        "readOnly": true
       },
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
+       "description": "Export agent folder; the address of an access control unit in its access control system"
       },
       "properties": {
        "type": "object",
        "properties": {},
        "additionalProperties": true,
-       "description": "Настройки единицы СКУД: ключи — из unitOptions"
+       "description": "Access control unit settings: keys from unitOptions"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-immutable": true,
        "x-search": true
       }
@@ -3419,8 +3419,8 @@
       "id": "unit",
       "label": {
        "key": "action.acfa_sensor.unit",
-       "text": "Команда единицы",
-       "lang": "ru"
+       "text": "Unit command",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -3447,8 +3447,8 @@
       "id": "io.input",
       "label": {
        "key": "event.io.input",
-       "text": "Вход",
-       "lang": "ru"
+       "text": "Input",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -3471,8 +3471,8 @@
       "id": "unit",
       "label": {
        "key": "event.unit",
-       "text": "Единица СКУД",
-       "lang": "ru"
+       "text": "Access control unit",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -3506,13 +3506,13 @@
     },
     "label": {
      "key": "kind.acfa_lock",
-     "text": "Замок",
-     "lang": "ru"
+     "text": "Lock",
+     "lang": "en"
     },
     "labelPlural": {
      "key": "kind.acfa_lock.plural",
-     "text": "Замки",
-     "lang": "ru"
+     "text": "Locks",
+     "lang": "en"
     },
     "icon": "acfa_lock",
     "parents": [
@@ -3540,8 +3540,8 @@
      "class": "acfa",
      "label": {
       "key": "access.acfa",
-      "text": "СКУД",
-      "lang": "ru"
+      "text": "Access control",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -3557,19 +3557,19 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-immutable": true,
        "x-search": true
       },
@@ -3578,32 +3578,32 @@
        "items": {
         "type": "string"
        },
-       "description": "Только чтение, у единицы: команды. POST /devices/{id}/operations/{operation}, действие unit в правиле",
+       "description": "Read only, for a unit: commands. POST /devices/{id}/operations/{operation}, the unit action in a rule",
        "readOnly": true
       },
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
+       "description": "Export agent folder; the address of an access control unit in its access control system"
       },
       "properties": {
        "type": "object",
        "properties": {},
        "additionalProperties": true,
-       "description": "Настройки единицы СКУД: ключи — из unitOptions"
+       "description": "Access control unit settings: keys from unitOptions"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-immutable": true,
        "x-search": true
       }
@@ -3614,8 +3614,8 @@
       "id": "open",
       "label": {
        "key": "action.acfa_lock.open",
-       "text": "Открыть",
-       "lang": "ru"
+       "text": "Open",
+       "lang": "en"
       },
       "execution": "instant",
       "result": {
@@ -3636,8 +3636,8 @@
       "id": "close",
       "label": {
        "key": "action.acfa_lock.close",
-       "text": "Закрыть",
-       "lang": "ru"
+       "text": "Close",
+       "lang": "en"
       },
       "execution": "instant",
       "result": {
@@ -3658,8 +3658,8 @@
       "id": "block",
       "label": {
        "key": "action.acfa_lock.block",
-       "text": "Заблокировать",
-       "lang": "ru"
+       "text": "Block",
+       "lang": "en"
       },
       "execution": "instant",
       "result": {
@@ -3680,8 +3680,8 @@
       "id": "unit",
       "label": {
        "key": "action.acfa_lock.unit",
-       "text": "Команда единицы",
-       "lang": "ru"
+       "text": "Unit command",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -3708,8 +3708,8 @@
       "id": "unit",
       "label": {
        "key": "event.unit",
-       "text": "Единица СКУД",
-       "lang": "ru"
+       "text": "Access control unit",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -3743,13 +3743,13 @@
     },
     "label": {
      "key": "kind.acfa_fence",
-     "text": "Шлейф",
-     "lang": "ru"
+     "text": "Loop",
+     "lang": "en"
     },
     "labelPlural": {
      "key": "kind.acfa_fence.plural",
-     "text": "Шлейфы",
-     "lang": "ru"
+     "text": "Loops",
+     "lang": "en"
     },
     "icon": "acfa_fence",
     "parents": [
@@ -3777,8 +3777,8 @@
      "class": "acfa",
      "label": {
       "key": "access.acfa",
-      "text": "СКУД",
-      "lang": "ru"
+      "text": "Access control",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -3794,19 +3794,19 @@
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "model": {
        "x-label": {
         "key": "field.model",
-        "text": "Модель",
-        "lang": "ru"
+        "text": "Model",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model",
+       "description": "Model. For an access control unit — a template from unitOptions: set at creation; an edit — 422 NOT_SUPPORTED, field: model",
        "x-immutable": true,
        "x-search": true
       },
@@ -3815,32 +3815,32 @@
        "items": {
         "type": "string"
        },
-       "description": "Только чтение, у единицы: команды. POST /devices/{id}/operations/{operation}, действие unit в правиле",
+       "description": "Read only, for a unit: commands. POST /devices/{id}/operations/{operation}, the unit action in a rule",
        "readOnly": true
       },
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
+       "description": "Export agent folder; the address of an access control unit in its access control system"
       },
       "properties": {
        "type": "object",
        "properties": {},
        "additionalProperties": true,
-       "description": "Настройки единицы СКУД: ключи — из unitOptions"
+       "description": "Access control unit settings: keys from unitOptions"
       },
       "short": {
        "x-label": {
         "key": "field.short",
-        "text": "Короткое имя",
-        "lang": "ru"
+        "text": "Short name",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Номер для показа в дереве («3.3.1»)",
+       "description": "Number for display in the tree (\"3.3.1\")",
        "x-immutable": true,
        "x-search": true
       }
@@ -3851,8 +3851,8 @@
       "id": "arm",
       "label": {
        "key": "action.acfa_fence.arm",
-       "text": "Взять под охрану",
-       "lang": "ru"
+       "text": "Arm",
+       "lang": "en"
       },
       "execution": "instant",
       "result": {
@@ -3873,8 +3873,8 @@
       "id": "disarm",
       "label": {
        "key": "action.acfa_fence.disarm",
-       "text": "Снять с охраны",
-       "lang": "ru"
+       "text": "Disarm",
+       "lang": "en"
       },
       "execution": "instant",
       "result": {
@@ -3895,8 +3895,8 @@
       "id": "unit",
       "label": {
        "key": "action.acfa_fence.unit",
-       "text": "Команда единицы",
-       "lang": "ru"
+       "text": "Unit command",
+       "lang": "en"
       },
       "execution": "instant",
       "ruleAction": true,
@@ -3923,8 +3923,8 @@
       "id": "unit",
       "label": {
        "key": "event.unit",
-       "text": "Единица СКУД",
-       "lang": "ru"
+       "text": "Access control unit",
+       "lang": "en"
       },
       "params": {
        "type": "object",
@@ -3958,8 +3958,8 @@
     },
     "label": {
      "key": "kind.stream",
-     "text": "Поток",
-     "lang": "ru"
+     "text": "Stream",
+     "lang": "en"
     },
     "icon": "stream",
     "parents": [
@@ -3980,8 +3980,8 @@
      "class": "cam",
      "label": {
       "key": "access.cam",
-      "text": "Камеры",
-      "lang": "ru"
+      "text": "Cameras",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -3999,18 +3999,18 @@
       "codec": {
        "x-label": {
         "key": "field.codec",
-        "text": "Кодек",
-        "lang": "ru"
+        "text": "Codec",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Только чтение: что отдаёт устройство",
+       "description": "Read only: what the device supplies",
        "readOnly": true
       },
       "fps": {
        "x-label": {
         "key": "field.fps",
-        "text": "к/с",
-        "lang": "ru"
+        "text": "fps",
+        "lang": "en"
        },
        "type": "integer",
        "minimum": 1
@@ -4018,21 +4018,21 @@
       "height": {
        "x-label": {
         "key": "field.height",
-        "text": "Высота",
-        "lang": "ru"
+        "text": "Height",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Только чтение",
+       "description": "Read only",
        "readOnly": true
       },
       "res": {
        "x-label": {
         "key": "field.res",
-        "text": "Разрешение",
-        "lang": "ru"
+        "text": "Resolution",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Разрешение: ширина x высота, латинская x. Настройка, сервер передаёт её драйверу",
+       "description": "Resolution: width x height, Latin x. A setting passed by the server to the driver",
        "pattern": "^[0-9]+x[0-9]+$"
       },
       "resOptions": {
@@ -4040,27 +4040,27 @@
        "items": {
         "type": "string"
        },
-       "description": "Допустимые разрешения этого потока. Нет поля — ввод руками",
+       "description": "Allowed resolutions of this stream. No field — manual input",
        "readOnly": true
       },
       "streamId": {
        "x-label": {
         "key": "field.streamId",
-        "text": "Код потока",
-        "lang": "ru"
+        "text": "Stream code",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Его принимают Device.stream и ExtraArchive.stream",
+       "description": "Accepted by Device.stream and ExtraArchive.stream",
        "readOnly": true
       },
       "width": {
        "x-label": {
         "key": "field.width",
-        "text": "Ширина",
-        "lang": "ru"
+        "text": "Width",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Только чтение",
+       "description": "Read only",
        "readOnly": true
       }
      }
@@ -4078,8 +4078,8 @@
     },
     "label": {
      "key": "kind.volume",
-     "text": "Том",
-     "lang": "ru"
+     "text": "Volume",
+     "lang": "en"
     },
     "icon": "vol",
     "parents": [
@@ -4107,97 +4107,97 @@
       "account": {
        "x-label": {
         "key": "field.account",
-        "text": "Учётная запись",
-        "lang": "ru"
+        "text": "Account",
+        "lang": "en"
        },
        "type": "string"
       },
       "bucket": {
        "x-label": {
         "key": "field.bucket",
-        "text": "Корзина",
-        "lang": "ru"
+        "text": "Recycle bin",
+        "lang": "en"
        },
        "type": "string"
       },
       "confirmShrinkBytes": {
        "type": "integer",
        "minimum": 0,
-       "description": "Второе подтверждение уменьшения: равно новому sizeBytes. Меньшая квота без него — 422 VALIDATION_FAILED, field: sizeBytes. Не хранится",
+       "description": "Second confirmation of shrinking: equal to the new sizeBytes. A smaller quota without it — 422 VALIDATION_FAILED, field: sizeBytes. Not stored",
        "x-transient": true,
        "writeOnly": true
       },
       "dir": {
        "x-label": {
         "key": "field.dir",
-        "text": "Папка",
-        "lang": "ru"
+        "text": "Folder",
+        "lang": "en"
        },
        "type": "string"
       },
       "disk": {
        "x-label": {
         "key": "field.disk",
-        "text": "Диск",
-        "lang": "ru"
+        "text": "Disk",
+        "lang": "en"
        },
        "type": "string"
       },
       "enabled": {
        "x-label": {
         "key": "field.enabled",
-        "text": "Включено",
-        "lang": "ru"
+        "text": "Enabled",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "false — том выключен, состояние off. Поля нет — включён"
+       "description": "false — the volume is disabled, state off. No field — enabled"
       },
       "endpoint": {
        "x-label": {
         "key": "field.endpoint",
-        "text": "Адрес",
-        "lang": "ru"
+        "text": "Address",
+        "lang": "en"
        },
        "type": "string"
       },
       "file": {
        "x-label": {
         "key": "field.file",
-        "text": "Файл",
-        "lang": "ru"
+        "text": "File",
+        "lang": "en"
        },
        "type": "string"
       },
       "host": {
        "x-label": {
         "key": "field.host",
-        "text": "Сервер",
-        "lang": "ru"
+        "text": "Server",
+        "lang": "en"
        },
        "type": "string"
       },
       "keyId": {
        "x-label": {
         "key": "field.keyId",
-        "text": "Ключ доступа",
-        "lang": "ru"
+        "text": "Access key",
+        "lang": "en"
        },
        "type": "string"
       },
       "login": {
        "x-label": {
         "key": "field.login",
-        "text": "Имя пользователя",
-        "lang": "ru"
+        "text": "Username",
+        "lang": "en"
        },
        "type": "string",
-       "description": "Учётная запись NAS"
+       "description": "NAS account"
       },
       "mode": {
        "x-label": {
         "key": "field.mode",
-        "text": "Режим",
-        "lang": "ru"
+        "text": "Mode",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4210,8 +4210,8 @@
       "password": {
        "x-label": {
         "key": "field.password",
-        "text": "Пароль",
-        "lang": "ru"
+        "text": "Password",
+        "lang": "en"
        },
        "type": "string",
        "x-ui-widget": "password"
@@ -4219,24 +4219,24 @@
       "path": {
        "x-label": {
         "key": "field.path",
-        "text": "Путь",
-        "lang": "ru"
+        "text": "Path",
+        "lang": "en"
        },
        "type": "string"
       },
       "port": {
        "x-label": {
         "key": "field.port",
-        "text": "Порт",
-        "lang": "ru"
+        "text": "Port",
+        "lang": "en"
        },
        "type": "integer"
       },
       "proto": {
        "x-label": {
         "key": "field.proto",
-        "text": "Протокол",
-        "lang": "ru"
+        "text": "Protocol",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4247,16 +4247,16 @@
       "region": {
        "x-label": {
         "key": "field.region",
-        "text": "Регион",
-        "lang": "ru"
+        "text": "Region",
+        "lang": "en"
        },
        "type": "string"
       },
       "secret": {
        "x-label": {
         "key": "field.secret",
-        "text": "Секретный ключ",
-        "lang": "ru"
+        "text": "Secret key",
+        "lang": "en"
        },
        "type": "string",
        "x-ui-widget": "password",
@@ -4265,16 +4265,16 @@
       "sizeBytes": {
        "x-label": {
         "key": "field.sizeBytes",
-        "text": "Объём",
-        "lang": "ru"
+        "text": "Size",
+        "lang": "en"
        },
        "type": "integer"
       },
       "state": {
        "x-label": {
         "key": "field.state",
-        "text": "Состояние",
-        "lang": "ru"
+        "text": "State",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4285,43 +4285,43 @@
        "x-enum-labels": {
         "ready": {
          "key": "enum.state.ready",
-         "text": "Готов",
-         "lang": "ru"
+         "text": "Ready",
+         "lang": "en"
         },
         "format": {
          "key": "enum.state.format",
-         "text": "Форматируется",
-         "lang": "ru"
+         "text": "Formatting",
+         "lang": "en"
         },
         "open": {
          "key": "enum.state.open",
-         "text": "Открывается",
-         "lang": "ru"
+         "text": "Opening",
+         "lang": "en"
         },
         "off": {
          "key": "enum.state.off",
-         "text": "Выключен",
-         "lang": "ru"
+         "text": "Off",
+         "lang": "en"
         },
         "maint": {
          "key": "enum.state.maint",
-         "text": "Обслуживание",
-         "lang": "ru"
+         "text": "Maintenance",
+         "lang": "en"
         },
         "broken": {
          "key": "enum.state.broken",
-         "text": "Нужно форматировать или восстановить",
-         "lang": "ru"
+         "text": "Needs formatting or recovery",
+         "lang": "en"
         },
         "unfmt": {
          "key": "enum.state.unfmt",
-         "text": "Не отформатирован",
-         "lang": "ru"
+         "text": "Unformatted",
+         "lang": "en"
         },
         "error": {
          "key": "enum.state.error",
-         "text": "Ошибка",
-         "lang": "ru"
+         "text": "Error",
+         "lang": "en"
         }
        },
        "readOnly": true
@@ -4329,8 +4329,8 @@
       "style": {
        "x-label": {
         "key": "field.style",
-        "text": "Вид адреса",
-        "lang": "ru"
+        "text": "Address kind",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4353,8 +4353,8 @@
     },
     "label": {
      "key": "kind.archive.local",
-     "text": "Хранилище: локальное",
-     "lang": "ru"
+     "text": "Storage: local",
+     "lang": "en"
     },
     "icon": "archive",
     "parents": [
@@ -4377,8 +4377,8 @@
      "class": "arch",
      "label": {
       "key": "access.arch",
-      "text": "Архивы",
-      "lang": "ru"
+      "text": "Archives",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -4398,45 +4398,45 @@
       "admits": {
        "x-label": {
         "key": "field.admits",
-        "text": "Принимает записи",
-        "lang": "ru"
+        "text": "Accepts recordings",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "Принимает ли архив записи камер. false — новые привязки не принимаются, камера выбрать его не может"
+       "description": "Whether the archive accepts camera recordings. false — new bindings are not accepted; a camera cannot select it"
       },
       "encrypted": {
        "x-label": {
         "key": "field.encrypted",
-        "text": "Шифрование",
-        "lang": "ru"
+        "text": "Encryption",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "provider": {
        "x-label": {
         "key": "field.provider",
-        "text": "Провайдер",
-        "lang": "ru"
+        "text": "Provider",
+        "lang": "en"
        },
        "type": "null",
-       "description": "Облачный провайдер",
+       "description": "Cloud provider",
        "x-immutable": true
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Глубина хранения; 0 — без ограничения",
+       "description": "Retention depth; 0 — unlimited",
        "minimum": 0
       },
       "storage": {
        "x-label": {
         "key": "field.storage",
-        "text": "Тип хранения",
-        "lang": "ru"
+        "text": "Storage type",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4475,8 +4475,8 @@
     },
     "label": {
      "key": "kind.archive.network",
-     "text": "Хранилище: удалённое",
-     "lang": "ru"
+     "text": "Storage: remote",
+     "lang": "en"
     },
     "icon": "archive",
     "parents": [
@@ -4501,8 +4501,8 @@
      "class": "arch",
      "label": {
       "key": "access.arch",
-      "text": "Архивы",
-      "lang": "ru"
+      "text": "Archives",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -4522,45 +4522,45 @@
       "admits": {
        "x-label": {
         "key": "field.admits",
-        "text": "Принимает записи",
-        "lang": "ru"
+        "text": "Accepts recordings",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "Принимает ли архив записи камер. false — новые привязки не принимаются, камера выбрать его не может"
+       "description": "Whether the archive accepts camera recordings. false — new bindings are not accepted; a camera cannot select it"
       },
       "encrypted": {
        "x-label": {
         "key": "field.encrypted",
-        "text": "Шифрование",
-        "lang": "ru"
+        "text": "Encryption",
+        "lang": "en"
        },
        "type": "boolean"
       },
       "provider": {
        "x-label": {
         "key": "field.provider",
-        "text": "Провайдер",
-        "lang": "ru"
+        "text": "Provider",
+        "lang": "en"
        },
        "type": "null",
-       "description": "Облачный провайдер",
+       "description": "Cloud provider",
        "x-immutable": true
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Глубина хранения; 0 — без ограничения",
+       "description": "Retention depth; 0 — unlimited",
        "minimum": 0
       },
       "storage": {
        "x-label": {
         "key": "field.storage",
-        "text": "Тип хранения",
-        "lang": "ru"
+        "text": "Storage type",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4599,8 +4599,8 @@
     },
     "label": {
      "key": "kind.archive.backup",
-     "text": "Хранилище: резерв на сбой",
-     "lang": "ru"
+     "text": "Storage: backup on failure",
+     "lang": "en"
     },
     "icon": "archive",
     "parents": [
@@ -4623,8 +4623,8 @@
      "class": "arch",
      "label": {
       "key": "access.arch",
-      "text": "Архивы",
-      "lang": "ru"
+      "text": "Archives",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -4644,17 +4644,17 @@
       "admits": {
        "x-label": {
         "key": "field.admits",
-        "text": "Принимает записи",
-        "lang": "ru"
+        "text": "Accepts recordings",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "Принимает ли архив записи камер. false — новые привязки не принимаются, камера выбрать его не может"
+       "description": "Whether the archive accepts camera recordings. false — new bindings are not accepted; a camera cannot select it"
       },
       "encrypted": {
        "x-label": {
         "key": "field.encrypted",
-        "text": "Шифрование",
-        "lang": "ru"
+        "text": "Encryption",
+        "lang": "en"
        },
        "type": "boolean",
        "const": false
@@ -4662,28 +4662,28 @@
       "provider": {
        "x-label": {
         "key": "field.provider",
-        "text": "Провайдер",
-        "lang": "ru"
+        "text": "Provider",
+        "lang": "en"
        },
        "type": "null",
-       "description": "Облачный провайдер",
+       "description": "Cloud provider",
        "x-immutable": true
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Глубина хранения; 0 — без ограничения",
+       "description": "Retention depth; 0 — unlimited",
        "minimum": 0
       },
       "storage": {
        "x-label": {
         "key": "field.storage",
-        "text": "Тип хранения",
-        "lang": "ru"
+        "text": "Storage type",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4719,8 +4719,8 @@
     },
     "label": {
      "key": "kind.archive.edge",
-     "text": "Хранилище: карта сервера",
-     "lang": "ru"
+     "text": "Storage: server card",
+     "lang": "en"
     },
     "icon": "archive",
     "parents": [
@@ -4743,8 +4743,8 @@
      "class": "arch",
      "label": {
       "key": "access.arch",
-      "text": "Архивы",
-      "lang": "ru"
+      "text": "Archives",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -4764,17 +4764,17 @@
       "admits": {
        "x-label": {
         "key": "field.admits",
-        "text": "Принимает записи",
-        "lang": "ru"
+        "text": "Accepts recordings",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "Принимает ли архив записи камер. false — новые привязки не принимаются, камера выбрать его не может"
+       "description": "Whether the archive accepts camera recordings. false — new bindings are not accepted; a camera cannot select it"
       },
       "encrypted": {
        "x-label": {
         "key": "field.encrypted",
-        "text": "Шифрование",
-        "lang": "ru"
+        "text": "Encryption",
+        "lang": "en"
        },
        "type": "boolean",
        "const": false
@@ -4782,18 +4782,18 @@
       "provider": {
        "x-label": {
         "key": "field.provider",
-        "text": "Провайдер",
-        "lang": "ru"
+        "text": "Provider",
+        "lang": "en"
        },
        "type": "null",
-       "description": "Облачный провайдер",
+       "description": "Cloud provider",
        "x-immutable": true
       },
       "recordMode": {
        "x-label": {
         "key": "field.recordMode",
-        "text": "Когда писать",
-        "lang": "ru"
+        "text": "When to record",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4801,35 +4801,35 @@
         "always"
        ],
        "default": "backup",
-       "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида. Нет поля — режим «Авто»: при сбое, а у камеры без основной записи в кластере из одного — постоянно",
+       "description": "How a server-wide archive records: continuously or only on failure. Values — archiveModes of the kind. No field — \"Auto\" mode: on failure, and continuously for a camera without a primary recording in a single-member cluster",
        "x-enum-labels": {
         "backup": {
          "key": "enum.archiveMode.backup",
-         "text": "Только при сбое",
-         "lang": "ru"
+         "text": "Only on failure",
+         "lang": "en"
         },
         "always": {
          "key": "enum.archiveMode.always",
-         "text": "Постоянно",
-         "lang": "ru"
+         "text": "Continuously",
+         "lang": "en"
         }
        }
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Глубина хранения; 0 — без ограничения",
+       "description": "Retention depth; 0 — unlimited",
        "minimum": 0
       },
       "storage": {
        "x-label": {
         "key": "field.storage",
-        "text": "Тип хранения",
-        "lang": "ru"
+        "text": "Storage type",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4867,8 +4867,8 @@
     },
     "label": {
      "key": "kind.archive.incidents",
-     "text": "Хранилище: инциденты",
-     "lang": "ru"
+     "text": "Storage: incidents",
+     "lang": "en"
     },
     "icon": "archive",
     "parents": [
@@ -4891,8 +4891,8 @@
      "class": "arch",
      "label": {
       "key": "access.arch",
-      "text": "Архивы",
-      "lang": "ru"
+      "text": "Archives",
+      "lang": "en"
      },
      "levels": [
       "FORBID",
@@ -4912,18 +4912,18 @@
       "admits": {
        "x-label": {
         "key": "field.admits",
-        "text": "Принимает записи",
-        "lang": "ru"
+        "text": "Accepts recordings",
+        "lang": "en"
        },
        "type": "boolean",
-       "description": "Принимает ли архив записи камер. false — новые привязки не принимаются, камера выбрать его не может",
+       "description": "Whether the archive accepts camera recordings. false — new bindings are not accepted; a camera cannot select it",
        "const": false
       },
       "encrypted": {
        "x-label": {
         "key": "field.encrypted",
-        "text": "Шифрование",
-        "lang": "ru"
+        "text": "Encryption",
+        "lang": "en"
        },
        "type": "boolean",
        "const": false
@@ -4931,28 +4931,28 @@
       "provider": {
        "x-label": {
         "key": "field.provider",
-        "text": "Провайдер",
-        "lang": "ru"
+        "text": "Provider",
+        "lang": "en"
        },
        "type": "null",
-       "description": "Облачный провайдер",
+       "description": "Cloud provider",
        "x-immutable": true
       },
       "retentionDays": {
        "x-label": {
         "key": "field.retentionDays",
-        "text": "Срок записи, дней",
-        "lang": "ru"
+        "text": "Recording retention, days",
+        "lang": "en"
        },
        "type": "integer",
-       "description": "Глубина хранения; 0 — без ограничения",
+       "description": "Retention depth; 0 — unlimited",
        "minimum": 0
       },
       "storage": {
        "x-label": {
         "key": "field.storage",
-        "text": "Тип хранения",
-        "lang": "ru"
+        "text": "Storage type",
+        "lang": "en"
        },
        "type": "string",
        "enum": [
@@ -4981,8 +4981,8 @@
    "id": "vms.domain/1",
    "label": {
     "key": "profile.vms.domain/1",
-    "text": "Домен",
-    "lang": "ru"
+    "text": "Domain",
+    "lang": "en"
    },
    "properties": [
     "license"
@@ -4992,8 +4992,8 @@
    "id": "vms.server/1",
    "label": {
     "key": "profile.vms.server/1",
-    "text": "Сервер",
-    "lang": "ru"
+    "text": "Server",
+    "lang": "en"
    },
    "properties": [
     "allocated",
@@ -5017,8 +5017,8 @@
    "id": "vms.folder/1",
    "label": {
     "key": "profile.vms.folder/1",
-    "text": "Папка",
-    "lang": "ru"
+    "text": "Folder",
+    "lang": "en"
    },
    "properties": []
   },
@@ -5026,8 +5026,8 @@
    "id": "vms.camera/1",
    "label": {
     "key": "profile.vms.camera/1",
-    "text": "Камера",
-    "lang": "ru"
+    "text": "Camera",
+    "lang": "en"
    },
    "properties": [
     "alarmKinds",
@@ -5096,8 +5096,8 @@
    "id": "vms.archive/1",
    "label": {
     "key": "profile.vms.archive/1",
-    "text": "Хранилище",
-    "lang": "ru"
+    "text": "Storage",
+    "lang": "en"
    },
    "properties": [
     "admits",
@@ -5112,8 +5112,8 @@
    "id": "vms.volume/1",
    "label": {
     "key": "profile.vms.volume/1",
-    "text": "Том",
-    "lang": "ru"
+    "text": "Volume",
+    "lang": "en"
    },
    "properties": [
     "account",
@@ -5149,8 +5149,8 @@
    "id": "vms.stream/1",
    "label": {
     "key": "profile.vms.stream/1",
-    "text": "Поток",
-    "lang": "ru"
+    "text": "Stream",
+    "lang": "en"
    },
    "properties": [
     "codec",
@@ -5166,8 +5166,8 @@
    "id": "vms.detector/1",
    "label": {
     "key": "profile.vms.detector/1",
-    "text": "Детектор",
-    "lang": "ru"
+    "text": "Detector",
+    "lang": "en"
    },
    "properties": [
     "alarmKinds",
@@ -5187,8 +5187,8 @@
    "id": "vms.acs/1",
    "label": {
     "key": "profile.vms.acs/1",
-    "text": "Единица СКУД с командами",
-    "lang": "ru"
+    "text": "Access control unit with commands",
+    "lang": "en"
    },
    "properties": [
     "enabled",
@@ -5213,8 +5213,8 @@
    "id": "vms.live/1",
    "label": {
     "key": "profile.vms.live/1",
-    "text": "Живое видео",
-    "lang": "ru"
+    "text": "Live video",
+    "lang": "en"
    },
    "properties": [],
    "apis": [
@@ -5226,7 +5226,7 @@
    "label": {
     "key": "profile.vms.ptz/1",
     "text": "PTZ",
-    "lang": "ru"
+    "lang": "en"
    },
    "properties": [
     "ptz",
@@ -5242,8 +5242,8 @@
    "id": "vms.talk/1",
    "label": {
     "key": "profile.vms.talk/1",
-    "text": "Разговор",
-    "lang": "ru"
+    "text": "Talk",
+    "lang": "en"
    },
    "properties": [
     "channel",
@@ -5258,8 +5258,8 @@
    "id": "vms.timeline/1",
    "label": {
     "key": "profile.vms.timeline/1",
-    "text": "Архив: шкала и записи",
-    "lang": "ru"
+    "text": "Archive: timeline and recordings",
+    "lang": "en"
    },
    "properties": [],
    "apis": [

@@ -4,20 +4,20 @@
 # with a ticket for that one request, and the worker calls the console back with the ticket, only on the doors this
 # manifest lists (ADR-0094 B1).
 #
-# A unit is a backend instance — `backend/instances/<name>` — placed by labels next to `live` (ADR-0094 доп. (6) п. 3),
+# A unit is a backend instance — `backend/instances/<name>` — placed by labels next to `live` (ADR-0094 addendum (6) item 3),
 # at most one on a server (B1; the review of V/11, question 8): the console passes a person's request to a live worker
 # of backend with a door (the pass rule of the gate contract), and the worker calls back over TLS with the certificate of
-# role `backend`; the ticket is bound to the leaf of role backend of the addressee instance's server (доп. (6) пп. 1, 2).
-# The role socket — only the profile without a kit (a stand, the loopback; доп. (6) п. 4). One row is enough; a second
-# is a reserve for a move (V/11.1 Н1.2).
+# role `backend`; the ticket is bound to the leaf of role backend of the addressee instance's server (addendum (6) items 1, 2).
+# The role socket — only the profile without a kit (a stand, the loopback; addendum (6) item 4). One row is enough; a second
+# is a reserve for a move (V/11.1 N1.2).
 name: backend
 # The slot a worker of this subsystem makes, `b-<n>`, and the variable naming the one it is started under beside
 # `WORKER_NAME` (`runtime.slot`).
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
-# request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
+# request it serves (V/11.1 N1.3). No state outside the platform's store: the memory of repeats of a group
 # `idempotencyKey` is always there, in its own table `repeats` (below) read through the console's door of tables and
-# written through its batch door with the ticket (V/11.4 Н1.4; the review of V/11, question 3); so are the ids of people and the history of the
+# written through its batch door with the ticket (V/11.4 N1.4; the review of V/11, question 3); so are the ids of people and the history of the
 # rights screen (`people`, `history`, V/11.8). The family `<sub>/idem/` is the console's own
 # memory of `Idempotency-Key` (P/06.1): backend does not touch it.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
@@ -32,7 +32,7 @@ unit:
     # (503 «no worker of backend with a door is heard»).
     enabled:   {type: bool,   default: true}
 placement:
-  # By labels next to `live` (ADR-0094 доп. (6) п. 3; B8 `placement.home strict` is not needed for backend): a worker
+  # By labels next to `live` (ADR-0094 addendum (6) item 3; B8 `placement.home strict` is not needed for backend): a worker
   # carries one instance; short of a worker on a label set, the controller orders one on a server with these labels.
   # At most one worker of a role with a callback on a server (B1, the review of V/11, question 8): the ticket is bound to
   # the leaf of the server, and two instances on one server would share it. Declared by the norm B1, not a key today.
@@ -41,19 +41,19 @@ placement:
   tie_break:  most-free-capacity
   grows:      true
 snapshot: [labels, enabled]
-# The pass (P/06.5 Н1.8), the second kind (ADR-0094 B1, ADR-0091 доп. (30); the contract of the gate and the pass,
-# «Передача второго вида»): a request under `routes` goes to a live worker of backend with a door, without the person's
+# The pass (P/06.5 N1.8), the second kind (ADR-0094 B1, ADR-0091 addendum (30); the contract of the gate and the pass,
+# "Second-kind pass"): a request under `routes` goes to a live worker of backend with a door, without the person's
 # Authorization, with a ticket for this one request. The API of the contract (V/11.2) lives under one segment, `api`
-# (ADR-0094 доп. (8) п. 2): the browser calls `/backend/api/<contract path>`, the worker gets `/api/<contract path>` (the
+# (ADR-0094 addendum (8) item 2): the browser calls `/backend/api/<contract path>`, the worker gets `/api/<contract path>` (the
 # mount prefix is not passed) and answers any path under it, a path the contract has not with 404 NO_ROUTE; the static
 # files (B7) are `/backend/<file>` outside `api/`, so the two spaces do not meet. The transport of the callback — V/11.1
-# Н1.2. Not here, because the platform fixes them: the headers, the media types and the loopback mark (V/11.1 Н1.5).
+# N1.2. Not here, because the platform fixes them: the headers, the media types and the loopback mark (V/11.1 N1.5).
 door:
   pass:
     routes: [api]
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
-    # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
+    # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 N1.5).
     wait: {api/kinds: 15, api/stream-accounts: 15, api/objects/delete: 30, api/units: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
     # The console's own refusals on api are `Problem` (question 5).
     refusals:
@@ -61,93 +61,93 @@ door:
       codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED, '502': UPSTREAM_UNAVAILABLE, '503': UPSTREAM_UNAVAILABLE, '504': UPSTREAM_UNAVAILABLE}
     # The group operations of consolem (ADR-0095, P/06.9): the console leads them, a step comes to the route `opstep`, which
     # no browser reaches (it is not under routes). Their table is a service one: a person sees only their own operation,
-    # by the ticket, and no line `sub: backend` exists (V/11.4 Н1.8).
+    # by the ticket, and no line `sub: backend` exists (V/11.4 N1.8).
     operations:
       step: opstep
       service: true
-    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where` of the other
+    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 N1.9). Not: `/where` of the other
     # subsystems, writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
-      - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
-      - cam/children                 # the holder's rows of a device's inputs, outputs and sound (V/01.1 Н1.2а)
-      - cam/preset_labels            # a preset that went through us and its name (V/11.4 Н1.16)
-      - cam/child_settings           # the operator's words on them; a PATCH merges: a POST of the table replaces the row (V/11.4 Н1.2)
-      - cam/device_units             # the units of a device: a door, a reader, a relay under a door (V/01.1 Н1.2б)
-      - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 Н1.2)
-      - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
-      - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
-      - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
-      - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
-      - live/streams                 # a person's stream of a camera, its network (V/11.4 Н1.15)
-      - GET live/where               # the gateway's address and token for a person's live view (V/11.4 Н1.15; ADR-0112 доп. (1))
-      - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 Н1.18)
-      - servers/labels               # PUT, DELETE of a server's labels (V/11.4 Н1.19)
-      - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 Н1.9, V/01.8)
+      - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 N1.3)
+      - cam/children                 # the holder's rows of a device's inputs, outputs and sound (V/01.1 N1.2a)
+      - cam/preset_labels            # a preset that went through us and its name (V/11.4 N1.16)
+      - cam/child_settings           # the operator's words on them; a PATCH merges: a POST of the table replaces the row (V/11.4 N1.2)
+      - cam/device_units             # the units of a device: a door, a reader, a relay under a door (V/01.1 N1.2b)
+      - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 N1.2)
+      - cam/next_id                  # a new camera names its number itself (V/11.4 N1.2)
+      - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 N1.3; V/01.4 N1.4e)
+      - cam/requests                 # `disable` with a past term (V/11.4 N1.2), presets (N1.16), a unit's command (N1.17)
+      - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 N1.16)
+      - live/streams                 # a person's stream of a camera, its network (V/11.4 N1.15)
+      - GET live/where               # the gateway's address and token for a person's live view (V/11.4 N1.15; ADR-0112 addendum (1))
+      - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 N1.18)
+      - servers/labels               # PUT, DELETE of a server's labels (V/11.4 N1.19)
+      - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 N1.9, V/01.8)
       - cam/found                    # what it found; a created candidate's row goes
-      - cam/probes                   # «which model», a question to every server (V/01.8 Н1.3)
+      - cam/probes                   # «which model», a question to every server (V/01.8 N1.3)
       - cam/probe_replies
       - rec/recordings               # the rows of rec, their tombstones (V/02.1)
       - rec/volumes
       - det/units                    # the rows of det, their tombstones (V/04.1)
-      - detjob/jobs                  # a scan of an archive and what it found (V/05.1; V/11.4 Н1.20)
-      - detedge/watches              # a watch of a device archive (V/06.1; V/11.4 Н1.20)
-      - auto/scenarios               # rules and the hidden row of recording by detectors (ADR-0105, ADR-0111 п. 4; V/11.4 Н1.10)
+      - detjob/jobs                  # a scan of an archive and what it found (V/05.1; V/11.4 N1.20)
+      - detedge/watches              # a watch of a device archive (V/06.1; V/11.4 N1.20)
+      - auto/scenarios               # rules and the hidden row of recording by detectors (ADR-0105, ADR-0111 item 4; V/11.4 N1.10)
       - auto/next_id                 # a new rule names its number itself, as a camera
-      - auto/rule_marks              # mute and order of a rule: they change no row of scenarios (V/11.4 Н1.10)
-      - auto/schedules               # the tables of automation: the evaluator reads them, backend or the console writes (V/11.4 Н1.11)
+      - auto/rule_marks              # mute and order of a rule: they change no row of scenarios (V/11.4 N1.10)
+      - auto/schedules               # the tables of automation: the evaluator reads them, backend or the console writes (V/11.4 N1.11)
       - auto/day_groups
       - auto/modes
       - auto/mode_current
       - auto/windows
-      - auto/versions                # the history of a rule, written in the batch of the edit (ADR-0106 п. 7)
-      - auto/answers                 # an operator answers `ask`, acknowledges `escalate` (V/07.6 Н1.9): waits for the contract
-      - auto/test                    # the evaluator's door: a trial run of a draft, the rule's code is one (ADR-0105 п. 7)
-      - auto/requests                # `run`, `retry`: filing only, the person of the ticket is judged (V/11.4 Н1.10; P/06.3 Н1.9)
-      - cam/policy                   # the common settings of these subsystems (ADR-0094 доп. (2) п. 6)
+      - auto/versions                # the history of a rule, written in the batch of the edit (ADR-0106 item 7)
+      - auto/answers                 # an operator answers `ask`, acknowledges `escalate` (V/07.6 N1.9): waits for the contract
+      - auto/test                    # the evaluator's door: a trial run of a draft, the rule's code is one (ADR-0105 item 7)
+      - auto/requests                # `run`, `retry`: filing only, the person of the ticket is judged (V/11.4 N1.10; P/06.3 N1.9)
+      - cam/policy                   # the common settings of these subsystems (ADR-0094 addendum (2) item 6)
       - rec/policy
       - det/policy
-      - console/batch                # a device is one batch (B9, V/11.4 Н1.2, Н1.4)
+      - console/batch                # a device is one batch (B9, V/11.4 N1.2, N1.4)
       - changes                      # the change feed (B2, V/11.5)
       - GET manifest
       - GET servers
       - GET events
       - GET session                  # «who am I» and its grants (can_edit)
-      - GET schema                   # the tool get_schema (V/11.7 Н1.2)
-      - GET assist/models            # the assistant's default model (V/11.7 Н1.2)
-      - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; доп. (12) п. 7)
-      - folders                      # the copy of the domain's folders; outside a domain the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
-      - domain/folders               # the tree of the domain (P/08.5 Н1.8; V/11.4 Н1.7)
-      - domain/memberof              # who stands in which folder: not one batch with the folder (ADR-0110 доп. (5) п. 3)
-      - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
-      - GET rec/where                # a recorder's door and the person's token: timeline, verify, the address of a piece (V/11.1 Н1.2а)
-      - rec/keeps                    # holds (V/11.4 Н1.23)
+      - GET schema                   # the tool get_schema (V/11.7 N1.2)
+      - GET assist/models            # the assistant's default model (V/11.7 N1.2)
+      - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; addendum (12) item 7)
+      - folders                      # the copy of the domain's folders; outside a domain the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 N1.7)
+      - domain/folders               # the tree of the domain (P/08.5 N1.8; V/11.4 N1.7)
+      - domain/memberof              # who stands in which folder: not one batch with the folder (ADR-0110 addendum (5) item 3)
+      - backend/operations           # the group operations (P/06.9; V/11.4 N1.8)
+      - GET rec/where                # a recorder's door and the person's token: timeline, verify, the address of a piece (V/11.1 N1.2a)
+      - rec/keeps                    # holds (V/11.4 N1.23)
       - GET rec/heartbeats           # the words of a hold in the pulse
-      - rec/requests                 # filing a fetch (V/11.4 Н1.25)
-      - marks                        # a bookmark: POST only, `edit` on the unit of the body, the ticket's person (V/11.4 Н1.24)
-      - exp/parts                    # an export order: the part rows in one batch, reads, a part without a holder by CAS (V/11.20; V/08.6, V/08.8 Н1.4)
-      - exp/requests                 # cancel, delete of a part (V/11.20 Н1.4; V/08.8)
-      - GET exp/where                # the file door and the person's token: the link to a file (V/11.20 Н1.6; V/08.9 Н1.1)
-      - GET exp/heartbeats           # a part's holder alive: the heartbeat against LOST_AFTER (V/11.20 Н1.4; V/08.8 Н1.4)
-      - domain/verify                # the supervision of an order (V/11.20 Н1.2; ADR-0119 п. 5)
-      - GET domain/rec/books/primaries/* # recordings of other clusters: the section of the camera's ref at the holder (V/11.4 Н1.22)
+      - rec/requests                 # filing a fetch (V/11.4 N1.25)
+      - marks                        # a bookmark: POST only, `edit` on the unit of the body, the ticket's person (V/11.4 N1.24)
+      - exp/parts                    # an export order: the part rows in one batch, reads, a part without a holder by CAS (V/11.20; V/08.6, V/08.8 N1.4)
+      - exp/requests                 # cancel, delete of a part (V/11.20 N1.4; V/08.8)
+      - GET exp/where                # the file door and the person's token: the link to a file (V/11.20 N1.6; V/08.9 N1.1)
+      - GET exp/heartbeats           # a part's holder alive: the heartbeat against LOST_AFTER (V/11.20 N1.4; V/08.8 N1.4)
+      - domain/verify                # the supervision of an order (V/11.20 N1.2; ADR-0119 item 5)
+      - GET domain/rec/books/primaries/* # recordings of other clusters: the section of the camera's ref at the holder (V/11.4 N1.22)
       - GET domain/at/rec/where      # the door of a recording of another cluster
-      - GET domain/at/rec/timeline   # the timeline of another cluster, its console passes it (ADR-0112 доп. (13) п. 10; P/06.7 Н1.6)
+      - GET domain/at/rec/timeline   # the timeline of another cluster, its console passes it (ADR-0112 addendum (13) item 10; P/06.7 N1.6)
       - GET domain/at/rec/keeps
       - GET domain/at/rec/heartbeats
-      - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
-      # The view of the domain, how another member's rows are read (V/11.3 Н1.2а; ADR-0110 доп. (2)): the members, their
+      - GET domain/cam/books/licence # the licence, read only (V/11.3 N1.3; P/06.3 N1.9)
+      # The view of the domain, how another member's rows are read (V/11.3 N1.2a; ADR-0110 addendum (2)): the members, their
       # servers, the knocking; a recording's server by its `ref`; a member's tables, one member a call.
       - GET domain
       - GET domain/rec/recordings
-      - GET domain/cam/cameras       # camera clusters: pages of the view, ADR-0113 доп. (8) п. 1
-      - GET domain/cam/kept/state-summary # the states of the domain's cameras, a circle old (V/01.7 Н1.2)
-      - GET domain/relays            # who stands behind a relay, one row (V/11.3 Н1.2а)
-      - GET domain/topology          # the relays themselves (ADR-0112 доп. (12) п. 1)
-      - GET domain/shared/auto       # the document of scenarios, this cluster's copy (V/11.4 Н1.21)
+      - GET domain/cam/cameras       # camera clusters: pages of the view, ADR-0113 addendum (8) item 1
+      - GET domain/cam/kept/state-summary # the states of the domain's cameras, a circle old (V/01.7 N1.2)
+      - GET domain/relays            # who stands behind a relay, one row (V/11.3 N1.2a)
+      - GET domain/topology          # the relays themselves (ADR-0112 addendum (12) item 1)
+      - GET domain/shared/auto       # the document of scenarios, this cluster's copy (V/11.4 N1.21)
       - domain/shared                # its edit, whole, by the domain's admin
-      - GET auto/heartbeats          # the state of the scenarios in the pulse of this cluster (ADR-0112 доп. (12) п. 3)
-      - GET domain/at/auto/heartbeats # its state in the pulse of another member (ADR-0112 доп. (12) п. 3)
+      - GET auto/heartbeats          # the state of the scenarios in the pulse of this cluster (ADR-0112 addendum (12) item 3)
+      - GET domain/at/auto/heartbeats # its state in the pulse of another member (ADR-0112 addendum (12) item 3)
       - GET domain/cam/tables/cameras
       - GET domain/cam/tables/devices
       - GET domain/cam/tables/children
@@ -164,64 +164,64 @@ door:
       - GET domain/auto/tables/schedules
       - GET domain/auto/tables/day_groups
       - GET domain/auto/tables/windows
-      - GET domain/at/auto/versions  # beyond the view: the console of the target's cluster (ADR-0111 п. 15; V/11.3 Н1.2а)
-      - GET domain/at/events         # the journal of the target's cluster: the fires of its rule (V/11.3 Н1.2а)
-      - domain/edits                 # a kept edit of another member's row, one device a line (V/11.4 Н1.13)
-      - domain/members               # taking a box in, leaving out (V/11.4 Н1.14): the domain's admin is judged
-      - domain/placement             # the recorder of a camera (V/11.4 Н1.14)
-      - GET domain/users             # the snapshot of rights (V/11.8 Н1.1)
+      - GET domain/at/auto/versions  # beyond the view: the console of the target's cluster (ADR-0111 item 15; V/11.3 N1.2a)
+      - GET domain/at/events         # the journal of the target's cluster: the fires of its rule (V/11.3 N1.2a)
+      - domain/edits                 # a kept edit of another member's row, one device a line (V/11.4 N1.13)
+      - domain/members               # taking a box in, leaving out (V/11.4 N1.14): the domain's admin is judged
+      - domain/placement             # the recorder of a camera (V/11.4 N1.14)
+      - GET domain/users             # the snapshot of rights (V/11.8 N1.1)
       - GET domain/groups
       - GET domain/roles
       - GET domain/grants
-      - domain/batch                 # people, groups, roles in one batch, the rows of one cluster a batch (V/11.8 Н1.5)
-      - domain/roles/lines           # a role's rights on the whole domain: the source the rows spread from (V/11.8 Н1.5; ADR-0111 п. 16)
-      - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
-      - backend/people               # its own table: the id of a person (V/11.8 Н1.2)
-      - backend/history              # its own table: the history of the rights screen (V/11.8 Н1.7)
-      - backend/undo                 # its own table: the stack of undo (ADR-0106; V/11.4 Н1.12)
-# B7 (ADR-0094 доп. (1); P/02.1 `console.shell`, `console.files`, P/02.3, P/06.5 Н1.1 `mounted`), the keys in `console:`
+      - domain/batch                 # people, groups, roles in one batch, the rows of one cluster a batch (V/11.8 N1.5)
+      - domain/roles/lines           # a role's rights on the whole domain: the source the rows spread from (V/11.8 N1.5; ADR-0111 item 16)
+      - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 N1.4)
+      - backend/people               # its own table: the id of a person (V/11.8 N1.2)
+      - backend/history              # its own table: the history of the rights screen (V/11.8 N1.7)
+      - backend/undo                 # its own table: the stack of undo (ADR-0106; V/11.4 N1.12)
+# B7 (ADR-0094 addendum (1); P/02.1 `console.shell`, `console.files`, P/02.3, P/06.5 N1.1 `mounted`), the keys in `console:`
 # below (the installer reads each file, the manifest row keeps its SHA-256 and size): the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, by the name without the
 # query (the shell links `<file>?v=<12 hex>`); no file of the set is named under `api/` — that is the space of the API
-# (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/ because `console.shell: true` declares it
-# (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
-# of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
-# not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
+# (ADR-0094 addendum (8) item 2). It serves backend.shell.html at /backend/ because `console.shell: true` declares it
+# (addendum (3) item 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
+# of P/06.5 N1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
+# not stricter: inline styles and `data:` images stay allowed (addendum (8) items 1, 4).
 # The build: consolem @cb728a4 --without-learn (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 90e9cd59…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# backend.shell.html (SHA-256 90e9cd59…), the rest is the set (V/11.1 N1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
 # SHA-256 of each (the lesson's README): 8bb1a481… app.css, c63a68a3… app.js, 3124abf3… client.js,
 # 693b77d4… fonts/InterVariable.woff2, b68839ec… i18n-en.js, d944eed1… openapi.js, c1e5524f… whep-stub.js
 # (assets/stub-piece.mp4 of the build is left out: `.mp4` is outside console.files, and backend never gives stub://).
 # The set — SHA-256 083b1638b30c759fc67841b56d1691846cd0424a7435c6a0f7ef84350f40ffb1.
-# The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
+# The memory of repeats of a group `idempotencyKey` (V/11.4 N1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
-# row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 Н1.6): a row not by
-# them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after`: the
+# row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 N1.6): a row not by
+# them is unreadable — backend answers 503 and runs nothing (V/11.4 N1.4). Its lifetime — `delete_after`: the
 # console counts it from the first sight of the row's version, so it can only grow; the platform's reaper removes the row.
 tables:
   repeats:
     key: h
-    service: true                    # by a live ticket from a leaf of this role only, the person's may is not asked (P/06.1 Н1.6)
-    delete_after: 86400              # as the console's own memory of repeats (P/06.1 Н3)
+    service: true                    # by a live ticket from a leaf of this role only, the person's may is not asked (P/06.1 N1.6)
+    delete_after: 86400              # as the console's own memory of repeats (P/06.1 N3)
     fields:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
       idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
-      # the operationId of the group whose memory this is (V/11.4 Н1.4, the contract 0.2.0); runRule, retryRuleFire,
+      # the operationId of the group whose memory this is (V/11.4 N1.4, the contract 0.2.0); runRule, retryRuleFire,
       # runUnitAction keep their key in the console's memory of requests, runKindAction and checkExport write nothing
       op:       {type: string, required: true, enum: [createUnits, deleteObjects, createOperation, updateRules, createExport]}
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
       operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation
-      # the steps' outcomes by the index of `items`, as the text of a JSON array (V/11.4 Н1.4): a `json` field stops at
+      # the steps' outcomes by the index of `items`, as the text of a JSON array (V/11.4 N1.4): a `json` field stops at
       # 4000 bytes and a group is longer. An element: index (integer ≥ 0), outcome (done | failed), and at will id (the
       # id of the step's record), code (the contract's code of a failed step), field; nothing else.
       steps:
         type: string
         default: "[]"
-  # The id consolem knows a person by (V/11.8 Н1.2): a person's name is their login, so the id cannot be the key.
+  # The id consolem knows a person by (V/11.8 N1.2): a person's name is their login, so the id cannot be the key.
   people:
     key: h
     service: true
@@ -229,7 +229,7 @@ tables:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the name: `.` is no key
       login:    {type: string, required: true, schema: {minLength: 1}}
       id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
-  # The history of the rights screen (V/11.8 Н1.7): the platform's journal stays the record, this only shows it.
+  # The history of the rights screen (V/11.8 N1.7): the platform's journal stays the record, this only shows it.
   history:
     key: id
     service: true
@@ -239,7 +239,7 @@ tables:
       kind:     {type: string, required: true, enum: [history, cell]}
       when:     {type: string, required: true, schema: {minLength: 1}}   # RFC 3339 UTC
       entry:    {type: json, required: true, schema: {type: object}}     # AccessHistoryWrite or AccessCellWrite, with `actor`
-  # The stack of undo (ADR-0106 доп. (1), (2); V/11.4 Н1.12): a row per operation that went through backend, a single edit
+  # The stack of undo (ADR-0106 addendum (1), (2); V/11.4 N1.12): a row per operation that went through backend, a single edit
   # is an operation of one step. The console's rows of an operation are closed and live a day, so this is backend's own.
   # Its lifetime is UNDO_DAYS, 7 days, by `delete_after`; UNDO_KEEP, 50, backend holds itself when it adds a row.
   undo:
@@ -252,7 +252,7 @@ tables:
       user:     {type: string, required: true, schema: {minLength: 1}}   # the author: only they read and undo it
       single:   {type: bool, default: false}                             # not `POST /operations`: a single edit or a group request
       revert_of:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation undoes that one
-      redo_of:     {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation redoes that one (V/11.4 Н1.12)
+      redo_of:     {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation redoes that one (V/11.4 N1.12)
       redone_by:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last redo of this row: its `memory`, a double click does not redo twice
       reverted_by: {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last undo of this row; a row of `steps` closed by it says `reverted`, a failed one stays open
       overflow: {type: bool, default: false}                             # `steps` did not fit a row: not undoable
@@ -266,16 +266,16 @@ metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: instances_running         # backend_instances_running
-  shell: true                        # backend.shell.html at /backend/ (P/06.5 Н1.1 `mounted`)
-  files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js, whep-stub.js]   # /backend/<file> (V/11.1 Н1.4)
+  shell: true                        # backend.shell.html at /backend/ (P/06.5 N1.1 `mounted`)
+  files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js, whep-stub.js]   # /backend/<file> (V/11.1 N1.4)
 # What a page calls a unit of it (the product's words, one spec on both sides).
 display:
-  unit: бэкенд конфигуратора
-  units: бэкенды конфигуратора
-  units_count: бэкендов конфигуратора
-  section: Конфигуратор
-  general: Бэкенд
+  unit: configurator backend
+  units: configurator backends
+  units_count: configurator backends
+  section: Configurator
+  general: Backend
   fields:
-    name: имя
-    labels: метки серверов
-    enabled: включён
+    name: name
+    labels: server labels
+    enabled: enabled
