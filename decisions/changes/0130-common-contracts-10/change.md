@@ -49,11 +49,11 @@ Base `ef7192b2dd9bccb091e2c9066f7ded0dea66d49e`; accepted2372 is an ancestor. Ap
 | `Platform/common/ru/contracts/turn.md` | modify | 83de5f27cc8f86168736904c2771302bc3b96024 | a280b4b3abbee9a1acae0d342162cfafee33c088 |
 | `Platform/common/ru/vectors/accept/README.md` | modify | 600bc80c763632eefe2b4124cd440c635c63804c | 660347493595ce88f1308e631153731a3cec32d7 |
 | `Platform/common/ru/vectors/domain-envelopes/README.md` | modify | ea5fc052403de2a4cccf8c557910769ee5800b1c | 6da83b1d9046e77b9c48233531955398fd51f206 |
-| `Platform/common/ru/vectors/production-obligations/README.md` | add | - | 642433b06d4c976e4ef45422140f7281ad003498 |
+| `Platform/common/ru/vectors/production-obligations/README.md` | add | - | e520ed12d73180bfd2498a6e6f08fbdbabc9d4ae |
 | `Platform/common/ru/vectors/tombstone/README.md` | modify | 7568c681e3f17a1122da9714e060953a8dc71954 | 5ecf591b669a73df193a1059959e83b2018077c4 |
 | `Platform/common/vectors/accept/README.md` | modify | f2557efb52a1ebbef2e7f901cdabcfdf2863bd87 | d9f440568a439cb4b5ce68d94654874632111c8a |
 | `Platform/common/vectors/domain-envelopes/README.md` | modify | 4a04bd4811da5fa1214499fe11e8752f9f1d7494 | e539ed028aded5895ec35a016b145957f4ae9f5b |
-| `Platform/common/vectors/production-obligations/README.md` | add | - | 755a8af6b29fee7f0d97361d9cfae2f318e01f01 |
+| `Platform/common/vectors/production-obligations/README.md` | add | - | b479f5ef887abe91b5fca13a5ac76b80969293b2 |
 | `Platform/common/vectors/tombstone/README.md` | modify | e351388662d1f4a7e76ccad9926d80d45f1aa1cf | 0a29bf39a8ac8bd30ecde9d1d5d55587d0c6144f |
 | `decisions/changes/0130-common-contracts-10/delta.md` | add | - | e81aba07682f06ede29ff4bb3fb9ad38b5fad2b1 |
 | `decisions/changes/registry.tsv` | modify | e6b3927246876766bca5aff539bbf7bb0f513ca6 | 4ce16547b1e1e6b8b379a2eeada7940149f0ad98 |
