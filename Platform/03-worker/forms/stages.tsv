@@ -1,7 +1,7 @@
 # A possible implementation order for P/03 (ADR-0126): a plan, not a norm or a reduction of the lesson checklist.
 # Read every chapter and imported contract in full. Existing chapter reading dependencies on P/04, P/05 and P/08–P/10 remain.
 # gate uses the P/01 grammar: seams:<chapter>:<cases|*>, accept:<chapter>:<cases|*>, vectors:<own package>, build; checks separated by ;.
-# seams runs the seams.tsv of the chapter through the seam adapter over the real SDK code. accept is the process runner's scenarios.tsv, never seams.tsv. Former gates keep holding.
+# seams runs the seams.tsv of the chapter through the seam adapter over the real implementation code. accept is the process runner's scenarios.tsv, never seams.tsv. Former gates keep holding.
 # weight: relative 1–5. forms/slot-capture.tsv names the capture transitions.
 # A green build or a cache seam does not close the domain stand. Common vectors use consumers.tsv and the package README selections; run all assigned tables, not just the local creates-key package.
 # Final P/03 acceptance, OS races and domain dependencies remain those of the implementation README and the runner. Missing dependencies are not PASS.
