@@ -711,7 +711,7 @@
   },
   {
    "id": "gap-units",
-   "note": "the limit of Н1.6: the number does not know units, 300 s are accepted for «5 часов»",
+   "note": "the limit of N1.6: the number does not know units, 300 s are accepted for «5 часов»",
    "request": "When the Gate Loop sensor trips, wait 5 hours and raise an alarm on Gate Cam.",
    "row": {
     "when": [
@@ -752,7 +752,7 @@
   },
   {
    "id": "gap-dropped-step",
-   "note": "the limit of Н1.7: the check does not see a dropped step, the reconciliation accepts the plan",
+   "note": "the limit of N1.7: the check does not see a dropped step, the reconciliation accepts the plan",
    "request": "When a line is crossed on Fence East, raise an alarm on it and arm Fence West.",
    "row": {
     "when": [
@@ -1660,7 +1660,7 @@
   },
   {
    "id": "escalate-email",
-   "note": "via not client: there is no mail and Telegram, Н1.5",
+   "note": "via not client: there is no mail and Telegram, N1.5",
    "request": "When the Gate Loop sensor trips, escalate to the Guards, 5 minutes per level.",
    "row": {
     "when": [
@@ -2649,7 +2649,7 @@
   },
   {
    "id": "wait-still-yes",
-   "note": "the limit of Н1.6: the layer does not judge the branch of wait_event, «if still» in yes passes",
+   "note": "the limit of N1.6: the layer does not judge the branch of wait_event, «if still» in yes passes",
    "request": "When the Gate Loop sensor trips, give it 60 seconds for a line cross on Fence West; if still none, raise an alarm on Gate Cam.",
    "row": {
     "when": [
@@ -2940,7 +2940,7 @@
   },
   {
    "id": "disable-ru-gap",
-   "note": "the limit of Н1.6: «выключи камеру» also lets a disabled rule through",
+   "note": "the limit of N1.6: «выключи камеру» also lets a disabled rule through",
    "request": "Когда сработает датчик Gate Loop, выключи камеру Lobby Cam на 30 минут.",
    "row": {
     "when": [
@@ -3001,7 +3001,7 @@
   },
   {
    "id": "vanish-silent-gap",
-   "note": "the limit of Н1.6: «пропад» also lets silent through, the substitution is caught by the display and observation",
+   "note": "the limit of N1.6: «пропад» also lets silent through, the substitution is caught by the display and observation",
    "request": "Если сумка пропадёт со стойки у Lobby Cam, подними тревогу на Lobby Cam.",
    "row": {
     "when": [
@@ -3343,7 +3343,7 @@
   },
   {
    "id": "open-other-number",
-   "note": "N is the port of the step: «relay 3» with port 2 is not the number, the relay is not named (review of addendum (27) М1); a pass by the last word of the camera Gate Cam — no, a question (addendum (29) item 5)",
+   "note": "N is the port of the step: «relay 3» with port 2 is not the number, the relay is not named (review of addendum (27) M1); a pass by the last word of the camera Gate Cam — no, a question (addendum (29) item 5)",
    "request": "When the Gate Loop sensor trips, open relay 3 of Gate Cam.",
    "row": {
     "when": [
@@ -3374,7 +3374,7 @@
   },
   {
    "id": "unit-event-discard",
-   "note": "an event word with boundaries: card not in discard (review of addendum (27) М2)",
+   "note": "an event word with boundaries: card not in discard (review of addendum (27) M2)",
    "request": "When the Rear Gate Reader reports a discard, raise an alarm on Rear Gate.",
    "row": {
     "when": [
@@ -3612,7 +3612,7 @@
   },
   {
    "id": "ru-open-numero",
-   "note": "«реле № 2» — a number with the sign and a space (addendum (29) item 6, review (29) М3)",
+   "note": "«реле № 2» — a number with the sign and a space (addendum (29) item 6, review (29) M3)",
    "request": "Когда сработает датчик Gate Loop, открой реле № 2 у Gate Cam.",
    "row": {
     "when": [
@@ -3812,7 +3812,7 @@
   },
   {
    "id": "runrule-running-gap",
-   "note": "the limit of Н1.6: running lets runrule through instead of recording (addendum (31) item 3)",
+   "note": "the limit of N1.6: running lets runrule through instead of recording (addendum (31) item 3)",
    "request": "When motion is seen on Lobby Cam while Yard tour is running, record it for 5 minutes.",
    "row": {
     "when": [
@@ -3889,7 +3889,7 @@
   },
   {
    "id": "disarm-snyat",
-   "note": "«снять» without «охран» — filming (review of addendum (31) М1)",
+   "note": "«снять» without «охран» — filming (review of addendum (31) M1)",
    "request": "Когда сработает датчик Gate Loop, снять двор камерой Lobby Cam.",
    "row": {
     "when": [
@@ -3917,7 +3917,7 @@
   },
   {
    "id": "disarm-guard-anywhere-gap",
-   "note": "the limit of Н1.6: «охран» anywhere in the text lets cam disarm through (review of addendum (31) М2)",
+   "note": "the limit of N1.6: «охран» anywhere in the text lets cam disarm through (review of addendum (31) M2)",
    "request": "Когда сработает датчик Gate Loop, пусть Lobby Cam снимает двор, а Dock Cam поставь на охрану.",
    "row": {
     "when": [
@@ -3949,7 +3949,7 @@
   },
   {
    "id": "arm-from-disarm-gap",
-   "note": "the limit of Н1.6: «сними с охраны» also lets cam arm through (review of addendum (31) М2)",
+   "note": "the limit of N1.6: «сними с охраны» also lets cam arm through (review of addendum (31) M2)",
    "request": "Когда сработает датчик Gate Loop, сними Lobby Cam с охраны.",
    "row": {
     "when": [
@@ -4205,7 +4205,7 @@
   },
   {
    "id": "ask-default-yes-da",
-   "note": "«нет ответа считается да» — да with boundaries",
+   "note": "«нет ответа считается да» — «да» with boundaries",
    "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа считается да.",
    "row": {
     "when": [
@@ -4251,7 +4251,7 @@
   },
   {
    "id": "ask-default-no-ru",
-   "note": "«нет ответа — не поднимай»: a negation before поднима (addendum (33) item 1)",
+   "note": "«нет ответа — не поднимай»: a negation before the stem «поднима» (addendum (33) item 1)",
    "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не поднимай.",
    "row": {
     "when": [
@@ -4299,7 +4299,7 @@
   },
   {
    "id": "ask-default-no-ru-between",
-   "note": "«не надо поднимать»: one word in between (review (33) М2)",
+   "note": "«не надо поднимать»: one word in between (review (33) M2)",
    "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не надо поднимать.",
    "row": {
     "when": [
@@ -4347,7 +4347,7 @@
   },
   {
    "id": "ask-default-no-curly",
-   "note": "«don’t» with the apostrophe U+2019 — into ' before reconciliation (review (33) М2, review of norms (28)–(31) М1)",
+   "note": "«don’t» with the apostrophe U+2019 — into ' before reconciliation (review (33) M2, review of norms (28)–(31) M1)",
    "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; if nobody answers, don’t raise it anyway.",
    "row": {
     "when": [
@@ -4531,7 +4531,7 @@
   },
   {
    "id": "recording-ru-not-gap",
-   "note": "the limit of Н1.6: «не пишет» lets recording true through (addendum (33) item 3)",
+   "note": "the limit of N1.6: «не пишет» lets recording true through (addendum (33) item 3)",
    "request": "При движении на Lobby Cam писать её 5 минут, только если Dock Cam не пишет.",
    "row": {
     "when": [
@@ -4620,7 +4620,7 @@
   },
   {
    "id": "ask-default-yes-podnimi",
-   "note": "«подними тревогу» — default yes, the stem «подним» (review of norms (32), (33) М1)",
+   "note": "«подними тревогу» — default yes, the stem «подним» (review of norms (32), (33) M1)",
    "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — подними тревогу.",
    "row": {
     "when": [
@@ -4712,7 +4712,7 @@
   },
   {
    "id": "ask-default-no-zabud",
-   "note": "«не забудь поднять» — a negation one word away: a question instead of default yes, the limit of Н1.6",
+   "note": "«не забудь поднять» — a negation one word away: a question instead of default yes, the limit of N1.6",
    "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не забудь поднять тревогу.",
    "row": {
     "when": [
@@ -4760,7 +4760,7 @@
   },
   {
    "id": "segment-loses",
-   "note": "«loses its recording» — segment.lost (addendum (34), review (34) М1)",
+   "note": "«loses its recording» — segment.lost (addendum (34), review (34) M1)",
    "request": "When Dock Cam loses its recording, raise an alarm on Dock Cam.",
    "row": {
     "when": [
@@ -4828,7 +4828,7 @@
   },
   {
    "id": "armed-off-guard",
-   "note": "«off guard» — value false of the condition armed (review (34) М2)",
+   "note": "«off guard» — value false of the condition armed (review (34) M2)",
    "request": "On motion on Lobby Cam record it for 5 minutes, only if Lobby Cam is off guard.",
    "row": {
     "when": [
@@ -4910,7 +4910,7 @@
   },
   {
    "id": "disarm-caught-off-guard-gap",
-   "note": "the limit of Н1.6: «caught off guard» lets cam disarm through (addendum (34))",
+   "note": "the limit of N1.6: «caught off guard» lets cam disarm through (addendum (34))",
    "request": "When the Gate Loop sensor trips, so that no one is caught off guard, raise an alarm on Lobby Cam.",
    "row": {
     "when": [
@@ -4937,7 +4937,7 @@
   },
   {
    "id": "segment-lose",
-   "note": "«lose recording» — segment.lost (review of norms (34) М1)",
+   "note": "«lose recording» — segment.lost (review of norms (34) M1)",
    "request": "If Dock Cam cameras lose recording, raise an alarm on Dock Cam.",
    "row": {
     "when": [
@@ -5185,7 +5185,7 @@
   },
   {
    "id": "lost-two-events",
-   "note": "the limit of Н1.6: a recording loss and «сумка lost» in one request — the correct disappeared goes to a question (review of addendum (36) М1)",
+   "note": "the limit of N1.6: a recording loss and «сумка lost» in one request — the correct disappeared goes to a question (review of addendum (36) M1)",
    "request": "If recording is lost on Dock Cam or the bag on Lobby Cam is lost, raise an alarm on Lobby Cam.",
    "row": {
     "when": [
@@ -5308,7 +5308,7 @@
   },
   {
    "id": "arm-put-on-guard-names",
-   "note": "«put Fence East and Fence West on guard»: by cut(t) between put and on guard one word (R22 of «Пилот»)",
+   "note": "«put Fence East and Fence West on guard»: by cut(t) between put and on guard one word (R22 of \"Pilot\")",
    "request": "When the Gate Loop sensor trips, put Fence East and Fence West on guard.",
    "row": {
     "when": [
@@ -5443,7 +5443,7 @@
   },
   {
    "id": "step-ask-polite",
-   "note": "«I ask you» — politeness, not the step ask (review (38) М1)",
+   "note": "«I ask you» — politeness, not the step ask (review (38) M1)",
    "request": "I ask you: on motion on Lobby Cam record it for 5 minutes.",
    "row": {
     "when": [
@@ -5466,7 +5466,7 @@
   },
   {
    "id": "step-scan-plate",
-   "note": "«plate is scanned» — lpr, not det scan (review (38) М1)",
+   "note": "«plate is scanned» — lpr, not det scan (review (38) M1)",
    "request": "When a plate is scanned on Gate Cam, raise an alarm on Gate Cam.",
    "row": {
     "when": [
@@ -5659,7 +5659,7 @@
   },
   {
    "id": "same-cam-any-camera",
-   "note": "the trigger cam without unit — wide, from_event is needed (review (38) М2)",
+   "note": "the trigger cam without unit — wide, from_event is needed (review (38) M2)",
    "request": "When any camera goes silent, raise an alarm on that same camera.",
    "row": {
     "when": [
@@ -5761,7 +5761,7 @@
   },
   {
    "id": "lost-bag-start-recording",
-   "note": "«lost, start recording»: the narrow segment_lost_phrase does not cut the bare lost about a bag (review of norms (37)–(38) С1)",
+   "note": "«lost, start recording»: the narrow segment_lost_phrase does not cut the bare lost about a bag (review of norms (37)–(38) S1)",
    "request": "If the bag on Lobby Cam is lost, start recording Lobby Cam for 5 minutes.",
    "row": {
     "when": [
@@ -5784,7 +5784,7 @@
   },
   {
    "id": "step-scan-dropped-ru",
-   "note": "«просканируй архив» — det scan, there is no step («Пилот»'s question)",
+   "note": "«просканируй архив» — det scan, there is no step (\"Pilot\"'s question)",
    "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam и просканируй архив Gate Cam.",
    "row": {
     "when": [
@@ -5822,7 +5822,7 @@
   },
   {
    "id": "step-escalate-dropped-ru",
-   "note": "«эскалация» — the step escalate, it is missing («Пилот»'s question)",
+   "note": "«эскалация» — the step escalate, it is missing (\"Pilot\"'s question)",
    "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam, эскалация Guards в клиенте.",
    "row": {
     "when": [
@@ -5860,7 +5860,7 @@
   },
   {
    "id": "lost-recording-drops",
-   "note": "M04 of «Пилот»: «recording drops … the camera that lost it» — segment.lost, a bare lost does not let silent through",
+   "note": "M04 of \"Pilot\": «recording drops … the camera that lost it» — segment.lost, a bare lost does not let silent through",
    "request": "If recording drops on any camera in Building A, raise an alarm on the camera that lost it.",
    "row": {
     "when": [
@@ -5899,7 +5899,7 @@
   },
   {
    "id": "step-scan-dropped-ot",
-   "note": "«отсканируй архив» — det scan, there is no step (review of norms words-93j М1)",
+   "note": "«отсканируй архив» — det scan, there is no step (review of norms words-93j M1)",
    "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam и отсканируй архив Gate Cam.",
    "row": {
     "when": [

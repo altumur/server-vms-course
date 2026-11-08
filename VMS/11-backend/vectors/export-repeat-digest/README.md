@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/export-repeat-digest/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is V/11.20 Н1.2, the body-digest rule in [the chapter norms](../../spec/11.20-backend.norms.md); the stored field is `body` of `backend/repeats` in [V/11.4 Н1.4](../../spec/11.4-backend.norms.md). This package changes no other operation. It isolates digest calculation, not the acceptance of an HTTP request or a write. Every password in the table is synthetic test data.
+The owner is V/11.20 N1.2, the body-digest rule in [the chapter norms](../../spec/11.20-backend.norms.md); the stored field is `body` of `backend/repeats` in [V/11.4 N1.4](../../spec/11.4-backend.norms.md). This package changes no other operation. It isolates digest calculation, not the acceptance of an HTTP request or a write. Every password in the table is synthetic test data.
 
 ## `cases.tsv`
 

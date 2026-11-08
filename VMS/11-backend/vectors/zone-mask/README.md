@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/zone-mask/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson V/11 ([the norms of chapter 3](../../spec/11.3-backend.norms.md) Н1.3 «`zone`»; ADR-0112 addendum (1) item 3). They fix `ZONE_MASK` = 256 and the point rule. The numbers are derived from the norm and are not checked by an implementation. The run — with the `backend` driver.
+The owner is lesson V/11 ([the norms of chapter 3](../../spec/11.3-backend.norms.md) N1.3 «`zone`»; ADR-0112 addendum (1) item 3). They fix `ZONE_MASK` = 256 and the point rule. The numbers are derived from the norm and are not checked by an implementation. The run — with the `backend` driver.
 
 ## `cases.tsv`
 

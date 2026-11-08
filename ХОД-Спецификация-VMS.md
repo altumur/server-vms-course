@@ -625,3 +625,5 @@
 2026-11-08 — V/11, фаза 1: минимальный consolem repin cb728a4, --without-learn, профиль 68/87/206 из 361; новых ошибок check_spec против bde76bc нет (515 Platform + 2 прежних id-map, 62 исключения). [Происхождение, решения по тестам и пределы](decisions/inbox/2026-11-08-запрос-vms-repin-cb728a4.md). JCS/предметные доли и перевод/id-map — отдельная следующая фаза.
 
 2026-11-08 — V11 после принятого cb728a4: узкая композиция b70/127ed/9f95, затем English/history; происхождение и пределы — [отчёт](decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md).
+
+2026-11-08 — English/history V11 завершены в авторском охвате:30 пар/strict steps PASS, pinned assets и literal payloads сохранены; full strict100ERROR/62EXC против99/62 baseline112b, только reader gaps map+2journal вместо2old hash messages. READY не заявлен; [карта происхождения, переносов и проверки](decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md).
