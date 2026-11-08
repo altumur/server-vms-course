@@ -1901,6 +1901,156 @@ class BodyServiceControls(unittest.TestCase):
                 fixture().setUp()
 
 
+# Accepted FORMAT context, retained as a historical reader control, never current
+# P08 coverage. Source-owner receipt 1b177530 pins the three primary resources;
+# their full API also reads the same-pin gate-and-pass contract below.
+HISTORICAL_FOUR_SOURCE_PIN = "4a4687e18a408b23d8e41cd548723c3f04ad38ad"
+HISTORICAL_FOUR_SOURCE_FILES = (
+    ("Platform/08-domain/spec/08-domain.api.openapi.yaml", "100644",
+     "849c925eb4b2e9ed1ee499d9cd758aa26136cb99",
+     "fc4d7da24ef38b8740f43717085aaeeeae3d79142bf259ca4cc369271db22245", 176718),
+    ("Platform/common/data/common.schema.json", "100644",
+     "4686f8f63039eed57bc5432e5716b04aee6acc97",
+     "2dc6559d1bde3ec161243ad113ef447d0e709532c57ac75ad2447c3aa2c681af", 28392),
+    ("Platform/08-domain/data/backup-parts.schema.json", "100644",
+     "17568f529533e2c9afe1e1c46d0f4cf6f91f80b6",
+     "25f842aa561591dc5858e81b15598743b423f1902f69238fc939f4ed8cd9a07f", 532),
+    ("Platform/common/contracts/gate-and-pass.api.openapi.yaml", "100644",
+     "1b2a582ab87d8bb397e6c6021d7e5e443a4ddc9a",
+     "fc7a681e70ba1401e21ce88121836dbd4905306dab33db53d81e353368cc6c38", 2260),
+)
+
+
+def historical_four_source_git(*args):
+    """Read only declared historical Git objects, checking the worktree first."""
+    wrapper = ('cd "$1" || exit 1; '
+               '[ "$(git rev-parse --show-toplevel)" = "$1" ] || exit 1; '
+               'shift; git "$@"')
+    try:
+        result = subprocess.run(["/bin/bash", "-c", wrapper, "source-context-git", str(ROOT), *args],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        if (result.returncode != 0 or type(result.stdout) is not bytes
+                or type(result.stderr) is not bytes or result.stderr):
+            raise CheckingError("historical Source Git read did not complete normally")
+        return result.stdout
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"historical Source Git read failed: {exc}") from exc
+
+
+def historical_four_source_projection(destination, git_read=None):
+    """Authenticate every closed resource before writing an owned readonly projection."""
+    destination = Path(destination)
+    if destination.is_symlink() or not destination.is_dir() or any(destination.iterdir()):
+        raise CheckingError("historical Source projection requires a fresh empty real directory")
+    read = historical_four_source_git if git_read is None else git_read
+    pin = HISTORICAL_FOUR_SOURCE_PIN
+    if read("rev-parse", "--verify", pin + "^{commit}") != (pin + "\n").encode("ascii"):
+        raise CheckingError("missing or wrong historical Source commit identity")
+    names = [entry[0] for entry in HISTORICAL_FOUR_SOURCE_FILES]
+    tree = read("ls-tree", "-z", "--full-tree", pin, "--", *names)
+    expected = [f"{mode} blob {blob}\t{name}".encode("utf-8")
+                for name, mode, blob, digest, size in HISTORICAL_FOUR_SOURCE_FILES]
+    if (type(tree) is not bytes or not tree.endswith(b"\0")
+            or sorted(tree.split(b"\0")[:-1]) != sorted(expected)):
+        raise CheckingError("historical Source mode/type/blob/path roster differs")
+    payloads = []
+    for name, mode, blob, digest, size in HISTORICAL_FOUR_SOURCE_FILES:
+        raw = read("cat-file", "blob", blob)
+        if type(raw) is not bytes or len(raw) != size or hashlib.sha256(raw).hexdigest() != digest:
+            raise CheckingError(f"historical Source payload identity differs: {name}")
+        payloads.append((name, raw))
+    try:
+        for name, raw in payloads:
+            path = destination / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("xb") as stream:
+                stream.write(raw)
+            path.chmod(0o444)  # Git's declared non-executable mode was checked above.
+    except OSError as exc:
+        raise CheckingError(f"cannot materialize historical Source projection: {exc}") from exc
+    return {"context": "historical-accepted-FORMAT", "source_pin": pin,
+            "current_source_coverage": False,
+            "files": {name: hashlib.sha256(raw).hexdigest() for name, raw in payloads}}
+
+
+class HistoricalFourSourceContextControls(unittest.TestCase):
+    """Checking-service controls; injected Git replies are mocks, not Source observations."""
+
+    @classmethod
+    def setUpClass(cls):
+        pin = HISTORICAL_FOUR_SOURCE_PIN
+        cls.replies = {
+            ("rev-parse", "--verify", pin + "^{commit}"): (pin + "\n").encode("ascii"),
+            ("ls-tree", "-z", "--full-tree", pin, "--",
+             *(x[0] for x in HISTORICAL_FOUR_SOURCE_FILES)): historical_four_source_git(
+                 "ls-tree", "-z", "--full-tree", pin, "--",
+                 *(x[0] for x in HISTORICAL_FOUR_SOURCE_FILES)),
+        }
+        for name, mode, blob, digest, size in HISTORICAL_FOUR_SOURCE_FILES:
+            cls.replies[("cat-file", "blob", blob)] = historical_four_source_git("cat-file", "blob", blob)
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="historical-source-identity-control-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def rejected(self, replies):
+        with self.assertRaises(CheckingError):
+            historical_four_source_projection(self.root, lambda *args: replies[args])
+        self.assertEqual(list(self.root.iterdir()), [], "failed authentication wrote a partial projection")
+
+    def test_01_missing_wrong_or_padded_pin_is_not_a_fallback(self):
+        key = next(key for key in self.replies if key[0] == "rev-parse")
+        for value in (b"", b"0" * 40 + b"\n", b" " + self.replies[key], self.replies[key] + b"\n"):
+            with self.subTest(value=value):
+                self.rejected(self.replies | {key: value})
+
+    def test_02_missing_extra_duplicate_mode_type_or_blob_roster_is_rejected(self):
+        key = next(key for key in self.replies if key[0] == "ls-tree")
+        rows = self.replies[key].split(b"\0")[:-1]
+        for value in (b"", b"\0".join(rows[:-1]) + b"\0",
+                      self.replies[key] + rows[0] + b"\0",
+                      self.replies[key] + b"100644 blob " + b"0" * 40 + b"\textra\0",
+                      self.replies[key].replace(b"100644", b"100755", 1),
+                      self.replies[key].replace(b" blob ", b" tree ", 1),
+                      self.replies[key].replace(rows[0].split(b"\t")[0][-40:], b"0" * 40, 1)):
+            with self.subTest(value=value[:80]):
+                self.rejected(self.replies | {key: value})
+
+    def test_03_each_carrier_payload_is_checked_before_any_write(self):
+        for key, raw in self.replies.items():
+            if key[0] != "cat-file":
+                continue
+            for value in (b"", raw + b"\n", bytes([raw[0] ^ 1]) + raw[1:], raw.decode("utf-8")):
+                with self.subTest(blob=key[-1], kind=type(value).__name__, size=len(value)):
+                    self.rejected(self.replies | {key: value})
+
+    def test_04_git_process_and_transport_errors_are_checking_errors(self):
+        outcomes = [OSError("unavailable"), subprocess.TimeoutExpired("git", 30),
+                    subprocess.CompletedProcess([], 1, b"", b"fatal"),
+                    subprocess.CompletedProcess([], -9, b"", b""),
+                    subprocess.CompletedProcess([], 0, "not bytes", b""),
+                    subprocess.CompletedProcess([], 0, b"payload", b"unexpected diagnostic")]
+        for value in outcomes:
+            mock = Mock(side_effect=value) if isinstance(value, Exception) else Mock(return_value=value)
+            with self.subTest(outcome=repr(value)), patch.object(subprocess, "run", mock), \
+                    self.assertRaises(CheckingError):
+                historical_four_source_git("rev-parse", "--verify", HISTORICAL_FOUR_SOURCE_PIN + "^{commit}")
+
+    def test_05_existing_or_symlink_destination_is_not_overwritten(self):
+        marker = self.root / "preserve"
+        marker.write_bytes(b"owned-before")
+        read = Mock()
+        with self.assertRaises(CheckingError):
+            historical_four_source_projection(self.root, read)
+        self.assertEqual(marker.read_bytes(), b"owned-before")
+        link = self.root / "alias"
+        link.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(CheckingError):
+            historical_four_source_projection(link, read)
+        read.assert_not_called()
+
+
 class SourceSchemaReaderControls(unittest.TestCase):
     """Python-only source/registry controls; generated output and Go are not invoked."""
 
@@ -1955,8 +2105,10 @@ class SourceSchemaReaderControls(unittest.TestCase):
         return source, ref
 
     def test_00_actual_four_positions_without_document_or_cache_injection(self):
-        source = ROOT / "Platform/08-domain/spec/08-domain.api.openapi.yaml"
-        reader = SourceSchemaReader(ROOT, source)
+        """Read accepted FORMAT4a4687 files and their contract; not current P08 coverage."""
+        context = historical_four_source_projection(self.root)
+        source = self.root / "Platform/08-domain/spec/08-domain.api.openapi.yaml"
+        reader = SourceSchemaReader(self.root, source)
         edges = {(ptr, ref): target for (file, ptr, ref, kind), target in reader.edges.items()
                  if file == source and kind == "schema" and ".schema.json" in ref}
         prefixes = {"/components/schemas/HolderTopologyBody/properties/doc",
@@ -1965,8 +2117,27 @@ class SourceSchemaReaderControls(unittest.TestCase):
                     "/components/schemas/HolderBackupPartBody"}
         self.assertEqual({p for p, _ in edges}, prefixes)
         self.assertEqual(len(edges), 4)
-        common = ROOT / "Platform/common/data/common.schema.json"
-        backup = ROOT / "Platform/08-domain/data/backup-parts.schema.json"
+        common = self.root / "Platform/common/data/common.schema.json"
+        backup = self.root / "Platform/08-domain/data/backup-parts.schema.json"
+        self.assertEqual(edges, {
+            ("/components/schemas/HolderTopologyBody/properties/doc",
+             "../../common/data/common.schema.json#/$defs/common.domain_topology_doc"):
+                (common, "/$defs/common.domain_topology_doc"),
+            ("/components/schemas/HolderTopologyBody/properties/via/propertyNames",
+             "../../common/data/common.schema.json#/$defs/common.domain_member"):
+                (common, "/$defs/common.domain_member"),
+            ("/components/schemas/HolderTopologyBody/properties/via/additionalProperties",
+             "../../common/data/common.schema.json#/$defs/common.domain_member"):
+                (common, "/$defs/common.domain_member"),
+            ("/components/schemas/HolderBackupPartBody", "../data/backup-parts.schema.json"):
+                (backup, ""),
+        })
+        self.assertEqual(set(reader.provenance), {self.root / x[0] for x in HISTORICAL_FOUR_SOURCE_FILES})
+        for name, mode, blob, digest, size in HISTORICAL_FOUR_SOURCE_FILES:
+            path = self.root / name
+            self.assertFalse(path.is_symlink())
+            self.assertEqual(path.stat().st_mode & 0o222, 0)
+            self.assertEqual(reader.provenance[path], digest)
         for file in (common, backup):
             self.assertEqual(reader.document(file), json.loads(file.read_bytes()))
             self.assertEqual(reader.provenance[file], hashlib.sha256(file.read_bytes()).hexdigest())
@@ -1979,8 +2150,59 @@ class SourceSchemaReaderControls(unittest.TestCase):
         self.assertTrue(part.is_valid(good))
         self.assertFalse(part.is_valid(dict(good, rev=0)))
         self.assertFalse(part.is_valid({k: v for k, v in good.items() if k != "state"}))
-        self.BASELINE_RECEIPTS.append({"root": str(source), "json_positions": sorted(prefixes),
+        self.BASELINE_RECEIPTS.append({"context": context, "root": str(source),
+                                      "json_positions": sorted(prefixes),
                                       "files": {str(p): h for p, h in reader.provenance.items()}})
+
+    def test_47_historical_four_position_source_mutations_are_not_hidden(self):
+        """Physical owned Source mutations, not producer kills or document/cache injection."""
+        historical_four_source_projection(self.root)
+        payloads = {name: (self.root / name).read_bytes()
+                    for name, mode, blob, digest, size in HISTORICAL_FOUR_SOURCE_FILES}
+        relative = HISTORICAL_FOUR_SOURCE_FILES[0][0]
+        original = payloads[relative].decode("utf-8")
+        ref = "../../common/data/common.schema.json#/$defs/common.domain_topology_doc"
+        self.assertEqual(original.count(ref), 1)
+        anchor = "    HolderTopologyBody:\n      type: object\n      properties:\n"
+        self.assertEqual(original.count(anchor), 1)
+        variants = {
+            "missing-edge": original.replace("$ref: " + ref, "type: object", 1),
+            "instance-data": original.replace("$ref: " + ref, 'example: {"$ref": "' + ref + '"}', 1),
+            "wrong-target": original.replace(ref, "../../common/data/common.schema.json#/$defs/common.domain_member", 1),
+            "extra-edge": original.replace(anchor, anchor +
+                "        extra:\n          $ref: ../../common/data/common.schema.json#/$defs/common.domain_member\n", 1),
+            "network-URI": original.replace(ref, "https://example.invalid/common.schema.json", 1),
+            "missing-pointer": original.replace(ref, ref + "_missing", 1),
+        }
+        for name, text in variants.items():
+            with self.subTest(variant=name), tempfile.TemporaryDirectory(prefix="historical-four-source-mutant-") as tmp:
+                root = Path(tmp)
+                for path, raw in payloads.items():
+                    target = root / path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(text.encode("utf-8") if path == relative else raw)
+                source = root / relative
+                if name in ("network-URI", "missing-pointer"):
+                    with self.assertRaises(CheckingError):
+                        SourceSchemaReader(root, source)
+                    continue
+                reader = SourceSchemaReader(root, source)
+                edges = {(pointer, literal): target for (file, pointer, literal, kind), target
+                         in reader.edges.items() if file == source and kind == "schema" and ".schema.json" in literal}
+                if name in ("missing-edge", "instance-data"):
+                    self.assertEqual(len(edges), 3)
+                    self.assertFalse(any(pointer == "/components/schemas/HolderTopologyBody/properties/doc"
+                                         for pointer, literal in edges))
+                elif name == "extra-edge":
+                    self.assertEqual(len(edges), 5)
+                    self.assertIn(("/components/schemas/HolderTopologyBody/properties/extra",
+                                   "../../common/data/common.schema.json#/$defs/common.domain_member"), edges)
+                else:
+                    self.assertEqual(len(edges), 4)
+                    self.assertIn(("/components/schemas/HolderTopologyBody/properties/doc",
+                                   "../../common/data/common.schema.json#/$defs/common.domain_member"), edges)
+                    full = reader.validator_at(source, "/components/schemas/HolderTopologyBody")
+                    self.assertFalse(full.is_valid({"doc": {"rev": 0, "star": []}, "via": {"m1": "m2"}}))
 
     def test_01_actual_p10_reference_bearing_aliases_keep_each_coordinate(self):
         source = ROOT / "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml"
