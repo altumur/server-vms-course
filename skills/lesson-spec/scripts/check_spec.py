@@ -38,6 +38,13 @@ def arguments():
                         help="ADR-0121 (8) per-file debt for this source snapshot")
     parser.add_argument("--strict-coverage", action="store_true",
                         help="every references.tsv row of a form source must be the sole cause of a corpus case")
+    parser.add_argument("--scope", choices=("all", "platform", "vms"), default="all",
+                        help="independent source phases; canonical VMS always uses VMS/PLATFORM_PIN")
+    parser.add_argument("--vms-candidate", help="full course commit: separate proposed-repin report; never changes Owner pin")
+    parser.add_argument("--vms-live", action="store_true",
+                        help="separate nonblocking diagnostic against current working Platform")
+    parser.add_argument("--vms-evidence", type=Path,
+                        help="fresh directory outside source for retained VMS views and JSON phase report")
     return parser
 
 
@@ -778,7 +785,10 @@ def section_body(text, name):
 
 
 class Check:
-    def __init__(self, root, exceptions=None, strict_coverage=False):
+    def __init__(self, root, exceptions=None, strict_coverage=False, *, scope=None):
+        if scope not in (None, "platform", "vms"):
+            raise ValueError("unknown checker source phase")
+        self.scope = scope
         self.root = root.resolve()
         self.strict_coverage = strict_coverage
         self.errors = []
@@ -2212,7 +2222,8 @@ class Check:
             for path in sorted(home.glob("*.subsystem.yaml")):
                 if path.name not in TESTSUB_FILES:
                     self.error(path, "unexpected canonical course manifest; expected exactly testsub and testsub2")
-        return [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"), *paths]
+        vms = [] if self.scope == "platform" else list((self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"))
+        return [*vms, *paths]
 
     def canonical_layout(self):
         """ADR-0083 (115): root notes and frozen Source copies are not aliases."""
@@ -2456,11 +2467,19 @@ class Check:
         ссылок, кодов и слов отказов (`en_mirror.compare`), иначе отказ. Пары — по раскладке урока: `X` ↔ `ru/X` (ADR-0124)
         или `en/<имя>.en.md` ↔ `<имя>.md` (ADR-0121); в `ru/` без источника — только лекция."""
         import en_mirror
-        for path, message in en_mirror.full_english_errors(self.root):
+        modules = ("Platform",) if self.scope == "platform" else ("VMS",) if self.scope == "vms" else ("Platform", "VMS")
+        prefixes = None if self.scope is None else tuple(p for p in en_mirror.FULL_ENGLISH_DONE
+                                                        if p.split("/", 1)[0] in modules)
+        for path, message in en_mirror.full_english_errors(self.root, prefixes):
             self.error(path, message)
-        for path, message in en_mirror.source_cell_errors(self.root):
+        import source_cells
+        sources = en_mirror.english_sources(self.root, tuple(m + "/" for m in modules))
+        for path, message in source_cells.errors(self.root, [p for p in sources if p.suffix == ".tsv"],
+                                                  source_scopes=modules if self.scope is not None else None):
             self.error(path, message)
         for ru, en in en_mirror.pairs(self.root):
+            if self.scope is not None and en.relative_to(self.root).parts[0] not in modules:
+                continue
             texts = self.read(en), ru.is_file() and self.read(ru)
             if not ru.is_file():
                 self.error(en, f"no Russian text {self.name(ru)} for this English source")
@@ -2470,7 +2489,8 @@ class Check:
             for message in en_mirror.compare(texts[1], texts[0], ru, en, self.root):
                 self.error(en, f"ru↔en: {message}")
             self.stats["english_mirrors"] += 1
-        for ru in sorted([*self.root.glob("Platform/**/*.md"), *self.root.glob("VMS/**/*.md"), *self.root.glob("ru/*.md")]):
+        for ru in sorted([*(p for m in modules for p in self.root.glob(m + "/**/*.md")),
+                          *(self.root.glob("ru/*.md") if self.scope is None else [])]):
             if ru.parent.name == "en":
                 continue
             moved = en_mirror.home_of(ru, self.root)
@@ -2606,7 +2626,8 @@ class Check:
     def check_cyrillic(self, debt_path=None):
         """All Platform and normgen bytes, independently of the selected lessons."""
         import check_cyrillic
-        errors, stats = check_cyrillic.check(self.root, debt_path or check_cyrillic.DEBT)
+        scopes = ("Platform", "tools/normgen") if self.scope == "platform" else ("VMS",) if self.scope == "vms" else None
+        errors, stats = check_cyrillic.check(self.root, debt_path or check_cyrillic.DEBT, source_scopes=scopes)
         self.errors.extend(errors)
         self.stats.update(stats)
 
@@ -2987,7 +3008,9 @@ class Check:
 
     # A hash a vectors README names is the hash of the bytes it links (C08-VEC-MANIFEST-SHA-01): nothing else saw three go stale.
     def vector_hashes(self):
-        for readme in sorted(self.root.glob("*/**/vectors/**/README.md")):
+        patterns = ("Platform/**/vectors/**/README.md",) if self.scope == "platform" else (
+            "VMS/**/vectors/**/README.md",) if self.scope == "vms" else ("*/**/vectors/**/README.md",)
+        for readme in sorted(p for pattern in patterns for p in self.root.glob(pattern)):
             for line, text in enumerate(readme.read_text(encoding="utf-8").splitlines(), 1):
                 match = re.search(r"\]\(([^)]+)\)\s*\|\s*`([0-9a-f]{64})`", text)
                 if match:
@@ -3411,28 +3434,18 @@ def environment():
     return out
 
 
-def main():
-    args = arguments().parse_args()
-    check = Check(args.root, args.exceptions, args.strict_coverage)
-    import check_cyrillic
-    if check_cyrillic.export_mode(check.root):
-        check.error(check.root, "check_spec requires the full course source at the exact nested COURSE_COMMIT; "
-                               "an export omits history and frozen witnesses. Run source check_spec and the "
-                               "separate export identity/roster proof plus check_cyrillic --export; see validation.md")
-        check.check_cyrillic(args.cyrillic_debt)
-        for error in check.errors:
-            print("ERROR", error)
-        print("COUNTS", " ".join(f"{key}={value}" for key, value in sorted(check.stats.items())))
-        print("FAIL source proof requires the complete course tree; no export checks were silently skipped")
-        return 1
+def _platform_phase(args, names):
+    """Current Platform source pipeline; no VMS inventories or VMS globals."""
+    check = Check(args.root, args.exceptions, args.strict_coverage, scope="platform")
     if (check.root / LESSONS).is_file():
         check.canonical_layout()
     for name, got, want in environment():
         check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
-    names = args.lessons or [lecture_of(check.root / "Platform" / row["dir"]).relative_to(check.root).as_posix()
-                             for _, row in check.lessons_table()[1]
-                             if row.get("dir") and lecture_of(check.root / "Platform" / row["dir"]).is_file()]
-    for line, row in check.lessons_table()[1]:            # строка без файла урока — красное, не тихий пропуск (Kimi М-1)
+    rows = check.lessons_table()[1]
+    if names is None:
+        names = [lecture_of(check.root / "Platform" / row["dir"]).relative_to(check.root).as_posix()
+                 for _, row in rows if row.get("dir") and lecture_of(check.root / "Platform" / row["dir"]).is_file()]
+    for line, row in rows:
         if not row.get("dir") or not lecture_of(check.root / "Platform" / row["dir"]).is_file():
             check.error(check.root / LESSONS, f"line {line}: lesson {row.get('lesson')} has no file "
                                               f"Platform/{row.get('dir')}/{row.get('dir')}.md (or ru/ by ADR-0124)")
@@ -3440,37 +3453,160 @@ def main():
         check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
     for name in names:
         check.lesson((check.root / name).resolve())
-    if not args.lessons:                                   # уроки VMS — тем же проходом, строго (2026-11-03: без них ошибки формы копились)
-        vms = Check(args.root, args.exceptions, True)
-        lessons = [lecture_of(d) for d in sorted((check.root / "VMS").glob("[0-9][0-9]-*")) if lecture_of(d).is_file()]
-        for path in lessons:
-            vms.lesson(path.resolve())
-        check.errors.extend(e for e in vms.errors if e not in check.errors)
-        check.excepted.extend(e for e in vms.excepted if e not in check.excepted)
-        check.stats["vms_lessons_checked"] = len(lessons)
-    check.vms_module()
-    check.vector_hashes()
-    check.vms_frozen()
-    check.outcome_readers()
-    check.family_read()
-    check.vms_families()
-    check.common_contracts()
-    check.stub_text()
-    check.library_defects()
-    check.layer_words()
-    check.english_mirrors()
-    check.check_tables()
-    check.check_machines()
-    check.check_forms()
+    for method in ("vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
+                   "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms"):
+        getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
-    for error in check.errors:
-        print("ERROR", error)
-    for line in check.excepted:
-        print("EXCEPTION", line)
-    print("COUNTS", " ".join(f"{key}={value}" for key, value in sorted(check.stats.items())))
-    verdict = "FAIL" if check.errors else f"PASS with {len(check.excepted)} exceptions" if check.excepted else "PASS"
-    print(verdict, "structural checks only; semantic review and implementation acceptance remain separate")
-    return int(bool(check.errors))
+    return check
+
+
+def _vms_phase(args, view, names):
+    """Current VMS source with fixed Platform dependencies; dependency errors stay errors."""
+    check = Check(view, args.exceptions, True, scope="vms")
+    for name, got, want in environment():
+        check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
+    lessons = ([lecture_of(d) for d in sorted((view / "VMS").glob("[0-9][0-9]-*")) if lecture_of(d).is_file()]
+               if names is None else [view / name for name in names])
+    for path in lessons:
+        check.lesson(path.resolve())
+    check.stats["vms_lessons_checked"] = len(lessons)
+    for method in ("vms_module", "vector_hashes", "vms_frozen", "vms_families", "english_mirrors"):
+        getattr(check, method)()
+    check.check_cyrillic(args.cyrillic_debt)
+    return check
+
+
+def _phase_result(check, label):
+    return {"phase": label, "status": "FAIL" if check.errors else "PASS",
+            "errors": list(check.errors), "exceptions": list(check.excepted), "counts": dict(check.stats)}
+
+
+def _print_phase(result):
+    print("PHASE", result["phase"], result["status"])
+    for error in result["errors"]:
+        print("ERROR", result["phase"], error)
+    for line in result.get("exceptions", []):
+        print("EXCEPTION", result["phase"], line)
+    print("COUNTS", result["phase"], " ".join(f"{k}={v}" for k, v in sorted(result.get("counts", {}).items())))
+
+
+def _code_binding(args):
+    """Bind local checker bytes as well as the source/pin identities in the report."""
+    paths = {*SCRIPTS.rglob("*.py"), REQUIREMENTS, args.exceptions, args.cyrillic_debt}
+    return [{"path": str(p.resolve()), "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+            for p in sorted(paths) if p.is_file()]
+
+
+def _vms_reports(args, names):
+    import tempfile
+    import traceback
+    from vms_platform_pin import PinError, read_pin, verify_owner_pin, materialize_vms_view, _git
+    root = args.root.resolve()
+    evidence = args.vms_evidence.absolute() if args.vms_evidence else Path(tempfile.mkdtemp(prefix="check-spec-vms-"))
+    if evidence == root or root in evidence.parents or evidence.parent.resolve() != evidence.parent.absolute():
+        raise PinError("VMS evidence must be outside source without symlink parents")
+    if args.vms_evidence:
+        evidence.mkdir(parents=True, exist_ok=False)
+    report = {"format": "check_spec.vms-platform-pin/1", "source_root": str(root),
+              "code_inputs": _code_binding(args),
+              "checker_source_root": str(SCRIPTS.parents[2]),
+              "checker_source_commit": _git(SCRIPTS.parents[2], "rev-parse", "HEAD").decode().strip(),
+              "selected_vms_lessons": names, "strict_vms_coverage": True,
+              "interpreter": {"path": sys.executable, "version": sys.version},
+              "owner_pin_writer": "Owner representative only",
+              "canonical_policy": "Owner pin required; no live fallback; diagnostics do not change canonical verdict",
+              "phases": []}
+    owner = None
+    try:
+        owner = read_pin(root)
+        report["owner_platform_commit"] = owner.commit
+        report["owner_pin_sha256"] = owner.source_sha256
+    except Exception as exc:
+        report["phases"].append({"phase": "VMS_CANONICAL", "status": "ERROR",
+                                 "errors": [f"{type(exc).__name__}: {exc}"], "counts": {},
+                                 "traceback": traceback.format_exc()})
+    if owner is not None:
+        modes = [("VMS_CANONICAL", None, False)]
+        if args.vms_candidate:
+            modes.append(("VMS_REPIN_CANDIDATE", args.vms_candidate, False))
+        if args.vms_live:
+            modes.append(("VMS_LIVE_NONBLOCKING", None, True))
+        for label, candidate, live in modes:
+            view = evidence / label.lower()
+            result = {"phase": label, "status": "ERROR", "errors": [], "counts": {},
+                      "candidate_commit": candidate, "nonblocking": label != "VMS_CANONICAL", "view": str(view)}
+            try:
+                result["inputs"] = materialize_vms_view(root, owner, view, candidate=candidate, live=live)
+                result.update(_phase_result(_vms_phase(args, view, names), label))
+                verify_owner_pin(root, owner)
+            except Exception as exc:
+                # A failed checker/input operation is an ERROR with preserved traceback,
+                # never a semantic pass or an invitation to substitute live dependencies.
+                result["status"] = "ERROR"
+                result["errors"].append(f"{type(exc).__name__}: {exc}")
+                result["traceback"] = traceback.format_exc()
+            report["phases"].append(result)
+        try:
+            verify_owner_pin(root, owner)
+        except (PinError, OSError) as exc:
+            report["phases"][0]["status"] = "ERROR"
+            report["phases"][0]["errors"].append(str(exc))
+    report["canonical_status"] = report["phases"][0]["status"]
+    path = evidence / "report.json"
+    path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    for result in report["phases"]:
+        _print_phase(result)
+    print("VMS_REPORT", path)
+    return report
+
+
+def main():
+    parser = arguments()
+    args = parser.parse_args()
+    if args.scope == "platform" and (args.vms_candidate or args.vms_live or args.vms_evidence):
+        parser.error("VMS report options require --scope vms or all")
+    normalized = []
+    for name in args.lessons:
+        path = Path(name)
+        if path.is_absolute():
+            try:
+                path = path.relative_to(args.root.resolve())
+            except ValueError:
+                parser.error("selected lessons must be under the source root")
+        if ".." in path.parts:
+            parser.error("selected lessons cannot traverse outside their source module")
+        normalized.append(path.as_posix())
+    args.lessons = normalized
+    # A selected VMS lesson is still checked through the mandatory pinned view.
+    vms_names = [name for name in args.lessons if Path(name).parts and Path(name).parts[0] == "VMS"]
+    platform_names = [name for name in args.lessons if name not in vms_names]
+    if args.scope == "platform" and vms_names or args.scope == "vms" and platform_names:
+        parser.error("selected lessons must belong to the requested source phase")
+    import check_cyrillic
+    root = args.root.resolve()
+    if check_cyrillic.export_mode(root):
+        check = Check(root, args.exceptions, args.strict_coverage)
+        check.error(root, "check_spec requires the full course source at the exact nested COURSE_COMMIT; "
+                          "an export omits history and frozen witnesses. Run source check_spec and the "
+                          "separate export identity/roster proof plus check_cyrillic --export; see validation.md")
+        check.check_cyrillic(args.cyrillic_debt)
+        _print_phase(_phase_result(check, "SOURCE_REQUIRED"))
+        print("FAIL source proof requires the complete course tree; no export checks were silently skipped")
+        return 1
+    failed = False
+    if args.scope in ("all", "platform") and (not args.lessons or platform_names):
+        result = _phase_result(_platform_phase(args, platform_names if args.lessons else None), "PLATFORM_CURRENT")
+        _print_phase(result)
+        failed |= result["status"] != "PASS"
+    if args.scope in ("all", "vms"):
+        try:
+            report = _vms_reports(args, vms_names if args.lessons else None)
+            failed |= report["canonical_status"] != "PASS"
+        except (OSError, ValueError) as exc:
+            print("ERROR VMS_CANONICAL report setup:", exc)
+            failed = True
+    print("FAIL" if failed else "PASS", "structural checks only; semantic review and implementation acceptance remain separate")
+    return int(failed)
 
 
 if __name__ == "__main__":
