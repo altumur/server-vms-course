@@ -96,7 +96,8 @@ async function run(tag,P,deposed){
     const ho=w.__calls.slice(n).find(x=>x.path==="/domain/handover");
     out[T("handoverToChosen")]=!!ho&&ho.body.to==="quiet";
     pc.select("member:"+P+"m");await b.ready(40);
-    out[T("memberCardOpens")]=main().textContent.includes(P+"m");
+    const memberTitle=d.querySelector(".pc-hd .cr-cur,.pc-hd h1");
+    out[T("memberCardOpens")]=pc.selected()==="member:"+P+"m"&&!!memberTitle&&memberTitle.textContent===P+"m";
   } else {
     const t=main().textContent;
     out[T("deposedSaysWhoHolds")]=t.includes(P+"new")&&/заменён/.test(t)&&!cardOf(/Общие настройки/)&&!cardOf(/Единицы/);
