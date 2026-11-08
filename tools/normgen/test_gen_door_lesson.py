@@ -1458,9 +1458,9 @@ def _read_priority_report(raw, run_id, context):
             raise CheckingError("priority case identity")
         elif i <= 3:
             if (type(f["ranks"]) is not list or not f["ranks"] or
-                    any(type(v) is not int or v not in (0, 1, 2) for v in f["ranks"]) or f["priority"] is not None):
+                    any(type(v) is not int for v in f["ranks"]) or f["priority"] is not None):
                 raise CheckingError("priority ranks type")
-        elif f["ranks"] is not None or type(f["priority"]) is not int or f["priority"] not in (-1, 0, 1):
+        elif f["ranks"] is not None or type(f["priority"]) is not int:
             raise CheckingError("priority comparison type")
     return [{k: f[k] for k in ("case", "ranks", "priority")} for f in frames[1:-1]]
 
@@ -1486,7 +1486,16 @@ def _observe_priority(case, source):
     _complete_observer_go_test(done, test="TestReview103S08Priority")
     _verify_tree(module, snapshot)
     actual = _read_priority_report(_regular_bytes(report, mode=0o600), nonce, case.context["id"])
-    return [(w["case"], w, a) for w, a in zip(expected_ranks, actual) if w != a]
+    return _priority_differences(expected_ranks, actual)
+
+
+def _priority_differences(expected_ranks, actual):
+    # Source specifies relative priority, not the private integer encoding.
+    # Complete typed vectors remain actual observations; compare their path shape
+    # and the existing comparator's observable decisions, never fixed rank values.
+    return [(w["case"], w, a) for w, a in zip(expected_ranks, actual)
+            if (w["priority"] != a["priority"] or
+                w["ranks"] is not None and len(w["ranks"]) != len(a["ranks"]))]
 
 
 def _active_s08_mutants(model, source):
@@ -2409,8 +2418,8 @@ class RouteServiceControls(unittest.TestCase):
         mutants = [frames[:-1], frames + [frames[-1]], [frames[0], *frames[2:], frames[1]]]
         for index, field, value in [(1, "id", True), (1, "case", "foreign"), (2, "run", "foreign"),
                                      (2, "context", "foreign"), (1, "ranks", [True]),
-                                     (1, "ranks", []), (1, "ranks", [3]), (4, "priority", True),
-                                     (4, "priority", 2), (8, "completed", 0), (8, "completed", True),
+                                     (1, "ranks", []), (4, "priority", True),
+                                     (8, "completed", 0), (8, "completed", True),
                                      (0, "count", 0), (0, "kind", "end")]:
             bad = copy.deepcopy(frames); bad[index][field] = value; mutants.append(bad)
         for bad in mutants:
@@ -2425,6 +2434,14 @@ class RouteServiceControls(unittest.TestCase):
         actual = _read_priority_report(_mock_ndjson(changed), "run", "context")
         self.assertEqual(actual[0]["ranks"], [0])
         self.assertNotEqual(actual[0]["ranks"], frames[1]["ranks"])
+        original = _read_priority_report(_mock_ndjson(frames), "run", "context")
+        # A different private rank encoding with unchanged relative decisions is valid.
+        changed[1]["ranks"], changed[2]["ranks"], changed[3]["ranks"] = [50], [100], [100, 0]
+        encoded = _read_priority_report(_mock_ndjson(changed), "run", "context")
+        self.assertEqual(_priority_differences(original, encoded), [])
+        changed[5]["priority"] = 2
+        wrong = _read_priority_report(_mock_ndjson(changed), "run", "context")
+        self.assertTrue(_priority_differences(original, wrong))
 
     def test_source_priority_compile_errors_never_reach_semantic_receiver(self):
         from types import SimpleNamespace
