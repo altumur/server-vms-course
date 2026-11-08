@@ -891,10 +891,11 @@ PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stag
              **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
-def regen(parts):
+def regen(parts, *, delivery="internal"):
     """Choose regeneration producers: P/01 retains the complete REGEN order; other lessons select PART_GENS by parts."""
     if L.key == lesson.DEFAULT:
-        return REGEN + (PART_GENS["contracts"] if "contracts" in parts else ())
+        order = tuple(g for g in REGEN if delivery != "model-launch" or g != "gen_box.py")
+        return order + (PART_GENS["contracts"] if "contracts" in parts else ())
     gens = []
     for p in parts:
         if p not in PART_GENS:
@@ -964,7 +965,8 @@ def _finish_output(parts):
     provenance(required, [], {})
 
 
-def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None):
+def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None,
+            delivery="internal"):
     """Explicit creation in an empty external root; never repairs an existing set.
 
     Full verification: prepare(profiles=lesson.PROFILES). A selected/component or
@@ -980,6 +982,12 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
     if output_root.exists() and any(output_root.iterdir()):
         raise KitError("output root is not empty; create a new set explicitly")
     context = dict(context or {"kind": "current" if set(profiles) == set(lesson.PROFILES) else "component"})
+    if delivery not in DELIVERIES:
+        raise KitError(f"unknown delivery {delivery!r}")
+    if delivery == "model-launch":
+        if profiles != ("p01-1",):
+            raise KitError("model-launch preparation supports export P/01 only")
+        delivery_identity(source_root, context)
     inputs = lesson.output_inputs(source_root, code_root, kind=context["kind"])
     plans = {}
     for slug in profiles:
@@ -987,6 +995,8 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
         if not selected or len(selected) != len(set(selected)) or any(p not in PARTS for p in selected):
             raise KitError(f"invalid/empty parts for {slug}")
         plans[slug] = tuple(selected)
+        if delivery == "model-launch":
+            delivery_request(delivery, output_root, selected, None)
     output_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="normgen-inputs-") as tmp:
         stage = Path(tmp)
@@ -1002,7 +1012,7 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
             code = ("import sys;sys.path.insert(0,'kit');import build_kit as k;"
                     f"parts={selected!r};"
                     "import subprocess;"
-                    "gens=k.regen(parts);"
+                    f"gens=k.regen(parts,delivery={delivery!r});"
                     "\nfor g in gens:\n"
                     " if g=='contracts/gen/gen_heartbeat.py': continue\n"
                     " r=subprocess.run([sys.executable,g],capture_output=True,text=True)\n"
@@ -1093,7 +1103,7 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         if delivery == "model-launch":
             context["source_pin"] = delivery_identity(stage, context)["source_commit"]
         creator = ("import os,sys;sys.path.insert(0,'kit');import build_kit as k;"
-                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r});"
+                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r},delivery={delivery!r});"
                    "print(os.environ[k.lesson.OUTPUT_RECEIPT_ENV])")
         done = subprocess.run([sys.executable, "-c", creator], cwd=gens, env=env, capture_output=True, text=True)
         if done.returncode:
