@@ -3,7 +3,7 @@
  "adr": "ADR-0133 addendum (4) items 2–3; INPUT-CLASSIFICATION-SUPPLEMENT 2026-11-08",
  "owner": "spec103-claude",
  "scope": "P06–P10 Source (not ru/)",
- "pin": "e2463d20b59fb9ede4d7077b1e180be7ceb9eb1c",
+ "pin": "4402970b5494724a5a51e6f382aaabc60fb31cc2",
  "note": "Inbox material for SRC; not a source text and not exported to M. blob = Git blob at pin after the split; a class names what was found before the split, after_split what goes to M. moved_to names the judge-only table that now carries the text (J-only; not to be repeated in M).",
  "classification_rule": "rule: only protocol/form/order, names and counts of cases allowed; case: only case answers, no rule absent from a norm; mixed: both — split before export. An expected answer is the literal outcome tied to a named case/step; stated rules with a scenario pointer stay.",
  "counts": {
@@ -15,10 +15,10 @@
    "rule": 4,
    "mixed": 10
   },
-  "case_files": 0,
+  "case_files": 2,
   "norms": {
-   "mixed": 20,
-   "rule": 4
+   "mixed": 21,
+   "rule": 3
   }
  },
  "by_lesson": {
@@ -53,7 +53,7 @@
   {
    "path": "Platform/06-console/acceptance/1/README.md",
    "blob_before": "ada753bdeb0b851cac81809eab693c4448367ade",
-   "blob": "95f16f2bb604b40aed870a06fcdad1f016b76a95",
+   "blob": "19ad38625e7fdb3a3c761bfae51d9debd7e7e4f0",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -213,7 +213,7 @@
   {
    "path": "Platform/06-console/acceptance/5/README.md",
    "blob_before": "9e6130e15baf1f72d4cc5160d57339f7b0b1c824",
-   "blob": "1e0001a3de1a912006da3795772349bdcdf6435f",
+   "blob": "6cd67196cd54735a892ad9713e00aee94e60a084",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -256,7 +256,7 @@
   {
    "path": "Platform/06-console/acceptance/6/README.md",
    "blob_before": "1f6f1f1afbc117dabf6ba63dc1648e27a62696b8",
-   "blob": "c349734f78f6218ee70607e0662e4286b44c3ee8",
+   "blob": "7d903f315ab5362cc0e2c896a170171ef11086f3",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -295,7 +295,7 @@
   {
    "path": "Platform/06-console/acceptance/7/README.md",
    "blob_before": "ad399c02778823f12dcd895040aa57ca4779ea09",
-   "blob": "9bd450fb9933ab55cf137dbe1353963794633a6e",
+   "blob": "d177ff7e7afc2d75828e86ba092208532c53bbce",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -330,7 +330,7 @@
   {
    "path": "Platform/06-console/acceptance/8/README.md",
    "blob_before": "16cbf6294bb0fdb212d4b1e1216f289fbb372b41",
-   "blob": "a2fe637eb681b59520801963d8388c9d2911c1a3",
+   "blob": "dc2367b14c440fd76e8a9a5351c85cc2285a7e4d",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -399,7 +399,7 @@
   {
    "path": "Platform/08-domain/acceptance/3/README.md",
    "blob_before": "0ccfe473d352ab7595f176233eb463659fe230db",
-   "blob": "dea5e8cbb186a8133dde3a7002f7ebbd8a80ef5a",
+   "blob": "fa25103523934ca79557669cc357a41af06b78ae",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -457,7 +457,7 @@
   {
    "path": "Platform/08-domain/acceptance/5/README.md",
    "blob_before": "f0776dc7af9371849a88cb953b04a127ae7887ec",
-   "blob": "7ef8167965cb7c9cda17f14e9db265f90c5f3f46",
+   "blob": "9cfa07275e269bdc3b8596acdffcc889618a6b9d",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -491,7 +491,7 @@
   {
    "path": "Platform/08-domain/acceptance/7/README.md",
    "blob_before": "b62d608b146df183890478c99eb617b89495f68b",
-   "blob": "63629dc9201c0135978757129c1b3fa8d9828b08",
+   "blob": "365cf5a11d089a3001e5a2db10e4514a2dbd7add",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -510,7 +510,7 @@
   {
    "path": "Platform/08-domain/acceptance/8/README.md",
    "blob_before": "28ed1b6fbfa0d513e70dfd620b04b9c03fd525aa",
-   "blob": "c6da970cae4d268c865574cc24b8ed5e8359eca2",
+   "blob": "6ea31ca0464b98dd8816a8df63819573cf2c038e",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -552,7 +552,7 @@
   {
    "path": "Platform/08-domain/acceptance/10/README.md",
    "blob_before": "b1df479cae7a0861ae8460db9623870219c2c2bb",
-   "blob": "0afe19508bc07a8d0ddfa5f5d34be49e91cbacc3",
+   "blob": "1c0589f8c4c39431fa635285a4509e6024bca177",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -567,7 +567,7 @@
   {
    "path": "Platform/09-agent/acceptance/1/README.md",
    "blob_before": "5f4df6b962e97fa80bc2cca3a62ea5d04cb30393",
-   "blob": "854c9ac31f379362bedbde1500d95ba521457941",
+   "blob": "98253512834b933902f1fa8295c6800f360d2421",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -602,7 +602,7 @@
   {
    "path": "Platform/09-agent/acceptance/2/README.md",
    "blob_before": "8e4264d9e0c4f761fcc0c70d83b98cc7abe19b1e",
-   "blob": "2a20f12c9c6dce3fd96a00dde0febe2c2d5c317a",
+   "blob": "c19dd93059e578138a672b2f22ed84ac47c24d0f",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -621,7 +621,7 @@
   {
    "path": "Platform/10-domain-console/acceptance/README.md",
    "blob_before": "8921016bac3e5b559e9356fc6622cdb52a463801",
-   "blob": "82aed531395470b712aa74fd8f0bf4e2d34e8949",
+   "blob": "deb67db12de098c2a302a2f83482cac6a29e59ad",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -987,7 +987,7 @@
   },
   {
    "path": "Platform/06-console/spec/06.5-console.norms.md",
-   "blob": "a3ad9988866eb900830bbccd5a29d69071986188",
+   "blob": "765653726cc4658bcb5ffd823b7f9d9c7eb52684",
    "blob_before": "1f38a61136c4978efd822315537e7953f2fb3cbe",
    "class_found": "mixed",
    "after_split": "rule",
@@ -1011,7 +1011,7 @@
   },
   {
    "path": "Platform/06-console/spec/06.8-console.norms.md",
-   "blob": "5b73492c651e1e335b9f048acdec2ae55e831ce8",
+   "blob": "65620280d5cb95b269e0e9830c5b1912d215851c",
    "blob_before": "6e1d53834b65bac45a10ad085bcd21291a94c57e",
    "class_found": "mixed",
    "after_split": "rule",
@@ -1035,11 +1035,11 @@
   },
   {
    "path": "Platform/08-domain/spec/08.1-domain.norms.md",
-   "blob": "3a78be048f61d25dbd56f4c6c9166c524aaa0664",
+   "blob": "416db13471552b16a345d90dbf3340b80cbc41ce",
    "blob_before": "3a78be048f61d25dbd56f4c6c9166c524aaa0664",
-   "class_found": "rule",
+   "class_found": "mixed",
    "after_split": "rule",
-   "basis": "случаев с ответами в таблице N5 нет"
+   "basis": "таблица N5 (Где / случай / Что / Нормы): столбец «Что» с исходами вынесен, столбцы адреса и норм оставлены; граница счёта SHADOW_STALL поднята в N1.6"
   },
   {
    "path": "Platform/08-domain/spec/08.10-domain.norms.md",
@@ -1099,7 +1099,7 @@
   },
   {
    "path": "Platform/08-domain/spec/08.8-domain.norms.md",
-   "blob": "6b23cfe3be4aa0c625b1882970d7fe3605783615",
+   "blob": "bb0c504a19ec550dbd4e5935389e7fbe7087cf03",
    "blob_before": "686aa5232652b26fb626780be4c199627875fa7b",
    "class_found": "mixed",
    "after_split": "rule",
@@ -1123,7 +1123,7 @@
   },
   {
    "path": "Platform/09-agent/spec/09.2-agent.norms.md",
-   "blob": "b28992717e1640a0f3287a9649c2f32762dfe0b2",
+   "blob": "210f6618eb0ab39f706c5e3b9aaee28a2ccb02e0",
    "blob_before": "2cf9799b148b8ac9544a1eab585e80177b764db6",
    "class_found": "mixed",
    "after_split": "rule",
@@ -1153,17 +1153,744 @@
    "definition": "The canonical writing rules of a body value (scalars, null at top level, length by written text, canonical JSON of dicts/lists, value of a json field as is, ceiling JSON_CEILING, not-JSON refusals) — previously only the header comment of requests_body.tsv (judge table) with a pointer from the README",
    "source": "Platform/06-console/vectors/requests-body/requests_body.tsv lines 12–40 (header comment, kept)",
    "note": "ADR-0133 addendum (1) pattern; RU mirror same section"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.1-domain.norms.md",
+   "section": "N1.6 SHADOW_STALL",
+   "definition": "the count has run out only when the time is strictly greater than SHADOW_STALL",
+   "source": "08.1 N5 table / view cases (60 — no, 61 — yes)",
+   "note": "Architect answer 1"
+  },
+  {
+   "path": "Platform/06-console/spec/06.8-console.norms.md",
+   "section": "N1, FOLDER_ROW_MAX paragraph",
+   "definition": "counted serialization: comma/colon without spaces, UTF-8 not \\u escapes, no NaN/Infinity, no BOM, no LF other than an actually sent one",
+   "source": "forms/deletion-body-witnesses.json field serializer",
+   "note": "Architect answer 3; the limit stays B by name"
   }
  ],
  "residual_for_architect": [
-  "Norm prose lines tying a named scenario to an outcome that stayed because they restate a rule with a scenario pointer (allowed as name/pointer): 06.1 N5 evidence table lines ~1123, 1126, 1127; 06.5 lines ~799, 811; 06.6 lines ~564, 577; 08.8 line ~883; 09.2 line ~232 (line numbers before split commit shift by removed lines). If the Architect reads these as expected answers, they split the same way.",
-  "Platform/08-domain/spec/08.1 N5 table «Where | № / case | What | Norms» (vector/stand coverage with outcomes, ~line 747 on) was not rewritten: it is not the numbered scenario table; decision needed.",
-  "Acceptance README «Sleeps» tables keep outcome-flavoured reasons (absence checks); treated as stand protocol under ADR-0080 addendum (17), not case answers.",
-  "Platform/06-console/forms/numeric-loader.cases.tsv and forms/deletion-body-witnesses.json are case-like carriers under forms/: *.cases.* matches the excluded pattern of addendum (4) item 3, the witnesses json is a form-side case list; filter decision for SRC (not edited here)."
+  "Remaining stand protocol lines naming a scenario and a time budget, not in Sleeps sections (06/4 README «Scenario 04 admits 150 s…», 06/5 «deadline of 90 s of sc. 14») left as runner budget; say if they should move too."
  ],
  "limits": [
   "Rules-only check of moved material was by reading and targeted grep of norms, not an exhaustive proof that every sentence moved has a norm counterpart; the moved text stays verbatim in the judge tables, so nothing is lost.",
   "Acceptance READMEs were classified line by line; norm files only for the N5 table and scenario-answer ties, not for the normative text itself (norm text is rule by definition)."
  ],
- "not_filter": "Filter itself is SRC work; this list gives classes and blobs only."
+ "not_filter": "Filter itself is SRC work; this list gives classes and blobs only.",
+ "judge_only_exact": {
+  "note": "Exact whole-file list of P06–P10 files that do not go to M, at pin. No patterns. ru/ is not exported at all and is not listed. Common tables and P01–P05 are outside this writer (e.g. Platform/02-installer/forms/finite-profile.cases.json is named by 06.8/P02.3 and belongs to the P02 list).",
+  "count": 123,
+  "files": [
+   {
+    "path": "Platform/06-console/acceptance/1/scenarios.tsv",
+    "blob": "870a4cfde39557172309bcbb742eb4b428eab87f",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/1/seams.tsv",
+    "blob": "28e59d88248bea1d46dab08e11a45a7ed403e129",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/2/scenarios.tsv",
+    "blob": "f10ea0d6ceb7e5794397addd343041d716b9818f",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/2/seams.tsv",
+    "blob": "d01db7ff4724977e15b7a9011ed0307dc70704fd",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/3/scenarios.tsv",
+    "blob": "c4a8921f5fdea871d036d5a410c72f6cc04b1195",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/3/seams.tsv",
+    "blob": "4f6da8e2ddfcfb4e902438a793467787d69941df",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/4/scenarios.tsv",
+    "blob": "14116953075c448c790caeed41d03339423e04c3",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/4/seams.tsv",
+    "blob": "2814ecad000ed36a2429f64c4864efa279d43519",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/ct-dash-b2.json",
+    "blob": "d58067804b7a8b2f51d796fdfc4e5392545d5d33",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/ct-w-1-b1-other-name.json",
+    "blob": "9f4969416fb13229d8f1c0af007f580aee8d985c",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-W-9-bad-name.json",
+    "blob": "b9b7e14099ba44cd5224f259891bb67949128c82",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-t-1-belt-slow.json",
+    "blob": "795516f0dda6c92a6fe325343c513e16b8ff4b59",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-1-future.json",
+    "blob": "dcccd18a26978e54ade3c031cc89343e02ed332b",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-1-labels.json",
+    "blob": "be62c2ba80b09be6b800ce42ed183256a80071dc",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-1-observed-fraction.json",
+    "blob": "35c12e73308b655a5c7ead878e0311368b8cf7b1",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-1-running-waiting.json",
+    "blob": "4f5f98b53cb64c1b4cae5eb8ca206bdf5208c846",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-3-no-server.json",
+    "blob": "1770c37650d252f8f7e02c1aac660f1a8a834d36",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/hb-w-7-other-name.json",
+    "blob": "ea045a8e5c4c39e3a4329026f24a1b3259d11458",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/res-srv-p-stalled.json",
+    "blob": "e5ab02bf4c7cbbcd0a76dcb424512bab371fabd2",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/res-srv-q-extra-field.json",
+    "blob": "bcc9a91b8246991e18a2605f9150fd9d11a1a623",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/res-srv-r-wrong-server.json",
+    "blob": "3776945b8acf5b7e979b12eacf8341aa4816655a",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/res-srv-s-no-url.json",
+    "blob": "25de208ed8acddefeb27110d24c5695941f46845",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/api.js",
+    "blob": "e93e8fcb0bc075e5fa8e1836ea54484179ff2480",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/apis/app.css",
+    "blob": "8d14b2a67e3586ea5f357766094580c0dbc83ead",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/app.css",
+    "blob": "d630ff62cbb9e641312937085bcdcbf6c30e636e",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/app.js",
+    "blob": "c165a2821a220ff9c41ebce21a57b698ab95fe32",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/bundle.js",
+    "blob": "ad3a2987c8400e571c6de62ce78cf2107fbb9fa8",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/data.json",
+    "blob": "114342013a3e71f6794a47d37872b450549b321d",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/deep/er/Name_1-2.v3.js",
+    "blob": "2f5c10a9a157511c22178aabb6c1960e96e9b9b0",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/empty.css",
+    "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.ttf",
+    "blob": "381bd0a74eb64794f219b5fa0d45ca06c29eebf2",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.woff",
+    "blob": "dc6c47f25f68cd4bff5487c3e33cb58ca07c277c",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.woff2",
+    "blob": "b643118207f664354d37d8d6f4a31e4763fd8315",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/logo.png",
+    "blob": "613754cfaf74a7a2d86984231479d5671731f18a",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/logo.svg",
+    "blob": "e2de17a2bc09a75bf0b3d4ef24b4fc338313f3ed",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html",
+    "blob": "cb770bdc99533672f9ca3d760ed3ecd74b307936",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/probe-w.subsystem.yaml",
+    "blob": "217d8b8dce97db722a4b42d0b4281c219a870b42",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/probe-x.subsystem.yaml",
+    "blob": "8df3e48c9a9d5179407741afad83a0fc06198e9c",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/scenarios.tsv",
+    "blob": "da1818cdc4fb504112a74d3c13be75b4c8115f82",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/5/seams.tsv",
+    "blob": "b682e2d52c3f122d524bd0dafe76e8df5e88d009",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-build-number.json",
+    "blob": "39055f7c83a3df8ed128e0eeea942c30e035084b",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-no-status.json",
+    "blob": "fd7d04acd1ea4128ed7365530d13048542c88496",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-pending-0.json",
+    "blob": "3f99deffadba23ac082efcb7ca4c3ebb257a36f4",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-pending-2p63.json",
+    "blob": "67ce3f332dcedc7249bcc5533ba1c3dacdd7dfb5",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-pending-fraction.json",
+    "blob": "de091760241566a4485608e31456bc9480a7a125",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-pending-minus-zero.json",
+    "blob": "b95414688400d5d4cc3c0e4655e5c9210a893333",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-pending-missing.json",
+    "blob": "a6d29ea29d9446b9a42786cd1188fa84dec4cf32",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-schema-fraction.json",
+    "blob": "384c4ee87a45338db710e68396ac5fd6df372b10",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/scenarios.tsv",
+    "blob": "513b8774339ab75634d1d48f3d36850906785446",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/6/seams.tsv",
+    "blob": "c3146e53511fdcb204129049f267ba820da219d8",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/7/scenarios.tsv",
+    "blob": "9ef2fb1bdb2ceef63ef561ff3bea648feb08b627",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/7/seams.tsv",
+    "blob": "44b6050a084d9d9b3484aa93aa1c92e1e1b66e46",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/8/scenarios.tsv",
+    "blob": "e7a49c9e630fd85cb1c90366066a03a884b62afc",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/8/seams.tsv",
+    "blob": "cd38485de5779d90439e715c91ead36f6fe30eb9",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/9/scenarios.tsv",
+    "blob": "95fa07fa5a3cea56b4f6806fe3f2428e4644f45e",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/acceptance/9/seams.tsv",
+    "blob": "9393380f651d9b66499f002cb8a18f24086d8f64",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/06-console/forms/deletion-body-witnesses.json",
+    "blob": "fa78a84180ee9ce5a0eb3c375c79ca160c8fee03",
+    "kind": "byte witnesses of cases (Architect, answer 3)"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader.cases.tsv",
+    "blob": "7efaa3cbea4ae5b24118f5af6f9b20e95291f791",
+    "kind": "cases table (*.cases.*)"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-fixed-delete.subsystem.yaml",
+    "blob": "e86d7d0a059c406ae2caf6cb97696b3184bf08b1",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-fixed-ends.subsystem.yaml",
+    "blob": "2f04f6536e8aa797c7832db61b917205edcca57b",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-fixed-retire.subsystem.yaml",
+    "blob": "77186e589ef26948253cf6e041a1d6e06e708eef",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-named-delete.subsystem.yaml",
+    "blob": "1abf796147d3b67092b4e04e3575a8ec158f3b9a",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-named-ends.subsystem.yaml",
+    "blob": "363d7275cffd23b1c198cdf91e1ed15e802c718b",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-named-retire.subsystem.yaml",
+    "blob": "72a820eb9bff886b73ecc84dfffdb3818a508f1f",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-numeric-delete.subsystem.yaml",
+    "blob": "4f7b3e4aee8d1358de20aaec75e6edf75c58cdbd",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-numeric-ends.subsystem.yaml",
+    "blob": "54c72ad2d2f2f04a7d8e675c6874ccb31495c686",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/forms/numeric-loader/p06-c3-numeric-retire.subsystem.yaml",
+    "blob": "942fa2f4e201faf58a2af0fed02d578bc74fd86c",
+    "kind": "input fixture of numeric-loader.cases.tsv"
+   },
+   {
+    "path": "Platform/06-console/vectors/contender-projection/cases.tsv",
+    "blob": "9716bf6cd3213469ea8bc3e7e3588b2af008d0a5",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/key-families/cases.tsv",
+    "blob": "3633a999972a51aa4ea68c062896a08a0763ed6b",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/metrics/cases.tsv",
+    "blob": "7c1bbd658eb9f6950675be8613e31f145dfd40e8",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/op-step/expected.tsv",
+    "blob": "0727210881978931fc6dc1c3131cd57f84b54a82",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/op-step/key.tsv",
+    "blob": "21e41d1e7b9591c83e663c69c23ab742f3370fcc",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/reap/cases.tsv",
+    "blob": "960d3d3540417d5974d5dee7f91b74fd94800419",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/request-digest/digest.tsv",
+    "blob": "4ab2072c3f0488792e4508ae173a9bde686e7d64",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
+    "blob": "1c6268f7dc9060b743394c41f833a8c33b968050",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/resolve/cases.tsv",
+    "blob": "22e02100d7d0a6a966a5e042a4ae85d2e1e4154c",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/rid/rid.tsv",
+    "blob": "a691d403bf54bfc0052708ba93c1c66cc048ff27",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/06-console/vectors/rid/template.tsv",
+    "blob": "1b73ec21301fc31e6c9b6e692d0b04b841e37e00",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/0/seams.tsv",
+    "blob": "44e5d2fcec31e524cfb4a4b19d7443a89c37046b",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/1/scenarios.tsv",
+    "blob": "7200300a991753df4f8b024ea5643eb055e0e8dd",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/1/seams.tsv",
+    "blob": "46d015a4898ee8a5f954bdd733f54954dda78fed",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/10/scenarios.tsv",
+    "blob": "7bfcb2d9e876524e1dfc9ab398632793688f78ed",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/10/seams.tsv",
+    "blob": "a1027234c95bf09874ceebc0aed2756be1833ac5",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/2/seams.tsv",
+    "blob": "c8d10fa70357d5363264f9c9561571acec844165",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/kit-m1-one/ca.pem",
+    "blob": "f2c18c12fc2a456bb439b1588521dadeacf3143c",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/kit-m1-two/ca.next.pem",
+    "blob": "f17230f9d32b8deff76d32d362d5481ec9972b3f",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/kit-m1-two/ca.pem",
+    "blob": "f2c18c12fc2a456bb439b1588521dadeacf3143c",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/member-reported-rev-2pow53.json",
+    "blob": "781800c895cdf5aeec4ea1b0ae25002a6e0f863f",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/other-root.json",
+    "blob": "cadd32b3ea240ce0caaaca52cb9ec11ada9597d7",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/inputs/view-member-list-ghost.json",
+    "blob": "3ad4855c80544fa68cbaeac9f1c72365083746a3",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/scenarios.tsv",
+    "blob": "07f9db5e82b0221ffcdfebf62561e60e49025c32",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/3/seams.tsv",
+    "blob": "9d734870d02cc59253b462304bb4b5148a150c70",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/4/scenarios.tsv",
+    "blob": "b23552537ff45f055bf20a8123da5dcf73a3a03e",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/4/seams.tsv",
+    "blob": "0f972e0c321da914b1e1311150e0a915269e5d44",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/5/scenarios.tsv",
+    "blob": "cf57452c0c84231ba3ad29e51beef0c011b67c5b",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/5/seams.tsv",
+    "blob": "bb8122176697da4a26688c9fe9fe27b31c7fcb09",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/6/scenarios.tsv",
+    "blob": "73a29d2a9f3a7349a8d9cf4a47fdcd6f31267f31",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/6/seams.tsv",
+    "blob": "08254faf562bdd1946db25d9177c0cb247ede96d",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/7/scenarios.tsv",
+    "blob": "6fc99a788d3b082968ba2c8a85ded78e8391a6c6",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/7/seams.tsv",
+    "blob": "39e4b945a6c5129866827af307b2a7a97e862d63",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/8/scenarios.tsv",
+    "blob": "5c6f5f44df3b7e4036bf7cc5b6457a7f75dc78de",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/8/seams.tsv",
+    "blob": "975870fa45ceadfe4a69871fefc1d57b2e1ebbbc",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/9/scenarios.tsv",
+    "blob": "224037b415452e4e15890ca9b54c6b352f70973a",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/acceptance/9/seams.tsv",
+    "blob": "2c6e824a1729d3316aeaeae66c4136d17c5eef5d",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/vectors/assemble/cases.tsv",
+    "blob": "52bf7dbe19c1543a98ea5e94942f7afa888a6f91",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/vectors/issue/cases.tsv",
+    "blob": "161da510440592f5e5f2d9f976cc096061d4f6ae",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/08-domain/vectors/view/cases.tsv",
+    "blob": "d448319536f769f3dbf4fcc307fe81a80f278c2f",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
+    "blob": "1f59205bc90968ec707a6e228d1655adc7da855d",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/cases.tsv",
+    "blob": "4400fa6ff6985f9d1700425c5e1be93a3eba3852",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/doc-only.json",
+    "blob": "dd28a5641076e1f105281791dc365976cdcc13ae",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/inner-text.json",
+    "blob": "42bb47981e6642da664763aab124adb23f558496",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/jcs.json",
+    "blob": "a7b8e44f99d56bc59f3a4dd48c16ebecff0ea712",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/mismatch.json",
+    "blob": "030a70432c32101a8ae9352eb4e7e33984f393d4",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/backup-foreign-term.json",
+    "blob": "231b4be68aef0450efed9d71036311303bead335",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/inputs/shared-doc-unknown-issuer.json",
+    "blob": "3894ae312df946a1220bead06f76f08ecbc801e3",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/scenarios.tsv",
+    "blob": "1339da5bf8b6740468ebec0a169153c13c1e1594",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/1/seams.tsv",
+    "blob": "c4a1507c425f6f2edf940b18ddee07424058897e",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/2/scenarios.tsv",
+    "blob": "6dde070538e9d48f5c369f7e166bcad324e56182",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/acceptance/2/seams.tsv",
+    "blob": "8039b5ed0a9a901a1321c7097c0f38fe413d6782",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/09-agent/vectors/follow/cases.tsv",
+    "blob": "0f7d3fe5036699be9eea092557535020b7858afd",
+    "kind": "vector table or fixture"
+   },
+   {
+    "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
+    "blob": "6dae7be1b547357f5f0abe406eb32397df41a125",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/10-domain-console/acceptance/seams.tsv",
+    "blob": "79b29af72ab452afc1d5bb3837b24b5d34d13292",
+    "kind": "acceptance table or fixture"
+   },
+   {
+    "path": "Platform/10-domain-console/vectors/alarms/cases.tsv",
+    "blob": "d276bfa1fb371ba86211a5806265846eb4445144",
+    "kind": "vector table or fixture"
+   }
+  ]
+ },
+ "forms_case": [
+  {
+   "path": "Platform/06-console/forms/numeric-loader.cases.tsv",
+   "blob": "7efaa3cbea4ae5b24118f5af6f9b20e95291f791",
+   "class_found": "case",
+   "after_split": "J only",
+   "basis": "Architect answer 3; *.cases.*"
+  },
+  {
+   "path": "Platform/06-console/forms/deletion-body-witnesses.json",
+   "blob": "fa78a84180ee9ce5a0eb3c375c79ca160c8fee03",
+   "class_found": "case",
+   "after_split": "J only",
+   "basis": "Architect answer 3; serialization rule lifted to 06.8 N1 (FOLDER_ROW_MAX paragraph), limit by name B"
+  }
+ ],
+ "norm_line_decisions": [
+  {
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "needle": "46 scenarios / 514 steps",
+   "decision": "keep",
+   "reason": "count and names only"
+  },
+  {
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "needle": "| batch, P/06.1-24, 25 |",
+   "decision": "keep",
+   "reason": "evidence row: subject and where checked; 403 of a whole batch is the rule of N3"
+  },
+  {
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "needle": "| the limit of the body/row/claim",
+   "decision": "keep",
+   "reason": "rule with a pointer sc. 27, no case answer"
+  },
+  {
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "needle": "| the feed, P/06.1-30…32 |",
+   "decision": "keep",
+   "reason": "rule (CHANGES_SUBSCRIBERS_MAX + 1 — 503 busy), not tied to a case"
+  },
+  {
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "needle": "In total 33 scenarios / 327 steps",
+   "decision": "keep",
+   "reason": "count and topics"
+  },
+  {
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "needle": "Checked by reading and structurally",
+   "decision": "keep",
+   "reason": "rule and where checked; no case answer"
+  },
+  {
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "needle": "the gate at the static files and the shell",
+   "decision": "answer moved",
+   "reason": "named the codes of sc. 18 and of the reading branch; rule is N2 «Sign-in on the shell». Codes replaced by the branch names, the fragment is in acceptance/5/scenarios.tsv"
+  },
+  {
+   "path": "Platform/06-console/spec/06.6-console.norms.md",
+   "needle": "**P/06.6-01** drain",
+   "decision": "keep",
+   "reason": "checklist: general rule (out of form row — 503), scenario as pointer"
+  },
+  {
+   "path": "Platform/06-console/spec/06.6-console.norms.md",
+   "needle": "**P/06.6-04** the schema row",
+   "decision": "keep",
+   "reason": "checklist: general rule with a pointer"
+  },
+  {
+   "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+   "needle": "sc. 03 step 6 — a move with `why`",
+   "decision": "answer moved",
+   "reason": "named the answer of a step (200); rule is N1.8 step 6; fragment is in acceptance/8/scenarios.tsv"
+  },
+  {
+   "path": "Platform/09-agent/spec/09.2-agent.norms.md",
+   "needle": "the result at the member — sc. 06",
+   "decision": "answer moved",
+   "reason": "named the outcomes of sc. 06 (200 and 503); fragment is in acceptance/2/scenarios.tsv"
+  }
+ ],
+ "pass2": {
+  "commit": "4402970b5494724a5a51e6f382aaabc60fb31cc2",
+  "by": "Architect answers 2026-11-08",
+  "moved": [
+   "section Sleeps of 12 chapter READMEs → their scenarios.tsv (06/4 keeps a one-line statement without steps)",
+   "08.1 N5 What column → vectors/view/cases.tsv (vector rows), acceptance/1/scenarios.tsv (stand rows)",
+   "06.8 and acceptance/8 witness sizes → acceptance/8/scenarios.tsv",
+   "06/8 README reaper wait, 09/1 sc. 27 sentence, 08/8 sc. 02 grant sub-bullet → their scenarios.tsv"
+  ],
+  "deadlines": "every deadline in the moved Sleeps tables is by named constant already owned by a norm or contract (BACKUP_EVERY P/08, REPORT_EVERY, VIEW_EVERY, FRESH_EVERY, AS_OF_STORE_EVERY, TURN_TERM and TURN_RENEW common/contracts/turn.md, ROAD_QUIET, LOST_AFTER); none lifted. @sleep and @until semantics stay in the common acceptance README (foreign file)."
+ }
 }
