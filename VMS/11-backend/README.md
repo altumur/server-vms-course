@@ -123,6 +123,8 @@ Accepted in the plan as is (the analysis, row 12): the targets of the plan are a
 
 ## Assistant: harness
 
+This section describes the existing working branches. The catalogue-only learning branch and the live `explain` boundary are [V/11.7 N1.10](spec/11.7-backend.norms.md#n110-catalogue-only-learning-and-the-contract-gate). Its logical `answer.learn` needs Console contract agreement and an authorised repin; the pinned bundle remains `--without-learn`. Learning receives no working overview, plan, secrets or history. Its show is person-controlled in the same tab, after a warning that working alarms do not arrive there during training.
+
 The pilot's handover package (ADR-0093 item 8): tools v4.0, a loop with `tool_choice: required`, the system text in English;
 the model gpt-oss-20b, weights Q8_0, llama.cpp, the window 16384, reasoning `medium`. The content is moved into the lesson, without the paths and
 settings of the pilot's machine:
