@@ -310,8 +310,8 @@ func Route(method, path string, cat Catalog) (Match, *RouteError) {
 	return Match{}, &RouteError{Code: 404, Allow: allow, Reason: "method " + m + " is not of " + h.t.path}
 }
 
-// The S08 carrier is shared; only the generated P/06 declaration activates it.
-// Other lessons never request this private capability or inspect these records.
+// Only the generated P/06 declaration activates the complete S08 binding spec.
+// Owner table doors reuse its private operation/candidate records, not its P/06 routing policy.
 type p06BindingSpec struct {
 	operations []p06Operation
 	references []string
