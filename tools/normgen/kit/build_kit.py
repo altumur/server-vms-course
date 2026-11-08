@@ -288,9 +288,98 @@ def seed_rule(dst, seed):
     return taken, kept, refreshed
 
 
-def build(dst, module, parts=(), judged=None, seed=None):
+DELIVERIES = ("internal", "model-launch")
+RETIRED_ADAPTERS = {"slotname.go", "sealing.go", "valuesbytype.go"}
+PUBLIC_PROBES = ("copy_stream.py", "store_fitness.py", "store_probe_http.py", "store_probes.py", "README.md")
+LEGACY_EXPORT = "ce8d6db6219dbd38d358acbc81e3d429e7789950"
+
+
+def delivery_request(delivery, dst, parts, seed):
+    """Tool-only delivery policy; internal builds retain their historical behavior."""
+    if delivery not in DELIVERIES:
+        raise KitError(f"unknown delivery {delivery!r}")
+    if delivery == "internal":
+        return
+    if L.key != lesson.DEFAULT or L.slug != "p01-1":
+        raise KitError("model-launch delivery supports export P/01 only")
+    if "box" in parts:
+        raise KitError("model-launch delivery refuses the retired box part")
+    if seed is not None:
+        raise KitError("model-launch delivery refuses seed; use a new empty destination")
+    dst = Path(dst)
+    if dst.is_symlink() or (dst.exists() and (not dst.is_dir() or any(dst.iterdir()))):
+        raise KitError("model-launch delivery requires a new empty destination")
+
+
+def delivery_identity(root, context):
+    """Require actual export context and its single Platform source pin."""
+    export, course = context.get("export_commit"), context.get("course_commit")
+    if (context.get("kind") != "export" or not isinstance(export, str)
+            or re.fullmatch(r"[0-9a-f]{40}", export) is None or export == LEGACY_EXPORT
+            or not isinstance(course, str) or re.fullmatch(r"[0-9a-f]{40}", course) is None):
+        raise KitError("model-launch delivery requires pinned non-legacy export/code context")
+    pin_file = Path(root) / "Platform/COURSE_COMMIT"
+    if not pin_file.is_file() or pin_file.is_symlink():
+        raise KitError("model-launch delivery requires Platform/COURSE_COMMIT")
+    pin = pin_file.read_text(encoding="utf-8").strip()
+    if re.fullmatch(r"[0-9a-f]{40}", pin) is None or context.get("source_pin", pin) != pin:
+        raise KitError("invalid/inconsistent Platform/COURSE_COMMIT identity")
+    return {"source_commit": pin, "code_commit": course, "export_commit": export}
+
+
+def delivery_predicates():
+    """Project exactly two reviewed handwritten definitions, never the sealing algorithm."""
+    source = CONTRACTS / "go/sealing.go"
+    data = source.read_bytes()
+    specs = (
+        ("b64Canonical", rb"^func b64Canonical\(s string\) \(\[\]byte, bool\) \{\n.*?^}\n",
+         "3132646af3776d2529dc85caaee85862ace84e12f75cbfd86875322c5c63c319"),
+        ("LooksSealed", rb"^func LooksSealed\(v string\) bool \{[^\n]*}\n",
+         "a05dad6a9a60027d76b82b23cbbd770f85e32c55364d0969043f2ea0ed857dc1"),
+    )
+    closure = b"var b64 = base64.RawURLEncoding.Strict()\n"
+    if len(re.findall(b"^" + re.escape(closure), data, re.M)) != 1:
+        raise KitError("sealing predicate closure changed")
+    definitions, spans = [], []
+    for name, pattern, expected in specs:
+        matches = list(re.finditer(pattern, data, re.M | re.S))
+        if (len(re.findall(rb"^func " + name.encode() + rb"\(", data, re.M)) != 1
+                or len(matches) != 1 or sha256(matches[0][0]) != expected):
+            raise KitError(f"original sealing definition changed or is not unique: {name}")
+        m = matches[0]
+        definitions.append(m[0])
+        spans.append({"name": name, "byte_start": m.start(), "byte_end_exclusive": m.end(),
+                      "line_start": data[:m.start()].count(b"\n") + 1,
+                      "line_end": data[:m.end()].count(b"\n"), "sha256": expected})
+    helper = (b'// Handwritten predicates projected for model-launch delivery; DO NOT EDIT.\n'
+              b'package contracts\n\nimport (\n\t"encoding/base64"\n\t"strings"\n)\n\n'
+              + closure + b"\n" + b"\n".join(definitions))
+    projection = {"input": {"path": str(source.relative_to(ROOT)), "sha256": sha256(data)},
+                  "delivered_definitions": spans,
+                  "closure": closure.decode().rstrip("\n"), "origin": "handwritten",
+                  "excluded_algorithms": ["slotname.go", "sealing.go"]}
+    return helper, projection
+
+
+def build(dst, module, parts=(), judged=None, seed=None, *, delivery="internal"):
+    delivery_request(delivery, dst, parts, seed)
     checked_outputs()  # Validate before any destination/seed copy; never prepare here.
-    declared = lesson.output_manifest()["parts"][L.slug]
+    prepared = lesson.output_manifest()
+    declared = prepared["parts"][L.slug]
+    model = delivery == "model-launch"
+    identity, predicate_data, projection, probe_files = {}, None, None, []
+    if model:
+        identity = delivery_identity(ROOT, prepared["context"])
+        if (os.environ.get(COURSE_ENV) != identity["code_commit"]
+                or os.environ.get(EXPORT_ENV) != identity["export_commit"]):
+            raise KitError("model-launch environment differs from checked export context")
+        if "contracts" in parts:
+            predicate_data, projection = delivery_predicates()
+        for name in PUBLIC_PROBES:
+            source = ROOT / "Platform/01-store/probes" / name
+            if not source.is_file() or source.is_symlink():
+                raise KitError(f"missing regular public probe source: {source}")
+            probe_files.append((name, source.read_bytes(), str(source.relative_to(ROOT))))
     if not set(parts) <= set(declared):
         raise KitError("requested kit parts are absent from the prepared set")
     dst = Path(dst)
@@ -411,14 +500,23 @@ def build(dst, module, parts=(), judged=None, seed=None):
         for f in contract_files:
             data = f.read_bytes()       # nfkc_tables.go comes from contracts/gen/gen_nfkc.py (Unicode15.0.0).
             rel = f.relative_to(contract_root).as_posix()
+            if model and rel in ("slotname.go", "sealing.go"):
+                continue
             origin = "generated" if rel in ("nfkc_tables.go", "heartbeat/families.go") else "handwritten"
             source = (L.output_source(f) if origin == "generated" else
                       "tools/normgen/famrt2/go/runtime.go" if rel == "heartbeat/runtime.go" else
                       str((CONTRACTS / "go" / rel).relative_to(ROOT)))
             put("contracts", rel, data, origin, "contracts", source)
+        if model:
+            put("contracts", "delivery_predicates.go", predicate_data, "handwritten", "contracts",
+                projection["input"]["path"])
+            files[-1]["projection"] = projection
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
             fn = re.search(r"^func ([A-Z]\w*)\((?:table|input|file|raw)\b", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
+        if model:
+            for name in RETIRED_ADAPTERS:
+                contract_adapters.pop(name, None)
     for (sub, name, data, origin, source, own), component in tests:
         if sub == "vectoradapter" and name in contract_adapters:   # Replace the stub with a contracts-backed adapter, still implementation-owned.
             f = contract_adapters[name]
@@ -494,6 +592,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         put(sub, name, data, origin, "core", source)
         if own:
             files[-1]["editable"] = True
+    for name, data, source in probe_files:
+        put("../publicprobes", name, data, "handwritten", "publicprobes", source)
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
     if policy_root:
         stagetests_md += gen_policy_machines.KIT_MD
@@ -509,7 +609,9 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_launch.KIT_MD if launch_files else "")
            + ((gen_versioned_doors if L.key == "08-domain" else gen_core).KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
-           + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
+           + ((KIT_MODEL_CONTRACTS_MD if model else KIT_CONTRACTS_MD) if "contracts" in parts else "")).replace("{module}", module)
+    if model:
+        doc += KIT_MODEL_MD.format(**identity)
     if policy_root:
         doc = doc.replace("Standard library only, Go 1.22.", "Go 1.22; the closed policies use vendored cel-go v0.26.1 from Platform/common/versions.")
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # Part examples are P/01 code.
@@ -535,6 +637,20 @@ def build(dst, module, parts=(), judged=None, seed=None):
         "lines": totals,
         "lines_by_component": parts,
     }
+    if model:
+        manifest["delivery"] = {"mode": delivery, **identity,
+                                "prepared_manifest_sha256": os.environ[lesson.OUTPUT_RECEIPT_ENV],
+                                "contracts_projection": projection,
+                                "publicprobes": {"files": list(PUBLIC_PROBES),
+                                                 "source": "Platform/01-store/probes",
+                                                 "semantics": "public observation checkers; no SUT/provider qualification"}}
+        if projection is not None:
+            cp = manifest["provenance"]["contracts"]
+            cp["input_handwritten"] = cp.pop("handwritten")
+            delivered_sources = {f["source"] for f in files if f["component"] == "contracts"
+                                 and f["origin"] == "handwritten" and "projection" not in f}
+            cp["handwritten"] = [entry(ROOT / p) for p in sorted(delivered_sources)]
+            cp["delivery_projection"] = projection
     if openapi_sha:
         manifest["openapi"] = {"path": str(OPENAPI.relative_to(ROOT)), "sha256": openapi_sha}
     if seed is not None:
@@ -655,6 +771,46 @@ Reading files, the environment and the clock is yours. With the part
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
 """
 
+KIT_MODEL_CONTRACTS_MD = """
+## Part `contracts`: delivered projection
+
+Import `{module}/internal/contracts` for the retained computations; the exported-name inventory below lists the
+actual delivered API. `internal/contracts/heartbeat` retains its generated family readers. The closed slot-name
+and sealing algorithms are retired from this delivery: no Seal/Open, AAD, keyring, envelope or reseal API is supplied.
+Only the existing handwritten `b64Canonical` and `LooksSealed` definitions are extracted byte for byte from the
+original sealing source into `internal/contracts/delivery_predicates.go`, with their base64/strings closure.
+The manifest records the original input SHA and exact definition spans/hashes separately from the delivered file.
+Retained keys, record and agent-signature code uses `b64Canonical`; values code uses `LooksSealed`.
+
+Where assigned by the lesson, ordinary generated YOURS `SlotName`, `Sealing` and `ValuesByType` vectoradapter
+scaffolds keep their existing signatures and unimplemented errors; the closed contracts adapters do not replace
+them. The delivered vector inventory below determines the lesson's targets; no unassigned scaffolds are added.
+Other covered vector adapters continue to call retained contracts. Vectors, expectations and command inventory
+remain present; an unimplemented adapter does not report success.
+"""
+
+KIT_MODEL_MD = """
+## Model-launch delivery
+
+This is a tool delivery mode for export P/01, with no new platform part, setting, port, native command or Go ABI.
+Box is excluded. Admin and launch are retained pending the Architect's weekly decision (ADR129(29)); their runtime
+and flags are unchanged. Generated/editable ownership is recorded per file. Internal regeneration copies are inputs,
+not additional delivered algorithms.
+
+Source identity: Platform/COURSE_COMMIT `{source_commit}`. Code identity: `{code_commit}`.
+Export identity: `{export_commit}`. Historical identifiers inside public probe files and their README remain intact.
+
+`01-store/publicprobes/` contains exactly four sibling Python programs (`copy_stream.py`, `store_fitness.py`,
+`store_probe_http.py`, `store_probes.py`) plus README.md, unchanged from `Platform/01-store/probes` of this export.
+These are public observation checkers. They do not start or qualify a provider or establish SUT/production PASS.
+From that directory, with PYTHONPATH unset, use `python3.12 -B -m store_probes --list` for the eight-probe inventory
+and required bindings. The store_probes entrypoint supports the sibling imports using its own directory; importing
+an arbitrary sibling module by an unrelated loader is not the entrypoint contract. No capture means missing inputs
+(exit 3); MissingBinding reports absent concrete observations/bindings. OBSERVATION_PASS only judges supplied
+observations, with native_executed and production_passed both zero. Budget values and native observation bindings
+belong to the acceptance programme. README's historical relative spec links refer to the export's spec tree.
+"""
+
 KIT_DOOR_MD = """
 ## Part `door`: package `apidoor` — the doors of the store from the OpenAPI (generated)
 
@@ -736,10 +892,11 @@ PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stag
              **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
-def regen(parts):
+def regen(parts, *, delivery="internal"):
     """Choose regeneration producers: P/01 retains the complete REGEN order; other lessons select PART_GENS by parts."""
     if L.key == lesson.DEFAULT:
-        return REGEN + (PART_GENS["contracts"] if "contracts" in parts else ())
+        order = tuple(g for g in REGEN if delivery != "model-launch" or g != "gen_box.py")
+        return order + (PART_GENS["contracts"] if "contracts" in parts else ())
     gens = []
     for p in parts:
         if p not in PART_GENS:
@@ -809,7 +966,8 @@ def _finish_output(parts):
     provenance(required, [], {})
 
 
-def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None):
+def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code_root=ROOT, context=None,
+            delivery="internal"):
     """Explicit creation in an empty external root; never repairs an existing set.
 
     Full verification: prepare(profiles=lesson.PROFILES). A selected/component or
@@ -825,6 +983,12 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
     if output_root.exists() and any(output_root.iterdir()):
         raise KitError("output root is not empty; create a new set explicitly")
     context = dict(context or {"kind": "current" if set(profiles) == set(lesson.PROFILES) else "component"})
+    if delivery not in DELIVERIES:
+        raise KitError(f"unknown delivery {delivery!r}")
+    if delivery == "model-launch":
+        if profiles != ("p01-1",):
+            raise KitError("model-launch preparation supports export P/01 only")
+        delivery_identity(source_root, context)
     inputs = lesson.output_inputs(source_root, code_root, kind=context["kind"])
     plans = {}
     for slug in profiles:
@@ -832,6 +996,8 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
         if not selected or len(selected) != len(set(selected)) or any(p not in PARTS for p in selected):
             raise KitError(f"invalid/empty parts for {slug}")
         plans[slug] = tuple(selected)
+        if delivery == "model-launch":
+            delivery_request(delivery, output_root, selected, None)
     output_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="normgen-inputs-") as tmp:
         stage = Path(tmp)
@@ -847,7 +1013,7 @@ def prepare(parts=(), *, profiles=None, output_root=None, source_root=ROOT, code
             code = ("import sys;sys.path.insert(0,'kit');import build_kit as k;"
                     f"parts={selected!r};"
                     "import subprocess;"
-                    "gens=k.regen(parts);"
+                    f"gens=k.regen(parts,delivery={delivery!r});"
                     "\nfor g in gens:\n"
                     " if g=='contracts/gen/gen_heartbeat.py': continue\n"
                     " r=subprocess.run([sys.executable,g],capture_output=True,text=True)\n"
@@ -912,8 +1078,9 @@ with its sha256 and whether it is yours (`editable`). Standard library only, Go 
 """
 
 
-def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None):
+def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None, *, delivery="internal"):
     """Build from a clean course HEAD using an export's inputs; seed follows seed_rule. Return the manifest."""
+    delivery_request(delivery, dst, parts, seed)
     dst = Path(dst).resolve()
     seed = Path(seed).resolve() if seed is not None else None
     if git("status", "--porcelain", "--", "tools/normgen", cwd=root).strip():
@@ -923,6 +1090,8 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         sha = git("rev-parse", "--verify", f"{export}^{{commit}}", cwd=specs).decode().strip()
     except KitError as exc:
         raise KitError(f"--export {export}: not a commit of {specs}: {exc}") from None
+    if delivery == "model-launch" and sha == LEGACY_EXPORT:
+        raise KitError("model-launch delivery refuses the legacy export")
     with tempfile.TemporaryDirectory(prefix="kit-export-") as t, \
             tempfile.TemporaryDirectory(prefix="kit-generated-") as generated:
         stage = Path(t)
@@ -932,8 +1101,11 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
         env = dict(os.environ, NORMGEN_OUT=generated, PYTHONDONTWRITEBYTECODE="1",
                    **{COURSE_ENV: course, EXPORT_ENV: sha})
         context = {"kind": "export", "course_commit": course, "export_commit": sha}
+        if delivery == "model-launch":
+            context["source_pin"] = delivery_identity(stage, context)["source_commit"]
+        delivery_arg = f",delivery={delivery!r}" if delivery != "internal" else ""
         creator = ("import os,sys;sys.path.insert(0,'kit');import build_kit as k;"
-                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r});"
+                   f"k.prepare({tuple(parts)!r},profiles=({L.slug!r},),context={context!r}{delivery_arg});"
                    "print(os.environ[k.lesson.OUTPUT_RECEIPT_ENV])")
         done = subprocess.run([sys.executable, "-c", creator], cwd=gens, env=env, capture_output=True, text=True)
         if done.returncode:
@@ -943,6 +1115,8 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
             raise KitError("export creator did not return a strict creation receipt")
         env[lesson.OUTPUT_RECEIPT_ENV] = receipt
         cmd = [sys.executable, str(gens / "kit/build_kit.py"), str(dst), "--module", module]
+        if delivery != "internal":
+            cmd += ["--delivery", delivery]
         cmd += sum((["--part", p] for p in parts), []) + sum((["--judged", f"{k}={v}"] for k, v in judged.items()), [])
         cmd += ["--seed", str(seed)] if seed is not None else []
         done = subprocess.run(cmd, cwd=stage, capture_output=True, text=True, env=env)
@@ -950,7 +1124,9 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
             raise KitError((done.stderr or done.stdout).strip())
     manifest = json.loads((dst / "kit.manifest.json").read_text(encoding="utf-8"))
     built = " ".join(["python3 tools/normgen/kit/build_kit.py <kit> --module", module]
-                     + [f"--part {p}" for p in parts] + [f"--export {sha}"] + (["--seed <seed>"] if seed else []))
+                     + [f"--part {p}" for p in parts] + [f"--export {sha}"]
+                     + ([f"--delivery {delivery}"] if delivery != "internal" else [])
+                     + (["--seed <seed>"] if seed else []))
     sd = manifest.get("seed")
     seeded = (f"seed {seed}: the files of the model kept, not in the kit ({len(sd['kept'])}): {' '.join(sd['kept'])}; "
               f"the untouched stubs of the former kit refreshed ({len(sd['refreshed'])}): {' '.join(sd['refreshed'])}\n"
@@ -958,7 +1134,11 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
     (dst / "SOURCE.txt").write_text(
         f"export {sha} (cammeta-specs): the inputs — Platform/ of the export, byte for byte (git archive)\n"
         f"course {course} (clean): tools/normgen — the generators, the hand-written kit code; out regenerated on the "
-        f"export inputs\nmodule {module}\nparts: {' '.join(manifest['parts'])}\n{seeded}built: {built}\n", encoding="utf-8")
+        f"export inputs\nmodule {module}\nparts: {' '.join(manifest['parts'])}\n{seeded}built: {built}\n"
+        + (f"delivery {delivery}; source Platform/COURSE_COMMIT {manifest['delivery']['source_commit']}; "
+           f"creator prepared manifest SHA256 {receipt}\n"
+           "publicprobes: unchanged Platform/01-store/probes from this export; historical embedded pins retained\n"
+           if delivery == "model-launch" else ""), encoding="utf-8")
     return manifest
 
 
@@ -973,6 +1153,8 @@ def main(argv=None):
     ap.add_argument("--export", metavar="SHA", help="the inputs from this commit of cammeta-specs (Platform/), the code "
                     "from the clean HEAD of the course")
     ap.add_argument("--specs", default=str(SPECS), help="the git repository of the exports (default ~/cammeta-specs)")
+    ap.add_argument("--delivery", choices=DELIVERIES, default="internal",
+                    help="tool-only delivery mode; model-launch requires export P/01 and a new empty destination")
     ap.add_argument("--seed", help="the seed tree (the code of a former attempt with its kit.manifest.json): editable "
                     "files of the model stay out of the kit, untouched stubs of the former kit are refreshed")
     args = ap.parse_args(argv)
@@ -984,13 +1166,17 @@ def main(argv=None):
             return 1
         judged[part] = ref
     try:
+        delivery_request(args.delivery, args.dst, args.part, args.seed)
+        if args.delivery == "model-launch" and not args.export and lesson.owns_output_root():
+            raise KitError("model-launch needs --export or a supplied prepared export set; no implicit preparation")
         if not args.export and lesson.owns_output_root():
             # CLI creation is explicit here. build() itself only consumes a set.
             # A caller-supplied NORMGEN_OUT is never recreated, even if invalid.
             prepare(tuple(args.part), profiles=(L.slug,))
         manifest = (build_from_export(args.dst, args.module, args.part, judged, args.export, Path(args.specs),
-                                      seed=args.seed)
-                    if args.export else build(args.dst, args.module, args.part, judged, args.seed))
+                                      seed=args.seed, delivery=args.delivery)
+                    if args.export else build(args.dst, args.module, args.part, judged, args.seed,
+                                              delivery=args.delivery))
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1
