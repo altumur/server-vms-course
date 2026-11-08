@@ -3,7 +3,7 @@
  "adr": "ADR-0133 addendum (4) items 2–3; INPUT-CLASSIFICATION-SUPPLEMENT 2026-11-08",
  "owner": "spec103-claude",
  "scope": "P06–P10 Source (not ru/)",
- "pin": "4402970b5494724a5a51e6f382aaabc60fb31cc2",
+ "pin": "d8d9acfee35241580352571edd15b2f5dda12883",
  "note": "Inbox material for SRC; not a source text and not exported to M. blob = Git blob at pin after the split; a class names what was found before the split, after_split what goes to M. moved_to names the judge-only table that now carries the text (J-only; not to be repeated in M).",
  "classification_rule": "rule: only protocol/form/order, names and counts of cases allowed; case: only case answers, no rule absent from a norm; mixed: both — split before export. An expected answer is the literal outcome tied to a named case/step; stated rules with a scenario pointer stay.",
  "counts": {
@@ -170,7 +170,7 @@
   {
    "path": "Platform/06-console/acceptance/4/README.md",
    "blob_before": "3f5ade9bcd01402b18d12ac23715115ba6c2ec69",
-   "blob": "67c457c7f431c7e4fec22fe4497dc55bd66c3fa0",
+   "blob": "fe188c2a13b0ddd5fca93e699a5b848d6215b617",
    "class_found": "mixed",
    "after_split": "rule (идёт в M целым blob)",
    "basis": "протокол стенда и порядок остаются; описания сценариев/шагов и ожидаемые исходы вынесены в комментарии scenarios.tsv",
@@ -1213,7 +1213,7 @@
    },
    {
     "path": "Platform/06-console/acceptance/4/scenarios.tsv",
-    "blob": "14116953075c448c790caeed41d03339423e04c3",
+    "blob": "4106a367c3f9c3aebedbe9866c0fa23d7fcf21a1",
     "kind": "acceptance table or fixture"
    },
    {
@@ -1883,14 +1883,15 @@
   }
  ],
  "pass2": {
-  "commit": "4402970b5494724a5a51e6f382aaabc60fb31cc2",
+  "commit": "d8d9acfee35241580352571edd15b2f5dda12883",
   "by": "Architect answers 2026-11-08",
   "moved": [
-   "section Sleeps of 12 chapter READMEs → their scenarios.tsv (06/4 keeps a one-line statement without steps)",
+   "section Sleeps of 13 chapter READMEs → their scenarios.tsv (P06 1/4/5/6/7, P08 3/5/7/8/10, P09 1/2, P10)",
    "08.1 N5 What column → vectors/view/cases.tsv (vector rows), acceptance/1/scenarios.tsv (stand rows)",
    "06.8 and acceptance/8 witness sizes → acceptance/8/scenarios.tsv",
    "06/8 README reaper wait, 09/1 sc. 27 sentence, 08/8 sc. 02 grant sub-bullet → their scenarios.tsv"
   ],
-  "deadlines": "every deadline in the moved Sleeps tables is by named constant already owned by a norm or contract (BACKUP_EVERY P/08, REPORT_EVERY, VIEW_EVERY, FRESH_EVERY, AS_OF_STORE_EVERY, TURN_TERM and TURN_RENEW common/contracts/turn.md, ROAD_QUIET, LOST_AFTER); none lifted. @sleep and @until semantics stay in the common acceptance README (foreign file)."
+  "deadlines": "every deadline in the moved Sleeps tables is by named constant already owned by a norm or contract (BACKUP_EVERY P/08, REPORT_EVERY, VIEW_EVERY, FRESH_EVERY, AS_OF_STORE_EVERY, TURN_TERM and TURN_RENEW common/contracts/turn.md, ROAD_QUIET, LOST_AFTER); none lifted. @sleep and @until semantics stay in the common acceptance README (foreign file).",
+  "src_map": "Compared with SLEEPS-PRECISE-CURRENT-CARRIERS.json (sha256 089abcfb…, candidate febd3d33f): 13 records. The only divergence was 06/4 (kept in 4402970b5), moved at this pin; every non-separator line of all ranges is gone from EN and RU and is present as a comment in scenarios.tsv of its chapter."
  }
 }
