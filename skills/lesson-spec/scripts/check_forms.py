@@ -258,7 +258,25 @@ class _RefusalSchemas(dict):
             self.document_hashes[physical_path] = digest
         return self.documents[physical_path]
 
+    @staticmethod
+    def _pointer(tokens):
+        """Canonical JSON Pointer from decoded declaration tokens, never object IDs."""
+        return "".join("/" + str(token).replace("~", "~0").replace("/", "~1") for token in tokens)
+
+    @classmethod
+    def _child_pointer(cls, pointer, token):
+        return pointer + cls._pointer((token,))
+
+    @staticmethod
+    def _node_key(base, pointer):
+        return base.resolve().as_uri(), pointer
+
     def target(self, ref, base):
+        """Keep the existing two-item target API; internal walks retain the pointer."""
+        node, path, _ = self._typed_target(ref, base)
+        return node, path
+
+    def _typed_target(self, ref, base):
         from urllib.parse import unquote, urlsplit
         if type(ref) is not str or "\\" in ref or re.search(r"%(?![0-9a-fA-F]{2})", ref):
             raise ValueError(f"invalid schema reference {ref!r}")
@@ -306,6 +324,7 @@ class _RefusalSchemas(dict):
             schema_positions.add(position)
         node = doc
         declaration = doc if 0 in schema_positions else None
+        declaration_pointer = "" if declaration is not None else None
         if 0 in schema_positions:
             self.validate(node, path)
         try:
@@ -315,6 +334,7 @@ class _RefusalSchemas(dict):
                     self.validate(node, path)
                     if declaration is None:
                         declaration = node
+                        declaration_pointer = self._pointer(tokens[:index])
         except (KeyError, IndexError, TypeError) as exc:
             raise ValueError(f"unresolved schema reference {ref!r} in {base}") from exc
         if type(node) not in (dict, bool):
@@ -322,11 +342,11 @@ class _RefusalSchemas(dict):
         # Inventory the whole standalone resource or enclosing named component
         # independently. Never put unselected sibling references on the caller's
         # selected logical file chain.
-        self.inventory(declaration, path.resolve())
-        return node, path.resolve()
+        self.inventory(declaration, path.resolve(), pointer=declaration_pointer)
+        return node, path.resolve(), self._pointer(tokens)
 
-    def inventory(self, node, base):
-        key = (base.resolve(), id(node))
+    def inventory(self, node, base, *, pointer):
+        key = self._node_key(base, pointer)
         if key in self.inventoried or key in self.inventory_active:
             return
         self.inventory_active.add(key)
@@ -334,18 +354,20 @@ class _RefusalSchemas(dict):
             self.validate(node, base)
             if type(node) is dict:
                 if "$ref" in node:
-                    # target() inventories its declaration in its own context;
-                    # it still checks every individual edge's owner/base/slot.
-                    self.target(node["$ref"], base)
+                    # Each resource/declaration is inventoried in its own context.
+                    # The selected incoming chain is checked separately in closure.
+                    self._typed_target(node["$ref"], base)
                 for keyword in self._maps:
-                    for child in node.get(keyword, {}).values():
-                        self.inventory(child, base)
+                    for name, child in node.get(keyword, {}).items():
+                        at = self._child_pointer(self._child_pointer(pointer, keyword), name)
+                        self.inventory(child, base, pointer=at)
                 for keyword in self._lists:
-                    for child in node.get(keyword, []):
-                        self.inventory(child, base)
+                    for index, child in enumerate(node.get(keyword, [])):
+                        at = self._child_pointer(self._child_pointer(pointer, keyword), index)
+                        self.inventory(child, base, pointer=at)
                 for keyword in self._single:
                     if keyword in node:
-                        self.inventory(node[keyword], base)
+                        self.inventory(node[keyword], base, pointer=self._child_pointer(pointer, keyword))
             self.inventoried.add(key)
         finally:
             self.inventory_active.remove(key)
@@ -365,30 +387,33 @@ class _RefusalSchemas(dict):
                 "https://json-schema.org/draft/2020-12/schema", "https://spec.openapis.org/oas/3.1/dialect/base"):
             raise ValueError(f"unsupported schema dialect in {base}")
 
-    def closure(self, node, base, active=(), files=()):
-        key = (base.resolve(), id(node))
+    def closure(self, node, base, active=(), *, pointer):
+        key = self._node_key(base, pointer)
         if key in active:
-            return  # Structural recursive schemas are valid; alias projection detects alias cycles.
-        # Selected traversal is context-dependent: never reuse a closure PASS
-        # from another incoming file chain, even after a successful inventory.
+            segment = active[active.index(key):]
+            if any(uri != key[0] for uri, _ in segment):
+                chain = " → ".join(uri + "#" + at for uri, at in (*segment, key))
+                raise ValueError(f"cross-resource schema reference cycle: {chain}")
+            return  # The closed segment is local, even after a foreign prefix.
+        # No context-free selected-closure cache: check every incoming chain.
         self.validate(node, base)
         if type(node) is bool:
             return
         active = (*active, key)
         if "$ref" in node:
-            target, path = self.target(node["$ref"], base)
-            if path.resolve() != base.resolve() and path.resolve() in (*files, base.resolve()):
-                raise ValueError("cross-resource schema reference cycle")
-            self.closure(target, path, active, (*files, base.resolve()) if path.resolve() != base.resolve() else files)
+            target, path, at = self._typed_target(node["$ref"], base)
+            self.closure(target, path, active, pointer=at)
         for keyword in self._maps:
-            for child in node.get(keyword, {}).values():
-                self.closure(child, base, active, files)
+            for name, child in node.get(keyword, {}).items():
+                at = self._child_pointer(self._child_pointer(pointer, keyword), name)
+                self.closure(child, base, active, pointer=at)
         for keyword in self._lists:
-            for child in node.get(keyword, []):
-                self.closure(child, base, active, files)
+            for index, child in enumerate(node.get(keyword, [])):
+                at = self._child_pointer(self._child_pointer(pointer, keyword), index)
+                self.closure(child, base, active, pointer=at)
         for keyword in self._single:
             if keyword in node:
-                self.closure(node[keyword], base, active, files)
+                self.closure(node[keyword], base, active, pointer=self._child_pointer(pointer, keyword))
 
     def roles(self, name, project=True):
         if name not in self or self.origins.get(name) is None:
@@ -398,43 +423,113 @@ class _RefusalSchemas(dict):
         for resource in tuple(self.documents):
             self.load(resource)
         base = self.origins[name]
-        self.inventory(self[name], base)
-        self.closure(self[name], base)
-        def role(node, file, active=()):
-            key = (file.resolve(), id(node))
-            if key in active:
-                raise ValueError("cyclic response schema alias/role projection")
-            if type(node) is bool:
-                return set(), set()
-            props, required = set(node.get("properties", {})), set(node.get("required", []))
-            children = [(child, file) for child in node.get("allOf", [])]
-            if "$ref" in node:
-                children.append(self.target(node["$ref"], file))
-            for child, child_file in children:
-                child_props, child_required = role(child, child_file, (*active, key))
-                props |= child_props
-                required |= child_required
-            for keyword in ("anyOf", "oneOf"):
-                branches = [role(child, file, (*active, key)) for child in node.get(keyword, [])]
-                if branches:
-                    props |= set.union(*(p for p, _ in branches))
-                    required |= set.intersection(*(r for _, r in branches))
-            return props, required
+        pointer = self._child_pointer("/components/schemas", name)
+        self.inventory(self[name], base, pointer=pointer)
+        self.closure(self[name], base, pointer=pointer)
         if not project:
-            def aliases(node, file, active=()):
-                key = (file.resolve(), id(node))
-                if key in active:
-                    raise ValueError("cyclic response schema alias")
-                if type(node) is bool:
-                    return
-                children = [(child, file) for word in ("allOf", "anyOf", "oneOf") for child in node.get(word, [])]
-                if "$ref" in node:
-                    children.append(self.target(node["$ref"], file))
-                for child, child_file in children:
-                    aliases(child, child_file, (*active, key))
-            aliases(self[name], base)
-            return None  # Dash carries no direct property/required projection.
-        return role(self[name], base)
+            return None  # ADR9: dash has no direct property/required projection.
+
+        # Declared facts form a finite graph. This is field projection, not
+        # schema acceptance or satisfiability; closure above owns cycle validity.
+        graph = {}
+        def collect(node, file, pointer):
+            key = self._node_key(file, pointer)
+            if key in graph:
+                return key
+            facts = {"properties": set(), "required": set(), "unconditional": [], "alternatives": []}
+            graph[key] = facts
+            if type(node) is bool:
+                return key
+            facts["properties"] = set(node.get("properties", {}))
+            facts["required"] = set(node.get("required", []))
+            children = [(child, file, self._child_pointer(self._child_pointer(pointer, "allOf"), index))
+                        for index, child in enumerate(node.get("allOf", []))]
+            if "$ref" in node:
+                children.append(self._typed_target(node["$ref"], file))
+            facts["unconditional"] = [collect(child, child_file, at) for child, child_file, at in children]
+            for keyword in ("anyOf", "oneOf"):
+                if keyword in node:
+                    branches = [collect(child, file,
+                                        self._child_pointer(self._child_pointer(pointer, keyword), index))
+                                for index, child in enumerate(node[keyword])]
+                    facts["alternatives"].append(branches)
+            return key
+        root = collect(self[name], base, pointer)
+
+        # Property names are declared existence facts: preserve the existing
+        # allOf/ref/alternative unions, with no invented facts on a pure ring.
+        properties = {key: set(facts["properties"]) for key, facts in graph.items()}
+        while True:
+            updated = {}
+            for key, facts in graph.items():
+                names = set(facts["properties"])
+                for child in facts["unconditional"]:
+                    names |= properties[child]
+                for branches in facts["alternatives"]:
+                    for child in branches:
+                        names |= properties[child]
+                updated[key] = names
+            if updated == properties:
+                break
+            properties = updated
+
+        # Collapse unconditional ref/allOf rings. Their finite facts are exactly
+        # the union of declarations and outgoing obligations in that component.
+        reach = {}
+        for key in graph:
+            pending, seen = [key], set()
+            while pending:
+                child = pending.pop()
+                if child not in seen:
+                    seen.add(child)
+                    pending.extend(graph[child]["unconditional"])
+            reach[key] = seen
+        component_of, components = {}, {}
+        for key in graph:
+            if key in component_of:
+                continue
+            members = {child for child in reach[key] if key in reach[child]}
+            components[key] = members
+            for child in members:
+                component_of[child] = key
+        obligations = {}
+        universe = set()
+        for key, members in components.items():
+            own, unconditional, alternatives = set(), set(), []
+            for child in members:
+                own |= graph[child]["required"]
+                unconditional |= {component_of[target] for target in graph[child]["unconditional"]
+                                  if component_of[target] != key}
+                alternatives += [[component_of[target] for target in branches]
+                                 for branches in graph[child]["alternatives"]]
+            obligations[key] = own, unconditional, alternatives
+            universe |= own
+
+        def fixed_point(initial):
+            values = {key: set(initial) for key in components}
+            while True:
+                updated = {}
+                for key, (own, unconditional, alternatives) in obligations.items():
+                    required = set(own)
+                    for child in unconditional:
+                        required |= values[child]
+                    for branches in alternatives:
+                        guaranteed = set(values[branches[0]])
+                        for child in branches[1:]:
+                            guaranteed &= values[child]
+                        required |= guaranteed
+                    updated[key] = required
+                if updated == values:
+                    return values
+                values = updated
+        lower = fixed_point(set())[component_of[root]]
+        upper = fixed_point(universe)[component_of[root]]
+        if lower != upper:
+            coordinate = root[0] + "#" + root[1]
+            raise ValueError(f"underdetermined field projection at {coordinate}: recursive alternative "
+                             f"required facts have lower {sorted(lower)!r}, upper {sorted(upper)!r}; "
+                             "full schema/ref closure is valid")
+        return properties[root], lower
 
 
 def openapi_schemas(lesson):
