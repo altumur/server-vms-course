@@ -42,6 +42,12 @@ write:     a write is published whole — a temporary file in the same directory
            the secret bytes; after the write the rights are not widened (SF-G04)
 ```
 
+## Production obligations
+
+ADR-0130 Addendum (10), Q2: complete and `fsync` the temporary file before `rename`; after publication, complete the directory durability barrier before reporting success. Failure before publication preserves the old target. Failure after publication on an uncertain medium is an unknown outcome, never a claim that the old file was preserved or rotation succeeded. The operator command uses its existing non-zero refusal code with a reason without key material; `0` is reserved for confirmed success. Keep old keys as required by the existing key lifecycle; this adds no cryptographic format. Fault injection must distinguish temporary write, file barrier, rename and directory barrier, including crash/restart readback.
+
 ## Vectors
 
-There are no vectors: the placement of a file (a symbolic link, the mode, the owner) cannot be expressed by a TSV row — a layout test of the implementation and reading. (ADR-0083 addendum (32) item 2)
+Placement still needs a real filesystem layout test (ADR-0083 addendum (32) item 2). Public phase and crash vectors are in [production obligations](../vectors/production-obligations/README.md); a text vector alone does not execute barriers.
+
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

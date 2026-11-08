@@ -39,3 +39,5 @@ ru/                        for people, not in the export — translations of the
 ```
 
 The dictionary of normative words is the canon of the whole course; it lies outside the module (a course file).
+
+[Production obligations](contracts/production-obligations.md): finite budgets and public sequences for ADR-0130 Addendum (10).

@@ -104,7 +104,12 @@ live:      next to every room.<sub> — the element live.<sub>: the numbers n �
            of stage A 3–5, № 3, 19)
 ```
 
+## Production obligations
+
+ADR-0130 Addendum (10), Q3: startup lock waiting, including repeated inode comparisons and parent-directory locks, MUST have a finite positive implementation-declared monotonic budget and cancellation. The blocking wait is bounded by that budget; cancellation must release waiting resources within its declared finite budget. Expiry or cancellation uses the worker's existing start refusal, code `2` with a reason in the log, before readiness, slot capture, contender or heartbeat publication. It does not steal a lock, rewrite existing lock content or affect the live holder. A successful acquisition still requires the existing device/inode comparison. The probe supplies contention, cancellation and budgets from the declared environment.
+
 ## Vectors
 
 The package [`presence-room`](../vectors/presence-room/README.md) (the count `room`); the modes of the directories and files of the locks are the rows of `modes.tsv` of the package [`journal`](../vectors/journal/README.md) (together with the event journal). (ADR-0083 addendum (32) item 2)
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

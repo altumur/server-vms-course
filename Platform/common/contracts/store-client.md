@@ -97,9 +97,14 @@ memory:    the store remembers an id for at least two minutes and at least 50 00
            a forgotten repeat is applied as a new write — therefore cas on every write that matters
 ```
 
+## Production obligations
+
+ADR-0130 Addendum (10), Q4: each ordinary logical operation MUST have a finite positive implementation-declared end-to-end budget, measured monotonically from its first attempt; queueing, dependency waits, retries and backoff consume it. Inner ordinary hops reserve the existing forwarding allowance `F`; a hop or retry cannot restart or increase the remaining budget. Exactly one declared level owns retries, with bounded backoff and jitter, honouring existing `Retry-After`. On an unknown write outcome, retry only the identical logical operation with the same `id` and original `cas`/`guard`, within qualified replay retention. No new id may bypass ambiguity. If retention cannot be qualified, use owner readback/barrier rules or retain uncertainty; no blind retry as a new operation. Existing `ambiguous`, `unavailable` and forwarding `502` outcomes remain distinct. Streaming and pass retain their existing idle, header and completion rules; this creates no blanket response deadline, wire header or flag.
+
 ## Vectors
 
 The package [`store-client`](../vectors/store-client/README.md): the outcome of an answer for the client — the operation and the answer (code and body, no
 answer, a cut, a refused connection) → the outcome (the section «Outcomes and what the client does», `no_reply`). The wire (routes, parsing,
 codes at the inputs) is the acceptance of lesson 01 ([P/01.1 N5](../../01-store/spec/01.1-store.norms.md)).
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

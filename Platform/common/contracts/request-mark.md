@@ -174,7 +174,7 @@ An append has one mark of the reaper: `expired` is not written over `gone`, nor 
 confirmed read of this mark with the same `unit`/`digest` (local monotonic clock); an age ≥ `settle` — remove the row by
 CAS and the rid from `asked` by CAS; an unknown read — leave it. A late `fetched` of the holder after the mark is harmless: the mark does not
 change, the start of `settle` does not move — the request has one outcome, the first confirmed one; `fetched` confirmed earlier
-excludes the mark `expired`. Nobody cleans up the mark `expired` (marks accumulate, one per rid), and the rid of an append is derived from data and the door does not read the mark: a new request with the same rid is accepted (202), and the former mark with the same `unit`/`digest` closes it through `settle`, not through `ttl` — the repeat window after `expired` is shortened, the consumer knows this; the platform does not introduce a cleanup of append marks (the Architect's decision of 2026-10-31). Without a mark of the reaper an append has no marks, and it is not removed by `ttl` alone (P/06.4 N3 reaper `gone`,
+excludes the mark `expired`. ADR-0130 Addendum (10), Q5 supersedes the Architect's 2026-10-31 decision that append marks accumulate forever. A still-needed `expired` mark MUST NOT be deleted: the rid of an append is data-derived, the door does not read the mark, and a repeat with the same rid is accepted (202); the old mark with the same `unit`/`digest` closes it through `settle`, not `ttl`. Thus elapsed time alone does not prove cleanup eligibility. Only a proof that mandatory replay and side-effect memory is no longer needed permits cleanup. Eligible records MUST be reclaimed resumably within a finite positive implementation-declared cleanup budget under qualified workload. Until eligibility is proved, retain them and apply finite admission/resource budgets with visible existing refusal/backpressure; never forget them to admit work. Without a mark of the reaper an append has no marks, and it is not removed by `ttl` alone (P/06.4 N3 reaper `gone`,
 `expired`; ADR-0091 addendum (11) item 4; the stage C guess C06-GONE-FETCHED-33-01, the Architect's decision of 2026-10-25; the VMS request
 «request lifetime», the Architect's decision of 2026-10-29; vectors [`reap`](../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md) N3 «The ADR-0054 append».
 The sign of an append is `requests.outcome: fetched` (ADR-0054 addendum 2026-10-17); the training consumer is the requests of `testsub2`
@@ -248,6 +248,10 @@ limits:      FETCHED_COUNT, FETCHED_BYTES — the limit of the length of fetched
 
 From the «Races» of the procedure «reaper» of P/06.4 N3: two holders of one unit: `put_new` of the mark lets one through; the second holder closes a foreign `begun` past its term with the word `unknown` by the index — the one who began, having got a late answer, rereads the mark and writes the outcome by its index over it, `late: true`, as after the reaper too. The reaper against a holder that began in the last second: the mark `begun` already exists — the reaper writes `unknown` by the index, the holder, having got the answer, writes the outcome by the index of the mark read; conflict — reread and repeat only the write: the reaper and the second holder write once, so the repeat of the holder ends with its word over `unknown` — the holder wins (ADR-0054), `late: true` in the outcome after `unknown` (the stage C guess W03-E06, the Architect's decision of 2026-10-23); the reaper writes only by the index read and does not overwrite the word of the holder. A repeat of filing with the same rid: `cas ""` — the second one gets «exists»; unit/digest matched — queued without an outcome, answered with an outcome; foreign content — exists/spent.
 
+## Production obligations
+
+Destructive cleanup MUST obey the clock qualification and monotonic deadline rules of [the event journal](event-journal.md), Q6 of ADR-0130 Addendum (10). An uncertain wall-clock jump defers deletion; required security/replay state is retained under finite resource/admission budgets.
+
 ## Vectors
 
 The grammar of `rid` — the vectors [`rid`](../../06-console/vectors/rid/README.md); the write of a body field into the row (`<body fields>`; `<body fields>` in the Russian text) — the vectors
@@ -261,3 +265,4 @@ The packages are at the owner (P/06.4); the other states and `kept` have no vect
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
+[Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

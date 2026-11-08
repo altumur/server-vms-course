@@ -13,6 +13,10 @@ which the operator talks to the controller are the doors of the console ([P/06.6
 
 Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
+<!-- req: P/04-R069 -->
+
+The [common production obligations](../../common/contracts/production-obligations.md) apply to this owner (ADR-0130 Addendum (10)). MB4: a turn protects guarded store mutations only; external actions require their owner-declared independent fence. Q4 retry ownership and Q5 bounded resources also apply.
+
 ## N1 Form
 
 <!-- req: P/04-R002 -->

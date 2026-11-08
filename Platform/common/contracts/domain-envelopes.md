@@ -132,7 +132,7 @@ The package [`domain-envelopes`](../vectors/domain-envelopes/README.md) (analysi
 (`m1-round.tsv`). The rows are the inputs of the acceptance vector commands of M11/2 (`seal`, `seal-round`) and M11/3 (`seal-member`,
 `seal-member-round`) without a change of bytes; the scenarios and inputs were removed by the move of lesson 8 — the tables are the only source of these
 cases. An implementation passes them with its own function, without a stand. `keys_sealed` and the content of
-`sealed` have no vectors — candidates (README of the package).
+`sealed` require the public content-probe sequences in [production obligations](../vectors/production-obligations/README.md); executable bindings remain Runner-owned and NOTEXEC until supplied.
 
 The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
