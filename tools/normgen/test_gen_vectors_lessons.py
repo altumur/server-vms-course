@@ -4,6 +4,9 @@ import copy
 import importlib
 import json
 import os
+import re
+import math
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -141,21 +144,133 @@ def fake_go(g, mut=None):
     return "\n".join(out), list(by_fn)
 
 
-def results(mod):
-    done = subprocess.run(["go", "test", "-count=1", "-json", "./vectortests/"], cwd=mod, capture_output=True, text=True,
-                          env=GOENV)
-    res, panics = {}, 0
-    for line in done.stdout.splitlines():
-        try:
-            e = json.loads(line)
-        except ValueError:
+class CheckingError(ValueError):
+    """Vector preparation/process/report failure, never a semantic mutant kill."""
+
+
+def vector_test_context(original):
+    """Hold names/package from the immutable original, never a mutant's own roster."""
+    original = Path(original)
+    try:
+        names, source = [], []
+        for path in sorted((original / "vectortests").glob("*_test.go")):
+            if path.is_symlink() or not path.is_file():
+                raise CheckingError("nonregular original vector test file")
+            raw = path.read_bytes()
+            text = raw.decode("utf-8", "strict")
+            names += re.findall(r"(?m)^func (Test[A-Za-z0-9_]+)\(t \*testing\.T\)", text)
+            source.append((path.name, hashlib.sha256(raw).hexdigest()))
+        modules = re.findall(r"(?m)^module ([^\s]+)\s*$", (original / "go.mod").read_text())
+        if (not names or len(names) != len(set(names)) or len(modules) != 1 or
+                not any(not name.startswith("TestCommon") for name in names)):
+            raise CheckingError("nonempty unique original vector roster/package required")
+        return tuple(names), modules[0] + "/vectortests", tuple(source)
+    except (OSError, UnicodeError) as exc:
+        raise CheckingError(f"original vector Source read failed: {exc}") from exc
+
+
+def _unique_report(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise CheckingError("duplicate Go vector report key")
+        result[key] = value
+    return result
+
+
+def _report_constant(value):
+    raise CheckingError("non-JSON Go vector report constant: " + value)
+
+
+def _vector_report_context(expected, package):
+    if (type(expected) not in (list, tuple) or not expected or
+            any(type(v) is not str or not v for v in expected) or len(expected) != len(set(expected)) or type(package) is not str or not package or
+            not any(not name.startswith("TestCommon") for name in expected)):
+        raise CheckingError("nonempty vector roster/context required")
+
+
+def vector_report(done, expected, package):
+    """Validate every run/terminal and EOF before exposing any semantic failure."""
+    _vector_report_context(expected, package)
+    try:
+        text, stderr = done.stdout, done.stderr
+        if type(text) is bytes:
+            text = text.decode("utf-8", "strict")
+        if type(stderr) is bytes:
+            stderr = stderr.decode("utf-8", "strict")
+        if type(text) is not str or type(stderr) is not str or stderr:
+            raise CheckingError("missing vector process capture or Go command diagnostic")
+        text.encode("utf-8", "strict"); stderr.encode("utf-8", "strict")
+        if not text.endswith("\n"):
+            raise CheckingError("truncated vector Go report: final LF required")
+        lines = text.split("\n")
+        if lines and lines[-1] == "":
+            lines.pop()
+        if not lines or any(not line for line in lines):
+            raise CheckingError("empty/blank vector Go report")
+        events = [json.loads(line, object_pairs_hook=_unique_report, parse_constant=_report_constant) for line in lines]
+        json.dumps(events, ensure_ascii=False, allow_nan=False).encode("utf-8", "strict")
+    except (UnicodeError, ValueError, TypeError, AttributeError, RecursionError) as exc:
+        raise CheckingError("invalid vector Go UTF-8/JSON report") from exc
+    allowed = {"Time", "Action", "Package", "Test", "Elapsed", "Output"}
+    started, terminal, states, paused = False, None, {}, set()
+    outputs = []
+    for event in events:
+        if (type(event) is not dict or set(event) - allowed or event.get("Package") != package or
+                type(event.get("Action")) is not str or terminal is not None or
+                ("Test" in event and (type(event["Test"]) is not str or event["Test"] not in expected)) or
+                ("Output" in event and type(event["Output"]) is not str) or
+                ("Time" in event and type(event["Time"]) is not str) or
+                ("Elapsed" in event and (type(event["Elapsed"]) not in (int, float) or
+                     not math.isfinite(event["Elapsed"]) or event["Elapsed"] < 0))):
+            raise CheckingError("unknown/mistyped/out-of-context vector Go event")
+        action, name = event["Action"], event.get("Test")
+        if action == "start" and name is None and not started:
+            started = True
             continue
-        if e.get("Action") == "output" and "panic:" in e.get("Output", ""):
-            panics += 1
-        if e.get("Test") and e["Action"] in ("pass", "fail"):
-            res[e["Test"]] = e["Action"]
-    res = {t: a for t, a in res.items() if not t.startswith("TestCommon")}   # P/01 packages are judged by their P/01/P/02 judges.
-    return res, panics, done
+        if not started:
+            raise CheckingError("vector event before package start")
+        if action == "output":
+            if "Output" not in event or name is not None and states.get(name) != "run":
+                raise CheckingError("vector output outside named execution")
+            outputs.append(event.get("Output", ""))
+        elif name is not None:
+            if action == "run" and name not in states:
+                states[name] = "run"
+            elif action == "pause" and states.get(name) == "run" and name not in paused:
+                paused.add(name)
+            elif action == "cont" and states.get(name) == "run" and name in paused:
+                paused.remove(name)
+            elif action in ("pass", "fail") and states.get(name) == "run" and name not in paused:
+                states[name] = action
+            else:
+                raise CheckingError("duplicate/skipped/unordered vector named event")
+        elif action in ("pass", "fail"):
+            if set(states) != set(expected) or any(v == "run" for v in states.values()):
+                raise CheckingError("partial vector named report")
+            terminal = action
+        else:
+            raise CheckingError("unexpected vector package event")
+    failed = any(v == "fail" for v in states.values())
+    trace = "".join(outputs) + stderr
+    runtime_error = ("[build failed]" in trace or "test timed out" in trace or
+        (re.search(r"(?m)^(?:panic:|fatal error:)", trace) is not None and "goroutine " in trace) or
+        re.search(r"(?m)^signal:", trace) is not None)
+    if (type(getattr(done, "returncode", None)) is not int or done.returncode != (1 if failed else 0) or
+            terminal != ("fail" if failed else "pass") or runtime_error):
+        raise CheckingError("vector compilation/start/process failure or incomplete package")
+    # Common packages keep their own judges, but their complete execution above is mandatory.
+    return {name: result for name, result in states.items() if not name.startswith("TestCommon")}
+
+
+def results(mod, expected, package):
+    _vector_report_context(expected, package)
+    try:
+        done = subprocess.run(["go", "test", "-count=1", "-json", "./vectortests/"], cwd=mod,
+                              capture_output=True, text=True, encoding="utf-8", env=GOENV, timeout=300)
+    except (OSError, UnicodeError, subprocess.SubprocessError) as exc:
+        raise CheckingError(f"vector process failed: {exc}") from exc
+    return vector_report(done, expected, package), 0, done
 
 
 class VectorsLessons(unittest.TestCase):
@@ -198,7 +313,8 @@ class VectorsLessons(unittest.TestCase):
     def test_stubs_red(self):
         for lesson_key in LESSONS:
             with self.subTest(lesson=lesson_key):
-                res, panics, done = results(self.module(lesson_key, "stubs"))
+                expected, package, _ = vector_test_context(output_lesson.output_root() / LESSONS[lesson_key] / "go")
+                res, panics, done = results(self.module(lesson_key, "stubs"), expected, package)
                 self.assertEqual(panics, 0, done.stdout[-1500:])
                 red = [t for t, a in res.items() if a == "fail" and "FamilyRead" not in t]
                 green = [t for t, a in res.items() if a == "pass" and "FamilyRead" not in t]
@@ -209,14 +325,28 @@ class VectorsLessons(unittest.TestCase):
         for lesson_key in LESSONS:
             with self.subTest(lesson=lesson_key):
                 g = gv(lesson_key)
-                res, panics, done = results(self.module(lesson_key, "fake", fake_go(g)))
+                expected, package, _ = vector_test_context(output_lesson.output_root() / LESSONS[lesson_key] / "go")
+                res, panics, done = results(self.module(lesson_key, "fake", fake_go(g)), expected, package)
                 fails = [t for t, a in res.items() if a == "fail"]
                 self.assertEqual(fails, [], done.stdout[-3000:])
                 self.assertGreater(len(res), 150)
 
     def mutant(self, lesson_key, name, mut):
         g = gv(lesson_key)
-        res, panics, done = results(self.module(lesson_key, f"mut-{name}", fake_go(g, mut)))
+        expected, package, source_receipt = vector_test_context(
+            output_lesson.output_root() / LESSONS[lesson_key] / "go")
+        normal = fake_go(g)
+        identity = (lesson_key, expected, package, source_receipt, hashlib.sha256(normal[0].encode()).hexdigest())
+        if not hasattr(self, "_normal_vector_baselines"):
+            self._normal_vector_baselines = set()
+        if identity not in self._normal_vector_baselines:
+            baseline = self.module(lesson_key, "baseline-" + name, normal)
+            before, _, capture = results(baseline, expected, package)
+            self.assertEqual(capture.returncode, 0, "normal vector fixture package must pass")
+            self.assertEqual([t for t, a in before.items() if a != "pass"], [],
+                             "normal complete vector fixture must be positive before mutants: " + capture.stdout[-3000:])
+            self._normal_vector_baselines.add(identity)
+        res, panics, done = results(self.module(lesson_key, f"mut-{name}", fake_go(g, mut)), expected, package)
         return [t for t, a in res.items() if a == "fail"]
 
     def test_mutants(self):
@@ -330,6 +460,203 @@ class VectorsLessons(unittest.TestCase):
         # A field outside fields:state (P/04 slot takeable) stays accepted; do not broaden the README rule.
         unlisted = first("common/slot", "cases.tsv", set_value(lambda v: dict(v, takeable="mutant") if "takeable" in v else None))
         self.assertEqual(self.mutant("04-controller", "fields-unlisted", unlisted), [])
+
+
+class VectorReportControls(unittest.TestCase):
+    PACKAGE = "owned/vectortests"
+    NAMES = ("TestOwned", "TestCommonWitness")
+
+    def events(self, failed=False):
+        values = [dict(Action="start", Package=self.PACKAGE)]
+        for name in self.NAMES:
+            values.append(dict(Action="run", Package=self.PACKAGE, Test=name))
+            action = "fail" if failed and name == "TestOwned" else "pass"
+            values.append(dict(Action=action, Package=self.PACKAGE, Test=name))
+        values.append(dict(Action="fail" if failed else "pass", Package=self.PACKAGE))
+        return values
+
+    def done(self, values=None, code=0, stderr=""):
+        values = self.events() if values is None else values
+        return subprocess.CompletedProcess([], code, "".join(json.dumps(x) + "\n" for x in values), stderr)
+
+    def test_normal_complete_report_validates_common_before_filtering(self):
+        self.assertEqual(vector_report(self.done(), self.NAMES, self.PACKAGE), {"TestOwned": "pass"})
+        events = self.events()
+        events.pop(4)
+        with self.assertRaises(CheckingError):
+            vector_report(self.done(events), self.NAMES, self.PACKAGE)
+
+    def test_complete_named_semantic_failure_stays_a_failure(self):
+        self.assertEqual(vector_report(self.done(self.events(True), 1), self.NAMES, self.PACKAGE),
+                         {"TestOwned": "fail"})
+        events = self.events(True)
+        events.insert(2, dict(Action="output", Package=self.PACKAGE, Test="TestOwned",
+                             Output="    fixture_test.go:1: source value says panic: literal\n"))
+        self.assertEqual(vector_report(self.done(events, 1), self.NAMES, self.PACKAGE), {"TestOwned": "fail"})
+
+    def test_empty_or_common_only_context_never_starts_go(self):
+        from unittest.mock import patch
+        for names in ((), ("TestCommonWitness",), ("TestOwned", "TestOwned")):
+            with self.subTest(names=names), patch.object(subprocess, "run") as process:
+                with self.assertRaises(CheckingError):
+                    results(Path("unused"), names, self.PACKAGE)
+                process.assert_not_called()
+
+    def test_partial_extra_duplicate_skipped_or_foreign_named_events_are_checking(self):
+        normal = self.events()
+        mutants = [normal[:-1], normal[:2] + normal[3:],
+                   normal[:2] + [normal[1]] + normal[2:],
+                   normal[:3] + [normal[2]] + normal[3:],
+                   normal + [normal[-1]], normal[1:],
+                   [dict(e, Test="TestUnknown") if e.get("Test") == "TestOwned" else e for e in normal],
+                   [dict(e, Action="skip") if e.get("Test") == "TestOwned" and e["Action"] == "pass" else e for e in normal],
+                   [dict(e, Package="foreign/vectortests") for e in normal],
+                   [normal[0], normal[-1]], [normal[0], normal[2], normal[1], *normal[3:]]]
+        for events in mutants:
+            with self.subTest(events=events), self.assertRaises(CheckingError):
+                vector_report(self.done(events), self.NAMES, self.PACKAGE)
+
+    def test_json_utf8_types_duplicates_and_trailing_garbage_are_checking(self):
+        raw = self.done().stdout
+        mutants = ["", raw + "\n", raw + "garbage", raw[:-5], raw.rstrip("\n"),
+                   raw.replace('"Action": "start"', '"Action": true', 1),
+                   raw.replace('"Action": "start"', '"Action": "start", "Action": "start"', 1),
+                   raw.replace('"Package": "owned/vectortests"', '"Package": NaN', 1),
+                   raw.replace('"Action": "start"', '"Action": "start", "Elapsed": true', 1)]
+        for text in mutants:
+            with self.subTest(text=text), self.assertRaises(CheckingError):
+                vector_report(subprocess.CompletedProcess([], 0, text, ""), self.NAMES, self.PACKAGE)
+        with self.assertRaises(CheckingError):
+            vector_report(subprocess.CompletedProcess([], 0, b"\xff", b""), self.NAMES, self.PACKAGE)
+
+    def test_process_build_signal_timeout_and_panic_are_never_semantic_failures(self):
+        from unittest.mock import patch
+        for code in (1, 2, -9, True):
+            with self.subTest(code=code), self.assertRaises(CheckingError):
+                vector_report(self.done(code=code), self.NAMES, self.PACKAGE)
+        events = self.events(True)
+        events.insert(2, dict(Action="output", Package=self.PACKAGE, Test="TestOwned",
+                             Output="panic: subject crashed\n\ngoroutine 9 [running]:\n"))
+        with self.assertRaises(CheckingError):
+            vector_report(self.done(events, 1), self.NAMES, self.PACKAGE)
+        for error in (OSError("no Go"), subprocess.TimeoutExpired(["go"], 1)):
+            with patch.object(subprocess, "run", side_effect=error), self.assertRaises(CheckingError):
+                results(Path("unused"), self.NAMES, self.PACKAGE)
+
+    def test_original_roster_is_nonempty_and_does_not_follow_a_mutant(self):
+        with tempfile.TemporaryDirectory() as temp:
+            original = Path(temp) / "original"
+            (original / "vectortests").mkdir(parents=True)
+            (original / "go.mod").write_text("module owned\n\ngo 1.22\n")
+            file = original / "vectortests/cases_test.go"
+            file.write_text("package vectortests\nimport \"testing\"\nfunc TestOwned(t *testing.T){}\nfunc TestCommonWitness(t *testing.T){}\n")
+            expected, package, identities = vector_test_context(original)
+            self.assertEqual(expected, self.NAMES)
+            self.assertEqual(package, self.PACKAGE)
+            self.assertEqual(len(identities), 1)
+            # A valid shorter report never supplies its own expected roster.
+            short = [dict(Action="start", Package=package), dict(Action="run", Package=package, Test="TestOwned"),
+                     dict(Action="pass", Package=package, Test="TestOwned"), dict(Action="pass", Package=package)]
+            with self.assertRaises(CheckingError):
+                vector_report(self.done(short), expected, package)
+            file.unlink()
+            with self.assertRaises(CheckingError):
+                vector_test_context(original)
+
+    def test_mutant_checks_a_normal_complete_fixture_before_its_answer(self):
+        from unittest.mock import patch
+        case = VectorsLessons("test_mutants")
+        normal, mutant = self.done(), self.done(self.events(True), 1)
+        with patch(__name__ + ".gv", return_value=object()), \
+                patch(__name__ + ".fake_go", return_value=("owned fake Source fixture", [])), \
+                patch(__name__ + ".vector_test_context", return_value=(self.NAMES, self.PACKAGE, (("file", "hash"),))), \
+                patch.object(output_lesson, "output_root", return_value=Path("unused")), \
+                patch.object(case, "module", return_value=Path("owned-copy")), \
+                patch(__name__ + ".results", side_effect=[({"TestOwned": "pass"}, 0, normal),
+                                                         ({"TestOwned": "fail"}, 0, mutant)]) as run:
+            self.assertEqual(case.mutant("03-worker", "owned", object()), ["TestOwned"])
+            self.assertEqual(run.call_count, 2)
+
+    def test_mutant_process_error_cannot_be_returned_as_a_kill(self):
+        from unittest.mock import patch
+        case = VectorsLessons("test_mutants")
+        with patch(__name__ + ".gv", return_value=object()), \
+                patch(__name__ + ".fake_go", return_value=("owned fake Source fixture", [])), \
+                patch(__name__ + ".vector_test_context", return_value=(self.NAMES, self.PACKAGE, (("file", "hash"),))), \
+                patch.object(output_lesson, "output_root", return_value=Path("unused")), \
+                patch.object(case, "module", return_value=Path("owned-copy")), \
+                patch(__name__ + ".results", side_effect=[({"TestOwned": "pass"}, 0, self.done()),
+                                                         CheckingError("compiler failure")]):
+            with self.assertRaises(CheckingError):
+                case.mutant("03-worker", "owned", object())
+
+
+class VectorGoReportControls(unittest.TestCase):
+    """Bounded real Go transport controls, separate from Source vector semantics."""
+
+    def test_named_complete_positive_then_semantic_fail_and_build_error(self):
+        with tempfile.TemporaryDirectory(prefix="vector-report-go-") as temp:
+            root = Path(temp)
+            (root / "vectortests").mkdir()
+            (root / "go.mod").write_text("module reportcontrol\n\ngo 1.22\n")
+            file = root / "vectortests/control_test.go"
+            original = ('package vectortests\nimport "testing"\n'
+                        'func TestOwned(t *testing.T) {}\n'
+                        'func TestCommonWitness(t *testing.T) {}\n')
+            file.write_text(original)
+            names, package, _ = vector_test_context(root)
+            positive, _, capture = results(root, names, package)
+            self.assertEqual(capture.returncode, 0)
+            self.assertEqual(positive, {"TestOwned": "pass"})
+            file.write_text(original.replace('func TestOwned(t *testing.T) {}',
+                                            'func TestOwned(t *testing.T) {t.Error("complete semantic mismatch")}'))
+            failed, _, capture = results(root, names, package)
+            self.assertEqual(capture.returncode, 1)
+            self.assertEqual(failed, {"TestOwned": "fail"})
+            file.write_text(original + "invalid Go source\n")
+            with self.assertRaises(CheckingError):
+                results(root, names, package)
+
+
+class VectorAuditControls(unittest.TestCase):
+    def test_original_source_io_utf8_and_unhashable_context_are_checking(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with self.assertRaises(CheckingError):
+                vector_test_context(root)
+            (root / "vectortests").mkdir()
+            (root / "vectortests/a_test.go").write_bytes(b"\xff")
+            with self.assertRaises(CheckingError):
+                vector_test_context(root)
+        with self.assertRaises(CheckingError):
+            _vector_report_context((["unhashable"],), "p/vectortests")
+
+    def test_escaped_surrogate_in_output_is_checking(self):
+        fixture = VectorReportControls()
+        events = fixture.events()
+        events.insert(2, dict(Action="output", Package=fixture.PACKAGE, Test="TestOwned", Output="\ud800"))
+        with self.assertRaises(CheckingError):
+            vector_report(fixture.done(events), fixture.NAMES, fixture.PACKAGE)
+
+    def test_command_stderr_cannot_be_a_semantic_failure(self):
+        fixture = VectorReportControls()
+        with self.assertRaises(CheckingError):
+            vector_report(fixture.done(fixture.events(True), code=1, stderr="compiler command diagnostic"),
+                          fixture.NAMES, fixture.PACKAGE)
+
+    def test_common_failure_prevents_positive_mutant_baseline(self):
+        from unittest.mock import patch
+        case = VectorsLessons("test_mutants")
+        fixture = VectorReportControls()
+        with patch(__name__ + ".gv", return_value=object()), \
+                patch(__name__ + ".fake_go", return_value=("fixture", [])), \
+                patch(__name__ + ".vector_test_context", return_value=(fixture.NAMES, fixture.PACKAGE, (("file", "hash"),))), \
+                patch.object(output_lesson, "output_root", return_value=Path("unused")), \
+                patch.object(case, "module", return_value=Path("owned-copy")), \
+                patch(__name__ + ".results", return_value=({"TestOwned": "pass"}, 0, fixture.done(code=1))) as run:
+            with self.assertRaises(AssertionError):
+                case.mutant("03-worker", "owned", object())
+            self.assertEqual(run.call_count, 1)
 
 
 if __name__ == "__main__":

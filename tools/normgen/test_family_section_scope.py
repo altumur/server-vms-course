@@ -18,9 +18,9 @@ from v7.section import SchemaSection
 
 SHARED = {
     "en": "Reader and writer bounds (`$defs.writer`, applied by root `allOf`):",
-    "ru": "Пределы читателя и писателя (`$defs.writer`, применены корневым `allOf`):",
+    "ru": "\u041f\u0440\u0435\u0434\u0435\u043b\u044b \u0447\u0438\u0442\u0430\u0442\u0435\u043b\u044f \u0438 \u043f\u0438\u0441\u0430\u0442\u0435\u043b\u044f (`$defs.writer`, \u043f\u0440\u0438\u043c\u0435\u043d\u0435\u043d\u044b \u043a\u043e\u0440\u043d\u0435\u0432\u044b\u043c `allOf`):",
 }
-WRITER = {"en": "Only at the writer (`$defs.writer`):", "ru": "Только у писателя (`$defs.writer`):"}
+WRITER = {"en": "Only at the writer (`$defs.writer`):", "ru": "\u0422\u043e\u043b\u044c\u043a\u043e \u0443 \u043f\u0438\u0441\u0430\u0442\u0435\u043b\u044f (`$defs.writer`):"}
 CASES = (("sweep", "<sub>/sweep", "digests", 64),
          ("folders", "platform/folders/<id>", "members", 1000),
          ("memberof", "platform/memberof/<sub>/<manifest:unit.rows>/<id>", "folders", 8))

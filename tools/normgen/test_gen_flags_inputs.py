@@ -489,26 +489,13 @@ func init() {
             self.assertEqual(form.is_file(), got.is_file(), lesson)
             if not form.is_file():
                 continue
-            lines = [ln for ln in form.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
-            rows = [dict(zip(lines[0].split("\t"), ln.split("\t"))) for ln in lines[1:]]
-            norms = "".join(p.read_text(encoding="utf-8")
-                            for p in (ROOT / "Platform" / lesson / "spec").glob("*.norms.md"))
-            text = got.read_text(encoding="utf-8")
-            consts = dict(re.findall(r"^\t(\w+) = ([0-9]+)$", text, re.M))
-            table = {m[0]: (int(m[1]), m[2], m[3])
-                     for m in re.findall(r'^\t"(\w+)":\s+\{([0-9]+), "(\w+)", "([^"]+)"\},$', text, re.M)}
-            self.assertEqual(len(consts), len(rows), lesson)
-            self.assertEqual(len(table), len(rows), lesson)
-            for r in rows:
-                self.assertEqual(consts.get(field("$" + r["name"])), r["value"], r["name"])
-                self.assertEqual(table.get(r["name"]), (int(r["value"]), r["unit"], r["norm"]), r["name"])
-                self.assertIn(f"<!-- req: {r['norm']} -->", norms, r["name"])
+            rows = ConstantSubjectControls.assert_subject(self, ROOT, lesson, got.read_text(encoding="utf-8"))
             src = form.read_text(encoding="utf-8")
             first = rows[0]
             row = "\t".join(first[k] for k in ("name", "value", "unit", "norm", "meaning"))
             bad = {"value-zero": row.replace(f"\t{first['value']}\t", "\t0\t", 1),
                    "value-quoted": row.replace(f"\t{first['value']}\t", f'\t"{first["value"]}"\t', 1),
-                   "unit": row.replace(f"\t{first['unit']}\t", "\tms\t", 1),
+                   "unit": row.replace(f"\t{first['unit']}\t", "\tunknown\t", 1),
                    "norm": row.replace(f"\t{first['norm']}\t", "\tP/06.1-R999\t", 1),
                    "name": row.replace(first["name"], first["name"].lower(), 1),
                    "repeat": row + "\n" + row}
@@ -676,6 +663,89 @@ class ServiceReports(unittest.TestCase):
         self.assertEqual(inputs, [{"Cmd": c, "Args": a, "Env": e} for c, a, e in self.cases])
         self.assertEqual(process.call_args.args[0], ["go", "run", "./cmd/judgeinputs"])
 
+
+
+class ConstantSubjectControls(unittest.TestCase):
+    """Independent Source form/anchor expectations, including stored ms integers."""
+
+    @staticmethod
+    def assert_subject(test, root, lesson, text):
+        root = Path(root)
+        path = root / "Platform" / lesson / "forms/runtime-constants.tsv"
+        lines = [line for line in path.read_text(encoding="utf-8").split("\n")
+                 if line and not line.startswith("#")]
+        test.assertTrue(lines, "nonempty runtime constant form required")
+        head = ["name", "value", "unit", "norm", "meaning"]
+        test.assertEqual(lines[0].split("\t"), head)
+        cells = [line.split("\t") for line in lines[1:]]
+        test.assertTrue(cells, "nonempty runtime constant roster required")
+        test.assertTrue(all(len(row) == len(head) for row in cells))
+        rows = [dict(zip(head, row)) for row in cells]
+        test.assertEqual(len({row["name"] for row in rows}), len(rows), "duplicate source constant")
+        norms = "".join(p.read_text(encoding="utf-8")
+                        for p in (root / "Platform" / lesson / "spec").glob("*.norms.md"))
+        const_matches = re.findall(r"^\t(\w+) = ([0-9]+)$", text, re.M)
+        table_matches = re.findall(r'^\t"(\w+)":\s+\{([0-9]+), "(\w+)", "([^"]+)"\},$', text, re.M)
+        test.assertEqual(len(const_matches), len(rows), "missing/extra/malformed const")
+        test.assertEqual(len(table_matches), len(rows), "missing/extra/malformed metadata")
+        consts = dict(const_matches)
+        table = {m[0]: (int(m[1]), m[2], m[3]) for m in table_matches}
+        test.assertEqual(len(consts), len(rows), "duplicate emitted const")
+        test.assertEqual(len(table), len(rows), "duplicate emitted metadata")
+        for row in rows:
+            name = row["name"]
+            test.assertRegex(name, r"^[A-Z][A-Z0-9_]*$")
+            test.assertRegex(row["value"], r"^[1-9][0-9]*$")
+            test.assertLessEqual(int(row["value"]), 9223372036854775807)
+            test.assertIn(row["unit"], ("count", "s", "ms", "bytes"))
+            test.assertEqual(consts.get(field("$" + name)), row["value"], name)
+            test.assertEqual(table.get(name), (int(row["value"]), row["unit"], row["norm"]), name)
+            test.assertIn(f"<!-- req: {row['norm']} -->", norms, name)
+        return rows
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.lesson = "03-worker"
+        path = self.root / "Platform" / self.lesson
+        (path / "forms").mkdir(parents=True)
+        (path / "spec").mkdir()
+        self.form = path / "forms/runtime-constants.tsv"
+        self.norm = path / "spec/test.norms.md"
+        self.form.write_text("name\tvalue\tunit\tnorm\tmeaning\nGAP_MS\t317\tms\tP/test\tperiod\n")
+        self.norm.write_text("<!-- req: P/test -->\n")
+        self.output = '\tGapMs = 317\n\t"GAP_MS": {317, "ms", "P/test"},\n'
+
+    def check(self, text=None):
+        return self.assert_subject(self, self.root, self.lesson, self.output if text is None else text)
+
+    def test_stored_ms_integer_and_coherent_source_change(self):
+        self.check()
+        self.form.write_text(self.form.read_text().replace("317", "319"))
+        self.check(self.output.replace("317", "319"))
+
+    def test_output_drift_missing_duplicate_extra_unit_and_scaling(self):
+        for text in (self.output.replace("317", "318"), self.output.replace("317", "0.317"),
+                     self.output.replace('"ms"', '"s"'), self.output.splitlines()[0] + "\n",
+                     self.output + self.output, self.output + '\tExtra = 1\n', ""):
+            with self.subTest(text=text), self.assertRaises(AssertionError):
+                self.check(text)
+
+    def test_source_only_drift_missing_duplicate_shape_type_unit_overflow_and_anchor(self):
+        original = self.form.read_text()
+        bad = [original.replace("317", word) for word in
+               ("318", "true", "317.0", "0.317", "0317", "0", "9223372036854775808")]
+        bad += [original.replace("\tms\t", "\tunknown\t"), original + original.splitlines()[1] + "\n",
+                original.splitlines()[0] + "\n", original.replace("period", "period\textra")]
+        for text in bad:
+            self.form.write_text(text)
+            with self.subTest(text=text), self.assertRaises(AssertionError):
+                self.check()
+        self.form.write_text(original)
+        self.norm.write_text("")
+        with self.assertRaises(AssertionError):
+            self.check()
 
 if __name__ == "__main__":
     unittest.main()

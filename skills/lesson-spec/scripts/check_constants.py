@@ -30,6 +30,43 @@ P06_FOLDER_BINDINGS = (
     ("Platform/06-console/data/folders.schema.json", "/$defs/writer/properties/members/maxItems", "FOLDERS_MEMBERS_MAX"),
     ("Platform/06-console/data/memberof.schema.json", "/$defs/writer/properties/folders/maxItems", "FOLDERS_PER_UNIT_MAX"),
 )
+P08_RELAY_BINDINGS = (
+    ("Platform/08-domain/data/relay-members.schema.json", "/properties/members/maxProperties"),
+    ("Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
+     "/paths/~1domain~1relays~1{relay}/get/responses/200/content/application~1json/schema/properties/members/maxItems"),
+)
+P06_API = "Platform/06-console/spec/06-console.api.openapi.yaml"
+# Literal public owner coordinates; values always come from the independent owner.
+P06_API_BINDINGS = (
+    (P06_API, "/components/schemas/Changes/properties/changes/maxItems", "06-console", "CHANGES_HISTORY", "count"),
+    (P06_API, "/paths/~1changes/get/parameters/1/schema/maximum", "06-console", "CHANGES_WAIT", "s"),
+    (P06_API, "/paths/~1changes/head/parameters/1/schema/maximum", "06-console", "CHANGES_WAIT", "s"),
+    (P06_API, "/components/schemas/VerifyInput/properties/need/properties/units/maxItems", "06-console", "VERIFY_UNITS_MAX", "count"),
+)
+P06_READER_BINDINGS = (
+    ("Platform/06-console/data/folders.schema.json", "/properties/name/x-max-bytes", "06-console", "FOLDER_NAME_MAX", "bytes"),
+    ("Platform/06-console/data/folders.schema.json", "/properties/members/maxItems", "06-console", "FOLDERS_MEMBERS_MAX", "count"),
+    ("Platform/06-console/data/memberof.schema.json", "/properties/folders/maxItems", "06-console", "FOLDERS_PER_UNIT_MAX", "count"),
+    ("Platform/06-console/data/sweep.schema.json", "/properties/digests/maxItems", "06-console", "SWEEP_LIMIT", "count"),
+)
+P06_SWEEP_BINDINGS = (
+    ("Platform/06-console/data/sweep.schema.json", "/$defs/writer/properties/digests/maxItems", "06-console", "SWEEP_LIMIT", "count"),
+)
+P09_READER_BINDINGS = (
+    ("Platform/09-agent/data/outcomes.schema.json", "/maxProperties", "09-agent", "OUTCOMES_KEEP", "count"),
+    ("Platform/09-agent/data/alarms.schema.json", "/properties/events/maxItems", "09-agent", "ALARM_PAGE", "count"),
+)
+P09_WRITER_BINDINGS = (
+    ("Platform/09-agent/data/outcomes.schema.json", "/$defs/writer/maxProperties", "09-agent", "OUTCOMES_KEEP", "count"),
+    ("Platform/09-agent/data/alarms.schema.json", "/$defs/writer/properties/events/maxItems", "09-agent", "ALARM_PAGE", "count"),
+)
+P08_NEW_BINDINGS = (
+    ("Platform/08-domain/data/outcomes.schema.json", "/x-max-names", "08-domain", "OUTCOMES_LIMIT", "count"),
+    ("Platform/08-domain/data/pending.schema.json", "/x-max-names", "08-domain", "KEPT_LIMIT", "count"),
+)
+HISTORY_OWNER = "Platform/common/contracts/alarm-history.md"
+HISTORY_CARRIER = "Platform/08-domain/data/alarm-history.schema.json"
+
 P01_API = "Platform/01-store/spec/01-store.api.openapi.yaml"
 P01_CONSTANT_BINDINGS = (
     (P01_API, "/components/schemas/Status/properties/admission_ahead/exclusiveMinimum", "CLOCK_SKEW", "s", None),
@@ -145,7 +182,7 @@ class Judge:
                 for row in rows:
                     if row["name"] in self.forms[owner]:
                         self.error(path, f"ambiguous constant {row['name']}: duplicate row")
-                    if not re.fullmatch(r"[1-9][0-9]*", row["value"]):
+                    if not re.fullmatch(r"[1-9][0-9]*", row["value"]) or len(row["value"]) > 19:
                         self.error(path, f"{row['name']}: expected a positive unpadded ASCII integer")
                     else:
                         self.forms[owner][row["name"]] = (int(row["value"]), row["unit"])
@@ -156,7 +193,125 @@ class Judge:
         if value[1] != unit:
             self.error(path, f"{name}: unit {value[1]!r}, expected {unit}")
             return None
+        if not 0 < value[0] <= 9223372036854775807:
+            self.error(path, f"{name}: outside positive int64")
+            return None
         return value[0]
+
+    def pointer(self, path, pointer):
+        node = self.document(path)
+        for token in pointer.lstrip("/").split("/") if pointer else ():
+            key = token.replace("~1", "/").replace("~0", "~")
+            node = node[int(key)] if isinstance(node, list) and re.fullmatch(r"0|[1-9][0-9]*", key) else node[key]
+        return node
+
+    def effective(self, path, pointer):
+        """Return every applicable ref/allOf copy, resolving refs at their real base.
+
+        anyOf/oneOf are deliberately not flattened into unconditional constraints.
+        """
+        def walk(file, node, tokens, active=()):
+            if not isinstance(node, dict):
+                return []
+            marker = (file, id(node), tuple(tokens))
+            if marker in active:
+                raise ValueError("cyclic effective numeric carrier")
+            active = (*active, marker)
+            out = []
+            if tokens:
+                key = tokens[0]
+                if key in node:
+                    if len(tokens) == 1:
+                        out.append(node[key])
+                    else:
+                        out += walk(file, node[key], tokens[1:], active)
+            ref = node.get("$ref")
+            if ref is not None:
+                if not isinstance(ref, str):
+                    raise ValueError("non-string numeric carrier ref")
+                url = urlsplit(ref)
+                if url.scheme or url.netloc or url.query:
+                    raise ValueError("nonlocal numeric carrier ref")
+                target = (self.root / file).parent / unquote(url.path) if url.path else self.root / file
+                target = target.resolve()
+                if not target.is_relative_to(self.root):
+                    raise ValueError("numeric carrier ref escapes Source root")
+                target = target.relative_to(self.root).as_posix()
+                fragment = unquote(url.fragment)
+                if fragment and not fragment.startswith("/"):
+                    raise ValueError("numeric carrier ref requires a JSON pointer")
+                # First resolve the reference target; never reapply root allOf to
+                # the fragment tokens (which would recursively prepend the ref).
+                out += walk(target, self.pointer(target, fragment), tokens, active)
+            all_of = node.get("allOf", [])
+            if not isinstance(all_of, list) or any(not isinstance(part, dict) for part in all_of):
+                raise ValueError("invalid numeric carrier allOf")
+            for part in all_of:
+                out += walk(file, part, tokens, active)
+            return out
+        tokens = [k.replace("~1", "/").replace("~0", "~") for k in pointer[1:].split("/")]
+        return walk(path, self.document(path), tokens)
+
+    def declared_equalities(self, bindings, counter, effective=False):
+        for path, pointer, owner, name, unit in bindings:
+            expected = self.constant(owner, name, unit)
+            try:
+                values = self.effective(path, pointer) if effective else [self.pointer(path, pointer)]
+                if not values:
+                    raise KeyError(pointer)
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                self.error(path, f"missing/invalid numeric carrier {pointer}: {exc}")
+                continue
+            if expected is None or any(type(v) is not int or v != expected for v in values):
+                self.error(path, f"{pointer}: expected integer {owner}/{name}={expected} {unit}, got {values!r}")
+            else:
+                self.stats[counter] += 1
+
+    def console_numeric(self):
+        self.declared_equalities(P06_API_BINDINGS, "p06_api_equalities")
+        self.declared_equalities(P06_SWEEP_BINDINGS, "p06_sweep_equalities")
+        self.declared_equalities(P06_READER_BINDINGS, "p06_effective_reader_equalities", effective=True)
+
+    def agent_numeric(self):
+        self.declared_equalities(P09_WRITER_BINDINGS, "p09_writer_equalities")
+        self.declared_equalities(P09_READER_BINDINGS, "p09_effective_reader_equalities", effective=True)
+
+    def domain_numeric(self):
+        self.declared_equalities(P08_NEW_BINDINGS, "p08_new_named_equalities")
+        text = self.text(HISTORY_OWNER)
+        matches = re.findall(r"(?m)^HISTORY_LINES: +([1-9][0-9]*)$", text or "")
+        expected = int(matches[0]) if len(matches) == 1 and len(matches[0]) <= 19 else None
+        if expected is None or not 0 < expected <= 9223372036854775807:
+            self.error(HISTORY_OWNER, "missing/duplicate/invalid positive int64 HISTORY_LINES owner")
+            expected = None
+        try:
+            value = self.pointer(HISTORY_CARRIER, "/properties/events/maxItems")
+        except (KeyError, IndexError, TypeError):
+            value = None
+        if expected is None or type(value) is not int or value != expected:
+            self.error(HISTORY_CARRIER, f"events/maxItems: expected HISTORY_LINES={expected}, got {value!r}")
+        else:
+            self.stats["p08_history_lines_equalities"] += 1
+
+    def entry_url_bytes(self):
+        """Declared Entry field constraint, never a new runtime constant or codec binding."""
+        owner = "Platform/08-domain/spec/08.10-domain.norms.md"
+        path = API
+        pointer = "/components/schemas/Entry/properties/url/x-max-bytes"
+        text = self.text(owner)
+        matches = re.findall(r"(?m)^ENTRY_MAX: forms/runtime-constants\.tsv; bytes with class, url ≤ ([1-9][0-9]*), via, batch;", text or "")
+        expected = int(matches[0]) if len(matches) == 1 and len(matches[0]) <= 19 else None
+        if expected is None or not 0 < expected <= 9223372036854775807:
+            self.error(owner, "missing/duplicate/invalid Entry.url byte constraint")
+            expected = None
+        try:
+            value = self.pointer(path, pointer)
+        except (KeyError, IndexError, TypeError):
+            value = None
+        if expected is None or type(value) is not int or value != expected:
+            self.error(path, f"{pointer}: expected Entry.url byte constraint={expected}, got {value!r}")
+        else:
+            self.stats["p08_entry_url_byte_equalities"] += 1
 
     def schemas(self):
         for path, pointer, owner, name in schema_bindings():
@@ -200,6 +355,34 @@ class Judge:
                 self.error(path, f"{pointer}: expected integer 06-console/{name}={expected}, got {node!r}")
             else:
                 self.stats["p06_folder_equalities"] += 1
+
+    def relay_members(self):
+        """One P08 writer owner and its P10 reader copy, never a second value row."""
+        expected = self.constant("08-domain", "RELAY_MEMBERS_MAX", "count")
+        if expected is not None and not 0 < expected <= 9223372036854775807:
+            self.error("Platform/08-domain/forms/runtime-constants.tsv", "RELAY_MEMBERS_MAX is outside positive int64")
+        for path, pointer in P08_RELAY_BINDINGS:
+            node = self.document(path)
+            if node is None:
+                continue
+            try:
+                for key in pointer[1:].split("/"):
+                    node = node[key.replace("~1", "/").replace("~0", "~")]
+            except (KeyError, TypeError):
+                self.error(path, f"missing numeric carrier {pointer}")
+                continue
+            if type(node) is not int or node != expected:
+                self.error(path, f"{pointer}: expected integer 08-domain/RELAY_MEMBERS_MAX={expected}, got {node!r}")
+            else:
+                self.stats["p08_relay_member_equalities"] += 1
+        follower = "Platform/10-domain-console/forms/runtime-constants.tsv"
+        if self.text(follower) is not None:
+            from check_forms import CONST_COLUMNS, read
+            errors, rows = read(self.root / follower, CONST_COLUMNS)
+            for error in errors:
+                self.error(follower, error)
+            if any(row["name"] == "RELAY_MEMBERS_MAX" for row in rows):
+                self.error(follower, "RELAY_MEMBERS_MAX is owned by P08; a P10 value row duplicates its owner")
 
     def store_constants(self):
         """Three assigned P01 carriers; descriptions are exact closed source sentences."""
@@ -353,6 +536,13 @@ def check_p08_constants(root):
     judge.schemas()
     judge.contracts()
     judge.vectors()
+    judge.relay_members()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p08_relay_constants(root):
+    judge = Judge(root)
+    judge.relay_members()
     return judge.errors, dict(judge.stats)
 
 
@@ -365,4 +555,28 @@ def check_p06_folder_constants(root):
 def check_p01_constants(root):
     judge = Judge(root)
     judge.store_constants()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p09_numeric_constants(root):
+    judge = Judge(root)
+    judge.agent_numeric()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p06_numeric_constants(root):
+    judge = Judge(root)
+    judge.console_numeric()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p08_named_constants(root):
+    judge = Judge(root)
+    judge.domain_numeric()
+    return judge.errors, dict(judge.stats)
+
+
+def check_p08_entry_url_bytes(root):
+    judge = Judge(root)
+    judge.entry_url_bytes()
     return judge.errors, dict(judge.stats)
