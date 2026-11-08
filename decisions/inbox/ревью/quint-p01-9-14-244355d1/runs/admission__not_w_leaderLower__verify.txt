@@ -1,0 +1,651 @@
+# cmd: quint verify --server-endpoint=localhost:8931 --max-steps=9 --invariant=not_w_leaderLower --main=admission /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/admission__not_w_leaderLower__verify.qnt
+# overrides: {}
+# sha256(.qnt run): 611d06219645c040b36f690bc3ed06c38f7a2d309b15a33c8d27b05380a9c3af
+# secs: 8.0, rc: 1
+
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-08-04_3950548966423858476
+# APALACHE version: 0.62.1 | build: a321771                       I@16:08:04.697
+Starting checker server on port 8931...                           I@16:08:04.700
+The Apalache server is running on port 8931. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@16:08:07.340
+PASS #1: TypeCheckerSnowcat                                       I@16:08:07.712
+ > Running Snowcat .::.                                           I@16:08:07.712
+ > Your types are purrfect!                                       I@16:08:08.706
+ > All expressions are typed                                      I@16:08:08.706
+PASS #2: ConfigurationPass                                        I@16:08:08.707
+  > Set the initialization predicate to q::init                   I@16:08:08.710
+  > Set the transition predicate to q::step                       I@16:08:08.710
+  > Set an invariant to q::inv                                    I@16:08:08.710
+PASS #3: DesugarerPass                                            I@16:08:08.714
+  > Desugaring...                                                 I@16:08:08.714
+PASS #4: InlinePass                                               I@16:08:08.725
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:08:08.726
+PASS #5: TemporalPass                                             I@16:08:08.781
+  > Rewriting temporal operators...                               I@16:08:08.781
+  > No temporal property specified, nothing to encode             I@16:08:08.781
+PASS #6: InlinePass                                               I@16:08:08.781
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:08:08.781
+PASS #7: PrimingPass                                              I@16:08:08.795
+  > Introducing q::initPrimed for q::init'                        I@16:08:08.796
+PASS #8: VCGen                                                    I@16:08:08.798
+  > Producing verification conditions from the invariant q::inv   I@16:08:08.798
+  > VCGen produced 1 verification condition(s)                    I@16:08:08.801
+PASS #9: PreprocessingPass                                        I@16:08:08.805
+  > Before preprocessing: unique renaming                         I@16:08:08.805
+ > Applying standard transformations:                             I@16:08:08.809
+  > PrimePropagation                                              I@16:08:08.810
+  > Desugarer                                                     I@16:08:08.811
+  > UniqueRenamer                                                 I@16:08:08.814
+  > Normalizer                                                    I@16:08:08.818
+  > SetMembershipSimplifier                                       I@16:08:08.823
+  > Keramelizer                                                   I@16:08:08.826
+  > After preprocessing: UniqueRenamer                            I@16:08:08.835
+PASS #10: TransitionFinderPass                                    I@16:08:08.841
+  > Found 1 initializing transitions                              I@16:08:08.852
+  > Found 9 transitions                                           I@16:08:08.865
+  > No constant initializer                                       I@16:08:08.865
+  > Applying unique renaming                                      I@16:08:08.866
+PASS #11: OptimizationPass                                        I@16:08:08.870
+ > Applying optimizations:                                        I@16:08:08.874
+  > ConstSimplifier                                               I@16:08:08.874
+  > ExprOptimizer                                                 I@16:08:08.882
+  > SetMembershipSimplifier                                       I@16:08:08.885
+  > ConstSimplifier                                               I@16:08:08.886
+PASS #12: AnalysisPass                                            I@16:08:08.892
+ > Marking skolemizable existentials and sets to be expanded...   I@16:08:08.893
+  > Skolemization                                                 I@16:08:08.894
+  > Expansion                                                     I@16:08:08.895
+  > Remove unused let-in defs                                     I@16:08:08.898
+ > Running analyzers...                                           I@16:08:08.901
+  > Introduced expression grades                                  I@16:08:08.903
+PASS #13: BoundedChecker                                          I@16:08:08.904
+State 0: Checking 1 state invariants                              I@16:08:09.147
+State 0: state invariant 0 holds.                                 I@16:08:09.173
+Step 0: picking a transition out of 1 transition(s)               I@16:08:09.175
+State 1: Checking 1 state invariants                              I@16:08:09.251
+State 1: state invariant 0 holds.                                 I@16:08:09.278
+Step 1: Transition #2 is disabled                                 I@16:08:09.294
+Step 1: Transition #3 is disabled                                 I@16:08:09.306
+Step 1: picking a transition out of 5 transition(s)               I@16:08:09.343
+State 2: Checking 1 state invariants                              I@16:08:09.415
+State 2: state invariant 0 holds.                                 I@16:08:09.440
+Step 2: picking a transition out of 7 transition(s)               I@16:08:09.528
+State 3: Checking 1 state invariants                              I@16:08:09.603
+State 3: state invariant 0 holds.                                 I@16:08:09.638
+Step 3: picking a transition out of 7 transition(s)               I@16:08:09.785
+State 4: Checking 1 state invariants                              I@16:08:09.880
+State 4: state invariant 0 holds.                                 I@16:08:09.926
+Step 4: picking a transition out of 7 transition(s)               I@16:08:10.115
+State 5: Checking 1 state invariants                              I@16:08:10.211
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-08-04_3950548966423858476/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-08-04_3950548966423858476/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-08-04_3950548966423858476/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-08-04_3950548966423858476/violation1.itf.json I@16:08:10.604
+State 5: state invariant 0 violated.                              I@16:08:10.605
+Found 1 error(s)                                                  I@16:08:10.608
+The outcome is: Error                                             I@16:08:10.618
+An example execution:
+
+[State 0]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 0,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 1]
+{
+  clock: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 0,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 2]
+{
+  clock: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 5,
+          byLeader: "a",
+          casOk: true,
+          clk: 5,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: 6,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 3]
+{
+  clock: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 1),
+  lastAdm: Map("a" -> 5, "b" -> 0, "c" -> 5),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 5,
+          byLeader: "a",
+          casOk: true,
+          clk: 5,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: 6,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 4]
+{
+  clock: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 1),
+  lastAdm: Map("a" -> 5, "b" -> 0, "c" -> 5),
+  leader: "c",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 5,
+          byLeader: "a",
+          casOk: true,
+          clk: 5,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: 6,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 5]
+{
+  clock: Map("a" -> 5, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 2),
+  lastAdm: Map("a" -> 5, "b" -> 0, "c" -> 5),
+  leader: "c",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 5,
+          byLeader: "a",
+          casOk: true,
+          clk: 5,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: 6,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: 5,
+          byLeader: "c",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 2,
+          notBefore: 2,
+          outcome: "expired",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 2,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[violation] Found an issue (6677ms).
+Nov 08, 2026 4:08:07 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

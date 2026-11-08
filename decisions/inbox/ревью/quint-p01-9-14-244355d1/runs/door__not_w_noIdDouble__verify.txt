@@ -1,0 +1,233 @@
+# cmd: quint verify --server-endpoint=localhost:8931 --max-steps=12 --invariant=not_w_noIdDouble --main=door /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/door__not_w_noIdDouble__verify.qnt
+# overrides: {}
+# sha256(.qnt run): 82541f354abc86b506080fe85397b87172d251369a68e308fd7b1c729d298aa7
+# secs: 4.6, rc: 1
+
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-44_5428940762952609785
+# APALACHE version: 0.62.1 | build: a321771                       I@16:16:44.229
+Starting checker server on port 8931...                           I@16:16:44.231
+The Apalache server is running on port 8931. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@16:16:46.188
+PASS #1: TypeCheckerSnowcat                                       I@16:16:46.463
+ > Running Snowcat .::.                                           I@16:16:46.463
+ > Your types are purrfect!                                       I@16:16:46.810
+ > All expressions are typed                                      I@16:16:46.810
+PASS #2: ConfigurationPass                                        I@16:16:46.811
+  > Set the initialization predicate to q::init                   I@16:16:46.813
+  > Set the transition predicate to q::step                       I@16:16:46.813
+  > Set an invariant to q::inv                                    I@16:16:46.813
+PASS #3: DesugarerPass                                            I@16:16:46.817
+  > Desugaring...                                                 I@16:16:46.817
+PASS #4: InlinePass                                               I@16:16:46.823
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:16:46.823
+PASS #5: TemporalPass                                             I@16:16:46.860
+  > Rewriting temporal operators...                               I@16:16:46.861
+  > No temporal property specified, nothing to encode             I@16:16:46.861
+PASS #6: InlinePass                                               I@16:16:46.861
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:16:46.861
+PASS #7: PrimingPass                                              I@16:16:46.866
+  > Introducing q::initPrimed for q::init'                        I@16:16:46.867
+PASS #8: VCGen                                                    I@16:16:46.869
+  > Producing verification conditions from the invariant q::inv   I@16:16:46.869
+  > VCGen produced 1 verification condition(s)                    I@16:16:46.872
+PASS #9: PreprocessingPass                                        I@16:16:46.875
+  > Before preprocessing: unique renaming                         I@16:16:46.875
+ > Applying standard transformations:                             I@16:16:46.879
+  > PrimePropagation                                              I@16:16:46.879
+  > Desugarer                                                     I@16:16:46.881
+  > UniqueRenamer                                                 I@16:16:46.882
+  > Normalizer                                                    I@16:16:46.885
+  > SetMembershipSimplifier                                       I@16:16:46.888
+  > Keramelizer                                                   I@16:16:46.891
+  > After preprocessing: UniqueRenamer                            I@16:16:46.895
+PASS #10: TransitionFinderPass                                    I@16:16:46.899
+  > Found 1 initializing transitions                              I@16:16:46.911
+  > Found 11 transitions                                          I@16:16:46.922
+  > No constant initializer                                       I@16:16:46.923
+  > Applying unique renaming                                      I@16:16:46.923
+PASS #11: OptimizationPass                                        I@16:16:46.926
+ > Applying optimizations:                                        I@16:16:46.929
+  > ConstSimplifier                                               I@16:16:46.929
+  > ExprOptimizer                                                 I@16:16:46.936
+  > SetMembershipSimplifier                                       I@16:16:46.938
+  > ConstSimplifier                                               I@16:16:46.939
+PASS #12: AnalysisPass                                            I@16:16:46.943
+ > Marking skolemizable existentials and sets to be expanded...   I@16:16:46.944
+  > Skolemization                                                 I@16:16:46.945
+  > Expansion                                                     I@16:16:46.946
+  > Remove unused let-in defs                                     I@16:16:46.947
+ > Running analyzers...                                           I@16:16:46.950
+  > Introduced expression grades                                  I@16:16:46.953
+PASS #13: BoundedChecker                                          I@16:16:46.953
+State 0: Checking 1 state invariants                              I@16:16:47.187
+State 0: state invariant 0 holds.                                 I@16:16:47.191
+Step 0: picking a transition out of 1 transition(s)               I@16:16:47.192
+Step 1: Transition #3 is disabled                                 I@16:16:47.205
+Step 1: Transition #4 is disabled                                 I@16:16:47.207
+Step 1: Transition #5 is disabled                                 I@16:16:47.209
+Step 1: Transition #6 is disabled                                 I@16:16:47.211
+Step 1: Transition #7 is disabled                                 I@16:16:47.214
+State 1: Checking 1 state invariants                              I@16:16:47.224
+State 1: state invariant 0 holds.                                 I@16:16:47.224
+Step 1: Transition #10 is disabled                                I@16:16:47.228
+Step 1: picking a transition out of 5 transition(s)               I@16:16:47.228
+Step 2: Transition #4 is disabled                                 I@16:16:47.246
+Step 2: Transition #5 is disabled                                 I@16:16:47.248
+Step 2: Transition #6 is disabled                                 I@16:16:47.250
+Step 2: Transition #7 is disabled                                 I@16:16:47.253
+State 2: Checking 1 state invariants                              I@16:16:47.259
+State 2: state invariant 0 holds.                                 I@16:16:47.259
+State 2: Checking 1 state invariants                              I@16:16:47.262
+State 2: state invariant 0 holds.                                 I@16:16:47.262
+Step 2: picking a transition out of 7 transition(s)               I@16:16:47.263
+Step 3: Transition #4 is disabled                                 I@16:16:47.279
+Step 3: Transition #6 is disabled                                 I@16:16:47.283
+Step 3: Transition #7 is disabled                                 I@16:16:47.285
+State 3: Checking 1 state invariants                              I@16:16:47.289
+State 3: state invariant 0 holds.                                 I@16:16:47.290
+State 3: Checking 1 state invariants                              I@16:16:47.292
+State 3: state invariant 0 holds.                                 I@16:16:47.293
+Step 3: picking a transition out of 8 transition(s)               I@16:16:47.293
+Step 4: Transition #4 is disabled                                 I@16:16:47.306
+Step 4: Transition #6 is disabled                                 I@16:16:47.310
+Step 4: Transition #7 is disabled                                 I@16:16:47.312
+State 4: Checking 1 state invariants                              I@16:16:47.316
+State 4: state invariant 0 holds.                                 I@16:16:47.317
+State 4: Checking 1 state invariants                              I@16:16:47.320
+State 4: state invariant 0 holds.                                 I@16:16:47.321
+Step 4: picking a transition out of 8 transition(s)               I@16:16:47.322
+Step 5: Transition #4 is disabled                                 I@16:16:47.335
+Step 5: Transition #7 is disabled                                 I@16:16:47.342
+State 5: Checking 1 state invariants                              I@16:16:47.346
+State 5: state invariant 0 holds.                                 I@16:16:47.348
+State 5: Checking 1 state invariants                              I@16:16:47.350
+State 5: state invariant 0 holds.                                 I@16:16:47.352
+Step 5: picking a transition out of 9 transition(s)               I@16:16:47.353
+Step 6: Transition #4 is disabled                                 I@16:16:47.368
+State 6: Checking 1 state invariants                              I@16:16:47.376
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-44_5428940762952609785/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-44_5428940762952609785/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-44_5428940762952609785/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-44_5428940762952609785/violation1.itf.json I@16:16:47.475
+State 6: state invariant 0 violated.                              I@16:16:47.475
+Found 1 error(s)                                                  I@16:16:47.476
+The outcome is: Error                                             I@16:16:47.479
+An example execution:
+
+[State 0]
+{
+  allVotersDown: false,
+  applied: 0,
+  doorAnswer: "",
+  hasId: true,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: false,
+  retries: 0,
+  sent: false,
+  sentAt: -1,
+  t: 0,
+  voterAnswered503: false
+}
+
+[State 1]
+{
+  allVotersDown: false,
+  applied: 1,
+  doorAnswer: "",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 0,
+  sent: true,
+  sentAt: 0,
+  t: 0,
+  voterAnswered503: false
+}
+
+[State 2]
+{
+  allVotersDown: false,
+  applied: 1,
+  doorAnswer: "",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 0,
+  sent: true,
+  sentAt: 0,
+  t: 1,
+  voterAnswered503: false
+}
+
+[State 3]
+{
+  allVotersDown: false,
+  applied: 1,
+  doorAnswer: "",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 0,
+  sent: true,
+  sentAt: 0,
+  t: 2,
+  voterAnswered503: false
+}
+
+[State 4]
+{
+  allVotersDown: false,
+  applied: 1,
+  doorAnswer: "",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 0,
+  sent: true,
+  sentAt: 0,
+  t: 3,
+  voterAnswered503: false
+}
+
+[State 5]
+{
+  allVotersDown: false,
+  applied: 1,
+  doorAnswer: "ambiguous",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 0,
+  sent: true,
+  sentAt: 0,
+  t: 3,
+  voterAnswered503: false
+}
+
+[State 6]
+{
+  allVotersDown: false,
+  applied: 2,
+  doorAnswer: "answered",
+  hasId: false,
+  leaderUp: true,
+  lostAt: -1,
+  reachedLeader: true,
+  retries: 1,
+  sent: true,
+  sentAt: 0,
+  t: 3,
+  voterAnswered503: false
+}
+
+[violation] Found an issue (3672ms).
+Nov 08, 2026 4:16:45 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

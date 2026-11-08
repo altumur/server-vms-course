@@ -1,0 +1,832 @@
+# cmd: quint run --backend=rust --max-steps=40 --max-samples=20000 --invariant=inv_floorFirst --main=import_group --seed=0xadc0130 /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/import_group__inv_floorFirst__sim.qnt
+# overrides: {}
+# sha256(.qnt run): 04081121bfeee911cd60cccd51aaf00f2971041effd4d5d3db4c925764000213
+# secs: 8.6, rc: 0
+
+An example execution:
+
+[State 0]
+{
+  attemptGen: 0,
+  attempts: 0,
+  dirGen: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  dirPhase: Map("a" -> "Idle", "b" -> "Idle", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 0,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Idle",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 1]
+{
+  attemptGen: 0,
+  attempts: 0,
+  dirGen: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  dirPhase: Map("a" -> "Idle", "b" -> "Idle", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 0,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Idle",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 2]
+{
+  attemptGen: 0,
+  attempts: 0,
+  dirGen: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  dirPhase: Map("a" -> "Idle", "b" -> "Idle", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 0,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Idle",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 3]
+{
+  attemptGen: 0,
+  attempts: 0,
+  dirGen: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  dirPhase: Map("a" -> "Idle", "b" -> "Idle", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 0,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Idle",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 4]
+{
+  attemptGen: 0,
+  attempts: 0,
+  dirGen: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  dirPhase: Map("a" -> "Idle", "b" -> "Idle", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 0,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Idle",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 5]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  dirPhase: Map("a" -> "Floor", "b" -> "Floor", "c" -> "Idle"),
+  dirRows: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Floor",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 0,
+  up: Map("a" -> true, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 6]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  dirPhase: Map("a" -> "Transfer", "b" -> "Transfer", "c" -> "Idle"),
+  dirRows: Map("a" -> 1, "b" -> 1, "c" -> 0),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Transfer",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 1,
+  up: Map("a" -> true, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 7]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  dirPhase: Map("a" -> "Transfer", "b" -> "Transfer", "c" -> "Idle"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Transfer",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 8]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  dirPhase: Map("a" -> "Transfer", "b" -> "Transfer", "c" -> "Idle"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Transfer",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 9]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 0),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 10]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 11]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 12]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 13]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> false, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 14]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 15]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 16]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 17]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 1,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 18]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "a",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 19]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 20]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 21]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 22]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 23]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 24]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 25]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 26]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> true, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 27]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "c",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 28]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 29]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 30]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 31]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 32]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 33]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 34]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 35]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 36]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 37]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> false),
+  writesInAttempt: 0
+}
+
+[State 38]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> true, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 39]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> true),
+  writesInAttempt: 0
+}
+
+[State 40]
+{
+  attemptGen: 2,
+  attempts: 1,
+  dirGen: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  dirPhase: Map("a" -> "Done", "b" -> "Done", "c" -> "Done"),
+  dirRows: Map("a" -> 2, "b" -> 2, "c" -> 2),
+  floorGen: 2,
+  hour: 2,
+  lastAttemptGen: 0,
+  leader: "",
+  outageSeen: false,
+  phase: "Done",
+  rebuilds: 0,
+  refused: Map("a" -> false, "b" -> false, "c" -> false),
+  rowsDone: 2,
+  up: Map("a" -> false, "b" -> false, "c" -> true),
+  writesInAttempt: 0
+}
+
+[ok] No violation found (7907ms at 2529 traces/second).
+Trace length statistics: max=41, min=41, average=41.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xb76c113 --backend=rust to reproduce.

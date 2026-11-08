@@ -1,0 +1,632 @@
+# cmd: quint run --backend=rust --max-steps=30 --max-samples=20000 --invariant=inv_exitClean --main=stop --seed=0xadc0130 /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/stop__inv_exitClean__sim.qnt
+# overrides: {}
+# sha256(.qnt run): 8535c61d597b390549e74be47f77b9bcdbbf6c1bc7f6f382eec1a0eb39728d21
+# secs: 6.1, rc: 0
+
+An example execution:
+
+[State 0]
+{
+  admitAfterStop: false,
+  admittedTotal: 0,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 1]
+{
+  admitAfterStop: false,
+  admittedTotal: 0,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 2]
+{
+  admitAfterStop: false,
+  admittedTotal: 0,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 3]
+{
+  admitAfterStop: false,
+  admittedTotal: 0,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 4]
+{
+  admitAfterStop: false,
+  admittedTotal: 1,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 1,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 5]
+{
+  admitAfterStop: false,
+  admittedTotal: 1,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 1,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 6]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: false,
+  copyState: "none",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 2,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 0,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 7]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 0,
+  everCopyCancelled: false,
+  inflight: 2,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 1,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 8]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 1,
+  everCopyCancelled: false,
+  inflight: 1,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 1,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 9]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 0,
+  phase: "Run",
+  pins: 1,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 10]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 1,
+  refusedDuringStop: "",
+  stopSteps: 0
+}
+
+[State 11]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 1,
+  refusedDuringStop: "503",
+  stopSteps: 0
+}
+
+[State 12]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 1,
+  refusedDuringStop: "503",
+  stopSteps: 0
+}
+
+[State 13]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 1,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 1,
+  refusedDuringStop: "503",
+  stopSteps: 0
+}
+
+[State 14]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 1,
+  copyEver: true,
+  copyState: "streaming",
+  definite: 2,
+  everCopyCancelled: false,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 1,
+  refusedDuringStop: "503",
+  stopSteps: 1
+}
+
+[State 15]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 16]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopping",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 17]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 18]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 19]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 20]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 21]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 22]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 23]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 24]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 25]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 26]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 27]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 28]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 29]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[State 30]
+{
+  admitAfterStop: false,
+  admittedTotal: 2,
+  ambiguous: 0,
+  conns: 0,
+  copyEver: true,
+  copyState: "none",
+  definite: 2,
+  everCopyCancelled: true,
+  inflight: 0,
+  listeners: 0,
+  lockByCopy: false,
+  measure0: 3,
+  phase: "Stopped",
+  pins: 0,
+  refusedDuringStop: "503",
+  stopSteps: 3
+}
+
+[ok] No violation found (5530ms at 3617 traces/second).
+Trace length statistics: max=31, min=31, average=31.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xb671f18 --backend=rust to reproduce.

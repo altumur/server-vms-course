@@ -1,0 +1,235 @@
+# cmd: quint verify --server-endpoint=localhost:8931 --max-steps=12 --invariant=inv_forgetBoth --main=id_memory /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/id_memory__inv_forgetBoth__MUT_FORGET_ANY__verify.qnt
+# overrides: {'MUT_FORGET_ANY': 'true'}
+# sha256(.qnt run): dadc758f4848167d20294f6f529ad4b5b0c5469d4280076abec0c9844cee5db3
+# secs: 5.1, rc: 1
+
+# Usage statistics is OFF. We care about your privacy.
+# If you want to help our project, consider enabling statistics with config --enable-stats=true.
+
+Output directory: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-24_11721861437792687739
+# APALACHE version: 0.62.1 | build: a321771                       I@16:16:24.538
+Starting checker server on port 8931...                           I@16:16:24.541
+The Apalache server is running on port 8931. Press Ctrl-C to stop.
+PASS #0: SanyParser                                               I@16:16:26.471
+PASS #1: TypeCheckerSnowcat                                       I@16:16:26.761
+ > Running Snowcat .::.                                           I@16:16:26.761
+ > Your types are purrfect!                                       I@16:16:27.398
+ > All expressions are typed                                      I@16:16:27.398
+PASS #2: ConfigurationPass                                        I@16:16:27.399
+  > Set the initialization predicate to q::init                   I@16:16:27.401
+  > Set the transition predicate to q::step                       I@16:16:27.401
+  > Set an invariant to q::inv                                    I@16:16:27.401
+PASS #3: DesugarerPass                                            I@16:16:27.404
+  > Desugaring...                                                 I@16:16:27.404
+PASS #4: InlinePass                                               I@16:16:27.411
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:16:27.411
+PASS #5: TemporalPass                                             I@16:16:27.444
+  > Rewriting temporal operators...                               I@16:16:27.444
+  > No temporal property specified, nothing to encode             I@16:16:27.444
+PASS #6: InlinePass                                               I@16:16:27.444
+Leaving only relevant operators: CInitPrimed, q::init, q::initPrimed, q::inv, q::step I@16:16:27.444
+PASS #7: PrimingPass                                              I@16:16:27.452
+  > Introducing q::initPrimed for q::init'                        I@16:16:27.453
+PASS #8: VCGen                                                    I@16:16:27.454
+  > Producing verification conditions from the invariant q::inv   I@16:16:27.454
+  > VCGen produced 1 verification condition(s)                    I@16:16:27.457
+PASS #9: PreprocessingPass                                        I@16:16:27.459
+  > Before preprocessing: unique renaming                         I@16:16:27.459
+ > Applying standard transformations:                             I@16:16:27.463
+  > PrimePropagation                                              I@16:16:27.463
+  > Desugarer                                                     I@16:16:27.465
+  > UniqueRenamer                                                 I@16:16:27.467
+  > Normalizer                                                    I@16:16:27.471
+  > SetMembershipSimplifier                                       I@16:16:27.475
+  > Keramelizer                                                   I@16:16:27.477
+  > After preprocessing: UniqueRenamer                            I@16:16:27.483
+PASS #10: TransitionFinderPass                                    I@16:16:27.487
+  > Found 1 initializing transitions                              I@16:16:27.495
+  > Found 6 transitions                                           I@16:16:27.502
+  > No constant initializer                                       I@16:16:27.503
+  > Applying unique renaming                                      I@16:16:27.503
+PASS #11: OptimizationPass                                        I@16:16:27.506
+ > Applying optimizations:                                        I@16:16:27.509
+  > ConstSimplifier                                               I@16:16:27.509
+  > ExprOptimizer                                                 I@16:16:27.514
+  > SetMembershipSimplifier                                       I@16:16:27.515
+  > ConstSimplifier                                               I@16:16:27.516
+PASS #12: AnalysisPass                                            I@16:16:27.520
+ > Marking skolemizable existentials and sets to be expanded...   I@16:16:27.522
+  > Skolemization                                                 I@16:16:27.522
+  > Expansion                                                     I@16:16:27.523
+  > Remove unused let-in defs                                     I@16:16:27.525
+ > Running analyzers...                                           I@16:16:27.528
+  > Introduced expression grades                                  I@16:16:27.530
+PASS #13: BoundedChecker                                          I@16:16:27.530
+State 0: Checking 1 state invariants                              I@16:16:27.770
+State 0: state invariant 0 holds.                                 I@16:16:27.775
+Step 0: picking a transition out of 1 transition(s)               I@16:16:27.777
+Step 1: Transition #4 is disabled                                 I@16:16:27.870
+Step 1: Transition #5 is disabled                                 I@16:16:27.910
+Step 1: picking a transition out of 4 transition(s)               I@16:16:27.911
+State 2: Checking 1 state invariants                              I@16:16:28.037
+Check the trace in: /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-24_11721861437792687739/violation1.tla, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-24_11721861437792687739/MCviolation1.out, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-24_11721861437792687739/violation1.json, /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/_apalache-out/server/2026-11-08T16-16-24_11721861437792687739/violation1.itf.json I@16:16:28.170
+State 2: state invariant 0 violated.                              I@16:16:28.171
+Found 1 error(s)                                                  I@16:16:28.172
+The outcome is: Error                                             I@16:16:28.176
+An example execution:
+
+[State 0]
+{
+  ambiguousAwaiting: Map(1 -> false, 2 -> false, 3 -> false),
+  appliedRecords: 0,
+  forgetEvent:
+    {
+      ageEqualsMin: false,
+      ageOk: false,
+      happened: false,
+      monoAge: 0,
+      recOk: false,
+      wallAge: 0
+    },
+  issued: 0,
+  lastAgain: Map(1 -> -1, 2 -> -1, 3 -> -1),
+  lifetimeVer: Map(1 -> 0, 2 -> 0, 3 -> 0),
+  mem:
+    Map(
+      1 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        },
+      2 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        },
+      3 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        }
+    ),
+  mono: 0,
+  verCount: Map(1 -> 0, 2 -> 0, 3 -> 0),
+  wall: 0
+}
+
+[State 1]
+{
+  ambiguousAwaiting: Map(1 -> false, 2 -> false, 3 -> false),
+  appliedRecords: 1,
+  forgetEvent:
+    {
+      ageEqualsMin: false,
+      ageOk: false,
+      happened: false,
+      monoAge: 0,
+      recOk: false,
+      wallAge: 0
+    },
+  issued: 1,
+  lastAgain: Map(1 -> -1, 2 -> -1, 3 -> -1),
+  lifetimeVer: Map(1 -> 1, 2 -> 0, 3 -> 0),
+  mem:
+    Map(
+      1 ->
+        {
+          applied: true,
+          countAt: 1,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: 0
+        },
+      2 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        },
+      3 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        }
+    ),
+  mono: 0,
+  verCount: Map(1 -> 1, 2 -> 0, 3 -> 0),
+  wall: 0
+}
+
+[State 2]
+{
+  ambiguousAwaiting: Map(1 -> false, 2 -> false, 3 -> false),
+  appliedRecords: 1,
+  forgetEvent:
+    {
+      ageEqualsMin: false,
+      ageOk: false,
+      happened: true,
+      monoAge: 0,
+      recOk: false,
+      wallAge: 0
+    },
+  issued: 1,
+  lastAgain: Map(1 -> -1, 2 -> -1, 3 -> -1),
+  lifetimeVer: Map(1 -> 1, 2 -> 0, 3 -> 0),
+  mem:
+    Map(
+      1 ->
+        {
+          applied: true,
+          countAt: 1,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: true,
+          ver: 0
+        },
+      2 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        },
+      3 ->
+        {
+          applied: false,
+          countAt: 0,
+          firstMono: 0,
+          firstWall: 0,
+          forgotten: false,
+          ver: -1
+        }
+    ),
+  mono: 0,
+  verCount: Map(1 -> 0, 2 -> 0, 3 -> 0),
+  wall: 0
+}
+
+[violation] Found an issue (4088ms).
+Nov 08, 2026 4:16:26 PM com.google.protobuf.GeneratedMessage warnPre22Gencode
+WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest
+As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2
+error: found a counterexample

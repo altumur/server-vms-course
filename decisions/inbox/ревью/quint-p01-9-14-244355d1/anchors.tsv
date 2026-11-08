@@ -1,0 +1,60 @@
+file	line	substring
+Platform/01-store/spec/01.1-store.norms.md	83	do not check it
+Platform/01-store/spec/01.1-store.norms.md	451	admitted := max(
+Platform/01-store/spec/01.1-store.norms.md	456	MUST be checked against this stored time
+Platform/01-store/spec/01.1-store.norms.md	458	The admission time MUST NOT decrease along the log
+Platform/01-store/spec/01.1-store.norms.md	463	a group after `import` or `restore` starts from the clock of its leader
+Platform/01-store/spec/01.1-store.norms.md	464	A leader clock that ran ahead raises the admission time
+Platform/01-store/spec/01.1-store.norms.md	470	An already-admitted replay retains its newly assigned admission time
+Platform/01-store/spec/01.1-store.norms.md	473	A delete with `not_before` = T
+Platform/01-store/spec/01.1-store.norms.md	501	keep the original applied-id entry
+Platform/01-store/spec/01.1-store.norms.md	534	The order of checks inside the operation is normative
+Platform/01-store/spec/01.1-store.norms.md	537	A refusal `expired` and `early`
+Platform/01-store/spec/01.1-store.norms.md	539	Only `expired` remains the same refusal
+Platform/01-store/spec/01.1-store.norms.md	541	The absence of business effects is distinct from admission metadata
+Platform/01-store/spec/01.1-store.norms.md	690	The refusals `expired`, `early`, `guard`, `conflict` make no write
+Platform/01-store/spec/01.1-store.norms.md	694	The refused batch still updates the last admission time
+Platform/01-store/spec/01.1-store.norms.md	733	until both conditions hold
+Platform/01-store/spec/01.1-store.norms.md	735	Cache eviction MUST NOT forget an ineligible id
+Platform/01-store/spec/01.1-store.norms.md	738	Two replays of one `id` at once
+Platform/01-store/spec/01.1-store.norms.md	751	A closed list
+Platform/01-store/spec/01.1-store.norms.md	764	`no_leader_wait`, `lock_wait`, `connection_limit_doors`
+Platform/01-store/spec/01.1-store.norms.md	766	`ambiguous_leader`: the write reached the leader
+Platform/01-store/spec/01.3-store.norms.md	40	a directory with an unfinished import/restore attempt
+Platform/01-store/spec/01.3-store.norms.md	51	leader_wait: the effective -leader-wait interval from the loss of the leader
+Platform/01-store/spec/01.3-store.norms.md	59	attempt DOOR_REQUEST_TIMEOUT, margin DOOR_REQUEST_MARGIN
+Platform/01-store/spec/01.3-store.norms.md	70	all voters unreachable → 503 unavailable
+Platform/01-store/spec/01.3-store.norms.md	91	the admission time of a record
+Platform/01-store/spec/01.3-store.norms.md	92	the snapshot carries the admission time of the last record
+Platform/01-store/spec/01.3-store.norms.md	96	While the flag stands, writes with not_after by the writers' clocks get
+Platform/01-store/spec/01.3-store.norms.md	104	only on admin.sock of the leader
+Platform/01-store/spec/01.3-store.norms.md	109	import into a directory where a former import has already finished
+Platform/01-store/spec/01.3-store.norms.md	110	an unfinished attempt is continued by a replay
+Platform/01-store/spec/01.3-store.norms.md	114	in the whole verified input and in the saved state of the daemon
+Platform/01-store/spec/01.3-store.norms.md	120	in a group only op: floor on admin.sock of the leader
+Platform/01-store/spec/01.3-store.norms.md	123	it only grows
+Platform/01-store/spec/01.3-store.norms.md	132	import:    from an immutable copy
+Platform/01-store/spec/01.3-store.norms.md	134	like those of ordinary writers, waits for «Done»
+Platform/01-store/spec/01.3-store.norms.md	150	a new attempt — a new generation
+Platform/01-store/spec/01.3-store.norms.md	151	start on such a directory (code 2, the log — repeat import with the same input)
+Platform/01-store/spec/01.3-store.norms.md	160	ambiguous — the write was sent, there is no answer, 503
+Platform/01-store/spec/01.3-store.norms.md	162	alarms of the voters
+Platform/01-store/spec/01.3-store.norms.md	331	configstore recover -id <me> -dir
+Platform/01-store/spec/01.3-store.norms.md	332	the dump and the log are rewritten
+Platform/01-store/spec/01.3-store.norms.md	346	only one attempt per installation is allowed
+Platform/01-store/spec/01.3-store.norms.md	353	New floor
+Platform/01-store/spec/01.3-store.norms.md	366	Blocking external output MUST run outside the lock
+Platform/01-store/spec/01.3-store.norms.md	368	On stop, cease admitting new work
+Platform/01-store/spec/production-acceptance.md	15	The R141 minimum is strictly more than ID_REPLAY_MIN_AGE
+Platform/01-store/spec/production-acceptance.md	50	BUDGET_STOP
+Platform/01-store/spec/production-acceptance.md	62	RUN-W03
+Platform/01-store/spec/production-acceptance.md	69	RUN-L03
+Platform/02-installer/spec/02.4-installer.norms.md	48	RestartPreventExitStatus=2
+Platform/02-installer/spec/02.4-installer.norms.md	53	TimeoutStopSec 20–30
+Platform/01-store/forms/runtime-constants.tsv	7	CLOCK_SKEW
+Platform/01-store/forms/runtime-constants.tsv	9	ID_REPLAY_MIN_AGE
+Platform/01-store/forms/runtime-constants.tsv	10	ID_REPLAY_MIN_RECORDS
+Platform/01-store/forms/runtime-constants.tsv	11	DOOR_REQUEST_TIMEOUT
+Platform/01-store/forms/runtime-constants.tsv	12	DOOR_REQUEST_MARGIN
+Platform/01-store/forms/daemon-flags.tsv	37	-leader-wait	duration	5s
+Platform/01-store/spec/01.1-store.norms.md	466	Admission time uses finite binary64

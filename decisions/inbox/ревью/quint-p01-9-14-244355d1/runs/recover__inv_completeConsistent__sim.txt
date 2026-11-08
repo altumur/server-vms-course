@@ -1,0 +1,477 @@
+# cmd: quint run --backend=rust --max-steps=30 --max-samples=20000 --invariant=inv_completeConsistent --main=recover --seed=0xadc0130 /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/recover__inv_completeConsistent__sim.qnt
+# overrides: {}
+# sha256(.qnt run): 727bac206385465ab5f5a97915c77454c8390a76a6d9315dc01cf61481548069
+# secs: 2.9, rc: 0
+
+An example execution:
+
+[State 0]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 0,
+  started: false,
+  startedOnPartial: false,
+  wal: "old"
+}
+
+[State 1]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: true,
+  runs: 1,
+  started: false,
+  startedOnPartial: false,
+  wal: "old"
+}
+
+[State 2]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: true,
+  runs: 1,
+  started: false,
+  startedOnPartial: false,
+  wal: "partial"
+}
+
+[State 3]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: false,
+  startedOnPartial: false,
+  wal: "partial"
+}
+
+[State 4]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 5]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 6]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 7]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 8]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 9]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 10]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 11]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 12]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 13]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 14]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 15]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 16]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 17]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 18]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 19]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 20]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 21]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 22]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 23]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 24]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 25]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 26]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 27]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 28]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 29]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[State 30]
+{
+  complete: false,
+  dump: "old",
+  floorDoneThisRun: false,
+  floorGen: 1,
+  genHistoryOk: true,
+  rowsRemoved: false,
+  running: false,
+  runs: 1,
+  started: true,
+  startedOnPartial: true,
+  wal: "partial"
+}
+
+[ok] No violation found (2395ms at 8351 traces/second).
+Trace length statistics: max=31, min=31, average=31.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xb253e40 --backend=rust to reproduce.

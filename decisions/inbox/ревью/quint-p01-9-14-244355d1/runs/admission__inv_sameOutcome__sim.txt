@@ -1,0 +1,963 @@
+# cmd: quint run --backend=rust --max-steps=30 --max-samples=20000 --invariant=inv_sameOutcome --main=admission --seed=0xadc0130 /tmp/claude-1001/-home-pilot-review103-claude/60fca57e-e559-4968-b357-48ce230bae06/scratchpad/ev0130p01q/work/admission__inv_sameOutcome__sim.qnt
+# overrides: {}
+# sha256(.qnt run): 611d06219645c040b36f690bc3ed06c38f7a2d309b15a33c8d27b05380a9c3af
+# secs: 15.0, rc: 0
+
+An example execution:
+
+[State 0]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 0,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 1]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 0,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 2]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 3]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 0, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 4]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 1, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 5]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 1, "c" -> 0),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "b",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: -1,
+          byLeader: "",
+          casOk: true,
+          clk: -1,
+          fp: 0,
+          fromSnap: false,
+          guardOk: true,
+          id: -1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "",
+          ver: -1
+        }
+    ),
+  logLen: 1,
+  restartedSnap: Map("a" -> false, "b" -> false, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 0, "b" -> 0, "c" -> 0)
+}
+
+[State 6]
+{
+  clock: Map("a" -> 0, "b" -> 0, "c" -> 6),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 1, "b" -> 1, "c" -> 1),
+  lastAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  leader: "b",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          
+...[40104 bytes trimmed]...
+
+  clock: Map("a" -> 7, "b" -> 5, "c" -> 7),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 4, "b" -> 2, "c" -> 5),
+  lastAdm: Map("a" -> 7, "b" -> 7, "c" -> 7),
+  leader: "c",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: -1,
+          notAfter: -1,
+          notBefore: 6,
+          outcome: "guard",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 0,
+          fromSnap: false,
+          guardOk: false,
+          id: 2,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: 2,
+          notAfter: 2,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "guard",
+          ver: -1
+        }
+    ),
+  logLen: 5,
+  restartedSnap: Map("a" -> false, "b" -> true, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 1, "b" -> 1, "c" -> 0)
+}
+
+[State 28]
+{
+  clock: Map("a" -> 7, "b" -> 5, "c" -> 7),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 5, "b" -> 2, "c" -> 5),
+  lastAdm: Map("a" -> 7, "b" -> 7, "c" -> 7),
+  leader: "c",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: -1,
+          notAfter: -1,
+          notBefore: 6,
+          outcome: "guard",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 0,
+          fromSnap: false,
+          guardOk: false,
+          id: 2,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: 2,
+          notAfter: 2,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "guard",
+          ver: -1
+        }
+    ),
+  logLen: 5,
+  restartedSnap: Map("a" -> false, "b" -> true, "c" -> false),
+  snapAdm: Map("a" -> 0, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 1, "b" -> 1, "c" -> 0)
+}
+
+[State 29]
+{
+  clock: Map("a" -> 7, "b" -> 5, "c" -> 7),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 5, "b" -> 2, "c" -> 5),
+  lastAdm: Map("a" -> 7, "b" -> 7, "c" -> 7),
+  leader: "c",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: -1,
+          notAfter: -1,
+          notBefore: 6,
+          outcome: "guard",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 0,
+          fromSnap: false,
+          guardOk: false,
+          id: 2,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: 2,
+          notAfter: 2,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "guard",
+          ver: -1
+        }
+    ),
+  logLen: 5,
+  restartedSnap: Map("a" -> false, "b" -> true, "c" -> false),
+  snapAdm: Map("a" -> 7, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 5, "b" -> 1, "c" -> 0)
+}
+
+[State 30]
+{
+  clock: Map("a" -> 7, "b" -> 5, "c" -> 7),
+  diverged: false,
+  ids: Map(1 -> { fp: 0, ver: -1 }, 2 -> { fp: 0, ver: -1 }),
+  issued: 0,
+  known: Map("a" -> 5, "b" -> 2, "c" -> 5),
+  lastAdm: Map("a" -> 7, "b" -> 7, "c" -> 7),
+  leader: "a",
+  log:
+    Map(
+      0 ->
+        {
+          adm: 0,
+          byLeader: "a",
+          casOk: false,
+          clk: 0,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "early",
+          ver: -1
+        },
+      1 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: -1,
+          notAfter: -1,
+          notBefore: 6,
+          outcome: "guard",
+          ver: -1
+        },
+      2 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: false,
+          clk: 7,
+          fp: 0,
+          fromSnap: false,
+          guardOk: false,
+          id: 2,
+          notAfter: 4,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      3 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: true,
+          id: 2,
+          notAfter: 2,
+          notBefore: 6,
+          outcome: "expired",
+          ver: -1
+        },
+      4 ->
+        {
+          adm: 7,
+          byLeader: "c",
+          casOk: true,
+          clk: 7,
+          fp: 1,
+          fromSnap: false,
+          guardOk: false,
+          id: 1,
+          notAfter: -1,
+          notBefore: -1,
+          outcome: "guard",
+          ver: -1
+        }
+    ),
+  logLen: 5,
+  restartedSnap: Map("a" -> false, "b" -> true, "c" -> false),
+  snapAdm: Map("a" -> 7, "b" -> 0, "c" -> 0),
+  snapIdx: Map("a" -> 5, "b" -> 1, "c" -> 0)
+}
+
+[ok] No violation found (14101ms at 1418 traces/second).
+Trace length statistics: max=31, min=31, average=31.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xbce81dd --backend=rust to reproduce.
