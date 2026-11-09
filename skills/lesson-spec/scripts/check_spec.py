@@ -249,7 +249,7 @@ PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
 VARIANTS_CHAPTER = ("P/02", "5/")                     # variants/ — форма (аудит Gemini P/02, свойства 24, 25)
 
 
-REQ_ANCHOR = re.compile(r"<!-- (?:req: P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3}|removed: P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3} by ADR-[0-9]{4}) -->")   # P/NN-RNNN — урок одной главой (как check_forms.REQ)
+REQ_ANCHOR = re.compile(r"<!-- (?:req: (?:P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3}|P/AC-R[0-9]{3})|removed: (?:P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3}|P/AC-R[0-9]{3}) by ADR-[0-9]{4}) -->")   # P/NN-RNNN — урок одной главой (как check_forms.REQ)
 
 
 def _template_marker_source(text):
