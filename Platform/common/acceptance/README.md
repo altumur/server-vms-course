@@ -112,7 +112,7 @@ A profile describes those interfaces; it does not change their scenarios or expe
   of the refusal names the file (the norms of P/02.1, «Implementation decides» item 3).
 - **Processes of several roles** (lesson P/03 and later): the implementation names the launch command of each role — the store,
   the console, the controller, the worker, later the resource; the worker command receives the name by the substitution `{name}` (an argument), the environment —
-  `BOX_ID` (the constant box of the stand) and `SERVER_NAME` (P/02.4 N1.2); from the environment the worker takes its name only by `slot.name_env` of its manifest
+  `BOX_ID` (the constant box of the stand, `stand-box`) and `SERVER_NAME` (`srv-a` on a single-server stand; P/02.4 N1.2); from the environment the worker takes its name only by `slot.name_env` of its manifest
   (P/02.1 N1.2a), and the runner sets this variable if the manifest declared it (`testsub2` — `TALLY_NAME`; `testsub` has none). In the acceptances moved from the lessons before M10/6 (rights — now P/01.2), the runner reads the store with a role that has full rights on the prefix of the subsystem.
 - **Resource** ([P/05](../../05-resource/spec/05-resource.norms.md)): the launch command of the server resource with the substitution `{rport}` — the port of its door; the runner waits for the port
   and the row `platform/doors/<host>` before the first step. For a scenario that needs the heartbeats of other servers, the resource is on the server
@@ -123,6 +123,8 @@ A profile describes those interfaces; it does not change their scenarios or expe
   `acc/*`, the socket `acc.sock` next to `{socket}`. The runner puts exactly this file into `{rights}` (the form — P/01.2 N1.2):
   `{"roles": {"acc": {"group": "acc", "read": ["acc/*"], "write": ["acc/*"], "delete": ["acc/*"]}}}`.
   Deletion is a separate action (P/01.2 N1.3 `allowed`); in the file it is named explicitly.
+  The store is ready when `admin.sock` and the `<role>.sock` of the scenario role both accept a connection, within 15 s of the start; an instance that exits earlier or is not ready by then is a failed start.
+  The stand of P/01.2 is the store with its ready rights input above: it has no installer and no manifest is laid.
 - **One data directory** `{data}` per instance — it is `PLATFORM_DIR` (P/02.4 N1.2 «The setting channel and the layout»;
   the second pilot, N-4). The stand translates the substitutions into the environment of P/02.4 N1.2: `PLATFORM_DIR={data}`,
   `PLATFORM_STORE=configstore://<role socket>`, `CONSOLE_PORT={port}`, `RESOURCE_PORT={rport}`, `BOX_ID`, `SERVER_NAME`,
@@ -190,6 +192,17 @@ A profile describes those interfaces; it does not change their scenarios or expe
 - **README checks beyond the TSV** in each lesson are a scenario or an item «checked by reading» with a subject: controlled
   clocks, two consoles on one store and drills on a real box with systemd (`@manual`, [system acceptance](system/README.md)) are not given by this interface;
   a store group of several daemons is given by «Store group stand» below (P/01.3 N5), a server failure — by «Three-server cluster stand» below.
+
+### Environment of stand processes
+
+A stand process receives only the variables below; other variables of the environment of the runner are not inherited. A listed name is admitted, not required: the stand sets values by this README.
+
+| Applies | Variables |
+|---|---|
+| Every process, system | `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `TMPDIR`, `TMP`, `TEMP`, `LANG`, `LC_ALL`, `LC_CTYPE`, `TZ` |
+| Every process, platform | `PLATFORM_DIR`, `PLATFORM_STORE`, `BOX_ID`, `SERVER_NAME`, `SECRETS_KEY`, `CONSOLE_ROOT`, `CONSOLE_PORT`, `RESOURCE_PORT`, `AGENT_TOKEN_DIR`, `MANIFEST_DIR`, `LABELS`, `TIMEZONE`, `W2C_ENV`, `W2C_TLS_DIR`, `CONSOLE_CALL_PORT`, `CLUSTER`, `CLUSTERS`, `DOMAIN_URL`, `RELAY_URL`, `RELAY`, `RELAY_HOST`, `RELAY_PORT`, `RELAY_MEMBER`, `W2C_WALL_OFFSET`, `DOMAIN_CA`, `RELAY_CA`, `SIGNER_URL`, `DOMAIN_CONSOLE_URL`, `LOGIN_URL` |
+| Stands of processes and chapters | the variable named by `slot.name_env` of a stand manifest, `W2C_SHRINK_AFTER`, `W2C_ROLE`, `W2C_DEPLOYMENT`, `W2C_MANIFEST_REV` |
+| One launch | the assignments `<NAME>=<value>` of that `@start worker`; `W2C_TOKEN` for the person's command of `@move` |
 
 ### Stand without root
 
