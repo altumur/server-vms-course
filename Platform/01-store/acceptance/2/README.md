@@ -85,7 +85,7 @@ The session audit-kimi (2026-10-30, commit 399e4783b, `coverage audit P01 (for p
 The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
 - The edges of `never` (N1.3) for admin (rights «everything except `never`»): `platform/epoch/<y>`, two segments after `epoch/`
   and `<x>/epoch` without `/` after `epoch` are not epoch rows, their
-  deletion — 200; an implementation whose `never` is wider than the norm refuses here. The domain roles `domain`, `domainagent` and `<sub>domain` (its own family
-  `domain/<sub>/`) delete under `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); the same prohibition for admin.
+  deletion — 200; an implementation whose `never` is wider than the norm refuses here. For the domain roles `domain`, `domainagent` and `<sub>domain` (its own family
+  `domain/<sub>/`) `never` does not itself forbid a delete under `domain/`; the ordinary `allowed` patterns of the role still decide (N1.3, N3; C01-NEVER-DOMAIN-ROLE-01); for admin the prohibition stands.
 - `comment` of the rights file (N1.2): a number instead of a string — a start refusal, code 2;
   `GET /v1/rights` by admin returns a string `comment` (N2).

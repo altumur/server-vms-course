@@ -85,7 +85,7 @@
 Сессия аудита покрытия, второй проход (Gemini, 2026-10-30, коммит 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
 - Края `never` (N1.3) у admin (права «всё, кроме `never`»): `platform/epoch/<y>`, два сегмента после `epoch/`
   и `<x>/epoch` без `/` после `epoch` — не строки эпохи, их
-  удаление — 200; реализация, у которой `never` шире нормы, здесь отказывает. Роли домена `domain`, `domainagent` и `<sub>domain` (своя семья
-  `domain/<sub>/`) удаляют под `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); тот же запрет у admin.
+  удаление — 200; реализация, у которой `never` шире нормы, здесь отказывает. Для ролей домена `domain`, `domainagent` и `<sub>domain` (своя семья
+  `domain/<sub>/`) `never` сам не запрещает удаление под `domain/`; решают обычные шаблоны `allowed` роли (N1.3, N3; C01-NEVER-DOMAIN-ROLE-01); у admin запрет остаётся.
 - `comment` файла прав (N1.2): число вместо строки — отказ старта, код 2;
   `GET /v1/rights` admin возвращает строковый `comment` (N2).

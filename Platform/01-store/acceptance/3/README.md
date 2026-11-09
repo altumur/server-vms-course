@@ -45,7 +45,7 @@ Separate executable Z21 probe 5 uses a healthy completed directory state, not sc
 **Copying damaged rows.** An existing row with a damaged body and retained version stays in backup as `{key, items: null, index, unreadable: true}`, where `index` is its exact nonempty version; the existing key order and coherent copy header remain. This is separate from import/restore refusing unreadable input under N4. A lost version requires the P/01.1 R028 log entry, a nonzero backup CLI exit and preservation of the previous published file. HTTP copy may return `503 UnavailableFault` before `200` or close incompletely after `200`; a completed copy that omits the row or invents its `index` is invalid. The `bad-unreadable.jsonl` input below witnesses import refusal, not permission to omit a damaged row from backup. The `spoil-row` binding uses `what=body` or `what=index`; without it the dependent observation stays `NotExecuted`.
 
 The store copy (chapter 1.3 N1.3 `copy`; the store pilot, A2). The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a correct copy;
-there are no manifest rows (`platform/manifest/*`) in a copy: the copy does not know manifests, `import` carries a row of any family (chapter 1.3 N1.3
+the copy does not interpret manifest rows (`platform/manifest/*`): `import` carries a row of any family (chapter 1.3 N1.3
 `import`; the log of cammeta-go, lesson 11 № 10); `copy-ok-unordered.jsonl` — the rows out of order (the reader does not require an order). `bad-*.jsonl` — one
 `copy` refusal per file; nothing is transferred on a refusal.
 
