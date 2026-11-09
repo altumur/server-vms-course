@@ -55,3 +55,12 @@ only at a manifest with `holds`, `<s>/holds/*` is not given (item 1, C02-RESOURC
 if after the negations already given its rights still reach the pattern (item 2, C02-NONREADER-DENY-AFTER-01); the marks
 `objects/<s>/commands/*` of the console — only at a manifest with `requests` (as at the worker; `va` has none). The other files of `check/` are this derivation with
 one edit. What remains by reading: the inequality
+
+### Original passage 8
+
+sc. 12 — also `testsubdomain` and `domainagent` (the domain roles of the rights file `testsub`: `testsub` has `kept` and a transferable
+book `tallies`, `testsub2` has only collected books — there is no role `testsub2domain` and no socket).
+
+### Original passage 9
+
+The manifests of the variants `v1`–`v5` are byte for byte those on which the reconciliation generated the rights of both implementations — both load them; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below).

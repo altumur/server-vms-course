@@ -28,8 +28,8 @@ after a match of the whole step; a repeat of a variable is compared with the ear
 of keys in list remains the order of the store, the runner does not sort the actual answer.
 
 The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2controller`, `testsub2worker`, `resource`;
-sc. 12 — also `testsubdomain` and `domainagent` (the domain roles of the rights file `testsub`: `testsub` has `kept` and a transferable
-book `tallies`, `testsub2` has only collected books — there is no role `testsub2domain` and no socket).
+also the domain roles `testsubdomain` and `domainagent` (a domain role `<s>domain` exists only at a manifest with `domain.kept` or a transferable
+book, P/02.5 N1.4).
 
 The reconciliation of python and go M10/6–11 (R1–R5, R7) is part of these scenarios.
 
@@ -103,7 +103,7 @@ The variants and their expected outcomes are in [judge-only case data](README.ca
 | an element of `secrets.reads` strictly nested in a secret prefix of another manifest: a generation refusal before the file | P/02.5 N3 step 4, N4 (C02-SECRETS-READS-INTERSECTION-01) |
 | `secrets.readers` with `domainworker` | R6 |
 
-The manifests of the variants `v1`–`v5` are byte for byte those on which the reconciliation generated the rights of both implementations — both load them; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below).
+The manifests of the variants `v1`–`v5` come from the reconciliation of python and go M10/6–11; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below).
 
 ## Checks outside the scenario file
 
