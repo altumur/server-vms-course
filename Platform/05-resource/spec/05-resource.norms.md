@@ -367,7 +367,7 @@ puts a resource on the server of the reader ([P/04](../../04-controller/spec/04-
 
 PULSE_LIMIT is a finite positive limit of the duration of one step of the resource in seconds,
 chosen and declared by the implementation before the start. The duration is measured by the local
-monotonic clock, not by t/at of the writer; exceeding it gives pass_stalled in the next heartbeat.
+monotonic clock, not by t/at of the writer; while a step runs beyond the limit, every heartbeat carries pass_stalled; it is cleared when the step ends, including before the next heartbeat.
 It is a diagnostic threshold, not a promise to stop a hung call or to wait for an answer.
 
 <!-- req: P/05-R029 -->
@@ -393,7 +393,7 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
 ```
 
 
-The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again. A mirror peer is considered again next pass. These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary.
+The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again. A mirror peer is considered again next pass. These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary. A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue. The order of buckets between passes is not a contract.
 
 ### N1.6 Hint and HTTP representations
 
@@ -816,7 +816,7 @@ are performed separately. An outer array does not replace JSON Lines.
 | resource GET /events | 200 ResourceEvents; at the resource `HEAD` — 405 | resource 400 ResourceError (the parsing below); resource 503 ResourceError |
 | resource GET /events/wait | 200 WaitAnswer, including full/replaced | 400 ResourceError; the common lane is busy — 503 ResourceError |
 | resource GET /events/{path} | 200 whole bytes + X-Sum; 206 one range + Content-Range | 404/500 without a body; 416 text/plain + Content-Range |
-| resource PUT /mirror/{server}/{path} | 204 without a body; the header `X-Sum` — SHA-256 of the body (64 lowercase hex), required | no `X-Sum` or it is not in form — 400, the body is not accepted; the SHA-256 of the body does not match — 422; 408/413/500 — without a body |
+| resource PUT /mirror/{server}/{path} | 204 without a body; the header `X-Sum` — SHA-256 of the body (64 lowercase hex), required; 204 confirms that the verified copy and the metadata it needs survive a failure within the declared fault model, the barriers are chosen by the implementation | no `X-Sum` or it is not in form — 400, the body is not accepted; the SHA-256 of the body does not match — 422; 408/413/500 — without a body |
 | resource GET /mirrored/{server} | 200 MirroredListing | 404/500 without a body |
 | resource GET /mirrored/{server}/{path} | 200 bytes + X-Sum | 404/500 without a body |
 | resource `PUT /v1/objects/<sub>/blobs/<digest>` | 204 without a body. Required are a length ≤the resource door byte limit (OpenAPI Content-Length.maximum), `X-Written` — a non-negative time of the source copy (absent or not a number — 400), a sha256 name with 64 lowercase hex; bytes of another digest — 422; a key not of the blob form or a subsystem without a blob field — 405, as for any object (N1.1 «Bodies at the resource» `mirror`; reconciliation of python and go M10/6–11, T10, T11). On reading the actual limit/sum are checked | 400/404/405/408/409/411/413/422/503 — `ResourceError`, 403 — it or `ResourceDenied`. The common refusals of the console do not apply here (moved from M10/10 N2) |
@@ -983,7 +983,7 @@ relieve: platform/space.enabled ∧ used/total > high → for manifests with req
          the journal free_ask.key_taken
 mirror:  platform/mirror does not read → the step is not executed, settings_unread: mirror (N1.4 mirror); platform/mirror.enabled → the neighbours = the next copies live ones by name (liveness — the door row, N1.4 mirror); the closed buckets that the neighbour does not have
          (the sum) → PUT /mirror/<me>/<path> with X-Sum = SHA-256 of the bucket; PEER_FAILS consecutive failures → the neighbour is skipped until the end of this mirror pass
-each step is its own attempt; a step longer than PULSE_LIMIT → pass_stalled in the heartbeat
+each step is its own attempt; a step running longer than PULSE_LIMIT → pass_stalled in every heartbeat while it runs
 ```
 
 <!-- req: P/05-R054 -->

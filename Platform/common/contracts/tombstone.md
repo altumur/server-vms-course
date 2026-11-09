@@ -81,7 +81,8 @@ rewrite:   an object with the same key is written at the deleter again after wri
            acknowledgements and without the term of 7 days (the key is live again; copies older than written are replaced by the new write; C06-BLOB-GC-33-01, the Architect's answer of 2026-10-25 (1));
            «at once» — on the write: a write of the key (a new body of the console, an owner-sourced copy through the resource door) removes the tombstone by the same action, before
            its answer, not by the resource pass — a read after the answer of the write does not see the tombstone (C05-GONE-REWRITE-AT-WRITE-01,
-           the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/05 item 1)
+           the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/05 item 1);
+           after a crash between the removal of the tombstone and the publication of the new body the old or the new state is visible, and the old bytes of a peer are not resurrected; the way is chosen by the implementation
 remove:    otherwise the tombstone is kept for at least 7 days and is removed only when all peers have acknowledged the deletion (peers ⊆ acked);
            an unknown outcome is not an acknowledgement
 ```
