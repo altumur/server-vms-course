@@ -1,0 +1,5 @@
+id	when	cause	fix
+D08	trial t1	model artifact: ready answer not delivered over time (delivery not urgent), exit at budget gave a break after the answer reached the console	tickOk/exit guard: control relays a ready answer at once
+D11	trial t1	invariant inv_edit_answered_at_exit vacuous: exitProc writes "break", so clientSaw!=none was always true at exit (the inversion that the brief warns about)	strengthened to clientSaw in {200,502}
+J06	trial t1	model artifact: a request in write (not stuck) could spend 50 s before "stuck"; the common budget covers lock holding too, the model counted it only once stuck	waiting/expire/tick count phase write, production-obligations.md:9,:11
+J10	trial t1	same as J06	same

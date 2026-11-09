@@ -1,0 +1,100 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+S01	stream_norm	inv_lane_cap	property	verify	8			ok	ok	yes	2.6	stream_lane.qnt
+S02	stream_norm	inv_stalled_hold_bounded	property	verify	12			ok	ok	yes	124.1	stream_lane.qnt
+S03	stream_norm	inv_open_hold_bounded	property	verify	8			ok	ok	yes	6.5	stream_lane.qnt
+S04	stream_norm_h450	inv_stalled_hold_bounded	witness	verify	8			violation	violation	yes	1.0	stream_lane.qnt
+S05	stream_norm	wit_lane_full_of_stalled_refuses	witness	verify	8			violation	violation	yes	1.3	stream_lane.qnt
+S06	stream_norm	wit_stalled_closed_by_exp	witness	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S07	stream_ctrl_term	inv_stalled_hold_bounded	control	verify	8			ok	ok	yes	10.4	stream_lane.qnt
+S08	stream_ctrl_term	wit_stalled_closed_by_term	witness	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S09	stream_mut_noexp	inv_stalled_hold_bounded	mutant	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S10	stream_mut_nocap	inv_lane_cap	mutant	verify	8			violation	violation	yes	0.9	stream_lane.qnt
+D01	shutdown_norm	inv_no_early_502	property	verify	10			ok	ok	yes	1.3	shutdown.qnt
+D02	shutdown_norm	inv_no_break_on_applied	witness	verify	8			violation	violation	yes	0.9	shutdown.qnt
+D03	shutdown_norm	wit_term_break_then_applied	witness	verify	8			violation	violation	yes	0.9	shutdown.qnt
+D04	shutdown_norm	wit_applied_then_term_break	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D05	shutdown_norm	inv_stop_bounded	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D06	shutdown_norm	wit_stop_hangs_on_stream	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D07	shutdown_ctrl	inv_stop_bounded	control	verify	10			ok	ok	yes	1.3	shutdown.qnt
+D08	shutdown_ctrl	inv_no_break_on_applied	control	verify	10			ok	ok	yes	1.6	shutdown.qnt
+D09	shutdown_ctrl	inv_edit_answered_at_exit	control	verify	10			ok	ok	yes	1.4	shutdown.qnt
+D10	shutdown_ctrl	wit_drained_exit	witness	verify	10			violation	violation	yes	1.0	shutdown.qnt
+D11	shutdown_mut_short	inv_edit_answered_at_exit	mutant	verify	10			violation	violation	yes	1.0	shutdown.qnt
+D12	shutdown_mut_short	inv_no_break_on_applied	mutant	verify	10			violation	violation	yes	1.0	shutdown.qnt
+E01	edit502_keyed	inv_one_effect	property	verify	14			ok	ok	yes	15.0	edit_after_502.qnt
+E02	edit502_ifmatch	inv_one_effect	property	verify	12			ok	ok	yes	6.8	edit_after_502.qnt
+E03	edit502_bare_noretry	inv_one_effect	property	verify	12			ok	ok	yes	4.4	edit_after_502.qnt
+E04	edit502_keyed	inv_no_late_answer	property	verify	12			ok	ok	yes	7.0	edit_after_502.qnt
+E05	edit502_keyed	inv_502_not_early	property	verify	12			ok	ok	yes	19.7	edit_after_502.qnt
+E06	edit502_keyed	wit_applied_after_502	witness	verify	10			violation	violation	yes	2.2	edit_after_502.qnt
+E07	edit502_keyed	wit_502_never_applied	witness	verify	10			violation	violation	yes	1.9	edit_after_502.qnt
+E08	edit502_bare	wit_double_effect_after_502	witness	verify	12			violation	violation	yes	3.2	edit_after_502.qnt
+E09	edit502_bare	inv_one_effect	witness	verify	12			violation	violation	yes	2.8	edit_after_502.qnt
+E10	edit502_keyed	wit_retry_409_in_flight	witness	verify	12			violation	violation	yes	2.3	edit_after_502.qnt
+E11	edit502_keyed	wit_retry_replay_one_effect	witness	verify	12			violation	violation	yes	3.7	edit_after_502.qnt
+E12	edit502_ifmatch	wit_retry_412	witness	verify	12			violation	violation	yes	5.0	edit_after_502.qnt
+E13	edit502_mut_nomem	inv_one_effect	mutant	verify	12			violation	violation	yes	3.1	edit_after_502.qnt
+E14	edit502_mut_nobatch	inv_one_effect	mutant	verify	12			violation	violation	yes	4.2	edit_after_502.qnt
+E15	edit502_mut_late	inv_no_late_answer	mutant	verify	12			violation	violation	yes	2.4	edit_after_502.qnt
+E16	edit502_bare_noretry	wit_applied_after_502	witness	verify	10			violation	violation	yes	2.0	edit_after_502.qnt
+A01	alarmrace_norm	inv_no_false_unreadable	witness	verify	12			violation	violation	yes	1.8	alarms_mark_race.qnt
+A02	alarmrace_norm	wit_false_unreadable_ordered	witness	verify	12			violation	violation	yes	1.8	alarms_mark_race.qnt
+A03	alarmrace_norm_shortgap	inv_no_false_unreadable	property	verify	14			ok	ok	yes	7.1	alarms_mark_race.qnt
+A04	alarmrace_norm_every1	inv_no_false_unreadable	witness	verify	12			violation	violation	yes	1.8	alarms_mark_race.qnt
+A05	alarmrace_ctrl	inv_no_false_unreadable	control	verify	20			ok	ok	yes	183.4	alarms_mark_race.qnt
+A06	alarmrace_ctrl	inv_reread_once	control	verify	16			ok	ok	yes	10.7	alarms_mark_race.qnt
+A07	alarmrace_ctrl	inv_page_named	control	verify	16			ok	ok	yes	22.8	alarms_mark_race.qnt
+A08	alarmrace_ctrl	inv_changed_never_unreadable	control	verify	16			ok	ok	yes	11.4	alarms_mark_race.qnt
+A09	alarmrace_ctrl	wit_503_changed_marker	witness	verify	18			violation	violation	yes	4.0	alarms_mark_race.qnt
+A10	alarmrace_ctrl	wit_fresh_after_reread	witness	verify	12			violation	violation	yes	1.7	alarms_mark_race.qnt
+A11	alarmrace_ctrl	wit_genuine_unreadable	witness	verify	8			violation	violation	yes	1.5	alarms_mark_race.qnt
+A12	alarmrace_norm	inv_page_named	property	verify	12			ok	ok	yes	3.3	alarms_mark_race.qnt
+A13	alarmrace_mut_keep1	inv_no_false_unreadable	mutant	verify	10			violation	violation	yes	1.5	alarms_mark_race.qnt
+A14	alarmrace_mut_nocmp	inv_no_false_unreadable	mutant	verify	18			violation	violation	yes	27.2	alarms_mark_race.qnt
+A15	alarmrace_mut_loop	inv_reread_once	mutant	verify	10			violation	violation	yes	1.6	alarms_mark_race.qnt
+A16	alarmrace_mut_markfirst	inv_no_false_unreadable	mutant	verify	8			violation	violation	yes	1.5	alarms_mark_race.qnt
+A17	alarmrace_norm	wit_page_served	witness	verify	6			violation	violation	yes	1.4	alarms_mark_race.qnt
+A18	alarmrace_norm_shortgap	wit_one_mark_in_gap	witness	verify	8			violation	violation	yes	1.5	alarms_mark_race.qnt
+A19	alarmrace_norm_shortgap	inv_at_most_one_mark_in_gap	property	verify	14			ok	ok	yes	7.7	alarms_mark_race.qnt
+C01	alarmcomp_norm	inv_complete_is_whole	witness	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+C02	alarmcomp_norm	wit_complete_with_unknown_history	witness	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+C03	alarmcomp_norm	wit_complete_with_unreadable_history	witness	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+C04	alarmcomp_norm	wit_complete_true_reachable	witness	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+C05	alarmcomp_ctrl_unk503	inv_complete_is_whole	control	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+C06	alarmcomp_ctrl_unk503	wit_complete_with_unknown_history	control	verify	6			ok	ok	yes	0.8	alarms_completeness.qnt
+C07	alarmcomp_ctrl_field	inv_complete_is_whole	control	verify	6			ok	ok	yes	0.9	alarms_completeness.qnt
+C08	alarmcomp_ctrl_field	wit_complete_true_reachable	witness	verify	6			violation	violation	yes	0.7	alarms_completeness.qnt
+K01	clock_sep	inv_no_false_silent	witness	verify	6			violation	violation	yes	0.7	silence_clock.qnt
+K02	clock_sep	wit_mass_false_silent	witness	verify	6			violation	violation	yes	0.8	silence_clock.qnt
+K03	clock_sep	wit_false_silent_persists	witness	verify	8			violation	violation	yes	1.0	silence_clock.qnt
+K04	clock_nojump	inv_no_false_silent	control	verify	8			ok	ok	yes	1.3	silence_clock.qnt
+K05	clock_nojump	inv_no_false_ok	control	verify	8			ok	ok	yes	1.2	silence_clock.qnt
+K06	clock_nojump	wit_true_silent_seen	witness	verify	8			violation	violation	yes	0.8	silence_clock.qnt
+K07	clock_sep_40	inv_no_false_silent	control	verify	8			ok	ok	yes	2.3	silence_clock.qnt
+K08	clock_sep_41	inv_no_false_silent	witness	verify	8			violation	violation	yes	0.8	silence_clock.qnt
+K09	clock_co	inv_false_silent_transient	property	verify	10			ok	ok	yes	4.9	silence_clock.qnt
+K10	clock_co	inv_no_false_silent	witness	verify	8			violation	violation	yes	0.7	silence_clock.qnt
+K11	clock_co_back	wit_false_ok_hides_silence	witness	verify	8			violation	violation	yes	0.8	silence_clock.qnt
+K12	clock_sep_back	wit_false_ok_hides_silence	witness	verify	8			violation	violation	yes	0.9	silence_clock.qnt
+K13	clock_sep	inv_false_silent_transient	witness	verify	8			violation	violation	yes	1.0	silence_clock.qnt
+J01	journal_norm	inv_wait_bounded	witness	verify	8			violation	violation	yes	1.2	journal_lock.qnt
+J02	journal_norm	wit_stuck_blocks_both	witness	verify	8			violation	violation	yes	1.3	journal_lock.qnt
+J03	journal_norm	inv_no_silent_loss	witness	verify	8			violation	violation	yes	1.2	journal_lock.qnt
+J04	journal_norm	wit_io_then_403_lost	witness	verify	8			violation	violation	yes	1.2	journal_lock.qnt
+J05	journal_norm	wit_line_written_answered	witness	verify	8			violation	violation	yes	1.1	journal_lock.qnt
+J06	journal_budget	inv_wait_bounded	property	verify	10			ok	ok	yes	15.2	journal_lock.qnt
+J07	journal_budget	inv_no_silent_loss	witness	verify	10			violation	violation	yes	1.2	journal_lock.qnt
+J08	journal_budget	wit_timeout_then_403_lost	witness	verify	10			violation	violation	yes	1.5	journal_lock.qnt
+J09	journal_ctrl	inv_no_silent_loss	control	verify	10			ok	ok	yes	9.7	journal_lock.qnt
+J10	journal_ctrl	inv_wait_bounded	control	verify	12			ok	ok	yes	34.2	journal_lock.qnt
+J11	journal_mut_unenforced	inv_wait_bounded	mutant	verify	10			violation	violation	yes	1.1	journal_lock.qnt
+J12	journal_ctrl	wit_line_written_answered	witness	verify	8			violation	violation	yes	1.2	journal_lock.qnt
+J13	journal_ctrl	wit_timeout_503	witness	verify	10			violation	violation	yes	1.4	journal_lock.qnt
+Z01	stream_norm	inv_stalled_hold_bounded	property	run	25	3000		ok	ok	yes	1.3	stream_lane.qnt
+Z02	shutdown_ctrl	inv_no_break_on_applied	control	run	25	3000		ok	ok	yes	1.2	shutdown.qnt
+Z03	edit502_keyed	inv_one_effect	property	run	25	3000		ok	ok	yes	2.1	edit_after_502.qnt
+Z04	alarmrace_norm_shortgap	inv_no_false_unreadable	property	run	25	3000		ok	ok	yes	1.5	alarms_mark_race.qnt
+Z05	alarmrace_ctrl	inv_no_false_unreadable	control	run	25	3000		ok	ok	yes	1.4	alarms_mark_race.qnt
+Z06	clock_nojump	inv_no_false_silent	control	run	25	3000		ok	ok	yes	1.0	silence_clock.qnt
+Z07	journal_ctrl	inv_no_silent_loss	control	run	25	3000		ok	ok	yes	1.6	journal_lock.qnt
+Z08	alarmcomp_ctrl_field	inv_complete_is_whole	control	run	12	3000		ok	ok	yes	0.6	alarms_completeness.qnt

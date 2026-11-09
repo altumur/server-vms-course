@@ -1,0 +1,70 @@
+[01:36:29] S01 stream_norm inv_lane_cap rc=0 2.6s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm --max-steps 8 --invariant inv_lane_cap --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S01.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: [ok] No violation found (2018ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:38:33] S02 stream_norm inv_stalled_hold_bounded rc=0 124.1s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm --max-steps 12 --invariant inv_stalled_hold_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S02.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: [ok] No violation found (123511ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:38:39] S03 stream_norm inv_open_hold_bounded rc=0 6.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm --max-steps 8 --invariant inv_open_hold_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S03.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: [ok] No violation found (5901ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:38:40] S04 stream_norm_h450 inv_stalled_hold_bounded rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm_h450 --max-steps 8 --invariant inv_stalled_hold_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S04.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (386ms). | error: found a counterexample
+[01:38:42] S05 stream_norm wit_lane_full_of_stalled_refuses rc=1 1.3s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm --max-steps 8 --invariant wit_lane_full_of_stalled_refuses --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S05.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (662ms). | error: found a counterexample
+[01:38:43] S06 stream_norm wit_stalled_closed_by_exp rc=1 1.1s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_norm --max-steps 8 --invariant wit_stalled_closed_by_exp --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S06.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (505ms). | error: found a counterexample
+[01:38:53] S07 stream_ctrl_term inv_stalled_hold_bounded rc=0 10.4s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_ctrl_term --max-steps 8 --invariant inv_stalled_hold_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S07.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: [ok] No violation found (9776ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:38:54] S08 stream_ctrl_term wit_stalled_closed_by_term rc=1 1.1s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_ctrl_term --max-steps 8 --invariant wit_stalled_closed_by_term --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S08.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (502ms). | error: found a counterexample
+[01:38:56] S09 stream_mut_noexp inv_stalled_hold_bounded rc=1 1.1s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_mut_noexp --max-steps 8 --invariant inv_stalled_hold_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S09.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (473ms). | error: found a counterexample
+[01:38:57] S10 stream_mut_nocap inv_lane_cap rc=1 0.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main stream_mut_nocap --max-steps 8 --invariant inv_lane_cap --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/S10.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/stream_lane.qnt
+    out: } | [violation] Found an issue (290ms). | error: found a counterexample
+[01:38:58] D01 shutdown_norm inv_no_early_502 rc=0 1.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 10 --invariant inv_no_early_502 --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D01.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: [ok] No violation found (670ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:38:59] D02 shutdown_norm inv_no_break_on_applied rc=1 0.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 8 --invariant inv_no_break_on_applied --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D02.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (324ms). | error: found a counterexample
+[01:39:00] D03 shutdown_norm wit_term_break_then_applied rc=1 0.9s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 8 --invariant wit_term_break_then_applied --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D03.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (330ms). | error: found a counterexample
+[01:39:01] D04 shutdown_norm wit_applied_then_term_break rc=1 1.0s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 8 --invariant wit_applied_then_term_break --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D04.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (339ms). | error: found a counterexample
+[01:39:02] D05 shutdown_norm inv_stop_bounded rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 8 --invariant inv_stop_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D05.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (348ms). | error: found a counterexample
+[01:39:03] D06 shutdown_norm wit_stop_hangs_on_stream rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_norm --max-steps 8 --invariant wit_stop_hangs_on_stream --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D06.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (324ms). | error: found a counterexample
+[01:39:04] D07 shutdown_ctrl inv_stop_bounded rc=0 1.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_ctrl --max-steps 10 --invariant inv_stop_bounded --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D07.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: [ok] No violation found (678ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:39:05] D08 shutdown_ctrl inv_no_break_on_applied rc=0 1.6s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_ctrl --max-steps 10 --invariant inv_no_break_on_applied --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D08.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: [ok] No violation found (981ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:39:07] D09 shutdown_ctrl inv_edit_answered_at_exit rc=0 1.4s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_ctrl --max-steps 10 --invariant inv_edit_answered_at_exit --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D09.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: [ok] No violation found (893ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[01:39:08] D10 shutdown_ctrl wit_drained_exit rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_ctrl --max-steps 10 --invariant wit_drained_exit --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D10.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (395ms). | error: found a counterexample
+[01:39:09] D11 shutdown_mut_short inv_edit_answered_at_exit rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_mut_short --max-steps 10 --invariant inv_edit_answered_at_exit --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D11.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (354ms). | error: found a counterexample
+[01:39:10] D12 shutdown_mut_short inv_no_break_on_applied rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18827 --main shutdown_mut_short --max-steps 10 --invariant inv_no_break_on_applied --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/D12.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/shutdown.qnt
+    out: } | [violation] Found an issue (362ms). | error: found a counterexample
+[01:39:11] E01 edit502_keyed inv_one_effect rc=1 1.1s expect=ok actual=error match=NO
+    cmd: quint verify --server-endpoint localhost:18827 --main edit502_keyed --max-steps 14 --invariant inv_one_effect --out-itf /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/runs/E01.itf.json /home/pilot/review103-claude-adr0130-p10-quint/decisions/inbox/ревью/quint-p10-cbf02230/edit_after_502.qnt
+    out: error: No connection established. Last error: Error: connect ECONNREFUSED 127.0.0.1:18827. Resolution note: 
+server not reachable, stopping

@@ -1,0 +1,24 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+S01	stream_norm	inv_lane_cap	property	verify	8			ok	ok	yes	2.6	stream_lane.qnt
+S02	stream_norm	inv_stalled_hold_bounded	property	verify	12			ok	ok	yes	124.1	stream_lane.qnt
+S03	stream_norm	inv_open_hold_bounded	property	verify	8			ok	ok	yes	6.5	stream_lane.qnt
+S04	stream_norm_h450	inv_stalled_hold_bounded	witness	verify	8			violation	violation	yes	1.0	stream_lane.qnt
+S05	stream_norm	wit_lane_full_of_stalled_refuses	witness	verify	8			violation	violation	yes	1.3	stream_lane.qnt
+S06	stream_norm	wit_stalled_closed_by_exp	witness	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S07	stream_ctrl_term	inv_stalled_hold_bounded	control	verify	8			ok	ok	yes	10.4	stream_lane.qnt
+S08	stream_ctrl_term	wit_stalled_closed_by_term	witness	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S09	stream_mut_noexp	inv_stalled_hold_bounded	mutant	verify	8			violation	violation	yes	1.1	stream_lane.qnt
+S10	stream_mut_nocap	inv_lane_cap	mutant	verify	8			violation	violation	yes	0.9	stream_lane.qnt
+D01	shutdown_norm	inv_no_early_502	property	verify	10			ok	ok	yes	1.3	shutdown.qnt
+D02	shutdown_norm	inv_no_break_on_applied	witness	verify	8			violation	violation	yes	0.9	shutdown.qnt
+D03	shutdown_norm	wit_term_break_then_applied	witness	verify	8			violation	violation	yes	0.9	shutdown.qnt
+D04	shutdown_norm	wit_applied_then_term_break	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D05	shutdown_norm	inv_stop_bounded	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D06	shutdown_norm	wit_stop_hangs_on_stream	witness	verify	8			violation	violation	yes	1.0	shutdown.qnt
+D07	shutdown_ctrl	inv_stop_bounded	control	verify	10			ok	ok	yes	1.3	shutdown.qnt
+D08	shutdown_ctrl	inv_no_break_on_applied	control	verify	10			ok	ok	yes	1.6	shutdown.qnt
+D09	shutdown_ctrl	inv_edit_answered_at_exit	control	verify	10			ok	ok	yes	1.4	shutdown.qnt
+D10	shutdown_ctrl	wit_drained_exit	witness	verify	10			violation	violation	yes	1.0	shutdown.qnt
+D11	shutdown_mut_short	inv_edit_answered_at_exit	mutant	verify	10			violation	violation	yes	1.0	shutdown.qnt
+D12	shutdown_mut_short	inv_no_break_on_applied	mutant	verify	10			violation	violation	yes	1.0	shutdown.qnt
+E01	edit502_keyed	inv_one_effect	property	verify	14			ok	error	NO	1.1	edit_after_502.qnt
