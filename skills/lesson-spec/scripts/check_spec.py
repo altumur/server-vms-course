@@ -2685,7 +2685,7 @@ class Check:
     def library_defects(self):
         if not self.v7:
             return
-        path = human_text(Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS)), self.root)   # столбец «Вектор»
+        path = human_text(Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS)), self.root).with_name("DEFECTS.cases.md")
         layers = human_text(self.root / "Platform/common/LAYERS.md", self.root)
         if not path.is_file():
             if layers.is_file() and "versions/DEFECTS.md" in layers.read_text(encoding="utf-8"):
