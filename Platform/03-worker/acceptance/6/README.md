@@ -77,7 +77,7 @@ In 05, before sending step 5, the runner binds $rid = r- + the first 16 lowercas
 the exact UTF-8 bytes of the Idempotency-Key issued to this step (testsub has no requests.key).
 Step 05/5 accepts only 200 Answered or 202 Queued by the full contract: with 202
 queued equals the precomputed $rid; with 200 answered relates to c5 and the digest of the submitted
-body. Another 2xx is not permitted by the contract. So a fast answer does not change the variables of the following steps. The directives are not sent
+body. Another 2xx is not permitted by the contract. The correlation of `queued` and `answered` applies to every `POST` of the door of requests answered with 200 or 202 in this chapter, not only to step 05/5; the form of the digest follows `requests.key` of the manifest. So a fast answer does not change the variables of the following steps. The directives are not sent
 to the server as HTTP. The full answer is additionally checked by the contract of its owner:
 the store — P/01.1, the units — P/06.1, the doors of the resource — P/05 N2, the other doors — [chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) N2. In particular, answered
 with @any in the TSV is still bound to be a full mark of one of the three forms of AnsweredMark.
