@@ -13773,13 +13773,13 @@
     },
     {
       "path": "Platform/common/data/testsub/testsub.subsystem.yaml",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "disposition": "model_and_judge",
+      "basis": "ADR-0133 Addendum20 exact owner-defined stand input: training subsystem manifest, not case/expected answer. Exact named exception only; other testsub files unchanged."
     },
     {
       "path": "Platform/common/data/testsub/testsub2.subsystem.yaml",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "disposition": "model_and_judge",
+      "basis": "ADR-0133 Addendum20 exact owner-defined stand input: training subsystem manifest, not case/expected answer. Exact named exception only; other testsub files unchanged."
     },
     {
       "path": "Platform/common/export-model-filter.json",
@@ -13833,8 +13833,8 @@
     },
     {
       "path": "Platform/common/ru/acceptance/runner-targets.README.md",
-      "disposition": "model_and_judge",
-      "basis": "Root exact own-artifact mirror selection: faithful Russian public contract mirror."
+      "disposition": "judge_only",
+      "basis": "P01.10.17 / final P01.10.8 M1: retain physical Russian mirror for document compatibility; model English view per ADR-0083(115), exact file judge-only."
     },
     {
       "path": "Platform/common/ru/acceptance/runner-targets.provenance.cases.md",
