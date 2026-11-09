@@ -9,12 +9,12 @@
     {
       "path": "Platform/01-store/acceptance/1/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
@@ -29,12 +29,12 @@
     {
       "path": "Platform/01-store/acceptance/2/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
@@ -74,12 +74,12 @@
     {
       "path": "Platform/01-store/acceptance/3/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
@@ -344,7 +344,7 @@
     {
       "path": "Platform/01-store/ru/acceptance/1/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/ru/acceptance/1/README.md",
@@ -354,7 +354,7 @@
     {
       "path": "Platform/01-store/ru/acceptance/2/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/ru/acceptance/2/README.md",
@@ -364,7 +364,7 @@
     {
       "path": "Platform/01-store/ru/acceptance/3/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/01-store/ru/acceptance/3/README.md",
@@ -5984,12 +5984,12 @@
     {
       "path": "Platform/02-installer/acceptance/2/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root signed P01.10.12 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/02-installer/acceptance/2/puts-ceiling.tsv",
@@ -6029,12 +6029,12 @@
     {
       "path": "Platform/02-installer/acceptance/3/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root signed P01.10.12 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/02-installer/acceptance/3/puts.tsv",
@@ -6459,12 +6459,12 @@
     {
       "path": "Platform/02-installer/acceptance/4/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/acceptance/4/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root signed P01.10.12 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/02-installer/acceptance/4/inputs/seam-bad.subsystem.yaml",
@@ -6479,12 +6479,12 @@
     {
       "path": "Platform/02-installer/acceptance/5/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/acceptance/5/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root signed P01.10.12 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/02-installer/acceptance/5/scenarios.tsv",
@@ -6969,7 +6969,7 @@
     {
       "path": "Platform/02-installer/ru/acceptance/2/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/ru/acceptance/2/README.md",
@@ -6979,7 +6979,7 @@
     {
       "path": "Platform/02-installer/ru/acceptance/3/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/ru/acceptance/3/README.md",
@@ -6989,7 +6989,7 @@
     {
       "path": "Platform/02-installer/ru/acceptance/4/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/ru/acceptance/4/README.md",
@@ -6999,7 +6999,7 @@
     {
       "path": "Platform/02-installer/ru/acceptance/5/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+      "basis": "Root signed P01.10.12 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/02-installer/ru/acceptance/5/README.md",
@@ -7149,7 +7149,7 @@
     {
       "path": "Platform/02-installer/spec/02.4-installer.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root signed P01.10.13 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/02-installer/spec/02.5-installer.n5.cases.md",
@@ -13354,7 +13354,7 @@
     {
       "path": "Platform/common/LAYERS.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root signed P01.10.13 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/NORMATIVE-TERMS.md",
@@ -13374,7 +13374,7 @@
     {
       "path": "Platform/common/acceptance/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/acceptance/ops/README.cases.md",
@@ -13469,12 +13469,12 @@
     {
       "path": "Platform/common/acceptance/tls/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/common/acceptance/tls/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/acceptance/tls/stand.json",
@@ -13489,7 +13489,7 @@
     {
       "path": "Platform/common/contracts/agent-signature.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/contracts/alarm-history.md",
@@ -13654,7 +13654,7 @@
     {
       "path": "Platform/common/contracts/request-mark.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/contracts/role-certificate.cases.md",
@@ -13664,7 +13664,7 @@
     {
       "path": "Platform/common/contracts/role-certificate.md",
       "disposition": "model_and_judge",
-      "basis": "Root accepted P01.10.5.9/b4a exact clean whole public contract; selected-set/case/provenance fragments moved to J. Universal mask/native/trust/catalogue obligations and allowed generic examples retained."
+      "basis": "Root signed P01.10.13 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/contracts/row-check.md",
@@ -13679,7 +13679,7 @@
     {
       "path": "Platform/common/contracts/sealing.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root signed P01.10.13 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
       "path": "Platform/common/contracts/secret-files.md",
@@ -13854,7 +13854,7 @@
     {
       "path": "Platform/common/ru/acceptance/tls/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
     },
     {
       "path": "Platform/common/ru/acceptance/tls/README.md",
