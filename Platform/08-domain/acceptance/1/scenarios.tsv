@@ -39,3 +39,23 @@ scenario	step	request	expect
 15-shadow-and-executors	4	member m1 console POST /counters {"name": "c6"}	201
 15-shadow-and-executors	5	member m2 console POST /counters {"name": "c6"}	201
 15-shadow-and-executors	6	@until 120 holder GET /domain/shadow	200 {"counts": {"conflict": 0, "orphaned": 1, "unmanaged": 0}}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L33-40>
+# | № | Scenario | Steps | What |
+# |---|---|---|---|
+# | 04 | `cut-and-mend` | 5 | `@cut m1` — after LOST_AFTER `silent`, `complete: false`; `@mend` — `ok` again |
+# | 06 | `view-on-the-stand` | 8 | two units in two members, a search by ref, `?cluster=`, `no such member`; `contested` is empty; the shadow report — `unmanaged` 2, `may_write: false` |
+# | 07 | `view-unseen-and-silent` | 7 | after a restart of `domain` the members are `unseen`, then `ok`; a silent one is `silent` |
+# | 08 | `view-configured-and-stale` | 8 | a unit without a worker — `configured`, `unobserved`; the worker is killed — `stale` |
+# | 09 | `view-contested` | 5 | one ref in two members — `contested`, the unit is not in `units` |
+# | 15 | `shadow-and-executors` | 6 | an assignment with `copies`: the claims of the executors from `cluster` and `copies` are not a `conflict`; an assignment without a unit — `orphaned` after SHADOW_STALL |
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <08.1 N5 table, stand rows>
+# N5 row stand 04: a break: `@cut m1` — after LOST_AFTER `silent`, `complete: false`; `@mend` — `ok` again
+# N5 row stand 06: the view on the stand: two units with one id in two members, search by ref, `GET /domain/testsub/counters`; the shadow report — `unmanaged`, `may_write: false` (vectors 01 and 05)
+# N5 row stand 07: the view: after a restart of `domain` the members are `unseen`, then `ok`; a silent one — `silent` (vector 02)
+# N5 row stand 08: the view: a unit without a worker — `configured`; the worker is killed — `stale` (vector 03)
+# N5 row stand 09: the view: one ref in two members — `contested`, the unit is not in `units` (vector 04)
+# N5 row stand 15: the shadow report by placements: the executors from `copies` are not `conflict`; a placement without a unit — `orphaned` after SHADOW_STALL
+# N5 row stand sc. 10 [of the acceptance of chapter 8.6](../acceptance/6/README.md): the view with a placement of executors: without a placement — `contested`; a placement with `copies` — `complete: true`, both units in `units`; `origin` outside `copies` — `contested` (ADR-0091 addenda (12)–(19))
+# N5 row stand sc. 20–22 [of the acceptance of chapter 8.3](../acceptance/3/README.md): the fields of the view on the stand (coverage audit of P/08): `trust` and `topology` — before and after a write of the topology (sc. 20); `relay_refused` — the record of a relay at a refusal of a packet and its removal by an accepted packet (sc. 21); a mark with `rev` 2^53 — the member is `silent`, `complete: false` (sc. 22)

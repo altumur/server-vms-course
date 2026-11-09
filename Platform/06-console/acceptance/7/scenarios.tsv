@@ -109,3 +109,66 @@ scenario	step	request	expect
 18-shell-login	7	member m1 console GET /testsub2/app.js	401
 18-shell-login	8	@person root w2c test root password	ok
 18-shell-login	9	@until 60 member m1 console GET /testsub2/	200 @file Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L36-44>
+# - Scenario 03 creates the unit `c2` on `m2`; the controller of `m2` places it, step 3 waits for the answer 200 and binds `$w`, `$s`,
+#   `$r` (`worker`, `server`, `reason`), steps 4 and 5 wait for the same values through `/domain/at/m2/…` and with the subsystem prefix:
+#   the forwarded answer equals the local one (N1.6, the answer as it came). The 404 of a member «as received» — step 13 (`hold` has no unit `c2`).
+#   `m9` is the name of a non-member.
+# - Scenario 15. Keepers: with two members `ok` (`m1`, `m2`) both. `@sleep 35` — `BACKUP_EVERY` and the pass of the agent after
+#   `@domain`: the admission of members changes the state, and the first backup copy is not the last one. `$r` is its revision from the first answer
+#   after the silence; a quiet domain makes no new revisions ([chapter 8.8](../../../08-domain/spec/08.8-domain.norms.md) N1.5 `rev`). The
+#   holder has no backup copy: `backup` of its `/api/held` is `null`. Step 7 — the holder's view (chapter 8.8 N1.3 `term`, the door
+#   of the domain console — the lesson P/10) — a neighbour on the stand.
+# <README.md L48-54>
+# - Steps 2–6 — `GET /domain/shared/testsub` at the console of the holder's cluster (`member hold console`): the document named by
+#   the pointer (`domain/shared-docs/rev-<rev>`, N1.14 `term, rev`), — `term` 1, `rev` 1 after an edit by the holder (step 2; at a member
+#   this is sc. 01 of the acceptance of chapter 8.9); `?unit=` empty and repeated — 400 `refused` «a unit id is required», `..` — 404 `no such
+#   unit` (N1.14 `refusals`).
+# - Steps 7–11 — without a person (`@person -`): the segment `.` and `..` in percent form under `/domain/` — 404 `not a domain route` (N3
+#   «forward» step 1, before the guard; D4), the same route without the segment — 401 (step 3, the guard); `/api/held` is an open
+#   row: the door does not read an invalid `Authorization: Bearer` — 200 (N1.12 `open`, X13).
+# <README.md L56-59>
+# **Scenario 17** (ADR-0094 B6; the norm — [chapter 6.3](../../spec/06.3-console.norms.md) N2) — the stand of sc. 01–03, 15. A value not by default:
+# `@env m1 TIMEZONE=Asia/Tokyo` restarts the console and the agent only of the cluster `m1`, so the console `hold` at the same step gives
+# the former `UTC`: the zone is taken from the environment of the console, not from the shared place and not from the OS. Step 6 removes the variable, step 7 checks the return
+# to the default. `/session` is an open door, the answer 200 does not depend on the domain; the fields are compared by subset.
+# <README.md L61-64>
+# **Scenario 18** (ADR-0094 B7) — the stand of sc. 06, 13, 14 (the catalogue `testsub`, `testsub2`; the files of `testsub2` — common README, «Manifests»).
+# The runner does not follow `302`: it judges the code, `Location` by equality and the empty body. Without a person (`@person -`) `GET` of the shell — `302` to the page `/` with `return`, also with
+# an invalid token: the identity is not proved (step 5); `HEAD` and a file — `401`; with a person — the shell byte for byte (P/06.5 N2 «Sign-in on the shell»).
+# A logged-in person without a grant (`403`) — by reading.
+# <README.md L74-79>
+# - Scenario 13 — the book `notes` of `testsub2` (`pick: unique`): one ref `t5` on two members — `view.books.conflicts` at
+#   the holder (chapter 8.5 N1.3, N1.5 — a neighbour on the stand); the book row at `m2` without grants carries only `""` (the book door and
+#   the copy at a member — N1.1).
+# - Scenario 14 counts the failures of the emergency login from one address of the runner. A successful attempt does not count: the fifth failure is
+#   step 13, the sixth attempt — 429, for a correct pair too. The row `domain/break-glass/m1` is written by the process `domain` (steps 2–4 —
+#   chapter 8.4 N1.6, a neighbour on the stand), the agent carries it to `m1` (step 5 — chapter 9.1 N1.4 `break_glass`).
+# <README.md L101-105>
+# ## Accepted ADR-0127 review: own verify 503
+#
+# Use a real valid backend ticket and domain credential verification returning the checked user. With need present and an unreadable supervision input, the own response is503 VerifyUnavailable with detail, error=unavailable and supervision={unreadable:true}; unknown need is not200. Ordinary need unavailability without unreadable supervision may omit supervision. Compare the whole local schema; supervision=false, unreadable=false, an empty supervision object, a foreign role field and an extra response field are invalid. A known complete need result keeps the existing200 VerifyAnswer. Generic gate busy/trust and a non-200 answer actually forwarded from the domain are checked against their original forms under their own conditions, not generated as this local response.
+#
+# Schema probes of these positive and negative bodies are separate from the real HTTP/credential/roles checks. They do not run a domain, prove may, or create a new verify native command. ConsoleRefusal outside this operation remains byte-identical.
+# <06.7-console.norms.md N5 table rows>
+# N5 row 01: stand: the view, the list of members and an appointment through the console `m1`; the console of the holder's cluster — also by forwarding; an unknown path — 404 without a call; a body larger than the limit — 413
+# N5 row 02: stand: `X-W2C-Via` at a member — 400, at the holder's cluster — forwarding to its own box; `CLUSTERS` without a row, unreadable; the holder's console is silent — 502; without `SIGNER_URL` — 404 `no signer here`
+# N5 row 03: stand: `/domain/at/m2/testsub/where/<id>` from the console `m1` — the answer of the console `m2` as it came; the root under its own name; the refusals in the order of N3 «at a member»
+# N5 row 06: stand: `GET /domain/keys` at `m1` — the rows, the families of `testsub`, the set
+# N5 row 13: stand: `notes` (`unique`, the index of names — P/08.5 N1.7): one ref on two members — `view.books.conflicts`; without grants the recipient sees only `""`
+# N5 row 14: stand: the break-glass password — 400 short, 200; the entry at `m1`: wrong — 401, right — a session, the sixth failure — 429
+# N5 row 15: stand: `/api/held` at the members, the keepers `m1`, `m2`, the backup pair in `/api/held` and `view.term`; `/api/backup` without a signature — 401
+# N5 row 16: stand: `GET /domain/shared/testsub` at the console of the holder's cluster — `term`, `rev` of the document by the pointer; `?unit=` empty and repeated — 400, `..` — 404; without a human the segment `.`/`%2e%2e` under `/domain/` — 404 `not a domain route` before 401; `/api/held` with an invalid Bearer — 200 (the coverage audit of P/06, the second pass)
+# N5 row 17: stand: `TIMEZONE` of its own at a cluster: `@env m1 TIMEZONE=Asia/Tokyo` — `/session` of the console `m1` hands out this word, the console `hold` — the former `UTC`; without the variable — `UTC` again
+# N5 row 18: stand: the shell of `testsub2` without identity — 302 to the login page with `return`, `HEAD` and a file — 401, with a human — byte for byte
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 15/2 | 35 s | time before an action: the domain has gone quiet — after the admission of members the next backup copy is not earlier than `BACKUP_EVERY` 30 s, it is brought by the pass of the agent 5 s; `$r` is the last copy (the silence is not to be observed: «no more copies will arrive» is an absence) |
+#
+# The scenarios of the chapter have no other sleeps.
+#

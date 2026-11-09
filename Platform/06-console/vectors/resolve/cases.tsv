@@ -18,3 +18,20 @@ resolve-11-term-zero	{"field":{"name":"marks","type":"list","inherit":[],"merge"
 resolve-12-no-inherit	{"field":{"name":"step","type":"int"},"domain":null}	@exit 2	a field without inherit, not document and not group_by — out of the form of the common section of P/02.1 (N3 resolve pre; C06-RESOLVE-ABSENT-INHERIT-91-01)
 resolve-13-union-not-string	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine",1],"domain":{"term":1,"rev":3,"value":["site"]}}	@exit 2	union: an element of the list is not a string — out of form (type list; N5 exit; C06-RESOLVE-UNION-FORM-01)
 resolve-14-rev-over	{"field":{"name":"marks","type":"list","inherit":[],"merge":"union"},"unit":["mine"],"domain":{"term":1,"rev":9007199254740992,"value":["site"]}}	@exit 2	rev greater than 2^53 − 1 — out of form (N5 exit; C06-RESOLVE-UNION-FORM-01)
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <L24 fragment>
+# There are four rows `@exit 2` in the table
+# <L25 fragment>
+# (`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); the other cases of code 2 are by reading (N5).
+# <README.md L40-48>
+# ## Source log
+#
+# The rows of `corrections.tsv` of the acceptance M11/11 about sc. 03 (the paths and numbers are the former ones, they are resolved by
+# `id-map.tsv` (historical record)):
+#
+# | date | sample | fix |
+# |---|---|---|
+# | 2026-10-19 | 03-resolve 11, 04-alarms 15 | the expectation @exit 2 (the dictionary M10/01, the Architect's decision on the reconciliation M11, H14): the form of a trusted input — code 2, for both implementations by the norm |
+# | 2026-10-20 | the move | sc. 03 (11 steps) from M11/11 — the rows of this table (stage B; the plan of the move of lesson 8, § 3, appendix) |
+# <06.7 N5 exit fragment>
+# rows resolve-11 … resolve-14 — @exit 2; the other cases — by reading

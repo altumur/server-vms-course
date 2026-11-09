@@ -29,12 +29,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 **Output** — `{"write_mark": "gone" | "expired" | null, "remove_row": true | false}`: which mark to write create-once and whether to remove
 the row (by CAS, with the rid from `asked`) in this pass. The comparison is JSON by value.
 
-38 rows: for `resource` — 10 (four states and no answer × the age 3599 and 3600 with `ttl` 3600: remove only `silent` ∧ ≥ `ttl`; C06-FREE-OWNER-33-01); for `fetched` — 28: `gone` to an absent unit (creation, the age 0, 29.999, 30 with `settle` 30, another `digest`), an unknown
-read of the unit, an ordinary append without a mark (it is not removed by `ttl` alone; `fetched` and `settle`); the append deadline without a holder,
-the boundary 3660 (`ttl` 3600 + `REAP_AFTER` 60) — 19 rows `expired-*` and `gone-after-expired`: the age 3659.999 — nothing, 3660, 3661,
-7200 — `expired`; `fetched` earlier — no mark, removal by its `settle`; `ttl` 0 and no key — no deadline; no unit — `gone`, not
-`expired`; the read of the unit is not confirmed — nothing; the mark `gone` earlier and `expired` earlier — the second one is not written; `settle` of the mark
-`expired` (0, 29.999, 30), another `digest`; a late `fetched` does not shift `settle`.
+38 rows.
 
 ## Run
 

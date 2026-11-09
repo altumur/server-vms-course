@@ -27,11 +27,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 fields whose unreadable count increased (`<sub>_console_rows_garbled{table="field"}`). The comparison is the array of lines byte for byte
 and the number.
 
-29 rows: all the keys — `name` (and a repeat), `type`, `labels`, `from` (`heartbeat`, `status`, the segment `<name>`), `agg` (`value`, `flag`,
-`age`, `label`, `count`, `sum`, `max`, `histogram`), `equals`, `when`, `default`, `live`, `count`, `where` (a word and a list), `unheld`,
-`unless`, `buckets`, `label`, `values`; the value is written in the canonical JCS number notation (P/06.5 N3: an integer < 1e21 in digits,
-otherwise the shortest ECMAScript notation — 1e+21, 1e-7, 1234567.5), escaping of a label; a boolean value in a numeric field
-(`value`, `sum`: true — 1, false — 0); rounding half to even for `age` (0.25, 0.35, 0.45) and `_sum` (7.0625) — C06-METRICS-ROUND-91-01.
+29 rows.
 
 ## Run
 

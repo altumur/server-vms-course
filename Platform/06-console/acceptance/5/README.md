@@ -25,41 +25,13 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 
 Scenario 01 compares the published page/module bytes with the P/07 canon: [console.html](../../../07-console-module/module/console.html), [console.js](../../../07-console-module/module/console.js) and [console.css](../../../07-console-module/module/console.css). Publication remains synchronous at the existing paths with `?v=1`; the existing refusal of `?v=2` stays unchanged. These file comparisons prove byte publication, not UI-language or date-format behaviour, which is checked independently by the module owner. The subsystem static-file inputs of scenarios 26–28 remain separate and unchanged.
 
-- **A pass of the second kind (sc. 32; ADR-0094 B1).** Step 1 starts the resource of the console's server: the observations in `/metrics` need a confirmed source even when there are no workers (chapter 6.5 N4; G06-NO-RESOURCE-01). `probe-x` declares `door.pass` of the second kind, it has no worker. Steps 2–3 — a refusal of the console by the form of the manifest: `no worker…` becomes `{code, message}`; step 4 — the first segment of the route, while the path is outside `api/v1`; step 5 — `apix`: the comparison is by whole segments. Steps 6–8 — there is no ticket with such a value: the console is open, and still the identity is only the ticket, 401; step 9 confirms that no unit was written. Step 10 — an open route does not read the ticket. Steps 11–12 — `probe_x_passed_calls_total 0` at `/probe-x/metrics` and the common `/metrics`: root includes all subsystems of the catalogue (N2 «Outputs»). Step 13 excludes only the own series `testsub_passed_calls_total`: `testsub` has no `door.pass` of the second kind (N3). A live ticket — [the stand of the pass of the second kind](../../../common/acceptance/pass/README.md).
 - **Processes.** Sc. 08–10 bring up processes by the directives of the «Stand» (`@start worker`, `@start resource`,
   `@start controller testsub2`); before `@start` there are no background processes. The worker is `w-1` of the subsystem `testsub` on `srv-a`.
 - **The store door.** Sc. 07 writes an intent row bypassing the controller: `@as testsubcontroller store` — the role socket of the
   controller `testsub` by the installation rights file (P/02.5). There is no controller `testsub` in sc. 07, nobody will
   rewrite the row.
-- **A place without a row (sc. 19).** The worker `t-1` of the subsystem `testsub2` on `srv-a` (`@start worker testsub2 t-1 on srv-a`);
-  its instance is the `holder` of the slot (`$t1`). The hold rows `testsub2/holds/s9` (the instance `$t1`) and `s8` (a foreign
-  instance `box:1:ffffff`) are written by the role of the worker `@as testsub2worker store` bypassing the worker; there are no rows `shelves/s9`, `s8`,
-  they do not become candidates of the worker. Step 4 waits for the heartbeat of `t-1` in `/testsub2/servers`. `s9` is a hold in effect:
-  200, `server` is the field of the heartbeat; `s8` — the instance is not the one, the hold is not in effect, there is no place row — 404 `s8@?`
-  (P/06.5 N3 `/where/<table>/<place>`; C06-WHERE-PLACE-SERVER-33-01).
 - **Spoiling a heartbeat.** Sc. 08 spoils the heartbeat by the directive `@spoil object`: after it the heartbeat is unreadable (P/05 N1.1). The worker is
   killed before that (`@sigkill`): its heartbeat remains an object and is no longer written.
-- **A restart of a worker under the former name (sc. 20, 21; the coverage audit of P/06).** The series `failover_seconds{kind=last,worker}` and
-  `failovers_unmeasured` (N3 «/metrics — text») are computed from the heartbeat fields `started`, `previous_hb`, `previous_instance`
-  (P/03.4 N1.1: what the worker found under its name at the start, P/03.2 N3 «start()» step 4). Sc. 20: `w-1` is stopped by
-  `@sigterm`; a new instance is started only after the release of the slot (`released: "true"`, step 5) — the last heartbeat of the former one is
-  written before the release (P/03.4 N3 «stop by SIGTERM» steps 3–4), so `started` of the new one is not less than `previous_hb`, the failover is
-  measured, `failovers_unmeasured 0` (the value of `failover_seconds` is a difference of times, the TSV does not fix it). Sc. 21: a found
-  heartbeat — the input `hb-w-1-future.json` with `ts` 9999999999: `previous_hb` is greater than `started`, `last` is −1, an instance with
-  `previous_instance` and an unmeasured `last` — `failovers_unmeasured 1`. Step 3 of sc. 21 waits until the objects door of the resource
-  gives out the input: the worker reads the found heartbeat through it. The series `kind=worst` — by reading (P/06.5-06).
-- **A write only by a ticket (sc. 33; ADR-0119 addendum (10), (11)).** Step 1 starts the resource so the final unit listing can confirm that there are no workers (chapter 6.5 N4; G06-NO-RESOURCE-01). `probe-w`: `unit.writes_via` and `tables.log.writes_via` are `[probe-x]` (P/06.1 N1.1a). The stand session (loopback, all rights) gets `403 writes via` for `POST`, `PUT`, `DELETE` of a unit, for the table `log` and for a batch row — the whole batch, a table row without the word in it is not written either (steps 8, 9). `PUT` and `DELETE` of an absent row — `403`, not `404`: the word is judged right after the parsing of the key, before the read of the row and the rights (steps 4, 5). The table `free` without the word is open (step 11), reading does not change (steps 12, 13). A write by the ticket `probe-x` and `may` of the person of the ticket — the pass stand; until it — by reading (P/06.1-35). The field `reason` of the row `access.denied` — by reading: the stand does not read the audit journal.
-- **A numeric id (sc. 22; the coverage audit of P/06).** `probe-x` (`id: numeric`): the first number is 1, the counter row `probe-x/next_id`
-  `{n}` is the last issued one (read by the role `console`), a tombstone does not return the number (P/06.1 N1.3 numeric); in the path `01` —
-  400 `badkey`, `%32` — the unit 2 (P/06.1 N2).
-- **The counter of the batch door (sc. 29; ADR-0094 B9).** `probe-x` (`id: numeric`), the steps through the door `POST /console/batch` (P/06.1 N2 «Batch door»): the number of the unit is named by the caller, the row `probe-x/next_id`
-  with `cas` goes in the same batch, `n` is the largest number of the batch; `POST /probe-x/probes` after the batch takes the next number (steps 6, 15). The index of the counter — through the door `GET /probe-x/next_id` (steps 2, 4, 7), the index of the unit row — through the store door by the role `console`.
-- **The counter door (sc. 30; ADR-0094 B4).** `GET /probe-x/next_id` (P/06.1 N2 «Counter door»), the door only reads: step 1 — an empty subsystem, `n: 0`, `index: ""`; step 2 — a batch by this read; step 4 — `index` equals the index of the store; step 6 — `testsub` with a named id — 404; step 8 — the counter row is removed bypassing the console (`admin`), step 9 — `n` by recover, step 10 — `POST` takes `n + 1`; steps 12–14 — an unreadable row: `n` by recover, `index` is its version.
-- **The weight field (sc. 23; the coverage audit of P/06).** `probe-x` has the field `cost: {type: int, default: 1}` and `placement.weight:
-  {field: cost, default: 1}` (the form — «Additional checks of run 25» of the acceptance README of chapter 6.1): POST without `cost` — 1;
-  `cost` 0 and −1 for POST and PUT — 400 `error: type`, `field: /cost`, `detail` «cost must be at least 1» without `fault`; `"1"` and `true` — 400 `not_number` by the ordinary
-  type check (earlier than the weight, the row check contract P2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
-  by refused POSTs the TSV does not compare.
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
   `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Manifests»).
   The files are acceptance data: the fonts are not real (magic and all byte values), `logo.svg` carries a script, `bundle.js` is 300045 bytes, two
@@ -72,27 +44,11 @@ Scenario 01 compares the published page/module bytes with the P/07 canon: [conso
   Sc. 28 by the role `admin` (the socket `admin.sock`) spoils the parts: `app.js` — not base64, `app.css` — base64 of other bytes (`x`), the part of
   `data.json` it deletes; `@restart console` — because the console is entitled to keep the checked bytes in memory (N2). The restart does not refuse:
   a file without bytes is an outcome of the door, not of the start.
-- **The holder's door in `/where` (sc. 24; the second pass of the coverage audit of P/06, Gemini).** The preparation is as in sc. 11 of the acceptance of
-  [P/04](../../../04-controller/acceptance/README.md): the controller `testsub2`, the worker `t-1`, the shelf `s-1` on `srv-a` (step 5 waits for
-  the hold), the unit `ta` — the controller puts it on `t-1`. `testsub2` has `door: {routes: [read, play]}`: `/where/ta` gives
-  the field `door` with the token `door1.…` (N3 «`/where/<id>`»), the console at the first issue creates `door/signer` — `seed_secret`
-  in an envelope of the stand ring, and writes its kid into `door/keys`. Step 10 rewrites `door/keys` by the role `console` (`$kid` → 64 `f`,
-  cas by the read version): another value under its own kid — there is no `door`, the row is not rewritten (the version `$kw` is the earlier one), the alarm
-  `door.keys_conflict {kid}` is in the journal (N3, N4). The check of the token by the holder — by reading (P/03.4-08).
-- **The slot and the contenders in `WorkerRow` (sc. 25; the second pass of the coverage audit of P/06, Gemini).** The heartbeat of `w-1` is the input
-  `hb-w-1-labels.json` (as in sc. 12); the slot row `testsub/slots/w-1` is written by the role `testsubworker` bypassing the worker: `released:
-  "taking"` — `released: false`, `slot_taking: true`, `slot_garbled: false`; then `gen: "x"` (not by the form of P/03.2 N1.4) —
-  `slot_garbled: true`, `slot_until: null`, there are no `released` and `slot_taking` (N2 «Issuance»). The contender marks are objects
-  `@put object`: under `w-1` with `name: "w-2"` (not equal to the key segment — unreadable, but fresh: a contender for `w-1`,
-  `name_conflict_unreadable: true`) and the search mark `-` (not a contender); the series `testsub_name_conflicts` is 1 (N3 «/servers»
-  «Contenders»; the vectors `contender-projection` `name-mismatch`, `dash-not-contender`).
 - **Series.** The expectation `~<series>[ <value>]` on the body of `/metrics` of the console (with the door prefix and without) — a series with this name (and
   exactly this set of labels, if named) and the value, if named; several — through « ~» (sc. 05 step 6, sc. 10
   step 3); not a substring: `fake_counter_age` does not satisfy `~counter_age`, a repeat of a series or a line not by the series form —
   a mismatch. Series without values: the value is not fixed.
 - **Feed series.** Sc. 31 runs on its own new instance of the console and the store: the counters `w2c_changes_*` count from the start, and the values 0 and 1 are correct only there.
-- **Shortage.** Sc. 09: `testsub2` has `grows: true`, there are no workers — the unit `t1` waits, the pass report names the shortage.
-  The answer of `/testsub2/metrics` is 200 with the series `testsub2_units_short`, not a break.
 
 ### Inputs `inputs/` (sc. 05, 11, 12, 21, 25)
 
@@ -116,17 +72,12 @@ Heartbeats of a given form are put by `@put object <key> inputs/<file>` bypassin
 | `ct-dash-b2.json` | `testsub/contenders/-/b2` | a search mark without a given name, `name: "-"`, `state: waiting` — not a contender for the name (sc. 25) |
 | `hb-t-1-belt-slow.json` | `testsub2/heartbeats/t-1` | `jam: "stuck"` (a word from `heartbeat.strings`), `belt.state: "slow"` — a word not from `heartbeat.strings` (C20) |
 
-Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_garbled 2`. Step 8 writes the row
-`platform/servers/srv-a` by the role `console` (P/02.5 N1.4).
-
 ## Stand of sc. 03 and 17 (from M10/10)
 
 The stand of sc. 13–16 with the controller `testsub` (`@start controller`) and the resource (`@start resource`); a catalogue of two manifests.
 The steps before `/metrics` of the console are preparation: the controller writes the snapshot shard `testsub/snapshot/unplaced`, the resource gives it out
 through the objects door (`@until 20`, `@time` — the dictionary of the «Stand»); their subject is the acceptance of [P/04](../../../04-controller/acceptance/README.md)
-(sc. 03, 08 with the same steps). The subject of the chapter: sc. 03 step 5 — the series `testsub_snapshot_age_seconds` (N1.3 `age`); sc. 17 steps
-7–9 — the controller is stopped, the shard is spoiled (`@spoil object`), `/metrics` 200 with `testsub_snapshot_garbled_shards 1` (N1.3
-`metrics`; N0 P/01.1 «Stability of output»). The row `testsub/counters/s7` with `start: notint` sc. 17 writes bypassing the console by the role
+(sc. 03, 08 with the same steps). The row `testsub/counters/s7` with `start: notint` sc. 17 writes bypassing the console by the role
 of the console (`@as console store`).
 
 ## Stand of sc. 13–16 (from M10/11)
@@ -139,20 +90,6 @@ the processes, resets the store and the variables.
 - **Time in a row (sc. 13).** The rule of N0 P/01.1 «Time in a row» (the Architect's decision of 2026-10-18), the reader side:
   the same course as sc. 16, but the door row is written with `at` with 6 fraction digits (`901.123456`, `906.654321`) — a write of a form
   that the reader accepts and the writer does not write; the outcome is the same.
-- **Sc. 15 step 1** (the former step 9 of sc. 15 of M10/11; steps 1–8 — in [the acceptance of P/01.3](../../../01-store/acceptance/3/README.md)):
-  `door.pass` of `testsub2` (`pass: [entries]`) without a worker with a door — 503 `{"error": "denied"}` (N1.8; reconciliation of python and go M10/6–11, B26; the word — GP-L03, the Architect's decision of 2026-10-28); the door
-  `console2` is the same console with the prefix `/testsub2`.
-- **Sc. 16** (reconciliation of python and go 2026-10-18): the heartbeat of the resource is spoiled (`@spoil object`), while the door row is fresh — the state
-  `unreachable` (`resource_state` of [the observation contract](../../../common/contracts/observation.md): the rules in order,
-  an unreadable heartbeat does not confirm life). The resource is stopped before the spoiling so that it does not rewrite the heartbeat; the runner
-  changes the door row itself by the role `resource`.
-- **The deadline of 90 s** of sc. 14 is the waiting limit of exactly this stand; after `@sigkill` the heartbeat seen earlier is used.
-
-### Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 16/6, 13/6 | 5 s | time before an action: two writes of the door row by the role `resource` are spaced by the clock of the console — the row is fresh, while the heartbeat is spoiled (`unreachable`, `resource_state` of the observation contract) |
 
 ## Full form and reproducibility
 

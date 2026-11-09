@@ -53,10 +53,39 @@ This is the fixture's selected configuration, not a fallback of a running proces
 
 ## Rules
 
-The writing rules are the header comment of the table (a string, `true`/`false`, a top-level `null`, a number by JCS, the length by the
-written text, canonical JSON of a dictionary and a list, the value of a `json` field as is, the ceiling `JSON_CEILING` 4000 bytes
-of UTF-8, not JSON — a refusal without repair). The round trip: a value read and filed again is written the same way, byte for
-byte — both sides file each accepted `json` row a second time with the read value.
+The writing rules (the same text stays in the header comment of the table, ADR-0133 addendum (1)):
+
+```text
+  scalars in a request row
+    true / false      the JSON text: true, false (not Python's True)
+    null              at the top level of a `json` field: the field is ABSENT from the row (M10/3 N1.2: «null value —
+                      absent»); at the top level of a request field: the JSON text null (M10/8 N1.5 «another value —
+                      canonical JSON»); an empty string is the empty string; inside a JSON value a null stays null
+    a number          JCS (RFC 8785, ADR-0072; M10/8 N1.5 «another value — canonical JSON»): ES6
+                      Number.prototype.toString of the IEEE-754 double — a whole value in integer digits below 1e21
+                      (5, not 5.0; -0 is 0), otherwise the shortest form that reads back as the same double, with an
+                      exponent below 1e-6 and from 1e21 (1e-7, 1e+21); digits past the double are rounded
+                      (9007199254740993 → 9007199254740992); one past float64 (1e400) is refused by the body's parse
+                      (corrected to JCS 2026-10-18, stage A of ADR-0083: the old «never an exponent, never through a
+                      float» predates ADR-0072)
+    a string          as it is, unquoted, its own quotes its own; a string that looks like a number or a boolean
+                      stays the string; what type a field is, the schema says, not the text
+    length            the schema's maxLength over the WRITTEN text (1e40 is written 1e+40: 5 characters); the writing
+                      function does not judge length
+  the canonical JSON (JCS, ADR-0072) — a dict or a list in a request row, and any value of a `json` field: compact,
+  a dict's keys sorted by UTF-16 code units (U+1F600 before U+FB33), UTF-8 as it is (no \u escaping; no HTML escaping of < > &; / not escaped), U+2028/2029 raw, control
+  characters as json.dumps(ensure_ascii=False) writes them (\b \f \n \r \t short, the rest \u00xx lowercase),
+  numbers inside by the scalar rule, a null inside stays null. A `json` field's value is taken AS IT IS: a string
+  is a string document ("s" is stored "s"), never parsed again; the page parses its own text box before it sends,
+  its «not JSON» under the box (ADR-0002); not_json at a `json` field is only a body that is not JSON. Round trip:
+  the value read back and filed again is stored the same, byte for byte — both tests file every taken `json` row a
+  second time with the value they read. The ceiling of a `json` field: its canonical text's BYTES of UTF-8,
+  JSON_CEILING 4000: too_long. One canonical function each side.
+  A body that is not UTF-8, holds a lone surrogate or a number past float64 is not JSON: at the unit and table doors a
+  400 with `fault: not_json` (M10/3 N3, N4; words of fault.tsv); at the request door a 400 RequestError WITHOUT `fault`
+  — that door's only fault is too_long (M10/8 N2, N4; stage A review SA1-17).
+  not JSON is refused, never repaired: NaN, Infinity, a lone surrogate (\ud800) — not_json, not U+FFFD.
+```
 
 ## Run
 

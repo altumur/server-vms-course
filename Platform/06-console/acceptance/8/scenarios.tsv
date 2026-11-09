@@ -190,3 +190,48 @@ scenario	step	request	expect
 12-doors	12	"@as console store POST /v1/write {\"id\":\"c1\",\"op\":\"put\",\"key\":\"platform/folders/00000000000000000000000000000002\",\"items\":{\"name\":\"\"},\"cas\":\"\"}"	"200"
 12-doors	13	"GET /folders"	"200 {\"folders\": [{\"id\": \"00000000000000000000000000000002\", \"garbled\": true}, {\"id\": \"$f\"}]}"
 12-doors	14	"GET /folders/00000000000000000000000000000002"	"503 {\"error\": \"unavailable\"}"
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L23-29>
+# - Sc. 03 steps 11–14: the key `testsub/counters/<1007 bytes>` is exactly 1024 bytes: the unit row is representable, the membership key is longer than the limit — `400 bad member`. The neighbour at 989 bytes gives a membership key of exactly 1024 bytes and passes.
+# - Sc. 04: a chain of eight folders — `FOLDERS_DEPTH_MAX`; the ninth — `too deep`. Steps 13–16: a tombstone of an ancestor in the middle of the chain.
+# - Sc. 05 step 8: a write over a tombstone goes through the batch door, because `PUT` and `DELETE` of such a folder answer 404.
+# - Sc. 09: the boundary `FOLDERS_PER_UNIT_MAX`: the eighth folder passes, the ninth — 400, the deletion of a unit at the boundary removes all eight.
+# - Sc. 10 step 5: the store door removes the unit row bypassing the console door, as the controller does by `placement.ends`: `testsub` has no such deadline, so the scenario itself does the write, by the role `console`, as in sc. 19 of chapter 6.1. Until the pass of the reaper the member hangs; the scenario waits only for the end of the window, because the moment of the pass is not subject to the stand.
+# - Sc. 11: a batch of a unit with a folder. Steps 6–7 and 12 — a refusal by `no chain`, `no membership`, `parent gone`; `$ip` is the index of the parent, `$t` is the index of its tombstone.
+# - Sc. 12 steps 12–14: a row with an empty `name` is written by the store door by the role `console`, bypassing the folder door. A folder with this id is neither live nor dead: `garbled` in the list, 503 for a single one.
+# <README.md L41-47>
+# The plan of the rights scenarios, when the norm `may` is entered (a domain stand, `@person`, grants rows — as in [the acceptance of chapter 8.4](../../../08-domain/acceptance/4/README.md)):
+#
+# 1. a person with `edit` on a unit without `admin`, the unit is in a folder: `DELETE` of the unit — 200, the folder is without it;
+# 2. the creation of a unit with a folder row without `admin` over the folder — 403, nothing is written;
+# 3. a write of a folder without `admin` over it — 403; with `admin` on `folder:<ancestor>` — 200;
+# 4. adding and removing a unit with `admin` over the folder, without `admin` on the unit — 403;
+# 5. deleting a folder with a role row `folder:` on a descendant without `admin` on `*` in `sub` of this row — 403.
+# <README.md L55-59>
+# ## Shared reader and writer bounds (Z-10)
+#
+# The family schemas apply their existing `$defs.writer` through root `allOf` for the reader as well: `folders.members` uses FOLDERS_MEMBERS_MAX, `memberof.folders` uses FOLDERS_PER_UNIT_MAX. The existing [family-read table](../../../common/vectors/family-read/06.tsv) has the six appended `06-z10-*` boundary cases, plus the preexisting `06-rights-8033` and `06-rights-8034` cases at nine memberships. The latter reader case changes only its expected verdict/paths/outcome and note by ADR-0129 addendum (12); its input and identity are unchanged.
+#
+# The exact folder boundary is accepted in both modes; one extra member is unreadable in reader mode. Eight memberships are accepted; nine use the existing whole-row unreadable outcomes. The old HTTP scenarios and their count are unchanged: no standalone reaper/installer run is claimed by this vector/source addition. Reads in R013/R014/R016/R018 use this same family check and their existing outcomes, without truncation or an extra transition/refusal. B1 and execution of P02 recovery remain open.
+# <06.8-console.norms.md N5 table rows>
+# N5 row 01: create, rename, give out; a write without changes does not change the index; the form of the body
+# N5 row 02: member list: the order, the membership rows, removing the last folder removes the row; `If-Match`, `412`; a repeat of `Idempotency-Key`, another body — 422
+# N5 row 03: members: a repeat, the table not declared, no unit, a reference not by the form — 400
+# N5 row 04: the parent in an edit — 400; the depth at the boundary and beyond it; the parent not found, a tombstone
+# N5 row 05: delete, create a new one — no subfolders; a write over a tombstone by a batch — refusal; the id does not repeat
+# N5 row 06: deletion of a non-empty folder: 404 at once, for the subfolders too, the units in place; the reaper removes the subfolders and the membership
+# N5 row 07: unit deletion by the door: absent from the folders, a new index of the folders, no membership row; a folder deleted before the unit
+# N5 row 08: both sequences: a unit deletion, then a member-list edit — 400; an edit, then a deletion, a new folder included
+# N5 row 09: the boundary `FOLDERS_PER_UNIT_MAX`: at the limit the deletion passes, beyond it — 400
+# N5 row 10: deletion past the door: the member dangles, the reaper removes it and the membership row
+# N5 row 11: the batch door: a unit and a folder in one batch; no chain guard, no membership row, a write under a deleted ancestor — refusal
+# N5 row 12: `?member=`, `HEAD`, a method, a long path, a segment not an id
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <06.8 lines about the witness sizes>
+# records codec entities 1048575/1048576/1048577,
+#  The padded boundaries explicitly use V=1048576, not the default 524288. Our escaping packet is 1380972 bytes, not the reviewer's 1380980; its 450000-quote unit fits the default row ceiling.
+# byte witnesses1048575/1048576/1048577 and own1380972 in
+# <README, witness sizes>
+# : 1048575/1048576/1048577, extra LF, alternative escaping and the own 1380972-byte counterexample. The padded cases use V=1048576 rather than default 524288;
+# <README, reaper wait>
+# : scenarios 06 and 10 wait for it with `@until 90`. This deadline is an upper bound: the step ends as soon as the sign is there.

@@ -483,7 +483,7 @@ The catalogue [`acceptance/`](../acceptance/README.md): the stand of several clu
 
 ```yaml
 alarms:    the input — N3 alarms; the output {events, members, complete, sentence}
-exit:      0 — computed; 2 — an input not by the form (the rows alarms-15, alarms-17…23, alarms-31…37 — @exit 2: lost_after, a member name, page without
+exit:      0 — computed; 2 — an input not by the form (lost_after, a member name, page without
            last_report, sent_at null at a member with a report, history with cut_before null, a witness without ts, reported together with last_report,
            an extra field, a missing or malformed silent_after in either member form; the other cases — by reading; a page [], from > to, a row without id — 0 unreadable, the rows alarms-24…26); the exit codes are by the principle of «Domain stand» of the common README of acceptance («Exit codes of vector commands»: 2 — the form of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of M11, H14).
            Not by the form at alarms: a member name not by the member grammar, lost_after not > 0, silent_after absent or not a finite positive number (boolean and null are not numbers), a history or a witness not by the form of P/08.9 N1.9
@@ -496,22 +496,22 @@ exit:      0 — computed; 2 — an input not by the form (the rows alarms-15, a
 
 | № | Scenario | Norms |
 |---|---|---|
-| 02 | stand: the agent `m2` is turned off — `silent` in the delivery, the alarm row `silent` in `/domain/alarms`; a window not by the grammar and `since > until` — 400; it came back — took the document | N1.8; steps 04, 09 (delivery) — N1.2f; step 11 (the agent signature at `/events` of the member console) — a neighbour on the stand |
-| 05 | stand: the holder's page — `/`, the module, `/manifest`, `/mounts`, `/session` with `server_time`, `timezone` | N1.7 |
-| 06 | `no-domain-here` (the coverage audit of P/10, K01): the domain is not installed — the gate is `open`, there is no view; `GET /domain`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/shared`, `/domain/testsub/counters` — 404 `no domain here` | N1.2a, N1.2b, N1.2c, N1.2f; N4 |
-| 07 | `view-unreadable` (the coverage audit of P/10, K01): the process `domain` is stopped, the view is spoiled — 503 `unavailable`, not 404, at `GET /domain`, `/domain/members`, `/domain/testsub/counters`, `/domain/shared`; the shadow is spoiled — 503 at `/domain/shadow` | N1.2a, N1.2b, N1.2f; N4 |
-| 08 | `pass-process-down` (the coverage audit of P/10, K02): the process `domain` is stopped — an edit and a people door (and `GET`) — 502 `did not answer`, its own read door answers; after the return the same edit — `rev: 1` | N1.3 `pass`, N1.3a; N4 |
-| 09 | `pass-process-silent` (the coverage audit of P/10, K03): the process `domain` is frozen (`@freeze`) — an edit — 502 `did not answer`; after `@thaw` — `rev: 1` | N1.3 `pass`; N4 |
-| 10 | `read-doors-head-and-query` (the second pass, G02): `HEAD /domain`, `/domain/topology` — 200 without a body; `?cluster=` empty or twice — 400; there is no manifest, `rows` is not its own — 404 | N1.2, N1.2a; N4 |
-| 11 | `topology-placement-unreadable` (G02): `domain/topology`, the counter `domain/placement`, a placement record not by the form — 503 `unavailable`, not `rev 0` and not 404; the former counter — 200; there is no record or manifest — 404 | N1.2c, N1.2d; N4 |
-| 12 | `shared-and-members-unreadable` (G02): the pointer `domain/shared` not by the form — 503, not `doc: null`; the row `domain/member-rows/<part>` not by the form — 503 at `/domain/members` and of the whole door `/domain/alarms` | N1.2b, N1.2f, N3 `alarms`; N4 |
-| 13 | `alarms-query-lexemes` (G03): `since`/`until` not by the grammar of `time` (`1e3`, `-1`, `+1`, « 1», `1_000`, `1e10`) — 400 `refused`; `since` twice — 400; `%31` — accepted | N1.8 `door`; N4 |
-| 14 | `alarms-mark-unreadable` (G03): the mark `reported` is spoiled — the door 200, the member `unreadable` without `known_until`, `silent_since` | N3 `alarms` |
-| 15 | `dot-segments-and-x-user` (G04): without a token a segment `.`/`.%2E` — 404 `not a domain route`, not 401; an arrived `X-User` is stripped — 401, `/session` is anonymous; with a token — the identity from the token, the grants in `/session` | N2, N1.4, N1.5; N4 |
-| 16 | `gate-rows-unreadable` (G04): `domain/disabled`, `domain/revoked`, `domain/grants/domain`, `domain/keys` not by the form — 503 `unavailable`, not 401/403; the former value — 200 again | N1.5; N4 |
-| 17 | `read-versions` (ADR-0094 B4): `ETag` of the doors of one row; `index` of the records and `versions` of the grants equal the index of the store; `If-Match`, `Idempotency-Key` and `ETag` go through the cluster console and the domain console | N1.2; the forwarding contract `pass`, `answer`; P/08.0 N1.9 |
-| 18 | `kept-door`: `GET /domain/<sub>/kept/<name>`: the mask `*_secret` in depth and `enc:`, a family and the undeclared — 404, forwarding at the member console; without an identity 401, a non-viewer 403 also on the undeclared: the right before 404 | N1.2a; P/06.2 N1.4 |
-| 19 | `relay-door`: `GET /domain/relays/<relay>`: the names behind the relay without keys, a relay without members — empty, not a member — 404, a non-viewer — 403 also on the undeclared: the right before 404, forwarding at the member console, without an identity 401 | N1.2a; P/08.3 N1.2 |
+| 02 | `02-silent-member` | N1.8; steps 04, 09 (delivery) — N1.2f; step 11 (the agent signature at `/events` of the member console) — a neighbour on the stand |
+| 05 | `05-the-holders-page` | N1.7 |
+| 06 | `06-no-domain-here` | N1.2a, N1.2b, N1.2c, N1.2f; N4 |
+| 07 | `07-view-unreadable` | N1.2a, N1.2b, N1.2f; N4 |
+| 08 | `08-pass-process-down` | N1.3 `pass`, N1.3a; N4 |
+| 09 | `09-pass-process-silent` | N1.3 `pass`; N4 |
+| 10 | `10-read-doors-head-and-query` | N1.2, N1.2a; N4 |
+| 11 | `11-topology-placement-unreadable` | N1.2c, N1.2d; N4 |
+| 12 | `12-shared-and-members-unreadable` | N1.2b, N1.2f, N3 `alarms`; N4 |
+| 13 | `13-alarms-query-lexemes` | N1.8 `door`; N4 |
+| 14 | `14-alarms-mark-unreadable` | N3 `alarms` |
+| 15 | `15-dot-segments-and-x-user` | N2, N1.4, N1.5; N4 |
+| 16 | `16-gate-rows-unreadable` | N1.5; N4 |
+| 17 | `17-read-versions` | N1.2; the forwarding contract `pass`, `answer`; P/08.0 N1.9 |
+| 18 | `18-kept-door` | N1.2a; P/06.2 N1.4 |
+| 19 | `19-relay-door` | N1.2a; P/08.3 N1.2 |
 
 The doors of the lesson on the stand of the chapters of lesson P/08 are neighbours on the stand (the rule «scenario — in the chapter of its outcome, neighbours — on the stand»,
 ADR-0083 addendum (13)):

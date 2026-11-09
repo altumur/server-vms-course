@@ -21,8 +21,7 @@ of the mark object, `age` — the age of the observed version on the console clo
 `name_conflict`, `name_conflicts` as well), in ascending order of bytes; the key is absent when there are none (V7 item 3, the Architect's decision of 2026-10-28, P1; row 22 of the list); the comparison is JSON by
 value.
 
-7 rows: three marks of one name (two `refused` and `waiting`), the mark «-», any `state`, the boundary 300 / 300.001, `name` ≠
-the key segment (an unreadable fresh mark — a conflict with the flag), a name without a worker, a fresh and a stale one under one name.
+7 rows.
 
 ## Run
 

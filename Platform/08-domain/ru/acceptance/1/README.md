@@ -30,15 +30,6 @@ M11/06 (06 → 15) (стадия B, ADR-0083 доп. (1): без изменен�
 
 Формат — словарь «Стенда» и словарь домена; ожидание — подмножество полей.
 
-| № | Сценарий | Шагов | Что |
-|---|---|---|---|
-| 04 | `cut-and-mend` | 5 | `@cut m1` — через LOST_AFTER `silent`, `complete: false`; `@mend` — снова `ok` |
-| 06 | `view-on-the-stand` | 8 | две единицы в двух членах, поиск по ref, `?cluster=`, `no such member`; `contested` пуст; теневой отчёт — `unmanaged` 2, `may_write: false` |
-| 07 | `view-unseen-and-silent` | 7 | после перезапуска `domain` члены `unseen`, затем `ok`; молчащий — `silent` |
-| 08 | `view-configured-and-stale` | 8 | единица без воркера — `configured`, `unobserved`; воркер убит — `stale` |
-| 09 | `view-contested` | 5 | один ref в двух членах — `contested`, единицы нет в `units` |
-| 15 | `shadow-and-executors` | 6 | назначение с `copies`: заявки исполнителей из `cluster` и `copies` — не `conflict`; назначение без единицы — `orphaned` после SHADOW_STALL |
-
 Сценарии 06–09 повторяют на стенде сценарии 01–05 приёмки M11/01 (векторы `view`): настоящие отчёты агентов в
 `domain/members/<member>/reports/<rev>` и вид держателя.
 

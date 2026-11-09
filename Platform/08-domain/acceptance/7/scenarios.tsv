@@ -56,3 +56,39 @@ scenario	step	request	expect
 07-kept-token-revoked-word	13	holder DELETE /domain/issued/testsub2/vault/t1	200 {"revoked": "@not($j1)"}
 07-kept-token-revoked-word	14	@until 60 @verify m1 vault $t4	ok {"result": "refused", "reason": "revoked"}
 07-kept-token-revoked-word	15	holder DELETE /domain/issued/testsub2/vault/t1	404
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <L20 fragment>
+# (400 `request_id`, 413 `TOKEN_BODY`, 404 `<sub>` not from the catalog)
+# <README.md L11-11>
+# Scenario 07 is a token of a `keep` kind and the word `revoked` (ADR-0110 addenda (10)–(16); P/08.2 N1.6a `jti`, `door`; P/08.7 N1.3 `body`; roadmap 4.5). The kind `vault` of the manifest `testsub2` is `keep: true`. Steps 3–6 — `jti` is constant for the target. Steps 7–8 — a word not equal to the `jti` of the row is an ordinary request, `jti` is the earlier one. Steps 9–11 — a word equal to the `jti` of the row: so asks a member whose receiver refused the token with `revoked` while the holder does not know of the revocation (a copy older than `DELETE`); the holder puts `jti` into `domain/revoked` in one batch with the new row, issues a new `jti`, the earlier token is refused at the member by the revocation. Step 12 — a word at a kind without `keep` — 400. Steps 13–15 — `DELETE` revokes the tokens of the target, a repeated one — 404. The copy older than `DELETE` itself (the transfer from a copy), the raise of `exp` at a restore, the limit `REVOKED_WORDS` and a full row `domain/revoked` (409) — by reading: the stand does not hold a copy before `DELETE` longer than `BACKUP_EVERY` and does not fill the revocations row.
+# <README.md L39-54>
+# - Sc. 02 steps 7–8 — the body limit: 4096 bytes at the local door pass to the holder (`no_assignment`), 4097 — 413 at the local
+#   door; `TOKEN_HOLDER_BODY` 4608 at the holder's door — sc. 04.
+# - Sc. 02 steps 9–11 — the member's clock outside the window of the agent signature: 401 at the holder, then the clock back
+#   ([the agent signature contract](../../../common/contracts/agent-signature.md)).
+# - Sc. 01 step 7 — a forged token (`@spoil`) at the receiver — `bad_signature`.
+# - Sc. 04 — the holder's door `POST /api/tokens/m1/testsub/tally` through the door `signer` (the process `domain` on `hold`, like
+#   `POST /api/relay` in sc. 18 of [the acceptance of chapter 8.3](../3/README.md)), without an agent signature, a `@raw` body of the bytes `x`: exactly
+#   4608 bytes — the limit is not exceeded, the first check after it is the signature (`m1` is a member with a key in the record): 401 `no_signature`
+#   ([the agent signature contract](../../../common/contracts/agent-signature.md)); 4609 — 413 `refused` before the signature and the parse
+#   (the local token door contract `refusal_413`; N1.3 `body`).
+# - Sc. 05, 06 (the coverage audit of P/08, the second pass of Gemini, the draft G08 `e32df6f8b`, rewritten): the holder's rows are spoiled past the door (`admin.sock`).
+#   Sc. 05 — the record `domain/placement/testsub/c1` without `copies` is unreadable (the M11 check, T2; the outcomes of the family, G-35): `tally` — 403
+#   `assignment_unreadable` (N3 step 5; the vector `issue-08` is the same record as the input `"garbled"`). Sc. 06 — `domain/topology` is not
+#   JSON (N3 step 4a): `tally` (the scope `placement` with `target_fields` `[cluster, copies]`) does not take the topology — 200; `probe`
+#   (the scope `unit`, `poll_home`) — 503 `unavailable` before the scope; the local door passes the code and the body of the holder as they came
+#   (the local token door contract `answer`).
+# <08.7-domain.norms.md N5 table rows>
+# N5 row 01: stand: `tally` to the member from `origin` of the assignment — a token; accepted by a cluster from `aud`, rejected by a cluster outside `aud` (`wrong_audience`) and with a foreign kind (`wrong_kind`)
+# N5 row 02: stand: a role not in `grant`, a member not `origin`, no assignment — 403 with a word; `<sub>` not from the catalogue — 404 at the agent (reconciliation of M11, T8)
+# N5 row 03: stand: the local door of the agent — a second `Host`, a second `Content-Length`, `Transfer-Encoding`, headers more than 16 KiB — 400 `bad request`; a body more than `TOKEN_BODY` — 413 `refused`; an answer with `Connection: close`; the input deadline — by reading
+# N5 row 04: stand: the holder's door through `signer` without the agent's signature — a body of exactly `TOKEN_HOLDER_BODY` (4608 bytes) reaches the signature check (401 `no_signature`), 4609 — 413 `refused` before the signature and the parsing (coverage audit of P/08)
+# N5 row 05: stand: an assignment record without `copies` in the holder's store — `tally` 403 `assignment_unreadable` (coverage audit of P/08, second pass by Gemini)
+# N5 row 06: stand: `domain/topology` does not read — `tally` (a scope without topology) 200, `probe` (`poll_home`) 503 `unavailable` (coverage audit of P/08, second pass by Gemini)
+# N5 row 07: stand: the kind `vault` with `keep` — `jti` is constant for a target; the word `revoked` not equal to the `jti` of the row — an ordinary request; equal — `jti` into `domain/revoked`, a new `jti`, the former token is refused; the word at a kind without `keep` — 400; `DELETE /domain/issued` revokes the target, a repeat — 404 (ADR-0110 addendum (10)–(16); roadmap 4.5)
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# There are no sleeps. The member's clock is moved by `@clock` (sc. 02 steps 9, 11).
+#

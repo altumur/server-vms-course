@@ -22,8 +22,8 @@ source of these cases.
 Without a stand: the command `issue` of an implementation gets the input (the column `input`) and prints JSON; `expect` is a subset of the fields
 of the output by the dictionary of the «Stand» ([the common acceptance README](../../../common/acceptance/README.md), `<code> <JSON>`: the named fields
 exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not of the form of N5, including
-a `decl` not of the loading form of [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md)). There are three `@exit 2` rows
-(`issue-37`, `issue-38`, `issue-keep-too-long`); the other 37 inputs are of the form. `iat`, `exp` are from the `now` of the input, not from the process clock.
+a `decl` not of the loading form of [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md)).
+`iat`, `exp` are from the `now` of the input, not from the process clock.
 
 ## Inputs
 
@@ -45,17 +45,6 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | File | Input → expectation |
 |---|---|
 | [`cases.tsv`](cases.tsv), 40 rows: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` is the input of `issue` as JSON text → `expect`: `{"result":"ok","claims":…}` (the claims of N1.4: `iss`, `sub`, `kind`, `iat`, `exp`, the claim of ref and of the audience from the scope that gave the audience, at `scenario` — `by`, `acts` by JCS, `up`) or `{"result":"refused","status":…,"reason":<word>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
-
-| Cases | What it checks |
-|---|---|
-| 01, 06–09, 30 | `placement`: the audience `cluster` and `copies`; not `origin`, the name in the record is not a member — `outside_scope`; there is no record — `no_assignment`; unreadable, without `copies` — `assignment_unreadable` |
-| 02–05, 22, 24 | the order of the first steps: the role is not in `grant`, there is no kind — `not_granted`; the body is not of the form — `bad_request`; `by` not at `scenario` and absent at `scenario` — `by_misplaced`; `not_granted` before `by_misplaced` |
-| 10–12 | `unit` `self`: the owner is this member; not the owner, two owners — `unit_not_unique` |
-| 13–15, 27 | `placement` without a record falls to `unit` (`poll_home`): the relay is the nearest door of the owner; not it — `not_poll_home`; `centre` without a centre — `no_centre`; `poll_home` through `centre`, not the holder |
-| 16–21, 23, 25, 26, 28, 29 | `scenario`: directly, behind a relay (`up`), the lift of the relay, the home by placement; no element, a foreign `by`, no document, a name twice — `no_item`; `acts` by JCS; the home is unreadable — `no_home`; the home is not a member — `no_audience` |
-| 31–36 (the coverage audit of P/08, the second pass) | `star_centre` (N1.1 `computed`): the `cluster` of the record in `star` — `centre` in the audience, without `centre` — `no_centre`, outside `star` — nothing; `origin` `""` with `caller: origin` — `outside_scope`, in `target_fields` — not in the audience; `scenario` behind a relay ≠ the home without `centre` — `no_centre` |
-| 37, 38 (the coverage audit of P/08, the second pass) | an input not of the form — `@exit 2`: `decl` not of the loading form (`lifetime` 0, the M11 check, T4), `now` as a string |
-| `keep-too-long`, `keep-ok` (ADR-0110 addendum (10) item 2) | `decl` with `keep` and `lifetime` greater than `KEEP_OLD` — `@exit 2`; `keep` — the assertions are the same, `jti` is not judged |
 
 The vectors are checked by an oracle against the text of the norms (N1.1 `computed`, N1.3 `body`, N1.4, N3 «issue»), not against the code of implementations: the output
 of the oracle contains the expectation of each row. The rows `issue-31`…`issue-38` (the coverage audit of P/08, the second pass of Gemini, the draft

@@ -51,43 +51,6 @@ the fields of an expectation does not cancel the full form of the answer by the 
 by default is set anew for each scenario; an explicit @as acts on the subsequent
 store requests of this scenario. ASSERT does not perform an HTTP request.
 
-In scenario 05 at t4 `feed_secret: ""` is expected: the field is declared a string without default/inherit,
-and on the creation of t4 it was not passed. It gets the empty form by chapter 6.1 N1.2. At t1–t3
-a mask is expected; the absence of the secret field is checked separately at the table shelves — sc. 10: the file does not write `shelves` rows before it,
-`GET /shelves` sees one row `sh1`; in the store row the secret is an envelope `enc:v2:`, in the answers of the tables
-door there is no field `feed_secret` at all (`TableRow`: `*_secret` are excluded, chapter 6.1 N2), not a mask.
-
-## Coverage audit of P/06, second pass (Gemini)
-
-Sc. 11 (`audit-coverage-gemini` 0a5ae79f9) — resealing at start (N3 «reseal at start»): the role
-`console` writes past the console the unit row `t11` with an open `feed_secret`, the table row `sh11` with an open
-`feed_secret` and `door/signer` with an open `seed_secret` (kid `k-acc`, the seed — 32 bytes `0x1f`); after `@restart console`
-(steps 5–8 — `@until`: the resealing pass runs at start, the port may open before its end) all three are an envelope
-`enc:v2:`, the `revision` of the unit is the former `1`; `door/keys` is `{k-acc: <seed public key>}` (chapter 6.5 N3 «`/where/<id>`»
-`door/keys`: one's own kid at start, after the resealing). The Ed25519 public key of the seed `1f…1f` is
-`43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de` (RFC 8032, obtained by the library `cryptography`).
-The file does not write the rows `door/signer`, `door/keys` before sc. 11: `/where` is not called in the scenarios of the chapter. Resealing under
-the former kid — by reading: the stand has one ring.
-
-## Reconciliation of python and go M10/6–11
-
-- Sc. 02 steps 5–6: a mask with a Unicode whitespace character at the edge (`\t***`, `\u00a0***`) — 400 (N1.1 `mask_in`, S12).
-- Sc. 04 steps 9–14:
-  - unparsable urls (`https'://`, a space before `://`, `https:%3A//`) — 400 `bad_url` (S3);
-  - `'` in the host name does not cut the address: `token` after it is a password (A2, S4);
-  - a password in the nested address `via` and in the pair `who`, hidden by escaping, — a refusal without the login field `feed_user`
-    (A8 «View», A7, A15; S16).
-- Sc. 07: the json field `rule` of the manifest `testsub2` with nested `pw_secret`.
-  - A permutation of the elements `cams` without passwords: in the answer and in the store row there are no secrets, the password of A does not go to B
-    (N3 step 3, S1).
-  - A nested `null` is given as `null` (S20).
-  - A nested secret as a number — 400 (S13).
-- Sc. 08: a change of `feed` at a unit without a secret — 400 «must be given anew», with a secret — 200 (N3 step 3, S9).
-- Tables, rows at the end:
-  - `secret-in` — `'`, `<` and a character outside the grammar without a password (S4);
-  - `log-mask` — the value of a secret pair whole, a name decoded into pairs, `<` inside a value, a JSON token
-    (S17, S4, S18).
-
 ## Checks outside the scenario file
 
 - Full bodies of secret refusals: detail/error are mandatory; bad_url only for an address;
@@ -107,35 +70,6 @@ the former kid — by reading: the stand has one ring.
   profile of the chapter all the old keys are kept; status does not confirm the possibility of deleting them.
 - GET of a table without secret fields, nested secrets, snapshots, the log, argv and the heartbeat are
   separate subjects of reading of N5. File permissions and the opening by a worker are confirmed by the stand.
-
-## Counterexamples of run 31 and close admissible cases
-
-1. A separate new instance without SECRETS_KEY, an empty claim memory, c1 prepared.
-   POST /tallies with the key x and the body {name:t1, of:c1, feed:https://hub.example/a,
-   feed_secret:alpha} — 400 with the exact refusal body of N4, without fault. Replace only alpha
-   with bravo, keep x — the same refusal; there is no unit, no claim, no reserved number.
-   Repeat with a nested secret in an admissible JSON field of a separate manifest; absence,
-   an empty string and null are not a non-empty secret (the other form checks are kept).
-   A POST without a secret stays an ordinary creation, its repeat works by chapter 6.1.
-2. With the ring k1: the same POST with alpha creates a unit, an exact repeat returns the former
-   answer; replacing only the secret with bravo gives 422 key reused and changes nothing.
-   This is the last step of scenario 01. Also check a former pending younger/older than CLAIM_TAKEOVER_AFTER
-   by the rules of chapter 6.1: the prohibition without a ring does not remove a foreign claim; a set unreadable
-   ring stays 503, it is not replaced by the mode without a key.
-3. With the ring k1 leave the done claim of the original POST, then by PUT change the secret of the unit.
-   Stop the ordinary writes, add k2, restart the holders, reseal
-   the rows and get zero old envelopes. k1 stays in the ring; the exact original
-   POST under the former key returns the old answer, a changed one — 422. Do not recompute
-   the HMAC from the current unit and do not compare the old claim only under the current k2.
-4. Parsing of the ring: the line #backup + 64 hex is a comment, a ring of only it is empty
-   and unreadable. # a note, an empty line, then k1 + 64 hex — a correct ring;
-   a#b + 64 hex — an admissible imported kid for open/seal, but not for rotate.
-   k1 + 64 hex + #tail — a wrong entry. In the diagnostic of a foreign kid it is
-   exactly the name of the envelope (for example, k9) that is shown, without its key bytes.
-
-This is a specification of additional probes, not a statement of execution by an implementation.
-
-Probes of run 32: a set unreadable ring gives SealingUnavailable on all POST/PUT of units, including a body without secret and with an empty/null/omitted secret, before the HMAC/claim; GET/DELETE — the ordinary outcomes. An unset ring keeps a separate profile of 400 only for a non-empty secret in POST. In secret-in the row with pass%E2%80%8Bword requires an explicit removal of U+200B from the normalized name by N1; the original name/value are not rewritten before masking.
 
 Additional check by reading/model R36-06: the AAD of N1.2 uses the full path. Distinguish the rows a#b with the field c and a with the field b#c, a direct field and a nested one, the same *_secret in different objects/array indices, keys with /, ~, NUL and Unicode. For each path check the unambiguous JSON Pointer escaping and the UTF-8 bytes without normalization; opening does not try the old AAD. This is a check of the form of the context, not of the strength of AES or of an actual opening by an implementation. The transition of old sealed rows requires a separate rollout and a trusted source, it is not checked by the TSV.
 

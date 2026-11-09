@@ -62,3 +62,43 @@ scenario	step	request	expect
 06-token-through-relay	11	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}
 06-token-through-relay	12	@mend relay	ok
 06-token-through-relay	13	@until 30 token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r3", "ref": "c1"}	200 {"request_id": "r3", "token": "@any", "exp": "@any"}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <README.md L31-40>
+# - Sc. 02 steps 11–14 (the mutation check 2026-10-18): the relay checks the member signature — with the agent clock 400 s
+#   ahead the member behind the relay is `silent`, although the relay is alive; with the right clock — `ok` again.
+# - Sc. 02 steps 15–21: under `@cut relay` `domain/reached` does not grow. Step 16 binds `$c` — `as_of` of the holder view right
+#   after the cut; `ts` of the mark is the moment of the last answer of the holder (`domain_age` — N1.4 of the chapter; `fresh` — chapter 9.1), not
+#   later than the cut, so step 21 compares `$t2` with `$c`, not with `$t1`: the former comparison of two reads caught the write, delayed by
+#   FRESH_EVERY, of the last value before the cut (the reconciliation of M11 01–04, sc. 04/02 step 20 of the mix).
+#
+# - Sc. 05 `relay-moves` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; chapter 9.2 N1.1 `door`, P/09.1 N1.13): two relay agents (`@start agent relay
+#   second`), `RELAY_URL` of the member `m2` — their doors in order; SIGTERM of the active relay agent — the waiting one takes the queue and
+#   opens the door, the member goes by the next address, the reports through the relay continue.
+# <README.md L42-51>
+# ## Coverage audit of P/09, the second pass (Gemini)
+#
+# - Sc. 06 `token-through-relay` (`audit-coverage-gemini` cc36de538, draft G05; N1.1 `not_author`, N2 `POST
+#   /api/tokens/<member>/…`; [the local token door contract](../../../common/contracts/local-token-door.md) `no_queue`).
+#   The preparation is as in sc. 02, steps 1–7. The placement `c1` (`cluster: m1`, `origin: m2`) — as in sc. 01
+#   of [the acceptance of chapter 8.7](../../../08-domain/acceptance/7/README.md). The request of the worker `m2` through the local door of its agent goes
+#   through the relay door to the holder and gets 200. Under `@cut relay` the holder does not answer the relay: the relay
+#   answers the member 502 `did not answer` or stays silent, and the local door of `m2` gives the worker 503 `unavailable`, not the 502
+#   of the relay. After `@mend relay` — again 200. The bytes of the request at the relay door and the 502 itself — by reading: the runner does not call the relay
+#   door.
+# <09.2-agent.norms.md N5 table rows>
+# N5 row 02: the road through a relay: the stranger `m2` knocks through the relay, admission, `join`, the topology; `m2` `ok`, the mark `via: relay`, the set at `m2`, `domain/reached`
+# N5 row 03: a member not through this relay: it is silent; the topology — `ok` again through the relay
+# N5 row 04: a break of the relay: `relay` and the member behind it are `silent`; the return — `ok`
+# N5 row 05: the move of the relay: the door only at the active agent, `RELAY_URL` as a list — after SIGTERM of the active one the member goes to the next one
+# N5 row 06: a token through a relay: an ask of the local door of the member `m2` behind the relay — 200; under `@cut relay` — at the member 503 `unavailable`, not 502 of the relay; after `@mend` — 200
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <09.2 N5 line>
+# the result at the member is
+# 200 and 503 — sc. 06)
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# | Sc./step | Sleep | Reason |
+# |---|---|---|
+# | 02/17 + 02/19 | 70 + 15 s | absence: under `@cut relay` `domain/reached` does not grow; a new value would be written no later than `FRESH_EVERY` (chapter 9.1, `fresh`) after an answer by another road, and another road would open after `ROAD_QUIET` 15 s ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) N1.3a) and the agent pass 5 s — no less than 80 s in all |
+#

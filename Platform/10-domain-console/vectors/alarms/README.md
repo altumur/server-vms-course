@@ -20,8 +20,7 @@ the only source of these cases.
 
 Without a stand: the function of an implementation (the command `alarms`, the norms «Implementation decides» item 1) gets the input (the column `input`) and
 gives the output; `expect` is a subset of the fields of the output (`@absent` — no such field) or `@exit 2` (the input is out of form: the norms N5
-`exit`). The `@exit 2` rows are `alarms-15-lost-after-negative` (`lost_after` not > 0), `alarms-17`…`alarms-23` and `alarms-31`…`alarms-37` (the other cases of
-code 2 of N5 `exit`). A page out of the form of P/09.1 N1.10 — the outcome 0 `unreadable`, not code 2 (rows 06, 12, 24–26).
+`exit`). A page out of the form of P/09.1 N1.10 — the outcome 0 `unreadable`, not code 2.
 Who performs it — the domain console (`10-domain-console`, P/10 N3 `alarms`, N1.8, N5 `alarms`). The process `domain` (`08-domain`) does not perform it: it writes the history that the function reads (P/08.9 N1.9 `writer`; its writing without repeats — the package `alarm-history`); the agent (`09-agent`) writes the alarm page of a member (P/09.1 N1.10) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 ## Input
@@ -30,7 +29,7 @@ Who performs it — the domain console (`10-domain-console`, P/10 N3 `alarms`, N
 - the members: `last_report` and `received_at` — the domain clock, `sent_at` — the member clock of the same report (at the vectors — `page.to`; with
   `page` not an object — a number, as `received_at`: `null` at a member with a report — code 2, H14, row 19), `page` — the page of P/09.1 N1.10 (`"garbled"` — does not read; `null` — none), `history` —
   the history object of P/08.9 N1.9; `reported: "garbled"` instead of `last_report`, `received_at`, `sent_at` — the mark is read, out of form (C10-REPORTED-OUTCOME-1D6);
-- `silent_after` is required in each member form and is a finite positive number. The collector supplies the server/camera value from N1.8; the function infers no class and uses no `lost_after` fallback. Rows 28–30 exercise a camera alongside a server and the exact boundary; rows 31–35 reject zero, negative, boolean, string and null, while rows 36–37 reject absence in the normal and garbled forms.
+- `silent_after` is required in each member form and is a finite positive number. The collector supplies the server/camera value from N1.8; the function infers no class and uses no `lost_after` fallback.
 - `witnesses` — the witness objects `{sub, name, ts, cluster, units}` (the norms N1.8 `witness`). Here `ts` is already normalized to the domain clock by the originating report, not the clock of the target member. The real collector's two offset directions are checked by CALL seams, not simulated by changing these native inputs.
 
 The names of the subsystems and the units in the input (`testsub`, `testsub/c1`) are data of the input: the vector does not depend on the bytes of the manifests of the catalogue.
@@ -44,38 +43,9 @@ of the acceptance of M11, at the rows 16–27 — the checked case and its norm 
 |---|---|
 | [`cases.tsv`](cases.tsv), 37 rows: 22 computed, 15 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
 
-| Rows | What they check |
-|---|---|
-| 01–10 | all answered; a storm — `truncated`, a quiet member is visible; silent — the silence row and the alarms of the last report; a witness later than the report — `not_reporting`, earlier — `silent`; never and does not read; the history without repeats, `history_cut_before`; the window; the clock correction; two witnesses |
-| 11–14 | reconciliation of M11 09–12: `cut_before` 0 — the history from the start, there is no `history_cut_before` (A13); a page line not `alarm` — the page is `unreadable` (A15); a repeat of `same_line` in one page — the first one (A16); a tie of witnesses by `alive_at` — the smaller `alive_via` (A17) |
-| 15 | `lost_after` −1 — the input is out of form, code 2 (H14) |
-| 16 | the mark `reported` is read, out of form (`reported: "garbled"`) — the member is `unreadable`, there is no silence row, the other member is `ok` (C10-REPORTED-OUTCOME-1D6) |
-| 17–23 | the second pass of the coverage audit of P/10 (G01): the input is out of form, code 2 — the member name not by the grammar; `page` without `last_report`; `sent_at` null at a member with a report (H14); `history` with `cut_before` null (A13); a witness without `ts` (H14); `reported` together with `last_report` (C10-REPORTED-OUTCOME-1D6); an extra field |
-| 24–26 | the second pass (G01): the page is out of form — 0 `unreadable`, not code 2: `page` — the array `[]`; `from > to`; a line without `id` (A15) |
-| 27 | the second pass (G01): the window `[since, until]` also for the silence row — `silent_since` earlier than `since`: there is no row, the member is `silent`, `known_until`, `silent_since` and `sentence` — as without the window |
-
 The vectors were checked by the runs of the implementations of the acceptance of M11/11 (run 41, the reconciliation of M11 09–12) and by the text of the norms; on a discrepancy
 the norm is right, «Specification» corrects the vector.
 
-## Source log
-
-The rows of `corrections.tsv` of the acceptance of M11/11 about sc. 04 and its inputs (the paths and numbers are the former ones, they are resolved by
-`id-map.tsv` (historical record)):
-
-| date | sample | fix |
-|---|---|---|
-| 2026-10-18 | 11/inputs/alarms-*; README | run 41 R41-16: the alarm clock — t + (received_at − sent_at) of the report; the input carries sent_at (at the vectors = page.to, the expectations are the former ones) |
-| 2026-10-18 | 11/scenarios.tsv; inputs | run 41, mutations №52–54: all the reasons of an edit joined by «; » (two substrings); since > until — 400; two witnesses — the largest alive_at |
-| 2026-10-19 | 04-alarms 11–14; inputs alarms-11…14 | reconciliation of M11 09–12 (A13, A15–A17): cut_before 0 at the start, a page line not alarm — unreadable, a repeat of same_line in a page — the first one, a tie of witnesses — the smaller alive_via |
-| 2026-10-19 | 03-resolve 11, 04-alarms 15 | the expectation @exit 2 (the dictionary of M10/01, the Architect's decision on the reconciliation of M11, H14): the form of a trusted input — code 2, at both implementations by the norm |
-| 2026-10-19 | 04-alarms 6; inputs alarms-06 | cammeta-go M11-11 № 12: at m2 with last_report, sent_at null — by N5 (H14) the input is out of form, code 2, while the step waits for unreadable; sent_at as a number, page garbled is kept. The other inputs of the M11 vectors are reconciled with the rules of code 2 — there are no other mismatches (codes 2 — only at the steps @exit 2) |
-| 2026-10-20 | the move | sc. 04 (15 steps) from M11/11 — the rows of this table (stage B; the plan of the move of lesson 10, § 3) |
-
-Rows 17–27 — the second pass of the coverage audit of P/10 (audit-coverage-gemini 798e11a44, the draft G01; 2026-10-30): the expectations
-were obtained by the command `alarms` of the frozen witnesses `cammeta-python` and `cammeta-go`
-(`cammeta domain-vector alarms`) — both give the expectation of each row; the witnesses do not know the field `reported` (row 16 is red
-at them), the code 2 of row 22 at them is «extra field», by the norm — `reported` together with `last_report`.
-
 ## P/10 review neighbours
 
-Each member form requires `silent_after`, a finite positive number; there is no `lost_after` fallback. The collector always supplies the server/camera threshold of N1.8; the function infers no class. Rows 28–30 check a camera alongside a server and the exact boundary; 31–35 reject zero, negative, boolean, string and null, including garbled; 36–37 reject a missing threshold in the normal and garbled forms. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.
+Each member form requires `silent_after`, a finite positive number; there is no `lost_after` fallback. The collector always supplies the server/camera threshold of N1.8; the function infers no class. A witness input `ts` is already normalized to domain time using its originating report, never the target member's mark. Both offset directions of the actual collector are checked by CALL seams.

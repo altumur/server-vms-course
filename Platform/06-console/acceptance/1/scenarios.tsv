@@ -527,3 +527,306 @@ scenario	step	request	expect
 46-service-table	9	"console2 GET /stash/b"	403 {"error": "denied"}
 46-service-table	10	"POST /counters {\"name\": \"c1\"}"	201 {"revision": 1}
 46-service-table	11	"@until 10 GET /changes?after=$p"	200 {"changes": [{"key": "testsub/counters/c1", "revision": 1}]}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <L94 fragment>
+# (the minimum of the norm; sc. 16 expects 413 at 1.1 MB)
+# <L199 fragment>
+# Step 3 with a different body under the former key checks 422.
+# <README.md L52-60>
+# - Sc. 46 — the table `stash` of the manifest `testsub2` (`service: true`, P/06.1 N1.6 `service`). Steps 2–6 — the human door and a batch row are closed, the row has not appeared (step 7). Step 8 puts a row past the door by the role `console`: the door is closed for a live row too (step 9), and the rows feed does not give out this table: `changes` of step 11 is only `c1`. Reading and writing by a ticket — [the stand of the transfer of the second kind](../../../common/acceptance/pass/README.md).
+# - Sc. 33 — the anchor row: `tallies` is a part of `counters` (`about: {sub: testsub, field: of}` of the manifest `testsub2`). Step 4 — a part without an anchor; steps 6–8 — a unit and a part, one index; steps 9–11 — an edit of the part raises
+#   the `revision` of the anchor; steps 12–13 — a stale `cas` of the second row, the first one is not written; steps 14–15 — the removal of the part is a tombstone, its index is read by `?deleted=1&about=`; step 16 — the anchor is judged at the removal too, the value `of` from the read row; steps 18–19 — a write over the tombstone by its index, the `revision` of the tombstone + 1.
+# - Sc. 34 — guards: step 6 — the guard row is not written; steps 10–12 — a number in `field`, the guards before `cas`.
+# - Sc. 35 — the replay memory: steps 4–6 — a repeat gets the saved answer, although `cas` is already stale; step 7 — a different body; step 8 — the same request without a key — 412; steps 10–13 — `412 row moved` is not remembered: the claim is removed (`cas` is outside the fingerprint, P/06.1 N3 «batch» steps 5, 9), a repeat with the same key reads the row anew and names its index now — `$c` (G06-BATCH-REPEAT-01, the Specification's decision of 2026-11-05); step 14 — `If-Match` is not read.
+#   That `done` lies in the batch itself — by reading (N5).
+# - Sc. 36 — the form and refusals; step 19 — the weight of a row is counted after the preparation; steps 20–21 — one over the limit, steps 29–30 — exactly at the limit: the claim of the runner's key does not count.
+# - Sc. 37 — references by the state after the batch: step 4 — the target is created by the same batch, it stands after the referring row; step 8 — the target is edited alone, the reverse `must_match`; step 10 — the pair is edited together; step 12 — the target is outside the batch; step 13 — the target is removed by the batch;
+#   step 16 — `unique` of two rows of the batch.
+# <README.md L67-69>
+# - Sc. 38 — a unit: step 4 — the `index` of the door equals the index of the store; step 5 — a condition by the index; steps 7–8 — both forms of the condition are not met, the body carries the current `revision` and `row`; step 10 — the form `revision` works as before; steps 12–15 — other values; step 20 — a condition without a row.
+# - Sc. 39 — the table `shelves`: step 5 — the condition is met, `revision` grows; steps 8–9 — the condition by the index is not met at `DELETE` and `POST`; steps 11, 13 — no row: `POST` — 412, `DELETE` — 404, as for units; steps 16–17 — a repeat answers from the memory before the condition; steps 19–21 — 412 is remembered and repeated, although the row has gone further; step 23 — a removed row counts anew.
+# - Sc. 40 — tombstones of a part: `tallies` is a part of `counters`. Step 8 — the `ETag` of the answer of `DELETE`; steps 10–12 — the listing; steps 13–15 — the form and a manifest without `about` (`testsub`); step 16 — a foreign tombstone index, there is no `row`: a tombstone is not a row; step 17 — a write over the tombstone by its index; step 19 — by the same condition by `revision`.
+# <README.md L79-83>
+# - Sc. 41 — the form. Step 3 — there is no value in the message; step 4 — nothing new, `position` equals `after`; step 8 — a resend gives the same `at`; step 9 — the whole history in order; steps 11–14 — `wait` holds the answer not less than named: the time is given by `server_time` of the door `/session`, so step 14 tolerates the rounding of the write (no sleep is needed); step 15 — the bound `wait=25` with a ready message does not wait; step 16 — without `after` `wait` is not read; steps 19–25 — the forms of the parameters; steps 26–27 — the door has no prefix.
+# - Sc. 42 — the gap of the initial load: step 5 takes a number, step 6 edits a row in the gap, step 7 reads it, step 8 — the message about the edit arrives, and the client discards it: `revision` 2 is not above the read one; step 10 — the next edit is new already. That the client discards is its norm, the door is obliged to say it. `GET /{rows}` reads the heartbeats, so the scenario begins with `@start resource`.
+# - Sc. 43 — deletion: the index of the tombstone is read by `store`, the message carries it (step 6); a write over the tombstone — `revision` (step 8). A table: step 14 — there is no tombstone, `deleted: ""`; steps 19–21 — the row was removed and created anew. Whether the removal and the write fell into one tick or not, the array is one: the removal before the write, otherwise the client would discard `revision` 1 as old.
+# - Sc. 44 — eviction: four batches of 64 rows — exactly `CHANGES_HISTORY`, the number `$p` stands before the oldest message and is still good (step 6, all 256 keys in order); one row beyond evicts it (step 8, a reset). Step 9 — a number inside the history works as before.
+# - Sc. 45 — restart: step 5 — a reset, step 6 — the new number is not equal to the former one, steps 8–9 — the feed goes on, the memory of the first tick knows the row `c1`; steps 10–11 — a value not by the form and a number of the former instance.
+# <README.md L114-132>
+# - Sc. 22 — direct references of the unit `tallies` (the row check contract P5, «Identifier» `ref_and_must_match`, `unique`):
+#   the `zone` of the unit ≠ the `zone` of the live target — 409 `conflict`/`must_match`, there is no row (steps 1–3; a successful pair — step 4); the target
+#   has no element `zone` (a table field without a default is not passed), the unit has `""` — 409 `must_match` (steps 5–7); no target is not
+#   a refusal, ADR-0057 (step 8); `feed` — `unique: canonical`: a host in another case is the same value, 409 `unique` (steps 9–10);
+#   the target is not readable (the row `shx` with `size: "many"` is written by the runner with the role `console`, as sc. 19 step 11) — 409 `garbled`
+#   (steps 11–12). There is no row — the read of the store door `{"items": null}`: one refusal code of a write does not prove it.
+# - Sc. 23 — `of` of `tallies` is `fixed`: a creation over a tombstone with another `of` — 400 «… is fixed», the tombstone is the former one; with the same one —
+#   201, the `revision` of the tombstone + 1 (N3 «create» steps 5, 8); an edit of `of` of a live row — 400, the row and the `revision` are the former ones
+#   (the row check contract R2).
+# - Sc. 24 — `born` of the counter row: a deletion keeps it (steps 2–4), a creation over a tombstone sets a new random one
+#   (steps 5–7, `ASSERT`; N3 «create» step 8, «delete» step 2; ADR-0091 item 3).
+# - Sc. 25 — the counterexample of run 24 (below): `marks` `[]` and `[""]` — the row elements `""` and `'[""]'` (the row check contract
+#   `values_by_type` list), an edit of `start` does not touch them, after `@restart console` the listing and the rows are the same.
+# - Sc. 26 — the state row `testsub2/state/result/t1` with `born` and `revision` of the live row (past the holder — `@as
+#   testsub2worker`, as sc. 20): a `value` not by the schema `unit.state.result` (`state` not from `enum`) does not act, there is no `state` in
+#   the listing; the same row with a `value` by the schema acts (N2 «State in the response»).
+# - Sc. 27 — PUT of `marks` of one element of 524288 bytes: the body ≈ 524310 bytes is less than the body limit of the stand (1 MiB), the weight
+#   of the prepared row is greater than the ceiling 524288 — 413 `row too large` without `fault`, the row and the `revision` are the former ones (N3 «edit»
+#   step 6, N4). The words of `detail` are a choice of the implementation («Implementation decides» item 4), the TSV does not compare them.
+# <README.md L140-158>
+# - Sc. 28 — the cursor (`unit.state.cursor`) is reconciled only by `born` (the row check contract «Unit state» `acts`;
+#   P/03.6 N1.7 `cursor`): both state rows with `born` and `revision` of the live row act (step 6); an edit of the row (`revision`
+#   2) removes the `result` of the former `revision`, the cursor stays (step 8); a cursor with another `born` does not act — there is no `state` (step 10).
+# - Sc. 29 — an edit of the fields removes the blob digest by an empty string (the row check contract `values_by_type` blob:
+#   «only the previous row digest or "" (remove)»): 200, `revision` + 1, `""` in the row; the former digest after the removal is no longer the former
+#   digest of the row, 400 (R2; N3 «edit», «Races»).
+# - Sc. 30 — the bytes door removes the digest of its bytes from the list `testsub2/sweep` (N3 «put_body» step 2), the second
+#   mark stays; the list is unreadable as a whole (`digests` not by the form, the outcome of the row `console` of the family `sweep`) — the door does not
+#   rewrite it (the version is the former one) and answers 200. Step 3 reads the version of the list, step 4 writes a non-empty batch by it: a background
+#   mark does not rewrite a non-empty batch (N1.5 `mark`). The digest of `hello-blob` (10 bytes) is
+#   `sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0`.
+# - Sc. 31 — the stamps `by`, `at`, `made_at` in the body of a table row write — 400 `unknown field` before the write (N3
+#   «table — write a row» step 1; `made_at` — also outside `stamp: [by, at]` of the table `shelves`); a write without stamps — `by` and `at` of the console,
+#   there is no `made_at` outside `stamp` (N1.6 `stamp`). The mark `was: true` of the overwrite log — by reading: two events of one kind in a row
+#   the TSV does not order (with an equal `t` the order is by `id`).
+# - Sc. 32 — the hold row `testsub2/holds/sh1` not by the form (`gen: "x"`, the reader outcome `console` of the family `holds`):
+#   `held_by` is `null` in `GET /shelves` and `GET /shelves/sh1`, not 503 (N1.6 `held_by`; C06-TABLE-HELD-BY-33-01); the same outcome
+#   is distinguished from «no hold» — `/where/shelves/sh1` 503 (chapter 6.5 N3 «`/where/<table>/<place>`») and the series
+#   `testsub2_shelves_open` 1 → 0 (`unheld`: an unreadable hold does not count the place as free).
+# <README.md L160-172>
+# Details of the steps (reconciliation of python and go M10/6–11):
+# - Sc. 15 steps 7–8 — the words of 404 of the bytes door (T26); steps 11–12 — another method on it is 405 (T9); step 13 — `If-Match`
+#   is not read by the bytes door.
+# - Sc. 16 steps 1, 3 — the words of the ceilings: `detail` «… the ceiling is 4000» (T24), `detail` «… this door takes at most …» (T25);
+#   16/4–5 — the bound of a json field of 4000/4001 bytes of canonical JSON (the mutation check 7cecaf2 № 44).
+# - Sc. 17 steps 11–12 — the form of the table log `{sub, target, was}` (T21); step 10 — `@start resource` (review analysis of stage B 6–7, № 22); steps 13–19 — the replay memory of the tables door.
+# - Sc. 18: a table row that a unit references (`tallies.shelf` → `shelves`, `must_match: {zone: zone}`) is not
+#   overwritten with another `zone` (the reverse side of `must_match`, N3 step 2) and is deleted: a reference does not require the target
+#   (ADR-0057), the unit keeps the value.
+# - Sc. 19 — a change of `feed` on the tables door (S10, T13; the rule of chapter 6.2 N3 step 3), `ftp://` (T14), null at a string field
+#   (T15), the key `-0.5` (T17), the order «name before field» (T18) and «key before an undeclared field» (T19), the target `over` is not
+#   readable (T20: the row `shx` with `size: "many"` is written by the runner with the role `console`). The stand has no ring: secrets are not
+#   sent in the body, the rule is checked by an empty and an absent secret.
+# <README.md L201-215>
+# ## Additional checks R29-01…03
+#
+# These are separate cases P/06.1-01, 09, 11 (formerly M10/3-01, 09, 19); they are not in the main TSV. For each case
+# create a separate instance with testsub, empty rows and claim memory, the needed rights
+# and a store with a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (N1.3). Do not count the schema check as a run of these scenarios.
+#
+# | Preparation and action | Expected outcome |
+# |---|---|
+# | POST /counters with a correct body, an Idempotency-Key of 187, 188, 200 ASCII letters; each case separately (200 — in the TSV, sc. 13) | The claim key is a digest of a constant length, all three cases pass the limit; 201 with the full row; a repeat returns the same result |
+# | The same POST with 201 ASCII letters; separately 100/101 Cyrillic characters (200/202 UTF-8 bytes) — in the TSV, sc. 13 | 201 and 202 bytes of the component — 400 before pending; 200 bytes of the component are admitted |
+# | A named id of 1007/1008 ASCII letters (testsub/counters/ has 17 bytes); separately Cyrillic/four-byte characters with the same full lengths | 1024 — 201 at any implementation (the file names are encoded by the implementation, the event log contract «File names in shared trees»); 1025 — 400 badkey; a POST after its own pending keeps the refusal by step 9, the unit is not written; PUT/DELETE do not change the row/revision |
+# | A badkey refusal on the write of the initial pending; separately on the write of the unit, then on the saving of the answer | Before pending — 400 without a claim; after pending — 400 only after a confirmed saving of the refusal; on a failure of the saving — 503, the rules of pending and of a foreign guard are kept |
+#
+# The rows of the table R29 about the slot, the epoch, the guard and holds are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (the
+# branches of the worker of full keys, stage B).
+# <README.md L217-224>
+# For unique a separate manifest with `tag: {type: string, unique: true}` and two live units
+# c1/c2 with a/b are needed. First a sequential PUT c1→x, then PUT c2→x: the second sees the new value
+# and gets 409 conflict/fault unique. In a separate case both reads finish before both
+# writes: independent CAS of their own rows can return two 200 and leave x/x. The placement pass
+# by itself is not obliged to detect or fix x/x. Repeat the bound with unique: canonical
+# for equivalent URLs by ADR-0057 and with a change/deletion of the linked row between the check
+# of must_match and the write. The presence of ref without must_match does not mean must_exist. An analysis
+# of the real reads/writes is required; this README does not claim that any implementation was run.
+# <README.md L237-255>
+# N5 requires separate evidence of reading or a controlled stand for races.
+# The table below sets the counterexamples of run 23; the execution of the steps of scenarios.tsv does not mean they pass.
+# The author of the implementation names the place of the check and the actual result. For numeric ids a manifest with
+# `unit.id: numeric` is needed; for the check of required+default — a separate instance with a copy of the current testsub,
+# where only the field start has required: true added, and default: 0 is kept. A POST with name without start
+# is to get 400, with an explicitly passed start: 0 — 201. The counterexamples of run 23 about the slot (P/03.2-01, 02, 05, 07, 08) are
+# the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
+#
+# | Norm | Initial state and intervention | Expected observation |
+# |---|---|---|
+# | P/06.1-02 | Create testsub with name and without start/labels/step/marks; then edit only labels; separately — a required field with a default, not passed by the client | start = 0, labels = [], step/marks are absent; an edit of labels does not reset start. A default does not satisfy the requirement to pass a required field; the other types without a default — by the table N1.2 |
+# | P/06.1-06 | Separately create c3 with name=c3; PUT /counters/c3 with name=x; re-read; then PUT with name=c3 | A new name — 400 `error: fixed`, `field: /name`, detail «name is fixed», id/name/revision are not changed; the former name — 200, the ordinary increase of revision. A PUT of an absent unit with a new name stays 404 (the read before the prohibition of the change) |
+# | P/06.1-07 | A holds pending, reserves 1 and is delayed before saving the number; after CLAIM_TAKEOVER_AFTER B takes over the claim, reserves 2; A continues | The CAS of the claim of A is refused, the unit 1 is not created; only 2 is created. A does not save the answer and does not delete the claim of B; the result of A by the current pending/done in N3 |
+# | P/06.1-07 | A has already written the number 1 into the claim; B takes over before the write of the unit; A continues | B keeps the number 1; the guard of the late A is refused; B creates 1, there is no second number for this claim |
+# | P/06.1-07 | A created the unit but did not save the answer; B took over and finished; A tries to save the answer or remove the claim | The CAS of A is refused; the answer of B is not replaced and the claim is not removed; A returns the saved answer. On an unknown outcome of the creation 5xx does not turn into done, pending is kept for recovery |
+#
+# The forms of the answers are checked separately: the values `a/b` and `..`, inadmissible at any kind of id,
+# do not pass UnitId; a refusal 400 of GET/DELETE with `fault: not_number` does not pass the contract.
+# These are probes of schemas and rules, not additional rows of the HTTP scenario with another manifest.
+# <README.md L257-273>
+# ### Counterexamples of run 24
+#
+# All the cases below are separate instances/evidence, not a continuation of the rows of the main TSV.
+#
+# | Norms | Preparation and action | Expected outcome |
+# |---|---|---|
+# | P/06.1-02, 08 | In two clean states POST with name=c and marks=[] / marks=[""]; re-read the row, restart the console, PUT only start:1 (in the TSV — sc. 25) | In the store marks="" / marks='[""]'; HTTP returns the original list after the read and the edit, the values do not merge |
+# | P/06.1-07 | POST with the key ..; separately with the admissible . and ..foo, each on its own state | .. — 400 before pending, the row of the claim/unit does not appear; . and ..foo are not refused because of this grammar |
+# | P/06.1-02, 07, 08 | The body limit 1048576 bytes, the row 524288; a compact POST {"name":"wide","marks":["x" × 524288]}, then a repeat with the same key; separately a PUT of such marks into a short existing unit (PUT — in the TSV, sc. 27) | The body 524316 bytes, items 524328: 413 row too large without fault, not a refusal of the HTTP limit. The POST does not create the unit, the refusal is saved and repeated whole; the PUT keeps the former row and revision |
+# | P/06.1-07 | With the chosen form of the claim pick a successful answer whose done row would exceed the ceiling although the unit fits; separately a failure of the write of the result after the creation | Before the creation — 413 and a saved refusal instead of an unstorable success. On an unconfirmed saving after a written/unknown unit — 503 and pending for recovery, without deleting a foreign claim |
+#
+# The weight of items is counted as the sum of the UTF-8 bytes of the names and values of the elements after the preparation of N1.2;
+# it differs from the JSON bytes of the HTTP body. For the counterexample wide the materialized ones are id=wide, revision=1,
+# name=wide, start=0, labels="" and marks of 524288 x; step is absent. The record of the refusal of the POST is to
+# fit into the claim row for this stand; a repeat is compared whole. For numeric a reserve
+# obtained before the refusal is not returned. The variation of the successful answer depends on the declared form of the claim,
+# so its actual bytes and the chosen ceiling are attached by the owner of the implementation.
+# <README.md L275-291>
+# ## Additional checks of run 25
+#
+# In the TSV — sc. 23 of [the acceptance of chapter 6.5](../5/README.md): the field `cost` and `placement.weight` are declared at `probe-x`.
+# These checks go separately from the TSV, on an isolated copy of testsub.
+# Add the field cost: {type: int, default: 1} and placement.weight: {field: cost, default: 1};
+# do not change the other keys. For POST use a separate name and key for each case.
+#
+# | Input | Expectation |
+# |---|---|
+# | POST/PUT cost = -1 or 0 | 400, `error: type`, `field: /cost`, detail «cost must be at least 1», without fault |
+# | POST/PUT cost = 1 | 201/200, the number 1 is kept |
+# | POST without cost | 201, the default 1 is materialized |
+# | POST/PUT cost = "1" or true | 400, fault not_number by the ordinary type check |
+#
+# A refused POST does not create a unit, its repeat returns the saved answer whole.
+# On a refused PUT the former fields/revision are kept; after a successful PUT revision grows by 1.
+# Read the row before and after the refusal; one HTTP code does not prove the absence of a write.
+# <README.md L295-301>
+# ## Checks of the full answer `GET /{rows}`
+#
+# RunningUnit.worker have the form of a slot name of [P/03.2 N1.4](../../../03-worker/spec/03.2-worker.norms.md).
+# Admissible are `w-1`, `w-server-12`, a prefix of eight letters and a long admissible suffix;
+# not admitted are `""`, `w`, `w-`, `w--1`, `W-1`, `w/1`, `w_1` and a final line feed.
+# The schema checks the common grammar; the correspondence to slot.prefix of a concrete manifest is checked
+# separately. CreatedUnit.worker:null is kept.
+# <README.md L309-313>
+# ## Check of the error class R37 (Codex)
+#
+# Numeric with delete_after is rejected at load; without a physical cleanup the successful numbers are kept in rows/tombstones after the cleanup of done. On a loss of the history or an incomplete read the formula recover is not applied. The source of a named id is not secret and is a string. For the file profile with a component255 bytes:201 ASCII in an id are admissible by this limit,256 —400 with detail/error naming the file restriction before the write; w- plus254 letters does not capture a slot. The long keys in the table R29 check the limit of rows, and do not promise the placement of a literal file of any length.
+#
+# This is a subject of a check of the norms/data and of a future stand, not a performed test of an implementation.
+# <README.md L315-331>
+# ## Probes of the reconciliation of python and go (2026-10-18)
+#
+# The probes of the README are `decisions/inbox/2026-10-18-%D1%81%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-python-go-%D0%BC10-3-5.md`; the expectation is the norms of the chapter.
+#
+# | Probe | Expectation |
+# |---|---|
+# | `If-Match` and `Idempotency-Key` with a space or TAB at the edges | the value without OWS (N2) |
+# | an empty `If-Match:` at PUT | 400 «If-Match is a unit revision» |
+# | `testsub2`: `must_match`, the target has no element, the unit has `""` | 409 `conflict`, `fault: must_match` (in the TSV — sc. 22 steps 5–7) |
+# | `testsub2`: url `https://h/%zz`, `https://h\a`, with TAB; `mirror://local` without a path | 400 `bad_url` |
+# | `start: -0` | in the store row `0` |
+# | a foreign `pending` younger than CLAIM_TAKEOVER_AFTER with a different fingerprint | 409 `in flight`; after CLAIM_TAKEOVER_AFTER — 422 `key reused` |
+# | a claim not by the form of a claim | 503 `store unavailable`, the claim is not touched |
+# | a heartbeat with an element `status` without the id grammar or with a fractional `epoch` | the element is not in `rows`; `worker` — from the key of the heartbeat |
+# | the names `A`, `é`, `.a` by the grammar | 201 at any implementation (N1.3: there is no file profile) |
+#
+# `rows` with a live worker (`phase: running`, `worker`, `worker_state: live`) — the steps of the acceptances of [P/03.3](../../../03-worker/acceptance/3/README.md) (sc. 02) and [P/03.2](../../../03-worker/acceptance/2/README.md) (sc. 08) on a catalogue of two manifests.
+# <README.md L333-375>
+# ## Bodies and tables: probes outside TSV
+#
+# From the acceptance of M10/10 (runs 33–37, R36); the subject is the reading of the norms and a future stand, not an execution of an implementation.
+#
+# For 400 of a table check the full text and structured refusals. The common TextRefusal/FormRefusal overlap without fault,
+# so anyOf, not oneOf; check all local oneOf for an overlap of the branches.
+#
+# Kimi 33: check the template of the table notches with three substitutions by the owner P/02.1. Names of tables/rows: lowercase ASCII
+# 1–32, the prohibitions of families/doors, Audit and 33 characters are rejected at load.
+#
+# The service names next_id/placement/workers/sweep and the actual unit.rows are rejected as table names, placement_log/workers2
+# are admissible with a correct manifest.
+#
+# The name scope of all added fields: rows=cluster/worker/ts is refused, records is admissible; bytes+blob is refused, bytes
+# without blob is admissible. TableInput accepts the declared id and other names of the unit, but not held_by/garbled; name is admissible only
+# as a string with key=name.
+#
+# Declarations of unit.fields with any platform_fields (N1.2, including deleted) are rejected before the materialization of default/inherit.
+# Check each element of the list, an empty declaration, default and inherit; the neighbouring deleted_flag/worker_label are admissible, the names
+# of table fields do not get this prohibition.
+#
+# Blob: an empty name, /, %, dots, a space, control characters, non-ASCII and 65 characters are rejected by the loader; admissible are _, A,
+# payload_2 and 64 characters. A table blob is outside the profile, the ordinary fields of a table are not narrowed by this.
+#
+# R36-09/11/12: by/at/made_at cannot be declared as editable fields of tables regardless of stamp; a passed top-level stamp
+# gives 400 unknown field before the write, and a key of the same name inside an allowed JSON field is not affected by this prohibition. The neighbouring
+# by_note/at_time/made_at_hint are admissible as ordinary fields. A unit id of 201 ASCII bytes is admissible with a short full key;
+# 200 bytes refers to rid/Idempotency-Key, not to id. A passed stamp — sc. 31 (the second pass of the coverage audit of P/06); the negative checks of a name are outside the current TSV.
+#
+# Run 36 (Kimi): reconcile the priority of the common framing/length of a blob before the search for the field. A non-empty sweep batch does not refresh at/the version
+# and does not collect new digests; 300 s are counted by the observer of an unchanged version, a new judge/a new version start from zero.
+# In the exclusive window the other sweepers are stopped; do not delete on an unconfirmed quiet or read.
+#
+# R37 (Codex): Table.key does not extract *_secret; a single field/an ordinary substitution — string, :int — int/float.
+# A non-matching declaration is refused by the loader; an absent/wrong value of the body gives 400 before the computation of
+# the name and the write. The names of mount and root tables are checked together at the load of the catalogue, not by the priority of the URL.
+#
+# The bounds of :int by P/02.1: binary64, the absolute value not greater than 2^53−1; bool/null/a string/non-numeric/non-finite/out of bounds — 400, not
+# a language coercion. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and the canonical decimal result without an exponent.
+#
+# The cleanup with grace — the phases of N3 and the codes of the window command of N2: without `--writers-stopped` nothing is deleted, the grace of 300 s of an unchanged
+# version, an object newer than the mark is not touched (controlled clocks are needed, the common acceptance README «Stand»). They are checked by reading (reconciliation of python and go
+# M10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
+# <README.md L381-391>
+# ## Accepted ADR-0127 review: POST continuation and feed observation
+#
+# The additional seams s06–s08 use the existing console-repeat port and ordinary claim/target code. For s06 write a real tombstone with revision 5, admit the POST's planned revision 6 and born under its claim CAS, perform the target commit, lose that reply, and stop before done. Another console first observes the unchanged pending version, waits CLAIM_TAKEOVER_AFTER on its monotonic clock, then takes it by CAS. The response is 201 with that same revision 6 and born, no second target write; an old executor's target attempt with its old claim guard gets 412. s07 is the absent-row/revision 1 positive neighbor. s08 loses the planning-save reply: no target call before a confirmed owned reread of that saved intent, then exactly one target write with the saved born. Record actual claim versions, target bytes and writes, not a case-selected result. The internal claim shape remains the implementation's choice.
+#
+# For the feed, control the ordinary observer's listing dependency: ten unconfirmed ticks after a row change, then one successful listing. No earlier tick invents an observation; at is the wall time of that first successful observation. Redeliver after a later clock advance and compare the same stored at. Do not assert an upper bound from another process's admission clock or call a successful parse a feed execution. These additional IO obligations require an actual implementation/stand; this source edit does not execute them.
+#
+#
+# ADR-0129(17): POST continuation requires this claim's complete saved revision and born. An existing numeric id or revision 1 alone is not proof; confirmed foreign presence without that intent gives existing 409 exists. Preserve real claim CAS/target guards, intended-pair save before the target and pending on an unknown outcome. The family-read sweep neighbours at SWEEP_LIMIT and one more, plus the former 66-digest reader case, use the existing whole-row unreadable outcome; empty/absent batches and at rules stay unchanged. These source witnesses do not execute the HTTP stand or recovery.
+#
+#
+# The separately declared added seam rows are s09-post-named-no-intent, s10-post-numeric-no-intent, s11-post-born-mismatch. Their exact interventions and real observations use the existing ports described by the forms README. All earlier seam cells and process scenario bytes are preserved; source selection/translation does not execute an adapter or IO.
+# <06.1-console.norms.md N5 table rows>
+# N5 row 01: creation: 201 with the row, a repeat with the same key — the same answer, another body under the same key — 422, without a key — 400
+# N5 row 02: a live name — 409 exists
+# N5 row 03: an edit: revision grows by 1 each time, the values by types
+# N5 row 04: platform fields and unknown ones — 400, the platform ones earlier than the unknown ones
+# N5 row 05: a mandatory field is absent or empty — 400
+# N5 row 06: the name grammar: `/`, `,`, `\|`, `"`, `.`, `..`, `\` — 400; `a.b` — 201 (an empty name — sc. 05); `a b` — 201 and `PUT /counters/a%20b` — 200, `/%FF` — 400
+# N5 row 07: deletion: 200 `{deleted}`, a repeat — 404, an edit — 404; a return of the name — 201 with the revision of the tombstone + 1 (the deletion did not change revision)
+# N5 row 08: types strictly: a number as a string, a list as a string, a fraction at int — 400; a lone surrogate and `1e400` — `not_json` before the claim (the same key with a correct body — 201); int beyond ±(2^53 − 1) — `not_number`, at the bound — 201; two errors — the refusal of the first field by the manifest
+# N5 row 09: a list with a comma in an element is accepted and read as the same list (`marks`); at the placement labels field a comma — 400
+# N5 row 10: an inherited field not set — absent in the row
+# N5 row 11: a bad path: two segments — 404; a non-existent one — 404
+# N5 row 12: input forms: a repeat with rearranged fields and with a path with the prefix — the same answer; `1.0` and `1e2` at `int` — `not_number`; a label outside the alphabet — 400, by the alphabet — 201
+# N5 row 13: `Idempotency-Key`: 200 bytes (ASCII and 100 Cyrillic ones) — 201, a repeat — the same answer; 201 bytes, 202 bytes, `..`, `/` — 400, no unit; the key twice — 400
+# N5 row 14: `If-Match`: equal — an edit; not equal — 412 `revision moved` with the current `revision`, nothing written; not an integer or with a leading zero — 400; the header twice — 400; DELETE the same; the repeat memory (steps 11–23): a repeat of `PUT` — the saved answer earlier than `If-Match`, short and with the prefix — one path, another body — 422 `key reused`, a saved `412` is repeated, a key out of form — 400, the same key at `DELETE` — its own memory, a repeat of `DELETE` — the saved 200
+# N5 row 15: `15-blob` (M10/10 sc. 04): body: bytes in the row — 400; `PUT /tallies/t1/mask` — 200 with a digest; the row carries `sha256-`; a repeat of the same bytes — the same digest; an edit of the fields: a fresh digest — 400, the former — 200 (N1.2/N4)
+# N5 row 16: `16-ceilings` (M10/10 sc. 05): the ceiling of a `json` field 4000 — 400 `too_long`; a body larger than the limit — 413
+# N5 row 17: `17-tables` (M10/10 sc. 06): the table `shelves`: POST 201, GET a list with `held_by`, GET a row, DELETE, 404, 400 without a key, 405; the repeat memory (steps 13–19): a repeat of `POST` — the same answer, another body — 422 `key reused`, the row as before, a repeat of `DELETE` — 200 instead of 404
+# N5 row 18: `18-table-ref` (M10/10 sc. 07): a reference to a table row: the unit `tallies` with `shelf`; a write of the row with another `zone` — 409 `must_match`; DELETE of the row — 200, the unit keeps `shelf`
+# N5 row 20: `20-made` (ADR-0091 items 1, 3): POST of an id with the customer prefix `testsub-` — 400; the order row: an edit of the field `key` (`of`) — 400 «is fixed», `made` in the body — 400, another field — 200 with the former `made` and `born`; the state `result` with another `revision` does not act, with an equal one — in `configured` (`state`); a row of the door gets `born`, without `made`; the deletion of an order row sets `made.gone`
+# N5 row 21: `21-worker-table-delete`: a row of the worker table `gauges` — GET reads, POST — 403, DELETE by the operator — 200 and no row, a repeat — 404; the worker writes the row anew — by reading
+# N5 row 22: `22-unit-refs` (the coverage audit of P/06): the unit `tallies` — `must_match` with another `zone` and with an absent element of the target — 409 `must_match`, no row; no target — 201 (ADR-0057); `feed` `unique: canonical` — 409 `unique`; the target does not read — 409 `garbled`
+# N5 row 23: `23-fixed` (the coverage audit of P/06): over a tombstone another `of` (`fixed`) — 400 «is fixed», the tombstone as before; the same — 201, `revision` of the tombstone + 1; an edit of `of` of a live row — 400, the row as before
+# N5 row 24: `24-born-anew` (the coverage audit of P/06): the deletion keeps `born`, a creation over the tombstone gives a new one
+# N5 row 25: `25-list-forms-restart` (the coverage audit of P/06): `marks` `[]` and `[""]` — the elements `""` and `'[""]'`, an edit of another field and a restart of the console do not merge them
+# N5 row 26: `26-state-unreadable` (the coverage audit of P/06): a state row with `value` not by the schema `unit.state.result` does not act — no `state`; with `value` by the schema — acts
+# N5 row 27: `27-put-row-too-large` (the coverage audit of P/06): an edit over the row ceiling with a body smaller than the limit — 413 `row too large` without `fault`, the row and `revision` as before
+# N5 row 28: `28-state-cursor-born` (the coverage audit of P/06, the second pass): a cursor acts by `born` without `revision` — after an edit of the row `result` of the former `revision` is removed, the cursor stays; a cursor with another `born` does not act — no `state`
+# N5 row 29: `29-blob-clear` (the coverage audit of P/06, the second pass): an edit of the fields removes the blob digest `""` — 200, `revision` + 1; the former digest after the removal — 400
+# N5 row 30: `30-sweep-unmark` (the coverage audit of P/06, the second pass): the bytes door removes its digest from the list `sweep`, the other marks stay; an unreadable list is not rewritten, the request — 200
+# N5 row 31: `31-table-stamps` (the coverage audit of P/06, the second pass): `by`, `at`, `made_at` in the body of a write of a table row — 400 `unknown field`, no row; a write — `by`, `at` of the console, `made_at` outside `stamp` is absent
+# N5 row 32: `32-hold-unreadable` (the coverage audit of P/06, the second pass): an unreadable hold row — `held_by: null` in the list and the row, not 503; `/where` of the place — 503; the series `shelves_open` does not count the place as free
+# N5 row 33: `33-batch-anchor` (ADR-0094 B9): a part without an anchor — 400 `no anchor`; a unit and a part in one batch — 200, both have one index; an edit of the part raises the `revision` of the anchor; an outdated `cas` of the second row — 412 `row moved`, nothing written; the removal of a part — a tombstone, a write over it by its index
+# N5 row 34: `34-batch-guards`: a guard holds and is not written; the 412 refusal names the key and the index now, the guards before `cas`; a guard on an absent row
+# N5 row 35: `35-batch-repeat`: a repeat with the same key — the saved answer, not a false 412, the row is not rewritten; another body — 422 `key reused`; without a key a repeat — 412; a key out of form — 400; after `412 row moved` the claim is removed: a repeat with the same key reads the row anew and names its index now (G06-BATCH-REPEAT-01, the Specification's decision of 2026-11-05); `If-Match` is not read
+# N5 row 36: `36-batch-form`: not a JSON object, the form of the body and of an element — 400 with `field`; a repeat of a key, a guard on a write; a family not of the door and a subsystem outside the catalogue — 400 `badkey`; a refusal of a row — `field` with the number; a worker table — 403; the removal of an absent row — 404; over the limits — 413 `batch too large`, exactly at the limit — 200; a row heavier than the ceiling — 413 `row too large`; another method — 405, a subsystem prefix — 404
+# N5 row 37: `37-batch-refs`: the target of `ref` and `must_match`, created, edited or removed by the same batch, is judged by the state after the batch; a target outside the batch — as before; `unique` of two rows of the batch — 409
+# N5 row 38: `38-versions-units` (ADR-0094 B4): `index` in the answer of a write and in `configured` equals the store index; `If-Match` by the index and by `revision`; 412 with `row`; `ETag`; the forms `*`, `W/`, a list, empty — 400; `index` in the body — 400 `platform_field`; `POST` with a condition without a row — 412 with `revision: 0`
+# N5 row 39: `39-versions-tables` (ADR-0094 B4): `revision` and `index` of a table row, `ETag`, `If-Match` at `POST` and `DELETE`, 412 with `row`, no row — 412 at `POST`, 404 at `DELETE`; `revision`, `index` in the body — 400; the repeat memory earlier than the condition, a saved 412; a removed row counts anew
+# N5 row 40: `40-deleted-about` (ADR-0094 addendum (5) item 1, addendum (3) item 9): tombstones by `about` — the order by `id`, a foreign value, empty; the parameters out of form and a manifest without `about` — 400; a write over a tombstone by its index and `revision`, a foreign index — 412 without `row`; `ETag` of the answer of `DELETE`
+# N5 row 41: `41-changes-position` (ADR-0094 B2): without `after` — the current number; an edit — a message without the value with `n`, `at`; redelivery — the same `n` and `at`; nothing new — `position` equals `after`; `wait` holds the answer, there is something to say — does not hold; the forms of `after`, `wait`, the method, `HEAD`; no prefix
+# N5 row 42: `42-changes-gap` (addendum (3) item 6): an edit in the gap of the initial load: the read `revision` and the message about it, the next edit
+# N5 row 43: `43-changes-deleted`: the deletion of a unit — the tombstone index, a write over the tombstone — `revision`; a removed table row — `deleted: ""`; removed and created anew — `deleted: ""` earlier than `revision`
+# N5 row 44: `44-changes-evicted` (addendum (3) item 6): the history exactly `CHANGES_HISTORY`: 256 messages arrive whole, message 257 evicts — a reset; a number in the history is read further
+# N5 row 45: `45-changes-restart`: a restart of the console — a reset, a new number, the feed goes on; a value out of form and a number of the former instance — a reset
+# N5 row 46: `46-service-table` (ADR-0094 B1, addendum (15) item 3): a table `service: true` is closed to a person for a read, a write, a removal and as a row of a batch, the row is not written; a live row is closed the same way and does not go into the feed
+# N5 row 19: `19-table-feed` (M10/10 sc. 11): a change of `feed` at the table door: without a secret and with an empty one — 400 «anew», the address as before, the same address — 201; `ftp://` — `bad_url`; null at a string field — 400; the key `-0.5` → `c1-0-2`; the name earlier than a field, the key earlier than an undeclared field; the target `over` does not read — 409 `garbled`
+# <06.1 N5 paragraph>
+# Sc. 15 steps 7–8 — the words of 404 (T26), steps 11–13 — another method at the bytes door 405 (T9), `If-Match` is not read; sc. 16 steps 1, 3 — the words of the ceilings (T24, T25); sc. 17 steps 11–12 — the table journal (T21; step 10 — `@start resource`, review of stage B 6–7, № 22). Checked by reading (reconciliation of python and go M10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
+# --- judge-only (ADR-0133 add. (4), Architect's answers 2026-11-08) ---
+# <README, section «Sleeps» (verbatim)>
+# ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+#
+# There are no sleeps. Waiting for an event is `@until`: sc. 17 step 11 waits for the log row `shelf.declared` after `@start resource`.
+#

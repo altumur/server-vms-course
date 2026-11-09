@@ -498,3 +498,138 @@ scenario	step	request	expect
 37-versions-groups-roles	18	holder @header Idempotency-Key: b-r1 POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "e"}}]}	200 {"written": 1}
 37-versions-groups-roles	19	holder @header Idempotency-Key: b-r1 POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "f"}}]}	422 {"error": "key reused"}
 37-versions-groups-roles	20	holder POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "f"}}]}	412 {"error": "conflict", "field": "/writes/0"}
+# --- judge-only: case descriptions and expected outcomes moved here (ADR-0133 add. (4)) from the chapter README and norms N5; not a rule source ---
+# <L10 fragment>
+# ; steps 01/25–26 — `GET /drain` with a narrow grant — 403: the drain requires `view` on `*`, C06-DRAIN-VISIBILITY-33-01; steps 01/27–33 — `POST /marks` without the grant `edit` — 403 before the body, a narrow `edit unit:` — one's own unit 2xx, a foreign one 403, C06-BODYEDIT-SCOPE-33-01
+# <README.md L32-37>
+# - Scenario 01 step 12 — `until` with seven fraction digits at the input is stored rounded to thousandths: 4102444800.1234565 →
+#   4102444800.123 (N1.3 until; the Architect's decision on the M11 reconciliation, P8).
+# - Scenario 01 steps 22–24 — the boundary of white space in the name of a person (N1.1 `name`, the property White_Space; the edit `f31941fb2`):
+#   again on behalf of `root` (`@person root …`), the name `a\u0085b` (U+0085 is white space) — 400 `bad name`, as `a|b` of steps 7–8;
+#   `a\ufeffb` (U+FEFF is not white space) — by the other rules, 201. In `request` and `expect` the character is written by JSON escaping
+#   `\u0085`, `\ufeff` (the review analysis of stage B 8–10, № 18).
+# <README.md L40-62>
+# - Scenario 02:
+#   - steps 05–07 — a forged token `@spoil($ta)`: at the member console, at the door of people and at the revocation — 401 (a check of the signature, not
+#     only of the presence of a token);
+#   - steps 09–11 — disabling: at the holder `domain/disabled`, at `m1` — a refusal after the answer to the agent;
+#   - steps 15–16 — revocation: `domain/revoked` reaches `m1`.
+# - Scenario 04 — the limit of the login door of the process `domain`. Step 8 — the counting key is the pair (address, name): another name from the same
+#   address after 429 at `root` gets an ordinary 401, not 429 (P/08.4 N1.10 `key`; ADR-0083 addendum (19) item 2, the review analysis of
+#   ADR-0090, № 26).
+# - Scenario 13 — an unreadable row of a person (N1.1 `unreadable`): `ann` with the grant `view` at `m1` is disabled, then the row
+#   `domain/users/ann` is rewritten past the writer with `name: bob` (≠ the name of the key; `disabled: "false"` and a secret that the ring does not
+#   open, — a non-strict reader would lift the disabling and so give itself away). The login of `ann` — 503 `unavailable`, not 401 (N1.2
+#   `check`, `G-42`); the login of `root` — 200 (the other rows serve). Step 9 — a sleep of 7 s (two reconciliation passes, `VIEW_EVERY` 3 s):
+#   `domain/disabled` is still `["ann"]`, the grant of `ann` is not removed (the reconciliation of subjects without a name: the row exists, but is unreadable —
+#   the person exists, C08-GRANTS-ORPHAN-01). `DELETE` deletes the unreadable row too, removes the grant (`grants_changed: ["m1"]`);
+#   then `domain/disabled` is `[]` (the reconciliation by the flags of the rows of people), the login of `ann` — an ordinary 401. The norm does not name an edit `PUT` of an unreadable
+#   row (N3 «people door» step 7: «absent — 404» against the rule «Unreadable row») — there is no step.
+# - Scenario 14 — the common ceiling (N1.10 `ceiling`, the contract of the gate and the forwarding «Attempt limit»): the names `n1`–`n4` with
+#   five failures each (the key is the pair (address, name): the fifth failure of each key still passes, `per_address` does not fire) — 20
+#   refusals of all keys; a fresh name `n5` — the first attempt passes (401: «no more than one attempt in 60 s» does not yet act for a key without an attempt),
+#   the second right after it — 429 `too many attempts`. `Retry-After` is not compared in the TSV (the number of seconds is not
+#   predicted). The steps are logins in a row, the ceiling window of 60 s does not expire.
+# - Scenario 15 — the cluster in the grants path byte for byte (N1.3, the M11 reconciliation, P13): `PUT /domain/grants/m%31` — 400 `bad name`
+#   (`%` is not in the grammar of a member), the row `m1` is the former one (the rejected edit has `view`), there is no row `m%31`.
+# <README.md L75-140>
+# | № | Scenario | Steps | What |
+# |---|---|---|---|
+# | 01 | `login-people-grants` | 33 | login, one refusal to an unknown and a wrong one; people — 201, 400, 409; a name with U+0085 — 400 `bad name`, with U+FEFF — 201; the grant `unit:` — `/session` with grants, reading, 403 of a write and of another cluster, 401 without a token; `until` rounded |
+# | 02 | `disable-revoke-last-admin` | 23 | a forged token — 401; disabling and enabling; revocation; the last administrator — 409 |
+# | 04 | `login-limit` | 8 | five failures, then 429 for the right pair too; another name from the same address — 401 |
+# | 08 | `grant-by-kept` | 7 | a row that matched the former one keeps its `by`; a new one — the name of the writer |
+# | 09 | `deleting-mark` | 6 | the mark `domain/deleting/dz` is written directly — the pass reconciliation removes the grant row `dz` and the mark |
+# | 10 | `deleting-any-mark` | 10 | a mark of any form is removed by the pass, the pass does not stall; a mark without a person — 409 `being deleted`, `POST` 409 `exists`; after the removal — 201 |
+# | 11 | `events-view` | 10 | ann with `view unit:testsub/c1`: three rows — an alarm `of=testsub/c2` (not visible), an observation and a mark of the console of root `of=testsub/c1` (visible); without `limit` — two visible, `truncated` 0; `limit=1` — the first visible (the mark), `truncated` 1; `complete` does not change (`@append event` under `@on m1`) |
+# | 12 | `pass-need` | 9 | ann with `view unit:testsub2/t1` at the console of the cluster `m1`: `GET /entries` without `?unit=` and with `?unit=testsub2/t1` passes the gate — 503 `{"error": "denied"}`, `detail` «no worker of testsub2 with a door is heard» (the word — `GP-L03`, the Architect's decision 2026-10-28) (there is no worker of `testsub2` on the stand); with `?unit=testsub2/t2` — 403; `POST /entries` — `entries` is not named in `rights.routes`, `admin` is needed — 403; the side of the domain console (`"*"` without `?unit=`) — by reading: `testsub2` has no worker on the domain and no forwarding route of the domain console |
+# | 13 | `garbled-person-row` | 16 | an unreadable row of a person: login — 503, `domain/disabled` and the grant are not removed; `DELETE` deletes it and the grant; then `disabled` is empty, login — 401 |
+# | 14 | `login-ceiling` | 23 | four names with five failures each — 20 refusals; a fresh name — 401, its second attempt — 429 |
+# | 15 | `grants-cluster-no-decode` | 5 | `PUT /domain/grants/m%31` — 400 `bad name`; the row `m1` is the former one, there is no `m%31` |
+# | 16 | `until-by-value` | 5 | `until` by value: without `until` and `0.0` — one row, a repeat — 400 `bad line`; `…0011` and `…0014` round into one — 400; `0.0001` is written `0.001` |
+# | 17 | `last-admin-garbled` | 7 | a second administrator with an unreadable row of a person is not counted as an admin: removing `root` from `assigned` of the role `admin` and disabling `root` — 409 `last admin`; `DELETE` of the unreadable one — 200 |
+# | 18 | `garbled-grants-row` | 6 | an unreadable row `domain/grants/m1`: `POST /domain/users` — 503, an edit `PUT` over it — 503; the row is fixed past the door (`delete` under `domain/` is forbidden to `admin` too) — 201 |
+# | 19 | `garbled-break-glass` | 7 | an unreadable `domain/break-glass/m1`: `GET /domain/break-glass` — the key `m1` is there, `{}`; `PUT` writes the row anew — `set_at` again |
+# | 20 | `batch-rights` | 18 | ann with `admin unit:testsub/c1-m1` at the console of `m1`; steps 16–17 — tombstones by `about`: one's own unit — 200, a foreign one — 403; step 18 — `GET /testsub/next_id` as a creation of rows — 403 (ADR-0094 B4); the batch door (ADR-0094 B9): the second row without a right — 403 of the whole batch, the indexes of both are the former ones; the guard `c2-m1` without `view` — 412 `row moved` with `index: ""`, as for an absent row; one's own row — 200 `{written: 1}` |
+# | 21 | `changes-rights` | 23 | the feed `GET /changes` of the member console under a narrow grant (ADR-0094 B2): a change of the set of the grant lines — a reset; the number of another person; there is no grant — 403 |
+# | 22 | `changes-labels` | 21 | the feed under a narrow grant by marks (ADR-0094 B2): a new row with a mark is visible without a reset, a row without a mark is not visible, a change of the mark of the unit — a reset |
+# | 23 | `versions-and-repeats` | 30 | the versions and the replay memory of the doors of people (chapter 8.0 N1.9, ADR-0094 B3, B4) |
+# | 24 | `grant-line-forms` | 10 | the forms of a line: `sub`, `folder:`, `none`, a repeat, the order (ADR-0097); there is no dry run |
+# | 25 | `sub-of-each-check` | 15 | `sub` of each check: `/drain`, a batch, `/marks`; there is no dry run |
+# | 26 | `events-by-sub` | 12 | `/events` by the `sub` of an event; there is no dry run |
+# | 27 | `roles-and-groups` | 26 | groups, roles, `/session` with `role`, deletion of a person and a role; there is no dry run |
+# | 28 | `person-card-and-term` | 15 | `email` by right, the term of an account; there is no dry run |
+# | 29 | `last-admin-by-role` | 18 | the last administrator by role and group, `builtin`; there is no dry run |
+# | 30 | `manager-of-people` | 21 | the manager: `admin only`, the status of the target, the body before the target; there is no dry run |
+# | 31 | `password-set-by-non-admin` | 13 | `pw_by`: an assignment and membership in a group; there is no dry run |
+# | 32 | `domain-batch` | 16 | `POST /domain/batch`: the difference, `cas`, the outcome of the batch; there is no dry run |
+# | 33 | `folder-rights` | 23 | the write rights of folders ADR-0097 §6, ADR-0099 §4; there is no dry run |
+# | 34 | `changes-folders` | 15 | the feed: a change of the composition and deletion of a folder — a reset to a subscriber with the line `folder:`; there is no dry run |
+# | 35 | `changes-folder-rows` | 15 | the feed under a narrow grant: a message about a folder, a tombstone; there is no dry run |
+# | 36 | `changes-role-assignment` | 12 | the removal of a role assignment — a reset; there is no dry run |
+# | 37 | `versions-groups-roles` | 20 | the versions and the memory of groups, roles, a batch; there is no dry run |
+#
+# Sc. 09 — the deletion mark `domain/deleting/<name>`: the mark is written directly into the holder's store, the pass reconciliation (chapter 8.4 N3,
+# «Interrupted step 9») removes the grant rows by it and deletes it; a break of `DELETE` after the row of the person — by reading (the stand debt
+# item 3, ADR-0083 addendum (9)). Sc. 10 (the M11 reconciliation, P1, P3) — a mark of any form: `a|b` (a name not by the grammar) and `aa` with
+# non-empty `items` are removed by the pass, the pass does not stall; the mark `zz` without a person — an edit of a grant with the line `zz` 409
+# `being deleted` and `POST` 409 `exists` before the checks of names. Steps 7–8 go right after the writing of the mark: the window is up to the nearest
+# pass (3 s), the reconciliation removes the mark not earlier; after the removal (step 9) the name is free — 201.
+#
+# Sc. 16–19 (the coverage audit of P/08, the second pass of Gemini, the draft G04 `e32df6f8b`, rewritten):
+# - sc. 16 — `until` of a grant line by value (N1.3 `lines`, the M11 reconciliation, P7, P9): a line without `until` and with `until: 0.0` are one
+#   line, a repeat — 400 `bad line`; `4102444800.0011` and `4102444800.0014` round to thousandths into `4102444800.001` — a repeat,
+#   400; a positive `0.0001` that would round into 0 is written `0.001` (C08-UNTIL-REWRITE-01); the lines of the answer are by
+#   `subject` (`ann` before `root`).
+# - sc. 17 — `last_admin` (N1.3, C08-LAST-ADMIN-UNREADABLE-01): `ann` is the second administrator of `domain/grants/domain`, her row is
+#   spoiled past the door (`name` ≠ the name of the key, as sc. 13); removing `root` and disabling `root` — 409 `last admin`: an unreadable
+#   row of a person is not counted as an admin. `DELETE` deletes it too (N3 «people door» step 7).
+# - sc. 18 — an unreadable row `domain/grants/m1` (`doc` is not JSON): `POST /domain/users` — 503 `unavailable` (N3 «people door»
+#   step 7a, C08-GRANTS-ORPHAN-01), an edit `PUT /domain/grants/m1` over it — 503 (the outcomes of `domain/grants`, `G-25`: an edit
+#   over an unreadable row is not written); the row is fixed through `admin.sock` by a write by the form (`doc` with an empty `lines`; `delete` under `domain/` is forbidden to `admin` too, C09-AUDIT-HEAL-NOT-DELETE-01) — the person is created.
+#
+# - sc. 19 — an unreadable row `domain/break-glass/m1` (no `pwhash_secret`): `GET /domain/break-glass` keeps the key of the cluster
+#   without `set_at` — exactly `{}` (the outcomes of the family, `G-23`, C08-BREAK-GLASS-UNREAD-KEY-01; the witness `cammeta-go` omits the key —
+#   a defect of the witness); `PUT` does not read the row and writes it anew — the door has no refusal for this.
+#
+# Not taken from the draft G04: healing the grants row by the door `PUT` (expectation 200): the norm (`G-25`) requires 503.
+#
+# Sc. 21, 22 — the feed `GET /changes` of the member console under a narrow grant (ADR-0094 B2; P/06.1 N2 «Change feed»). The subscription goes before the creation of rows: ann takes a number, root creates units, therefore the message about a creation does not fall outside the expected array. root writes the foreign row first: if the message about one's own has already come, the tick saw the foreign one too, so it was cut off by the filter, not by time. Sc. 21: step 17 — a change of the set of the grant lines gives a reset, step 20 — the number of another person, step 23 — there is no grant, 403. Sc. 22: step 11 — a new row with a mark is visible and gives no reset, step 16 — a row without a mark is not visible, step 20 — the mark of the unit changed, a reset.
+#
+# Sc. 23 — the versions and the replay memory of the doors of people ([chapter 8.0](../../spec/08.0-domain.norms.md) N1.9). The `revision` of the first administrator is 1: the row is written by `first-admin`. Step 11 repeats step 10 with the former `If-Match`: the answer from memory, `revision` 3 in the row did not move (step 13). Step 12 — another password under the same key: the fingerprint sees the password.
+# Step 14: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/users/ann" ‖ 0x00 ‖ "u-r1")`; neither the fingerprint nor the body carries the password. Steps 16, 19 — a repeat of a creation and of a deletion: without the memory these are 409 `exists` and 404. Step 20 goes with a new key: 404. For the grants `$g` is the `revision` of the row `m1` after the preparation `@start domain`.
+# Step 25: there is no row `c9`, the condition — 412 with `revision: 0`. The break-glass account of `m1` is set here for the first time, therefore `revision` 1.
+# <08.4-domain.norms.md N5 table rows>
+# N5 row 01: the stand: login, a refusal to an unknown and to a wrong one with one answer; people — 201, 400, 409; a name with U+0085 — 400 `bad name`, with U+FEFF — 201 (the White_Space boundary, the edit `f31941fb2`; analysis of review of stage B 8–10, № 18); a grant `unit:` — `/session` with grants, reading a unit, 403 of writing and of another cluster, 401 without a token; `until` with seven fraction digits is stored rounded to thousandths (the Architect's decision on the M11 reconciliation, P8)
+# N5 row 02: the stand: disabling — a refusal at a member after an answer to the agent, login — 401; enabling; revocation — 401; the last administrator — 409
+# N5 row 04: the stand: the login limit — five failures, then 429 for the right pair too; another name from the same address — not locked (the key is the pair, № 26)
+# N5 row 08: a line that matched the former one keeps its `by`; a new one — the name of the writer (mutation check 2026-10-18)
+# N5 row 09: the deletion mark: the person `dz` with a grant at `m1`, the mark `domain/deleting/dz` written directly — the pass reconciliation removes the grant line of `dz` and deletes the mark; DELETE with a break after the person row, POST and a new grant line at a mark — 409 — by reading: the stand does not interrupt DELETE and does not outrun the pass of 3 s (log of cammeta-go, M11-09 № 1)
+# N5 row 10: a mark of any form: a name not by the grammar and non-empty `items` — removed by the pass, the pass does not stall; a mark without a person — a new grant line 409 `being deleted`, `POST` 409 `exists` before the name checks; after the removal — 201 (the M11 reconciliation, P1, P3)
+# N5 row 11: the visibility of `GET /events` of a member's console under a narrow grant `view unit:`: a line by `unit` or `of`, the filter before `cut`/`limit` (the request to the resources — `limit` 10000), `truncated` — the visible ones beyond `limit`, `complete` does not change
+# N5 row 12: `need` of the route `door.pass` at the cluster console: the capability by `rights.routes`, otherwise `GET` — `view`, the others — `admin`; the target — `?unit=` or without it a grant on anything; the side of the domain console — by reading
+# N5 row 13: the stand: an unreadable person row (`name` ≠ the name of the key) — login 503 `unavailable`, the other rows serve; `domain/disabled` and the grant are not removed; `DELETE` deletes it with the grant line; after — `disabled` is empty, login 401 (the coverage audit of P/08)
+# N5 row 14: the stand: the common ceiling — 20 refusals of four keys; a fresh key — the first attempt 401, the second within 60 s — 429 (the coverage audit of P/08)
+# N5 row 15: the stand: `PUT /domain/grants/m%31` — 400 `bad name`, the row `m1` is not touched (the M11 reconciliation, P13; the coverage audit of P/08)
+# N5 row 16: the stand: `until` by value — without `until` and `0.0` — a repeat, 400 `bad line`; a fraction that rounded into the same one — a repeat; `0.0001` is written `0.001` (the M11 reconciliation, P7, P9; C08-UNTIL-REWRITE-01; the coverage audit of P/08, the second pass of Gemini)
+# N5 row 17: the stand: a second administrator with an unreadable person row does not count — removing and disabling `root` — 409 `last admin` (C08-LAST-ADMIN-UNREADABLE-01; the coverage audit of P/08, the second pass of Gemini)
+# N5 row 18: the stand: an unreadable row `domain/grants/m1` — `POST /domain/users` 503, `PUT /domain/grants/m1` over it 503 (G-25, C08-GRANTS-ORPHAN-01; the coverage audit of P/08, the second pass of Gemini)
+# N5 row 19: the stand: an unreadable `domain/break-glass/m1` — `GET /domain/break-glass` keeps the cluster key without `set_at`; `PUT` writes the row anew (G-23, C08-BREAK-GLASS-UNREAD-KEY-01; the coverage audit of P/08, the second pass of Gemini)
+# N5 row 21: the stand: the feed `GET /changes` under a grant on one unit — a message only about its own row; a change of grants — a reset, a number of another person — a reset, no grant — 403 (ADR-0094 B2)
+# N5 row 22: the stand: the feed under a grant by a label — a row with the label is visible, without the label it is not; a change of `labels` of a unit — a reset (ADR-0094 B2)
+# N5 row 23: the stand: `revision` and the index of people, grants, the break-glass account; `If-Match` of two forms, 412 with `row` without secrets; a repeat of a key, a different body and a different password 422; a repeat of `DELETE`; the claim row without the password (ADR-0094 B3, B4)
+# N5 row 37: the stand: versions and memory of groups, roles, the batch: `revision`, `If-Match`, 404 before the condition, 412, a repeat of a key, a different body 422 (ADR-0094 B3, B4; no dry run)
+# N5 row 34: the stand: the feed under a line `folder:` — a change of the membership and the deletion of the folder give a reset (ADR-0097 §3)
+# N5 row 35: the stand: the feed under a narrow grant — the folder row is visible to any grant (`sub` empty): a message about the folder, `revision: 0`, a tombstone with an index (ADR-0096 §5)
+# N5 row 36: the stand: removing an assignment of a role — reset 3 (ADR-0098 §4)
+# N5 row 33: the stand: the write rights of folders — `admin sub: platform folder:F` edits `F` and creates a subfolder, the root and a foreign folder 403; the membership without `admin` on the unit 403, with it 200; the removal without a right on the unit 403 (ADR-0097 §6, ADR-0099 §4)
+# N5 row 24: the stand: the forms of a line — `sub` and `folder:` in `domain/grants/domain` 400, the grammar of `sub`, `none` on a direct line, `folder:` out of form, a repeat with `sub`; the order of lines with `sub` (ADR-0097)
+# N5 row 25: the stand: `sub` of each check — `GET /drain` under `view sub: testsub *` 403; a batch under the right of another `sub` 403, under the right of its own 200; `/marks` under `sub: testsub` 403, under `sub: platform` 2xx (ADR-0097 §2, §3)
+# N5 row 26: the stand: `/events` by `sub` of the event — the line `view sub: testsub2` does not show an event of `testsub`, `view sub: testsub` shows it (ADR-0097 §3)
+# N5 row 27: the stand: groups and roles — `unknown member`, `exists`, `role:` in `domain/grants/domain` 400, `unknown subject`, `labels:` on a role line 400, `role:admin` 400, a role name of 64 characters, `/session` with `role` and `none`, `POST` under `view` 403; deleting a person removes him from the group, deleting a role — its lines (ADR-0098, ADR-0099 §1)
+# N5 row 28: the stand: the card and the term — `email` under `view` only one's own; an expired `expires` — `domain/disabled` and login as for a disabled one; removing the term (ADR-0098 §3)
+# N5 row 29: the stand: the last administrator by the role — `expires`, the removal and the term of the assignment, the removal from the group, the deletion of the group 409; a second unlimited one — 200; `builtin`, the name `admin` taken (ADR-0100 §1, §2)
+# N5 row 30: the stand: the user manager — an ordinary person 200; an administrator, the role `admin`, `domain/grants/domain`, `break-glass`, `DELETE` of a role with a domain line — 403 `admin only`; the grants of a cluster 200; the role `admin` spoiled — 503 (ADR-0100 §3)
+# N5 row 31: the stand: `password set by a non-admin` — an assignment directly and an inclusion into a group with `admin` 409; after a password change by an administrator 200 (ADR-0100 §3)
+# N5 row 32: the stand: `POST /domain/batch` — a manager with himself into `admin` 403, an unchanged row `admin` of the snapshot is not judged, a stale `cas` 412, an empty batch 400; `last admin` by the result of the batch; the same batch from an administrator 200 (ADR-0098 §6, ADR-0100 §3)
+# N5 row 20: the stand: the batch door of the cluster console under a grant on one unit — a row without a right gives 403 of the whole batch, nothing written; a guard without `view` — 412 with `index: ""`; one's own row — 200 (ADR-0094 B9)
