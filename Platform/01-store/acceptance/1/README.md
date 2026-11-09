@@ -36,20 +36,13 @@ A replay of delete with the same id and different items (none/null/number/object
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 A change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `delete` is now scenario 30.
 
-## Batch (sc. 33–40; ADR-0094 B9)
+## Batch
 
 The batch `op: batch` (N1 `batch`, N3 «write batch»): the JSON is judged whole, as in the other steps of the chapter; for a `conflict` of a batch the expectation has `key`.
-- Sc. 33 — all or nothing: step 6 — the `cas` of the second row is stale, steps 7–8 see both rows as before; steps 4 and 10 — one version for all rows.
-- Sc. 34 — creation, edit and removal in one batch; step 7 — delete of an absent row; steps 10, 12 — `items` of delete is not read; step 11 — the `cas` of the removed row is stale.
-- Sc. 35 — guards: step 3 — the guard is not written; step 7 — the guard before `cas`; steps 8–9 and 10–11 — the first violation in the order of `guards` and `writes`.
-- Sc. 36 — the fingerprint: steps 2–4 — the order of `guards` and of the fields of `items`, `cas: null` give the same; steps 5–9 — a different one; steps 10–12 — the memory is shared with the write; step 14 — the memory before the guard;
-  steps 15–16 — a refusal does not occupy the `id`; steps 17–21 — `items` of delete is not included, `cas` is.
-- Sc. 37 — deadlines: steps 5–6 — before the guards and `cas`, steps 7–8 — a refusal does not occupy the `id`.
-- Sc. 38 — the form; steps 26–30 — the order of the checks of N2.1 on pairs of violations; steps 31–32 — one over the limit, steps 35–36 — exactly at the limit; step 37 — extra top-level fields, among them the fields of a single write, are not read.
-- Sc. 39 — the weight: two rows of 400000 bytes each are together heavier than the ceiling, each is lighter; a row heavier than the ceiling — 413 with its `key`. The weight of `@big`: the field name plus the value.
-- Sc. 40 — rights: 403 before deadlines (step 5), a refusal does not occupy the `id` (steps 6, 8).
 
-The role `console` does not know the limit on the number of rows — sc. 16 of chapter 1.2. Restart and the group — sc. 30, 31 of chapter 1.3. The refusal of a body over the limit is a common refusal before JSON parsing, sc. 22.
+The weight of `@big`: the field name plus the value.
+
+The role `console` does not know the limit on the number of rows — chapter 1.2. Restart and the group — chapter 1.3. The refusal of a body over the limit is a common refusal before JSON parsing.
 
 ## Extra fields of a command (K37-05)
 

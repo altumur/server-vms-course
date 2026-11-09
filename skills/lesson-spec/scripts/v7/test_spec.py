@@ -849,13 +849,18 @@ class TestTree(unittest.TestCase):
         self.assertFalse(any("slots.outcomes.tsv" in e and "resource" in e for e in errors), errors[:5])
 
     def test_library_defects(self):
-        """Перечень дефектов библиотек (Platform/common/versions/DEFECTS.md): у курса — все записи, строки векторов
+        """Столбец векторов дефектов (Platform/common/versions/DEFECTS.cases.md): все записи, строки векторов
         есть; несуществующая строка вектора — красное; запись, которой нет в перечне, — красное; LAYERS называет файл,
         а его нет — красное."""
         sys.path.insert(0, str(HERE.parent))
         import check_spec
         root = self.copy()
-        target = check_spec.human_text(root / check_spec.Check.LIBRARY_DEFECTS, root)   # столбец «Вектор» — текст для человека
+        public = check_spec.human_text(root / check_spec.Check.LIBRARY_DEFECTS, root)
+        target = public.with_name("DEFECTS.cases.md")
+        # Until the Source split lands, materialize its exact new location in this fixture only.
+        if not target.exists():
+            target.write_text(public.read_text(encoding="utf-8"), encoding="utf-8")
+        public.write_text("# Library defects\n\nThe vector column is in DEFECTS.cases.md.\n", encoding="utf-8")
 
         def errors():
             check = check_spec.Check(root, None, False)
