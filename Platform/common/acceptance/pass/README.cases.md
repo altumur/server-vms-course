@@ -19,3 +19,11 @@ Generic rules remain in [README.md](README.md). The following original passages 
 | 09 | a switched-off person at the holder: the ticket is 401, the stream is closed by `domain/disabled` | `ticket` step 5, `close` |
 | 10 | a write of the first kind: the worker of the door receives the token of the person in `Authorization`, the addressee of the ticket does not see it, the door has no ticket header; a door outside the list — 401 | `first_kind`, P/06.3 N1.9 |
 | 11–13 | the check without login under a race (ADR-0119 addendum (18)): `POST /domain/verify` by the ticket of `probe-p`; at the bounds of the keys 4 (pair), 19 (author), 9 (name, three authors) two simultaneous wrong ones (`@together`) — one 401, the second 429; after — 429 also with the right password: the count is not more than 5/20/10; a success at the bound does not spend the budget; an author whose only exhausted key is the name key checks another name | the gate contract «Attempt limit» `verify` `answer`, `outcome`, `retry`; P/08.4 N1.2a, N1.10; P/06.7 N1.15 |
+
+### Original passage 2
+
+The runner executes sc. 01–09: the directives of the dictionary, the door `socket`, the substitution `{cport}`, the key `keys.pass_stand`; the Go probe 53ee5148 passed them in a dry run 124/124 on the pin 36c2531, runner b02d743, run 20261102T054511Z-pass-53ee514-dry, not a credited one. Sc. 10 and `probe-f`, sc. 11–13 (`@together`, `domain/verify` in `calls` of `probe-p`) were not run by an implementation. The rule is the same as for the [system acceptance](../system/README.md): a scenario goes into a runner release only after a run against an implementation, each red step is analysed by the question «norm or data», and new scenarios enter the pin of the lines only by a runner release.
+
+### Original passage 3
+
+`probe-p` declares `wait: {api/x: 300}`: the request of a scenario keeps the ticket alive, the limit does not mask the checks of revocation and switching off (`PASS_WAIT` 5 s would remove the ticket itself). The limit 504 is judged by `api/slow` 2 s. The sleep of sc. 05 step 13, 7 s: the stream outlives `PASS_WAIT`, a stream has no limit; `PASS_WAIT` + 2 s of the margin of the stand.

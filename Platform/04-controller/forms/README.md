@@ -88,7 +88,7 @@ The acting [runtime-constants.tsv](runtime-constants.tsv) has only name/value/un
 
 ## Current reports and ADR0129(15) witnesses
 
-Positive backgrounds come from the current writer: placement has manifest_rev and nonempty reason; active intent has nonempty reason, idle does not require it; a report has the three mandatory counters; a snapshot has one unit.rows array, including []. Raw family-read is never completed or repaired. Absence before the first object publication is not a malformed wrapper. Current s42/s43 recover pending after a confirmed release, not an early final mark; t-1 and the exact old guards stay.
+Positive backgrounds come from the current writer: placement has manifest_rev and nonempty reason; active intent has nonempty reason, idle does not require it; a report has the three mandatory counters; a snapshot has one unit.rows array, including []. Raw family-read is never completed or repaired. Absence before the first object publication is not a malformed wrapper. Recovery goes through pending after a confirmed release, not an early final mark; the exact old guards stay.
 
 All s51-s63 use the existing controller-pass port. fixture and scripted replies select real inputs/client outcomes, never a canned result or an implementation API. The adapter never receives expect. Compute observations from actual controller calls and recorded store/object IO; fixture names are not evidence of execution.
 

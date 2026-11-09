@@ -29,10 +29,7 @@ of keys in list stays the order of the store; the runner does not sort the actua
 Sc. 16 — the batch `op: batch` by roles (P/01.1 N1 `batch`, ADR-0094 B9): step 1 — the role `console` does not know the limit `BATCH_WRITES`, step 3 — the other
 roles know it; steps 4–7 — a row and a guard without the right, nothing is written; steps 8–11 — `never` for admin judges each row of the batch.
 
-The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`, `admin`; in sc. 14 after `@rights store
-inputs/rights-domain-roles.json` — the domain roles `domain`, `domainagent`, `testsubdomain`.
-
-Reconciliation of python and go M10/6–11 (R12): sc. 05 steps 8–10 — `never` and an empty `<y>`; sc. 08 step 2 — the role header before the body.
+The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`, `admin`; the domain roles `domain`, `domainagent`, `testsubdomain` (through a rights file that names them).
 
 ## Isolation
 
@@ -60,37 +57,35 @@ the named role.
   an adjacent ordinary key must not fall into never. A trusted forwarding of admin without a file
   is allowed outside never; with a loaded file it is refused. An untrusted forwarding is forbidden
   in both modes, list included. These are separate probes; the TSV does not perform them.
-- Now by scenarios: a non-string `comment` is a start refusal, a string one is returned by `GET /v1/rights` — sc. 15; the keys adjacent
-  to the epoch (`platform/epoch/<y>`, two segments after `epoch/`, `<x>/epoch` without `/`) are outside `never` for admin — sc. 14.
+- A non-string `comment` is a start refusal, a string one is returned by `GET /v1/rights`; the keys adjacent
+  to the epoch (`platform/epoch/<y>`, two segments after `epoch/`, `<x>/epoch` without `/`) are outside `never` for admin.
 
 These are subjects of a separate reading/structural test, not additional performed
 scenarios. Socket modes, forwarding and the certificate require the corresponding stand.
 
-In scenario 08 the name X-Configstore-Role is a designation of the header of trusted role forwarding.
+The name X-Configstore-Role in the scenarios is a designation of the header of trusted role forwarding.
 Before the run substitute the name from the implementation description (N3/«Implementation decides», item 3);
-do not change the value console and the socket role. This is not a normative header name. Without
+do not change the header value and the socket role. This is not a normative header name. Without
 such a setting the preparation of the run is not complete. Count the forbidden identity spoofing,
 not the subsequent refusal of the key write.
 
 ## Coverage audit of P/01 (sc. 11–13)
 
 The session audit-kimi (2026-10-30, commit 399e4783b, `coverage audit P01 (for people)`): properties that were formerly checked by reading.
-- Sc. 11 — `never` (N1.3): for the console a 403 is indistinguishable from a refusal by rights, so the distinguishing role is admin: its rights are
+- `never` (N1.3): for the console a 403 is indistinguishable from a refusal by rights, so the distinguishing role is admin: its rights are
   «everything except never», and without `never` these writes would pass. Reading the floor by admin — 200: the refusal concerns the action.
-- Sc. 12 — the role forwarding header at `GET /v1/list` (N3 «check», R38-06): the header name is a designation, as in sc. 08.
-- Sc. 13 — the rights file (N1.2, N4) by the directive `@rights store` (common README): without a file — `GET /v1/rights` 404; three inputs
-  `inputs/rights-bad-field.json` (an unknown role field), `rights-internal-role.json` (the role `configstore`),
-  `rights-bad-name.json` (the name `Console`) — a start refusal, code 2; the last step brings back the stand file.
+- The role forwarding header at `GET /v1/list` (N3 «check», R38-06): the header name is a designation.
+- The rights file (N1.2, N4) by the directive `@rights store` (common README): without a file — `GET /v1/rights` 404; an unknown role field, an internal role
+  and a wrong role name — a start refusal, code 2.
 - Not accepted: rows of the vector `rights-evaluator` for a role outside the file (A09): the store does not open a socket of a role that is not in the file,
   and the door does not see the evaluator's refusal; it stays by reading (P/01.2-04).
 
 ## Coverage audit of P/01, second pass (sc. 14–15)
 
 The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
-- Sc. 14 — the edges of `never` (N1.3). Steps 1–6 for admin (rights «everything except `never`»): `platform/epoch/c1` (`x = platform`),
-  `testsub/epoch/a/b` (two segments after `epoch/`) and `testsub/epoch` (no `/` after `epoch`) are not epoch rows, their
-  deletion — 200; an implementation whose `never` is wider than the norm refuses here. Steps 7–13 — the rights file
-  `inputs/rights-domain-roles.json`: the domain roles `domain`, `domainagent` and `<sub>domain` (`testsubdomain`, its own family
-  `domain/testsub/`) delete under `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); the same prohibition for admin — sc. 11 step 6.
-- Sc. 15 — `comment` of the rights file (N1.2): a number instead of a string (`inputs/rights-bad-comment.json`) — a start refusal, code 2;
-  the stand file again — `GET /v1/rights` by admin returns its string `comment` (N2).
+- The edges of `never` (N1.3) for admin (rights «everything except `never`»): `platform/epoch/<y>`, two segments after `epoch/`
+  and `<x>/epoch` without `/` after `epoch` are not epoch rows, their
+  deletion — 200; an implementation whose `never` is wider than the norm refuses here. The domain roles `domain`, `domainagent` and `<sub>domain` (its own family
+  `domain/<sub>/`) delete under `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); the same prohibition for admin.
+- `comment` of the rights file (N1.2): a number instead of a string — a start refusal, code 2;
+  `GET /v1/rights` by admin returns a string `comment` (N2).

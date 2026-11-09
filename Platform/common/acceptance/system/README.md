@@ -28,64 +28,21 @@ prove a full restore of the events.
 
 ## Sc. 05 — pull the power
 
-The server `srv-b` carries a unit without a home `c1` (`testsub`, the worker `w-2`) and a unit with a home `h1` (`testsub2`, the shelf `s-b1`, the holder
-`t-srv-b-1`). The scenario pulls the power, watches the move and the copies, then returns the server. Steps and norms:
+Sc. 05 pulls the power of one server, watches the move and the copies, then returns the server. The governing norms are P/01.3 N1.3 `join`, P/03.2 N1.5 and N3 «capture», P/04 N1.3 `home`, N1.4a and N3, P/05 N1.4 and N1.6, the observation contract `resource_state` and the merge contract.
 
-| Steps | What is seen | Norm |
-|---|---|---|
-| 1–5 | a group of three is assembled, the leader is `srv-a` | P/01.3 N1.3 `join` |
-| 6–7 | the mirror is switched on, one copy: the neighbour of `srv-b` is the single `srv-c`; the retention of `testsub` is 36500 days, because the bucket of step 33 is dated 2026-01-01 and the pass `retain` could otherwise remove it | P/05 N1.4 `mirror`, N3 `retain`; P/02.4 N1.9 |
-| 8–29 | controllers, shelves, workers; `w-2` is the only worker of `testsub` when `c1` is created, so `c1` is on `srv-b`, epoch 1; `h1` — at the holder of its shelf | P/04 N3 «choose», N1.3 `home` |
-| 30–32 | a closed bucket `$closed` on the volume of `srv-b`; the pass at the start of the resource copies it to `srv-c` | P/05 N1.4 `pass`, `mirror` |
-| 33 | a copy of a bucket which is not on the volume of `srv-b`: only restore will show it | P/05 N1.6, N1.4 «Bucket restore» |
-| 34 | an open bucket on the volume of `srv-b`: it has no copy, it is in `lost` until the return | P/04 N1.4a `lost` |
-| 35–37 | the power is pulled: minus a vote, the group lives, the resource is `silent` | P/04 N1.4a `store`; the observation contract `resource_state`; chapter 6.5 `ServerRow.resource` |
-| 38–40 | `c1` at another worker, epoch 2 | P/04 N1.4a `moves`, N3 «fate»; P/03.2 N1.5 |
-| 41 | `h1` at another holder, without waiting for the home | P/04 N3 «pass()» step 6, N1.3 `home` (a preference, not a filter) |
-| 42 | `fate: move`, the name `w-2` is given away by the controller | P/04 N3 «fate», N1.2 `names_given` |
-| 43–46 | the merge of the console: the closed bucket — from the copy of `srv-c` under the name of the owner, `from mirror`, `fenced`; there is no open one; the answer is incomplete, `srv-b` is `silent`; `srv-a` has no copies | the merge contract «Merge» steps 2, 7, «Epochs», `from_mirror`; P/04 N1.4a `stays`, `lost`; P/05 N2 `/mirrored` |
-| 47–48 | the return: the member is a follower again, without `-join` | P/04 N3 «pull the power» «return»; P/01.3 N1.3 `join` |
-| 49–50 | the restore is done, one bucket is pulled, it is on the volume | P/05 N1.4 «Bucket restore», the heartbeat field `restore` |
-| 51–53 | the archive is intact: both previous buckets are on the volume, the row of the open one is seen by the merge under the old epoch, the answer is complete | P/04 N1.4a `stays`; the merge contract «Epochs» |
-| 54–56 | `w-2` captured its name again, `gen` 2 | P/04 N1.4a `return`; P/03.2 N3 «capture» |
-| 57–58 | `t-srv-b-1` holds the shelf again, `h1` goes home | P/04 N3 «pass()» step 7, HOME_BUDGET |
-| 59–60 | `c1` has no home — it stays at `$holder` | P/04 N1.4a `moves`; N3 «pull the power» |
-| 61 | the resource of `srv-b` is `live` again | the observation contract `resource_state` |
-
-The stand gives a name to each process (`@start worker <name>`), so step 54 checks the return of its own name, while the choice of a free name
-by a nameless process is the acceptance of chapter P/03.2. Step 49 waits for `restored: 1`: `srv-c` has two copies, but `$closed` remained on the volume of `srv-b` and is not counted, only the bucket of step 33 is pulled
-(the Architect's decision of 2026-10-31).
+The stand gives a name to each process (`@start worker <name>`); the choice of a free name by a nameless process is the acceptance of chapter P/03.2.
 
 A declared home allows an automatic return within HOME_BUDGET; without a home the return of a server by itself does not cause
-a rebalancing (a check of the error class R37, Codex): steps 58–60.
+a rebalancing (a check of the error class R37, Codex).
 
 ### Timings
 
 The timings 45/90 s of the norm are the drill profile of a healthy stand with heartbeats observed in advance, an available store and capacity, not
 a common deadline (P/04 N1.4a `moves`); the scenario judges only the upper bound. The steps do not assert a lower bound of the move.
-`t = 0` is the `ok` of the directive `@power-pull`. The numbers are from the constants of the norms:
+`t = 0` is the `ok` of the directive `@power-pull`.
 
-| Quantity | Calculation | s |
-|---|---|---|
-| the judge moves a slot not earlier than | `SLOT_TERM` 45 + `LOST_AFTER` 45 from the first read of the last version (N3 «fate», the margin row) | 90 |
-| the judge certainly moves by | the last version is read no later than 5 s (a pass), the pass after the bound — no later than 5 s: 90 + 5 + 5 | 100 |
-| the move on a healthy stand by | the leader could be on `srv-b`: + `leader_wait` 5; the margin of the stand + 15 | 120 |
-| step 37 (`silent`) | `LOST_AFTER` 45 + poll 5 + the margin of the stand 20; the bound is strict: `age > LOST_AFTER` | 70 |
-| step 37 ends not earlier than | the heartbeat of the resource is written every 10 s (P/05 N1.4), the last version is not older than 10 s at `t = 0`: 45 − 10 | 35 |
-| steps 38, 41, 42 | the remainder 120 − 35 (they go after step 37) | 85 |
-| step 40 | the epoch after the move: `POLL` ~2 s and the writes of the store; the timing as in the acceptances of P/03 | 30 |
-| step 58 | the timing of sc. 38 of the acceptance of P/04 (the same way home) | 90 |
-
-The `silent` of the resource (step 37) moves nothing by itself. N3 «leaving» fires on it only with `requires: resource` and a live worker
-(the Architect's decision of 2026-10-31). `testsub` does not declare this key, `testsub2` declares it, but the holder `h1` is silent together with the resource.
-Therefore both units go by the fate `move`, and steps 38, 41 judge one timing of 120 s. Step 42 waits as long as step 38: `fate: move`
-comes out with the pass that takes `c1` away. Later it does not disappear: `move` of a silent resource does not depend on the units, the slot is not given away.
-
-### Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
-
-| Sc./step | Sleep | Reason |
-|---|---|---|
-| 05/59 | 12 s | absence: `c1` does not go to the returned `w-2` — the controller sees its heartbeat on the next pass, the move would happen a pass later: two passes of 5 s and a margin, as for the sleeps of the acceptance of P/04 |
+The `silent` of the resource moves nothing by itself. N3 «leaving» fires on it only with `requires: resource` and a live worker
+(the Architect's decision of 2026-10-31). `move` of a silent resource does not depend on the units, the slot is not given away.
 
 ### Executability
 

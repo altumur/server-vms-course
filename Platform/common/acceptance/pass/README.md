@@ -10,11 +10,11 @@ By reading, with a reason: a socket of a foreign role — the stand sets up one 
 
 ## Executability
 
-The runner executes sc. 01–09: the directives of the dictionary, the door `socket`, the substitution `{cport}`, the key `keys.pass_stand`; the Go probe 53ee5148 passed them in a dry run 124/124 on the pin 36c2531, runner b02d743, run 20261102T054511Z-pass-53ee514-dry, not a credited one. Sc. 10 and `probe-f`, sc. 11–13 (`@together`, `domain/verify` in `calls` of `probe-p`) were not run by an implementation. The rule is the same as for the [system acceptance](../system/README.md): a scenario goes into a runner release only after a run against an implementation, each red step is analysed by the question «norm or data», and new scenarios enter the pin of the lines only by a runner release.
+The runner has the directives of the dictionary, the door `socket`, the substitution `{cport}`, the key `keys.pass_stand`. The rule is the same as for the [system acceptance](../system/README.md): a scenario goes into a runner release only after a run against an implementation, each red step is analysed by the question «norm or data», and new scenarios enter the pin of the lines only by a runner release.
 
 ## Timings
 
-`probe-p` declares `wait: {api/x: 300}`: the request of a scenario keeps the ticket alive, the limit does not mask the checks of revocation and switching off (`PASS_WAIT` 5 s would remove the ticket itself). The limit 504 is judged by `api/slow` 2 s. The sleep of sc. 05 step 13, 7 s: the stream outlives `PASS_WAIT`, a stream has no limit; `PASS_WAIT` + 2 s of the margin of the stand.
+`probe-p` declares `wait: {api/x: 300}`: the request of a scenario keeps the ticket alive, the limit does not mask the checks of revocation and switching off (`PASS_WAIT` 5 s would remove the ticket itself). A stream outlives `PASS_WAIT`, a stream has no limit.
 
 ## scenarios.tsv
 
