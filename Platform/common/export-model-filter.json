@@ -13392,6 +13392,11 @@
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 public target/stand dependency form, wholefile. No private routing or case outcomes."
     },
     {
+      "path": "Platform/common/acceptance/judge-input-filter.json",
+      "disposition": "judge_only",
+      "basis": "Second whole-file filter of the judge line (ADR-0135 (2) item 1); administrative input of the trusted exporter, not for the product model."
+    },
+    {
       "path": "Platform/common/acceptance/ops/README.cases.md",
       "disposition": "judge_only",
       "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
