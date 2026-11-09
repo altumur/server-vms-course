@@ -40,7 +40,7 @@
 | `not_applicable` | ключ профиля выбирает сборку, для которой у цели нет смысла, как `keys.store_build: box` у стенда группы; цель не входит в итог и не красная |
 | `blocked` | нужного интерфейса или части состава нет до исполнения; это не результат проверки |
 
-Причина итога `not_executed` — одно из закрытого списка: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; либо, если нет обязательного для цели публичного интерфейса или ключа профиля, имя этого интерфейса или ключа.
+Причина итога `not_executed` — одно из закрытого списка: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; либо, если обязательный для цели публичный интерфейс или ключ профиля отсутствует или имеет значение, которого цель не принимает, имя этого интерфейса или ключа.
 
 Всякая строка или сценарий `not_executed` снимает GREEN с цели. Исключений нет: строка долга стенда снимает GREEN так же, как любая другая, и итог цели это называет.
 

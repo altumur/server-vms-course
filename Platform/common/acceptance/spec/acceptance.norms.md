@@ -58,7 +58,7 @@ The result of a target is GREEN, red, `not_executed`, `not_applicable` or `block
 
 <!-- req: P/AC-R030 -->
 
-The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; or, when a public interface or profile key that the target requires is absent, the name of that interface or key.
+The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key.
 
 <!-- req: P/AC-R031 -->
 
