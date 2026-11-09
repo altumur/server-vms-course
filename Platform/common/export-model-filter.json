@@ -12862,6 +12862,16 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/acceptance/runner-targets.README.md",
+      "disposition": "model_and_judge",
+      "basis": "Exact Root-selected public target/stand carrier from accepted79063c1; preserve statedSource246/Readerc9 scope and Missing qualification; no case inventory."
+    },
+    {
+      "path": "Platform/common/acceptance/runner-targets.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Exact Root-selected public target/stand carrier from accepted79063c1; preserve statedSource246/Readerc9 scope and Missing qualification; no case inventory."
+    },
+    {
       "path": "Platform/common/acceptance/system/README.md",
       "disposition": "judge_only",
       "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
