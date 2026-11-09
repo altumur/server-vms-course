@@ -92,8 +92,7 @@ mask_in: a value of ≥ 3 characters of the set «* ＊ ∗ ⁎ ✱ • ● ∙ 
 
 ## Vectors
 
-The package [`log-mask`](../vectors/log-mask/README.md) (`cases.tsv`, 39 rows, 8 of them — the Architect's answer of 2026-10-25; «Mask at the input» — `mask_in.tsv`, 33 rows, the
-Architect's decision of 2026-10-27; the catalogue rule — the field declarations
+The package [`log-mask`](../vectors/log-mask/README.md) (`cases.tsv`; «Mask at the input» — `mask_in.tsv`; the catalogue rule — the field declarations
 [`secret-in/fields.yaml`](../vectors/secret-in/fields.yaml)). The value of a field `type: url` is the package
 [`secret-in`](../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
 (P/06.2-05).
