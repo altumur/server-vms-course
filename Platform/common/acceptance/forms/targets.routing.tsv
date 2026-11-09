@@ -1,0 +1,21 @@
+# Acceptance target routing, judge-only. One row per id of forms/targets.tsv; id is the only repeated column.
+# engine: the shared engine or scenario family that executes the target.
+# acceptance: JSON array of repository-relative directories holding its tables and inputs.
+# scenarios: all | none | first-step:<directive> | not-first-step:<directive> | range:<first>-<last> (the number prefix of a scenario name).
+# parts: JSON array of {key,owner}, the parts of other lessons in the stand of this target.
+id	engine	acceptance	scenarios	parts
+P/01.1/door	run	["Platform/01-store/acceptance/1"]	all	[]
+P/01.1/extra	extra	["Platform/01-store/acceptance/1"]	none	[]
+P/01.1/inproc	run	["Platform/01-store/acceptance/1"]	all	[]
+P/01.2/rights	l06	["Platform/01-store/acceptance/2","Platform/01-store/vectors/rights-evaluator"]	all	[]
+P/01.3/daemon	l11	["Platform/01-store/acceptance/3"]	not-first-step:@group-setup	[]
+P/01.3/group	store_group	["Platform/01-store/acceptance/3"]	first-step:@group-setup	[]
+system/05-power-pull	power_stand	["Platform/common/acceptance/system"]	range:5-5	[{"key":"console","owner":"06-console"},{"key":"manifest-put","owner":"02-installer"},{"key":"rights","owner":"02-installer"},{"key":"ring","owner":"02-installer"},{"key":"controller","owner":"04-controller"},{"key":"worker","owner":"03-worker"},{"key":"resource","owner":"05-resource"}]
+P/01/vectors-jcs	vector	["Platform/01-store/vectors/jcs"]	all	[]
+P/01/vectors-crl	vector	["Platform/common/vectors/crl"]	all	[]
+P/01/vectors-revoked	vector	["Platform/common/vectors/revoked"]	all	[]
+P/01/vectors-log-mask	vector	["Platform/common/vectors/log-mask","Platform/common/vectors/secret-in"]	all	[]
+P/01/vectors-store-client	vector	["Platform/common/vectors/store-client"]	all	[]
+P/01/vectors-family-read	vector	["Platform/common/vectors/family-read"]	all	[]
+P/01/vectors-rights-evaluator	vector	["Platform/01-store/vectors/rights-evaluator"]	all	[]
+P/01/vectors-write-checks	vector	["Platform/01-store/forms"]	all	[]
