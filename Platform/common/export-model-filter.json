@@ -13377,6 +13377,21 @@
       "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
+      "path": "Platform/common/acceptance/forms/targets.README.md",
+      "disposition": "model_and_judge",
+      "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 generic public target form/flags/profile semantics, wholefile."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/targets.routing.tsv",
+      "disposition": "judge_only",
+      "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 private engine/acceptance routing companion, wholefile. Opaque metadata only; no model delivery."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/targets.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 public target/stand dependency form, wholefile. No private routing or case outcomes."
+    },
+    {
       "path": "Platform/common/acceptance/ops/README.cases.md",
       "disposition": "judge_only",
       "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
@@ -13810,6 +13825,11 @@
       "path": "Platform/common/ru/acceptance/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/forms/targets.README.md",
+      "disposition": "judge_only",
+      "basis": "Owner exact P01.46.5 role; physical Russian source mirror retained for document consumers, outside English model view."
     },
     {
       "path": "Platform/common/ru/acceptance/ops/README.cases.md",
