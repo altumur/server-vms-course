@@ -33,7 +33,5 @@ temporary daemon under `$data/configstore`), installs the owned manifest [`tests
 ordinary `manifest put`, writes exactly the given rows by `cas ""`, sets no ring (`SECRETS_KEY` is unset) and invokes the command
 function with argv against this store. It returns `{exit_code:<integer>, unknown:[…], untouched:<bool>}`: `unknown` — the keys of
 the log lines «`<key>` unknown-row-form» of the call, sorted, each once; `untouched` — every given row has the same bytes and version
-after the call. In `s12` (the default D) `identity/x` matches no row family: it is listed, code 1; the kept rows
-`domain/testsub/ledger` and `domain/testsub/badges/b1` (testsub `domain.kept: [ledger, badges/]`) are not listed. In `s13` (the given
-prefix `domain/`, only kept rows) nothing is walked: code 0. Both seams are outside a stage gate of
+after the call. By P/02.4 N1.9 «Walk» a row that matches no row family is listed, code 1; a kept row of a manifest (`domain.kept`) is not listed and does not affect the code. Both seams are outside a stage gate of
 [`stages.tsv`](../../forms/stages.tsv): the generated kit has no adapter function for this CALL yet, and the seams are not claimed as run.
