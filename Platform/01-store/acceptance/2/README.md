@@ -19,7 +19,7 @@ Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md).
 The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
 the method, `$name`, `ASSERT`; the expectation is a subset of fields, `index` may be omitted. Specific to the chapter:
 
-- `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key. For an identity refusal — the socket role and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role does not replace the socket role.
+- `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key; in a batch the pair is any action and key of its writes or guards; for an operation with a guard the refusal may instead name `read` and the key of the guard. At `/v1/rights` error names the role and also a reason or the route: the role alone is not enough. For an identity refusal — the socket role and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role does not replace the socket role.
 
 An absent expectation body for 200 does not mean an empty answer. Its form is checked by the input
 contract of chapter 1.1; 403 is exactly the string fields kind/error without console fields. `$name` is bound only

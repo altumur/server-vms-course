@@ -72,7 +72,7 @@ an error of this check is an outcome of the tool, not a TLS alert.
 ```
 
 - `handshake: ok` — the handshake is completed, `http` is the answer of the door to the `request` of the probe (the full form — the contract of the door).
-- `handshake: alert` — the server refused with the handshake (TLS alert): `http: null`; `version` — the chosen version or `null` if
+- `handshake: alert` — the server refused with the handshake (TLS alert), also when TLS 1.3 refuses the client leaf after the client's Finished and no application byte arrived: `http: null`; `version` — the chosen version or `null` if
   the refusal is before the choice; `reused: false`, `session_available: false`.
 - `reused` — a session is presented and the server resumed it; `session_available` — the server issued a usable session (a ticket or
   an identifier) over this connection.
@@ -148,7 +148,7 @@ P/08, P/10 (the address defaults). The directive `@kit-start` — the dictionary
 The probe `@tls` with the door `kit` goes to the process of the last `@kit-start`: the input `{door: "kit", url, client, request}`, `url` — the address
 of the connection with the substitution `{port}` (the port of the door of this process). The client of the stand checks the server as a client of its own
 cluster (`own_client`): the CA fingerprint of the kit, the role of the process, `host` — the `server` of the kit if the host of `url` is
-a loopback literal (the threshold `loopback`), otherwise the host of `url`; then revocation (the `revoked` of the kit is empty). The outcome is the closed form above
+a loopback literal (the threshold `loopback`), otherwise the host of `url` (an IP literal other than loopback is a data error); then revocation (the `revoked` of the kit is empty). The outcome is the closed form above
 with the field `peer`: `"ok"` or a word of the contract `peer`; on a word the client closes the handshake — `handshake: "ok"` (the server did not refuse), `http: null`, `version` may be `null`. The server refused with the handshake — `handshake: "alert"`, `peer: null`, `http: null`. A refusal of the check
 of the server at the door `kit` is an outcome of the probe, not the class «stand» (at the other doors — as before). The client judges the steps of `peer` over the handshake chain: a leaf without a CA in `chain[1:]` — `foreign_ca` (step 3). Of the words the table names `wrong_name`; the other words are not judged by the acceptance, except `peer: "ok"`.
 
