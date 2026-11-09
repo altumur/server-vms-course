@@ -22,6 +22,33 @@ The format is the dictionary of directives and doors of the common acceptance RE
   `key` included, are not admitted (the common rule of `error` is kept). For a weight refusal the fields `key` and `size`
   are mandatory and are compared as before.
 
+## The instance of the chapter
+
+An additional check of the full key (R29-01, P/01.1-16,22) runs beyond the scenario TSV on a separate instance
+with rights on acc/: the keys of this prefix at the boundary lengths in UTF-8 bytes, including Cyrillic and four-byte
+characters, and the same set in a non-empty guard.key. For an existing guard use its actual version, for an absent one —
+index="", so as not to fall into the version comparison refusal. For a file implementation separately check its
+declared limit: an earlier badkey is admissible, but the threshold 200 by itself is not a norm of the platform.
+Test the full UTF-8 representation, not the number of characters.
+
+The scenarios are run through the store door (the lesson, N2) of any implementation; the path to the door (the unix socket of a role or a stand with the same door) is a parameter of the stand. The role of the run is `acc` («Stand» of the common README): full rights on the prefix `acc/` and on nothing else. For **each scenario, including on a repeated run**, the runner creates a new isolated instance
+of the store with empty application rows and an empty memory of the write identifiers `id`. In particular,
+both test prefixes are empty — `acc/` and `other/`. Cleaning the rows `acc/<scenario>/` in the previous instance
+is not enough: it does not clear the replay memory. Versions need not start from a given number.
+
+The preparation of the instance, its data directory and its rights is done by the runner before the scenario starts; the checked requests
+go only from the indicated role with rights on `acc/`. A row outside those rights is written by the runner in the preparation (not a checked request) through `admin.sock` of the instance (`{socket}` of «Stand» of the common README); a listing sees its name
+and version without the value, although the role has no read rights there (N3 «list»). A query of `POST /v1/write` and a body of `GET` are not read; `Infinity` and a BOM in the body — N2.1.
+Parallel scenarios use different instances and share neither rows nor the `id` memory.
+
+The parameters of each instance (N5 of the lesson): the row ceiling **524288 bytes**, the read limit of an HTTP body
+**1048576 bytes**. The runner checks both values before the scenarios by behaviour on a probe instance obtained in the same way.
+The runner obtains an isolated instance in the way the implementation named in its description (the norms,
+«Implementation decides» item 10). If the parameters cannot be provided or the check did not agree, the run is not performed;
+the expected bytes must not be adjusted to the available settings.
+
+The runner passes the bytes of the body from `request` after the substitutions, without re-serialization or other additions.
+
 ## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
 
 [`seams.tsv`](seams.tsv) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`

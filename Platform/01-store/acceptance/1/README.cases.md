@@ -107,3 +107,26 @@ go only from the indicated role with rights on `acc/`. Scenario 21 does not rece
 writes the row `other/21-rights/c9` `{n: "1"}` through `admin.sock` of the instance (`{socket}` of «Stand»); step 6 sees its name
 and version without the value, although the role has no read rights on `other/` (N3 «list»). In sc. 24 step 7 — the query of a `POST` is not
 read, step 8 — the body of a `GET` is not read; in sc. 26 steps 9–10 — `Infinity` and a BOM in the body (N2.1).
+
+### Original passage 16
+
+An additional check of the full key (R29-01, P/01.1-16,22): on a separate instance
+with rights on acc/ check the keys of this prefix with the full length of 200, 201, 213, 1024 and 1025
+UTF-8 bytes, including Cyrillic and four-byte characters. The first four pass the door rule,
+1025 gives 400 badkey without a write; check the same set in a non-empty guard.key. For an existing
+guard use its actual version, for an absent one — index="", so as not to fall
+into the version comparison refusal. For a file implementation separately check its declared limit:
+an earlier badkey is admissible, but the threshold 200 by itself is not a norm of the platform.
+This is a separate harness beyond the scenario TSV; test the full UTF-8 representation, not the number of characters.
+
+### Original passage 17
+
+The runner checks both values before the scenarios by behaviour on a probe instance obtained in the same
+way: a body of exactly 1048576 bytes reaches the JSON parsing (the answer is not `413`), 1048577 bytes — `413 toolarge`
+with `limit` 1048576; a weight of `items` of exactly 524288 bytes is written, 524289 — `413 toolarge` with `limit` 524288.
+
+### Original passage 18
+
+Scenario 15 after the expansion of `@big` sends bodies of 524348 and 524344 bytes: both are smaller than the body limit,
+but the weight of `items` is 524292 and 524288 bytes. So exactly the row ceiling is checked.
+Scenario 22 sends a body of 4194364 bytes, more than 1048576: the refusal arises before the JSON parsing and the weight check.

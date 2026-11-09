@@ -338,37 +338,7 @@ On a stand without a kit, `no_role`, `wrong_role` or `bad_chain` from `holder` o
 
 An answer body compared as JSON is parsed strictly: a repeated object name at any level or a non-JSON number constant (`NaN`, `Infinity`) is a mismatch of the step.
 
-An additional check of the full key (R29-01, P/01.1-16,22): on a separate instance
-with rights on acc/ check the keys of this prefix with the full length of 200, 201, 213, 1024 and 1025
-UTF-8 bytes, including Cyrillic and four-byte characters. The first four pass the door rule,
-1025 gives 400 badkey without a write; check the same set in a non-empty guard.key. For an existing
-guard use its actual version, for an absent one — index="", so as not to fall
-into the version comparison refusal. For a file implementation separately check its declared limit:
-an earlier badkey is admissible, but the threshold 200 by itself is not a norm of the platform.
-This is a separate harness beyond the scenario TSV; test the full UTF-8 representation, not the number of characters.
-
-The scenarios are run through the store door (the lesson, N2) of any implementation; the path to the door (the unix socket of a role or a stand with the same door) is a parameter of the stand. The role of the run is `acc` («Stand» above): full rights on the prefix `acc/` and on nothing else. For **each scenario, including on a repeated run**, the runner creates a new isolated instance
-of the store with empty application rows and an empty memory of the write identifiers `id`. In particular,
-both test prefixes are empty — `acc/` and `other/`. Cleaning the rows `acc/<scenario>/` in the previous instance
-is not enough: it does not clear the replay memory. Versions need not start from a given number.
-
-The preparation of the instance, its data directory and its rights is done by the runner before the scenario starts; the checked requests
-go only from the indicated role with rights on `acc/`. A row outside those rights is written by the runner in the preparation (not a checked request) through `admin.sock` of the instance (`{socket}` of «Stand»); a listing sees its name
-and version without the value, although the role has no read rights there (N3 «list»). A query of `POST /v1/write` and a body of `GET` are not read; `Infinity` and a BOM in the body — N2.1.
-Parallel scenarios use different instances and share neither rows nor the `id` memory.
-
-The parameters of each instance (N5 of the lesson): the row ceiling **524288 bytes**, the read limit of an HTTP body
-**1048576 bytes**. The runner checks both values before the scenarios by behaviour on a probe instance obtained in the same
-way: a body of exactly 1048576 bytes reaches the JSON parsing (the answer is not `413`), 1048577 bytes — `413 toolarge`
-with `limit` 1048576; a weight of `items` of exactly 524288 bytes is written, 524289 — `413 toolarge` with `limit` 524288.
-The runner obtains an isolated instance in the way the implementation named in its description (the norms,
-«Implementation decides» item 10). If the parameters cannot be provided or the check did not agree, the run is not performed;
-the expected bytes must not be adjusted to the available settings.
-
-Scenario 15 after the expansion of `@big` sends bodies of 524348 and 524344 bytes: both are smaller than the body limit,
-but the weight of `items` is 524292 and 524288 bytes. So exactly the row ceiling is checked.
-Scenario 22 sends a body of 4194364 bytes, more than 1048576: the refusal arises before the JSON parsing and the weight check.
-The runner passes the bytes of the body from `request` after the substitutions, without re-serialization or other additions.
+The isolated instance of chapter 1.1, its preparation and its limits are in the [acceptance README of that chapter](../../01-store/acceptance/1/README.md).
 
 ### Seam adapter protocol
 
