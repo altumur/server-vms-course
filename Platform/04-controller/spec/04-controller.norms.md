@@ -320,7 +320,7 @@ power_pull:
   restore:  P/05 N1.4 «Bucket restore»
   return:   the resource pulls the buckets; the workers take free names; a name with an expired slot — only by the word of the controller (P/03.2)
   presence: the presence lock contract (common/contracts/presence-lock.md)
-fresh_controller: what is seen for the first time has just changed; it moves nothing for the first LOST_AFTER (N3 «pass()», step 0)
+fresh_controller: what is seen for the first time has just changed; it moves nothing for the first LOST_AFTER (N3 «pass()», step 0). This limits judgements by silence and by terms; a confirmed gone from a live resource is positive evidence and takes precedence, the race is closed by CAS
 ```
 
 <!-- req: P/04-R017 -->

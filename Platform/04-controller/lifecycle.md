@@ -82,8 +82,8 @@ argument of the runner command is the subsystem name `<sub>`.
 
 ## Signals and readiness
 
-- **Readiness** — `Type=notify`: `READY=1` after the schema check and the manifest read, `WATCHDOG=1` on every turn of the pass;
-  `WatchdogSec` from its P/02.4 unit source (SHOULD); without `NOTIFY_SOCKET` it is silent ([P/02.4] N1.1 `notify`, `watchdog`).
+- **Readiness** — `Type=notify`: `READY=1` after the schema check and the manifest read, `WATCHDOG=1` at the boundaries of completed decisions and of progress of the pass, not from an independent timer, so that a hung call is not masked;
+  `WatchdogSec` from its P/02.4 unit source (SHOULD) limits the gap between notifications, the finite budget of a pass is a separate existing obligation; without `NOTIFY_SOCKET` it is silent ([P/02.4] N1.1 `notify`, `watchdog`).
 - **The first LOST_AFTER** after start it judges nobody: what is seen for the first time has «just changed» ([P/04] N3 «pass()» step 0, N1.4a
   `fresh_controller`).
 - **SIGTERM** — an orderly exit; an unfinished intent is completed by the next holder of the turn
