@@ -61,8 +61,8 @@ element of the curve Edwards25519; not a point of the curve is 32 bytes that do 
 signature form: the triple `X-W2C-Member/Time/Signature` is at the asks without a member on the path (lesson 10).
 
 The form of the function is the column `input` of the package [`agent-sig`](../vectors/agent-sig/README.md) (the former input of the command `agent-sig`
-of the acceptance of M11/3 N5; sc. 10 was removed by the move of lesson 8): `{key, method, path, body, header, now, window}` →
-`{result: ok}` | `{result: refused, reason}`; `path` with «?» is an input out of form. The triple of lesson 10 is [the ask signature
+of the acceptance of M11/3 N5; sc. 10 was removed by the move of lesson 8): `{key, method, path, body, header, now, window, for?}` →
+`{result: ok}` | `{result: refused, reason}`; `path` with «?» is an input out of form. `for` is the value of the header `X-Agent-For`: it is present only for a request with this header, and then the signed string ends with `"\n" <for>` («Signature»); without `for` the string is as without the header. The triple of lesson 10 is [the ask signature
 contract](ask-sig.md).
 
 ## Vectors

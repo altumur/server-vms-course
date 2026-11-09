@@ -205,6 +205,8 @@ cases. The merge and the removal of `domain/revoked` at a member (`merge`, `repe
 guess of stage C KEYS-G01, the Architect's decision of 2026-10-23); the bound of `prune` at the token checker — the vectors [`domain-token`](../vectors/domain-token/README.md) (formerly sc. 07
 of the acceptance of M11/2) through the function `token`.
 
+A row of `revoked.tsv` checks the merge and the removal at a member: the input is the JSON object `{own, answer, now}`: `own` is the member's own row `jtis`, `answer` is the `jtis` of the holder's answer or `null` (there are no entries of the answer: `repeat` and `prune` apply to `own`), `now` is the wall seconds; the output is the `jtis` of the row that the agent writes.
+
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
