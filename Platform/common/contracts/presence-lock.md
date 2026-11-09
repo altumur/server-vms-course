@@ -60,7 +60,7 @@ presence_lock:  <events root>/.workers/<sub>/<instance>.lock   # the components 
              of open or read), not its content (analysis of the review of stage B 3–5, № 23), and a lock whose check cannot be
              completed: an error of flock other than «busy» (EWOULDBLOCK), or an error of fstat/stat other than ENOENT at stat (that is
              a mismatch), — also unknown, like an unreadable file; do not touch the file (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7); one <sub>/<worker> has several readable named files — an unknown check takes priority, otherwise runs if at least one is busy;
-             a gone file the resource MAY delete, holding its flock and after a matching comparison; there is no other source of presence (pid files, kill(pid, 0))
+             a gone file the resource MAY delete, holding its flock and after a matching comparison, but only after it has observed that file as gone for longer than SLOT_TERM (the slot contract «Terms»; otherwise the controller sees unlisted and waits instead of move; the Architect's decision of 2026-11-09); there is no other source of presence (pid files, kill(pid, 0))
 presence:   the resource tells about the processes of its box by the heartbeat fields of P/05 N1.4 (`workers`, `running`, `unknown`; the words and their
             derivation — there too, the fate — P/04); how it learns — the presence lock above
             (<events root>/.workers/<sub>/<instance>.lock, flock; the second pilot, N-1); unreadable → unknown (a word

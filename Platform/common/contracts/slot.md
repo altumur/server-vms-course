@@ -44,7 +44,7 @@ states:
 ```yaml
 SLOT_TERM: 45          # the slot term, s
 TORN_MARGIN: 5         # s; independent extra observation margin for a torn row, not HOLD_SKEW
-TORN_STILL: SLOT_TERM + TORN_MARGIN  # unchanged observation required before rewriting a torn row with readable gen
+TORN_STILL: SLOT_TERM + TORN_MARGIN  # unchanged observation required before rewriting a torn row with readable gen at a capture, where there is no gone evidence; a release on gone does not require it
 ```
 
 ## Vectors
