@@ -40,4 +40,4 @@ of implementations; on a divergence the contract is right, the vector is correct
 
 ## Vector wire
 
-The wire of `cases.tsv` is set by the `common/keys` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
+The wire of `cases.tsv` and `revoked.tsv` is set by the `common/keys` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
