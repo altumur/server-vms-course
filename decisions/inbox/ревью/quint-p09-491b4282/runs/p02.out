@@ -1,0 +1,863 @@
+quint run --backend=rust --main=pass_seq_14 --init=init --step=step --max-steps=60 --max-samples=5 --invariant=GapBelowLost --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/p02.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  pass_seq_14::pass_base::lastAction: "init",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 14,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 0,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "wait",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 1]
+{
+  pass_seq_14::pass_base::lastAction: "waitNext",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 14,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 0,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 2]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 13,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 6,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 3]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 12,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 12,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 4]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 11,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 18,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 5]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 10,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 24,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 6]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 9,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 30,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 7]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 8,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 36,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 8]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 7,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 42,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 9]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 6,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 48,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 10]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 5,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 54,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 11]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 4,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 60,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 12]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 3,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 66,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 13]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 2,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 72,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 14]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 1,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 78,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 15]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 0,
+  pass_seq_14::pass_base::lastReportAt: 0,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 0,
+  pass_seq_14::pass_base::nextPassAt: 0,
+  pass_seq_14::pass_base::now: 84,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 0
+}
+
+[State 16]
+{
+  pass_seq_14::pass_base::lastAction: "sendReport",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 84,
+  pass_seq_14::pass_base::passStart: 0,
+  pass_seq_14::pass_base::phase: "wait",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 17]
+{
+  pass_seq_14::pass_base::lastAction: "waitNext",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 14,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 84,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 18]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 13,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 90,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 19]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 12,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 96,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 20]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 11,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 102,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 21]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 10,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 108,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 22]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 9,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 114,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 23]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 8,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 120,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 24]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 7,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 126,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 25]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 6,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 132,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 26]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 5,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 138,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 27]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 4,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 144,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 28]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 3,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 150,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 29]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 2,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 156,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 30]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 1,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 162,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 31]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 84,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 84,
+  pass_seq_14::pass_base::nextPassAt: 84,
+  pass_seq_14::pass_base::now: 168,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 1
+}
+
+[State 32]
+{
+  pass_seq_14::pass_base::lastAction: "sendReport",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 168,
+  pass_seq_14::pass_base::passStart: 84,
+  pass_seq_14::pass_base::phase: "wait",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 33]
+{
+  pass_seq_14::pass_base::lastAction: "waitNext",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 14,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 168,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 34]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 13,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 174,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 35]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 12,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 180,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 36]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 11,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 186,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 37]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 10,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 192,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 38]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 9,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 198,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 39]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 8,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 204,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 40]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 7,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 210,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 41]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 6,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 216,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 42]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 5,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 222,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 43]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 4,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 228,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 44]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 3,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 234,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 45]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 2,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 240,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 46]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 1,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 246,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 47]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 168,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 168,
+  pass_seq_14::pass_base::nextPassAt: 168,
+  pass_seq_14::pass_base::now: 252,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 2
+}
+
+[State 48]
+{
+  pass_seq_14::pass_base::lastAction: "sendReport",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 0,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 252,
+  pass_seq_14::pass_base::passStart: 168,
+  pass_seq_14::pass_base::phase: "wait",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 49]
+{
+  pass_seq_14::pass_base::lastAction: "waitNext",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 14,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 252,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 50]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 13,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 258,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 51]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 12,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 264,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 52]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 11,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 270,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 53]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 10,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 276,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 54]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 9,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 282,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 55]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 8,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 288,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 56]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 7,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 294,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 57]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 6,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 300,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 58]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 5,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 306,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 59]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 4,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 312,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[State 60]
+{
+  pass_seq_14::pass_base::lastAction: "followOne",
+  pass_seq_14::pass_base::lastGap: 84,
+  pass_seq_14::pass_base::lastReportAt: 252,
+  pass_seq_14::pass_base::left: 3,
+  pass_seq_14::pass_base::markAt: 252,
+  pass_seq_14::pass_base::nextPassAt: 252,
+  pass_seq_14::pass_base::now: 318,
+  pass_seq_14::pass_base::passStart: 252,
+  pass_seq_14::pass_base::phase: "follow",
+  pass_seq_14::pass_base::reports: 3
+}
+
+[ok] No violation found (25ms at 200 traces/second).
+Trace length statistics: max=61, min=61, average=61.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

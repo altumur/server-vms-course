@@ -1,0 +1,112 @@
+quint run --backend=rust --main=report_text --init=init --step=step --max-steps=18 --max-samples=80000 --invariant=witRebaseConverge --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o04.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "init",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 1]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "sendWholeOk",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 2]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "sendDeltaLost",
+  report_text::report_base::lostPending: true,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 3]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: true,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 4]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "sendDeltaLost",
+  report_text::report_base::lostPending: true,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 5]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: true,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 6]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "rebase",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 7]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 3,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 3,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "sendWholeOk",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[violation] Found an issue (17ms at 2706 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

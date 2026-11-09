@@ -1,0 +1,863 @@
+quint run --backend=rust --main=pass_par_60 --init=init --step=step --max-steps=60 --max-samples=5 --invariant=GapBelowLost --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/p06.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  pass_par_60::pass_base::lastAction: "init",
+  pass_par_60::pass_base::lastGap: 0,
+  pass_par_60::pass_base::lastReportAt: 0,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 0,
+  pass_par_60::pass_base::now: 0,
+  pass_par_60::pass_base::passStart: 0,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 0
+}
+
+[State 1]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 0,
+  pass_par_60::pass_base::lastReportAt: 0,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 0,
+  pass_par_60::pass_base::now: 0,
+  pass_par_60::pass_base::passStart: 0,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 0
+}
+
+[State 2]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 0,
+  pass_par_60::pass_base::lastReportAt: 0,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 0,
+  pass_par_60::pass_base::now: 6,
+  pass_par_60::pass_base::passStart: 0,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 0
+}
+
+[State 3]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 6,
+  pass_par_60::pass_base::lastReportAt: 6,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 10,
+  pass_par_60::pass_base::now: 6,
+  pass_par_60::pass_base::passStart: 0,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 1
+}
+
+[State 4]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 6,
+  pass_par_60::pass_base::lastReportAt: 6,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 10,
+  pass_par_60::pass_base::now: 10,
+  pass_par_60::pass_base::passStart: 10,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 1
+}
+
+[State 5]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 6,
+  pass_par_60::pass_base::lastReportAt: 6,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 10,
+  pass_par_60::pass_base::now: 16,
+  pass_par_60::pass_base::passStart: 10,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 1
+}
+
+[State 6]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 16,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 20,
+  pass_par_60::pass_base::now: 16,
+  pass_par_60::pass_base::passStart: 10,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 2
+}
+
+[State 7]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 16,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 20,
+  pass_par_60::pass_base::now: 20,
+  pass_par_60::pass_base::passStart: 20,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 2
+}
+
+[State 8]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 16,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 20,
+  pass_par_60::pass_base::now: 26,
+  pass_par_60::pass_base::passStart: 20,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 2
+}
+
+[State 9]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 26,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 30,
+  pass_par_60::pass_base::now: 26,
+  pass_par_60::pass_base::passStart: 20,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 3
+}
+
+[State 10]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 26,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 30,
+  pass_par_60::pass_base::now: 30,
+  pass_par_60::pass_base::passStart: 30,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 3
+}
+
+[State 11]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 26,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 30,
+  pass_par_60::pass_base::now: 36,
+  pass_par_60::pass_base::passStart: 30,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 3
+}
+
+[State 12]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 36,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 40,
+  pass_par_60::pass_base::now: 36,
+  pass_par_60::pass_base::passStart: 30,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 4
+}
+
+[State 13]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 36,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 40,
+  pass_par_60::pass_base::now: 40,
+  pass_par_60::pass_base::passStart: 40,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 4
+}
+
+[State 14]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 36,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 0,
+  pass_par_60::pass_base::nextPassAt: 40,
+  pass_par_60::pass_base::now: 46,
+  pass_par_60::pass_base::passStart: 40,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 4
+}
+
+[State 15]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 46,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 50,
+  pass_par_60::pass_base::now: 46,
+  pass_par_60::pass_base::passStart: 40,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 5
+}
+
+[State 16]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 46,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 50,
+  pass_par_60::pass_base::now: 50,
+  pass_par_60::pass_base::passStart: 50,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 5
+}
+
+[State 17]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 46,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 50,
+  pass_par_60::pass_base::now: 56,
+  pass_par_60::pass_base::passStart: 50,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 5
+}
+
+[State 18]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 56,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 60,
+  pass_par_60::pass_base::now: 56,
+  pass_par_60::pass_base::passStart: 50,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 6
+}
+
+[State 19]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 56,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 60,
+  pass_par_60::pass_base::now: 60,
+  pass_par_60::pass_base::passStart: 60,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 6
+}
+
+[State 20]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 56,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 60,
+  pass_par_60::pass_base::now: 66,
+  pass_par_60::pass_base::passStart: 60,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 6
+}
+
+[State 21]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 66,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 70,
+  pass_par_60::pass_base::now: 66,
+  pass_par_60::pass_base::passStart: 60,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 7
+}
+
+[State 22]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 66,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 70,
+  pass_par_60::pass_base::now: 70,
+  pass_par_60::pass_base::passStart: 70,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 7
+}
+
+[State 23]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 66,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 70,
+  pass_par_60::pass_base::now: 76,
+  pass_par_60::pass_base::passStart: 70,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 7
+}
+
+[State 24]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 76,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 80,
+  pass_par_60::pass_base::now: 76,
+  pass_par_60::pass_base::passStart: 70,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 8
+}
+
+[State 25]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 76,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 80,
+  pass_par_60::pass_base::now: 80,
+  pass_par_60::pass_base::passStart: 80,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 8
+}
+
+[State 26]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 76,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 80,
+  pass_par_60::pass_base::now: 86,
+  pass_par_60::pass_base::passStart: 80,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 8
+}
+
+[State 27]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 86,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 90,
+  pass_par_60::pass_base::now: 86,
+  pass_par_60::pass_base::passStart: 80,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 9
+}
+
+[State 28]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 86,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 90,
+  pass_par_60::pass_base::now: 90,
+  pass_par_60::pass_base::passStart: 90,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 9
+}
+
+[State 29]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 86,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 46,
+  pass_par_60::pass_base::nextPassAt: 90,
+  pass_par_60::pass_base::now: 96,
+  pass_par_60::pass_base::passStart: 90,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 9
+}
+
+[State 30]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 96,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 100,
+  pass_par_60::pass_base::now: 96,
+  pass_par_60::pass_base::passStart: 90,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 10
+}
+
+[State 31]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 96,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 100,
+  pass_par_60::pass_base::now: 100,
+  pass_par_60::pass_base::passStart: 100,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 10
+}
+
+[State 32]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 96,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 100,
+  pass_par_60::pass_base::now: 106,
+  pass_par_60::pass_base::passStart: 100,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 10
+}
+
+[State 33]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 106,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 110,
+  pass_par_60::pass_base::now: 106,
+  pass_par_60::pass_base::passStart: 100,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 11
+}
+
+[State 34]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 106,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 110,
+  pass_par_60::pass_base::now: 110,
+  pass_par_60::pass_base::passStart: 110,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 11
+}
+
+[State 35]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 106,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 110,
+  pass_par_60::pass_base::now: 116,
+  pass_par_60::pass_base::passStart: 110,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 11
+}
+
+[State 36]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 116,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 120,
+  pass_par_60::pass_base::now: 116,
+  pass_par_60::pass_base::passStart: 110,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 12
+}
+
+[State 37]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 116,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 120,
+  pass_par_60::pass_base::now: 120,
+  pass_par_60::pass_base::passStart: 120,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 12
+}
+
+[State 38]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 116,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 120,
+  pass_par_60::pass_base::now: 126,
+  pass_par_60::pass_base::passStart: 120,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 12
+}
+
+[State 39]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 126,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 130,
+  pass_par_60::pass_base::now: 126,
+  pass_par_60::pass_base::passStart: 120,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 13
+}
+
+[State 40]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 126,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 130,
+  pass_par_60::pass_base::now: 130,
+  pass_par_60::pass_base::passStart: 130,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 13
+}
+
+[State 41]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 126,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 130,
+  pass_par_60::pass_base::now: 136,
+  pass_par_60::pass_base::passStart: 130,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 13
+}
+
+[State 42]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 136,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 140,
+  pass_par_60::pass_base::now: 136,
+  pass_par_60::pass_base::passStart: 130,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 14
+}
+
+[State 43]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 136,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 140,
+  pass_par_60::pass_base::now: 140,
+  pass_par_60::pass_base::passStart: 140,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 14
+}
+
+[State 44]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 136,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 96,
+  pass_par_60::pass_base::nextPassAt: 140,
+  pass_par_60::pass_base::now: 146,
+  pass_par_60::pass_base::passStart: 140,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 14
+}
+
+[State 45]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 146,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 150,
+  pass_par_60::pass_base::now: 146,
+  pass_par_60::pass_base::passStart: 140,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 15
+}
+
+[State 46]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 146,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 150,
+  pass_par_60::pass_base::now: 150,
+  pass_par_60::pass_base::passStart: 150,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 15
+}
+
+[State 47]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 146,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 150,
+  pass_par_60::pass_base::now: 156,
+  pass_par_60::pass_base::passStart: 150,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 15
+}
+
+[State 48]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 156,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 160,
+  pass_par_60::pass_base::now: 156,
+  pass_par_60::pass_base::passStart: 150,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 16
+}
+
+[State 49]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 156,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 160,
+  pass_par_60::pass_base::now: 160,
+  pass_par_60::pass_base::passStart: 160,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 16
+}
+
+[State 50]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 156,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 160,
+  pass_par_60::pass_base::now: 166,
+  pass_par_60::pass_base::passStart: 160,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 16
+}
+
+[State 51]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 166,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 170,
+  pass_par_60::pass_base::now: 166,
+  pass_par_60::pass_base::passStart: 160,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 17
+}
+
+[State 52]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 166,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 170,
+  pass_par_60::pass_base::now: 170,
+  pass_par_60::pass_base::passStart: 170,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 17
+}
+
+[State 53]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 166,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 170,
+  pass_par_60::pass_base::now: 176,
+  pass_par_60::pass_base::passStart: 170,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 17
+}
+
+[State 54]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 176,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 180,
+  pass_par_60::pass_base::now: 176,
+  pass_par_60::pass_base::passStart: 170,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 18
+}
+
+[State 55]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 176,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 180,
+  pass_par_60::pass_base::now: 180,
+  pass_par_60::pass_base::passStart: 180,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 18
+}
+
+[State 56]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 176,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 180,
+  pass_par_60::pass_base::now: 186,
+  pass_par_60::pass_base::passStart: 180,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 18
+}
+
+[State 57]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 186,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 190,
+  pass_par_60::pass_base::now: 186,
+  pass_par_60::pass_base::passStart: 180,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 19
+}
+
+[State 58]
+{
+  pass_par_60::pass_base::lastAction: "waitNext",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 186,
+  pass_par_60::pass_base::left: 60,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 190,
+  pass_par_60::pass_base::now: 190,
+  pass_par_60::pass_base::passStart: 190,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 19
+}
+
+[State 59]
+{
+  pass_par_60::pass_base::lastAction: "followOne",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 186,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 146,
+  pass_par_60::pass_base::nextPassAt: 190,
+  pass_par_60::pass_base::now: 196,
+  pass_par_60::pass_base::passStart: 190,
+  pass_par_60::pass_base::phase: "follow",
+  pass_par_60::pass_base::reports: 19
+}
+
+[State 60]
+{
+  pass_par_60::pass_base::lastAction: "sendReport",
+  pass_par_60::pass_base::lastGap: 10,
+  pass_par_60::pass_base::lastReportAt: 196,
+  pass_par_60::pass_base::left: 0,
+  pass_par_60::pass_base::markAt: 196,
+  pass_par_60::pass_base::nextPassAt: 200,
+  pass_par_60::pass_base::now: 196,
+  pass_par_60::pass_base::passStart: 190,
+  pass_par_60::pass_base::phase: "wait",
+  pass_par_60::pass_base::reports: 20
+}
+
+[ok] No violation found (22ms at 227 traces/second).
+Trace length statistics: max=61, min=61, average=61.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

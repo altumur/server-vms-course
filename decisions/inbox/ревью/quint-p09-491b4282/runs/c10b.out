@@ -1,0 +1,282 @@
+quint run --backend=rust --main=clock_asof_mono --init=init --step=step --max-steps=20 --max-samples=40000 --invariant=AsOfNotFuture --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c10b.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  clock_asof_mono::clock_asof_base::asOf: 0,
+  clock_asof_mono::clock_asof_base::j: 0,
+  clock_asof_mono::clock_asof_base::lastAction: "init",
+  clock_asof_mono::clock_asof_base::reachedTs: 0,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 1,
+  clock_asof_mono::clock_asof_base::tLastCarry: 0,
+  clock_asof_mono::clock_asof_base::tLastReach: 0,
+  clock_asof_mono::clock_asof_base::w: 1
+}
+
+[State 1]
+{
+  clock_asof_mono::clock_asof_base::asOf: 0,
+  clock_asof_mono::clock_asof_base::j: 0,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 0,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 61,
+  clock_asof_mono::clock_asof_base::tLastCarry: 0,
+  clock_asof_mono::clock_asof_base::tLastReach: 0,
+  clock_asof_mono::clock_asof_base::w: 61
+}
+
+[State 2]
+{
+  clock_asof_mono::clock_asof_base::asOf: 0,
+  clock_asof_mono::clock_asof_base::j: 1,
+  clock_asof_mono::clock_asof_base::lastAction: "jumpForward",
+  clock_asof_mono::clock_asof_base::reachedTs: 0,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 61,
+  clock_asof_mono::clock_asof_base::tLastCarry: 0,
+  clock_asof_mono::clock_asof_base::tLastReach: 0,
+  clock_asof_mono::clock_asof_base::w: 7261
+}
+
+[State 3]
+{
+  clock_asof_mono::clock_asof_base::asOf: 0,
+  clock_asof_mono::clock_asof_base::j: 1,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 0,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 0,
+  clock_asof_mono::clock_asof_base::tLastReach: 0,
+  clock_asof_mono::clock_asof_base::w: 93661
+}
+
+[State 4]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 1,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 93661
+}
+
+[State 5]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "jumpBack",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 6]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 7]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 8]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 9]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 10]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86461,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86461
+}
+
+[State 11]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86461,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: false,
+  clock_asof_mono::clock_asof_base::t: 86521,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86461,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86521
+}
+
+[State 12]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86521,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 86521,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86521,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86521
+}
+
+[State 13]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86521,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 86521,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86521,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 86521
+}
+
+[State 14]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86521,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 172921,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86521,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 172921
+}
+
+[State 15]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86521,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 172922,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86521,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 172922
+}
+
+[State 16]
+{
+  clock_asof_mono::clock_asof_base::asOf: 86521,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 93661,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 172982,
+  clock_asof_mono::clock_asof_base::tLastCarry: 86521,
+  clock_asof_mono::clock_asof_base::tLastReach: 86461,
+  clock_asof_mono::clock_asof_base::w: 172982
+}
+
+[State 17]
+{
+  clock_asof_mono::clock_asof_base::asOf: 172982,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 172982,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 172982,
+  clock_asof_mono::clock_asof_base::tLastCarry: 172982,
+  clock_asof_mono::clock_asof_base::tLastReach: 172982,
+  clock_asof_mono::clock_asof_base::w: 172982
+}
+
+[State 18]
+{
+  clock_asof_mono::clock_asof_base::asOf: 172982,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 172982,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 172982,
+  clock_asof_mono::clock_asof_base::tLastCarry: 172982,
+  clock_asof_mono::clock_asof_base::tLastReach: 172982,
+  clock_asof_mono::clock_asof_base::w: 172982
+}
+
+[State 19]
+{
+  clock_asof_mono::clock_asof_base::asOf: 172982,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "tick",
+  clock_asof_mono::clock_asof_base::reachedTs: 172982,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 173042,
+  clock_asof_mono::clock_asof_base::tLastCarry: 172982,
+  clock_asof_mono::clock_asof_base::tLastReach: 172982,
+  clock_asof_mono::clock_asof_base::w: 173042
+}
+
+[State 20]
+{
+  clock_asof_mono::clock_asof_base::asOf: 173042,
+  clock_asof_mono::clock_asof_base::j: 2,
+  clock_asof_mono::clock_asof_base::lastAction: "carry",
+  clock_asof_mono::clock_asof_base::reachedTs: 173042,
+  clock_asof_mono::clock_asof_base::staleSkip: true,
+  clock_asof_mono::clock_asof_base::t: 173042,
+  clock_asof_mono::clock_asof_base::tLastCarry: 173042,
+  clock_asof_mono::clock_asof_base::tLastReach: 173042,
+  clock_asof_mono::clock_asof_base::w: 173042
+}
+
+[ok] No violation found (410ms at 97561 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

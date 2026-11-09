@@ -1,0 +1,50 @@
+quint run --backend=rust --main=pass_seq_0 --init=init --step=step --max-steps=10 --max-samples=5 --invariant=witSent --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/p09.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  pass_seq_0::pass_base::lastAction: "init",
+  pass_seq_0::pass_base::lastGap: 0,
+  pass_seq_0::pass_base::lastReportAt: 0,
+  pass_seq_0::pass_base::left: 0,
+  pass_seq_0::pass_base::markAt: 0,
+  pass_seq_0::pass_base::nextPassAt: 0,
+  pass_seq_0::pass_base::now: 0,
+  pass_seq_0::pass_base::passStart: 0,
+  pass_seq_0::pass_base::phase: "wait",
+  pass_seq_0::pass_base::reports: 0
+}
+
+[State 1]
+{
+  pass_seq_0::pass_base::lastAction: "waitNext",
+  pass_seq_0::pass_base::lastGap: 0,
+  pass_seq_0::pass_base::lastReportAt: 0,
+  pass_seq_0::pass_base::left: 0,
+  pass_seq_0::pass_base::markAt: 0,
+  pass_seq_0::pass_base::nextPassAt: 0,
+  pass_seq_0::pass_base::now: 0,
+  pass_seq_0::pass_base::passStart: 0,
+  pass_seq_0::pass_base::phase: "follow",
+  pass_seq_0::pass_base::reports: 0
+}
+
+[State 2]
+{
+  pass_seq_0::pass_base::lastAction: "sendReport",
+  pass_seq_0::pass_base::lastGap: 0,
+  pass_seq_0::pass_base::lastReportAt: 0,
+  pass_seq_0::pass_base::left: 0,
+  pass_seq_0::pass_base::markAt: 0,
+  pass_seq_0::pass_base::nextPassAt: 10,
+  pass_seq_0::pass_base::now: 0,
+  pass_seq_0::pass_base::passStart: 0,
+  pass_seq_0::pass_base::phase: "wait",
+  pass_seq_0::pass_base::reports: 1
+}
+
+[violation] Found an issue (20ms at 250 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

@@ -1,0 +1,282 @@
+quint run --backend=rust --main=clock_asof_clamp --init=init --step=step --max-steps=20 --max-samples=40000 --invariant=AsOfNotFuture --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c09.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 0,
+  clock_asof_clamp::clock_asof_base::j: 0,
+  clock_asof_clamp::clock_asof_base::lastAction: "init",
+  clock_asof_clamp::clock_asof_base::reachedTs: 0,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 1,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 0,
+  clock_asof_clamp::clock_asof_base::tLastReach: 0,
+  clock_asof_clamp::clock_asof_base::w: 1
+}
+
+[State 1]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 0,
+  clock_asof_clamp::clock_asof_base::j: 1,
+  clock_asof_clamp::clock_asof_base::lastAction: "jumpForward",
+  clock_asof_clamp::clock_asof_base::reachedTs: 0,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 1,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 0,
+  clock_asof_clamp::clock_asof_base::tLastReach: 0,
+  clock_asof_clamp::clock_asof_base::w: 7201
+}
+
+[State 2]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 0,
+  clock_asof_clamp::clock_asof_base::j: 1,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 0,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 61,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 0,
+  clock_asof_clamp::clock_asof_base::tLastReach: 0,
+  clock_asof_clamp::clock_asof_base::w: 7261
+}
+
+[State 3]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 7261,
+  clock_asof_clamp::clock_asof_base::j: 1,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 61,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 7261
+}
+
+[State 4]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 7261,
+  clock_asof_clamp::clock_asof_base::j: 1,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 62,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 7262
+}
+
+[State 5]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 62,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "jumpBack",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 62,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 62
+}
+
+[State 6]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 62,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 122,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 122
+}
+
+[State 7]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 62,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 86522,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 86522
+}
+
+[State 8]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 62,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 7261,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 86523,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 61,
+  clock_asof_clamp::clock_asof_base::tLastReach: 61,
+  clock_asof_clamp::clock_asof_base::w: 86523
+}
+
+[State 9]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 86523,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 86523
+}
+
+[State 10]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 86523,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 86523
+}
+
+[State 11]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 86523,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 86523
+}
+
+[State 12]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 172923,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 172923
+}
+
+[State 13]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 259323,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 259323
+}
+
+[State 14]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 259383,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 259383
+}
+
+[State 15]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 345783,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 345783
+}
+
+[State 16]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 86523,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 86523,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 432183,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 86523,
+  clock_asof_clamp::clock_asof_base::tLastReach: 86523,
+  clock_asof_clamp::clock_asof_base::w: 432183
+}
+
+[State 17]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 432183,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 432183,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 432183,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 432183,
+  clock_asof_clamp::clock_asof_base::tLastReach: 432183,
+  clock_asof_clamp::clock_asof_base::w: 432183
+}
+
+[State 18]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 432183,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "carry",
+  clock_asof_clamp::clock_asof_base::reachedTs: 432183,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 432183,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 432183,
+  clock_asof_clamp::clock_asof_base::tLastReach: 432183,
+  clock_asof_clamp::clock_asof_base::w: 432183
+}
+
+[State 19]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 432183,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 432183,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 518583,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 432183,
+  clock_asof_clamp::clock_asof_base::tLastReach: 432183,
+  clock_asof_clamp::clock_asof_base::w: 518583
+}
+
+[State 20]
+{
+  clock_asof_clamp::clock_asof_base::asOf: 432183,
+  clock_asof_clamp::clock_asof_base::j: 2,
+  clock_asof_clamp::clock_asof_base::lastAction: "tick",
+  clock_asof_clamp::clock_asof_base::reachedTs: 432183,
+  clock_asof_clamp::clock_asof_base::staleSkip: false,
+  clock_asof_clamp::clock_asof_base::t: 604983,
+  clock_asof_clamp::clock_asof_base::tLastCarry: 432183,
+  clock_asof_clamp::clock_asof_base::tLastReach: 432183,
+  clock_asof_clamp::clock_asof_base::w: 604983
+}
+
+[ok] No violation found (276ms at 144928 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

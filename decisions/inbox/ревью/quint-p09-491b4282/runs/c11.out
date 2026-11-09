@@ -1,0 +1,34 @@
+quint run --backend=rust --main=clock_asof_nojump --init=init --step=step --max-steps=8 --max-samples=5000 --invariant=witCarry --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c11.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  clock_asof_nojump::clock_asof_base::asOf: 0,
+  clock_asof_nojump::clock_asof_base::j: 0,
+  clock_asof_nojump::clock_asof_base::lastAction: "init",
+  clock_asof_nojump::clock_asof_base::reachedTs: 0,
+  clock_asof_nojump::clock_asof_base::staleSkip: false,
+  clock_asof_nojump::clock_asof_base::t: 1,
+  clock_asof_nojump::clock_asof_base::tLastCarry: 0,
+  clock_asof_nojump::clock_asof_base::tLastReach: 0,
+  clock_asof_nojump::clock_asof_base::w: 1
+}
+
+[State 1]
+{
+  clock_asof_nojump::clock_asof_base::asOf: 1,
+  clock_asof_nojump::clock_asof_base::j: 0,
+  clock_asof_nojump::clock_asof_base::lastAction: "carry",
+  clock_asof_nojump::clock_asof_base::reachedTs: 1,
+  clock_asof_nojump::clock_asof_base::staleSkip: false,
+  clock_asof_nojump::clock_asof_base::t: 1,
+  clock_asof_nojump::clock_asof_base::tLastCarry: 1,
+  clock_asof_nojump::clock_asof_base::tLastReach: 1,
+  clock_asof_nojump::clock_asof_base::w: 1
+}
+
+[violation] Found an issue (42ms at 476 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

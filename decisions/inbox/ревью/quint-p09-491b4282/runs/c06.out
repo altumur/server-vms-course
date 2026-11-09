@@ -1,0 +1,99 @@
+quint run --backend=rust --main=clock_asof_text --init=init --step=step --max-steps=24 --max-samples=60000 --invariant=RevokeBound --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c06.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  clock_asof_text::clock_asof_base::asOf: 0,
+  clock_asof_text::clock_asof_base::j: 0,
+  clock_asof_text::clock_asof_base::lastAction: "init",
+  clock_asof_text::clock_asof_base::reachedTs: 0,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 1,
+  clock_asof_text::clock_asof_base::tLastCarry: 0,
+  clock_asof_text::clock_asof_base::tLastReach: 0,
+  clock_asof_text::clock_asof_base::w: 1
+}
+
+[State 1]
+{
+  clock_asof_text::clock_asof_base::asOf: 0,
+  clock_asof_text::clock_asof_base::j: 0,
+  clock_asof_text::clock_asof_base::lastAction: "tick",
+  clock_asof_text::clock_asof_base::reachedTs: 0,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 86401,
+  clock_asof_text::clock_asof_base::tLastCarry: 0,
+  clock_asof_text::clock_asof_base::tLastReach: 0,
+  clock_asof_text::clock_asof_base::w: 86401
+}
+
+[State 2]
+{
+  clock_asof_text::clock_asof_base::asOf: 0,
+  clock_asof_text::clock_asof_base::j: 1,
+  clock_asof_text::clock_asof_base::lastAction: "jumpForward",
+  clock_asof_text::clock_asof_base::reachedTs: 0,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 86401,
+  clock_asof_text::clock_asof_base::tLastCarry: 0,
+  clock_asof_text::clock_asof_base::tLastReach: 0,
+  clock_asof_text::clock_asof_base::w: 93601
+}
+
+[State 3]
+{
+  clock_asof_text::clock_asof_base::asOf: 93601,
+  clock_asof_text::clock_asof_base::j: 1,
+  clock_asof_text::clock_asof_base::lastAction: "carry",
+  clock_asof_text::clock_asof_base::reachedTs: 93601,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 86401,
+  clock_asof_text::clock_asof_base::tLastCarry: 86401,
+  clock_asof_text::clock_asof_base::tLastReach: 86401,
+  clock_asof_text::clock_asof_base::w: 93601
+}
+
+[State 4]
+{
+  clock_asof_text::clock_asof_base::asOf: 93601,
+  clock_asof_text::clock_asof_base::j: 2,
+  clock_asof_text::clock_asof_base::lastAction: "jumpBack",
+  clock_asof_text::clock_asof_base::reachedTs: 93601,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 86401,
+  clock_asof_text::clock_asof_base::tLastCarry: 86401,
+  clock_asof_text::clock_asof_base::tLastReach: 86401,
+  clock_asof_text::clock_asof_base::w: 86401
+}
+
+[State 5]
+{
+  clock_asof_text::clock_asof_base::asOf: 93601,
+  clock_asof_text::clock_asof_base::j: 2,
+  clock_asof_text::clock_asof_base::lastAction: "tick",
+  clock_asof_text::clock_asof_base::reachedTs: 93601,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 172801,
+  clock_asof_text::clock_asof_base::tLastCarry: 86401,
+  clock_asof_text::clock_asof_base::tLastReach: 86401,
+  clock_asof_text::clock_asof_base::w: 172801
+}
+
+[State 6]
+{
+  clock_asof_text::clock_asof_base::asOf: 93601,
+  clock_asof_text::clock_asof_base::j: 2,
+  clock_asof_text::clock_asof_base::lastAction: "tick",
+  clock_asof_text::clock_asof_base::reachedTs: 93601,
+  clock_asof_text::clock_asof_base::staleSkip: false,
+  clock_asof_text::clock_asof_base::t: 172861,
+  clock_asof_text::clock_asof_base::tLastCarry: 86401,
+  clock_asof_text::clock_asof_base::tLastReach: 86401,
+  clock_asof_text::clock_asof_base::w: 172861
+}
+
+[violation] Found an issue (22ms at 3045 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

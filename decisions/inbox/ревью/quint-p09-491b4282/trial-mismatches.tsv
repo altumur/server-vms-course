@@ -1,0 +1,13 @@
+ids	stage	expected	actual	cause	resolution
+k11	trial1	witness order	ORDER-MISS	proceedHandover был разрешён после loseHolder: держатель действует только живым	proceedHandover требует holderAlive
+k11,k12	trial1	witness order	ORDER-MISS	startHandover не обязан предшествовать записи строки: порядок ужесточён до нужной части	order=writeTaken>proceedHandover>loseHolder; fetchPart>fetchPart>writeTaken>proceedHandover
+k17	trial1	ok	violated	уборка referenced была только при writeTaken: части копились при движении указателя без строки	CLEANUP применён и в fetchPart (контроль-гипотеза)
+t01,t02,t03,t05,t09	trial1	violated	ok	случайный обход не проходил длинные цепочки ожидания при шаге времени 1	добавлен фокусный шаг stepDoor; шаг времени = TURN_RENEW (допущение о сетке)
+t14	trial1	witness order	ORDER-MISS	перехват без настоящего держателя: kill до первого взятия	добавлены stepKill и условие ver>=2
+p02,p05	trial1	ok	violated	первый интервал включал лишние every от старта: граница считалась неверно	старт прохода в 0; отдельный параметр PERIOD (from_start|from_end), добавлен p05b
+c10	trial1	ok	violated	контроль-гипотеза clamp убирает будущий as_of, но не закрывает обещание срока 08.4:898: as_of уже сдвинут на J	ожидание изменено на violated с пометкой; добавлены контроли RULE=mono (c10b,c10c)
+c16	trial1	ok	violated	mono-правило по штампу не срабатывало при равном штампе (штамп нестрого возрастающий)	детекция по монотонному счётчику строк seq
+o04	trial1	witness order	ORDER-MISS	целое с потерей находилось другим путём	введены лишние флаги lostPending/rebasedAfterLost, свидетель по ним
+o07	trial1	ok	violated	dt=KEEP приводил к истечению даже в контроле без истечения	набор шагов времени зафиксирован {1,30,86400}
+o08	trial1	witness order	ORDER-MISS	свидетель сохранённого ответа находил прямой путь без потери	добавлен флаг lostOnce
+o09	trial2	witness order	прежний order пропускал неполный порядок	добавлено отдельное имя действия reapplied	порядок appliedLost>tick>reapplied

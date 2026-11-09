@@ -1,0 +1,41 @@
+quint run --backend=rust --main=storm_sync_201 --init=init --step=step --max-steps=10 --max-samples=5 --invariant=BurstWithinRate --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/s02.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  storm_sync_201::storm_base::firedCohorts: 0,
+  storm_sync_201::storm_base::lastAction: "init",
+  storm_sync_201::storm_base::marksLost: false,
+  storm_sync_201::storm_base::maxBurst: 0,
+  storm_sync_201::storm_base::postsPerMemberMax: 0,
+  storm_sync_201::storm_base::sec: 0,
+  storm_sync_201::storm_base::wholesThisSec: 0
+}
+
+[State 1]
+{
+  storm_sync_201::storm_base::firedCohorts: 0,
+  storm_sync_201::storm_base::lastAction: "loseMarks",
+  storm_sync_201::storm_base::marksLost: true,
+  storm_sync_201::storm_base::maxBurst: 0,
+  storm_sync_201::storm_base::postsPerMemberMax: 0,
+  storm_sync_201::storm_base::sec: 0,
+  storm_sync_201::storm_base::wholesThisSec: 0
+}
+
+[State 2]
+{
+  storm_sync_201::storm_base::firedCohorts: 1,
+  storm_sync_201::storm_base::lastAction: "second",
+  storm_sync_201::storm_base::marksLost: true,
+  storm_sync_201::storm_base::maxBurst: 201,
+  storm_sync_201::storm_base::postsPerMemberMax: 2,
+  storm_sync_201::storm_base::sec: 1,
+  storm_sync_201::storm_base::wholesThisSec: 201
+}
+
+[violation] Found an issue (18ms at 278 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

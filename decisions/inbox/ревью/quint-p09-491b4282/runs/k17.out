@@ -1,0 +1,513 @@
+quint run --backend=rust --main=keeper_disk_ctrl --init=init --step=stepDisk --max-steps=40 --max-samples=20000 --invariant=KeeperDiskBounded --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/k17.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/keeper_backup.qnt
+An example execution:
+
+[State 0]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 0,
+  keeper_disk_ctrl::keeper_base::kObj: 0,
+  keeper_disk_ctrl::keeper_base::kParts: Set(),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "init",
+  keeper_disk_ctrl::keeper_base::pointer: 0
+}
+
+[State 1]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 1,
+  keeper_disk_ctrl::keeper_base::kObj: 0,
+  keeper_disk_ctrl::keeper_base::kParts: Set(),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 0
+}
+
+[State 2]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 1,
+  keeper_disk_ctrl::keeper_base::kObj: 0,
+  keeper_disk_ctrl::keeper_base::kParts: Set(),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 1
+}
+
+[State 3]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 1,
+  keeper_disk_ctrl::keeper_base::kObj: 1,
+  keeper_disk_ctrl::keeper_base::kParts: Set(),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 1
+}
+
+[State 4]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 1,
+  keeper_disk_ctrl::keeper_base::kObj: 1,
+  keeper_disk_ctrl::keeper_base::kParts: Set(1),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 1
+}
+
+[State 5]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 2,
+  keeper_disk_ctrl::keeper_base::kObj: 1,
+  keeper_disk_ctrl::keeper_base::kParts: Set(1),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 1
+}
+
+[State 6]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 2,
+  keeper_disk_ctrl::keeper_base::kObj: 1,
+  keeper_disk_ctrl::keeper_base::kParts: Set(1),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 7]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 2,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(1),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 8]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 2,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 9]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 2,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 10]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: false,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 3,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2),
+  keeper_disk_ctrl::keeper_base::kTaken: 0,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 11]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 3,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2),
+  keeper_disk_ctrl::keeper_base::kTaken: 2,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 2
+}
+
+[State 12]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 3,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2),
+  keeper_disk_ctrl::keeper_base::kTaken: 2,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 3
+}
+
+[State 13]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2),
+  keeper_disk_ctrl::keeper_base::kTaken: 2,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 3
+}
+
+[State 14]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 2,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2, 3),
+  keeper_disk_ctrl::keeper_base::kTaken: 2,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 3
+}
+
+[State 15]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 3,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 2, 3),
+  keeper_disk_ctrl::keeper_base::kTaken: 2,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 3
+}
+
+[State 16]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 3,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 3),
+  keeper_disk_ctrl::keeper_base::kTaken: 3,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 3
+}
+
+[State 17]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 3,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 3),
+  keeper_disk_ctrl::keeper_base::kTaken: 3,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 4
+}
+
+[State 18]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 3,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 3, 4),
+  keeper_disk_ctrl::keeper_base::kTaken: 3,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 4
+}
+
+[State 19]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 4,
+  keeper_disk_ctrl::keeper_base::kObj: 4,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 3, 4),
+  keeper_disk_ctrl::keeper_base::kTaken: 3,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 4
+}
+
+[State 20]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 5,
+  keeper_disk_ctrl::keeper_base::kObj: 4,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 3, 4),
+  keeper_disk_ctrl::keeper_base::kTaken: 3,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 4
+}
+
+[State 21]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 5,
+  keeper_disk_ctrl::keeper_base::kObj: 4,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 4),
+  keeper_disk_ctrl::keeper_base::kTaken: 4,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 4
+}
+
+[State 22]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 5,
+  keeper_disk_ctrl::keeper_base::kObj: 4,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 4),
+  keeper_disk_ctrl::keeper_base::kTaken: 4,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 5
+}
+
+[State 23]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 5,
+  keeper_disk_ctrl::keeper_base::kObj: 4,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 4, 5),
+  keeper_disk_ctrl::keeper_base::kTaken: 4,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 5
+}
+
+[State 24]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 5,
+  keeper_disk_ctrl::keeper_base::kObj: 5,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 4, 5),
+  keeper_disk_ctrl::keeper_base::kTaken: 4,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 5
+}
+
+[State 25]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 5,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 4, 5),
+  keeper_disk_ctrl::keeper_base::kTaken: 4,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 5
+}
+
+[State 26]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 5,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 5),
+  keeper_disk_ctrl::keeper_base::kTaken: 5,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 5
+}
+
+[State 27]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 5,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 5),
+  keeper_disk_ctrl::keeper_base::kTaken: 5,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 6
+}
+
+[State 28]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 5,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 5, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 5,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 6
+}
+
+[State 29]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 6,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 5, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 5,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 6
+}
+
+[State 30]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 6,
+  keeper_disk_ctrl::keeper_base::kObj: 6,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 6,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 6
+}
+
+[State 31]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 7,
+  keeper_disk_ctrl::keeper_base::kObj: 6,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 6,
+  keeper_disk_ctrl::keeper_base::lastAction: "newHead",
+  keeper_disk_ctrl::keeper_base::pointer: 6
+}
+
+[State 32]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 7,
+  keeper_disk_ctrl::keeper_base::kObj: 6,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 6,
+  keeper_disk_ctrl::keeper_base::lastAction: "movePointer",
+  keeper_disk_ctrl::keeper_base::pointer: 7
+}
+
+[State 33]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 7,
+  keeper_disk_ctrl::keeper_base::kObj: 7,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 6),
+  keeper_disk_ctrl::keeper_base::kTaken: 6,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeObject",
+  keeper_disk_ctrl::keeper_base::pointer: 7
+}
+
+[State 34]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 7,
+  keeper_disk_ctrl::keeper_base::kObj: 7,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 6, 7),
+  keeper_disk_ctrl::keeper_base::kTaken: 6,
+  keeper_disk_ctrl::keeper_base::lastAction: "fetchPart",
+  keeper_disk_ctrl::keeper_base::pointer: 7
+}
+
+[State 35]
+{
+  keeper_disk_ctrl::keeper_base::everComplete: true,
+  keeper_disk_ctrl::keeper_base::handover: "idle",
+  keeper_disk_ctrl::keeper_base::hoPair: 0,
+  keeper_disk_ctrl::keeper_base::holderAlive: true,
+  keeper_disk_ctrl::keeper_base::holderHead: 7,
+  keeper_disk_ctrl::keeper_base::kObj: 7,
+  keeper_disk_ctrl::keeper_base::kParts: Set(0, 7),
+  keeper_disk_ctrl::keeper_base::kTaken: 7,
+  keeper_disk_ctrl::keeper_base::lastAction: "writeTaken",
+  keeper_disk_ctrl::keeper_base::pointer: 7
+}
+
+[ok] No violation found (306ms at 65359 traces/second).
+Trace length statistics: max=33, min=13, average=21.42
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

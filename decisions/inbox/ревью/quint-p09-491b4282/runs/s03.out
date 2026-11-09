@@ -1,0 +1,86 @@
+quint run --backend=rust --main=storm_uni_1000 --init=init --step=step --max-steps=10 --max-samples=5 --invariant=BurstWithinRate --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/s03.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  storm_uni_1000::storm_base::firedCohorts: 0,
+  storm_uni_1000::storm_base::lastAction: "init",
+  storm_uni_1000::storm_base::marksLost: false,
+  storm_uni_1000::storm_base::maxBurst: 0,
+  storm_uni_1000::storm_base::postsPerMemberMax: 0,
+  storm_uni_1000::storm_base::sec: 0,
+  storm_uni_1000::storm_base::wholesThisSec: 0
+}
+
+[State 1]
+{
+  storm_uni_1000::storm_base::firedCohorts: 0,
+  storm_uni_1000::storm_base::lastAction: "loseMarks",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 0,
+  storm_uni_1000::storm_base::postsPerMemberMax: 0,
+  storm_uni_1000::storm_base::sec: 0,
+  storm_uni_1000::storm_base::wholesThisSec: 0
+}
+
+[State 2]
+{
+  storm_uni_1000::storm_base::firedCohorts: 1,
+  storm_uni_1000::storm_base::lastAction: "second",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 200,
+  storm_uni_1000::storm_base::postsPerMemberMax: 2,
+  storm_uni_1000::storm_base::sec: 1,
+  storm_uni_1000::storm_base::wholesThisSec: 200
+}
+
+[State 3]
+{
+  storm_uni_1000::storm_base::firedCohorts: 2,
+  storm_uni_1000::storm_base::lastAction: "second",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 200,
+  storm_uni_1000::storm_base::postsPerMemberMax: 2,
+  storm_uni_1000::storm_base::sec: 2,
+  storm_uni_1000::storm_base::wholesThisSec: 200
+}
+
+[State 4]
+{
+  storm_uni_1000::storm_base::firedCohorts: 3,
+  storm_uni_1000::storm_base::lastAction: "second",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 200,
+  storm_uni_1000::storm_base::postsPerMemberMax: 2,
+  storm_uni_1000::storm_base::sec: 3,
+  storm_uni_1000::storm_base::wholesThisSec: 200
+}
+
+[State 5]
+{
+  storm_uni_1000::storm_base::firedCohorts: 4,
+  storm_uni_1000::storm_base::lastAction: "second",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 200,
+  storm_uni_1000::storm_base::postsPerMemberMax: 2,
+  storm_uni_1000::storm_base::sec: 4,
+  storm_uni_1000::storm_base::wholesThisSec: 200
+}
+
+[State 6]
+{
+  storm_uni_1000::storm_base::firedCohorts: 5,
+  storm_uni_1000::storm_base::lastAction: "second",
+  storm_uni_1000::storm_base::marksLost: true,
+  storm_uni_1000::storm_base::maxBurst: 200,
+  storm_uni_1000::storm_base::postsPerMemberMax: 2,
+  storm_uni_1000::storm_base::sec: 5,
+  storm_uni_1000::storm_base::wholesThisSec: 200
+}
+
+[ok] No violation found (19ms at 263 traces/second).
+Trace length statistics: max=7, min=7, average=7.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

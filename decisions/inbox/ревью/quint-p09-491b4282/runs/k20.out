@@ -1,0 +1,6 @@
+quint verify --main=keeper_all_parts --init=init --step=step --max-steps=12 --invariant=TakenHasParts --server-endpoint=localhost:18827 --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/k20.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/keeper_backup.qnt
+[ok] No violation found (2289ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

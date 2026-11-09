@@ -1,0 +1,130 @@
+quint run --backend=rust --main=storm_sync_200 --init=init --step=step --max-steps=10 --max-samples=5 --invariant=BurstWithinRate --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/s01.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  storm_sync_200::storm_base::firedCohorts: 0,
+  storm_sync_200::storm_base::lastAction: "init",
+  storm_sync_200::storm_base::marksLost: false,
+  storm_sync_200::storm_base::maxBurst: 0,
+  storm_sync_200::storm_base::postsPerMemberMax: 0,
+  storm_sync_200::storm_base::sec: 0,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 1]
+{
+  storm_sync_200::storm_base::firedCohorts: 0,
+  storm_sync_200::storm_base::lastAction: "loseMarks",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 0,
+  storm_sync_200::storm_base::postsPerMemberMax: 0,
+  storm_sync_200::storm_base::sec: 0,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 2]
+{
+  storm_sync_200::storm_base::firedCohorts: 1,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 1,
+  storm_sync_200::storm_base::wholesThisSec: 200
+}
+
+[State 3]
+{
+  storm_sync_200::storm_base::firedCohorts: 1,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 2,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 4]
+{
+  storm_sync_200::storm_base::firedCohorts: 1,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 3,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 5]
+{
+  storm_sync_200::storm_base::firedCohorts: 1,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 4,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 6]
+{
+  storm_sync_200::storm_base::firedCohorts: 1,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 5,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 7]
+{
+  storm_sync_200::storm_base::firedCohorts: 2,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 6,
+  storm_sync_200::storm_base::wholesThisSec: 200
+}
+
+[State 8]
+{
+  storm_sync_200::storm_base::firedCohorts: 2,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 7,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 9]
+{
+  storm_sync_200::storm_base::firedCohorts: 2,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 8,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[State 10]
+{
+  storm_sync_200::storm_base::firedCohorts: 2,
+  storm_sync_200::storm_base::lastAction: "second",
+  storm_sync_200::storm_base::marksLost: true,
+  storm_sync_200::storm_base::maxBurst: 200,
+  storm_sync_200::storm_base::postsPerMemberMax: 2,
+  storm_sync_200::storm_base::sec: 9,
+  storm_sync_200::storm_base::wholesThisSec: 0
+}
+
+[ok] No violation found (18ms at 278 traces/second).
+Trace length statistics: max=11, min=11, average=11.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

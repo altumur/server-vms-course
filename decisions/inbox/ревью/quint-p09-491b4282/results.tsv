@@ -1,0 +1,92 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+k01	keeper_head_only	TakenHasParts	property	rust	12	20000	RULE=head_only (09.1:590,1525) MAXH=2	violated	violated	yes	0.6	keeper_backup.qnt
+k02	keeper_head_only	HandoverTargetComplete	property	rust	12	20000	RULE=head_only	violated	violated	yes	0.6	keeper_backup.qnt
+k03	keeper_head_only	RestoreAfterLoss	property	rust	12	20000	RULE=head_only	violated	violated	yes	0.6	keeper_backup.qnt
+k04	keeper_head_only	TakenBehindObject	property	rust	15	30000	RULE=head_only	ok	ok	yes	0.6	keeper_backup.qnt
+k05	keeper_all_parts	TakenHasParts	property	rust	15	30000	RULE=all_parts (08.8:204)	ok	ok	yes	0.6	keeper_backup.qnt
+k06	keeper_all_parts	HandoverTargetComplete	property	rust	15	30000	RULE=all_parts	ok	ok	yes	0.6	keeper_backup.qnt
+k07	keeper_all_parts	RestoreAfterLoss	property	rust	15	30000	RULE=all_parts	ok	ok	yes	0.6	keeper_backup.qnt
+k08	keeper_all_parts	LastCopyServable	property	rust	15	30000	RULE=all_parts, порядок 09.1:1525: объект раньше частей	violated	violated	yes	0.6	keeper_backup.qnt
+k09	keeper_parts_first	LastCopyServable	control	rust	15	30000	RULE=parts_first (гипотеза)	ok	ok	yes	0.6	keeper_backup.qnt
+k10	keeper_parts_first	TakenHasParts	control	rust	15	30000	RULE=parts_first	ok	ok	yes	0.6	keeper_backup.qnt
+k11	keeper_head_only	witHeadOnlyHandover	witness	rust	14	40000	порядок: объект, строка, передача, потеря без частей	violated	violated	yes	0.6	keeper_backup.qnt
+k12	keeper_all_parts	witAllPartsTaken	witness	rust	14	40000	порядок: части, строка, передача	violated	violated	yes	0.6	keeper_backup.qnt
+k13	keeper_mut_somepart	TakenHasParts	mutant	rust	12	20000	мутант RULE=some_part	violated	violated	yes	0.6	keeper_backup.qnt
+k14	keeper_mut_count	TakenHasParts	mutant	rust	12	20000	мутант RULE=count_only (части другой головы засчитаны)	violated	violated	yes	0.6	keeper_backup.qnt
+k15	keeper_mut_eager	TakenHasParts	mutant	rust	14	30000	мутант CLEANUP=eager	violated	violated	yes	0.6	keeper_backup.qnt
+k16	keeper_disk_text	KeeperDiskBounded	property	rust	40	20000	CLEANUP=none (09.1:54), MAXH=7, BACKUP_HEADS=5	violated	violated	yes	0.6	keeper_backup.qnt
+k17	keeper_disk_ctrl	KeeperDiskBounded	control	rust	40	20000	CLEANUP=referenced (гипотеза), MAXH=7	ok	ok	yes	0.8	keeper_backup.qnt
+k18	keeper_disk_text	witDisk	witness	rust	40	20000	MAXH=7: головы и части копятся	violated	violated	yes	0.6	keeper_backup.qnt
+k19	keeper_all_parts	witTaken	control	rust	12	20000	достижимость строки при all_parts	violated	violated	yes	0.6	keeper_backup.qnt
+k23	keeper_all_parts	witCopyReplaced	witness	rust	16	60000	порядок: подтверждена голова 1, объект заменён неполной головой 2 | ORDER-MISS: нет последовательности fetchPart>fetchPart>writeTaken>newHead>movePointer>writeObject в init>newHead>movePointer>writeObject>fetchPart>fetchPart>newHead>writeTaken>movePointer>writeObject	violated	violated	no	0.6	keeper_backup.qnt
+k20	keeper_all_parts	TakenHasParts	property	apalache	12	0	RULE=all_parts; Apalache	ok	ok	yes	3.0	keeper_backup.qnt
+k21	keeper_head_only	TakenHasParts	property	apalache	8	0	RULE=head_only; Apalache	violated	violated	yes	1.2	keeper_backup.qnt
+k22	keeper_parts_first	LastCopyServable	control	apalache	12	0	RULE=parts_first; Apalache	ok	ok	yes	2.0	keeper_backup.qnt
+t01	relay_text	DoorOnlyActive	property	rust	60	200000	DOOR_RULE=text (09.2:57,09.1:739), TURN 45/10	violated	violated	yes	1.0	relay_turn.qnt
+t02	relay_text	NoStaleObserved	property	rust	60	200000	DOOR_RULE=text	violated	violated	yes	1.0	relay_turn.qnt
+t03	relay_text	witStaleObserved	witness	rust	60	300000	порядок: взял, пауза, чужой взял, возврат, потеря увидена, POST 200 | ORDER-MISS: нет последовательности takeTurn>pause>takeTurn>resume>lossObserved>memberPost в init>takeTurn>pause>pause>tick>resume>observeVer>pause>tick>tick>tick>tick>tick>resume>memberPost>memberPost>memberPost>resume>takeTurn>memberPost>memberPost>lossObserved>tick>pause>resume>memberPost	violated	violated	no	1.0	relay_turn.qnt
+t04	relay_close	NoStaleObserved	control	rust	60	200000	DOOR_RULE=close (гипотеза)	ok	ok	yes	15.8	relay_turn.qnt
+t05	relay_close	NoStaleUnobserved	property	rust	60	200000	DOOR_RULE=close: остаётся окно до наблюдения	violated	violated	yes	1.1	relay_turn.qnt
+t06	relay_text	GuardNoLateWrite	property	rust	30	100000	охрана включена	ok	ok	yes	8.4	relay_turn.qnt
+t07	relay_mut_noguard	GuardNoLateWrite	mutant	rust	24	60000	мутант GUARD_ON=false	violated	violated	yes	1.0	relay_turn.qnt
+t08	relay_text	HandoverBound	property	rust	45	100000	stepBound; граница TURN_TERM+2*TURN_RENEW	ok	ok	yes	10.3	relay_turn.qnt
+t09	relay_mut_slowwait	HandoverBound	mutant	rust	45	60000	мутант WAIT_X=2	violated	ok	no	7.6	relay_turn.qnt
+t10	relay_text	NoDroppedOnSigterm	property	rust	24	40000	STOP_RULE=text (09.1:1402): принятая работа брошена	violated	violated	yes	0.9	relay_turn.qnt
+t11	relay_drain	NoDroppedOnSigterm	control	rust	24	40000	STOP_RULE=drain (гипотеза)	ok	ok	yes	3.1	relay_turn.qnt
+t12	relay_text	witDropped	witness	rust	20	40000	порядок: приём работы, SIGTERM	violated	violated	yes	0.9	relay_turn.qnt
+t13	relay_text	witReleaseLost	witness	rust	20	40000	порядок: продление не подтверждено, SIGTERM конфликт, очередь не снята	violated	violated	yes	1.5	relay_turn.qnt
+t14	relay_text	witWaiterTook	witness	rust	45	100000	порядок: kill держателя, время, перехват ожидающим	violated	violated	yes	6.1	relay_turn.qnt
+t15	relay_text	OneActiveByRow	property	rust	30	60000		ok	ok	yes	5.8	relay_turn.qnt
+t16	relay_text	witServed	control	rust	20	40000	достижимость 200 у истинно активной двери	violated	violated	yes	0.9	relay_turn.qnt
+t17	relay_text	GuardNoLateWrite	property	apalache	12	0	Apalache	ok	ok	yes	177.2	relay_turn.qnt
+t18	relay_text	HandoverBound	property	apalache	16	0	stepBound; Apalache	ok	ok	yes	312.5	relay_turn.qnt
+p01	pass_seq_0	GapBelowLost	control	rust	40	5	N_SILENT=0	ok	ok	yes	0.6	timing.qnt
+p02	pass_seq_14	GapBelowLost	property	rust	60	5	N_SILENT=14, последовательно	ok	ok	yes	0.6	timing.qnt
+p03	pass_seq_15	GapBelowLost	property	rust	60	5	N_SILENT=15, последовательно	violated	violated	yes	0.6	timing.qnt
+p04	pass_seq_15	MarkFresh	property	rust	60	5	N_SILENT=15	violated	violated	yes	0.6	timing.qnt
+p05	pass_seq_14	MarkFresh	property	rust	60	5	N_SILENT=14	ok	ok	yes	0.6	timing.qnt
+p05b	pass_end_14	GapBelowLost	property	rust	60	5	N_SILENT=14, PERIOD=from_end (every от конца прохода)	violated	violated	yes	0.6	timing.qnt
+p06	pass_par_60	GapBelowLost	control	rust	60	5	N_SILENT=60, параллельно	ok	ok	yes	0.6	timing.qnt
+p07	pass_par_60	MarkFresh	control	rust	60	5	N_SILENT=60, параллельно	ok	ok	yes	0.6	timing.qnt
+p08	pass_seq_16	witGapOver	witness	rust	60	5	порядок: последовательное следование, затем отчёт позднее LOST_AFTER	violated	violated	yes	0.6	timing.qnt
+p09	pass_seq_0	witSent	control	rust	10	5	достижимость отчёта	violated	violated	yes	0.6	timing.qnt
+c01	clock_asof_nojump	AsOfNotFuture	control	rust	20	40000	J=0	ok	ok	yes	0.9	timing.qnt
+c02	clock_asof_nojump	ReachedFresh	control	rust	20	40000	J=0	ok	ok	yes	0.9	timing.qnt
+c03	clock_asof_nojump	RevokeBound	control	rust	20	40000	J=0	ok	ok	yes	1.0	timing.qnt
+c04	clock_asof_text	AsOfNotFuture	property	rust	20	40000	RULE=text, J=7200 (параметр)	violated	violated	yes	0.6	timing.qnt
+c05	clock_asof_text	ReachedFresh	property	rust	20	40000	RULE=text	violated	violated	yes	0.6	timing.qnt
+c06	clock_asof_text	RevokeBound	property	rust	24	60000	RULE=text	violated	violated	yes	0.6	timing.qnt
+c07	clock_asof_text	witFutureAsOf	witness	rust	20	40000	порядок: скачок вперёд, ответ, возврат	violated	violated	yes	0.6	timing.qnt
+c08	clock_asof_text	witStaleSkip	witness	rust	20	60000	порядок: скачок, запись, возврат, время, ответ без записи	violated	violated	yes	0.6	timing.qnt
+c09	clock_asof_clamp	AsOfNotFuture	control	rust	20	40000	RULE=clamp (гипотеза)	ok	ok	yes	0.9	timing.qnt
+c10	clock_asof_clamp	RevokeBound	control	rust	24	60000	RULE=clamp: снятие будущего as_of не закрывает обещание срока	violated	violated	yes	0.6	timing.qnt
+c10b	clock_asof_mono	AsOfNotFuture	control	rust	20	40000	RULE=mono (гипотеза)	ok	ok	yes	1.0	timing.qnt
+c10c	clock_asof_mono	RevokeBound	control	rust	24	60000	RULE=mono	ok	ok	yes	1.6	timing.qnt
+c11	clock_asof_nojump	witCarry	control	rust	8	5000	достижимость ответа	violated	violated	yes	0.9	timing.qnt
+c12	alarm_nojump	AlarmBound	control	rust	40	60000	J=0, проверка фронта раз в секунду	ok	ok	yes	2.8	timing.qnt
+c13	alarm_text	AlarmBound	property	rust	40	100000	RULE=wall (09.1:640,643), J=20 (параметр)	violated	violated	yes	0.6	timing.qnt
+c14	alarm_text	ToNotFuture	property	rust	30	60000	RULE=wall	violated	violated	yes	0.6	timing.qnt
+c15	alarm_text	witAlarmStuck	witness	rust	40	100000	порядок: скачок, тревога, сборка, возврат, тревога, зависание	violated	violated	yes	0.6	timing.qnt
+c16	alarm_mono	AlarmBound	control	rust	40	100000	RULE=mono (гипотеза)	ok	ok	yes	3.1	timing.qnt
+c17	alarm_mut_nocheck	AlarmBound	mutant	rust	20	30000	мутант: тик без проверки фронта	violated	violated	yes	0.6	timing.qnt
+c18	alarm_nojump	witPageBuilt	control	rust	15	20000	достижимость сборки страницы	violated	violated	yes	0.6	timing.qnt
+s01	storm_sync_200	BurstWithinRate	control	rust	10	5	N=200, синхронно	ok	ok	yes	0.6	timing.qnt
+s02	storm_sync_201	BurstWithinRate	property	rust	10	5	N=201, синхронно (класс server: нет разброса, 09.1:270)	violated	violated	yes	0.6	timing.qnt
+s03	storm_uni_1000	BurstWithinRate	control	rust	10	5	N=1000, равномерно	ok	ok	yes	0.6	timing.qnt
+s04	storm_uni_1001	BurstWithinRate	property	rust	10	5	N=1001, равномерно	violated	violated	yes	0.6	timing.qnt
+s05	storm_sync_201	PerMemberBounded	property	rust	10	5	не более 2 POST на члена (09.1:1437)	ok	ok	yes	0.6	timing.qnt
+s06	storm_sync_201	witBurst	witness	rust	10	5	порядок: потеря пометок, секунда с когортой	violated	violated	yes	0.6	timing.qnt
+s07	storm_sync_200	witFired	control	rust	10	5	достижимость когорты	violated	violated	yes	0.6	timing.qnt
+o01	report_text	ConfirmedMatches	property	rust	18	60000	BASE_CHECK=true (acc:296)	ok	ok	yes	0.9	outcomes.qnt
+o02	report_text	BaseNotAhead	property	rust	18	60000		ok	ok	yes	0.8	outcomes.qnt
+o03	report_mut_nobase	ConfirmedMatches	mutant	rust	16	60000	мутант: шаг 3 выключен	violated	violated	yes	0.5	outcomes.qnt
+o04	report_text	witRebaseConverge	witness	rust	18	80000	порядок: потеря ответа на дельту, rebase, целое подтверждено	violated	violated	yes	0.5	outcomes.qnt
+o05	report_text	ConfirmedMatches	property	apalache	10	0	Apalache	ok	ok	yes	457.4	outcomes.qnt
+o06	edit_text	AtMostOnce	property	rust	16	60000	KEEP=86400 (06 const)	violated	violated	yes	0.5	outcomes.qnt
+o07	edit_inf	AtMostOnce	control	rust	16	60000	KEEP=10^9 (контроль без истечения)	ok	ok	yes	0.9	outcomes.qnt
+o08	edit_inf	witSaved	witness	rust	12	20000	порядок: применено, ответ потерян, сохранённый ответ	violated	violated	yes	0.5	outcomes.qnt
+o09	edit_text	witAppliedTwice	witness	rust	16	60000	порядок: применено, истечение KEEP, повторное исполнение	violated	violated	yes	0.5	outcomes.qnt
+k23r	keeper_all_parts	witCopyReplaced	witness	rust	16	60000	k23 с порядком без лишнего newHead: подтверждение головы 1, затем указатель и объект головы 2	violated	violated	yes	0.6	keeper_backup.qnt
+t03r	relay_text	witStaleObserved	witness	rust	60	300000	t03 с существенным порядком: resume может идти до перехвата	violated	violated	yes	1.0	relay_turn.qnt
+t08r	relay_text	HandoverBound	property	rust	45	200000	граница при kill держателя, фокусный шаг	ok	ok	yes	13.8	relay_turn.qnt
+t09r	relay_mut_slowwait	HandoverBound	mutant	rust	45	200000	мутант WAIT_X=2 на том же шаге, что t08r	violated	violated	yes	12.6	relay_turn.qnt

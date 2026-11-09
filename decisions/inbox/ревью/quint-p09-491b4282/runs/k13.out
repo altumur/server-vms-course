@@ -1,0 +1,92 @@
+quint run --backend=rust --main=keeper_mut_somepart --init=init --step=step --max-steps=12 --max-samples=20000 --invariant=TakenHasParts --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/k13.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/keeper_backup.qnt
+An example execution:
+
+[State 0]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 0,
+  keeper_mut_somepart::keeper_base::kObj: 0,
+  keeper_mut_somepart::keeper_base::kParts: Set(),
+  keeper_mut_somepart::keeper_base::kTaken: 0,
+  keeper_mut_somepart::keeper_base::lastAction: "init",
+  keeper_mut_somepart::keeper_base::pointer: 0
+}
+
+[State 1]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 1,
+  keeper_mut_somepart::keeper_base::kObj: 0,
+  keeper_mut_somepart::keeper_base::kParts: Set(),
+  keeper_mut_somepart::keeper_base::kTaken: 0,
+  keeper_mut_somepart::keeper_base::lastAction: "newHead",
+  keeper_mut_somepart::keeper_base::pointer: 0
+}
+
+[State 2]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 1,
+  keeper_mut_somepart::keeper_base::kObj: 0,
+  keeper_mut_somepart::keeper_base::kParts: Set(),
+  keeper_mut_somepart::keeper_base::kTaken: 0,
+  keeper_mut_somepart::keeper_base::lastAction: "movePointer",
+  keeper_mut_somepart::keeper_base::pointer: 1
+}
+
+[State 3]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 1,
+  keeper_mut_somepart::keeper_base::kObj: 1,
+  keeper_mut_somepart::keeper_base::kParts: Set(),
+  keeper_mut_somepart::keeper_base::kTaken: 0,
+  keeper_mut_somepart::keeper_base::lastAction: "writeObject",
+  keeper_mut_somepart::keeper_base::pointer: 1
+}
+
+[State 4]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 1,
+  keeper_mut_somepart::keeper_base::kObj: 1,
+  keeper_mut_somepart::keeper_base::kParts: Set(0),
+  keeper_mut_somepart::keeper_base::kTaken: 0,
+  keeper_mut_somepart::keeper_base::lastAction: "fetchPart",
+  keeper_mut_somepart::keeper_base::pointer: 1
+}
+
+[State 5]
+{
+  keeper_mut_somepart::keeper_base::everComplete: false,
+  keeper_mut_somepart::keeper_base::handover: "idle",
+  keeper_mut_somepart::keeper_base::hoPair: 0,
+  keeper_mut_somepart::keeper_base::holderAlive: true,
+  keeper_mut_somepart::keeper_base::holderHead: 1,
+  keeper_mut_somepart::keeper_base::kObj: 1,
+  keeper_mut_somepart::keeper_base::kParts: Set(0),
+  keeper_mut_somepart::keeper_base::kTaken: 1,
+  keeper_mut_somepart::keeper_base::lastAction: "writeTaken",
+  keeper_mut_somepart::keeper_base::pointer: 1
+}
+
+[violation] Found an issue (22ms at 12000 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

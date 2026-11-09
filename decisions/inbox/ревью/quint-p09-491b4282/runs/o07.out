@@ -1,0 +1,213 @@
+quint run --backend=rust --main=edit_inf --init=init --step=step --max-steps=16 --max-samples=60000 --invariant=AtMostOnce --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o07.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "none",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "init",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 0,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 0
+}
+
+[State 1]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "none",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 30,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 0
+}
+
+[State 2]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "none",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 31,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 0
+}
+
+[State 3]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "none",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 86431,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 0
+}
+
+[State 4]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "pending",
+  edit_inf::edit_base::claimAt: 86431,
+  edit_inf::edit_base::lastAction: "crashBefore",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 86431,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 1
+}
+
+[State 5]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "pending",
+  edit_inf::edit_base::claimAt: 86431,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 86432,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 1
+}
+
+[State 6]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "pending",
+  edit_inf::edit_base::claimAt: 86431,
+  edit_inf::edit_base::lastAction: "inFlight",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 86432,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 2
+}
+
+[State 7]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "pending",
+  edit_inf::edit_base::claimAt: 86431,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 172832,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 2
+}
+
+[State 8]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "appliedLost",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 172832,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 9]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 259232,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 10]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 259233,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 11]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 345633,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 12]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 432033,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 13]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 432034,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 3
+}
+
+[State 14]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "savedAnswer",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 432034,
+  edit_inf::edit_base::outcome: true,
+  edit_inf::edit_base::sends: 4
+}
+
+[State 15]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 432035,
+  edit_inf::edit_base::outcome: true,
+  edit_inf::edit_base::sends: 4
+}
+
+[State 16]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 172832,
+  edit_inf::edit_base::lastAction: "tick",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 432036,
+  edit_inf::edit_base::outcome: true,
+  edit_inf::edit_base::sends: 4
+}
+
+[ok] No violation found (364ms at 164835 traces/second).
+Trace length statistics: max=17, min=17, average=17.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

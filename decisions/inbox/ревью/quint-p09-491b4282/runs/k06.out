@@ -1,0 +1,233 @@
+quint run --backend=rust --main=keeper_all_parts --init=init --step=step --max-steps=15 --max-samples=30000 --invariant=HandoverTargetComplete --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/k06.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/keeper_backup.qnt
+An example execution:
+
+[State 0]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 0,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "init",
+  keeper_all_parts::keeper_base::pointer: 0
+}
+
+[State 1]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 1,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "newHead",
+  keeper_all_parts::keeper_base::pointer: 0
+}
+
+[State 2]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "newHead",
+  keeper_all_parts::keeper_base::pointer: 0
+}
+
+[State 3]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "movePointer",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 4]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "startHandover",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 5]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "callOff",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 6]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "startHandover",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 7]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "callOff",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 8]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(0),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "fetchPart",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 9]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(0),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "startHandover",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 10]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 0,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "fetchPart",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 11]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 2,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "writeObject",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 12]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 2,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "callOff",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 13]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "waiting",
+  keeper_all_parts::keeper_base::hoPair: 2,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 2,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "startHandover",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 14]
+{
+  keeper_all_parts::keeper_base::everComplete: false,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 2,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 0,
+  keeper_all_parts::keeper_base::lastAction: "callOff",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[State 15]
+{
+  keeper_all_parts::keeper_base::everComplete: true,
+  keeper_all_parts::keeper_base::handover: "idle",
+  keeper_all_parts::keeper_base::hoPair: 0,
+  keeper_all_parts::keeper_base::holderAlive: true,
+  keeper_all_parts::keeper_base::holderHead: 2,
+  keeper_all_parts::keeper_base::kObj: 2,
+  keeper_all_parts::keeper_base::kParts: Set(0, 2),
+  keeper_all_parts::keeper_base::kTaken: 2,
+  keeper_all_parts::keeper_base::lastAction: "writeTaken",
+  keeper_all_parts::keeper_base::pointer: 2
+}
+
+[ok] No violation found (96ms at 312500 traces/second).
+Trace length statistics: max=16, min=2, average=3.77
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

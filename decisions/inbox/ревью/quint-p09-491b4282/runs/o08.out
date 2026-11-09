@@ -1,0 +1,44 @@
+quint run --backend=rust --main=edit_inf --init=init --step=step --max-steps=12 --max-samples=20000 --invariant=witSaved --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o08.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  edit_inf::edit_base::applied: 0,
+  edit_inf::edit_base::claim: "none",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "init",
+  edit_inf::edit_base::lostOnce: false,
+  edit_inf::edit_base::now: 0,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 0
+}
+
+[State 1]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "appliedLost",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 0,
+  edit_inf::edit_base::outcome: false,
+  edit_inf::edit_base::sends: 1
+}
+
+[State 2]
+{
+  edit_inf::edit_base::applied: 1,
+  edit_inf::edit_base::claim: "done",
+  edit_inf::edit_base::claimAt: 0,
+  edit_inf::edit_base::lastAction: "savedAnswer",
+  edit_inf::edit_base::lostOnce: true,
+  edit_inf::edit_base::now: 0,
+  edit_inf::edit_base::outcome: true,
+  edit_inf::edit_base::sends: 2
+}
+
+[violation] Found an issue (17ms at 4412 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

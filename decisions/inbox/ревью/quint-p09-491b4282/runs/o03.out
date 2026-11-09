@@ -1,0 +1,99 @@
+quint run --backend=rust --main=report_mut_nobase --init=init --step=step --max-steps=16 --max-samples=60000 --invariant=ConfirmedMatches --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o03.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  report_mut_nobase::report_base::baseDoc: Set(),
+  report_mut_nobase::report_base::baseRev: 0,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 0,
+  report_mut_nobase::report_base::hStored: Set(),
+  report_mut_nobase::report_base::lastAction: "init",
+  report_mut_nobase::report_base::lostPending: false,
+  report_mut_nobase::report_base::memberDoc: Set("a"),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 1]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a"),
+  report_mut_nobase::report_base::baseRev: 1,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 1,
+  report_mut_nobase::report_base::hStored: Set("a"),
+  report_mut_nobase::report_base::lastAction: "sendWholeOk",
+  report_mut_nobase::report_base::lostPending: false,
+  report_mut_nobase::report_base::memberDoc: Set("a"),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 2]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a"),
+  report_mut_nobase::report_base::baseRev: 1,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 1,
+  report_mut_nobase::report_base::hStored: Set("a"),
+  report_mut_nobase::report_base::lastAction: "edit",
+  report_mut_nobase::report_base::lostPending: false,
+  report_mut_nobase::report_base::memberDoc: Set(),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 3]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a"),
+  report_mut_nobase::report_base::baseRev: 1,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 2,
+  report_mut_nobase::report_base::hStored: Set(),
+  report_mut_nobase::report_base::lastAction: "sendDeltaLost",
+  report_mut_nobase::report_base::lostPending: true,
+  report_mut_nobase::report_base::memberDoc: Set(),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 4]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a"),
+  report_mut_nobase::report_base::baseRev: 1,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 2,
+  report_mut_nobase::report_base::hStored: Set(),
+  report_mut_nobase::report_base::lastAction: "edit",
+  report_mut_nobase::report_base::lostPending: true,
+  report_mut_nobase::report_base::memberDoc: Set("b"),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 5]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a"),
+  report_mut_nobase::report_base::baseRev: 1,
+  report_mut_nobase::report_base::confirmedMismatch: false,
+  report_mut_nobase::report_base::hRev: 2,
+  report_mut_nobase::report_base::hStored: Set(),
+  report_mut_nobase::report_base::lastAction: "edit",
+  report_mut_nobase::report_base::lostPending: true,
+  report_mut_nobase::report_base::memberDoc: Set("a", "b"),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[State 6]
+{
+  report_mut_nobase::report_base::baseDoc: Set("a", "b"),
+  report_mut_nobase::report_base::baseRev: 3,
+  report_mut_nobase::report_base::confirmedMismatch: true,
+  report_mut_nobase::report_base::hRev: 3,
+  report_mut_nobase::report_base::hStored: Set("b"),
+  report_mut_nobase::report_base::lastAction: "sendDeltaOk",
+  report_mut_nobase::report_base::lostPending: false,
+  report_mut_nobase::report_base::memberDoc: Set("a", "b"),
+  report_mut_nobase::report_base::rebasedAfterLost: false
+}
+
+[violation] Found an issue (17ms at 4588 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

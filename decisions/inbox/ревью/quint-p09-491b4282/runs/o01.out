@@ -1,0 +1,256 @@
+quint run --backend=rust --main=report_text --init=init --step=step --max-steps=18 --max-samples=60000 --invariant=ConfirmedMatches --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o01.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "init",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 1]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 2]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("b"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 3]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 4]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "sendWholeLost",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 5]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("b"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 6]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a", "b"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 7]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 0,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 8]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "sendWholeLost",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 9]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "sendWholeOk",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a"),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 10]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 1,
+  report_text::report_base::hStored: Set("a"),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 11]
+{
+  report_text::report_base::baseDoc: Set("a"),
+  report_text::report_base::baseRev: 1,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "sendDeltaLost",
+  report_text::report_base::lostPending: true,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: false
+}
+
+[State 12]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "rebase",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set(),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 13]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 14]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 2,
+  report_text::report_base::hStored: Set(),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a", "b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 15]
+{
+  report_text::report_base::baseDoc: Set(),
+  report_text::report_base::baseRev: 0,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 3,
+  report_text::report_base::hStored: Set("a", "b"),
+  report_text::report_base::lastAction: "sendWholeLost",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a", "b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 16]
+{
+  report_text::report_base::baseDoc: Set("a", "b"),
+  report_text::report_base::baseRev: 3,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 3,
+  report_text::report_base::hStored: Set("a", "b"),
+  report_text::report_base::lastAction: "sendWholeOk",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("a", "b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 17]
+{
+  report_text::report_base::baseDoc: Set("a", "b"),
+  report_text::report_base::baseRev: 3,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 3,
+  report_text::report_base::hStored: Set("a", "b"),
+  report_text::report_base::lastAction: "edit",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[State 18]
+{
+  report_text::report_base::baseDoc: Set("b"),
+  report_text::report_base::baseRev: 4,
+  report_text::report_base::confirmedMismatch: false,
+  report_text::report_base::hRev: 4,
+  report_text::report_base::hStored: Set("b"),
+  report_text::report_base::lastAction: "sendDeltaOk",
+  report_text::report_base::lostPending: false,
+  report_text::report_base::memberDoc: Set("b"),
+  report_text::report_base::rebasedAfterLost: true
+}
+
+[ok] No violation found (373ms at 160858 traces/second).
+Trace length statistics: max=19, min=19, average=19.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

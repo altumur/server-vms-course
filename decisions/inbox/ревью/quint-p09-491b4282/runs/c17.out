@@ -1,0 +1,93 @@
+quint run --backend=rust --main=alarm_mut_nocheck --init=init --step=step --max-steps=20 --max-samples=30000 --invariant=AlarmBound --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c17.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  alarm_mut_nocheck::clock_alarm_base::checked: false,
+  alarm_mut_nocheck::clock_alarm_base::front: -1,
+  alarm_mut_nocheck::clock_alarm_base::frontSeen: 0,
+  alarm_mut_nocheck::clock_alarm_base::j: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastAction: "init",
+  alarm_mut_nocheck::clock_alarm_base::lastPageTrue: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastUrgent: 0,
+  alarm_mut_nocheck::clock_alarm_base::pageTo: 0,
+  alarm_mut_nocheck::clock_alarm_base::pendingAt: -1,
+  alarm_mut_nocheck::clock_alarm_base::seq: 0,
+  alarm_mut_nocheck::clock_alarm_base::t: 1,
+  alarm_mut_nocheck::clock_alarm_base::w: 1,
+  alarm_mut_nocheck::clock_alarm_base::watermark: 0
+}
+
+[State 1]
+{
+  alarm_mut_nocheck::clock_alarm_base::checked: false,
+  alarm_mut_nocheck::clock_alarm_base::front: 1,
+  alarm_mut_nocheck::clock_alarm_base::frontSeen: 0,
+  alarm_mut_nocheck::clock_alarm_base::j: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_mut_nocheck::clock_alarm_base::lastPageTrue: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastUrgent: 0,
+  alarm_mut_nocheck::clock_alarm_base::pageTo: 0,
+  alarm_mut_nocheck::clock_alarm_base::pendingAt: 1,
+  alarm_mut_nocheck::clock_alarm_base::seq: 1,
+  alarm_mut_nocheck::clock_alarm_base::t: 1,
+  alarm_mut_nocheck::clock_alarm_base::w: 1,
+  alarm_mut_nocheck::clock_alarm_base::watermark: 1
+}
+
+[State 2]
+{
+  alarm_mut_nocheck::clock_alarm_base::checked: false,
+  alarm_mut_nocheck::clock_alarm_base::front: 1,
+  alarm_mut_nocheck::clock_alarm_base::frontSeen: 0,
+  alarm_mut_nocheck::clock_alarm_base::j: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastAction: "tick",
+  alarm_mut_nocheck::clock_alarm_base::lastPageTrue: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastUrgent: 0,
+  alarm_mut_nocheck::clock_alarm_base::pageTo: 0,
+  alarm_mut_nocheck::clock_alarm_base::pendingAt: 1,
+  alarm_mut_nocheck::clock_alarm_base::seq: 1,
+  alarm_mut_nocheck::clock_alarm_base::t: 2,
+  alarm_mut_nocheck::clock_alarm_base::w: 2,
+  alarm_mut_nocheck::clock_alarm_base::watermark: 1
+}
+
+[State 3]
+{
+  alarm_mut_nocheck::clock_alarm_base::checked: false,
+  alarm_mut_nocheck::clock_alarm_base::front: 1,
+  alarm_mut_nocheck::clock_alarm_base::frontSeen: 0,
+  alarm_mut_nocheck::clock_alarm_base::j: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastAction: "tick",
+  alarm_mut_nocheck::clock_alarm_base::lastPageTrue: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastUrgent: 0,
+  alarm_mut_nocheck::clock_alarm_base::pageTo: 0,
+  alarm_mut_nocheck::clock_alarm_base::pendingAt: 1,
+  alarm_mut_nocheck::clock_alarm_base::seq: 1,
+  alarm_mut_nocheck::clock_alarm_base::t: 3,
+  alarm_mut_nocheck::clock_alarm_base::w: 3,
+  alarm_mut_nocheck::clock_alarm_base::watermark: 1
+}
+
+[State 4]
+{
+  alarm_mut_nocheck::clock_alarm_base::checked: false,
+  alarm_mut_nocheck::clock_alarm_base::front: 1,
+  alarm_mut_nocheck::clock_alarm_base::frontSeen: 0,
+  alarm_mut_nocheck::clock_alarm_base::j: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastAction: "tick",
+  alarm_mut_nocheck::clock_alarm_base::lastPageTrue: 0,
+  alarm_mut_nocheck::clock_alarm_base::lastUrgent: 0,
+  alarm_mut_nocheck::clock_alarm_base::pageTo: 0,
+  alarm_mut_nocheck::clock_alarm_base::pendingAt: 1,
+  alarm_mut_nocheck::clock_alarm_base::seq: 1,
+  alarm_mut_nocheck::clock_alarm_base::t: 4,
+  alarm_mut_nocheck::clock_alarm_base::w: 4,
+  alarm_mut_nocheck::clock_alarm_base::watermark: 1
+}
+
+[violation] Found an issue (21ms at 1952 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

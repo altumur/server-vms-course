@@ -1,0 +1,68 @@
+quint run --backend=rust --main=edit_text --init=init --step=step --max-steps=16 --max-samples=60000 --invariant=witAppliedTwice --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o09.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+An example execution:
+
+[State 0]
+{
+  edit_text::edit_base::applied: 0,
+  edit_text::edit_base::claim: "none",
+  edit_text::edit_base::claimAt: 0,
+  edit_text::edit_base::lastAction: "init",
+  edit_text::edit_base::lostOnce: false,
+  edit_text::edit_base::now: 0,
+  edit_text::edit_base::outcome: false,
+  edit_text::edit_base::sends: 0
+}
+
+[State 1]
+{
+  edit_text::edit_base::applied: 1,
+  edit_text::edit_base::claim: "done",
+  edit_text::edit_base::claimAt: 0,
+  edit_text::edit_base::lastAction: "appliedLost",
+  edit_text::edit_base::lostOnce: true,
+  edit_text::edit_base::now: 0,
+  edit_text::edit_base::outcome: false,
+  edit_text::edit_base::sends: 1
+}
+
+[State 2]
+{
+  edit_text::edit_base::applied: 1,
+  edit_text::edit_base::claim: "done",
+  edit_text::edit_base::claimAt: 0,
+  edit_text::edit_base::lastAction: "savedLost",
+  edit_text::edit_base::lostOnce: true,
+  edit_text::edit_base::now: 0,
+  edit_text::edit_base::outcome: false,
+  edit_text::edit_base::sends: 2
+}
+
+[State 3]
+{
+  edit_text::edit_base::applied: 1,
+  edit_text::edit_base::claim: "done",
+  edit_text::edit_base::claimAt: 0,
+  edit_text::edit_base::lastAction: "tick",
+  edit_text::edit_base::lostOnce: true,
+  edit_text::edit_base::now: 86400,
+  edit_text::edit_base::outcome: false,
+  edit_text::edit_base::sends: 2
+}
+
+[State 4]
+{
+  edit_text::edit_base::applied: 2,
+  edit_text::edit_base::claim: "pending",
+  edit_text::edit_base::claimAt: 86400,
+  edit_text::edit_base::lastAction: "reapplied",
+  edit_text::edit_base::lostOnce: true,
+  edit_text::edit_base::now: 86400,
+  edit_text::edit_base::outcome: false,
+  edit_text::edit_base::sends: 3
+}
+
+[violation] Found an issue (17ms at 8059 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

@@ -1,0 +1,182 @@
+quint run --backend=rust --main=relay_mut_noguard --init=init --step=step --max-steps=24 --max-samples=60000 --invariant=GuardNoLateWrite --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/t07.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/relay_turn.qnt
+An example execution:
+
+[State 0]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: false,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 0,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 0,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::lastAction: "init",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "standby", 2 -> "standby"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 0
+}
+
+[State 1]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: false,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 0,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> true),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 2,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::lastAction: "takeTurn",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 10),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "standby", 2 -> "active"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 1
+}
+
+[State 2]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: false,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 0,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> true),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 2,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::lastAction: "issueWrite",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 10),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "standby", 2 -> "active"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 1
+}
+
+[State 3]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: false,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 0,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 0,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::lastAction: "sigterm",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 10),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "standby", 2 -> "dead"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 2
+}
+
+[State 4]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: false,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 0,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 0,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::lastAction: "kill",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 10),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "dead", 2 -> "dead"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 2
+}
+
+[State 5]
+{
+  relay_mut_noguard::relay_turn_base::acceptedByNonHolder: true,
+  relay_mut_noguard::relay_turn_base::acceptedWrites: 1,
+  relay_mut_noguard::relay_turn_base::doorOpen: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::dropped: 0,
+  relay_mut_noguard::relay_turn_base::holder: 0,
+  relay_mut_noguard::relay_turn_base::inFlightVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::inflight: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::knownVer: Map(1 -> -1, 2 -> 1),
+  relay_mut_noguard::relay_turn_base::lastAction: "applyWrite",
+  relay_mut_noguard::relay_turn_base::lastChange: 0,
+  relay_mut_noguard::relay_turn_base::nextCheck: Map(1 -> 0, 2 -> 10),
+  relay_mut_noguard::relay_turn_base::now: 0,
+  relay_mut_noguard::relay_turn_base::observedLoss: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::paused: Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::pendingWrite: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::releaseLost: false,
+  relay_mut_noguard::relay_turn_base::renewInFlight:
+    Map(1 -> false, 2 -> false),
+  relay_mut_noguard::relay_turn_base::role: Map(1 -> "dead", 2 -> "dead"),
+  relay_mut_noguard::relay_turn_base::seenAt: Map(1 -> 0, 2 -> 0),
+  relay_mut_noguard::relay_turn_base::seenVer: Map(1 -> -1, 2 -> -1),
+  relay_mut_noguard::relay_turn_base::served: 0,
+  relay_mut_noguard::relay_turn_base::staleObserved: 0,
+  relay_mut_noguard::relay_turn_base::staleUnobserved: 0,
+  relay_mut_noguard::relay_turn_base::ver: 2
+}
+
+[violation] Found an issue (104ms at 4894 traces/second).
+Use --verbosity=3 to show executions.
+error: Invariant violated
+
+[exit 1]

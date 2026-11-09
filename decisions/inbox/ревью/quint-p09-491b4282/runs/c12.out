@@ -1,0 +1,706 @@
+quint run --backend=rust --main=alarm_nojump --init=init --step=step --max-steps=40 --max-samples=60000 --invariant=AlarmBound --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/c12.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/timing.qnt
+An example execution:
+
+[State 0]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: -1,
+  alarm_nojump::clock_alarm_base::frontSeen: 0,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "init",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 0,
+  alarm_nojump::clock_alarm_base::lastUrgent: 0,
+  alarm_nojump::clock_alarm_base::pageTo: 0,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 0,
+  alarm_nojump::clock_alarm_base::t: 1,
+  alarm_nojump::clock_alarm_base::w: 1,
+  alarm_nojump::clock_alarm_base::watermark: 0
+}
+
+[State 1]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: -1,
+  alarm_nojump::clock_alarm_base::frontSeen: 0,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 0,
+  alarm_nojump::clock_alarm_base::lastUrgent: 0,
+  alarm_nojump::clock_alarm_base::pageTo: 0,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 0,
+  alarm_nojump::clock_alarm_base::t: 1,
+  alarm_nojump::clock_alarm_base::w: 1,
+  alarm_nojump::clock_alarm_base::watermark: 0
+}
+
+[State 2]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 1,
+  alarm_nojump::clock_alarm_base::frontSeen: 0,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 0,
+  alarm_nojump::clock_alarm_base::lastUrgent: 0,
+  alarm_nojump::clock_alarm_base::pageTo: 0,
+  alarm_nojump::clock_alarm_base::pendingAt: 1,
+  alarm_nojump::clock_alarm_base::seq: 1,
+  alarm_nojump::clock_alarm_base::t: 1,
+  alarm_nojump::clock_alarm_base::w: 1,
+  alarm_nojump::clock_alarm_base::watermark: 1
+}
+
+[State 3]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 1,
+  alarm_nojump::clock_alarm_base::frontSeen: 0,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 0,
+  alarm_nojump::clock_alarm_base::lastUrgent: 0,
+  alarm_nojump::clock_alarm_base::pageTo: 0,
+  alarm_nojump::clock_alarm_base::pendingAt: 1,
+  alarm_nojump::clock_alarm_base::seq: 1,
+  alarm_nojump::clock_alarm_base::t: 2,
+  alarm_nojump::clock_alarm_base::w: 2,
+  alarm_nojump::clock_alarm_base::watermark: 1
+}
+
+[State 4]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 1,
+  alarm_nojump::clock_alarm_base::frontSeen: 1,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 2,
+  alarm_nojump::clock_alarm_base::lastUrgent: 2,
+  alarm_nojump::clock_alarm_base::pageTo: 2,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 1,
+  alarm_nojump::clock_alarm_base::t: 2,
+  alarm_nojump::clock_alarm_base::w: 2,
+  alarm_nojump::clock_alarm_base::watermark: 1
+}
+
+[State 5]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 1,
+  alarm_nojump::clock_alarm_base::frontSeen: 1,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 2,
+  alarm_nojump::clock_alarm_base::lastUrgent: 2,
+  alarm_nojump::clock_alarm_base::pageTo: 2,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 1,
+  alarm_nojump::clock_alarm_base::t: 3,
+  alarm_nojump::clock_alarm_base::w: 3,
+  alarm_nojump::clock_alarm_base::watermark: 1
+}
+
+[State 6]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 1,
+  alarm_nojump::clock_alarm_base::frontSeen: 1,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 2,
+  alarm_nojump::clock_alarm_base::lastUrgent: 2,
+  alarm_nojump::clock_alarm_base::pageTo: 2,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 1,
+  alarm_nojump::clock_alarm_base::t: 3,
+  alarm_nojump::clock_alarm_base::w: 3,
+  alarm_nojump::clock_alarm_base::watermark: 1
+}
+
+[State 7]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 1,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 2,
+  alarm_nojump::clock_alarm_base::lastUrgent: 2,
+  alarm_nojump::clock_alarm_base::pageTo: 2,
+  alarm_nojump::clock_alarm_base::pendingAt: 3,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 3,
+  alarm_nojump::clock_alarm_base::w: 3,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 8]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 1,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 2,
+  alarm_nojump::clock_alarm_base::lastUrgent: 2,
+  alarm_nojump::clock_alarm_base::pageTo: 2,
+  alarm_nojump::clock_alarm_base::pendingAt: 3,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 4,
+  alarm_nojump::clock_alarm_base::w: 4,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 9]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 2,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 4,
+  alarm_nojump::clock_alarm_base::lastUrgent: 4,
+  alarm_nojump::clock_alarm_base::pageTo: 4,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 4,
+  alarm_nojump::clock_alarm_base::w: 4,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 10]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 2,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 4,
+  alarm_nojump::clock_alarm_base::lastUrgent: 4,
+  alarm_nojump::clock_alarm_base::pageTo: 4,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 5,
+  alarm_nojump::clock_alarm_base::w: 5,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 11]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 2,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 4,
+  alarm_nojump::clock_alarm_base::lastUrgent: 4,
+  alarm_nojump::clock_alarm_base::pageTo: 4,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 5,
+  alarm_nojump::clock_alarm_base::w: 5,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 12]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 3,
+  alarm_nojump::clock_alarm_base::frontSeen: 2,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 4,
+  alarm_nojump::clock_alarm_base::lastUrgent: 4,
+  alarm_nojump::clock_alarm_base::pageTo: 4,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 2,
+  alarm_nojump::clock_alarm_base::t: 6,
+  alarm_nojump::clock_alarm_base::w: 6,
+  alarm_nojump::clock_alarm_base::watermark: 3
+}
+
+[State 13]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 6,
+  alarm_nojump::clock_alarm_base::frontSeen: 2,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 4,
+  alarm_nojump::clock_alarm_base::lastUrgent: 4,
+  alarm_nojump::clock_alarm_base::pageTo: 4,
+  alarm_nojump::clock_alarm_base::pendingAt: 6,
+  alarm_nojump::clock_alarm_base::seq: 3,
+  alarm_nojump::clock_alarm_base::t: 6,
+  alarm_nojump::clock_alarm_base::w: 6,
+  alarm_nojump::clock_alarm_base::watermark: 6
+}
+
+[State 14]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 6,
+  alarm_nojump::clock_alarm_base::frontSeen: 3,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 6,
+  alarm_nojump::clock_alarm_base::lastUrgent: 6,
+  alarm_nojump::clock_alarm_base::pageTo: 6,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 3,
+  alarm_nojump::clock_alarm_base::t: 6,
+  alarm_nojump::clock_alarm_base::w: 6,
+  alarm_nojump::clock_alarm_base::watermark: 6
+}
+
+[State 15]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 6,
+  alarm_nojump::clock_alarm_base::frontSeen: 3,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 6,
+  alarm_nojump::clock_alarm_base::lastUrgent: 6,
+  alarm_nojump::clock_alarm_base::pageTo: 6,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 3,
+  alarm_nojump::clock_alarm_base::t: 7,
+  alarm_nojump::clock_alarm_base::w: 7,
+  alarm_nojump::clock_alarm_base::watermark: 6
+}
+
+[State 16]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 6,
+  alarm_nojump::clock_alarm_base::frontSeen: 3,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 6,
+  alarm_nojump::clock_alarm_base::lastUrgent: 6,
+  alarm_nojump::clock_alarm_base::pageTo: 6,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 3,
+  alarm_nojump::clock_alarm_base::t: 7,
+  alarm_nojump::clock_alarm_base::w: 7,
+  alarm_nojump::clock_alarm_base::watermark: 6
+}
+
+[State 17]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 7,
+  alarm_nojump::clock_alarm_base::frontSeen: 3,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 6,
+  alarm_nojump::clock_alarm_base::lastUrgent: 6,
+  alarm_nojump::clock_alarm_base::pageTo: 6,
+  alarm_nojump::clock_alarm_base::pendingAt: 7,
+  alarm_nojump::clock_alarm_base::seq: 4,
+  alarm_nojump::clock_alarm_base::t: 7,
+  alarm_nojump::clock_alarm_base::w: 7,
+  alarm_nojump::clock_alarm_base::watermark: 7
+}
+
+[State 18]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 7,
+  alarm_nojump::clock_alarm_base::frontSeen: 3,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 6,
+  alarm_nojump::clock_alarm_base::lastUrgent: 6,
+  alarm_nojump::clock_alarm_base::pageTo: 6,
+  alarm_nojump::clock_alarm_base::pendingAt: 7,
+  alarm_nojump::clock_alarm_base::seq: 4,
+  alarm_nojump::clock_alarm_base::t: 8,
+  alarm_nojump::clock_alarm_base::w: 8,
+  alarm_nojump::clock_alarm_base::watermark: 7
+}
+
+[State 19]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 7,
+  alarm_nojump::clock_alarm_base::frontSeen: 4,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 8,
+  alarm_nojump::clock_alarm_base::lastUrgent: 8,
+  alarm_nojump::clock_alarm_base::pageTo: 8,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 4,
+  alarm_nojump::clock_alarm_base::t: 8,
+  alarm_nojump::clock_alarm_base::w: 8,
+  alarm_nojump::clock_alarm_base::watermark: 7
+}
+
+[State 20]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 7,
+  alarm_nojump::clock_alarm_base::frontSeen: 4,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 8,
+  alarm_nojump::clock_alarm_base::lastUrgent: 8,
+  alarm_nojump::clock_alarm_base::pageTo: 8,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 4,
+  alarm_nojump::clock_alarm_base::t: 9,
+  alarm_nojump::clock_alarm_base::w: 9,
+  alarm_nojump::clock_alarm_base::watermark: 7
+}
+
+[State 21]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 9,
+  alarm_nojump::clock_alarm_base::frontSeen: 4,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 8,
+  alarm_nojump::clock_alarm_base::lastUrgent: 8,
+  alarm_nojump::clock_alarm_base::pageTo: 8,
+  alarm_nojump::clock_alarm_base::pendingAt: 9,
+  alarm_nojump::clock_alarm_base::seq: 5,
+  alarm_nojump::clock_alarm_base::t: 9,
+  alarm_nojump::clock_alarm_base::w: 9,
+  alarm_nojump::clock_alarm_base::watermark: 9
+}
+
+[State 22]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 9,
+  alarm_nojump::clock_alarm_base::frontSeen: 5,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 9,
+  alarm_nojump::clock_alarm_base::lastUrgent: 9,
+  alarm_nojump::clock_alarm_base::pageTo: 9,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 5,
+  alarm_nojump::clock_alarm_base::t: 9,
+  alarm_nojump::clock_alarm_base::w: 9,
+  alarm_nojump::clock_alarm_base::watermark: 9
+}
+
+[State 23]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 9,
+  alarm_nojump::clock_alarm_base::frontSeen: 5,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 9,
+  alarm_nojump::clock_alarm_base::lastUrgent: 9,
+  alarm_nojump::clock_alarm_base::pageTo: 9,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 5,
+  alarm_nojump::clock_alarm_base::t: 10,
+  alarm_nojump::clock_alarm_base::w: 10,
+  alarm_nojump::clock_alarm_base::watermark: 9
+}
+
+[State 24]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 9,
+  alarm_nojump::clock_alarm_base::frontSeen: 5,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 9,
+  alarm_nojump::clock_alarm_base::lastUrgent: 9,
+  alarm_nojump::clock_alarm_base::pageTo: 9,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 5,
+  alarm_nojump::clock_alarm_base::t: 10,
+  alarm_nojump::clock_alarm_base::w: 10,
+  alarm_nojump::clock_alarm_base::watermark: 9
+}
+
+[State 25]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 5,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 9,
+  alarm_nojump::clock_alarm_base::lastUrgent: 9,
+  alarm_nojump::clock_alarm_base::pageTo: 9,
+  alarm_nojump::clock_alarm_base::pendingAt: 10,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 10,
+  alarm_nojump::clock_alarm_base::w: 10,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 26]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 5,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 9,
+  alarm_nojump::clock_alarm_base::lastUrgent: 9,
+  alarm_nojump::clock_alarm_base::pageTo: 9,
+  alarm_nojump::clock_alarm_base::pendingAt: 10,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 11,
+  alarm_nojump::clock_alarm_base::w: 11,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 27]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 6,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 11,
+  alarm_nojump::clock_alarm_base::lastUrgent: 11,
+  alarm_nojump::clock_alarm_base::pageTo: 11,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 11,
+  alarm_nojump::clock_alarm_base::w: 11,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 28]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 6,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 11,
+  alarm_nojump::clock_alarm_base::lastUrgent: 11,
+  alarm_nojump::clock_alarm_base::pageTo: 11,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 12,
+  alarm_nojump::clock_alarm_base::w: 12,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 29]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 6,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 11,
+  alarm_nojump::clock_alarm_base::lastUrgent: 11,
+  alarm_nojump::clock_alarm_base::pageTo: 11,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 12,
+  alarm_nojump::clock_alarm_base::w: 12,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 30]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 10,
+  alarm_nojump::clock_alarm_base::frontSeen: 6,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 11,
+  alarm_nojump::clock_alarm_base::lastUrgent: 11,
+  alarm_nojump::clock_alarm_base::pageTo: 11,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 6,
+  alarm_nojump::clock_alarm_base::t: 13,
+  alarm_nojump::clock_alarm_base::w: 13,
+  alarm_nojump::clock_alarm_base::watermark: 10
+}
+
+[State 31]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 13,
+  alarm_nojump::clock_alarm_base::frontSeen: 6,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 11,
+  alarm_nojump::clock_alarm_base::lastUrgent: 11,
+  alarm_nojump::clock_alarm_base::pageTo: 11,
+  alarm_nojump::clock_alarm_base::pendingAt: 13,
+  alarm_nojump::clock_alarm_base::seq: 7,
+  alarm_nojump::clock_alarm_base::t: 13,
+  alarm_nojump::clock_alarm_base::w: 13,
+  alarm_nojump::clock_alarm_base::watermark: 13
+}
+
+[State 32]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 13,
+  alarm_nojump::clock_alarm_base::frontSeen: 7,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 13,
+  alarm_nojump::clock_alarm_base::lastUrgent: 13,
+  alarm_nojump::clock_alarm_base::pageTo: 13,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 7,
+  alarm_nojump::clock_alarm_base::t: 13,
+  alarm_nojump::clock_alarm_base::w: 13,
+  alarm_nojump::clock_alarm_base::watermark: 13
+}
+
+[State 33]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 13,
+  alarm_nojump::clock_alarm_base::frontSeen: 7,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 13,
+  alarm_nojump::clock_alarm_base::lastUrgent: 13,
+  alarm_nojump::clock_alarm_base::pageTo: 13,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 7,
+  alarm_nojump::clock_alarm_base::t: 14,
+  alarm_nojump::clock_alarm_base::w: 14,
+  alarm_nojump::clock_alarm_base::watermark: 13
+}
+
+[State 34]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 13,
+  alarm_nojump::clock_alarm_base::frontSeen: 7,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 13,
+  alarm_nojump::clock_alarm_base::lastUrgent: 13,
+  alarm_nojump::clock_alarm_base::pageTo: 13,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 7,
+  alarm_nojump::clock_alarm_base::t: 14,
+  alarm_nojump::clock_alarm_base::w: 14,
+  alarm_nojump::clock_alarm_base::watermark: 13
+}
+
+[State 35]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 7,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "alarmEvent",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 13,
+  alarm_nojump::clock_alarm_base::lastUrgent: 13,
+  alarm_nojump::clock_alarm_base::pageTo: 13,
+  alarm_nojump::clock_alarm_base::pendingAt: 14,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 14,
+  alarm_nojump::clock_alarm_base::w: 14,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[State 36]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 7,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 13,
+  alarm_nojump::clock_alarm_base::lastUrgent: 13,
+  alarm_nojump::clock_alarm_base::pageTo: 13,
+  alarm_nojump::clock_alarm_base::pendingAt: 14,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 15,
+  alarm_nojump::clock_alarm_base::w: 15,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[State 37]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 8,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "pageBuilt",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 15,
+  alarm_nojump::clock_alarm_base::lastUrgent: 15,
+  alarm_nojump::clock_alarm_base::pageTo: 15,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 15,
+  alarm_nojump::clock_alarm_base::w: 15,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[State 38]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 8,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 15,
+  alarm_nojump::clock_alarm_base::lastUrgent: 15,
+  alarm_nojump::clock_alarm_base::pageTo: 15,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 16,
+  alarm_nojump::clock_alarm_base::w: 16,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[State 39]
+{
+  alarm_nojump::clock_alarm_base::checked: true,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 8,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "frontRead",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 15,
+  alarm_nojump::clock_alarm_base::lastUrgent: 15,
+  alarm_nojump::clock_alarm_base::pageTo: 15,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 16,
+  alarm_nojump::clock_alarm_base::w: 16,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[State 40]
+{
+  alarm_nojump::clock_alarm_base::checked: false,
+  alarm_nojump::clock_alarm_base::front: 14,
+  alarm_nojump::clock_alarm_base::frontSeen: 8,
+  alarm_nojump::clock_alarm_base::j: 0,
+  alarm_nojump::clock_alarm_base::lastAction: "tick",
+  alarm_nojump::clock_alarm_base::lastPageTrue: 15,
+  alarm_nojump::clock_alarm_base::lastUrgent: 15,
+  alarm_nojump::clock_alarm_base::pageTo: 15,
+  alarm_nojump::clock_alarm_base::pendingAt: -1,
+  alarm_nojump::clock_alarm_base::seq: 8,
+  alarm_nojump::clock_alarm_base::t: 17,
+  alarm_nojump::clock_alarm_base::w: 17,
+  alarm_nojump::clock_alarm_base::watermark: 14
+}
+
+[ok] No violation found (2111ms at 28423 traces/second).
+Trace length statistics: max=41, min=41, average=41.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

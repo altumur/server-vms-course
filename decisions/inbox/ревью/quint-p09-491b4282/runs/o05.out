@@ -1,0 +1,6 @@
+quint verify --main=report_text --init=init --step=step --max-steps=10 --invariant=ConfirmedMatches --server-endpoint=localhost:18827 --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/o05.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/outcomes.qnt
+[ok] No violation found (456855ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.
+
+[exit 0]

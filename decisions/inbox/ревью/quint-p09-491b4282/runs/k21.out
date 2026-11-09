@@ -1,0 +1,77 @@
+quint verify --main=keeper_head_only --init=init --step=step --max-steps=8 --invariant=TakenHasParts --server-endpoint=localhost:18827 --out-itf=/home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/runs/k21.itf.json /home/pilot/review103-claude-adr0130-p09-quint/decisions/inbox/ревью/quint-p09-491b4282/keeper_backup.qnt
+An example execution:
+
+[State 0]
+{
+  keeper_head_only::keeper_base::everComplete: false,
+  keeper_head_only::keeper_base::handover: "idle",
+  keeper_head_only::keeper_base::hoPair: 0,
+  keeper_head_only::keeper_base::holderAlive: true,
+  keeper_head_only::keeper_base::holderHead: 0,
+  keeper_head_only::keeper_base::kObj: 0,
+  keeper_head_only::keeper_base::kParts: Set(),
+  keeper_head_only::keeper_base::kTaken: 0,
+  keeper_head_only::keeper_base::lastAction: "init",
+  keeper_head_only::keeper_base::pointer: 0
+}
+
+[State 1]
+{
+  keeper_head_only::keeper_base::everComplete: false,
+  keeper_head_only::keeper_base::handover: "idle",
+  keeper_head_only::keeper_base::hoPair: 0,
+  keeper_head_only::keeper_base::holderAlive: true,
+  keeper_head_only::keeper_base::holderHead: 1,
+  keeper_head_only::keeper_base::kObj: 0,
+  keeper_head_only::keeper_base::kParts: Set(),
+  keeper_head_only::keeper_base::kTaken: 0,
+  keeper_head_only::keeper_base::lastAction: "newHead",
+  keeper_head_only::keeper_base::pointer: 0
+}
+
+[State 2]
+{
+  keeper_head_only::keeper_base::everComplete: false,
+  keeper_head_only::keeper_base::handover: "idle",
+  keeper_head_only::keeper_base::hoPair: 0,
+  keeper_head_only::keeper_base::holderAlive: true,
+  keeper_head_only::keeper_base::holderHead: 1,
+  keeper_head_only::keeper_base::kObj: 0,
+  keeper_head_only::keeper_base::kParts: Set(),
+  keeper_head_only::keeper_base::kTaken: 0,
+  keeper_head_only::keeper_base::lastAction: "movePointer",
+  keeper_head_only::keeper_base::pointer: 1
+}
+
+[State 3]
+{
+  keeper_head_only::keeper_base::everComplete: false,
+  keeper_head_only::keeper_base::handover: "idle",
+  keeper_head_only::keeper_base::hoPair: 0,
+  keeper_head_only::keeper_base::holderAlive: true,
+  keeper_head_only::keeper_base::holderHead: 1,
+  keeper_head_only::keeper_base::kObj: 1,
+  keeper_head_only::keeper_base::kParts: Set(),
+  keeper_head_only::keeper_base::kTaken: 0,
+  keeper_head_only::keeper_base::lastAction: "writeObject",
+  keeper_head_only::keeper_base::pointer: 1
+}
+
+[State 4]
+{
+  keeper_head_only::keeper_base::everComplete: false,
+  keeper_head_only::keeper_base::handover: "idle",
+  keeper_head_only::keeper_base::hoPair: 0,
+  keeper_head_only::keeper_base::holderAlive: true,
+  keeper_head_only::keeper_base::holderHead: 1,
+  keeper_head_only::keeper_base::kObj: 1,
+  keeper_head_only::keeper_base::kParts: Set(),
+  keeper_head_only::keeper_base::kTaken: 1,
+  keeper_head_only::keeper_base::lastAction: "writeTaken",
+  keeper_head_only::keeper_base::pointer: 1
+}
+
+[violation] Found an issue (527ms).
+error: found a counterexample
+
+[exit 1]
