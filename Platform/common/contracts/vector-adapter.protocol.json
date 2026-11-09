@@ -1,0 +1,2478 @@
+{
+  "adapters": [
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "raw": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"01-store\" || owner == \"02-installer\" || owner == \"03-worker\" || owner == \"06-console\" || owner == \"08-domain\" || owner == \"09-agent\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "01-store/jcs"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "action": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"01-store\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "01-store/rights-evaluator"
+    },
+    {
+      "entrypoint": {
+        "command": "canonical",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "raw",
+          "type": "bytes",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/canonical"
+    },
+    {
+      "entrypoint": {
+        "command": "exec",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "schema": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "argv": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "result": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "result",
+                  "argv"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "result": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "result"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/exec"
+    },
+    {
+      "entrypoint": {
+        "command": "install-order",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "schema": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "order": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "result": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "result",
+                  "order"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "result": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "result"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/install-order"
+    },
+    {
+      "entrypoint": {
+        "command": "platform-lists",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/platform-lists"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "list": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/platform-lists"
+    },
+    {
+      "entrypoint": {
+        "command": "workers-script",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "02-installer/workers-script"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/contender-projection"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "decls": {
+              "type": "string"
+            },
+            "present": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/key-families"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/metrics"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "i": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "value",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/op-step"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/reap"
+    },
+    {
+      "entrypoint": {
+        "command": "request-digest",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {
+                "input": {
+                  "type": "string"
+                },
+                "sender": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sender",
+                "input"
+              ],
+              "type": "object"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/request-digest"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            },
+            "sender": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/request-digest"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "body": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fault"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "stored": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stored"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/requests-body"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/resolve"
+    },
+    {
+      "entrypoint": {
+        "command": "rid",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {
+                "rid": {}
+              },
+              "required": [
+                "rid"
+              ],
+              "type": "object"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/rid"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "body": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "rid": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"03-worker\" || owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "detail": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "detail"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "rid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rid"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "06-console/rid"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner in [\"08-domain\"]"
+        },
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/agent-sig"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/ask-sig"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "age": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "boolean",
+          "variant": ""
+        }
+      ],
+      "package": "common/contender-fresh"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": [
+            "object",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/crl"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/deadline"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "backup_key_rev": {
+              "type": "string"
+            },
+            "root_key": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/domain-backup-key"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "seed_secret": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": [
+            "object",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/domain-founding"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/domain-token"
+    },
+    {
+      "entrypoint": {
+        "command": "door-token-issue",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {
+                "claims": {},
+                "kid": {
+                  "type": "string"
+                },
+                "now": {},
+                "seed_hex": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "seed_hex",
+                "kid",
+                "now",
+                "claims"
+              ],
+              "type": "object"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "claims_jcs": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "claims_jcs",
+              "token"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/door-token"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "claims": {
+              "type": "string"
+            },
+            "kid": {
+              "type": "string"
+            },
+            "now": {
+              "type": "string"
+            },
+            "seed_hex": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "claims_jcs": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "claims_jcs",
+              "token"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/door-token"
+    },
+    {
+      "entrypoint": {
+        "command": "env-line",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": [
+            "array",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/env-file"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/env-file"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"05-resource\""
+        },
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/events-merge"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "family": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "who": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"01-store\""
+        },
+        {
+          "cells": {
+            "family": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "who": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"02-installer\""
+        },
+        {
+          "cells": {
+            "family": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "who": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"03-worker\""
+        },
+        {
+          "cells": {
+            "family": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "who": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"04-controller\""
+        },
+        {
+          "cells": {
+            "family": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "who": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "properties": {
+              "paths": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "verdict": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "verdict",
+              "paths",
+              "outcome"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/family-read"
+    },
+    {
+      "entrypoint": {
+        "command": "fault",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "variant": "",
+          "when": "owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/fault"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {},
+          "variant": "",
+          "when": "owner == \"06-console\""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/fault"
+    },
+    {
+      "entrypoint": {
+        "command": "fresh-age",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": "",
+          "when": "owner in [\"04-controller\", \"06-console\"]"
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "boolean",
+          "variant": ""
+        }
+      ],
+      "package": "common/fresh-age"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "age": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "boolean",
+          "variant": ""
+        }
+      ],
+      "package": "common/fresh-age"
+    },
+    {
+      "entrypoint": {
+        "command": "group-of",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": "",
+          "when": "owner in [\"03-worker\", \"04-controller\"]"
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/group-of"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "raw": {
+              "type": "string"
+            }
+          },
+          "variant": "",
+          "when": "owner in [\"03-worker\", \"04-controller\", \"06-console\"]"
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/group-of"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "key": {
+              "type": "string"
+            },
+            "object": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "object": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/heartbeat-read"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/hold-state"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": [
+            "object",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/instance"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "t": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/journal"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/keys"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            },
+            "op": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": [
+            "string",
+            "array"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/labels"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "raw": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/log-mask"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/loopback"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "boolean",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/may"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/object-client"
+    },
+    {
+      "entrypoint": {
+        "command": "password-hash",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": [
+            "string",
+            "boolean"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/password-hash"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/peer"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/pool"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/record"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "at": {
+              "type": "string"
+            },
+            "history": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/resource-state"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": [
+            "array",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/revoked"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "body": {
+              "type": "string"
+            },
+            "op": {
+              "type": "string"
+            },
+            "rows": {
+              "type": "string"
+            },
+            "stored": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "name": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "result",
+              "word"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "properties": {
+              "result": {
+                "type": "string"
+              },
+              "row": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "result",
+              "row"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/row-check"
+    },
+    {
+      "entrypoint": {
+        "command": "said-id",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "opaque"
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/said-id"
+    },
+    {
+      "entrypoint": {
+        "command": "said-read",
+        "surface": "stand"
+      },
+      "inputs": [
+        {
+          "argument_file": {
+            "encoding": "json",
+            "schema": {
+              "additionalProperties": false,
+              "properties": {
+                "fetched": {},
+                "rid": {}
+              },
+              "required": [
+                "fetched",
+                "rid"
+              ],
+              "type": "object"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "type": "boolean",
+          "variant": ""
+        }
+      ],
+      "package": "common/said-id"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/schema"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "envelope": {
+              "type": "string"
+            },
+            "key_hex": {
+              "type": "string"
+            },
+            "pointer": {
+              "type": "string"
+            },
+            "row_key": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "file": {
+              "type": "string"
+            },
+            "rotate": {
+              "const": "true"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "file": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "key_hex": {
+              "type": "string"
+            },
+            "kid": {
+              "type": "string"
+            },
+            "nonce_b64url": {
+              "type": "string"
+            },
+            "plaintext": {
+              "type": "string"
+            },
+            "pointer": {
+              "type": "string"
+            },
+            "row_key": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        },
+        {
+          "cells": {
+            "path": {
+              "type": "string"
+            },
+            "row_key": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/sealing"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "field": {
+              "type": "string"
+            },
+            "raw": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "masked": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "masked",
+              "fault",
+              "text"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fault",
+              "text"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "type": "string"
+              },
+              "masked": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "masked",
+              "fault"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fault"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        },
+        {
+          "frame": "json",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "masked": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "masked"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "",
+          "when": "owner == \"04-controller\""
+        }
+      ],
+      "package": "common/secret-in"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            },
+            "op": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "value",
+          "variant": ""
+        }
+      ],
+      "package": "common/slot-name"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "string",
+          "variant": ""
+        }
+      ],
+      "package": "common/store-client"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            },
+            "op": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": [
+            "object",
+            "string"
+          ],
+          "variant": ""
+        }
+      ],
+      "package": "common/tombstone"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "input": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "type": "array",
+          "variant": ""
+        }
+      ],
+      "package": "common/turn"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "json": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "variant": "write"
+        },
+        {
+          "cells": {
+            "row": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "variant": "read"
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "fault": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "write"
+        },
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "plaintext": {},
+              "row": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "row",
+              "plaintext"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "write"
+        },
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "row": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "row"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "write"
+        },
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "value": {}
+            },
+            "required": [
+              "status",
+              "value"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "read"
+        },
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "read"
+        },
+        {
+          "frame": "json-lf",
+          "schema": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": "write"
+        }
+      ],
+      "package": "common/values-by-type"
+    },
+    {
+      "entrypoint": {
+        "surface": "vectors"
+      },
+      "inputs": [
+        {
+          "cells": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "variant": ""
+        }
+      ],
+      "outputs": [
+        {
+          "frame": "json",
+          "schema": {
+            "properties": {
+              "layer1": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer1"
+            ],
+            "type": "object"
+          },
+          "type": "object",
+          "variant": ""
+        }
+      ],
+      "package": "common/yaml-suite"
+    }
+  ]
+}
