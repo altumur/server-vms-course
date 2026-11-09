@@ -59,3 +59,8 @@ do not change the value console and the socket role. This is not a normative hea
   `domain/testsub/`) delete under `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); the same prohibition for admin — sc. 11 step 6.
 - Sc. 15 — `comment` of the rights file (N1.2): a number instead of a string (`inputs/rights-bad-comment.json`) — a start refusal, code 2;
   the stand file again — `GET /v1/rights` by admin returns its string `comment` (N2).
+
+### Original passage 11
+
+Sc. 16 — the batch `op: batch` by roles (P/01.1 N1 `batch`, ADR-0094 B9): step 1 — the role `console` does not know the limit `BATCH_WRITES`, step 3 — the other
+roles know it; steps 4–7 — a row and a guard without the right, nothing is written; steps 8–11 — `never` for admin judges each row of the batch.

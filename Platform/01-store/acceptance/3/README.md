@@ -58,7 +58,7 @@ The writer side of the rule «Time in a row» (N0 of chapter 1.1): the floor aft
 
 ## Actual body ceiling in status (ADR-0127 P/06 C2)
 
-Scenario16 step1 also checks required `max_body: 1048576` and the unchanged `max_value: 524288` on its default stand. Repeat the ordinary status GET on a fresh store configured through the existing `-max-body 2097152` and `-max-value 524288`: max_body is2097152, max_value stays524288. This is an actual daemon/HTTP obligation; the source/schema audit does not execute that repeat. Do not add acceptance.yaml keys or guess the limits from defaults.
+The Status response of the default stand carries the required `max_body: 1048576` and the unchanged `max_value: 524288`. Repeat the ordinary status GET on a fresh store configured through the existing `-max-body 2097152` and `-max-value 524288`: max_body is2097152, max_value stays524288. This is an actual daemon/HTTP obligation; the source/schema audit does not execute that repeat. Do not add acceptance.yaml keys or guess the limits from defaults.
 
 The independent schema witnesses in `inputs/status-body-limits.json` use complete Status responses: positive body ceilings1/1048576/2097152, and missing/zero/negative/nonintegral/bool/string/null negatives. Apply the existing Status schema to the whole response. max_body counts entity bytes, including an actual LF; HTTP request/header/chunk framing does not enter it. The static P06 profile gate uses the value from this result, not a new flag or a replacement for max_value.
 

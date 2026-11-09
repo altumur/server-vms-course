@@ -52,23 +52,11 @@ command, each by a separate call. All installations except the last MUST return 
 3. `rev` of the row `platform/manifest/<name>` — with `<rev>`: the row is read by the store door (`GET /v1/get?key=platform/manifest/<name>`,
    the field `rev` in `items`) or by the command `manifest show` of the implementation; `-` — `items: null` / there is no row.
 
-Nothing else is compared: neither the mark `/rev` nor the refusal text beyond the file name. The cases `self_*`, `other_*`,
-`prefix_clash` are catalogue checks (chapter 2.1 N3 `load_catalogue`: «A=B», a coincidence of `metrics.prefix`): a single load of these
-files gives `ok`, the refusal is only at an installation into the catalogue. `same_twice` — the same file twice: «unchanged», rev 1;
-`changed` — a changed one with the same name: rev 2. The cases `creates_*`, `uses_*`, `os_name_clash` (ADR-0091) are catalogue checks
-of chapter 2.1 N3 for `worker.creates`, `worker.uses` and OS names: each refusing case differs from `creates_ok` or `uses_ok`
-by one reason; `creates_nested_prefix` installs two customers, the refusal is at the second one (`cust-x`). If the target or the owner of a share is not yet in the catalogue, the check waits for its installation (`creates_no_target`, `uses_no_owner` — 0);
-`target_after_customer_mismatch` — a refusal at the installation of the target after an incompatible customer. The cases `kind_dup`,
-`door_domain_*` (ADR-0091 addendum (14), (17), (18) item 6) are the kinds of the domain token: the same kind at a second subsystem — a refusal; the kind
-of the route `door.routes[].domain` is declared by another subsystem of the catalogue or by its own — accepted; there is no kind — a refusal (there is no deferral).
-The cases `files_*`, `shell_declared_*` (ADR-0094 B7): `filed` names the accepted names — all extensions, nested segments, `api.js` and
-`apis/…` next to the prohibition of `api/`, an empty file, a file in two parts; `filed-missing` names a file that does not exist — code 2, stderr names the manifest file and the path;
-`filed-none` — the same `name` without a list; `pagedecl` — `console.shell: true`, there is no shell — code 2; `pagedecl-bare` — the same `name` without
-the word, after `@shell-put` there is a shell — a new revision with the declaration. `filed-big` names `big.js`, `filed-sum` — `sum1.js`…`sum5.js`:
-a file one byte above `FILE_MAX` and a sum one byte above `FILES_TOTAL_MAX` (four files of 8 MiB and a byte) — code 2 before the write, the revision is the former 1;
-exactly `FILE_MAX` — accepted, rev 2.
-The cases `near_*` (ADR-0091 addendum (26) item 2) — the deferral of `near`: there is no subsystem `near.sub` — the client is accepted, the field check
-waits; the target after an incompatible client — a refusal at the installation of the target.
+Nothing else is compared: neither the mark `/rev` nor the refusal text beyond the file name. Catalogue checks (chapter 2.1 N3 `load_catalogue`: «A=B», a coincidence of `metrics.prefix`) give `ok` at a single load of such a file: the refusal is only at an installation into the catalogue. The same file again is «unchanged»; a changed file with the same name takes a new revision.
+The catalogue checks of chapter 2.1 N3 apply to `worker.creates`, `worker.uses` and OS names (ADR-0091). If the target or the owner of a share is not yet in the catalogue, the check waits for its installation; a target after an incompatible customer is a refusal at the installation of the target.
+The kinds of the domain token (ADR-0091 addendum (14), (17), (18) item 6): the same kind at a second subsystem — a refusal; the kind of the route `door.routes[].domain` is declared by another subsystem of the catalogue or by its own — accepted; there is no kind — a refusal (there is no deferral).
+Static files and the declared shell (ADR-0094 B7): all extensions, nested segments, `api.js` and `apis/…` next to the prohibition of `api/`, an empty file and a file in two parts are accepted names; a listed file that does not exist — code 2, stderr names the manifest file and the path; `console.shell: true` without a shell — code 2; the same manifest without the word with a shell present — a new revision with the declaration; a file above `FILE_MAX` or a sum above `FILES_TOTAL_MAX` — code 2 before the write, the revision stays; exactly `FILE_MAX` — accepted.
+The deferral of `near` (ADR-0091 addendum (26) item 2): there is no subsystem `near.sub` — the client is accepted, the field check waits; the target after an incompatible client — a refusal at the installation of the target.
 
 ## Checks by reading
 
@@ -79,38 +67,20 @@ the `rev` of the row.
 ## The coverage audit P/02 (2026-10-30)
 
 The session audit-kimi, commit 82f4da9fc, the coverage audit P02 (for people): properties that were formerly checked by reading.
-- `toolarge_row` (B01): the same manifest with a comment after which the weight of the main row is above the ceiling 524288 — code 2
-  before bringing the mark up to date, the row is the former rev 1 (N3 branch `toolarge`, N4; a counterexample of N5).
-- `self_table_list`, `other_table_list`, `list_tables_ok` (B04): catalogue checks with the list form of `tables`, paired with
-  `self_table`, `other_table` (chapter 2.1 N3, P/02.1-20).
-- `rev_max_same`, `rev_max_changed` (B02): the boundary `rev` = 2^53 − 1 by the directive `@rev-max`: the same file — «unchanged»,
-  code 0; a changed one — a refusal before any write, code 2, rev is the former one (N3, N4). The row key and `rev` in stderr — by reading per N4.
-- `shell_script_text` (C02-SHELL-TAG-01): `onclick=` in the text of a script, `onload=` in a style, `onclick=` in a comment and `data-on=` are not an attribute `on…=`, the shell is accepted, rev 2; not yet run by an implementation.
-- `shell_onclick`, `shell_same_twice`, `shell_changed` (B03): after an installation without a shell (rev 1), the shell `paged.shell.html`
-  with `onmouseover=` — code 2 before reading the catalogue, rev is the former 1; a shell appeared — a new revision (absence equals empty),
-  the same yaml and shell again — «unchanged» (rev 2); a shell different by bytes (`@shell-put pagedok-alt`) — rev 3 (N1.5, N3). The attribute name in stderr — by reading per N4. The form of the check — check_spec 0021baa83 (the Architect).
+- The weight of the main row is above the ceiling (B01) — code 2 before bringing the mark up to date, the row stays (N3 branch `toolarge`, N4; a counterexample of N5).
+- Catalogue checks with the list form of `tables` (B04; chapter 2.1 N3, P/02.1-20).
+- The boundary `rev` = 2^53 − 1 by the directive `@rev-max` (B02): the same file — «unchanged», code 0; a changed one — a refusal before any write, code 2, the revision stays (N3, N4). The row key and `rev` in stderr — by reading per N4.
+- The attribute `on…=` of a shell (C02-SHELL-TAG-01): `onclick=` in the text of a script, `onload=` in a style, `onclick=` in a comment and `data-on=` are not an attribute `on…=`, the shell is accepted; not yet run by an implementation.
+- The shell and the revision (B03): a shell with an attribute `on…=` — code 2 before reading the catalogue, the revision stays; a shell appeared — a new revision (absence equals empty); the same yaml and shell again — «unchanged»; a shell different by bytes — a new revision (N1.5, N3). The attribute name in stderr — by reading per N4. The form of the check — check_spec 0021baa83 (the Architect).
 
 ## The coverage audit P/02, second pass (Gemini)
 
 The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): catalogue checks that were formerly done by reading.
-- `requests_ok`, `requests_missing_target`, `requests_target_no_requests`, `requests_target_drops_requests` —
-  `worker.requests` (chapter 2.1 N3 «load_catalogue»): a target with the section `requests` — accepted; there is no target — code 2
-  (requests have no deferral as `near`, `creates`, `uses` have: the target is installed earlier, P/02.4 N1.7 `order`); a target without
-  `requests` — code 2; a target that removed `requests` on an update — code 2, its row is the former rev 1 (the catalogue is checked
-  as a whole with the candidate).
-- `creates_target_secret_default`, `creates_target_after_secret_default` — rule 4 of `worker.creates`: an optional field
-  `*_secret` of the target with `default` (the file `target-secret-default` differs from `target` by one `default`) — code 2 with the target
-  earlier and at the installation of the target after the customer.
-- `near_bad_of`, `near_target_after_bad_of` — a field `near.of` that `near.sub` does not have, with a correct `near.prefer`
-  (paired with `near_bad_field`, `near_target_after_mismatch`).
-- `uses_owner_after`, `uses_owner_after_mismatch` — the owner of a share after the consumer: the share is declared — accepted, it is not — code 2
-  at the installation of the owner (paired with `target_after_customer`, `target_after_customer_mismatch`).
-- `os_name_*` — the OS names of the catalogue (P/02.4 N1.1 `users_groups` names): the group `w2c-<sub>controller` with a name of 18 characters —
-  exactly 32, accepted; of 19 — 33, code 2; the user of a part `<dep>-pbox-<24-character part>` — 33, code 2; the subsystem
-  `store` — the user `<dep>-store` coincided with the platform group `w2c-store`, code 2; the part `belt` and the share `belt` without
-  `part` — the user of the part and the group of the share `<dep>-psub-belt` coincided, code 2; a share with `part: belt` has no group of its own —
-  accepted. The deployment of the installer is the default `w2c` (P/02.4 N1.2; the command `manifest-put` of the «Stand» does not receive a deployment
-  name): `os_name_platform_clash` and the lengths of the users are computed with it; the controller group is `w2c-…` with any.
+- `worker.requests` (chapter 2.1 N3 «load_catalogue»): a target with the section `requests` — accepted; there is no target — code 2 (requests have no deferral as `near`, `creates`, `uses` have: the target is installed earlier, P/02.4 N1.7 `order`); a target without `requests` — code 2; a target that removed `requests` on an update — code 2, its row stays (the catalogue is checked as a whole with the candidate).
+- Rule 4 of `worker.creates`: an optional field `*_secret` of the target with `default` — code 2 with the target earlier and at the installation of the target after the customer.
+- The checks of `near` also cover a field `near.of` that `near.sub` does not have, with a correct `near.prefer`.
+- The owner of a share after the consumer: the share is declared — accepted, it is not — code 2 at the installation of the owner.
+- The OS names of the catalogue (P/02.4 N1.1 `users_groups` names): a name of exactly 32 characters is accepted, of 33 — code 2, for the group of a controller and for the user of a part alike; a user that coincides with a platform group or with the group of a share — code 2; a share with `part` has no group of its own and is accepted. The deployment of the installer is the default `w2c` (P/02.4 N1.2; the command `manifest-put` of the «Stand» does not receive a deployment name): the clash with platform groups and the lengths of the users are computed with it; the controller group is `w2c-…` with any.
 
 Bringing up to date a removed mark `/rev` in the branch «unchanged» and the refusal on a mark not by the form — the acceptance of chapter 2.2 (`rev_deleted`,
 `rev_spoiled`; the directives `@rev-delete`, `@rev-spoil` — the Architect's decision, only with the four columns of chapter 2.2).

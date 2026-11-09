@@ -140,3 +140,41 @@ the class «data», the Architect's assignment of 2026-10-22). Then `@until` at 
   it out); `@start domain on m2`; `@move m2` (without `copy` and `why`) → `409 {"error": "refused", "detail": "~did not answer"}`;
   there is no new term: `@move m2 why=…` on **another instance** of the same preparation → `200 {"holder": "m2", "restored_from":
   null}`, the term — the previous one + 1.
+
+### Original passage 13
+
+**Item 7 — the handshake by `ca-certs`** ([P/08.3 N1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; [P/10 N1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): after the row `ca-certs` and `Entry.ca`
+a forwarded request of the member's console with `X-Operator: console` at the role door → `{"handshake": "ok"}`, `http` — the answer
+of the door per the gate (not 401/403 with the words `no_role`, `wrong_role`, `bad_chain`).
+
+### Original passage 14
+
+- The door of the class `role`: the CA of the member in the union — `{"handshake": "ok"}`, `http.body.error` ∉ {`no_role`, `wrong_role`, `bad_chain`}; no client certificate — `{"handshake": "ok", "http": {"status": 401, "body": {"error": "no_role"}}}`; steps 6–7 of peer, the role is not `console` — 403 `wrong_role`; a leaf without a role — 403 `no_role`; a signature outside the closed list `sig` — 403 `bad_chain` after the handshake; a CA outside the union, an expired leaf, EKU without `clientAuth`, a member outside the union — `{"handshake": "alert", "http": null}`.
+
+### Original passage 15
+
+- The door of the class `signed` (the listener `SIGNER_URL`): a client certificate is not required, `http` is by the request signature (not 401 `no_role`); a presented leaf of its own CA passes the handshake, `http` — as without a certificate (the stand does not observe `X-W2C-Client`); a leaf of the CA from `ca.next.pem` — the same (rotation; **a debt of the stand** — below); a signature outside `sig` — after the handshake, only `X-W2C-Client` (the stand does not observe it); an expired leaf, EKU without `clientAuth`, a CA that is not its own, the CA of another cluster (its clients do not present a leaf here, the role certificate contract `clients`) — `{"handshake": "alert", "http": null}`.
+
+### Original passage 16
+
+A change of the union is seen by new connections: after `POST /domain/members/<member>/ca {"ca": []}` (the grant admin; the agent is stopped — its report with `tls_ca` would return the CA, [P/08.3 N1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14) the next probe of the member's console — `{"handshake": "alert", "http": null}`; the return of `ca` and `ca_certs` → again `{"handshake": "ok"}`.
+
+### Original passage 17
+
+A positive control before the probe: the control server of the harness issues a session, the client presents it and gets `reused: true`. No — the check is not executed (the stand), not a failure of the implementation. A session is saved by `save_session` and presented by `resume_session`; a presented session is a full handshake (`reused: false`), with or without `session_available`. After the removal of the CA (without restarting the server; the agent is stopped — its report with `tls_ca` would return the CA, [P/08.3 N1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14) a new connection and the presentation of a session are `{"handshake": "alert", "http": null}`: there is no resumption, the ticket of the past session does not bring the CA back. Without a usable session (`session_available: false`) the presentation is not executed and is not declared executed.
+
+### Original passage 18
+
+- A forwarded request with the CA of the member in the union: `200` — the answer of the domain console as it came (not 401/403 with the words `no_role`, `wrong_role`, `bad_chain`; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27): `answer`, `tls`.
+- After the CA of a member is removed, a direct connection of the console of this member with the role door of the holder — `{"handshake": "alert", "http": null}`: `server.role`, the CA is outside the union.
+- The forwarding of this member still gives `200`, the answer of the domain console as it came, and the journal of the forwarding console records `domain.forwarded {cluster, path, user, status: 200}`: the removal of the CA is not the removal of the membership: transition 1 is the class `signed`, to the role door goes the console of the holder's cluster (P/10 N1.4 `server.role`); `journal`.
+- `POST /domain/members/<member>/ca {"ca": []}`, then with a fingerprint and without `ca_certs`: both — `200`; there is no row `ca-certs` (removed by `[]`), and the probe of this member → `{"handshake": "alert", "http": null}` — the member is outside the union while there are no certificates under the fingerprints (`admin`: «without ca_certs the row does not change»).
+- A certificate in `ca_certs` that does not match the fingerprint — `400 {"error": "refused"}`; `Entry.ca` and the row `ca-certs` do not change (`admin`, N4: sha256 does not match); a leaf instead of a CA — `400 {"error": "refused"}` — the leaf is not a CA (`admin`: «including CA:true (otherwise 400)»); the same `ca`, `ca_certs` twice — both `200`, the `rev` of the second answer = the `rev` of the first + 1 (`admin`: «the same ca again — a new write»).
+
+### Original passage 19
+
+- `own_client`: for a loopback literal in `url` the `host` is the `server` of the kit and the leaf carries it — `{"handshake": "ok", "peer": "ok"}`; `localhost` is a name, the leaf does not carry it — `{"peer": "wrong_name", "http": null}` (`loopback`); the system host of the stand is not touched.
+
+### Original passage 20
+
+- **«A neighbour did not answer»** (ER, added by the Quint model of M11): with no neighbour answering (`@cut-route` of all neighbours; the holder holds its copy `domain/backups/rev-N` and would otherwise give it out), `@move` without `copy` and `why` → `409 {"error": "refused", "detail": "~did not answer"}`, there is no new term; `@move` with `why` on another instance of the same preparation → `200` with `restored_from: null`, the term — the previous one + 1.

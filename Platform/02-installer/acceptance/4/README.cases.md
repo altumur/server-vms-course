@@ -17,3 +17,9 @@ Generic rules remain in [README.md](README.md). The following original passages 
 ### Original passage 2
 
 [`inputs/seam-bad.subsystem.yaml`](inputs/seam-bad.subsystem.yaml) is the owned fixture of `s1-put-invalid-source`: a YAML document with only `name`, missing the mandatory manifest structure. The scenario copies it with `@file`, calls the normal `manifest put`, and checks the refusal and unchanged source bytes. It is deliberately outside the accepted manifest corpus. The remaining file inputs are literal owned strings in the seam table.
+
+### Original passage 3
+
+after the call. In `s12` (the default D) `identity/x` matches no row family: it is listed, code 1; the kept rows
+`domain/testsub/ledger` and `domain/testsub/badges/b1` (testsub `domain.kept: [ledger, badges/]`) are not listed. In `s13` (the given
+prefix `domain/`, only kept rows) nothing is walked: code 0. Both seams are outside a stage gate of

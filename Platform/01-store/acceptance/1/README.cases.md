@@ -96,3 +96,14 @@ The complete previous 15 seam scenarios / 239 steps remain byte-exact. s16–s18
 ### Original passage 13
 
 s19 starts at the existing clock2000000000. +0.0000001 is converted to the same binary64 value before max, so not_before2000000000 gives early. After a further +0.0003999, a bound2000000000.0002 passes. Roll back0.0004, reopen, and apply the same bound to another row: it still passes because the assigned fractional binary64 admission value survived. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.
+
+### Original passage 14
+
+- raw `\x00`, `\x01`, TAB, `\x7f` and `#` in the request target — `400` (`%00` — sc. 25, `200`);
+
+### Original passage 15
+
+go only from the indicated role with rights on `acc/`. Scenario 21 does not receive additional rights on `other/`: before its first step the runner in the preparation (not a checked request)
+writes the row `other/21-rights/c9` `{n: "1"}` through `admin.sock` of the instance (`{socket}` of «Stand»); step 6 sees its name
+and version without the value, although the role has no read rights on `other/` (N3 «list»). In sc. 24 step 7 — the query of a `POST` is not
+read, step 8 — the body of a `GET` is not read; in sc. 26 steps 9–10 — `Infinity` and a BOM in the body (N2.1).

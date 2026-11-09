@@ -93,6 +93,8 @@ each has a vector row on which the answer is different without the workaround, o
 **The package `yaml-suite`** ([`vectors/yaml-suite/`](vectors/yaml-suite/README.md)) — the outcome of layer 1 on each test of
 yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance without a network); `layer1` is checked strictly, the rule is a summary.
 
+The native call of `yaml-suite` receives the cell `id` (the test identifier) and the fixture `in.yaml` (the bytes of the test input). The native output is one JSON object `{"layer1": "ok"|"refused"}`, optionally with `"rule"`. Only `layer1` is compared strictly: anything else is red (ADR-0092 item 2). `rule` is a hint into the report, without a failure: the rule names of an implementation are its own.
+
 ## 5. Relations (CEL)
 
 A row of `relations.json` is a CEL expression over the tree of the loader: an absent value and `has` take the static

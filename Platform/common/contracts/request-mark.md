@@ -178,7 +178,7 @@ excludes the mark `expired`. ADR-0130 Addendum (10), Q5 supersedes the Architect
 `expired`; ADR-0091 addendum (11) item 4; the stage C guess C06-GONE-FETCHED-33-01, the Architect's decision of 2026-10-25; the VMS request
 «request lifetime», the Architect's decision of 2026-10-29; vectors [`reap`](../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md) N3 «The ADR-0054 append».
 The sign of an append is `requests.outcome: fetched` (ADR-0054 addendum 2026-10-17); the training consumer is the requests of `testsub2`
-(the form — the README of the [acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md), the handler — P/03.6 N5). Except for these two marks the reaper neither marks such a row nor removes it by `ttl` alone; scenario 07 of the acceptance of chapter 3.6.
+(the form and the handler — [P/03.6](../../03-worker/spec/03.6-worker.norms.md) N5). Except for these two marks the reaper neither marks such a row nor removes it by `ttl` alone; scenario 07 of the acceptance of chapter 3.6.
 Resource rows and elsewhere stay with their owners; the reaper neither marks them nor
 moves them into the protocol of an ordinary request. Elsewhere is closed/removed by its owner — in the ordinary profile; in the append profile a body with
 `action` from `elsewhere` is an append: the holder reports fetched, the console removes the row after settle (P/03.6 N3; (the Architect's decision of 2026-10-20, review of stage B 6–7)).

@@ -62,3 +62,8 @@ change	lesson	share	rev	state	sha	reviews	model
 0133-finite55-eight-return	P/01,P/04,Platform/common	Спецификация	1	review	-	-	-
 0133-finite55-two-regressions	P/01	Спецификация	1	review	-	-	-
 0133-finite55-copy-file-associations	P/01	Спецификация	1	review	-	-	-
+0133-p02-acceptance-remaining-cases	P/02	Спецификация	1	review	-	-	-
+0133-native-forms-four-packages	P/02,Platform/common	Спецификация	1	review	-	-	-
+0133-p02-acceptance5-two-clauses	P/02	Спецификация	1	review	-	-	-
+0133-filter-review-c1-c2-m2	P/01,Platform/common	Спецификация	1	review	-	-	-
+0133-crl-stale-set-clause	Platform/common	Спецификация	1	review	-	-	-

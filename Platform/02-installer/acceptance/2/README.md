@@ -45,7 +45,7 @@ All installations except the last MUST return `0`, each directive MUST pass: oth
 failed). After the last installation the runner compares:
 
 1. the return code — with `<code>`;
-2. with code `2` — stderr names the file of the last installation and the key of the refused row: for the case `rev_spoiled` (the last directive before the installation is `@rev-spoil`) — the key of the mark `platform/manifest/<name>/rev`, otherwise — the key of the view `platform/manifest/<name>/canonical/1` (both are part of the
+2. with code `2` — stderr names the file of the last installation and the key of the refused row: if the last directive before the installation is `@rev-spoil` — the key of the mark `platform/manifest/<name>/rev`, otherwise — the key of the view `platform/manifest/<name>/canonical/1` (both are part of the
    text; the weight and the ceiling in the text are not compared);
 3. `rev` of the row `platform/manifest/<name>` — with `<rev>`, as in chapter 2.3 (the store door `GET /v1/get?key=…`, the field `rev` in
    `items`; `-` — `items: null`);
@@ -60,20 +60,21 @@ of the view after a `cas` conflict — by reading per N5 of the chapter.
 
 ## Cases
 
-| № | Case | What it checks | Norm |
-|---|---|---|---|
-| 01 | `first` | the first installation of `testsub`: the row, the view and the mark rev 1; `manifest` — the vector `course-testsub` | P/02.2-04, P/02.3-01 |
-| 02 | `same_twice` | the same file again — «unchanged»: rev 1, the view is the former one | P/02.3 N3 «Manifest change» |
-| 03 | `view_deleted` | there is no view, the file is the same — not «unchanged»: the row rev 2, the view and the mark rev 2 | P/02.3 N3 («same row, missing view»); window 2.2, R12 |
-| 04 | `view_spoiled` | the view is not equal to the projection, the file is the same — the view is rewritten, rev 2 | ibid. |
-| 05 | `view_over_ceiling` | the weight of the view row is 524289 — one byte above the ceiling, the manifest row (523609) fits: a refusal as a whole, code 2; the row, the view and the mark are the former rev 1 from `probe` | P/02.2 N3, N4; P/02.3 N4 (window 2.2, item 8) |
-| 06 | `view_at_ceiling` | the weight of the view row is exactly 524288 — the view is written, the row and the mark rev 2; the boundary of the domain of accepted manifests | P/02.2 N1.2 `ceiling` (ADR-0089 addendum (1) R11) |
-| 07 | `sugared` | the sugar `tables`, `bound_to`, without `snapshot` and `display` — the installer's view equals the vector | P/02.2-02, P/02.2-03 |
-| 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 N3 «Manifest change» («missing mark … → bring up to date»), P/02.3-03 |
-| 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
+The cases and their expected outcomes are in [judge-only case data](README.cases.md). They cover these rules:
 
+| What it checks | Norm |
+|---|---|
+| the first installation writes the row, the view and the mark with one revision; `manifest` is the assigned vector | P/02.2-04, P/02.3-01 |
+| the same file again — «unchanged»: the revision and the view stay | P/02.3 N3 «Manifest change» |
+| there is no view, the file is the same — not «unchanged»: a new revision of the row, the view and the mark | P/02.3 N3 («same row, missing view»); window 2.2, R12 |
+| the view is not equal to the projection, the file is the same — the view is rewritten with a new revision | ibid. |
+| the weight of the view row is above the ceiling, the manifest row fits — a refusal as a whole, code 2; the row, the view and the mark stay | P/02.2 N3, N4; P/02.3 N4 (window 2.2, item 8) |
+| the weight of the view row is exactly the ceiling — the view is written; the boundary of the domain of accepted manifests | P/02.2 N1.2 `ceiling` (ADR-0089 addendum (1) R11) |
+| the sugar `tables`, `bound_to`, the absence of `snapshot` and `display` — the installer's view equals the assigned vector | P/02.2-02, P/02.2-03 |
+| there is no mark, the file is the same — «unchanged»: the row and the view stay, the mark is brought up to date with the revision and the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 N3 «Manifest change» («missing mark … → bring up to date»), P/02.3-03 |
+| the mark is not by the form, the file is the same — a refusal, code 2, nothing is written: the row, the view and the mark stay (property 14) | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
 The weight of the view row is the sum of the bytes of the names and values of `items` (P/01.1 N1): `form` `"1"`, `rev` of one digit, `sha256` 64 characters,
-`manifest` — `87 +` the length of the view. The files 05 and 06 differ by one byte of the field `display.unit` (after `worker.exec` the field is shortened by 49 bytes: the view of 06 is again 524201); their manifest rows are under the ceiling.
+`manifest` — `87 +` the length of the view.
 
 ## puts-ceiling.tsv: a non-default store ceiling
 
