@@ -71,3 +71,4 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	31	copy_snapshot_unavailable	http	503	unavailable	-	-	-	P/01.3 N2 HTTP copy
 1.3	32	start_data_dir_owned	start	exit 2	-	-	-	dir	P/01.3 N1.3 ownership; ADR-0130 addendum (2)
 1.3	33	local_data_dir_owned	cli	exit !0	-	-	-	dir	P/01.3 N1.3 ownership; local box import/restore and recover; ADR-0130 addendum (2)
+1.3	34	replay_limit	http	503	unavailable	-	Retry-After	-	P/01.3 R035; ADR-0130 addendum (15) item 6

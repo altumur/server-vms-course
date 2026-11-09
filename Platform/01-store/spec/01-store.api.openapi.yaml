@@ -916,8 +916,8 @@ components:
       description: The write is not done, or the outcome is unknown; the kind decides how to repeat.
       headers:
         Retry-After:
-          schema: {type: integer, const: 1}
-          description: Only for unavailable at the connection limit of the door (P/01.3 N4); otherwise absent.
+          schema: {type: integer}
+          description: Only for unavailable. At the connection limit of the door it is exactly 1 (P/01.3 N4); above the replay-processing limit it is the time until admission in seconds, computed by the implementation (P/01.3 R035, replay_limit); otherwise absent.
       content:
         application/json:
           schema:
