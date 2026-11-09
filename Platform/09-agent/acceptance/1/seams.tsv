@@ -1,4 +1,4 @@
-# P/09 ordinary implementation seams; CALL adapters observe actual crypto/I/O, not prepared expected results.
+# P/09 ordinary implementation seams; the runner executes this file through the seam adapter; CALL adapters observe actual crypto/I/O, not prepared expected results.
 # scenario	step	request	expect
 s1-no-road	1	CALL agent-startup {"fixture":"no_report_road"}	{"exit":2,"turn_writes":0,"member_key_creates":0}
 s2-https-relay-member	1	CALL agent-startup {"fixture":"https_relay_without_member"}	{"exit":2,"turn_writes":0,"member_key_creates":0}

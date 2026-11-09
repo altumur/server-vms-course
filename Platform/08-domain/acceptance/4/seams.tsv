@@ -1,4 +1,4 @@
-# P/08 seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# P/08 seams; the runner executes this file through the seam adapter; ordinary code and controlled I/O, protocol in forms/README.md.
 # scenario	step	request	expect
 s01-first-admin-existing-unreadable-user	1	CALL domain-first-admin {"users":"one_unreadable_person","stdin":"valid_utf8_password"}	{"exit_nonzero":true,"user_writes":0,"grant_writes":0}
 s02-first-admin-invalid-utf8	1	CALL domain-first-admin {"users":"confirmed_empty","stdin":"invalid_utf8"}	{"exit_nonzero":true,"user_writes":0,"grant_writes":0}

@@ -1,4 +1,4 @@
-# P/09 ordinary implementation seams; CALL adapters observe actual crypto/I/O, not prepared expected results.
+# P/09 ordinary implementation seams; the runner executes this file through the seam adapter; CALL adapters observe actual crypto/I/O, not prepared expected results.
 # scenario	step	request	expect
 s1-body-before-signature	1	CALL relay-door {"fixture":"before_first_batch","content_length":"BODY_LIMIT+1"}	{"status":413,"body_reads":0,"signature_checks":0,"knock_writes":0}
 s2-first-answer	1	CALL relay-door {"fixture":"before_first_batch_signed_stranger"}	{"status":503,"signature_checks":0,"knock_writes":0}

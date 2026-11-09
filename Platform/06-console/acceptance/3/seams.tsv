@@ -1,4 +1,4 @@
-# P/06 seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# P/06 seams; the runner executes this file through the seam adapter; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
 # scenario	step	request	expect
 s01-trace-no-keys-shut	1	CALL console-gate {"loopback":true,"keys":"absent","ever_keys":true,"identity":"absent"}	{"status":503,"handler_calls":0,"business_writes":0}
 s02-open-loopback	1	CALL console-gate {"loopback":true,"keys":"absent","ever_keys":false,"domain_traces":"absent","identity":"absent"}	{"status":200,"gate_state":"open","handler_calls":1}
