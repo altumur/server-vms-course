@@ -116,7 +116,7 @@ Before it starts any process the judge lists the plan: all selected targets, for
 
 <!-- req: P/AC-R016 -->
 
-The judge starts stand processes as the [layout by processes](../README.md#layout-by-processes-stage-c), the [stand without root](../README.md#stand-without-root) and the rows of the dictionary say. The readiness of a store is the single rule of «Role sockets» in that section; a directive that waits for a store applies this rule.
+The judge starts stand processes as the [layout by processes](../README.md#layout-by-processes-stage-c), the [stand without root](../README.md#stand-without-root) and the rows of the dictionary say. The readiness of a store is the single rule of «Role sockets» in that section; a directive that waits for a store applies this rule. Its term is in the table «Terms of the stand» of that section.
 
 <!-- req: P/AC-R017 -->
 
