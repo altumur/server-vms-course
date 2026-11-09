@@ -1,0 +1,84 @@
+quint verify --server-endpoint=localhost:18825 --main=locks_text --invariant=inv_r2_wait_le_deadline --max-steps=14 p08_locks.qnt
+
+An example execution:
+
+[State 0]
+{
+  locks_text::p08_locks::e1: "holding",
+  locks_text::p08_locks::e2: "none",
+  locks_text::p08_locks::e2Since: 0,
+  locks_text::p08_locks::e2Wait: 0,
+  locks_text::p08_locks::f: "none",
+  locks_text::p08_locks::fSince: 0,
+  locks_text::p08_locks::r1: "holding",
+  locks_text::p08_locks::r2: "none",
+  locks_text::p08_locks::r2Since: 0,
+  locks_text::p08_locks::r2Wait: 0,
+  locks_text::p08_locks::secAge: 0,
+  locks_text::p08_locks::secHeld: true,
+  locks_text::p08_locks::secIoAlive: true,
+  locks_text::p08_locks::seq: 1,
+  locks_text::p08_locks::staleAfterRelease: false,
+  locks_text::p08_locks::t: 0,
+  locks_text::p08_locks::tCalledOff: 0,
+  locks_text::p08_locks::tE2Arrive: 0,
+  locks_text::p08_locks::tE2Granted: 0,
+  locks_text::p08_locks::tE2Refused: 0,
+  locks_text::p08_locks::tFStart: 0,
+  locks_text::p08_locks::tFrozenSet: 0
+}
+
+[State 1]
+{
+  locks_text::p08_locks::e1: "holding",
+  locks_text::p08_locks::e2: "none",
+  locks_text::p08_locks::e2Since: 0,
+  locks_text::p08_locks::e2Wait: 0,
+  locks_text::p08_locks::f: "none",
+  locks_text::p08_locks::fSince: 0,
+  locks_text::p08_locks::r1: "holding",
+  locks_text::p08_locks::r2: "waiting",
+  locks_text::p08_locks::r2Since: 0,
+  locks_text::p08_locks::r2Wait: 0,
+  locks_text::p08_locks::secAge: 0,
+  locks_text::p08_locks::secHeld: true,
+  locks_text::p08_locks::secIoAlive: true,
+  locks_text::p08_locks::seq: 2,
+  locks_text::p08_locks::staleAfterRelease: false,
+  locks_text::p08_locks::t: 0,
+  locks_text::p08_locks::tCalledOff: 0,
+  locks_text::p08_locks::tE2Arrive: 0,
+  locks_text::p08_locks::tE2Granted: 0,
+  locks_text::p08_locks::tE2Refused: 0,
+  locks_text::p08_locks::tFStart: 0,
+  locks_text::p08_locks::tFrozenSet: 0
+}
+
+[State 2]
+{
+  locks_text::p08_locks::e1: "holding",
+  locks_text::p08_locks::e2: "none",
+  locks_text::p08_locks::e2Since: 0,
+  locks_text::p08_locks::e2Wait: 0,
+  locks_text::p08_locks::f: "none",
+  locks_text::p08_locks::fSince: 0,
+  locks_text::p08_locks::r1: "holding",
+  locks_text::p08_locks::r2: "waiting",
+  locks_text::p08_locks::r2Since: 0,
+  locks_text::p08_locks::r2Wait: 0,
+  locks_text::p08_locks::secAge: 0,
+  locks_text::p08_locks::secHeld: true,
+  locks_text::p08_locks::secIoAlive: true,
+  locks_text::p08_locks::seq: 3,
+  locks_text::p08_locks::staleAfterRelease: false,
+  locks_text::p08_locks::t: 120,
+  locks_text::p08_locks::tCalledOff: 0,
+  locks_text::p08_locks::tE2Arrive: 0,
+  locks_text::p08_locks::tE2Granted: 0,
+  locks_text::p08_locks::tE2Refused: 0,
+  locks_text::p08_locks::tFStart: 0,
+  locks_text::p08_locks::tFrozenSet: 0
+}
+
+[violation] Found an issue (520ms).
+error: found a counterexample

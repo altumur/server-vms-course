@@ -1,0 +1,80 @@
+quint run --backend=rust --main=parts_c_fetchfirst_slow --invariant=wit_refusal_before_deadline --max-steps=14 --max-samples=100000 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_c_fetchfirst_slow::p08_parts::answerAt: 0,
+  parts_c_fetchfirst_slow::p08_parts::answered: false,
+  parts_c_fetchfirst_slow::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst_slow::p08_parts::got: Set(),
+  parts_c_fetchfirst_slow::p08_parts::holderServes: false,
+  parts_c_fetchfirst_slow::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst_slow::p08_parts::nextPart: 1,
+  parts_c_fetchfirst_slow::p08_parts::phase: "head",
+  parts_c_fetchfirst_slow::p08_parts::seq: 1,
+  parts_c_fetchfirst_slow::p08_parts::t: 0,
+  parts_c_fetchfirst_slow::p08_parts::tAbort: 0,
+  parts_c_fetchfirst_slow::p08_parts::tBad: 0,
+  parts_c_fetchfirst_slow::p08_parts::tMix: 0,
+  parts_c_fetchfirst_slow::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_c_fetchfirst_slow::p08_parts::answerAt: 0,
+  parts_c_fetchfirst_slow::p08_parts::answered: false,
+  parts_c_fetchfirst_slow::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst_slow::p08_parts::got: Set(),
+  parts_c_fetchfirst_slow::p08_parts::holderServes: false,
+  parts_c_fetchfirst_slow::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst_slow::p08_parts::nextPart: 1,
+  parts_c_fetchfirst_slow::p08_parts::phase: "fetch",
+  parts_c_fetchfirst_slow::p08_parts::seq: 2,
+  parts_c_fetchfirst_slow::p08_parts::t: 0,
+  parts_c_fetchfirst_slow::p08_parts::tAbort: 0,
+  parts_c_fetchfirst_slow::p08_parts::tBad: 0,
+  parts_c_fetchfirst_slow::p08_parts::tMix: 0,
+  parts_c_fetchfirst_slow::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_c_fetchfirst_slow::p08_parts::answerAt: 0,
+  parts_c_fetchfirst_slow::p08_parts::answered: false,
+  parts_c_fetchfirst_slow::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst_slow::p08_parts::got: Set(),
+  parts_c_fetchfirst_slow::p08_parts::holderServes: false,
+  parts_c_fetchfirst_slow::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst_slow::p08_parts::nextPart: 1,
+  parts_c_fetchfirst_slow::p08_parts::phase: "fetch",
+  parts_c_fetchfirst_slow::p08_parts::seq: 3,
+  parts_c_fetchfirst_slow::p08_parts::t: 40,
+  parts_c_fetchfirst_slow::p08_parts::tAbort: 0,
+  parts_c_fetchfirst_slow::p08_parts::tBad: 2,
+  parts_c_fetchfirst_slow::p08_parts::tMix: 0,
+  parts_c_fetchfirst_slow::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_c_fetchfirst_slow::p08_parts::answerAt: 40,
+  parts_c_fetchfirst_slow::p08_parts::answered: true,
+  parts_c_fetchfirst_slow::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst_slow::p08_parts::got: Set(),
+  parts_c_fetchfirst_slow::p08_parts::holderServes: false,
+  parts_c_fetchfirst_slow::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst_slow::p08_parts::nextPart: 1,
+  parts_c_fetchfirst_slow::p08_parts::phase: "aborted",
+  parts_c_fetchfirst_slow::p08_parts::seq: 4,
+  parts_c_fetchfirst_slow::p08_parts::t: 40,
+  parts_c_fetchfirst_slow::p08_parts::tAbort: 3,
+  parts_c_fetchfirst_slow::p08_parts::tBad: 2,
+  parts_c_fetchfirst_slow::p08_parts::tMix: 0,
+  parts_c_fetchfirst_slow::p08_parts::written: Set()
+}
+
+[violation] Found an issue (41ms at 512 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x4f89814eb62bb77a --backend=rust to reproduce.
+error: Invariant violated

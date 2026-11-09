@@ -1,0 +1,345 @@
+quint run --backend=rust --main=idem_restart_frequent --invariant=inv_not_early --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 1,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 1,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 2,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 3]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 3,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 4]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 3,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 5]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 4,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 6]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 5,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 7]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 6,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 8]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 7,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 9]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 8,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 10]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 9,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 11]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 10,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 12]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 11,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 13]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 12,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 14]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 12,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 15]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 13,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 16]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 14,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 17]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 15,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 18]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 16,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 9
+}
+
+[State 19]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 2,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 17,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 16
+}
+
+[State 20]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 2,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 17,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 16
+}
+
+[ok] No violation found (1131ms at 88417 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xf54985e3ca6ae18b --backend=rust to reproduce.

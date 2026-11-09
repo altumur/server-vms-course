@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=hold_c_q6 --invariant=inv_hold_covers_token --max-steps=12 p08_clock.qnt
+
+[ok] No violation found (1764ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

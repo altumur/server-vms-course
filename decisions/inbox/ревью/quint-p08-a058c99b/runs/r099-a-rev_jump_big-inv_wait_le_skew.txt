@@ -1,0 +1,66 @@
+quint verify --server-endpoint=localhost:18825 --main=rev_jump_big --invariant=inv_wait_le_skew --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "init",
+  rev_jump_big::p08_clock_rev::real: 1000,
+  rev_jump_big::p08_clock_rev::rev: 1061,
+  rev_jump_big::p08_clock_rev::waitStart: 0,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 1]
+{
+  rev_jump_big::p08_clock_rev::off: 600,
+  rev_jump_big::p08_clock_rev::phase: "jumped",
+  rev_jump_big::p08_clock_rev::real: 1000,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 0,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 2]
+{
+  rev_jump_big::p08_clock_rev::off: 600,
+  rev_jump_big::p08_clock_rev::phase: "jumped",
+  rev_jump_big::p08_clock_rev::real: 1001,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 0,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 3]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "waiting_corrected",
+  rev_jump_big::p08_clock_rev::real: 1001,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1001,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 4]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "waiting_corrected",
+  rev_jump_big::p08_clock_rev::real: 1601,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1001,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 5]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "done",
+  rev_jump_big::p08_clock_rev::real: 1601,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1001,
+  rev_jump_big::p08_clock_rev::waited: 600
+}
+
+[violation] Found an issue (163ms).
+error: found a counterexample

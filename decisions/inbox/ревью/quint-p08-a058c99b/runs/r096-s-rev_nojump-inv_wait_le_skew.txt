@@ -1,0 +1,139 @@
+quint run --backend=rust --main=rev_nojump --invariant=inv_wait_le_skew --max-steps=12 --max-samples=100000 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "init",
+  rev_nojump::p08_clock_rev::real: 1000,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 0,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 1]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1000,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 2]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1030,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 3]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1035,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 4]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1040,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 5]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1045,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 6]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1046,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 7]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1051,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 8]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1052,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 9]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1057,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 10]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1062,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 11]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "done",
+  rev_nojump::p08_clock_rev::real: 1062,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 62
+}
+
+[State 12]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "done",
+  rev_nojump::p08_clock_rev::real: 1122,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 62
+}
+
+[ok] No violation found (767ms at 130378 traces/second).
+Trace length statistics: max=13, min=13, average=13.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x6daf51879dd1c242 --backend=rust to reproduce.

@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=gc_c_durable --invariant=inv_no_gc_under_young_fetch --max-steps=16 p08_partgc.qnt
+
+[ok] No violation found (3944ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

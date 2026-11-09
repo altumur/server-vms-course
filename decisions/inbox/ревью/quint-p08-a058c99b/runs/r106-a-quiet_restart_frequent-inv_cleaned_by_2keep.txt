@@ -1,0 +1,102 @@
+quint verify --server-endpoint=localhost:18826 --main=quiet_restart_frequent --invariant=inv_cleaned_by_2keep --max-steps=14 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 0,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 1,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 0,
+  quiet_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  quiet_restart_frequent::p08_age::age: 10799,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 0,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 2,
+  quiet_restart_frequent::p08_age::sinceRestart: 10799,
+  quiet_restart_frequent::p08_age::t: 10799,
+  quiet_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 1,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 3,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 10799,
+  quiet_restart_frequent::p08_age::tRestart: 2
+}
+
+[State 3]
+{
+  quiet_restart_frequent::p08_age::age: 10799,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 1,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 4,
+  quiet_restart_frequent::p08_age::sinceRestart: 10799,
+  quiet_restart_frequent::p08_age::t: 21598,
+  quiet_restart_frequent::p08_age::tRestart: 2
+}
+
+[State 4]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 2,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 5,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 21598,
+  quiet_restart_frequent::p08_age::tRestart: 4
+}
+
+[State 5]
+{
+  quiet_restart_frequent::p08_age::age: 5399,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 2,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 6,
+  quiet_restart_frequent::p08_age::sinceRestart: 5399,
+  quiet_restart_frequent::p08_age::t: 26997,
+  quiet_restart_frequent::p08_age::tRestart: 4
+}
+
+[violation] Found an issue (227ms).
+error: found a counterexample

@@ -1,0 +1,345 @@
+quint run --backend=rust --main=idem_restart_rare --invariant=inv_cleaned_by_2keep --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  idem_restart_rare::p08_age::age: 0,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 1,
+  idem_restart_rare::p08_age::sinceRestart: 0,
+  idem_restart_rare::p08_age::t: 0,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  idem_restart_rare::p08_age::age: 0,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 1,
+  idem_restart_rare::p08_age::sinceRestart: 0,
+  idem_restart_rare::p08_age::t: 0,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  idem_restart_rare::p08_age::age: 0,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 2,
+  idem_restart_rare::p08_age::sinceRestart: 0,
+  idem_restart_rare::p08_age::t: 0,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 3]
+{
+  idem_restart_rare::p08_age::age: 43200,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 3,
+  idem_restart_rare::p08_age::sinceRestart: 43200,
+  idem_restart_rare::p08_age::t: 43200,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 4]
+{
+  idem_restart_rare::p08_age::age: 43200,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 3,
+  idem_restart_rare::p08_age::sinceRestart: 43200,
+  idem_restart_rare::p08_age::t: 43200,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 5]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 4,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 6]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 5,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 7]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 6,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 8]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 6,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 9]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 7,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 10]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 7,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 11]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 12]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 13]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 14]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 15]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 16]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 17]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 18]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 19]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 20]
+{
+  idem_restart_rare::p08_age::age: 86400,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: true,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86400,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 8,
+  idem_restart_rare::p08_age::sinceRestart: 86400,
+  idem_restart_rare::p08_age::t: 86400,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[ok] No violation found (2088ms at 47893 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xc724e7a572edbca5 --backend=rust to reproduce.

@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=locks_text --invariant=inv_no_stale_after_release --max-steps=14 p08_locks.qnt
+
+[ok] No violation found (2931ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

@@ -1,0 +1,144 @@
+quint run --backend=rust --main=hold_j60_checker_true --invariant=inv_hold_covers_token --max-steps=12 --max-samples=100000 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 0,
+  hold_j60_checker_true::p08_clock_hold::exp: 0,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: false,
+  hold_j60_checker_true::p08_clock_hold::jumped: false,
+  hold_j60_checker_true::p08_clock_hold::off: 0,
+  hold_j60_checker_true::p08_clock_hold::real: 0,
+  hold_j60_checker_true::p08_clock_hold::seq: 1,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 0,
+  hold_j60_checker_true::p08_clock_hold::tJump: 0,
+  hold_j60_checker_true::p08_clock_hold::tMark: 0
+}
+
+[State 1]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 0,
+  hold_j60_checker_true::p08_clock_hold::exp: 0,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: false,
+  hold_j60_checker_true::p08_clock_hold::jumped: false,
+  hold_j60_checker_true::p08_clock_hold::off: 0,
+  hold_j60_checker_true::p08_clock_hold::real: 60,
+  hold_j60_checker_true::p08_clock_hold::seq: 2,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 0,
+  hold_j60_checker_true::p08_clock_hold::tJump: 0,
+  hold_j60_checker_true::p08_clock_hold::tMark: 0
+}
+
+[State 2]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 0,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: false,
+  hold_j60_checker_true::p08_clock_hold::off: 0,
+  hold_j60_checker_true::p08_clock_hold::real: 60,
+  hold_j60_checker_true::p08_clock_hold::seq: 3,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 0,
+  hold_j60_checker_true::p08_clock_hold::tMark: 0
+}
+
+[State 3]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 60,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: false,
+  hold_j60_checker_true::p08_clock_hold::off: 0,
+  hold_j60_checker_true::p08_clock_hold::real: 60,
+  hold_j60_checker_true::p08_clock_hold::seq: 4,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 0,
+  hold_j60_checker_true::p08_clock_hold::tMark: 3
+}
+
+[State 4]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 60,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: true,
+  hold_j60_checker_true::p08_clock_hold::off: 60,
+  hold_j60_checker_true::p08_clock_hold::real: 60,
+  hold_j60_checker_true::p08_clock_hold::seq: 5,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 4,
+  hold_j60_checker_true::p08_clock_hold::tMark: 3
+}
+
+[State 5]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 60,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: true,
+  hold_j60_checker_true::p08_clock_hold::off: 60,
+  hold_j60_checker_true::p08_clock_hold::real: 61,
+  hold_j60_checker_true::p08_clock_hold::seq: 6,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 4,
+  hold_j60_checker_true::p08_clock_hold::tMark: 3
+}
+
+[State 6]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: false,
+  hold_j60_checker_true::p08_clock_hold::at: 60,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: false,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: true,
+  hold_j60_checker_true::p08_clock_hold::off: 60,
+  hold_j60_checker_true::p08_clock_hold::real: 961,
+  hold_j60_checker_true::p08_clock_hold::seq: 7,
+  hold_j60_checker_true::p08_clock_hold::tFree: 0,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 4,
+  hold_j60_checker_true::p08_clock_hold::tMark: 3
+}
+
+[State 7]
+{
+  hold_j60_checker_true::p08_clock_hold::aliveAtFree: true,
+  hold_j60_checker_true::p08_clock_hold::at: 60,
+  hold_j60_checker_true::p08_clock_hold::exp: 960,
+  hold_j60_checker_true::p08_clock_hold::freed: true,
+  hold_j60_checker_true::p08_clock_hold::issued: true,
+  hold_j60_checker_true::p08_clock_hold::jumped: true,
+  hold_j60_checker_true::p08_clock_hold::off: 60,
+  hold_j60_checker_true::p08_clock_hold::real: 961,
+  hold_j60_checker_true::p08_clock_hold::seq: 8,
+  hold_j60_checker_true::p08_clock_hold::tFree: 7,
+  hold_j60_checker_true::p08_clock_hold::tIssue: 2,
+  hold_j60_checker_true::p08_clock_hold::tJump: 4,
+  hold_j60_checker_true::p08_clock_hold::tMark: 3
+}
+
+[violation] Found an issue (50ms at 28840 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xb87eb7d971d34d92 --backend=rust to reproduce.
+error: Invariant violated

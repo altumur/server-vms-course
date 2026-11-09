@@ -1,0 +1,48 @@
+quint verify --server-endpoint=localhost:18826 --main=storm_text --invariant=wit_whole_burst --max-steps=10 p08_storm.qnt
+
+An example execution:
+
+[State 0]
+{
+  storm_text::p08_storm::admittedCam: 0,
+  storm_text::p08_storm::maxAdmittedCam: 0,
+  storm_text::p08_storm::maxSigWork: 0,
+  storm_text::p08_storm::maxWholeSrv: 0,
+  storm_text::p08_storm::refusedThisSec: 0,
+  storm_text::p08_storm::reqs: 0,
+  storm_text::p08_storm::seen: Set(),
+  storm_text::p08_storm::sigWork: 0,
+  storm_text::p08_storm::t: 0,
+  storm_text::p08_storm::wholeSrv: 0
+}
+
+[State 1]
+{
+  storm_text::p08_storm::admittedCam: 0,
+  storm_text::p08_storm::maxAdmittedCam: 0,
+  storm_text::p08_storm::maxSigWork: 1,
+  storm_text::p08_storm::maxWholeSrv: 1,
+  storm_text::p08_storm::refusedThisSec: 0,
+  storm_text::p08_storm::reqs: 0,
+  storm_text::p08_storm::seen: Set("s3"),
+  storm_text::p08_storm::sigWork: 1,
+  storm_text::p08_storm::t: 0,
+  storm_text::p08_storm::wholeSrv: 1
+}
+
+[State 2]
+{
+  storm_text::p08_storm::admittedCam: 0,
+  storm_text::p08_storm::maxAdmittedCam: 0,
+  storm_text::p08_storm::maxSigWork: 2,
+  storm_text::p08_storm::maxWholeSrv: 2,
+  storm_text::p08_storm::refusedThisSec: 0,
+  storm_text::p08_storm::reqs: 0,
+  storm_text::p08_storm::seen: Set("s1", "s3"),
+  storm_text::p08_storm::sigWork: 2,
+  storm_text::p08_storm::t: 0,
+  storm_text::p08_storm::wholeSrv: 2
+}
+
+[violation] Found an issue (189ms).
+error: found a counterexample

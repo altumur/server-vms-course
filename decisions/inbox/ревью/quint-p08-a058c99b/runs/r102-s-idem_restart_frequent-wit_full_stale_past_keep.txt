@@ -1,0 +1,168 @@
+quint run --backend=rust --main=idem_restart_frequent --invariant=wit_full_stale_past_keep --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 1,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 2,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 2,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 0,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 3]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 0,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 3,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 4]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 4,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 86399,
+  idem_restart_frequent::p08_age::tRestart: 3
+}
+
+[State 5]
+{
+  idem_restart_frequent::p08_age::age: 43200,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 5,
+  idem_restart_frequent::p08_age::sinceRestart: 43200,
+  idem_restart_frequent::p08_age::t: 129599,
+  idem_restart_frequent::p08_age::tRestart: 3
+}
+
+[State 6]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: false,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 6,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 3
+}
+
+[State 7]
+{
+  idem_restart_frequent::p08_age::age: 86399,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 1,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 7,
+  idem_restart_frequent::p08_age::sinceRestart: 86399,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 3
+}
+
+[State 8]
+{
+  idem_restart_frequent::p08_age::age: 0,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 2,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 8,
+  idem_restart_frequent::p08_age::sinceRestart: 0,
+  idem_restart_frequent::p08_age::t: 172798,
+  idem_restart_frequent::p08_age::tRestart: 7
+}
+
+[State 9]
+{
+  idem_restart_frequent::p08_age::age: 43200,
+  idem_restart_frequent::p08_age::alive: true,
+  idem_restart_frequent::p08_age::born: 0,
+  idem_restart_frequent::p08_age::ceilingHit: true,
+  idem_restart_frequent::p08_age::count: 2,
+  idem_restart_frequent::p08_age::nRestarts: 2,
+  idem_restart_frequent::p08_age::removedAt: 0,
+  idem_restart_frequent::p08_age::removedEarly: false,
+  idem_restart_frequent::p08_age::seq: 9,
+  idem_restart_frequent::p08_age::sinceRestart: 43200,
+  idem_restart_frequent::p08_age::t: 215998,
+  idem_restart_frequent::p08_age::tRestart: 7
+}
+
+[violation] Found an issue (16ms at 3438 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x5ee93a256f9e8c09 --backend=rust to reproduce.
+error: Invariant violated

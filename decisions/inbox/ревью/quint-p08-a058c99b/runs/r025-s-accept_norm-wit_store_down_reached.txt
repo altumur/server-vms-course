@@ -1,0 +1,44 @@
+quint run --backend=rust --main=accept_norm --invariant=wit_store_down_reached --max-steps=14 --max-samples=100000 p08_accept.qnt
+
+An example execution:
+
+[State 0]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 1,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 1]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 2,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[violation] Found an issue (71ms at 282 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x7b20db9c4adb8964 --backend=rust to reproduce.
+error: Invariant violated

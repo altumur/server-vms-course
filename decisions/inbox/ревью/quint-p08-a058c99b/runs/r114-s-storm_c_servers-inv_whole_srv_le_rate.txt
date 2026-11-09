@@ -1,0 +1,163 @@
+quint run --backend=rust --main=storm_c_servers --invariant=inv_whole_srv_le_rate --max-steps=10 --max-samples=100000 p08_storm.qnt
+
+An example execution:
+
+[State 0]
+{
+  storm_c_servers::p08_storm::admittedCam: 0,
+  storm_c_servers::p08_storm::maxAdmittedCam: 0,
+  storm_c_servers::p08_storm::maxSigWork: 0,
+  storm_c_servers::p08_storm::maxWholeSrv: 0,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 0,
+  storm_c_servers::p08_storm::seen: Set(),
+  storm_c_servers::p08_storm::sigWork: 0,
+  storm_c_servers::p08_storm::t: 0,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 1]
+{
+  storm_c_servers::p08_storm::admittedCam: 1,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 1,
+  storm_c_servers::p08_storm::maxWholeSrv: 0,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 1,
+  storm_c_servers::p08_storm::seen: Set("c2"),
+  storm_c_servers::p08_storm::sigWork: 1,
+  storm_c_servers::p08_storm::t: 0,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 2]
+{
+  storm_c_servers::p08_storm::admittedCam: 0,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 1,
+  storm_c_servers::p08_storm::maxWholeSrv: 0,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 0,
+  storm_c_servers::p08_storm::seen: Set("c2"),
+  storm_c_servers::p08_storm::sigWork: 0,
+  storm_c_servers::p08_storm::t: 1,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 3]
+{
+  storm_c_servers::p08_storm::admittedCam: 1,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 1,
+  storm_c_servers::p08_storm::maxWholeSrv: 0,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 1,
+  storm_c_servers::p08_storm::seen: Set("c2"),
+  storm_c_servers::p08_storm::sigWork: 1,
+  storm_c_servers::p08_storm::t: 1,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 4]
+{
+  storm_c_servers::p08_storm::admittedCam: 1,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 2,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 1,
+  storm_c_servers::p08_storm::seen: Set("c2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 2,
+  storm_c_servers::p08_storm::t: 1,
+  storm_c_servers::p08_storm::wholeSrv: 1
+}
+
+[State 5]
+{
+  storm_c_servers::p08_storm::admittedCam: 0,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 2,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 0,
+  storm_c_servers::p08_storm::seen: Set("c2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 0,
+  storm_c_servers::p08_storm::t: 2,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 6]
+{
+  storm_c_servers::p08_storm::admittedCam: 1,
+  storm_c_servers::p08_storm::maxAdmittedCam: 1,
+  storm_c_servers::p08_storm::maxSigWork: 2,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 1,
+  storm_c_servers::p08_storm::seen: Set("c1", "c2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 1,
+  storm_c_servers::p08_storm::t: 2,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 7]
+{
+  storm_c_servers::p08_storm::admittedCam: 2,
+  storm_c_servers::p08_storm::maxAdmittedCam: 2,
+  storm_c_servers::p08_storm::maxSigWork: 2,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 2,
+  storm_c_servers::p08_storm::seen: Set("c1", "c2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 2,
+  storm_c_servers::p08_storm::t: 2,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 8]
+{
+  storm_c_servers::p08_storm::admittedCam: 2,
+  storm_c_servers::p08_storm::maxAdmittedCam: 2,
+  storm_c_servers::p08_storm::maxSigWork: 3,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 2,
+  storm_c_servers::p08_storm::seen: Set("c1", "c2", "s2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 3,
+  storm_c_servers::p08_storm::t: 2,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 9]
+{
+  storm_c_servers::p08_storm::admittedCam: 0,
+  storm_c_servers::p08_storm::maxAdmittedCam: 2,
+  storm_c_servers::p08_storm::maxSigWork: 3,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 0,
+  storm_c_servers::p08_storm::seen: Set("c1", "c2", "s2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 0,
+  storm_c_servers::p08_storm::t: 3,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[State 10]
+{
+  storm_c_servers::p08_storm::admittedCam: 1,
+  storm_c_servers::p08_storm::maxAdmittedCam: 2,
+  storm_c_servers::p08_storm::maxSigWork: 3,
+  storm_c_servers::p08_storm::maxWholeSrv: 1,
+  storm_c_servers::p08_storm::refusedThisSec: 0,
+  storm_c_servers::p08_storm::reqs: 1,
+  storm_c_servers::p08_storm::seen: Set("c1", "c2", "c3", "s2", "s3"),
+  storm_c_servers::p08_storm::sigWork: 1,
+  storm_c_servers::p08_storm::t: 3,
+  storm_c_servers::p08_storm::wholeSrv: 0
+}
+
+[ok] No violation found (403ms at 248139 traces/second).
+Trace length statistics: max=11, min=11, average=11.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xa28fc337587af266 --backend=rust to reproduce.

@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=turn_norm --invariant=inv_guard --max-steps=11 p08_turn.qnt
+
+[ok] No violation found (31719ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

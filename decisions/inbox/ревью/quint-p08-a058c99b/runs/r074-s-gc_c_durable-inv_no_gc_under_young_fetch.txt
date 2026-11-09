@@ -1,0 +1,384 @@
+quint run --backend=rust --main=gc_c_durable --invariant=inv_no_gc_under_young_fetch --max-steps=24 --max-samples=100000 p08_partgc.qnt
+
+An example execution:
+
+[State 0]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 1,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 1,
+  gc_c_durable::p08_partgc::t: 0,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 1]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 1,
+  gc_c_durable::p08_partgc::fetchRev: 1,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 2,
+  gc_c_durable::p08_partgc::t: 0,
+  gc_c_durable::p08_partgc::tFetch: 1,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 2]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 2,
+  gc_c_durable::p08_partgc::fetchRev: 1,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 3,
+  gc_c_durable::p08_partgc::t: 30,
+  gc_c_durable::p08_partgc::tFetch: 1,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 3]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 2,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 4,
+  gc_c_durable::p08_partgc::t: 30,
+  gc_c_durable::p08_partgc::tFetch: 1,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 4]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 3,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 5,
+  gc_c_durable::p08_partgc::t: 60,
+  gc_c_durable::p08_partgc::tFetch: 1,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 5]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 3,
+  gc_c_durable::p08_partgc::fetchRev: 3,
+  gc_c_durable::p08_partgc::fetchStart: 60,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 6,
+  gc_c_durable::p08_partgc::t: 60,
+  gc_c_durable::p08_partgc::tFetch: 5,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 6]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 4,
+  gc_c_durable::p08_partgc::fetchRev: 3,
+  gc_c_durable::p08_partgc::fetchStart: 60,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 7,
+  gc_c_durable::p08_partgc::t: 90,
+  gc_c_durable::p08_partgc::tFetch: 5,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 7]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 4,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 60,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 8,
+  gc_c_durable::p08_partgc::t: 90,
+  gc_c_durable::p08_partgc::tFetch: 5,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 8]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 4,
+  gc_c_durable::p08_partgc::fetchRev: 4,
+  gc_c_durable::p08_partgc::fetchStart: 90,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 9,
+  gc_c_durable::p08_partgc::t: 90,
+  gc_c_durable::p08_partgc::tFetch: 8,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 9]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 4,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 90,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 10,
+  gc_c_durable::p08_partgc::t: 90,
+  gc_c_durable::p08_partgc::tFetch: 8,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 10]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 5,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 90,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 11,
+  gc_c_durable::p08_partgc::t: 120,
+  gc_c_durable::p08_partgc::tFetch: 8,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 11]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 90,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 12,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 8,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 12]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 90,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 13,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 8,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 13]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 6,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 14,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 14]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 15,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 15]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 16,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 16]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 7,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 17,
+  gc_c_durable::p08_partgc::t: 180,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 17]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 8,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 18,
+  gc_c_durable::p08_partgc::t: 210,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 18]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 9,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 19,
+  gc_c_durable::p08_partgc::t: 240,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 19]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 10,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 20,
+  gc_c_durable::p08_partgc::t: 270,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 12,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 20]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 10,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1, 2),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 21,
+  gc_c_durable::p08_partgc::t: 270,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 20,
+  gc_c_durable::p08_partgc::tRestart: 15
+}
+
+[State 21]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 10,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1, 2),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 22,
+  gc_c_durable::p08_partgc::t: 270,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 20,
+  gc_c_durable::p08_partgc::tRestart: 21
+}
+
+[State 22]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 11,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1, 2),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 23,
+  gc_c_durable::p08_partgc::t: 300,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 20,
+  gc_c_durable::p08_partgc::tRestart: 21
+}
+
+[State 23]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 11,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1, 2, 3),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 24,
+  gc_c_durable::p08_partgc::t: 300,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 23,
+  gc_c_durable::p08_partgc::tRestart: 21
+}
+
+[State 24]
+{
+  gc_c_durable::p08_partgc::accounted: true,
+  gc_c_durable::p08_partgc::curHead: 12,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 150,
+  gc_c_durable::p08_partgc::gone: Set(1, 2, 3),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 25,
+  gc_c_durable::p08_partgc::t: 330,
+  gc_c_durable::p08_partgc::tFetch: 13,
+  gc_c_durable::p08_partgc::tGc: 23,
+  gc_c_durable::p08_partgc::tRestart: 21
+}
+
+[ok] No violation found (1374ms at 72780 traces/second).
+Trace length statistics: max=25, min=25, average=25.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xdba7c3bc88bd1798 --backend=rust to reproduce.

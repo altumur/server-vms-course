@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=accept_norm --invariant=inv_no_dup_gen --max-steps=12 p08_accept.qnt
+
+[ok] No violation found (2881ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

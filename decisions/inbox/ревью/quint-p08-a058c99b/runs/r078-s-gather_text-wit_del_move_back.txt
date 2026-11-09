@@ -1,0 +1,73 @@
+quint run --backend=rust --main=gather_text --invariant=wit_del_move_back --max-steps=8 --max-samples=100000 p08_gather.qnt
+
+An example execution:
+
+[State 0]
+{
+  gather_text::p08_gather::deletedEver: Set(),
+  gather_text::p08_gather::list: Set(),
+  gather_text::p08_gather::movesDone: 1,
+  gather_text::p08_gather::removed: Set(),
+  gather_text::p08_gather::returned: false,
+  gather_text::p08_gather::seq: 1,
+  gather_text::p08_gather::tBack: 0,
+  gather_text::p08_gather::tDel: 0,
+  gather_text::p08_gather::tMove2: 0
+}
+
+[State 1]
+{
+  gather_text::p08_gather::deletedEver: Set(),
+  gather_text::p08_gather::list: Set("n"),
+  gather_text::p08_gather::movesDone: 1,
+  gather_text::p08_gather::removed: Set(),
+  gather_text::p08_gather::returned: false,
+  gather_text::p08_gather::seq: 2,
+  gather_text::p08_gather::tBack: 0,
+  gather_text::p08_gather::tDel: 0,
+  gather_text::p08_gather::tMove2: 0
+}
+
+[State 2]
+{
+  gather_text::p08_gather::deletedEver: Set("n"),
+  gather_text::p08_gather::list: Set(),
+  gather_text::p08_gather::movesDone: 1,
+  gather_text::p08_gather::removed: Set("n"),
+  gather_text::p08_gather::returned: false,
+  gather_text::p08_gather::seq: 3,
+  gather_text::p08_gather::tBack: 0,
+  gather_text::p08_gather::tDel: 2,
+  gather_text::p08_gather::tMove2: 0
+}
+
+[State 3]
+{
+  gather_text::p08_gather::deletedEver: Set("n"),
+  gather_text::p08_gather::list: Set(),
+  gather_text::p08_gather::movesDone: 2,
+  gather_text::p08_gather::removed: Set(),
+  gather_text::p08_gather::returned: false,
+  gather_text::p08_gather::seq: 4,
+  gather_text::p08_gather::tBack: 0,
+  gather_text::p08_gather::tDel: 2,
+  gather_text::p08_gather::tMove2: 3
+}
+
+[State 4]
+{
+  gather_text::p08_gather::deletedEver: Set("n"),
+  gather_text::p08_gather::list: Set("n"),
+  gather_text::p08_gather::movesDone: 2,
+  gather_text::p08_gather::removed: Set(),
+  gather_text::p08_gather::returned: true,
+  gather_text::p08_gather::seq: 5,
+  gather_text::p08_gather::tBack: 4,
+  gather_text::p08_gather::tDel: 2,
+  gather_text::p08_gather::tMove2: 3
+}
+
+[violation] Found an issue (18ms at 6056 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xd722ccaca3e27bb4 --backend=rust to reproduce.
+error: Invariant violated

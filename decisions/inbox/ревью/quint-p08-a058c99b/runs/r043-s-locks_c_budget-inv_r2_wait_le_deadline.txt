@@ -1,0 +1,555 @@
+quint run --backend=rust --main=locks_c_budget --invariant=inv_r2_wait_le_deadline --max-steps=20 --max-samples=100000 p08_locks.qnt
+
+An example execution:
+
+[State 0]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "none",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "none",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: true,
+  locks_c_budget::p08_locks::secIoAlive: true,
+  locks_c_budget::p08_locks::seq: 1,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 0,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 0,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 1]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "none",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "none",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: true,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 2,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 0,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 0,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 2]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "none",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "none",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: true,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 2,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 0,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 0,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 3]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "none",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "none",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 3,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 0,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 0,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 4]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "none",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 4,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 0,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 5]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "none",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 5,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 6]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 6,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 7]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 6,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 0,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 8]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 7,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 1,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 9]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 8,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 11,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 10]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 9,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 21,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 11]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 9,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 21,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 12]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 10,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 31,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 13]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 11,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 41,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 14]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 11,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 41,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 15]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 11,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 41,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 16]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 11,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 41,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 17]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 11,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 41,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 18]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 12,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 42,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 19]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 12,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 42,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[State 20]
+{
+  locks_c_budget::p08_locks::e1: "holding",
+  locks_c_budget::p08_locks::e2: "waiting",
+  locks_c_budget::p08_locks::e2Since: 0,
+  locks_c_budget::p08_locks::e2Wait: 0,
+  locks_c_budget::p08_locks::f: "waiting",
+  locks_c_budget::p08_locks::fSince: 0,
+  locks_c_budget::p08_locks::r1: "holding",
+  locks_c_budget::p08_locks::r2: "waiting",
+  locks_c_budget::p08_locks::r2Since: 0,
+  locks_c_budget::p08_locks::r2Wait: 0,
+  locks_c_budget::p08_locks::secAge: 0,
+  locks_c_budget::p08_locks::secHeld: false,
+  locks_c_budget::p08_locks::secIoAlive: false,
+  locks_c_budget::p08_locks::seq: 12,
+  locks_c_budget::p08_locks::staleAfterRelease: false,
+  locks_c_budget::p08_locks::t: 42,
+  locks_c_budget::p08_locks::tCalledOff: 0,
+  locks_c_budget::p08_locks::tE2Arrive: 4,
+  locks_c_budget::p08_locks::tE2Granted: 0,
+  locks_c_budget::p08_locks::tE2Refused: 0,
+  locks_c_budget::p08_locks::tFStart: 3,
+  locks_c_budget::p08_locks::tFrozenSet: 0
+}
+
+[ok] No violation found (13657ms at 7322 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x7bcd170790a6ae48 --backend=rust to reproduce.

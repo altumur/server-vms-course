@@ -1,0 +1,125 @@
+quint verify --server-endpoint=localhost:18825 --main=hold_j0_slow --invariant=wit_free_after_issue --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 0,
+  hold_j0_slow::p08_clock_hold::exp: 0,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: false,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 0,
+  hold_j0_slow::p08_clock_hold::seq: 1,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 0,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 0
+}
+
+[State 1]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 0,
+  hold_j0_slow::p08_clock_hold::exp: 0,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: false,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 240,
+  hold_j0_slow::p08_clock_hold::seq: 2,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 0,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 0
+}
+
+[State 2]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 0,
+  hold_j0_slow::p08_clock_hold::exp: 1140,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: true,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 240,
+  hold_j0_slow::p08_clock_hold::seq: 3,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 2,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 0
+}
+
+[State 3]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 240,
+  hold_j0_slow::p08_clock_hold::exp: 1140,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: true,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 240,
+  hold_j0_slow::p08_clock_hold::seq: 4,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 2,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 3
+}
+
+[State 4]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 240,
+  hold_j0_slow::p08_clock_hold::exp: 1140,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: true,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 540,
+  hold_j0_slow::p08_clock_hold::seq: 5,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 2,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 3
+}
+
+[State 5]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 240,
+  hold_j0_slow::p08_clock_hold::exp: 1140,
+  hold_j0_slow::p08_clock_hold::freed: false,
+  hold_j0_slow::p08_clock_hold::issued: true,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 1440,
+  hold_j0_slow::p08_clock_hold::seq: 6,
+  hold_j0_slow::p08_clock_hold::tFree: 0,
+  hold_j0_slow::p08_clock_hold::tIssue: 2,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 3
+}
+
+[State 6]
+{
+  hold_j0_slow::p08_clock_hold::aliveAtFree: false,
+  hold_j0_slow::p08_clock_hold::at: 240,
+  hold_j0_slow::p08_clock_hold::exp: 1140,
+  hold_j0_slow::p08_clock_hold::freed: true,
+  hold_j0_slow::p08_clock_hold::issued: true,
+  hold_j0_slow::p08_clock_hold::jumped: false,
+  hold_j0_slow::p08_clock_hold::off: 0,
+  hold_j0_slow::p08_clock_hold::real: 1440,
+  hold_j0_slow::p08_clock_hold::seq: 7,
+  hold_j0_slow::p08_clock_hold::tFree: 6,
+  hold_j0_slow::p08_clock_hold::tIssue: 2,
+  hold_j0_slow::p08_clock_hold::tJump: 0,
+  hold_j0_slow::p08_clock_hold::tMark: 3
+}
+
+[violation] Found an issue (267ms).
+error: found a counterexample

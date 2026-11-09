@@ -1,0 +1,78 @@
+quint verify --server-endpoint=localhost:18825 --main=parts_incremental_abort --invariant=wit_abort_clean --max-steps=14 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "head",
+  parts_incremental_abort::p08_parts::seq: 1,
+  parts_incremental_abort::p08_parts::t: 0,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 0,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "fetch",
+  parts_incremental_abort::p08_parts::seq: 2,
+  parts_incremental_abort::p08_parts::t: 0,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 0,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "fetch",
+  parts_incremental_abort::p08_parts::seq: 3,
+  parts_incremental_abort::p08_parts::t: 20,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 2,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_incremental_abort::p08_parts::answerAt: 20,
+  parts_incremental_abort::p08_parts::answered: true,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "aborted",
+  parts_incremental_abort::p08_parts::seq: 4,
+  parts_incremental_abort::p08_parts::t: 20,
+  parts_incremental_abort::p08_parts::tAbort: 3,
+  parts_incremental_abort::p08_parts::tBad: 2,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[violation] Found an issue (497ms).
+error: found a counterexample

@@ -1,0 +1,56 @@
+quint run --backend=rust --main=idem_m_early --invariant=inv_not_early --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  idem_m_early::p08_age::age: 0,
+  idem_m_early::p08_age::alive: true,
+  idem_m_early::p08_age::born: 0,
+  idem_m_early::p08_age::ceilingHit: false,
+  idem_m_early::p08_age::count: 2,
+  idem_m_early::p08_age::nRestarts: 0,
+  idem_m_early::p08_age::removedAt: 0,
+  idem_m_early::p08_age::removedEarly: false,
+  idem_m_early::p08_age::seq: 1,
+  idem_m_early::p08_age::sinceRestart: 0,
+  idem_m_early::p08_age::t: 0,
+  idem_m_early::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  idem_m_early::p08_age::age: 43200,
+  idem_m_early::p08_age::alive: true,
+  idem_m_early::p08_age::born: 0,
+  idem_m_early::p08_age::ceilingHit: false,
+  idem_m_early::p08_age::count: 2,
+  idem_m_early::p08_age::nRestarts: 0,
+  idem_m_early::p08_age::removedAt: 0,
+  idem_m_early::p08_age::removedEarly: false,
+  idem_m_early::p08_age::seq: 2,
+  idem_m_early::p08_age::sinceRestart: 43200,
+  idem_m_early::p08_age::t: 43200,
+  idem_m_early::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  idem_m_early::p08_age::age: 43200,
+  idem_m_early::p08_age::alive: false,
+  idem_m_early::p08_age::born: 0,
+  idem_m_early::p08_age::ceilingHit: false,
+  idem_m_early::p08_age::count: 1,
+  idem_m_early::p08_age::nRestarts: 0,
+  idem_m_early::p08_age::removedAt: 43200,
+  idem_m_early::p08_age::removedEarly: true,
+  idem_m_early::p08_age::seq: 3,
+  idem_m_early::p08_age::sinceRestart: 43200,
+  idem_m_early::p08_age::t: 43200,
+  idem_m_early::p08_age::tRestart: 0
+}
+
+[violation] Found an issue (42ms at 1857 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x40f762425829240a --backend=rust to reproduce.
+error: Invariant violated

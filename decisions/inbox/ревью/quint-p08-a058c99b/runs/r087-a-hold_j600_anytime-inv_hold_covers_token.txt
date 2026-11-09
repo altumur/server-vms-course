@@ -1,0 +1,125 @@
+quint verify --server-endpoint=localhost:18825 --main=hold_j600_anytime --invariant=inv_hold_covers_token --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 0,
+  hold_j600_anytime::p08_clock_hold::exp: 0,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: false,
+  hold_j600_anytime::p08_clock_hold::jumped: false,
+  hold_j600_anytime::p08_clock_hold::off: 0,
+  hold_j600_anytime::p08_clock_hold::real: 0,
+  hold_j600_anytime::p08_clock_hold::seq: 1,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 0,
+  hold_j600_anytime::p08_clock_hold::tJump: 0,
+  hold_j600_anytime::p08_clock_hold::tMark: 0
+}
+
+[State 1]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 0,
+  hold_j600_anytime::p08_clock_hold::exp: 0,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: false,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 0,
+  hold_j600_anytime::p08_clock_hold::seq: 2,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 0,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 0
+}
+
+[State 2]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 0,
+  hold_j600_anytime::p08_clock_hold::exp: 1500,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: true,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 0,
+  hold_j600_anytime::p08_clock_hold::seq: 3,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 2,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 0
+}
+
+[State 3]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 600,
+  hold_j600_anytime::p08_clock_hold::exp: 1500,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: true,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 0,
+  hold_j600_anytime::p08_clock_hold::seq: 4,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 2,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 3
+}
+
+[State 4]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 600,
+  hold_j600_anytime::p08_clock_hold::exp: 1500,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: true,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 900,
+  hold_j600_anytime::p08_clock_hold::seq: 5,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 2,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 3
+}
+
+[State 5]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: false,
+  hold_j600_anytime::p08_clock_hold::at: 600,
+  hold_j600_anytime::p08_clock_hold::exp: 1500,
+  hold_j600_anytime::p08_clock_hold::freed: false,
+  hold_j600_anytime::p08_clock_hold::issued: true,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 1500,
+  hold_j600_anytime::p08_clock_hold::seq: 6,
+  hold_j600_anytime::p08_clock_hold::tFree: 0,
+  hold_j600_anytime::p08_clock_hold::tIssue: 2,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 3
+}
+
+[State 6]
+{
+  hold_j600_anytime::p08_clock_hold::aliveAtFree: true,
+  hold_j600_anytime::p08_clock_hold::at: 600,
+  hold_j600_anytime::p08_clock_hold::exp: 1500,
+  hold_j600_anytime::p08_clock_hold::freed: true,
+  hold_j600_anytime::p08_clock_hold::issued: true,
+  hold_j600_anytime::p08_clock_hold::jumped: true,
+  hold_j600_anytime::p08_clock_hold::off: 600,
+  hold_j600_anytime::p08_clock_hold::real: 1500,
+  hold_j600_anytime::p08_clock_hold::seq: 7,
+  hold_j600_anytime::p08_clock_hold::tFree: 6,
+  hold_j600_anytime::p08_clock_hold::tIssue: 2,
+  hold_j600_anytime::p08_clock_hold::tJump: 1,
+  hold_j600_anytime::p08_clock_hold::tMark: 3
+}
+
+[violation] Found an issue (300ms).
+error: found a counterexample

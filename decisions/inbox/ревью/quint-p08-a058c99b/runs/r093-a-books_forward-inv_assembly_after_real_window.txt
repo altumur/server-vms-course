@@ -1,0 +1,36 @@
+quint verify --server-endpoint=localhost:18825 --main=books_forward --invariant=inv_assembly_after_real_window --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  books_forward::p08_clock_books::assembled: false,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: false,
+  books_forward::p08_clock_books::off: 0,
+  books_forward::p08_clock_books::real: 0
+}
+
+[State 1]
+{
+  books_forward::p08_clock_books::assembled: false,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: true,
+  books_forward::p08_clock_books::off: 60,
+  books_forward::p08_clock_books::real: 0
+}
+
+[State 2]
+{
+  books_forward::p08_clock_books::assembled: true,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: true,
+  books_forward::p08_clock_books::off: 60,
+  books_forward::p08_clock_books::real: 0
+}
+
+[violation] Found an issue (122ms).
+error: found a counterexample

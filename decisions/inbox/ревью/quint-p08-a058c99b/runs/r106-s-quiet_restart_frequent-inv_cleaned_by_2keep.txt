@@ -1,0 +1,120 @@
+quint run --backend=rust --main=quiet_restart_frequent --invariant=inv_cleaned_by_2keep --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 0,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 1,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 0,
+  quiet_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  quiet_restart_frequent::p08_age::age: 10799,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 0,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 2,
+  quiet_restart_frequent::p08_age::sinceRestart: 10799,
+  quiet_restart_frequent::p08_age::t: 10799,
+  quiet_restart_frequent::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 1,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 3,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 10799,
+  quiet_restart_frequent::p08_age::tRestart: 2
+}
+
+[State 3]
+{
+  quiet_restart_frequent::p08_age::age: 5400,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 1,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 4,
+  quiet_restart_frequent::p08_age::sinceRestart: 5400,
+  quiet_restart_frequent::p08_age::t: 16199,
+  quiet_restart_frequent::p08_age::tRestart: 2
+}
+
+[State 4]
+{
+  quiet_restart_frequent::p08_age::age: 10799,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 1,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 5,
+  quiet_restart_frequent::p08_age::sinceRestart: 10799,
+  quiet_restart_frequent::p08_age::t: 21598,
+  quiet_restart_frequent::p08_age::tRestart: 2
+}
+
+[State 5]
+{
+  quiet_restart_frequent::p08_age::age: 0,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 2,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 6,
+  quiet_restart_frequent::p08_age::sinceRestart: 0,
+  quiet_restart_frequent::p08_age::t: 21598,
+  quiet_restart_frequent::p08_age::tRestart: 5
+}
+
+[State 6]
+{
+  quiet_restart_frequent::p08_age::age: 5400,
+  quiet_restart_frequent::p08_age::alive: true,
+  quiet_restart_frequent::p08_age::born: 0,
+  quiet_restart_frequent::p08_age::ceilingHit: false,
+  quiet_restart_frequent::p08_age::count: 2,
+  quiet_restart_frequent::p08_age::nRestarts: 2,
+  quiet_restart_frequent::p08_age::removedAt: 0,
+  quiet_restart_frequent::p08_age::removedEarly: false,
+  quiet_restart_frequent::p08_age::seq: 7,
+  quiet_restart_frequent::p08_age::sinceRestart: 5400,
+  quiet_restart_frequent::p08_age::t: 26998,
+  quiet_restart_frequent::p08_age::tRestart: 5
+}
+
+[violation] Found an issue (31ms at 1581 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x2513641a2a28ed1b --backend=rust to reproduce.
+error: Invariant violated

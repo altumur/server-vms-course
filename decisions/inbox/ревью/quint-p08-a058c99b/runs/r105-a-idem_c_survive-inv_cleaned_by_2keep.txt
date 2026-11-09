@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=idem_c_survive --invariant=inv_cleaned_by_2keep --max-steps=14 p08_age.qnt
+
+[ok] No violation found (2567ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

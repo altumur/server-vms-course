@@ -1,0 +1,139 @@
+quint run --backend=rust --main=books_nojump --invariant=inv_assembly_after_real_window --max-steps=12 --max-samples=100000 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  books_nojump::p08_clock_books::assembled: false,
+  books_nojump::p08_clock_books::assembledAtReal: 0,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 0
+}
+
+[State 1]
+{
+  books_nojump::p08_clock_books::assembled: false,
+  books_nojump::p08_clock_books::assembledAtReal: 0,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 200
+}
+
+[State 2]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 200
+}
+
+[State 3]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 300
+}
+
+[State 4]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 500
+}
+
+[State 5]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 530
+}
+
+[State 6]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 535
+}
+
+[State 7]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 540
+}
+
+[State 8]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 585
+}
+
+[State 9]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 685
+}
+
+[State 10]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 690
+}
+
+[State 11]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 735
+}
+
+[State 12]
+{
+  books_nojump::p08_clock_books::assembled: true,
+  books_nojump::p08_clock_books::assembledAtReal: 200,
+  books_nojump::p08_clock_books::at: 0,
+  books_nojump::p08_clock_books::jumped: false,
+  books_nojump::p08_clock_books::off: 0,
+  books_nojump::p08_clock_books::real: 765
+}
+
+[ok] No violation found (298ms at 335570 traces/second).
+Trace length statistics: max=13, min=13, average=13.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xf6e06f15fdb92b5e --backend=rust to reproduce.

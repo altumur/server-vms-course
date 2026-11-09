@@ -1,0 +1,279 @@
+quint run --backend=rust --main=accept_norm --invariant=inv_mark_points --max-steps=14 --max-samples=100000 p08_accept.qnt
+
+An example execution:
+
+[State 0]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 1,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 1]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 2,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 2]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 3,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 3]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 4,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 4]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 5,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 5]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 6,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 6]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "idle", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 7,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 7]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 8,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 8]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 9,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 9]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 10,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 10]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 11,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 11]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 12,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 12]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "rep", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 13,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 13]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "idle", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 14,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 14]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 1, sent: 2, stage: "idle", via: "r" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 15,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[ok] No violation found (2568ms at 38941 traces/second).
+Trace length statistics: max=15, min=15, average=15.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x7026e4fc33e9bb2 --backend=rust to reproduce.

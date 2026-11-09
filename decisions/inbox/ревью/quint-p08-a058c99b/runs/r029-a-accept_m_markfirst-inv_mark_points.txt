@@ -1,0 +1,82 @@
+quint verify --server-endpoint=localhost:18825 --main=accept_m_markfirst --invariant=inv_mark_points --max-steps=12 p08_accept.qnt
+
+An example execution:
+
+[State 0]
+{
+  accept_m_markfirst::p08_accept::ans503AfterMark: false,
+  accept_m_markfirst::p08_accept::cur:
+    { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_m_markfirst::p08_accept::deltas: Set(),
+  accept_m_markfirst::p08_accept::dupGen: false,
+  accept_m_markfirst::p08_accept::falseOverRead: false,
+  accept_m_markfirst::p08_accept::gens: Set(),
+  accept_m_markfirst::p08_accept::lastLost503Sent: 0,
+  accept_m_markfirst::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_m_markfirst::p08_accept::repObjs: Set(),
+  accept_m_markfirst::p08_accept::seq: 1,
+  accept_m_markfirst::p08_accept::storeUp: true,
+  accept_m_markfirst::p08_accept::t503: 0,
+  accept_m_markfirst::p08_accept::tMarkApplied: 0,
+  accept_m_markfirst::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 1]
+{
+  accept_m_markfirst::p08_accept::ans503AfterMark: false,
+  accept_m_markfirst::p08_accept::cur:
+    { rev: 1, sent: 1, stage: "rep", via: "r" },
+  accept_m_markfirst::p08_accept::deltas: Set(),
+  accept_m_markfirst::p08_accept::dupGen: false,
+  accept_m_markfirst::p08_accept::falseOverRead: false,
+  accept_m_markfirst::p08_accept::gens: Set(),
+  accept_m_markfirst::p08_accept::lastLost503Sent: 0,
+  accept_m_markfirst::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_m_markfirst::p08_accept::repObjs: Set(),
+  accept_m_markfirst::p08_accept::seq: 2,
+  accept_m_markfirst::p08_accept::storeUp: true,
+  accept_m_markfirst::p08_accept::t503: 0,
+  accept_m_markfirst::p08_accept::tMarkApplied: 0,
+  accept_m_markfirst::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 2]
+{
+  accept_m_markfirst::p08_accept::ans503AfterMark: false,
+  accept_m_markfirst::p08_accept::cur:
+    { rev: 1, sent: 1, stage: "mark", via: "r" },
+  accept_m_markfirst::p08_accept::deltas: Set(),
+  accept_m_markfirst::p08_accept::dupGen: false,
+  accept_m_markfirst::p08_accept::falseOverRead: false,
+  accept_m_markfirst::p08_accept::gens: Set(),
+  accept_m_markfirst::p08_accept::lastLost503Sent: 0,
+  accept_m_markfirst::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_m_markfirst::p08_accept::repObjs: Set(1),
+  accept_m_markfirst::p08_accept::seq: 3,
+  accept_m_markfirst::p08_accept::storeUp: true,
+  accept_m_markfirst::p08_accept::t503: 0,
+  accept_m_markfirst::p08_accept::tMarkApplied: 0,
+  accept_m_markfirst::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 3]
+{
+  accept_m_markfirst::p08_accept::ans503AfterMark: true,
+  accept_m_markfirst::p08_accept::cur:
+    { rev: 1, sent: 1, stage: "idle", via: "r" },
+  accept_m_markfirst::p08_accept::deltas: Set(),
+  accept_m_markfirst::p08_accept::dupGen: false,
+  accept_m_markfirst::p08_accept::falseOverRead: false,
+  accept_m_markfirst::p08_accept::gens: Set((1, 1)),
+  accept_m_markfirst::p08_accept::lastLost503Sent: 1,
+  accept_m_markfirst::p08_accept::mark: { rev: 1, sent: 1, via: "r" },
+  accept_m_markfirst::p08_accept::repObjs: Set(1),
+  accept_m_markfirst::p08_accept::seq: 4,
+  accept_m_markfirst::p08_accept::storeUp: true,
+  accept_m_markfirst::p08_accept::t503: 3,
+  accept_m_markfirst::p08_accept::tMarkApplied: 3,
+  accept_m_markfirst::p08_accept::tRepeatSameHeard: 0
+}
+
+[violation] Found an issue (1163ms).
+error: found a counterexample

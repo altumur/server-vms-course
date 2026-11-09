@@ -1,0 +1,38 @@
+quint run --backend=rust --main=books_forward --invariant=inv_assembly_after_real_window --max-steps=12 --max-samples=100000 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  books_forward::p08_clock_books::assembled: false,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: false,
+  books_forward::p08_clock_books::off: 0,
+  books_forward::p08_clock_books::real: 0
+}
+
+[State 1]
+{
+  books_forward::p08_clock_books::assembled: false,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: true,
+  books_forward::p08_clock_books::off: 60,
+  books_forward::p08_clock_books::real: 0
+}
+
+[State 2]
+{
+  books_forward::p08_clock_books::assembled: true,
+  books_forward::p08_clock_books::assembledAtReal: 0,
+  books_forward::p08_clock_books::at: 0,
+  books_forward::p08_clock_books::jumped: true,
+  books_forward::p08_clock_books::off: 60,
+  books_forward::p08_clock_books::real: 0
+}
+
+[violation] Found an issue (23ms at 2130 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xca5eea6039b1ec6a --backend=rust to reproduce.
+error: Invariant violated

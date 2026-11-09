@@ -1,0 +1,36 @@
+quint verify --server-endpoint=localhost:18826 --main=books_back --invariant=wit_assembly_blocked_past_3x --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  books_back::p08_clock_books::assembled: false,
+  books_back::p08_clock_books::assembledAtReal: 0,
+  books_back::p08_clock_books::at: 0,
+  books_back::p08_clock_books::jumped: false,
+  books_back::p08_clock_books::off: 0,
+  books_back::p08_clock_books::real: 0
+}
+
+[State 1]
+{
+  books_back::p08_clock_books::assembled: false,
+  books_back::p08_clock_books::assembledAtReal: 0,
+  books_back::p08_clock_books::at: 0,
+  books_back::p08_clock_books::jumped: false,
+  books_back::p08_clock_books::off: 0,
+  books_back::p08_clock_books::real: 200
+}
+
+[State 2]
+{
+  books_back::p08_clock_books::assembled: false,
+  books_back::p08_clock_books::assembledAtReal: 0,
+  books_back::p08_clock_books::at: 0,
+  books_back::p08_clock_books::jumped: true,
+  books_back::p08_clock_books::off: -300,
+  books_back::p08_clock_books::real: 200
+}
+
+[violation] Found an issue (141ms).
+error: found a counterexample

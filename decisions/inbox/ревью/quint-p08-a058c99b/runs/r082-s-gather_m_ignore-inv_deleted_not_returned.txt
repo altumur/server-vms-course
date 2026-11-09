@@ -1,0 +1,60 @@
+quint run --backend=rust --main=gather_m_ignore --invariant=inv_deleted_not_returned --max-steps=8 --max-samples=100000 p08_gather.qnt
+
+An example execution:
+
+[State 0]
+{
+  gather_m_ignore::p08_gather::deletedEver: Set(),
+  gather_m_ignore::p08_gather::list: Set(),
+  gather_m_ignore::p08_gather::movesDone: 1,
+  gather_m_ignore::p08_gather::removed: Set(),
+  gather_m_ignore::p08_gather::returned: false,
+  gather_m_ignore::p08_gather::seq: 1,
+  gather_m_ignore::p08_gather::tBack: 0,
+  gather_m_ignore::p08_gather::tDel: 0,
+  gather_m_ignore::p08_gather::tMove2: 0
+}
+
+[State 1]
+{
+  gather_m_ignore::p08_gather::deletedEver: Set(),
+  gather_m_ignore::p08_gather::list: Set("n"),
+  gather_m_ignore::p08_gather::movesDone: 1,
+  gather_m_ignore::p08_gather::removed: Set(),
+  gather_m_ignore::p08_gather::returned: false,
+  gather_m_ignore::p08_gather::seq: 2,
+  gather_m_ignore::p08_gather::tBack: 0,
+  gather_m_ignore::p08_gather::tDel: 0,
+  gather_m_ignore::p08_gather::tMove2: 0
+}
+
+[State 2]
+{
+  gather_m_ignore::p08_gather::deletedEver: Set("n"),
+  gather_m_ignore::p08_gather::list: Set(),
+  gather_m_ignore::p08_gather::movesDone: 1,
+  gather_m_ignore::p08_gather::removed: Set("n"),
+  gather_m_ignore::p08_gather::returned: false,
+  gather_m_ignore::p08_gather::seq: 3,
+  gather_m_ignore::p08_gather::tBack: 0,
+  gather_m_ignore::p08_gather::tDel: 2,
+  gather_m_ignore::p08_gather::tMove2: 0
+}
+
+[State 3]
+{
+  gather_m_ignore::p08_gather::deletedEver: Set("n"),
+  gather_m_ignore::p08_gather::list: Set("n"),
+  gather_m_ignore::p08_gather::movesDone: 1,
+  gather_m_ignore::p08_gather::removed: Set("n"),
+  gather_m_ignore::p08_gather::returned: true,
+  gather_m_ignore::p08_gather::seq: 4,
+  gather_m_ignore::p08_gather::tBack: 3,
+  gather_m_ignore::p08_gather::tDel: 2,
+  gather_m_ignore::p08_gather::tMove2: 0
+}
+
+[violation] Found an issue (42ms at 571 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x555f6b92139befc8 --backend=rust to reproduce.
+error: Invariant violated

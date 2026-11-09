@@ -1,0 +1,345 @@
+quint run --backend=rust --main=quiet_restart_rare --invariant=inv_cleaned_by_2keep --max-steps=20 --max-samples=100000 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 1,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 0,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 1,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 0,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 1,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 0,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 3]
+{
+  quiet_restart_rare::p08_age::age: 5401,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 2,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 5401,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 4]
+{
+  quiet_restart_rare::p08_age::age: 10801,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 3,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 5]
+{
+  quiet_restart_rare::p08_age::age: 10801,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 3,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 6]
+{
+  quiet_restart_rare::p08_age::age: 10801,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: false,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 3,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 7]
+{
+  quiet_restart_rare::p08_age::age: 10801,
+  quiet_restart_rare::p08_age::alive: true,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 2,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 0,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 4,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 8]
+{
+  quiet_restart_rare::p08_age::age: 10801,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 0,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 5,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 0
+}
+
+[State 9]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 6,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 10801,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 10]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 7,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 16202,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 11]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 7,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 16202,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 12]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 7,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 16202,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 13]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 7,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 16202,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 14]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 8,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 21602,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 15]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 1,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 8,
+  quiet_restart_rare::p08_age::sinceRestart: 10801,
+  quiet_restart_rare::p08_age::t: 21602,
+  quiet_restart_rare::p08_age::tRestart: 5
+}
+
+[State 16]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 2,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 9,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 21602,
+  quiet_restart_rare::p08_age::tRestart: 8
+}
+
+[State 17]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 2,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 9,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 21602,
+  quiet_restart_rare::p08_age::tRestart: 8
+}
+
+[State 18]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 2,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 9,
+  quiet_restart_rare::p08_age::sinceRestart: 0,
+  quiet_restart_rare::p08_age::t: 21602,
+  quiet_restart_rare::p08_age::tRestart: 8
+}
+
+[State 19]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 2,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 10,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 27003,
+  quiet_restart_rare::p08_age::tRestart: 8
+}
+
+[State 20]
+{
+  quiet_restart_rare::p08_age::age: 0,
+  quiet_restart_rare::p08_age::alive: false,
+  quiet_restart_rare::p08_age::born: 0,
+  quiet_restart_rare::p08_age::ceilingHit: true,
+  quiet_restart_rare::p08_age::count: 1,
+  quiet_restart_rare::p08_age::nRestarts: 2,
+  quiet_restart_rare::p08_age::removedAt: 10801,
+  quiet_restart_rare::p08_age::removedEarly: false,
+  quiet_restart_rare::p08_age::seq: 10,
+  quiet_restart_rare::p08_age::sinceRestart: 5401,
+  quiet_restart_rare::p08_age::t: 27003,
+  quiet_restart_rare::p08_age::tRestart: 8
+}
+
+[ok] No violation found (1612ms at 62035 traces/second).
+Trace length statistics: max=21, min=21, average=21.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0x1fe2382d06246985 --backend=rust to reproduce.

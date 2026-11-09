@@ -1,0 +1,188 @@
+quint run --backend=rust --main=gc_text_memory --invariant=wit_restart_gc_read --max-steps=24 --max-samples=100000 p08_partgc.qnt
+
+An example execution:
+
+[State 0]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 1,
+  gc_text_memory::p08_partgc::fetchRev: 0,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 1,
+  gc_text_memory::p08_partgc::t: 0,
+  gc_text_memory::p08_partgc::tFetch: 0,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 0
+}
+
+[State 1]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 1,
+  gc_text_memory::p08_partgc::fetchRev: 0,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 2,
+  gc_text_memory::p08_partgc::t: 0,
+  gc_text_memory::p08_partgc::tFetch: 0,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 1
+}
+
+[State 2]
+{
+  gc_text_memory::p08_partgc::accounted: true,
+  gc_text_memory::p08_partgc::curHead: 1,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 3,
+  gc_text_memory::p08_partgc::t: 0,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 1
+}
+
+[State 3]
+{
+  gc_text_memory::p08_partgc::accounted: true,
+  gc_text_memory::p08_partgc::curHead: 2,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 4,
+  gc_text_memory::p08_partgc::t: 30,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 1
+}
+
+[State 4]
+{
+  gc_text_memory::p08_partgc::accounted: true,
+  gc_text_memory::p08_partgc::curHead: 3,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 5,
+  gc_text_memory::p08_partgc::t: 60,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 1
+}
+
+[State 5]
+{
+  gc_text_memory::p08_partgc::accounted: true,
+  gc_text_memory::p08_partgc::curHead: 4,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 6,
+  gc_text_memory::p08_partgc::t: 90,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 1
+}
+
+[State 6]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 4,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 7,
+  gc_text_memory::p08_partgc::t: 90,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 6
+}
+
+[State 7]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 5,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 8,
+  gc_text_memory::p08_partgc::t: 120,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 6
+}
+
+[State 8]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 5,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 9,
+  gc_text_memory::p08_partgc::t: 120,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 8
+}
+
+[State 9]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 6,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 10,
+  gc_text_memory::p08_partgc::t: 150,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 0,
+  gc_text_memory::p08_partgc::tRestart: 8
+}
+
+[State 10]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 6,
+  gc_text_memory::p08_partgc::fetchRev: 1,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(1),
+  gc_text_memory::p08_partgc::hit: false,
+  gc_text_memory::p08_partgc::seq: 11,
+  gc_text_memory::p08_partgc::t: 150,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 10,
+  gc_text_memory::p08_partgc::tRestart: 8
+}
+
+[State 11]
+{
+  gc_text_memory::p08_partgc::accounted: false,
+  gc_text_memory::p08_partgc::curHead: 6,
+  gc_text_memory::p08_partgc::fetchRev: 0,
+  gc_text_memory::p08_partgc::fetchStart: 0,
+  gc_text_memory::p08_partgc::gone: Set(1),
+  gc_text_memory::p08_partgc::hit: true,
+  gc_text_memory::p08_partgc::seq: 12,
+  gc_text_memory::p08_partgc::t: 150,
+  gc_text_memory::p08_partgc::tFetch: 2,
+  gc_text_memory::p08_partgc::tGc: 10,
+  gc_text_memory::p08_partgc::tRestart: 8
+}
+
+[violation] Found an issue (56ms at 24125 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xeee61c1b71f959ef --backend=rust to reproduce.
+error: Invariant violated

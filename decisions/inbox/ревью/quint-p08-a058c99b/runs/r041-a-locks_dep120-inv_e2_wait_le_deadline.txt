@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=locks_dep120 --invariant=inv_e2_wait_le_deadline --max-steps=14 p08_locks.qnt
+
+[ok] No violation found (7678ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

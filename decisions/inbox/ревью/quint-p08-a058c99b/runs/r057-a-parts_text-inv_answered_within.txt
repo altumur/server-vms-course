@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=parts_text --invariant=inv_answered_within --max-steps=14 p08_parts.qnt
+
+[ok] No violation found (1270ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

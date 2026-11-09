@@ -1,0 +1,54 @@
+quint verify --server-endpoint=localhost:18826 --main=idem_restart_rare --invariant=wit_cleaned --max-steps=14 p08_age.qnt
+
+An example execution:
+
+[State 0]
+{
+  idem_restart_rare::p08_age::age: 0,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 1,
+  idem_restart_rare::p08_age::sinceRestart: 0,
+  idem_restart_rare::p08_age::t: 0,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 1]
+{
+  idem_restart_rare::p08_age::age: 86401,
+  idem_restart_rare::p08_age::alive: true,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 2,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 0,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 2,
+  idem_restart_rare::p08_age::sinceRestart: 86401,
+  idem_restart_rare::p08_age::t: 86401,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[State 2]
+{
+  idem_restart_rare::p08_age::age: 86401,
+  idem_restart_rare::p08_age::alive: false,
+  idem_restart_rare::p08_age::born: 0,
+  idem_restart_rare::p08_age::ceilingHit: false,
+  idem_restart_rare::p08_age::count: 1,
+  idem_restart_rare::p08_age::nRestarts: 0,
+  idem_restart_rare::p08_age::removedAt: 86401,
+  idem_restart_rare::p08_age::removedEarly: false,
+  idem_restart_rare::p08_age::seq: 3,
+  idem_restart_rare::p08_age::sinceRestart: 86401,
+  idem_restart_rare::p08_age::t: 86401,
+  idem_restart_rare::p08_age::tRestart: 0
+}
+
+[violation] Found an issue (211ms).
+error: found a counterexample

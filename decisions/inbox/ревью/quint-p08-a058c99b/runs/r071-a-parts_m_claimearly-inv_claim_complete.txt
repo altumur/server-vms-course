@@ -1,0 +1,114 @@
+quint verify --server-endpoint=localhost:18825 --main=parts_m_claimearly --invariant=inv_claim_complete --max-steps=14 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_m_claimearly::p08_parts::answerAt: 0,
+  parts_m_claimearly::p08_parts::answered: false,
+  parts_m_claimearly::p08_parts::claimedIncomplete: false,
+  parts_m_claimearly::p08_parts::got: Set(),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 1,
+  parts_m_claimearly::p08_parts::phase: "head",
+  parts_m_claimearly::p08_parts::seq: 1,
+  parts_m_claimearly::p08_parts::t: 0,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_m_claimearly::p08_parts::answerAt: 0,
+  parts_m_claimearly::p08_parts::answered: false,
+  parts_m_claimearly::p08_parts::claimedIncomplete: false,
+  parts_m_claimearly::p08_parts::got: Set(),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 1,
+  parts_m_claimearly::p08_parts::phase: "fetch",
+  parts_m_claimearly::p08_parts::seq: 2,
+  parts_m_claimearly::p08_parts::t: 0,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_m_claimearly::p08_parts::answerAt: 0,
+  parts_m_claimearly::p08_parts::answered: false,
+  parts_m_claimearly::p08_parts::claimedIncomplete: false,
+  parts_m_claimearly::p08_parts::got: Set(1),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 2,
+  parts_m_claimearly::p08_parts::phase: "fetch",
+  parts_m_claimearly::p08_parts::seq: 3,
+  parts_m_claimearly::p08_parts::t: 20,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_m_claimearly::p08_parts::answerAt: 0,
+  parts_m_claimearly::p08_parts::answered: false,
+  parts_m_claimearly::p08_parts::claimedIncomplete: false,
+  parts_m_claimearly::p08_parts::got: Set(1, 2),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 3,
+  parts_m_claimearly::p08_parts::phase: "fetch",
+  parts_m_claimearly::p08_parts::seq: 4,
+  parts_m_claimearly::p08_parts::t: 40,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[State 4]
+{
+  parts_m_claimearly::p08_parts::answerAt: 0,
+  parts_m_claimearly::p08_parts::answered: false,
+  parts_m_claimearly::p08_parts::claimedIncomplete: false,
+  parts_m_claimearly::p08_parts::got: Set(1, 2, 3),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 1,
+  parts_m_claimearly::p08_parts::phase: "writing",
+  parts_m_claimearly::p08_parts::seq: 5,
+  parts_m_claimearly::p08_parts::t: 60,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[State 5]
+{
+  parts_m_claimearly::p08_parts::answerAt: 60,
+  parts_m_claimearly::p08_parts::answered: true,
+  parts_m_claimearly::p08_parts::claimedIncomplete: true,
+  parts_m_claimearly::p08_parts::got: Set(1, 2, 3),
+  parts_m_claimearly::p08_parts::holderServes: false,
+  parts_m_claimearly::p08_parts::mixedVisible: false,
+  parts_m_claimearly::p08_parts::nextPart: 1,
+  parts_m_claimearly::p08_parts::phase: "claimed",
+  parts_m_claimearly::p08_parts::seq: 6,
+  parts_m_claimearly::p08_parts::t: 60,
+  parts_m_claimearly::p08_parts::tAbort: 0,
+  parts_m_claimearly::p08_parts::tBad: 0,
+  parts_m_claimearly::p08_parts::tMix: 0,
+  parts_m_claimearly::p08_parts::written: Set()
+}
+
+[violation] Found an issue (548ms).
+error: found a counterexample

@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=idem_restart_frequent --invariant=inv_not_early --max-steps=14 p08_age.qnt
+
+[ok] No violation found (2793ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

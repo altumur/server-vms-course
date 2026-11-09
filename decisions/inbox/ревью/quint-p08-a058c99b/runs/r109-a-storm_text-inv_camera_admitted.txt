@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18825 --main=storm_text --invariant=inv_camera_admitted --max-steps=10 p08_storm.qnt
+
+[ok] No violation found (1820ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

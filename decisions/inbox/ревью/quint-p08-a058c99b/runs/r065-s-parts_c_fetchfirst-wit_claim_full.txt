@@ -1,0 +1,188 @@
+quint run --backend=rust --main=parts_c_fetchfirst --invariant=wit_claim_full --max-steps=14 --max-samples=100000 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "head",
+  parts_c_fetchfirst::p08_parts::seq: 1,
+  parts_c_fetchfirst::p08_parts::t: 0,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 2,
+  parts_c_fetchfirst::p08_parts::t: 0,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 3,
+  parts_c_fetchfirst::p08_parts::t: 20,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 3,
+  parts_c_fetchfirst::p08_parts::t: 20,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 4]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 4,
+  parts_c_fetchfirst::p08_parts::t: 40,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 5]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2, 3),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "writing",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 6]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2, 3),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "writing",
+  parts_c_fetchfirst::p08_parts::seq: 6,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 5,
+  parts_c_fetchfirst::p08_parts::written: Set(1)
+}
+
+[State 7]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2, 3),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "writing",
+  parts_c_fetchfirst::p08_parts::seq: 7,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 5,
+  parts_c_fetchfirst::p08_parts::written: Set(1, 2)
+}
+
+[State 8]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2, 3),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 4,
+  parts_c_fetchfirst::p08_parts::phase: "writing_done",
+  parts_c_fetchfirst::p08_parts::seq: 8,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 5,
+  parts_c_fetchfirst::p08_parts::written: Set(1, 2, 3)
+}
+
+[State 9]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 60,
+  parts_c_fetchfirst::p08_parts::answered: true,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2, 3),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 4,
+  parts_c_fetchfirst::p08_parts::phase: "claimed",
+  parts_c_fetchfirst::p08_parts::seq: 9,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 5,
+  parts_c_fetchfirst::p08_parts::written: Set(1, 2, 3)
+}
+
+[violation] Found an issue (77ms at 5987 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0xdaaec4b8e7c064b9 --backend=rust to reproduce.
+error: Invariant violated

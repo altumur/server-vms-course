@@ -1,0 +1,42 @@
+quint verify --server-endpoint=localhost:18825 --main=accept_norm --invariant=wit_store_down_reached --max-steps=12 p08_accept.qnt
+
+An example execution:
+
+[State 0]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 1,
+  accept_norm::p08_accept::storeUp: true,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[State 1]
+{
+  accept_norm::p08_accept::ans503AfterMark: false,
+  accept_norm::p08_accept::cur: { rev: 0, sent: 0, stage: "idle", via: "" },
+  accept_norm::p08_accept::deltas: Set(),
+  accept_norm::p08_accept::dupGen: false,
+  accept_norm::p08_accept::falseOverRead: false,
+  accept_norm::p08_accept::gens: Set(),
+  accept_norm::p08_accept::lastLost503Sent: 0,
+  accept_norm::p08_accept::mark: { rev: 0, sent: 0, via: "" },
+  accept_norm::p08_accept::repObjs: Set(),
+  accept_norm::p08_accept::seq: 2,
+  accept_norm::p08_accept::storeUp: false,
+  accept_norm::p08_accept::t503: 0,
+  accept_norm::p08_accept::tMarkApplied: 0,
+  accept_norm::p08_accept::tRepeatSameHeard: 0
+}
+
+[violation] Found an issue (822ms).
+error: found a counterexample

@@ -1,0 +1,114 @@
+quint verify --server-endpoint=localhost:18826 --main=parts_text_slow --invariant=wit_claim_past_deadline --max-steps=14 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_text_slow::p08_parts::answerAt: 0,
+  parts_text_slow::p08_parts::answered: false,
+  parts_text_slow::p08_parts::claimedIncomplete: false,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 1,
+  parts_text_slow::p08_parts::phase: "head",
+  parts_text_slow::p08_parts::seq: 1,
+  parts_text_slow::p08_parts::t: 0,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 0,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_text_slow::p08_parts::answerAt: 0,
+  parts_text_slow::p08_parts::answered: false,
+  parts_text_slow::p08_parts::claimedIncomplete: false,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 1,
+  parts_text_slow::p08_parts::phase: "fetch",
+  parts_text_slow::p08_parts::seq: 2,
+  parts_text_slow::p08_parts::t: 0,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 0,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_text_slow::p08_parts::answerAt: 0,
+  parts_text_slow::p08_parts::answered: false,
+  parts_text_slow::p08_parts::claimedIncomplete: false,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 2,
+  parts_text_slow::p08_parts::phase: "fetch",
+  parts_text_slow::p08_parts::seq: 3,
+  parts_text_slow::p08_parts::t: 40,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 2,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_text_slow::p08_parts::answerAt: 0,
+  parts_text_slow::p08_parts::answered: false,
+  parts_text_slow::p08_parts::claimedIncomplete: false,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 3,
+  parts_text_slow::p08_parts::phase: "fetch",
+  parts_text_slow::p08_parts::seq: 4,
+  parts_text_slow::p08_parts::t: 80,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 2,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set(2)
+}
+
+[State 4]
+{
+  parts_text_slow::p08_parts::answerAt: 0,
+  parts_text_slow::p08_parts::answered: false,
+  parts_text_slow::p08_parts::claimedIncomplete: false,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 4,
+  parts_text_slow::p08_parts::phase: "writing_done",
+  parts_text_slow::p08_parts::seq: 5,
+  parts_text_slow::p08_parts::t: 120,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 4,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set(2)
+}
+
+[State 5]
+{
+  parts_text_slow::p08_parts::answerAt: 120,
+  parts_text_slow::p08_parts::answered: true,
+  parts_text_slow::p08_parts::claimedIncomplete: true,
+  parts_text_slow::p08_parts::got: Set(),
+  parts_text_slow::p08_parts::holderServes: false,
+  parts_text_slow::p08_parts::mixedVisible: false,
+  parts_text_slow::p08_parts::nextPart: 4,
+  parts_text_slow::p08_parts::phase: "claimed",
+  parts_text_slow::p08_parts::seq: 6,
+  parts_text_slow::p08_parts::t: 120,
+  parts_text_slow::p08_parts::tAbort: 0,
+  parts_text_slow::p08_parts::tBad: 4,
+  parts_text_slow::p08_parts::tMix: 0,
+  parts_text_slow::p08_parts::written: Set(2)
+}
+
+[violation] Found an issue (536ms).
+error: found a counterexample

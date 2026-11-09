@@ -1,0 +1,111 @@
+quint verify --server-endpoint=localhost:18825 --main=gc_c_durable --invariant=wit_gc_happens --max-steps=16 p08_partgc.qnt
+
+An example execution:
+
+[State 0]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 1,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 1,
+  gc_c_durable::p08_partgc::t: 0,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 1]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 2,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 2,
+  gc_c_durable::p08_partgc::t: 30,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 2]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 3,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 3,
+  gc_c_durable::p08_partgc::t: 60,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 3]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 4,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 4,
+  gc_c_durable::p08_partgc::t: 90,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 4]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 5,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 5,
+  gc_c_durable::p08_partgc::t: 120,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 5]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 6,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 0,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[State 6]
+{
+  gc_c_durable::p08_partgc::accounted: false,
+  gc_c_durable::p08_partgc::curHead: 6,
+  gc_c_durable::p08_partgc::fetchRev: 0,
+  gc_c_durable::p08_partgc::fetchStart: 0,
+  gc_c_durable::p08_partgc::gone: Set(1),
+  gc_c_durable::p08_partgc::hit: false,
+  gc_c_durable::p08_partgc::seq: 7,
+  gc_c_durable::p08_partgc::t: 150,
+  gc_c_durable::p08_partgc::tFetch: 0,
+  gc_c_durable::p08_partgc::tGc: 6,
+  gc_c_durable::p08_partgc::tRestart: 0
+}
+
+[violation] Found an issue (216ms).
+error: found a counterexample

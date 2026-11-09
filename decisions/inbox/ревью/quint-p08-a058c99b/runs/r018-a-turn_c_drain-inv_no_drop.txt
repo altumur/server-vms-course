@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=turn_c_drain --invariant=inv_no_drop --max-steps=11 p08_turn.qnt
+
+[ok] No violation found (33402ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.

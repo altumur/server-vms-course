@@ -1,0 +1,126 @@
+quint run --backend=rust --main=gather_one_move --invariant=inv_deleted_not_returned --max-steps=8 --max-samples=100000 p08_gather.qnt
+
+An example execution:
+
+[State 0]
+{
+  gather_one_move::p08_gather::deletedEver: Set(),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set(),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 1,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 0,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 1]
+{
+  gather_one_move::p08_gather::deletedEver: Set(),
+  gather_one_move::p08_gather::list: Set("n"),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set(),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 2,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 0,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 2]
+{
+  gather_one_move::p08_gather::deletedEver: Set(),
+  gather_one_move::p08_gather::list: Set("n"),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set(),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 2,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 0,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 3]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 4]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 5]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 6]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 7]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[State 8]
+{
+  gather_one_move::p08_gather::deletedEver: Set("n"),
+  gather_one_move::p08_gather::list: Set(),
+  gather_one_move::p08_gather::movesDone: 1,
+  gather_one_move::p08_gather::removed: Set("n"),
+  gather_one_move::p08_gather::returned: false,
+  gather_one_move::p08_gather::seq: 3,
+  gather_one_move::p08_gather::tBack: 0,
+  gather_one_move::p08_gather::tDel: 2,
+  gather_one_move::p08_gather::tMove2: 0
+}
+
+[ok] No violation found (398ms at 251256 traces/second).
+Trace length statistics: max=9, min=9, average=9.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xe86f521b20a49d04 --backend=rust to reproduce.

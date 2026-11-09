@@ -1,0 +1,68 @@
+quint run --backend=rust --main=rev_jump_big --invariant=inv_wait_le_skew --max-steps=12 --max-samples=100000 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "init",
+  rev_jump_big::p08_clock_rev::real: 1000,
+  rev_jump_big::p08_clock_rev::rev: 1061,
+  rev_jump_big::p08_clock_rev::waitStart: 0,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 1]
+{
+  rev_jump_big::p08_clock_rev::off: 600,
+  rev_jump_big::p08_clock_rev::phase: "jumped",
+  rev_jump_big::p08_clock_rev::real: 1000,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 0,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 2]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "waiting_corrected",
+  rev_jump_big::p08_clock_rev::real: 1000,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1000,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 3]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "waiting_corrected",
+  rev_jump_big::p08_clock_rev::real: 1600,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1000,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 4]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "waiting_corrected",
+  rev_jump_big::p08_clock_rev::real: 1601,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1000,
+  rev_jump_big::p08_clock_rev::waited: 0
+}
+
+[State 5]
+{
+  rev_jump_big::p08_clock_rev::off: 0,
+  rev_jump_big::p08_clock_rev::phase: "done",
+  rev_jump_big::p08_clock_rev::real: 1601,
+  rev_jump_big::p08_clock_rev::rev: 1600,
+  rev_jump_big::p08_clock_rev::waitStart: 1000,
+  rev_jump_big::p08_clock_rev::waited: 601
+}
+
+[violation] Found an issue (53ms at 4604 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x83113a777e29a068 --backend=rust to reproduce.
+error: Invariant violated

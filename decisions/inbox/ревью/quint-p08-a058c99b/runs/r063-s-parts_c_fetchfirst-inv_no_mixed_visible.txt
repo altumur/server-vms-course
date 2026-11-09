@@ -1,0 +1,279 @@
+quint run --backend=rust --main=parts_c_fetchfirst --invariant=inv_no_mixed_visible --max-steps=14 --max-samples=100000 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "head",
+  parts_c_fetchfirst::p08_parts::seq: 1,
+  parts_c_fetchfirst::p08_parts::t: 0,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "head",
+  parts_c_fetchfirst::p08_parts::seq: 1,
+  parts_c_fetchfirst::p08_parts::t: 0,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 1,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 2,
+  parts_c_fetchfirst::p08_parts::t: 0,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 3,
+  parts_c_fetchfirst::p08_parts::t: 20,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 4]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 3,
+  parts_c_fetchfirst::p08_parts::t: 20,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 5]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 2,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 3,
+  parts_c_fetchfirst::p08_parts::t: 20,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 6]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 4,
+  parts_c_fetchfirst::p08_parts::t: 40,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 0,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 7]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 8]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 9]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 10]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 11]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 0,
+  parts_c_fetchfirst::p08_parts::answered: false,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "fetch",
+  parts_c_fetchfirst::p08_parts::seq: 5,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 0,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 12]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 60,
+  parts_c_fetchfirst::p08_parts::answered: true,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "aborted",
+  parts_c_fetchfirst::p08_parts::seq: 6,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 5,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 13]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 60,
+  parts_c_fetchfirst::p08_parts::answered: true,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "aborted",
+  parts_c_fetchfirst::p08_parts::seq: 6,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 5,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[State 14]
+{
+  parts_c_fetchfirst::p08_parts::answerAt: 60,
+  parts_c_fetchfirst::p08_parts::answered: true,
+  parts_c_fetchfirst::p08_parts::claimedIncomplete: false,
+  parts_c_fetchfirst::p08_parts::got: Set(1, 2),
+  parts_c_fetchfirst::p08_parts::holderServes: true,
+  parts_c_fetchfirst::p08_parts::mixedVisible: false,
+  parts_c_fetchfirst::p08_parts::nextPart: 3,
+  parts_c_fetchfirst::p08_parts::phase: "aborted",
+  parts_c_fetchfirst::p08_parts::seq: 6,
+  parts_c_fetchfirst::p08_parts::t: 60,
+  parts_c_fetchfirst::p08_parts::tAbort: 5,
+  parts_c_fetchfirst::p08_parts::tBad: 4,
+  parts_c_fetchfirst::p08_parts::tMix: 0,
+  parts_c_fetchfirst::p08_parts::written: Set()
+}
+
+[ok] No violation found (1620ms at 61728 traces/second).
+Trace length statistics: max=15, min=15, average=15.00
+You may increase --max-samples and --max-steps.
+Use --verbosity to produce more (or less) output.
+Use --seed=0xdfefde0c59f6d814 --backend=rust to reproduce.

@@ -1,0 +1,98 @@
+quint run --backend=rust --main=parts_incremental_abort --invariant=inv_no_mixed_visible --max-steps=14 --max-samples=100000 p08_parts.qnt
+
+An example execution:
+
+[State 0]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "head",
+  parts_incremental_abort::p08_parts::seq: 1,
+  parts_incremental_abort::p08_parts::t: 0,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 0,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 1]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "fetch",
+  parts_incremental_abort::p08_parts::seq: 2,
+  parts_incremental_abort::p08_parts::t: 0,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 0,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 2]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 1,
+  parts_incremental_abort::p08_parts::phase: "fetch",
+  parts_incremental_abort::p08_parts::seq: 3,
+  parts_incremental_abort::p08_parts::t: 20,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 2,
+  parts_incremental_abort::p08_parts::tMix: 0,
+  parts_incremental_abort::p08_parts::written: Set()
+}
+
+[State 3]
+{
+  parts_incremental_abort::p08_parts::answerAt: 0,
+  parts_incremental_abort::p08_parts::answered: false,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: false,
+  parts_incremental_abort::p08_parts::nextPart: 2,
+  parts_incremental_abort::p08_parts::phase: "fetch",
+  parts_incremental_abort::p08_parts::seq: 4,
+  parts_incremental_abort::p08_parts::t: 40,
+  parts_incremental_abort::p08_parts::tAbort: 0,
+  parts_incremental_abort::p08_parts::tBad: 2,
+  parts_incremental_abort::p08_parts::tMix: 3,
+  parts_incremental_abort::p08_parts::written: Set(1)
+}
+
+[State 4]
+{
+  parts_incremental_abort::p08_parts::answerAt: 40,
+  parts_incremental_abort::p08_parts::answered: true,
+  parts_incremental_abort::p08_parts::claimedIncomplete: false,
+  parts_incremental_abort::p08_parts::got: Set(),
+  parts_incremental_abort::p08_parts::holderServes: true,
+  parts_incremental_abort::p08_parts::mixedVisible: true,
+  parts_incremental_abort::p08_parts::nextPart: 2,
+  parts_incremental_abort::p08_parts::phase: "aborted",
+  parts_incremental_abort::p08_parts::seq: 5,
+  parts_incremental_abort::p08_parts::t: 40,
+  parts_incremental_abort::p08_parts::tAbort: 4,
+  parts_incremental_abort::p08_parts::tBad: 2,
+  parts_incremental_abort::p08_parts::tMix: 3,
+  parts_incremental_abort::p08_parts::written: Set(1)
+}
+
+[violation] Found an issue (135ms at 852 traces/second).
+Use --verbosity=3 to show executions.
+Use --seed=0x1a3fe6a33bab9d6b --backend=rust to reproduce.
+error: Invariant violated

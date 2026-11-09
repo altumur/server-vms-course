@@ -1,0 +1,66 @@
+quint verify --server-endpoint=localhost:18826 --main=rev_nojump --invariant=wit_waited_tight --max-steps=12 p08_clock.qnt
+
+An example execution:
+
+[State 0]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "init",
+  rev_nojump::p08_clock_rev::real: 1000,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 0,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 1]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1000,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 2]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1060,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 3]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1061,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 4]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "waiting",
+  rev_nojump::p08_clock_rev::real: 1062,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 0
+}
+
+[State 5]
+{
+  rev_nojump::p08_clock_rev::off: 0,
+  rev_nojump::p08_clock_rev::phase: "done",
+  rev_nojump::p08_clock_rev::real: 1062,
+  rev_nojump::p08_clock_rev::rev: 1061,
+  rev_nojump::p08_clock_rev::waitStart: 1000,
+  rev_nojump::p08_clock_rev::waited: 62
+}
+
+[violation] Found an issue (181ms).
+error: found a counterexample

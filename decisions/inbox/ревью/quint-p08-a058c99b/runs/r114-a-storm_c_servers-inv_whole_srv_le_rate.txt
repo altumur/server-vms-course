@@ -1,0 +1,5 @@
+quint verify --server-endpoint=localhost:18826 --main=storm_c_servers --invariant=inv_whole_srv_le_rate --max-steps=10 p08_storm.qnt
+
+[ok] No violation found (566ms).
+You may increase --max-steps.
+Use --verbosity to produce more (or less) output.
