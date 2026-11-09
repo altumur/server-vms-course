@@ -10382,6 +10382,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06-console.README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06-console.README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -10477,9 +10482,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/spec/06-console.README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/06-console/spec/06-console.README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root accepted P01.10.5.8 R2/9d6 exact clean whole public owner instruction/port ABI; case associations faithfully retained only in J companions. No CALL/runtime qualification inferred."
     },
     {
       "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
@@ -11777,9 +11787,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/08-domain/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root accepted P01.10.5.8 R2/9d6 exact clean whole public owner instruction/port ABI; case associations faithfully retained only in J companions. No CALL/runtime qualification inferred."
     },
     {
       "path": "Platform/08-domain/forms/daemon-flags.tsv",
@@ -11880,6 +11895,11 @@
       "path": "Platform/08-domain/ru/acceptance/9/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
     },
     {
       "path": "Platform/08-domain/ru/forms/README.md",
@@ -12542,9 +12562,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/09-agent/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/09-agent/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root accepted P01.10.5.8 R2/9d6 exact clean whole public owner instruction/port ABI; case associations faithfully retained only in J companions. No CALL/runtime qualification inferred."
     },
     {
       "path": "Platform/09-agent/forms/daemon-flags.tsv",
@@ -12595,6 +12620,11 @@
       "path": "Platform/09-agent/ru/acceptance/2/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/09-agent/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
     },
     {
       "path": "Platform/09-agent/ru/forms/README.md",
@@ -12682,9 +12712,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/10-domain-console/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root accepted P01.10.5.8 R2/9d6 exact clean whole public owner instruction/port ABI; case associations faithfully retained only in J companions. No CALL/runtime qualification inferred."
     },
     {
       "path": "Platform/10-domain-console/forms/daemon-flags.tsv",
@@ -12732,6 +12767,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/10-domain-console/ru/forms/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -12740,6 +12780,11 @@
       "path": "Platform/10-domain-console/ru/lifecycle.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
     },
     {
       "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.md",
@@ -12757,9 +12802,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/spec/10-domain-console.README.cases.md",
+      "disposition": "judge_only",
+      "basis": "New exact committed case companion under Architect *.cases.* rule, expanded to this named path; ordinary bytes stay J only."
+    },
+    {
       "path": "Platform/10-domain-console/spec/10-domain-console.README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root accepted P01.10.5.8 R2/9d6 exact clean whole public owner instruction/port ABI; case associations faithfully retained only in J companions. No CALL/runtime qualification inferred."
     },
     {
       "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",

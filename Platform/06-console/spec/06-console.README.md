@@ -157,15 +157,11 @@ This is a suggested order, not a mandatory structure of the code.
    of the index.
 5. Implement the tables as a full replacement by the manifest with CAS; `Idempotency-Key` is optional, with it — the replay memory of N3. Do not output secrets;
    a spoiled row differs from a read failure (N1.6, N2).
-6. Prepare the instances by the acceptance README. Scenarios 01–14: `testsub` is loaded, its data and claim memory are empty,
-   the background writers are stopped, the caller has the needed rights; 03 and 14 — each on its own clean instance, the other
-   12 — in the order of the file on one. The scenarios are linked: 04 and 11 use `c2` created by scenario 02; this
-   instance must not be reset between them (review analysis of stage A 3–5, № 10). Scenarios 15–20: a fresh stand for each — the build schema
-   1, the body 1 MiB, testsub/testsub2, c1 only in 15/16/18; in 20 the runner puts the order and state rows bypassing the writer. Then separate probes of the maintenance window and of the full answer; the copy
+6. Prepare the instances by the acceptance README. Then separate probes of the maintenance window and of the full answer; the copy
    of the body at the resource and its refusals — [the instructions of P/05](../../05-resource/spec/05-resource.README.md).
 7. Check N2 separately from the partial expectations of the TSV: the mandatory fields and types of the full answers, the masks,
    `worker: null` on creation, the same full answer on a POST retry, the form of the deletion and of the refusals.
-   The values `a/b` and `..`, inadmissible for any unit.id, are rejected by the schema; the chosen kind of id is checked separately.
+   Values inadmissible for any unit.id are rejected by the schema; the chosen kind of id is checked separately.
    GET/DELETE do not return the fault of the write field check: their 400 contains only detail and error.
    Errors that the table checks only by code do not exempt from checking the body by the contract.
    A body below the HTTP limit can exceed the row ceiling: 413 row too large is kept as the POST answer,
