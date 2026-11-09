@@ -4,8 +4,6 @@ This English text is the source; the Russian translation `ru/acceptance/5/README
 
 Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
-
 The norm of the chapter is [`06.5-console.norms.md`](../../spec/06.5-console.norms.md) N5. The scenarios were moved from the acceptance of
 M10/09 (01, 02, 04–12; 03 — the session — into
 [the acceptance of chapter 6.3](../3/README.md)) and of M10/11
@@ -16,43 +14,25 @@ the former ones (sc. 08 and 19 — the first step `@start resource`: the console
 by the scenarios of M10/09. In total 33 scenarios / 327 steps: 13 — sc. 33 (a write only by the ticket writes_via, ADR-0119 addendum (10)), 13 — sc. 32 (a pass of the second kind without a worker, ADR-0094 B1), 9 — sc. 31 (the feed series, ADR-0094 B2), 14 — sc. 30 (the counter door, ADR-0094 B4), 15 — sc. 29 (the counter of the batch door, ADR-0094 B9), 72 — sc. 26–28 (static files and the shell of a mounted subsystem, ADR-0094 B7), 23 — sc. 24–25 (the second pass of the coverage audit of P/06, Gemini), 30 — sc. 20–23 (the coverage audit of P/06), 8 — sc. 19 `19-place-held-no-row` (C06-WHERE-PLACE-SERVER-33-01), 5 — sc. 18 `18-id-default` (`{id}` in the default, VMS request № 1), 85 in the scenarios of M10/09 (the steps 04/8 and 12/12–13 were added — analysis of the review of stage B 6–7, № 19,
 № 20), 23 from M10/11, 14 from M10/10.
 
-<!-- original-mixed-case-paragraph -->
-
 Doors: without a prefix — the console (scenarios 01–12, as in M10/09), `console` and `console2` (scenarios 13–16, as in M10/11; 03 and 17, as in M10/10), `resource` (03, 17),
-
-<!-- original-mixed-case-paragraph -->
 
 ## Stand of sc. 01, 02, 04–12 (from M10/09), 18–33
 
-<!-- original-mixed-case-paragraph -->
-
 Before each automatic scenario stop the processes of the previous one, create separate empty row/object stores and clear the variables/replay memory. Load the unchanged testsub and testsub2 and the third manifest of this directory `probe-x.subsystem.yaml` (a name with «-»: `metrics.prefix` is `probe_x`, mutation check 7cecaf2 № 40) and the fourth `probe-w.subsystem.yaml` (the word `writes_via`, sc. 33); root is testsub, the second is available under /testsub2, the third under /probe-x, the fourth under /probe-w; there is no domain, requests come from the loopback. The background controller/resource/worker do not work before @start. The build is schema 1; the store is fresh and empty — there is no row platform/schema, the runner does not write it (reading of the commits «cammeta-acceptance» 2026-10-20). For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for the replays of the same step. A table POST does not get a promise of replay memory from this.
-
-<!-- original-mixed-case-paragraph -->
 
 Without workers there is no placement; the counter c4 is created only in 04. The domain login, closed grants, CSP and a repeat of a logical action are checked by a separate stand/module test, not by this TSV.
 
-<!-- original-mixed-case-paragraph -->
-
 Scenario 01 compares the published page/module bytes with the P/07 canon: [console.html](../../../07-console-module/module/console.html), [console.js](../../../07-console-module/module/console.js) and [console.css](../../../07-console-module/module/console.css). Publication remains synchronous at the existing paths with `?v=1`; the existing refusal of `?v=2` stays unchanged. These file comparisons prove byte publication, not UI-language or date-format behaviour, which is checked independently by the module owner. The subsystem static-file inputs of scenarios 26–28 remain separate and unchanged.
-
-<!-- original-mixed-case-paragraph -->
 
 - **Processes.** Sc. 08–10 bring up processes by the directives of the «Stand» (`@start worker`, `@start resource`,
   `@start controller testsub2`); before `@start` there are no background processes. The worker is `w-1` of the subsystem `testsub` on `srv-a`.
-
-<!-- original-mixed-case-paragraph -->
 
 - **The store door.** Sc. 07 writes an intent row bypassing the controller: `@as testsubcontroller store` — the role socket of the
   controller `testsub` by the installation rights file (P/02.5). There is no controller `testsub` in sc. 07, nobody will
   rewrite the row.
 
-<!-- original-mixed-case-paragraph -->
-
 - **Spoiling a heartbeat.** Sc. 08 spoils the heartbeat by the directive `@spoil object`: after it the heartbeat is unreadable (P/05 N1.1). The worker is
   killed before that (`@sigkill`): its heartbeat remains an object and is no longer written.
-
-<!-- original-mixed-case-paragraph -->
 
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
   `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Manifests»).
@@ -67,20 +47,12 @@ Scenario 01 compares the published page/module bytes with the P/07 canon: [conso
   `data.json` it deletes; `@restart console` — because the console is entitled to keep the checked bytes in memory (N2). The restart does not refuse:
   a file without bytes is an outcome of the door, not of the start.
 
-<!-- original-mixed-case-paragraph -->
-
   exactly this set of labels, if named) and the value, if named; several — through « ~» (sc. 05 step 6, sc. 10
   step 3); not a substring: `fake_counter_age` does not satisfy `~counter_age`, a repeat of a series or a line not by the series form —
 
-<!-- original-mixed-case-paragraph -->
-
 - **Feed series.** Sc. 31 runs on its own new instance of the console and the store: the counters `w2c_changes_*` count from the start, and the values 0 and 1 are correct only there.
 
-<!-- original-mixed-case-paragraph -->
-
 ### Inputs `inputs/` (sc. 05, 11, 12, 21, 25)
-
-<!-- original-mixed-case-paragraph -->
 
 | File | Key | What is in it |
 |---|---|---|
@@ -106,21 +78,13 @@ through the objects door (`@until 20`, `@time` — the dictionary of the «Stand
 of the console (`@as console store`).
 
 
-<!-- original-mixed-case-paragraph -->
-
 ## Stand of sc. 13–16 (from M10/11)
-
-<!-- original-mixed-case-paragraph -->
 
 - **Time in a row (sc. 13).** The rule of N0 P/01.1 «Time in a row» (the Architect's decision of 2026-10-18), the reader side:
   the same course as sc. 16, but the door row is written with `at` with 6 fraction digits (`901.123456`, `906.654321`) — a write of a form
   that the reader accepts and the writer does not write; the outcome is the same.
 
 
-<!-- original-mixed-case-paragraph -->
-
 R36-08: a stable active intent directs u to w-2 with placement=w-1 or with its absence — /where uses w-2; target="" gives 404 with the reason intent. A foreign id/idle use placement. A change of the intent version requires repeating the read, a non-answer of any mandatory read — 503. The heartbeat is read after the effective decision; the absence of a door does not turn into null. Scenario 04 checks only the absence of a placement, active/interleavings are not executed in the current TSV.
-
-<!-- original-mixed-case-paragraph -->
 
 Run 36 (Kimi): check both outcomes of the absence of v and the mounted /servers, /unplaceable, /where, /metrics and the page. For where(table,place): an unknown table 404 before unit; then the form/view, a confirmed hold and the heartbeat, a read error 503, the absence of a hold 404 with X-Unreachable. door is optional and appears only with a confirmed addressee/holder/signer; the issue is journaled. Sc.04/6 sees empty resources and does not check the fields of ResourceRow. (The loopback, trust, Origin and the emergency login — [the acceptance of chapter 6.3](../3/README.md).)

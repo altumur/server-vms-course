@@ -4,8 +4,6 @@ This English text is the source; the Russian translation `ru/vectors/view/README
 
 Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
-
 The expectations depend on the bytes of the catalog manifests (the review analysis of stage A 8–10, № 37): `domain.ref`, `domain.view`, `unit.rows` and
 `unit.id` of the manifests `testsub` and `testsub2` from the specification data:
 

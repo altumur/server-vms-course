@@ -4,8 +4,6 @@ This English text is the source; the Russian translation `ru/acceptance/3/README
 
 Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
-
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) N5. The scenarios were moved (stage B, ADR-0083 addendum (1): without
 a change of behaviour) from the acceptances of M11/03 (01, 02, 03, 05, 14), M11/04 (01 → 15, 05 → 16), M11/08 (04) and M11/12 (02 → 17);
 the numbers, the names and the steps are the former ones, except `15-topology` (in M11/04 — `01-topology`), `16-second-road` (in M11/04 —
@@ -15,8 +13,6 @@ scenarios of M11/03 (the rule — the plan of the move of lesson 8, § 3; the Ar
 5 — sc. 19 `19-members-source` (a door of lesson P/10, C10-MEMBERS-SCENARIO-01), 20 — sc. 20–22 (the coverage audit of P/08,
 the view fields of chapter 8.1 and a mark beyond the limit of `rev`), 25 — sc. 23–26 (the coverage audit of P/08, the second pass of Gemini), 31 — sc. 27 (ADR-0094 B3, B4).
 
-<!-- original-mixed-case-paragraph -->
-
 The command scenarios of M11/03 sc. 10–13 (`agent-sig`, `seal-member`, `seal-member-round`, `accept`) and M11/04 sc. 06 (`accept` with
 a road) are not moved: the same cases without a change of bytes are the vectors of the common contracts
 [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
@@ -24,11 +20,7 @@ a road) are not moved: the same cases without a change of bytes are the vectors 
 `corrections-3.tsv` (historical correction record)). The other scenarios of M11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); M11/04 sc. 02–04 —
 [chapter 9.2](../../../09-agent/acceptance/2/README.md), M11/08 — [chapter 6.7](../../../06-console/acceptance/7/README.md) (01–03), [lesson P/10](../../../10-domain-console/acceptance/README.md) (05), the vectors `peer` (06), M11/12 — chapters 8.10 and [9.1](../../../09-agent/acceptance/1/README.md).
 
-<!-- original-mixed-case-paragraph -->
-
 **Scenarios 15, 16** (from the acceptance README of M11/04), **21 and 25**: there are four clusters — `hold`, `m1`, `m2`, `relay`. The agent `relay` always
-
-<!-- original-mixed-case-paragraph -->
 
 **Scenario 04** (from the acceptance README of M11/08): the agent `m1` is given the TLS directory `inputs/kit-m1-one/` (only `ca.pem`
 of the centre A), then `inputs/kit-m1-two/` (`ca.pem` A and `ca.next.pem` B), then the variable is removed (`@env m1
@@ -38,8 +30,6 @@ files: A — `d72f9e5e…68a6`, B — `6fefd57b…e217`. Step 4 — the row `dom
 3 already sees the fingerprint), step 18 — the removal by the administrator deleted it. Steps 10–11 check that an edit by the administrator without
 a change of the centres at the member is rewritten by its next report. Steps 14–16 — two agent passes (`REPORT_EVERY` 5 s) without
 `tls_ca`: the fingerprints are not removed. How the runner passes the environment and restarts the console and the agent of the cluster with the variable
-
-<!-- original-mixed-case-paragraph -->
 
 ## Inputs `inputs/`
 
@@ -57,11 +47,7 @@ The inputs were moved byte for byte from `inputs/` of the acceptances of M11/03 
 the description is up to the Architect, the skill `lesson-spec`).
 
 
-<!-- original-mixed-case-paragraph -->
-
 the agent; `$kr` (sc. 20) is the `rev` of the set from `trust` of the view; `$k` (sc. 29) is the private key of the batch from the answer of `POST /domain/batches`, the runner gives it to the command `join` by the directive `@join m2 batch=b1 $k`. In total 21 scenarios / 218 steps.
-
-<!-- original-mixed-case-paragraph -->
 
 Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `BACKUP_EVERY`): the member `m1` is a keeper, and
 `domain/backup-taken` in its report gives its own generation at any moment of the run. Therefore step 5 waits at `m1` for the object itself
@@ -69,7 +55,5 @@ Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `
 (two agent passes: one change may belong to a round that was in flight), and only step 10 takes the last generation: in
 it the snapshot is there for any number of generations between them (a generation carries all objects of the member, N1.3).
 
-
-<!-- original-mixed-case-paragraph -->
 
 of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2](../../../09-agent/acceptance/2/README.md).

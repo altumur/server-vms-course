@@ -4,8 +4,6 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
 
-<!-- original-mixed-case-paragraph -->
-
 [the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). The scenarios were moved (stage B, ADR-0083
 addendum (1): without a change of behaviour) from the acceptances of M11/05 (04 → 13), M11/06 (04, 07, 08), M11/10 (11), M11/11 (05, 06 → 14) and
 M11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in M11/05 — `04-slot-liveness`) and
@@ -16,8 +14,6 @@ M11/05, 26 from M11/06, 20 from M11/10, 11 from M11/11, 40 from M11/12, 2 — sc
 35 — sc. 16–19 of the coverage audit of P/09 (audit-kimi aee4369fb, drafts J01–J04); 72 — sc. 20–25 of its second pass (Gemini,
 cc36de538, drafts G03, G04; below); 21 — sc. 27 `roles-copy` (ADR-0098 §4).
 
-<!-- original-mixed-case-paragraph -->
-
 The other scenarios of the sources are at the chapters of their outcome (ADR-0083 addendum (13); the appendix of the plan of the move of lesson 8): M11/05
 sc. 01, 03, 05 — [chapter 8.5](../../../08-domain/acceptance/5/README.md), 02 — [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (13); M11/06 sc. 01, 02,
 03, 05, 09 — [chapter 8.6](../../../08-domain/acceptance/6/README.md), 06 — [chapter 8.1](../../../08-domain/acceptance/1/README.md)
@@ -26,8 +22,6 @@ sc. 01, 03, 05 — [chapter 8.5](../../../08-domain/acceptance/5/README.md), 02 
 02 — [the acceptance of lesson P/10](../../../10-domain-console/acceptance/README.md), 04 — the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — the vectors [`resolve`](../../../06-console/vectors/resolve/README.md); M11/12 sc. 02 — [chapter 8.3](../../../08-domain/acceptance/3/README.md) (sc. 17), 04,
 05 — [chapter 8.10](../../../08-domain/acceptance/10/README.md). The agent side in the scenarios of other chapters — the list
 «Neighbours on the stand» of the norm of the chapter, N5.
-
-<!-- original-mixed-case-paragraph -->
 
 The differences by scenario (from the READMEs of the source acceptances):
 
@@ -54,8 +48,6 @@ Sc. 20–25 (`audit-coverage-gemini` cc36de538, drafts G03, G04) — the same st
 `token` and the directives `@domain`, `@join`, `@stop`/`@start agent`, `@on` (`@put object`) — the dictionary of the «Domain stand». The rows
 bypassing the writer are put by the store door of the member through `admin.sock`, as in sc. 03 and 18.
 
-<!-- original-mixed-case-paragraph -->
-
 ## Inputs `inputs/`
 
 | File | Scenario | What is in it |
@@ -67,15 +59,9 @@ bypassing the writer are put by the store door of the member through `admin.sock
 «Inputs and form»); `backup-foreign-term.json` — the coverage audit of P/09 (draft J04), the bytes of the draft.
 
 
-<!-- original-mixed-case-paragraph -->
-
 The three positive vectors must reach the actual copy write.
-
-<!-- original-mixed-case-paragraph -->
 
 and marker to stay unchanged and zero copy writes and related edits. The five cases cover as_of in the digest, JCS
 instead of wire formatting, a refused digest of doc alone and a refused mismatching whole-body digest.
-
-<!-- original-mixed-case-paragraph -->
 
 The owner wire body contains raw KV strings doc and as_of. Only the outer JSON is canonicalized for the digest; the internal doc text is not normalized first. The inner-text neighbor has equal decoded inner objects but different strings and digests, and observes the exact successful copy_items. The trusted advertised as_of, received_at and domain_age retain their existing numeric types. Existing refusal cases preserve the complete initial raw copy, index and the rebaselined current-wire marker. No case reports actual IO success before its adapter is run.
