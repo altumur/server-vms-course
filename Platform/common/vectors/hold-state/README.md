@@ -18,8 +18,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `heartbeat` | the heartbeat of the worker `by` (`{worker, instance}`) or `null` — there is no heartbeat |
 | `heartbeat_age` | the age of the observed version of the heartbeat, seconds |
 
-**Output** — `{"active": true | false}`. 10 rows: the age 0, 49.999, 50; the heartbeat 45 and 45.001; another instance; `released`; an empty
-`holder`; no heartbeat; no row.
+**Output** — `{"active": true | false}`.
 
 ## Run
 

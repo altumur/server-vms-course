@@ -8,8 +8,8 @@
     },
     {
       "path": "Platform/01-store/acceptance/1/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
@@ -23,8 +23,8 @@
     },
     {
       "path": "Platform/01-store/acceptance/2/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
@@ -63,8 +63,8 @@
     },
     {
       "path": "Platform/01-store/acceptance/3/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
@@ -453,8 +453,8 @@
     },
     {
       "path": "Platform/01-store/vectors/rights-evaluator/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
@@ -474,7 +474,7 @@
     {
       "path": "Platform/02-installer/acceptance/1/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/02-installer/acceptance/1/cases/a103_calls_book_deep.subsystem.yaml",
@@ -5939,7 +5939,7 @@
     {
       "path": "Platform/02-installer/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/acceptance/2/puts-ceiling.tsv",
@@ -5984,7 +5984,7 @@
     {
       "path": "Platform/02-installer/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/acceptance/3/puts.tsv",
@@ -6414,7 +6414,7 @@
     {
       "path": "Platform/02-installer/acceptance/4/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/acceptance/4/inputs/seam-bad.subsystem.yaml",
@@ -6434,7 +6434,7 @@
     {
       "path": "Platform/02-installer/acceptance/5/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/acceptance/5/scenarios.tsv",
@@ -6804,7 +6804,7 @@
     {
       "path": "Platform/02-installer/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/forms/daemon-flags.tsv",
@@ -7094,7 +7094,7 @@
     {
       "path": "Platform/02-installer/spec/02.3-installer.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Proposed whole public canonical normative/dependency document, not a case fixture; no generic ABI is dropped."
+      "basis": "P01.10.7.2 finite-role review proposal: ROOT_NORMATIVE_EXAMPLE_CLASSIFICATION_REQUIRED_NOT_CONFIRMED_CASE_DEFECT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/02-installer/spec/02.4-installer.norms.md",
@@ -8299,7 +8299,7 @@
     {
       "path": "Platform/02-installer/vectors/install-order/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_AFTER_CURRENT_PUBLIC_NATIVE_PROTOCOL_MATERIALIZED. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/02-installer/vectors/install-order/cases.tsv",
@@ -8344,7 +8344,7 @@
     {
       "path": "Platform/03-worker/acceptance/2/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/03-worker/acceptance/2/scenarios.tsv",
@@ -8364,7 +8364,7 @@
     {
       "path": "Platform/03-worker/acceptance/3/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/03-worker/acceptance/3/scenarios.tsv",
@@ -8384,7 +8384,7 @@
     {
       "path": "Platform/03-worker/acceptance/4/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/03-worker/acceptance/4/scenarios.tsv",
@@ -8399,7 +8399,7 @@
     {
       "path": "Platform/03-worker/acceptance/5/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/03-worker/acceptance/5/seams.tsv",
@@ -8409,7 +8409,7 @@
     {
       "path": "Platform/03-worker/acceptance/6/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/03-worker/acceptance/6/scenarios.tsv",
@@ -8544,7 +8544,7 @@
     {
       "path": "Platform/03-worker/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011057. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/03-worker/forms/contender-writer.machine.yaml",
@@ -8774,7 +8774,7 @@
     {
       "path": "Platform/03-worker/spec/03.2-worker.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Proposed whole public canonical normative/dependency document, not a case fixture; no generic ABI is dropped."
+      "basis": "P01.10.7.2 finite-role review proposal: ROOT_NORMATIVE_EXAMPLE_CLASSIFICATION_REQUIRED_NOT_CONFIRMED_CASE_DEFECT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/03-worker/spec/03.3-worker.n5.cases.md",
@@ -8834,7 +8834,7 @@
     {
       "path": "Platform/04-controller/acceptance/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/04-controller/acceptance/scenarios.tsv",
@@ -9018,8 +9018,8 @@
     },
     {
       "path": "Platform/04-controller/forms/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/04-controller/forms/daemon-flags.tsv",
@@ -9219,7 +9219,7 @@
     {
       "path": "Platform/05-resource/acceptance/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/05-resource/acceptance/inputs/gone-foo.json",
@@ -9428,8 +9428,8 @@
     },
     {
       "path": "Platform/05-resource/forms/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/05-resource/forms/daemon-flags.tsv",
@@ -10224,7 +10224,7 @@
     {
       "path": "Platform/06-console/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "Owned faithful README/case split now published; generic carrier remains public. Exact current Source role requires Root confirmation."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/06-console/forms/daemon-flags.tsv",
@@ -10478,8 +10478,8 @@
     },
     {
       "path": "Platform/06-console/spec/06-console.README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/06-console/spec/06-console.api.openapi.yaml",
@@ -11778,8 +11778,8 @@
     },
     {
       "path": "Platform/08-domain/forms/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/08-domain/forms/daemon-flags.tsv",
@@ -12543,8 +12543,8 @@
     },
     {
       "path": "Platform/09-agent/forms/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/09-agent/forms/daemon-flags.tsv",
@@ -12683,8 +12683,8 @@
     },
     {
       "path": "Platform/10-domain-console/forms/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/10-domain-console/forms/daemon-flags.tsv",
@@ -12758,8 +12758,8 @@
     },
     {
       "path": "Platform/10-domain-console/spec/10-domain-console.README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: M_BLOCKED_EXISTING_P011058. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml",
@@ -12818,8 +12818,8 @@
     },
     {
       "path": "Platform/common/acceptance/ops/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/acceptance/ops/probe-op.subsystem.yaml",
@@ -12838,8 +12838,8 @@
     },
     {
       "path": "Platform/common/acceptance/pass/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/acceptance/pass/probe-f.subsystem.yaml",
@@ -12863,18 +12863,18 @@
     },
     {
       "path": "Platform/common/acceptance/runner-targets.README.md",
-      "disposition": "model_and_judge",
-      "basis": "Exact Root-selected public target/stand carrier from accepted79063c1; preserve statedSource246/Readerc9 scope and Missing qualification; no case inventory."
+      "disposition": "judge_only",
+      "basis": "Root withdrew whole-M admission after P01.34 S4: frozen target table/companion retain Reader-code anchors and provenance; safe public projection pending, no current model exposure."
     },
     {
       "path": "Platform/common/acceptance/runner-targets.tsv",
-      "disposition": "model_and_judge",
-      "basis": "Exact Root-selected public target/stand carrier from accepted79063c1; preserve statedSource246/Readerc9 scope and Missing qualification; no case inventory."
+      "disposition": "judge_only",
+      "basis": "Root withdrew whole-M admission after P01.34 S4: frozen target table/companion retain Reader-code anchors and provenance; safe public projection pending, no current model exposure."
     },
     {
       "path": "Platform/common/acceptance/system/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/acceptance/system/inputs/cluster.json",
@@ -12888,8 +12888,8 @@
     },
     {
       "path": "Platform/common/acceptance/tls/README.md",
-      "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "disposition": "model_and_judge",
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/acceptance/tls/stand.json",
@@ -13487,6 +13487,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/alarm-history/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/alarm-history/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -13547,6 +13552,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/family-read/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/family-read/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -13567,14 +13577,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/heartbeat-read/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/heartbeat-read/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/hold-state/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/hold-state/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/holds/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/holds/README.md",
@@ -13607,9 +13632,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/log-mask/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/log-mask/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/loopback/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/loopback/README.md",
@@ -13625,6 +13660,11 @@
       "path": "Platform/common/ru/vectors/object-client/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/password-hash/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/password-hash/README.md",
@@ -13657,6 +13697,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/resource-state/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/resource-state/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -13672,9 +13717,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/said-id/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/said-id/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/schema/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/schema/README.md",
@@ -13692,9 +13747,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/slot-name/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/ru/vectors/slot-name/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/slot/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/slot/README.md",
@@ -13705,6 +13770,11 @@
       "path": "Platform/common/ru/vectors/store-client/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/tombstone/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/tombstone/README.md",
@@ -13720,6 +13790,11 @@
       "path": "Platform/common/ru/vectors/turn/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/values-by-type/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
     },
     {
       "path": "Platform/common/ru/vectors/values-by-type/README.md",
@@ -13754,7 +13829,7 @@
     {
       "path": "Platform/common/vectors/accept/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/accept/cases.tsv",
@@ -13764,7 +13839,7 @@
     {
       "path": "Platform/common/vectors/agent-sig/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/agent-sig/batch-knock.tsv",
@@ -13777,9 +13852,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/alarm-history/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/alarm-history/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/alarm-history/cases.tsv",
@@ -13789,7 +13869,7 @@
     {
       "path": "Platform/common/vectors/ask-sig/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/ask-sig/cases.tsv",
@@ -13804,7 +13884,7 @@
     {
       "path": "Platform/common/vectors/contender-fresh/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/contender-fresh/fresh.tsv",
@@ -13814,7 +13894,7 @@
     {
       "path": "Platform/common/vectors/crl/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/crl/cases.tsv",
@@ -13824,7 +13904,7 @@
     {
       "path": "Platform/common/vectors/deadline/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/deadline/cases.tsv",
@@ -13844,7 +13924,7 @@
     {
       "path": "Platform/common/vectors/domain-envelopes/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/domain-envelopes/m1-open.tsv",
@@ -13869,7 +13949,7 @@
     {
       "path": "Platform/common/vectors/domain-founding/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/domain-founding/book-seal.tsv",
@@ -13889,7 +13969,7 @@
     {
       "path": "Platform/common/vectors/domain-token/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/domain-token/cases.tsv",
@@ -13899,7 +13979,7 @@
     {
       "path": "Platform/common/vectors/door-token/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/door-token/issue.tsv",
@@ -13987,9 +14067,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/family-read/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/family-read/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/fault/README.md",
@@ -14022,9 +14107,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/heartbeat-read/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/heartbeat-read/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/heartbeat-read/cases.tsv",
@@ -14037,9 +14127,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/hold-state/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/hold-state/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/hold-state/cases.tsv",
@@ -14047,9 +14142,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/holds/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/holds/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/holds/cases.tsv",
@@ -14109,7 +14209,7 @@
     {
       "path": "Platform/common/vectors/keys/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/keys/cases.tsv",
@@ -14132,9 +14232,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/log-mask/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/log-mask/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/log-mask/cases.tsv",
@@ -14147,9 +14252,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/loopback/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/loopback/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/loopback/cases.tsv",
@@ -14187,9 +14297,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/password-hash/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/password-hash/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/password-hash/cases.tsv",
@@ -14199,7 +14314,7 @@
     {
       "path": "Platform/common/vectors/peer/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/peer/cases.tsv",
@@ -14209,7 +14324,7 @@
     {
       "path": "Platform/common/vectors/pool/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/pool/cases.tsv",
@@ -14219,7 +14334,7 @@
     {
       "path": "Platform/common/vectors/presence-room/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/presence-room/cases.tsv",
@@ -14234,7 +14349,7 @@
     {
       "path": "Platform/common/vectors/record/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/record/cases.tsv",
@@ -14252,9 +14367,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/resource-state/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/resource-state/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/resource-state/cases.tsv",
@@ -14274,7 +14394,7 @@
     {
       "path": "Platform/common/vectors/row-check/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/row-check/cases.tsv",
@@ -14287,9 +14407,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/said-id/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/said-id/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/said-id/read.tsv",
@@ -14302,9 +14427,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/schema/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/schema/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/schema/cases.tsv",
@@ -14314,7 +14444,7 @@
     {
       "path": "Platform/common/vectors/sealing/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/sealing/aad.tsv",
@@ -14357,9 +14487,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/vectors/slot-name/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/slot-name/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/slot-name/cases.tsv",
@@ -14367,9 +14502,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/slot/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/slot/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/slot/cases.tsv",
@@ -14397,9 +14537,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/tombstone/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/tombstone/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/tombstone/cases.tsv",
@@ -14409,7 +14554,7 @@
     {
       "path": "Platform/common/vectors/trust-set/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/trust-set/cases.tsv",
@@ -14419,7 +14564,7 @@
     {
       "path": "Platform/common/vectors/turn/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/turn/cases.tsv",
@@ -14427,9 +14572,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/values-by-type/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted70c newly committed whole case-prose companion; exact expanded *.cases.* rule, no payload copied to model."
+    },
+    {
       "path": "Platform/common/vectors/values-by-type/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root16 selection: public generic protocol must remain M after Source clean/split; current mixed blob BLOCKS publication."
+      "basis": "Root accepted70c exact whole clean public generic protocol; former case-only portions faithfully split to exact J companion, no in-export redaction."
     },
     {
       "path": "Platform/common/vectors/values-by-type/cases.tsv",
@@ -14454,7 +14604,7 @@
     {
       "path": "Platform/common/vectors/yaml-suite/README.md",
       "disposition": "judge_only",
-      "basis": "Proposed whole mixed case/acceptance document exclusion only with exact retained public generic ABI from existing Source-depth closure."
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
     },
     {
       "path": "Platform/common/vectors/yaml-suite/expect.tsv",
@@ -16474,12 +16624,12 @@
     {
       "path": "Platform/common/versions/DEFECTS.md",
       "disposition": "model_and_judge",
-      "basis": "Proposed whole public canonical normative/dependency document, not a case fixture; no generic ABI is dropped."
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_MIXED_LIBRARY_DOCUMENT_NO_PUBLIC_ALTERNATIVE. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/versions/README.md",
       "disposition": "model_and_judge",
-      "basis": "Proposed whole public canonical normative/dependency document, not a case fixture; no generic ABI is dropped."
+      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_MIXED_LIBRARY_DOCUMENT_NO_PUBLIC_ALTERNATIVE. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
     },
     {
       "path": "Platform/common/versions/go.mod",

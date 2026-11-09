@@ -17,9 +17,7 @@ An alarm line in the input is `{id, class, kind, subsystem, unit, t, t_src}`.
 | `page` | `{events}` — the lines of one page → the `id` of the remaining lines in order (a repeat — the first one) |
 | `write` | `{now, history, lines}`: `history` — `{events, cut_before}` or `null` (there is no history), `lines` — the accepted lines of the page (`t` already on the domain clock) → `{ids, cut_before, written}` of the history after the write: the `id` of the lines in order, `cut_before` and `written` — whether there was a write (nothing new and nothing removed — `false`, the object is the former one) |
 
-The comparison is JSON by value. 16 rows: 8 `same` (including `t_src` 990 and 990.0, absent and `null`), 1 `page`, 7 `write` (creation with
-`cut_before` 0, without a repeat by `same_line`, removal by the week and the movement of `cut_before`, nothing removed, equal `t` at
-the boundary `HISTORY_LINES` 2000; AH-SAME52-01, AH-CUT52-01).
+The comparison is JSON by value.
 
 ## Run
 

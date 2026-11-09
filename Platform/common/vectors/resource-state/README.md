@@ -23,8 +23,6 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `state` | `live`, `unreachable`, `unknown` or `silent` |
 | `note` | a rule of the contract |
 
-24 cases: 5 `live`, 7 `unreachable`, 4 `unknown`, 8 `silent`.
-
 ## Run
 
 A side gives the history to its observer (the observation memory and the monotonic clock are replaceable) and compares the state at

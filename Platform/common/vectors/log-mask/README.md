@@ -2,11 +2,9 @@
 
 This English text is the source; the Russian translation `ru/vectors/log-mask/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the log mask contract](../../contracts/log-mask.md) (chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) N1.4 `never.log`; the pairs and the addresses — [the address contract](../../contracts/url-credentials.md)). The package was moved from `Platform/06-console/vectors/log-mask/` byte for byte (C06-LOG-MASK-33-01); eight rows at the end (the end of the Basic/Bearer credentials, the White_Space whitespace — the answer of «Architect» 2026-10-25) are only here: the common table `Source/tests/testdata/log_mask.tsv` is the former one.
+The owner is [the log mask contract](../../contracts/log-mask.md) (chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) N1.4 `never.log`; the pairs and the addresses — [the address contract](../../contracts/url-credentials.md)).
 The participants are all processes of the platform that write a log (id-map: M10/7-08 → P/06.2-05, «all processes»). The bytes are written by
-«Specification»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16, ADR-0083). Moved from
-`Source/tests/testdata/log_mask.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision on V8 of the plan of lesson 6);
-the head of the file is English, as it was: `M10/7 N1.4` in it is the former address of chapter P/06.2 N1.4.
+«Specification»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16, ADR-0083).
 
 ## `cases.tsv`
 
@@ -43,7 +41,7 @@ The mask at the input — the log mask contract «Mask at the input» (`mask_in`
 the header `case<TAB>value<TAB>expect<TAB>note`. `value` is the value of a secret field sent for a write, as a JSON string
 (invisible characters — `\uXXXX`); `expect` — `{"mask": true}` (a mask: the write is refused, P/06.2 N4) or `{"mask": false}`
 (a value). The mask characters are those that cover the display of the table `cases.tsv` and the vectors `secret-in` (`***`), and the whole set
-of the contract. 33 rows: 21 masks, 12 values (fewer than three characters, a character outside the set or inside, a non-White_Space at the edge).
+of the contract.
 The input of the single command `vectors` is `cells: {value}`; the native outcome is code 0 and the object `{mask}`, JSON by value.
 
 Who performs it — the console (`06-console`: a write of a secret field recognizes a mask, P/06.2 N1.1 `mask_in`, N4); the other writers

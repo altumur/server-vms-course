@@ -28,14 +28,10 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | Field | Meaning |
 |---|---|
-| `case` | the name of the row; `plain-…` — the SaidID equals the rid, `hashed-…` — a hash |
+| `case` | the name of the row |
 | `rid` | the rid — a JSON string; a character that is not printable by the rule above, and a mark (M) are written by the escape `\uXXXX` (outside the BMP — by a surrogate pair), the others — as they are |
 | `said` | the expected SaidID — a JSON string |
 | `note` | what the row is for |
-
-The boundaries: 40 and 41 code points for ASCII, Cyrillic (2 bytes), characters outside the BMP (4 bytes, two UTF-16 units), 40 and 42 for letters with
-a combining mark (points, not graphemes); «#» first and inside; a comma; the space U+0020 and NBSP; Cf, Co, Cn; a digit outside
-ASCII; ASCII punctuation and symbols; the largest rid of 200 bytes.
 
 ## `read.tsv`
 
@@ -56,8 +52,8 @@ code 0 — computed, 2 — an input not of the form; stdout is compared with the
 
 ## Run
 
-A side implements SaidID and the reading of `fetched` by its own function (the worker — the write, the console — the reading) and checks each row: `said.tsv` — SaidID(`rid`) equals `said` byte for byte; `read.tsv` — the outcome of the reading
-equals `reported`. The vectors are derived from the norm; on a divergence the norm is right, the vector is corrected by «Specification».
+A side implements SaidID and the reading of `fetched` by its own function (the worker — the write, the console — the reading).
+The vectors are derived from the norm; on a divergence the norm is right, the vector is corrected by «Specification».
 Who performs is by the table: `said.tsv` — the worker (`03-worker`, writes SaidID into `fetched`, P/03.4 N1.1, P/03.6 N3) and the console (`06-console`, the reaper computes SaidID(rid) when reading, P/06.4 N3 «reaper» `clear`); `read.tsv` — the console (`06-console`); the worker does not read `fetched` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
