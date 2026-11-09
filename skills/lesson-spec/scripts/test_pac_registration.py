@@ -193,5 +193,28 @@ class RegisteredSharedLessonControls(unittest.TestCase):
         self.assertEqual(result.stats["norm_ids"], 1)
 
 
+    def test_foreign_adjacent_metadata_comments_in_one_html_block_refuse(self):
+        from markdown_it import MarkdownIt
+        text = "<!-- req: P/AC-R099 --><!-- req: P/AC-R100 -->\\n"
+        tokens = MarkdownIt("commonmark").parse(text)
+        self.assertEqual([t.type for t in tokens], ["html_block"])
+        self.assertIsNone(REQ_ANCHOR.fullmatch(tokens[0].content.strip()))
+        foreign = self.source.with_name("foreign.README.md")
+        foreign.write_text(text)
+        self.assertTrue(any("belong to Platform/common/acceptance/spec/acceptance.norms.md" in e
+                            for e in self.check().errors))
+        foreign.write_text(chr(96) * 3 + "markdown\\n" + text + chr(96) * 3 + "\\n")
+        self.assertEqual(self.check().errors, [])
+
+    def test_missing_ru_instruction_is_rejected_with_ru_norms_present(self):
+        from check_spec import human_text
+        self.ru_instructions.unlink()
+        self.assertTrue(self.russian.is_file())
+        self.assertEqual(human_text(self.instructions, self.root), self.ru_instructions)
+        errors = self.check().errors
+        self.assertTrue(any("ru/acceptance/spec/acceptance.README.md" in e and
+                            "regular nonsymlink" in e for e in errors), errors)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1723,12 +1723,13 @@ class Check:
                 if path in texts or path.is_symlink() or not path.is_file():
                     continue
                 text = self.read(path)
-                if text is None or not any(number.startswith(prefix + "-") for number in
-                                           check_forms.ANCHOR.findall(text) + check_forms.TOMBSTONE.findall(text)):
+                if text is None or prefix + "-R" not in text:
                     continue
                 for token in MarkdownIt("commonmark").parse(text):
-                    if token.type == "html_block" and REQ_ANCHOR.fullmatch(token.content.strip()):
-                        numbers = check_forms.ANCHOR.findall(token.content) + check_forms.TOMBSTONE.findall(token.content)
+                    if token.type == "html_block":
+                        numbers = [number for marker in REQ_ANCHOR.finditer(token.content)
+                                   for number in (check_forms.ANCHOR.findall(marker.group()) +
+                                                  check_forms.TOMBSTONE.findall(marker.group()))]
                         if any(number.startswith(prefix + "-") for number in numbers):
                             self.error(path, f"{prefix} requirement anchors belong to {registration['norms']}")
                             break
