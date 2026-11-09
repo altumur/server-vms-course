@@ -44,6 +44,18 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
 5. **The implementation description** (ARCHITECTURE) — an answer to every item of the section «Implementation decides». An item without an answer means the implementation is not ready.
 6. **The store daemon** (chapter 1.3): flags, `FORMAT`, the group and the door without a vote, sockets, durability, service doors, the floor, the copy and `import`/`restore`/`recover`.
 7. **An acceptance run** through the door; implementations with an in-process API SHOULD run the same scenarios through it too (N5, P/01.1-20).
+8. **The vector functions of the shared packages** (the section «Shared vector packages») behind the profile command `vectors`.
+
+## Shared vector packages
+
+Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), the targets of this lesson include the four shared packages of the table. Each is run by the entry of the profile section `vectors` with the key of the table and calls the implementation's own function; the input, the output and the comparison are the README of the package and [the vector wire form](../../common/vectors/wire.md), the command is [the profile format](../../common/acceptance/PROFILE.md). The rows of the lesson `01-store` in [`consumers.tsv`](../../common/vectors/consumers.tsv) are the complete list of the shared tables assigned to this lesson.
+
+| Key in `vectors` | Target | Table | What runs in this lesson | Package |
+|---|---|---|---|---|
+| `common/revoked` | `P/01/vectors-revoked` | `cases.tsv` | the reader of the file `revoked` of the door that checks a TLS peer (chapter 1.3 N1.6) | [README](../../common/vectors/revoked/README.md) |
+| `common/log-mask` | `P/01/vectors-log-mask` | `cases.tsv` | the log mask of the store daemon and its CLI | [README](../../common/vectors/log-mask/README.md) |
+| `common/store-client` | `P/01/vectors-store-client` | `cases.tsv` | the parsing of a store answer by the CLI of the daemon (`admin_ops` through `admin.sock`, chapter 1.3 N1.3) | [README](../../common/vectors/store-client/README.md) |
+| `common/family-read` | `P/01/vectors-family-read` | `01.tsv` | the reading of the data families owned by this lesson (the catalogue column `owner`) by the common library of the implementation | [README](../../common/vectors/family-read/README.md) |
 
 ## Order of work
 
@@ -82,7 +94,7 @@ The one-box daemon work is split into `daemon_doors` (the service doors and stat
 
 References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
-1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (N1.3 `sockets`).
+1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); the sockets lie side by side in one directory, none in a subdirectory of it (admin.sock and the role sockets), and other entries of that directory are not a start refusal; inherited sockets are taken by `FileDescriptorName` (N1.3 `sockets`).
 
    Write the mark `FORMAT` first into an empty directory and check it before any write: a foreign or unmarked non-empty directory is exit code 2 without changes. Write the copy `backup`, and read `import`/`restore`, only in the form of N1.3 `copy`; do not carry your own on-disk format into the copy.
 
