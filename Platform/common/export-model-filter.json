@@ -14,7 +14,7 @@
     {
       "path": "Platform/01-store/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
@@ -34,7 +34,7 @@
     {
       "path": "Platform/01-store/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
@@ -79,7 +79,7 @@
     {
       "path": "Platform/01-store/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
@@ -504,7 +504,7 @@
     {
       "path": "Platform/01-store/vectors/rights-evaluator/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Whole named public document clean for prior selected role; no global Source certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
@@ -7144,7 +7144,7 @@
     {
       "path": "Platform/02-installer/spec/02.3-installer.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Only original selected norm fragment closed; prior normative role retained, not a new whole-chapter certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Only original selected norm fragment closed; prior normative role retained, not a whole-chapter certificate."
     },
     {
       "path": "Platform/02-installer/spec/02.4-installer.norms.md",
@@ -8824,7 +8824,7 @@
     {
       "path": "Platform/03-worker/spec/03.2-worker.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Only original selected norm fragment closed; prior normative role retained, not a new whole-chapter certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Only original selected norm fragment closed; prior normative role retained, not a whole-chapter certificate."
     },
     {
       "path": "Platform/03-worker/spec/03.3-worker.n5.cases.md",
@@ -9074,7 +9074,7 @@
     {
       "path": "Platform/04-controller/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/04-controller/forms/daemon-flags.tsv",
@@ -9494,7 +9494,7 @@
     {
       "path": "Platform/05-resource/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Whole named public document clean for prior selected role; no global Source certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/05-resource/forms/daemon-flags.tsv",
@@ -13384,7 +13384,7 @@
     {
       "path": "Platform/common/acceptance/ops/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/acceptance/ops/probe-op.subsystem.yaml",
@@ -13409,7 +13409,7 @@
     {
       "path": "Platform/common/acceptance/pass/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/acceptance/pass/probe-f.subsystem.yaml",
@@ -13454,7 +13454,7 @@
     {
       "path": "Platform/common/acceptance/system/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/acceptance/system/inputs/cluster.json",
@@ -13474,7 +13474,7 @@
     {
       "path": "Platform/common/acceptance/tls/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root exact eight remainder return at f32: whole model membership BLOCKED until faithful owning Source closure preserves generic ABI and removes selected case associations."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/acceptance/tls/stand.json",
@@ -17279,7 +17279,7 @@
     {
       "path": "Platform/common/versions/DEFECTS.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Whole named public document clean for prior selected role; no global Source certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/versions/README.cases.md",
@@ -17289,7 +17289,7 @@
     {
       "path": "Platform/common/versions/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root signed Source14 component at f32, actual mode/blob matches signed tuple. Whole named public document clean for prior selected role; no global Source certificate."
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
       "path": "Platform/common/versions/go.mod",
