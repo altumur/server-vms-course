@@ -12162,6 +12162,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/vectors/assemble/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root acceptedaddb exact J-only manifest-hash/provenance table companion; strict SHA consumer binding handled separately by Tools."
+    },
+    {
       "path": "Platform/08-domain/ru/vectors/assemble/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -12170,6 +12175,11 @@
       "path": "Platform/08-domain/ru/vectors/issue/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/vectors/view/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root acceptedaddb exact J-only manifest-hash/provenance table companion; strict SHA consumer binding handled separately by Tools."
     },
     {
       "path": "Platform/08-domain/ru/vectors/view/README.md",
@@ -12242,9 +12252,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/vectors/assemble/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root acceptedaddb exact J-only manifest-hash/provenance table companion; strict SHA consumer binding handled separately by Tools."
+    },
+    {
       "path": "Platform/08-domain/vectors/assemble/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.12/addb exact public native/frame/adapter protocol; private manifest hashes/provenance tables moved unchanged to J companion. No private testsub manifest admitted to M."
     },
     {
       "path": "Platform/08-domain/vectors/assemble/cases.tsv",
@@ -12262,9 +12277,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/vectors/view/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root acceptedaddb exact J-only manifest-hash/provenance table companion; strict SHA consumer binding handled separately by Tools."
+    },
+    {
       "path": "Platform/08-domain/vectors/view/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.12/addb exact public native/frame/adapter protocol; private manifest hashes/provenance tables moved unchanged to J companion. No private testsub manifest admitted to M."
     },
     {
       "path": "Platform/08-domain/vectors/view/cases.tsv",

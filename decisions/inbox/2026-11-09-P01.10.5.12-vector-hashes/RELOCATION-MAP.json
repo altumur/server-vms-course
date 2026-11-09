@@ -1,0 +1,113 @@
+{
+ "parent_main": "05d135a6f2745798ab21fc0b2d29e92572ee2693",
+ "files": [
+  {
+   "path": "Platform/08-domain/vectors/assemble/README.md",
+   "before_blob": "ec8ef0fde105c06dd8ccef704432a2f499e1b64f",
+   "before_sha256": "0fa532bfc8e598ee43ef6adc5b5e5f78d55395daba96c356c65c9baabf04820d",
+   "after_blob": "af34e4dcb3d337631302d02dcc0ba83e14d8dbe8",
+   "after_sha256": "72927a75e198cffafc06a4647f0b21b0492e59977463ddf018991e791590cb8c",
+   "lines": [
+    57,
+    50
+   ],
+   "cases_path": "Platform/08-domain/vectors/assemble/README.cases.md",
+   "cases_existed": false,
+   "cases_blob": "57ab045a697ecef08b7925937929eaebfb9fce55",
+   "cases_sha256": "69181daebff1cad1e5b3c1ba3ea708b8200fdf4c1d8c7234ef2b53c1cf727fbd",
+   "relocated": [
+    {
+     "LF": [
+      35,
+      44
+     ],
+     "sha256": "7528834bb58c542c7d26cc2d7cd352d2182fc4dd2d1c5383c0cd94663385a6ae",
+     "bytes": 995,
+     "substring": true,
+     "new_lines": 3
+    }
+   ]
+  },
+  {
+   "path": "Platform/08-domain/ru/vectors/assemble/README.md",
+   "before_blob": "07bbd30ce7ccddeafbf12c1cf5e1cdfe38ae36da",
+   "before_sha256": "dac16e27f42d4e6096575a2d0bd220c4300e1dd34d279dbea954efa340df8c2f",
+   "after_blob": "a8afe6d29409e96b04f2a7178255bac237b58297",
+   "after_sha256": "ae0b0848ccc68b4341b50ae6efbd5c5c6ea93f03497b7276b7e87aa9ad78caac",
+   "lines": [
+    57,
+    50
+   ],
+   "cases_path": "Platform/08-domain/ru/vectors/assemble/README.cases.md",
+   "cases_existed": false,
+   "cases_blob": "dafcf59ff3acc2e0a12835cf933aed2771092de6",
+   "cases_sha256": "a24025169781726f12aa89e991928504fc0bc83d0beccc2d05a1f082640e4357",
+   "relocated": [
+    {
+     "LF": [
+      35,
+      44
+     ],
+     "sha256": "65e4511da3c66afe901a667afff559e1a1a2c1d150b57bca662a878ab48fb149",
+     "bytes": 1182,
+     "substring": true,
+     "new_lines": 3
+    }
+   ]
+  },
+  {
+   "path": "Platform/08-domain/vectors/view/README.md",
+   "before_blob": "795b9165af173e6a88b4a6987fcc28585a35a194",
+   "before_sha256": "8adcaae9c477fa3f4e99838140269c4b8dcb3d5ab9d695678b76ebfa281b7ec3",
+   "after_blob": "76738ce40b48f686758355f87e38bfa9598f1952",
+   "after_sha256": "37acddb610f89ad2a9ecbc3acba02e926901e91f833d13476934731786f67b65",
+   "lines": [
+    60,
+    51
+   ],
+   "cases_path": "Platform/08-domain/vectors/view/README.cases.md",
+   "cases_existed": false,
+   "cases_blob": "ffc4fa904a5c400afd34d89b94970f94940630ba",
+   "cases_sha256": "c86eec8264cc46f0db9691303c3142110f7d17d5d374cd2c33f0c7a1dbfe9c97",
+   "relocated": [
+    {
+     "LF": [
+      39,
+      50
+     ],
+     "sha256": "24a81129ff2cd39239b2d87746c3ec25cac2e2b9e47ab74a8dbed45337e92607",
+     "bytes": 1074,
+     "substring": true,
+     "new_lines": 3
+    }
+   ]
+  },
+  {
+   "path": "Platform/08-domain/ru/vectors/view/README.md",
+   "before_blob": "bb4473756b8e9d0ea3019f5176ccf59c44c47bb7",
+   "before_sha256": "eb9bf4e1a59d6539ffe17230d783c7f8f256fe6595ecbad378e8e7de033ab09f",
+   "after_blob": "f3812f2bf0150cb61cf1678c8fc08fc7f97eab77",
+   "after_sha256": "6a2508227124e4ffd1443dc1ace7a0a5038c9ccec5186a36e6ea826244831ae7",
+   "lines": [
+    60,
+    51
+   ],
+   "cases_path": "Platform/08-domain/ru/vectors/view/README.cases.md",
+   "cases_existed": false,
+   "cases_blob": "d98f6ad592a0cc8f4d80a32dc7a2e0191394fc8d",
+   "cases_sha256": "f5f8f4c999c6f31bb28a0158954d0369d0d6122ccf049d08aaf372412752907b",
+   "relocated": [
+    {
+     "LF": [
+      39,
+      50
+     ],
+     "sha256": "410aee691f783020fb78006730caa58d90e7231a459b18baa1b1c2685269f40a",
+     "bytes": 1297,
+     "substring": true,
+     "new_lines": 3
+    }
+   ]
+  }
+ ]
+}
