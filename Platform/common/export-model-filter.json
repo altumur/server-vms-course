@@ -13462,6 +13462,16 @@
       "basis": "Root accepted c518 exact minimal public target/owner/stand/address/key/requirement/norm contract. No driver/Runner anchors/J hashes/provenance recursively; old full224 contract remains J-only history."
     },
     {
+      "path": "Platform/common/acceptance/spec/acceptance.README.md",
+      "disposition": "judge_only",
+      "basis": "Решение Архитектора по P01.62 (ответ 2026-11-09T18:01:55Z); раскладка P01.32: нормы урока судьи P/AC, файл целиком, только судье."
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "disposition": "judge_only",
+      "basis": "Решение Архитектора по P01.62 (ответ 2026-11-09T18:01:55Z); раскладка P01.32: нормы урока судьи P/AC, файл целиком, только судье."
+    },
+    {
       "path": "Platform/common/acceptance/system/README.cases.md",
       "disposition": "judge_only",
       "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
@@ -13860,6 +13870,16 @@
       "path": "Platform/common/ru/acceptance/runner-targets.provenance.cases.md",
       "disposition": "judge_only",
       "basis": "Root exact own-artifact mirror selection: Russian historical wrapper; identical opaque 79063c1 data, judge-only."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/spec/acceptance.README.md",
+      "disposition": "judge_only",
+      "basis": "Решение Архитектора по P01.62 (ответ 2026-11-09T18:01:55Z); раскладка P01.32: нормы урока судьи P/AC, файл целиком, только судье."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/spec/acceptance.norms.md",
+      "disposition": "judge_only",
+      "basis": "Решение Архитектора по P01.62 (ответ 2026-11-09T18:01:55Z); раскладка P01.32: нормы урока судьи P/AC, файл целиком, только судье."
     },
     {
       "path": "Platform/common/ru/acceptance/system/README.cases.md",
@@ -14563,8 +14583,8 @@
     },
     {
       "path": "Platform/common/vectors/crl/README.md",
-      "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "disposition": "model_and_judge",
+      "basis": "Решение Архитектора по P01.62 (ответ 2026-11-09T18:01:55Z); публичное описание пакета, как revoked/README.md, файл целиком после очистки P01.62.1 faf43903f: нет имён строк cases.tsv и описания байтов J."
     },
     {
       "path": "Platform/common/vectors/crl/cases.tsv",
