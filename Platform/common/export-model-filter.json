@@ -14442,6 +14442,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/versions/DEFECTS.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact new committed private case/provenance companion under Architect *.cases.* rule. Source14/15 whole-goal semantic acceptance remains pending; no body read."
+    },
+    {
       "path": "Platform/common/ru/versions/DEFECTS.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -17255,6 +17260,11 @@
       "path": "Platform/common/vectors/yaml-suite/inputs/ZXT5.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/versions/DEFECTS.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact new committed private case/provenance companion under Architect *.cases.* rule. Source14/15 whole-goal semantic acceptance remains pending; no body read."
     },
     {
       "path": "Platform/common/versions/DEFECTS.md",
