@@ -13052,9 +13052,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/contracts/log-mask.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted b4a exact new private case/provenance companion; whole-file J-only, no fields or rows rewritten by filter."
+    },
+    {
       "path": "Platform/common/contracts/log-mask.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.9/b4a exact clean whole public contract; selected-set/case/provenance fragments moved to J. Universal mask/native/trust/catalogue obligations and allowed generic examples retained."
     },
     {
       "path": "Platform/common/contracts/may-input.md",
@@ -13117,9 +13122,14 @@
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
     },
     {
+      "path": "Platform/common/contracts/role-certificate.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted b4a exact new private case/provenance companion; whole-file J-only, no fields or rows rewritten by filter."
+    },
+    {
       "path": "Platform/common/contracts/role-certificate.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "basis": "Root accepted P01.10.5.9/b4a exact clean whole public contract; selected-set/case/provenance fragments moved to J. Universal mask/native/trust/catalogue obligations and allowed generic examples retained."
     },
     {
       "path": "Platform/common/contracts/row-check.md",
@@ -13387,6 +13397,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/contracts/log-mask.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted b4a exact new private case/provenance companion; whole-file J-only, no fields or rows rewritten by filter."
+    },
+    {
       "path": "Platform/common/ru/contracts/log-mask.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -13450,6 +13465,11 @@
       "path": "Platform/common/ru/contracts/request-mark.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/common/ru/contracts/role-certificate.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted b4a exact new private case/provenance companion; whole-file J-only, no fields or rows rewritten by filter."
     },
     {
       "path": "Platform/common/ru/contracts/role-certificate.md",
