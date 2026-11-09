@@ -33,14 +33,7 @@ inputs are envelopes `x25519:v1` to `book seal 1`, `eph 1`, `nonce` 0…11
 item]` and the JSON Pointer of the secret).
 
 The expectations depend on the bytes of the catalog manifests (the review analysis of stage A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) and
-`domain.names` of the manifest `testsub2` from the specification data:
-
-| Manifest | File | sha256 |
-|---|---|---|
-| `testsub` | [`Platform/common/data/testsub/testsub.subsystem.yaml`](../../../common/data/testsub/testsub.subsystem.yaml) | `fc3bf70585646b078a8812edd0c92cd5c7d0c2e364b689273c5fd229aed7355b` |
-| `testsub2` | [`Platform/common/data/testsub/testsub2.subsystem.yaml`](../../../common/data/testsub/testsub2.subsystem.yaml) | `e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb` |
-
-The bytes of `testsub2` changed on 2026-11-04 (roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend are not touched — a recheck by the oracle is not needed.
+`domain.names` of the manifest `testsub2` from the specification data.
 
 ## Files
 
