@@ -450,7 +450,7 @@ def vendor(module):
             target = base / "internal" / rel[3:]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(text, encoding="utf-8")
-        env = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off")
+        env = dict(os.environ, GOFLAGS="-mod=readonly", GOPROXY="off", GOWORK="off")
         done = subprocess.run(["go", "mod", "vendor"], cwd=base, env=env, capture_output=True, text=True)
         if done.returncode:
             raise GenError(f"policy go mod vendor: {done.stderr[-1000:]}")

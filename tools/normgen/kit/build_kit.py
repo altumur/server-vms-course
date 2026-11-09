@@ -1042,6 +1042,21 @@ def prepared_vendor(module):
     mod = (root / "go.mod").read_bytes()
     if len(re.findall(rb"(?m)^module .+$", mod)) != 1:
         raise KitError("prepared go.mod must have one module")
+    pinned_mod = (ROOT / "Platform/common/versions/go.mod").read_bytes()
+    pinned_sum = (ROOT / "Platform/common/versions/go.sum").read_bytes()
+    if (re.sub(rb"(?m)^module .+$", b"module versions", mod) != pinned_mod or
+            (root / "go.sum").read_bytes() != pinned_sum):
+        raise KitError("prepared pinned module inputs changed; prepare a new vendor closure")
+    required = re.findall(rb"(?m)^[ \t]*([A-Za-z0-9][^ \t\r\n]*)[ \t]+(v[0-9][^ \t\r\n]*)(?:[ \t]+//[^\n]*)?$", pinned_mod)
+    explicit, current = [], None
+    for line in (root / "vendor/modules.txt").read_bytes().splitlines():
+        if line.startswith(b"# "):
+            cells = line[2:].split()
+            current = tuple(cells) if len(cells) == 2 else None
+        elif line.startswith(b"## ") and b"explicit" in [word.strip() for word in line[3:].split(b";")]:
+            explicit.append(current)
+    if not required or len(required) != len(set(required)) or len(explicit) != len(set(explicit)) or set(explicit) != set(required):
+        raise KitError("prepared vendor explicit module/version roster differs from the pinned module requirements")
     mod = re.sub(rb"(?m)^module .+$", ("module " + module).encode(), mod)
     return [("go.mod", mod), ("go.sum", (root / "go.sum").read_bytes())] + [
         (str(p.relative_to(root)), p.read_bytes()) for p in files]

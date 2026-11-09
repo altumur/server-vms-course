@@ -302,17 +302,18 @@ def vendor(module):
             (t / "internal" / relp).parent.mkdir(parents=True, exist_ok=True)
             (t / "internal" / relp).write_bytes(data)
         (t / "go.mod").write_bytes(mod)
-        (t / "go.sum").write_bytes((VERSIONS / "go.sum").read_bytes())
-        env = dict(__import__("os").environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off")
+        sums = (VERSIONS / "go.sum").read_bytes()
+        (t / "go.sum").write_bytes(sums)
+        env = dict(__import__("os").environ, GOFLAGS="-mod=readonly", GOPROXY="off", GOWORK="off")
         done = subprocess.run(["go", "mod", "vendor"], cwd=t, capture_output=True, text=True, env=env)
         if done.returncode:
             raise GenError(f"go mod vendor: {done.stderr.strip()[-600:]}")
+        if (t / "go.mod").read_bytes() != mod or (t / "go.sum").read_bytes() != sums:
+            raise GenError("go mod vendor rewrote the pinned module files")
         out = [("go.mod", (t / "go.mod").read_bytes()), ("go.sum", (t / "go.sum").read_bytes())]
         for f in sorted((t / "vendor").rglob("*")):
             if f.is_file():
                 out.append((str(f.relative_to(t)), f.read_bytes()))
-    if out[0][1] != mod:
-        raise GenError("go mod vendor rewrote go.mod: the pinned versions are not tidy")
     return out
 
 
