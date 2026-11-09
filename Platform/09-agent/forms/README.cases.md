@@ -15,3 +15,7 @@ The key replacement fixture operates on real ring-protected seeds and the actual
 <!-- original-mixed-case-paragraph -->
 
 The member-want fixture drives ordinary part requests through two passes of the same process with eight real persistent 503 responses and a valid ninth part. Count actual requests, observe unchanged stored at values, completion/withdrawal cleanup and a real restart from the state after the first pass; restart restores the original persisted at/name order. The relay-age fixture executes real empty/other-member batches, forwards the real cached carry into the ordinary member copier/may age path, then receives a new carry for that same member and restarts. Its old cached grants are truly expired, not refreshed by global heard. The missing-cache fixture uses a genuine first empty-batch response admitting the member, then actual signed GET handlers; valid GET is 503 only after signature checking, invalid signature remains 401, and neither a knock nor an invented cached response is produced.
+
+<!-- original-mixed-case-paragraph -->
+
+The relay-age fixture has prior as_of 100, receipt 200, domain_age 100 and unchanged content.

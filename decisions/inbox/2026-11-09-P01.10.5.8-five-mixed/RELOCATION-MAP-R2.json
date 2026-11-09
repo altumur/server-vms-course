@@ -1,0 +1,31 @@
+{
+ "parent_main": "56408a4a111e5ffa7d75002939841d0a985f5885",
+ "files": [
+  {
+   "path": "Platform/09-agent/forms/README.md",
+   "changed_LF": 52,
+   "before_blob": "f1a8ce8299bf70deadf4699621b773ee7076ee6a",
+   "after_blob": "ad71b33b4d4a3b9a923df8bb9182ba41317ad6cf",
+   "after_sha256": "3556dcfc22f9f149ce97895a59bb672cd7777bac641811e26096e0c387124da8",
+   "cases_path": "Platform/09-agent/forms/README.cases.md",
+   "cases_before_blob": "9a4ef781979f23132ca617c68d818652fb1447da",
+   "cases_after_blob": "1303bca2e45f167f54bef72cd4e6c8b4f5594fce",
+   "cases_after_sha256": "517bacc98754d96389669cff4676304a06cfef59fc505e1dbba2fce7b5d538be",
+   "relocated_sentence_sha256": "65c70afeb484fad0791848affc604ad7fb93f38629155edc0e282520652fce9a",
+   "substring_of_line": true
+  },
+  {
+   "path": "Platform/09-agent/ru/forms/README.md",
+   "changed_LF": 52,
+   "before_blob": "593d8426950edacd5cec80978d03a6feffd1d211",
+   "after_blob": "d86da4b5ab1acb758a3d49cc68baf1e43c0a01a2",
+   "after_sha256": "cb6f9b83cce128740b247f4680ace889ca2dbf3ea9b2e13a6d164c6a6fe1a0e4",
+   "cases_path": "Platform/09-agent/ru/forms/README.cases.md",
+   "cases_before_blob": "ae46065c96c1f9669025d2e2cad47f3dedbf9431",
+   "cases_after_blob": "ad3939c7c67579a8af9f2a209bef19780b656af9",
+   "cases_after_sha256": "c4585c39292760afcf6dfab2a9db6a4a302edc6b398b0fc5ae029477b29ba627",
+   "relocated_sentence_sha256": "88c7e3d0b642659ea6f35ab745c5f228c702d5a6e8a97c210ac9711588ec20dd",
+   "substring_of_line": true
+  }
+ ]
+}
