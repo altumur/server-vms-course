@@ -155,7 +155,7 @@ A profile describes those interfaces; it does not change their scenarios or expe
   whole (the order of the object keys does not matter; an array — by length, order and elements); code ≠ 0 or not JSON — FAIL of the
   row; the result of the package — the rows by `case`. The implementation names the templates in its description, like the other commands of «Stand».
   The commands `exec` and `install-order` of the profile `02-installer` and `door-token-verify` of the profile `03-worker` answer with the envelope
-  `{"result": …}` — the protocol is in the READMEs of their packages (`Platform/02-installer/vectors/exec/`, `…/install-order/`,
+  `{"result": …}` — the protocol: `exec` — the README of its package `Platform/02-installer/vectors/exec/`, `install-order` — [P/02.4](../../02-installer/spec/02.4-installer.norms.md) N5, `door-token-verify` — [the door token contract](../contracts/door-token.md) (the packages `…/install-order/`,
   `Platform/common/vectors/door-token/`; the stage C guess I02-STAND, the Architect's decision of 2026-10-23).
   The commands `group-of` (the profiles `03-worker`, `04-controller`: an address → `{group, fault}`) and `fresh-age` (the profiles `04-controller`,
   `06-console`: an age → `true`/`false`) — without an envelope, per the READMEs of their packages `Platform/common/vectors/group-of/`,
@@ -309,10 +309,8 @@ both test prefixes are empty — `acc/` and `other/`. Cleaning the rows `acc/<sc
 is not enough: it does not clear the replay memory. Versions need not start from a given number.
 
 The preparation of the instance, its data directory and its rights is done by the runner before the scenario starts; the checked requests
-go only from the indicated role with rights on `acc/`. Scenario 21 does not receive additional rights on `other/`: before its first step the runner in the preparation (not a checked request)
-writes the row `other/21-rights/c9` `{n: "1"}` through `admin.sock` of the instance (`{socket}` of «Stand»); step 6 sees its name
-and version without the value, although the role has no read rights on `other/` (N3 «list»). In sc. 24 step 7 — the query of a `POST` is not
-read, step 8 — the body of a `GET` is not read; in sc. 26 steps 9–10 — `Infinity` and a BOM in the body (N2.1).
+go only from the indicated role with rights on `acc/`. A row outside those rights is written by the runner in the preparation (not a checked request) through `admin.sock` of the instance (`{socket}` of «Stand»); a listing sees its name
+and version without the value, although the role has no read rights there (N3 «list»). A query of `POST /v1/write` and a body of `GET` are not read; `Infinity` and a BOM in the body — N2.1.
 Parallel scenarios use different instances and share neither rows nor the `id` memory.
 
 The parameters of each instance (N5 of the lesson): the row ceiling **524288 bytes**, the read limit of an HTTP body

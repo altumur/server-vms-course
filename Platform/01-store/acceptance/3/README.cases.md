@@ -139,3 +139,7 @@ The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a correct copy;
 
 `copy-ok-unordered.jsonl` — the rows out of order (the reader does not require an order). `bad-*.jsonl` — one
 `copy` refusal per file; nothing is transferred on a refusal.
+
+### Original passage 11
+
+Scenario16 step1 also checks required `max_body: 1048576` and the unchanged `max_value: 524288` on its default stand. Repeat the ordinary status GET on a fresh store configured through the existing `-max-body 2097152` and `-max-value 524288`: max_body is2097152, max_value stays524288. This is an actual daemon/HTTP obligation; the source/schema audit does not execute that repeat. Do not add acceptance.yaml keys or guess the limits from defaults.

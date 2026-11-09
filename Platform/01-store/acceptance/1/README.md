@@ -93,7 +93,7 @@ that is still coming — the client gets `413 toolarge` with `Connection: close`
 
 Probes of the framing and of the request line (N2.1, reconciliation of python and go 2026-10-18), each on raw bytes:
 - a lone LF and a lone CR at the end of a header line — `400`; an empty line before the request line — `400`;
-- raw `\x00`, `\x01`, TAB, `\x7f` and `#` in the request target — `400` (`%00` — sc. 25, `200`);
+- raw `\x00`, `\x01`, TAB, `\x7f` and `#` in the request target — `400` (`%00` is three admissible bytes, N2.1);
 - headers whose field lines without CRLF sum to exactly 65536 bytes are parsed (an answer by the route), 65537 — `400`; 2000
   short header lines within the limit are parsed;
 - a body with JSON of depth 128 in an extra field — written, 129 — `400`;

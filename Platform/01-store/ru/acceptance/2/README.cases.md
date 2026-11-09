@@ -59,3 +59,8 @@ inputs/rights-domain-roles.json` — роли домена `domain`, `domainagen
   `domain/testsub/`) удаляют под `domain/` — 200 (C01-NEVER-DOMAIN-ROLE-01); тот же запрет у admin — сц. 11 шаг 6.
 - Сц. 15 — `comment` файла прав (N1.2): число вместо строки (`inputs/rights-bad-comment.json`) — отказ старта, код 2;
   файл стенда снова — `GET /v1/rights` admin возвращает его строковый `comment` (N2).
+
+### Исходный отрывок 11
+
+Сц. 16 — пакет `op: batch` по ролям (P/01.1 N1 `batch`, ADR-0094 B9): шаг 1 — роль `console` не знает предела `BATCH_WRITES`, шаг 3 — прочие
+роли знают; шаги 4–7 — строка и страж без права, ничего не записано; шаги 8–11 — `never` у admin судит каждую строку пакета.

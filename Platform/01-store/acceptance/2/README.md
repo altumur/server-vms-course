@@ -26,8 +26,8 @@ contract of chapter 1.1; 403 is exactly the string fields kind/error without con
 after the whole step matches; a repeated variable is compared with the earlier value. The order
 of keys in list stays the order of the store; the runner does not sort the actual answer.
 
-Sc. 16 — the batch `op: batch` by roles (P/01.1 N1 `batch`, ADR-0094 B9): step 1 — the role `console` does not know the limit `BATCH_WRITES`, step 3 — the other
-roles know it; steps 4–7 — a row and a guard without the right, nothing is written; steps 8–11 — `never` for admin judges each row of the batch.
+The batch `op: batch` by roles (P/01.1 N1 `batch`, ADR-0094 B9): the role `console` does not know the limit `BATCH_WRITES`, the other
+roles know it; a row and a guard without the right — nothing is written; `never` for admin judges each row of the batch.
 
 The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`, `admin`; the domain roles `domain`, `domainagent`, `testsubdomain` (through a rights file that names them).
 
