@@ -6,10 +6,9 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the M11 README of the acceptance
 M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) N5; [the contract](../../spec/08-domain.api.openapi.yaml),
-the lecture (`ru/08-domain.md`, for people, not in the export). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of M11/06 (stage B, ADR-0083 addendum (1): without
-a change of behaviour); the numbers and the steps are the former ones, except sc. 03: step 14 (the holder's copy with `start` 7 before `DELETE`) is inserted, the former 14–16 are now 15–17 (the decision of «Architect» 2026-10-21 on a data finding of cammeta-python ac3509b). The other scenarios of M11/06: 04, 07, 08 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md), 06 — [the acceptance of chapter 8.1](../1/README.md) (sc. 15). Sc. 10 is added by ADR-0091 addenda (12)–(19) (the executors of placement). Sc. 11 — the coverage audit of P/08 (audit-kimi 1e9929d51), sc. 12–15 — its second pass (Gemini). In total 12 scenarios / 261 steps.
+the lecture (`ru/08-domain.md`, for people, not in the export). In total 12 scenarios / 261 steps.
 
-The `If-Match` condition of the units door, by which the agent applies an edit, is sc. 14 of the acceptance of
+The `If-Match` condition of the units door, by which the agent applies an edit, is in the acceptance of
 [P/06.1](../../../06-console/acceptance/1/README.md). The doors `GET /domain/placement`, `/domain`, `/domain/<sub>/<rows>`,
 through which the stand reads placements, the view and the units, are doors of the domain console (lesson P/10, [the forwarding contract](../../../common/contracts/forwarding.md) «Domain doors»; [N1.2a, N1.2d](../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter normates their content.
 
@@ -31,11 +30,11 @@ scenario. The domain name is `acme`; the recovery file is `{recovery}` in the in
 
 The format is the dictionary of the «Stand» and the dictionary of the domain; an expectation is a subset of fields. `$id` is the id of the kept edit from the 202 answer.
 
-Sc. 01 steps 10–16, 19 and sc. 03 steps 11–17 also observe the side of the member's agent (the copies `domain/placed*`, the application of an edit
+Selected steps also observe the side of the member's agent (the copies `domain/placed*`, the application of an edit
 through the units door) — items of [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit
 (ADR-0083 addendum (13)).
 
-## Placement counter after the start (sc. 01, 10)
+## Placement counter after the start
 
 The process `domain`, at its start and at each new taking of the queue `domain/signer-turn` — before the first answer to an agent — raises
 the counter `domain/placement` by 1 (P/08.6 N3, C08-PLACEMENT-BUMP-TURN-01).

@@ -287,9 +287,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/probes/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted675e exact private judge CLI companion; public observation contract retained separately."
+    },
+    {
       "path": "Platform/01-store/probes/README.md",
       "disposition": "model_and_judge",
-      "basis": "Root P01.10.5.13: retain public observation contract after faithful separation of private judge CLI/instructions; current source admission is BLOCKED until accepted owner closure."
+      "basis": "Root accepted P01.10.5.13/675e whole public production observation/boundary/group/budget contract. Private judge CLI moved to J; no supplied checker implementation in M."
     },
     {
       "path": "Platform/01-store/probes/copy_stream.py",
@@ -340,6 +345,11 @@
       "path": "Platform/01-store/ru/lifecycle.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted675e exact private judge CLI companion; public observation contract retained separately."
     },
     {
       "path": "Platform/01-store/ru/probes/README.md",
@@ -9557,9 +9567,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/1/scenarios.tsv",
@@ -9572,9 +9587,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/2/scenarios.tsv",
@@ -9587,9 +9607,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/3/scenarios.tsv",
@@ -9602,9 +9627,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/4/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/4/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/4/scenarios.tsv",
@@ -9617,9 +9647,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/5/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/5/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/5/inputs/ct-dash-b2.json",
@@ -9782,9 +9817,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/6/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/6/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/6/inputs/hb-w-1-build-number.json",
@@ -9837,9 +9877,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/7/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/7/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/7/scenarios.tsv",
@@ -9852,9 +9897,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/8/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/8/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/8/scenarios.tsv",
@@ -9867,9 +9917,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/06-console/acceptance/9/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/acceptance/9/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/06-console/acceptance/9/scenarios.tsv",
@@ -10322,9 +10377,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/ru/acceptance/1/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/06-console/ru/acceptance/2/README.md",
@@ -10332,9 +10397,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/ru/acceptance/3/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/4/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/06-console/ru/acceptance/4/README.md",
@@ -10342,9 +10417,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/acceptance/5/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/ru/acceptance/5/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/6/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/06-console/ru/acceptance/6/README.md",
@@ -10352,14 +10437,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/acceptance/7/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/ru/acceptance/7/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/acceptance/8/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/06-console/ru/acceptance/8/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/acceptance/9/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/06-console/ru/acceptance/9/README.md",
@@ -10722,9 +10822,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/1/scenarios.tsv",
@@ -10737,9 +10842,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/10/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/10/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/10/scenarios.tsv",
@@ -10762,9 +10872,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/3/inputs/kit-m1-one/ca.pem",
@@ -10807,9 +10922,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/4/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/4/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/4/scenarios.tsv",
@@ -10822,9 +10942,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/5/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/5/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/5/scenarios.tsv",
@@ -10837,9 +10962,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/6/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/6/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/6/scenarios.tsv",
@@ -10852,9 +10982,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/7/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/7/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/7/scenarios.tsv",
@@ -10867,9 +11002,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/8/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/8/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/8/scenarios.tsv",
@@ -10882,9 +11022,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/08-domain/acceptance/9/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/acceptance/9/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/08-domain/acceptance/9/scenarios.tsv",
@@ -11847,9 +11992,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/ru/acceptance/1/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/acceptance/10/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/08-domain/ru/acceptance/10/README.md",
@@ -11862,9 +12017,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/ru/acceptance/3/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/acceptance/4/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/08-domain/ru/acceptance/4/README.md",
@@ -11872,9 +12037,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/acceptance/5/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/ru/acceptance/5/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/acceptance/6/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/08-domain/ru/acceptance/6/README.md",
@@ -11882,14 +12057,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/acceptance/7/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/ru/acceptance/7/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/acceptance/8/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/08-domain/ru/acceptance/8/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/acceptance/9/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/08-domain/ru/acceptance/9/README.md",
@@ -12087,9 +12277,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/09-agent/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/09-agent/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/09-agent/acceptance/1/inputs/anywhere-hash/as-of.json",
@@ -12142,9 +12337,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/09-agent/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/09-agent/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/09-agent/acceptance/2/scenarios.tsv",
@@ -12612,9 +12812,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/09-agent/ru/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/09-agent/ru/acceptance/1/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/09-agent/ru/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/09-agent/ru/acceptance/2/README.md",
@@ -12692,9 +12902,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/acceptance/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
+    },
+    {
       "path": "Platform/10-domain-console/acceptance/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted P01.10.5.10/02bc whole public generic acceptance duty; concrete case/step-outcome and expected fragments moved to exact J companion, no priorSource137 whole-M inference."
     },
     {
       "path": "Platform/10-domain-console/acceptance/scenarios.tsv",
@@ -12760,6 +12975,11 @@
       "path": "Platform/10-domain-console/ru/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/10-domain-console/ru/acceptance/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted02bc exact private scenario/step/outcome companion; whole-file J-only, ordinary bytes retained."
     },
     {
       "path": "Platform/10-domain-console/ru/acceptance/README.md",
@@ -13189,7 +13409,7 @@
     {
       "path": "Platform/common/contracts/vector-adapter.protocol.json",
       "disposition": "model_and_judge",
-      "basis": "Existing Root-selected public derived-protocol destination now on published Source; NEW exact current artifact requires P01.10.10 Tools provenance/consistency and Root acceptance. Current admission BLOCKED; historical35ce not adopted."
+      "basis": "Root accepted P01.10.10/435b exact current wire-derived public command/input/frame/native-output union, no case/expected/provenance payload. Actual selected C must bind current wire/recipe/output externally; historical35ce not used."
     },
     {
       "path": "Platform/common/data/README.md",

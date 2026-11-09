@@ -1,0 +1,49 @@
+# Данные случаев только для судьи
+
+Этот русский текст — производный от `acceptance/7/README.cases.md`, руками не правится (ADR-0121).
+
+Общие правила остаются в [README.md](README.md). Следующие исходные отрывки сохраняют прежние связи именованных случаев как материал только для судьи.
+
+<!-- original-mixed-case-paragraph -->
+
+[`06.7-console.norms.md`](../../spec/06.7-console.norms.md) N5. Сценарии перенесены из приёмок M11/08 (01, 02, 03),
+M11/09 (06; 03 → 14), M11/05 (02 → 13) и M11/10 (01 → 15) (стадия B, ADR-0083 доп. (1): без изменения поведения); номера,
+имена и шаги — прежние, кроме `13-notes-unique` (в M11/05 — `02-notes-unique`), `14-break-glass` (в M11/09 —
+`03-break-glass`) и `15-held-and-copies` (в M11/10 — `01-held-and-copies`): их номера заняты сценариями M11/08 (у него в
+главе больше сценариев); новые номера — следующие после наибольшего номера источников главы (M11/10 сц. 12), по порядку
+урока M11, затем сценария (решение «Архитектора» по планам переноса 8–10, ADR-0083 доп. (14) п. 14; строка
+`corrections-7.tsv` (historical correction record)). Всего 10 сценариев / 106 шагов: 41 из M11/08, 18 из M11/09, 5 из M11/05, 9 из M11/10, 11 — сц. 16 (второй проход аудита покрытия P/06, Gemini), 7 — сц. 17 (ADR-0094 B6), 9 — сц. 18 (ADR-0094 B7), 4 шага сц. 03 (ADR-0112 доп. (12) п. 3), 1 шаг сц. 03 (ADR-0112 доп. (13) п. 10), 1 шаг сц. 03 (сверка ADR S23).
+
+<!-- original-mixed-case-paragraph -->
+
+Функцию `resolve` без стенда проверяет вектор [`resolve`](../../vectors/resolve/README.md) (12 строк: 11 — бывший сц. 03 приёмки
+M11/11); `families` двери `/domain/keys` (N1.11) — вектор [`key-families`](../../vectors/key-families/README.md) (12 строк:
+один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: M11/08 сц. 04 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md),
+05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../../common/ru/vectors/peer/README.md); M11/09 — [глава
+8.4](../../../../08-domain/ru/acceptance/4/README.md), [8.5](../../../../08-domain/ru/acceptance/5/README.md) (11) и векторы
+[`may`](../../../../common/ru/vectors/may/README.md); M11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/ru/acceptance/1/README.md)
+(13) и вектор [`assemble`](../../../../08-domain/ru/vectors/assemble/README.md); M11/10 — [глава 8.8](../../../../08-domain/ru/acceptance/8/README.md),
+[9.1](../../../../09-agent/ru/acceptance/1/README.md) (11), векторы [`record`](../../../../common/ru/vectors/record/README.md),
+[`ask-sig`](../../../../common/ru/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/ru/vectors/follow/README.md).
+
+<!-- original-mixed-case-paragraph -->
+
+**Сценарии 01–03, 15** (из README приёмок M11/08 и M11/10). Подготовка — как приёмка [главы 8.3](../../../../08-domain/ru/acceptance/3/README.md)
+
+<!-- original-mixed-case-paragraph -->
+
+- Сценарий 02 ставит домен только с `m1` (`@domain m1`): `m2` — не член, списка у него нет.
+
+<!-- original-mixed-case-paragraph -->
+
+**Сценарий 16** (второй проход аудита покрытия P/06, Gemini, `audit-coverage-gemini` 0a5ae79f9) — стенд сц. 01–03, 15
+(`testsub` объявляет `domain.shared`, как в приёмке [главы 8.9](../../../../08-domain/ru/acceptance/9/README.md)).
+
+
+<!-- original-mixed-case-paragraph -->
+
+**Сценарии 06, 13, 14** (из README приёмок M11/05 и M11/09). Подготовка — как приёмка [главы 8.5](../../../../08-domain/ru/acceptance/5/README.md)
+
+<!-- original-mixed-case-paragraph -->
+
+- Сценарий 06 — дверь семей ключей у `m1`. Учебного воркера на домене у стенда нет, поэтому семьи `testsub` пусты.

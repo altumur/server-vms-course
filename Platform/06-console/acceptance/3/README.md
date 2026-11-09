@@ -27,7 +27,7 @@ the special headers. A successful open `/session` contains `login_url`, even whe
 ## Evidence outside TSV
 
 The domain login, closed `grants`, `via` of a proven identity, the order of `identity`, `need` before the body, Origin by the cookie, the log
-`access.denied`, the emergency login and the debug identity are checked by a separate stand (the domain stand: the acceptance P/08.4, sc. 14 of chapter 6.7) and by a module test, not by this TSV
+`access.denied`, the emergency login and the debug identity are checked by a separate stand (the domain stand: the acceptance P/08.4 and of chapter 6.7) and by a module test, not by this TSV
 (the norms of the chapter, N5, «Checked by reading»).
 
 Additional check of the class of errors of run 36 (Kimi), by reading: without a domain every path, including the open one and /session,

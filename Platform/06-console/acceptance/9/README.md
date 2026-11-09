@@ -17,7 +17,7 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 
 ## What is checked by reading
 
-Sc. 04–06, 08–13 of the plan table — by reading, the change of the ring of sc. 11 — for good: there is no directive; the form of the key — the cases `a95_*` of the corpus of P/02.1. The algorithms without a stand are checked by the vectors [`op-step`](../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
+Scenarios of the plan table that the TSV does not run — by reading. The algorithms without a stand are checked by the vectors [`op-step`](../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
 
 
 

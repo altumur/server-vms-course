@@ -1,31 +1,16 @@
 # Store production probes
 
-These are the public observation checkers of [production acceptance](../spec/production-acceptance.md). They judge supplied observations. They do not start, discover or qualify an implementation, and an implementation does not import them. Python 3.12 standard library only.
+This is the observation contract of [production acceptance](../spec/production-acceptance.md): the properties that are judged over supplied observations. A check does not start, discover or qualify an implementation, and an implementation does not import it.
 
-`OBSERVATION_PASS` means only that the supplied observations passed that check. It is not a native run or a production result: the command always reports `native_executed: 0` and `production_passed: 0`.
+`OBSERVATION_PASS` means only that the supplied observations passed that check. It is not a native run or a production result.
 
-## Commands
+## Outcomes
 
-Run from this directory with `PYTHONPATH` unset:
-
-```sh
-python3.12 -B -m store_probes --list
-python3.12 -B -m store_probes
-python3.12 -B -m store_probes --capture <file> --probe <name>
-```
-
-`--list` is the inventory and exits 0. With no capture every probe reports its concrete missing bindings and the command exits 3. `--capture` reads a JSON file of format `cammeta-store-probes-v1`; omit `--probe` to keep the rows of all eight.
-
-| Exit | Meaning |
-|---|---|
-| 0 | observation checks passed |
-| 1 | normative observation mismatch |
-| 2 | instrument or form error |
-| 3 | missing inputs |
+A check ends in one of four outcomes: the observation checks passed; a normative observation mismatch; an instrument or form error; missing inputs, where the check names its concrete missing bindings.
 
 ## Probes
 
-Groups are partial slices of the [case groups](../spec/production-acceptance.md#case-groups): a probe does not execute a whole group. `--list` prints the owning norm references and required bindings of each probe.
+Groups are partial slices of the [case groups](../spec/production-acceptance.md#case-groups): a probe does not execute a whole group.
 
 | Name | Property | Case groups | Budgets |
 |---|---|---|---|
@@ -39,7 +24,3 @@ Groups are partial slices of the [case groups](../spec/production-acceptance.md#
 | `08-backup-rows` | Backup rows and incomplete output | RUN-L01, RUN-H01, RUN-H02, RUN-H03 | `BUDGET_BACKUP_ORDINARY`, `BUDGET_BACKUP_WORST` |
 
 The checkers take budget values from the supplied capture and do not read the budget table. Binding the approved values, launching a stand and collecting observations belong to the acceptance programme; this directory adds no profile field, port, flag or adapter.
-
-## Provenance
-
-The four modules are unchanged bytes of the acceptance runner commit `05f81051b72eb758f7d2f91cbffd4006db2b6c91`. Commit identifiers and carrier lines inside them are the historical provenance of those checks, not this export's identity.
