@@ -3067,6 +3067,7 @@ class Check:
     def vector_hashes(self):
         patterns = ("Platform/**/vectors/**/README.md",) if self.scope == "platform" else (
             "VMS/**/vectors/**/README.md",) if self.scope == "vms" else ("*/**/vectors/**/README.md",)
+        patterns += tuple(pattern.removesuffix("README.md") + "README.cases.md" for pattern in patterns)
         for readme in sorted(p for pattern in patterns for p in self.root.glob(pattern)):
             for line, text in enumerate(readme.read_text(encoding="utf-8").splitlines(), 1):
                 match = re.search(r"\]\(([^)]+)\)\s*\|\s*`([0-9a-f]{64})`", text)
