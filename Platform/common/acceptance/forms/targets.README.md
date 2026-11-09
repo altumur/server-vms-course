@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/forms/targets.README.md` is derived from it and is not edited by hand (ADR-0121).
 
-[`targets.tsv`](targets.tsv) is the registry of acceptance targets. The form is for every lesson. The rows of P/01 are filled first, with the same cells as their rows in [`runner-targets.tsv`](../runner-targets.tsv); the targets of the other lessons are only in that table for now.
+[`targets.tsv`](targets.tsv) is the registry of acceptance targets. The form is for every lesson. The rows of P/01 are filled first, with the same cells as their rows in [`runner-targets.tsv`](../runner-targets.tsv); the targets of the other lessons are only in that table for now. The row `P/01/production` exists only here: it is not in that table.
 
 ## Table form
 
@@ -23,6 +23,6 @@ id\towner\tstand_commands\tstand_addresses\tkeys\trequirements\tnorm_anchors\tfl
 
 | Flag | Meaning |
 |---|---|
-| `optional` | A profile that does not declare the interface of the target leaves the target not executed. Without this flag an absent interface blocks the target. |
+| `optional` | A profile that does not declare the interface of the target leaves the target not executed. Without this flag an absent interface blocks the target. At `P/01/production` the flag concerns only the functional verdict (N6.1 of the judge norms). |
 
 These columns add no profile field, command, substitution, address or parameter.

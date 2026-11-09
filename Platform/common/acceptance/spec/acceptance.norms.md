@@ -16,7 +16,7 @@ The judge is one shared engine. A lesson is only data. The engine branches only 
 
 <!-- req: P/AC-R029 -->
 
-The first wave of the engine is the targets of P/01 with a stand, scenarios or vectors. Outside it are the combat targets of D7, load, the judgement of families (the package `common/family-read`), the stands of consoles and of several clusters (the target `system/05-power-pull` among them), VMS, and the suites TLS and ER of [`tls/README.md`](../tls/README.md): the steps of those suites are written there as prose and their table is a separate piece of work. The registry keeps these targets; the first wave is a selection of the run, not a branch of the engine.
+The first wave of the engine is the targets of P/01 with a stand, scenarios or vectors. The production qualification of P/01 (N6) is in it. Outside it are the judgement of families (the package `common/family-read`), the stands of consoles and of several clusters (the target `system/05-power-pull` among them), VMS, and the suites TLS and ER of [`tls/README.md`](../tls/README.md): the steps of those suites are written there as prose and their table is a separate piece of work. The registry keeps these targets; the first wave is a selection of the run, not a branch of the engine.
 
 ## N1 Forms
 
@@ -58,7 +58,7 @@ The result of a target is GREEN, red, `not_executed`, `not_applicable` or `block
 
 <!-- req: P/AC-R030 -->
 
-The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class.
+The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; the reasons of the table of N6.5 for the target `P/01/production`; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class.
 
 <!-- req: P/AC-R031 -->
 
@@ -205,6 +205,98 @@ This lesson is checked mechanically over a stub of the protocols, not by a corpu
 
 The correctness of the verdicts is decided outside this mechanical check: by code review of another provider and by comparison of verdicts with an existing judge on named candidates of one specification slice, unit of comparison a case. A generated judge's verdict enters a product's result only by a separate decision of the owner.
 
+## N6 Production qualification of P/01
+
+### N6.1 Scope and verdict
+
+<!-- req: P/AC-R039 -->
+
+This section assigns the production qualification of P/01 to the judge (ADR-0135 addendum (4)). The owner of its groups, budgets and measurements is [the production qualification of the store](../../../01-store/spec/production-acceptance.md). A budget is named here and its value stays there. The section adds no platform route, working flag, profile field, directive of the dictionary or numeric value.
+
+<!-- req: P/AC-R040 -->
+
+The target `P/01/production` of the registry has the engine word `production`. Its inventory (N1.4) is the 17 [case groups](../../../01-store/spec/production-acceptance.md#case-groups) `RUN-*` and the 13 probes of N6.3, which are the rows of [the probe debt](../../../01-store/spec/production-acceptance.md#probe-debt) by name. An entry is executed once: `RUN-L03` is the first initial state of `prod-stop`, and `RUN-F01`, `RUN-F02`, `RUN-F04` are the stages of `prod-fault-stage`; their results are shown under both names.
+
+<!-- req: P/AC-R041 -->
+
+The flag `optional` of this target concerns only the functional verdict: the result of `P/01/production` does not enter the verdict of any other target. Production qualification MUST NOT be claimed without GREEN of this target, and until then the milestone 2.4b of the lesson (ADR-0130 addendum (7)) stays open.
+
+<!-- req: P/AC-R042 -->
+
+The [public store probes](../../../01-store/probes/README.md) are eight checkers of partial slices of the groups. Their pass alone never makes an entry GREEN. The verification of a TLS peer by the daemon, P/01.3-09, on a test CA (ADR-0130 addendum (14) item 6) is not among the 13 probes: it is an unclosed branch of production qualification, stays checked by reading and is named in the report of the target as open.
+
+### N6.2 Input of the qualification
+
+<!-- req: P/AC-R043 -->
+
+The values that the implementation declares and the facts of the environment reach the judge in a separate test input, as the [descriptor of the D7 bindings](../README.md#d7-test-side-evidence-bindings) does. It is not a profile field and it gives the implementation no interface. It is one JSON object with the closed fields:
+
+| Field | Type and meaning |
+|---|---|
+| `format` | The integer `1`. |
+| `source_pin` | The full 40-hex Source commit of the run. |
+| `budgets` | A mapping from the closed keys below to objects with exactly `value` (a finite positive number), `unit` (a nonempty string) and `threshold_ref` (a nonempty exact reference to the record that approved the threshold). |
+| `manager` | An object with exactly `stop_deadline_seconds` and `teardown_margin_seconds`, finite positive numbers: the actual stop deadline of the service manager and the separately measured teardown margin. |
+| `volume` | An object with exactly `path` (an absolute directory of limited size given by the environment) and `bytes` (its size, a positive integer). |
+
+The closed keys of `budgets` are `output`, `cancellation`, `response_write`, `commit_wait`, `door_attempts`, `replay_limit`, `admin_connections`, `writer_hold`, `disk`, `descriptors` and `id_collection`. A declaration of the candidate alone is no threshold (ADR-0130 addendum (15) item 7). An input outside this form is a data error of the run.
+
+### N6.3 Probes
+
+<!-- req: P/AC-R044 -->
+
+Each probe has its input, its observed outcome and its term as written here; the norm named in the row is the source of the outcome. «Group stand» is the [store group stand](../README.md#store-group-stand); on `keys.store_build: box` such a probe, or its named part, is `not_applicable`.
+
+| Probe | Norm | Input and means | Observed outcome | Term |
+|---|---|---|---|---|
+| `prod-stop` | P/01.3 R034 | `RUN-L03` and the initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted; the binding `progress`; the input `manager` | admission stops; a request read but not admitted gets 503 `unavailable`; a connection whose request is unread is closed; admitted work gets its definite or ambiguous outcome; snapshots, connections and listeners are released; a forced kill is no success | `BUDGET_STOP` on `graceful_stop_elapsed`, below the deadline of `manager` less its margin |
+| `prod-fault-stage` | P/01.1 R144 | `RUN-F01`, `RUN-F02`, `RUN-F04`; the bindings `fault` and `storage` | as the rows of these groups: `unavailable` with a proven absence of effect, `ambiguous` with an unknown result, a batch and its id whole or absent whole | none: the outcome is judged |
+| `prod-leader-loss` | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand; the answer of the leader held after a write was sent, by a freeze of the process group of the leader; a two-way partition of a member: no traffic between it and the other members in either direction | a write sent without an answer is `ambiguous`; with no leader for the effective interval, 503 `unavailable` | the effective `-leader-wait` |
+| `prod-import-interrupted` | P/01.3 N1.3 `import`; P/01.3 R021 | group stand; an interrupted `import` | a member starts and holds writers with 503 `unavailable`; the import continues through `admin.sock` of the leader; after the loss of a majority `recover` publishes a floor, a repeat of the former attempt refuses, the floor does not decrease, and a new `import` attempt carries the full input | the key `writer_hold` |
+| `prod-recover-interrupted` | P/01.3 R021 | the binding `fault` at the phase mark of `recover` | the phase mark stands; a daemon start refuses with code 2; a repeat of `recover` starts over from the same input | none: the outcome is judged |
+| `prod-disk-fd` | P/01.3 R036 | the input `volume`, by the stages before and after the effect; a process limit of descriptors set from the key `descriptors` | full disk: 503 `unavailable` only on a proven refusal before the effect, otherwise the `ambiguous_*` outcomes; a read keeps working; writes return after space is freed, without a restart. Exhausted descriptors: `connection_limit` if the connection could be accepted, otherwise it is closed; started requests get their definite outcome; the daemon does not crash | the keys `disk`, `descriptors` |
+| `prod-clock-group` | P/01.3 N1.3 `admission`; P/01.1 R013, R070 | group stand; the binding `clock` in the scope of [clocks in a group](../../../01-store/spec/production-acceptance.md#clocks-in-a-group); a leader change; a Raft snapshot | admission time does not decrease over a leader change and a snapshot; `expired` follows `not_after`; `admission_ahead` appears when the current clock of the leader is behind the saved admission time; the equality of admission time and a replay held after `not_after` before the first application are judged by R070 | `CLOCK_SKEW` bounds the spread of the clocks; no skew allowance is added |
+| `prod-reply-commit` | P/01.3 R035 | a slow reader made by the judge; group stand for the commit part: the commit held under a live leader by a freeze of the other voters | a reader that does not take the answer loses the connection; when the commit wait ends the outcome is `ambiguous` (`ambiguous_leader`) | the keys `response_write`, `commit_wait` |
+| `prod-door-attempts` | P/01.3 R035 | group stand with a door without a vote; all voters unreachable | the attempts of one request take not less than the effective `-leader-wait`; a repeat only with the same `id`; a write without `id` stays `ambiguous`; the loss of the answer to a sent attempt stays `ambiguous` | the effective `-leader-wait`; the key `door_attempts` |
+| `prod-replay-limit` | P/01.3 R035 | replays made by the judge above the key `replay_limit` | above the limit 503 `unavailable` with `Retry-After` before admission; neither the record nor the `id` memory is touched | the key `replay_limit` |
+| `prod-admin-limit` | P/01.3 R008 | the ordinary connection limits exhausted by the judge | `admin.sock` still admits the operator; above its own limit, `connection_limit`: 503 `unavailable` with `Retry-After` | the key `admin_connections` |
+| `prod-backup-temp` | P/01.3 R018 | a failure, a cancellation and a killed run of `backup`; the binding `fault` | the temporary file is removed on a failure and a cancellation; a leftover is removed by the next `backup` to the same target; the former copy stays | the key `cancellation` |
+| `prod-id-age` | P/01.1 R141 | the binding `clock`; the edges of `RUN-W03` | until both conditions hold, the same answer and no new application; equality at the age minimum is not eligible; the age runs from the first application on the admission-time clock | `ID_REPLAY_MIN_AGE`, `ID_REPLAY_MIN_RECORDS` |
+
+<!-- req: P/AC-R045 -->
+
+A two-way partition is the observable requirement of its row, whatever the means. The means is the choice of the engine (without root, for example, group addresses through a TCP relay of the judge that silently stops forwarding in both directions). The directive `@cut` cuts only incoming connections and does not satisfy this row alone.
+
+### N6.4 Terms
+
+<!-- req: P/AC-R046 -->
+
+The term of a probe is the last column of its row; the term of a group is its row in [the first approved budgets](../../../01-store/spec/production-acceptance.md#first-approved-budgets). The monotonic resolution and the scheduling uncertainty of the judge are calibrated separately and recorded; they do not increase a budget. An entry judged by its outcome alone is bounded by the budget of the target (N3.3). A timeout of the judge, a forced kill, a counter of the producer, an EIO text or a library return is no GREEN.
+
+### N6.5 Results and controls
+
+<!-- req: P/AC-R047 -->
+
+An entry ends in one of these results:
+
+| Observation | Result |
+|---|---|
+| every required observation matched and the controls of its instruments were activated | GREEN |
+| a normative mismatch | red, class `implementation` |
+| an error of an instrument or of the form of an observation, or a failed control | red, class `stand`; it says nothing about the implementation and gives no verdict for the entry |
+| a required D7 binding is absent | `not_executed`, the reason is `clock`, `storage`, `progress` or `fault` |
+| a required field or key of the input of N6.2 is absent, or its threshold is not approved | `not_executed`, the reason is the name of the field or key |
+| a numeric group measured outside the declared environment (N3.3) | `not_executed`, the reason is `environment_undeclared` |
+| the engine has no means for the two-way partition or for a Raft snapshot | `not_executed`, the reason is `two_way_partition` or `raft_snapshot` |
+
+<!-- req: P/AC-R048 -->
+
+Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../README.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. Named mutants of a candidate belong to the comparison of R028 and are not an input of the engine.
+
+<!-- req: P/AC-R049 -->
+
+On the stub of R027 the target lists its whole inventory and calls the interfaces of each entry; every entry whose binding the stub does not qualify is `not_executed`. A stub establishes no production result.
+
 ## Implementation decides
 
 An implementation is to name in its description:
@@ -212,7 +304,8 @@ An implementation is to name in its description:
 1. the language and the module layout of the engine; the shared parser of the tables; how a target's data selects an engine family of the routing table;
 2. the form of its evidence files and their names, beyond the report of N1.5; the budgets of a target and the reserve of a scenario (N3.3);
 3. parallelism in a run that is not credited (a credited run is one target at a time, N3.3);
-4. the printing form of the dry listing.
+4. the printing form of the dry listing;
+5. the means of the two-way partition and of a Raft snapshot of N6.3, and the instruments of N6.
 
 ## Readiness checklist
 
@@ -228,3 +321,4 @@ An implementation conforms to the lesson when every norm holds; a norm id `P/AC-
 - [ ] **P/AC-08** the declared environment (N3.3) — by reading of the run record
 - [ ] **P/AC-09** the failure classes (N4) — by reading, and the comparison of verdicts
 - [ ] **P/AC-10** the checks of N5 are present and pass — N5
+- [ ] **P/AC-11** the production qualification of P/01: the inventory, the input, the probes, the results and the controls (N6) — stub of N5 for the calls, by reading and by the comparison of verdicts for the rest
