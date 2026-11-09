@@ -120,7 +120,7 @@ The judge starts stand processes as the [layout by processes](../README.md#layou
 
 <!-- req: P/AC-R017 -->
 
-A stop signal goes to the whole process group of the command, and the judge waits up to 60 s for the exit of the whole group, not only of the shell that started it; after this term it sends SIGKILL to the group and the step has the class `stand`. A process that had already exited by itself when a stop or restart step came is a mismatch of that step: the stand does not hide it by starting the process again.
+A stop signal goes to the whole process group of the command, and the judge waits up to 60 s for the exit of the whole group, not only of the shell that started it; after this term it sends SIGKILL to the group; the step has the class `implementation` for a process of the implementation and the class `stand` only for a process of the stand itself or a proxy of the judge. A process that had already exited by itself when a stop or restart step came is a mismatch of that step: the stand does not hide it by starting the process again.
 
 <!-- req: P/AC-R018 -->
 
