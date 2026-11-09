@@ -328,3 +328,5 @@ mixed:        как signed целиком: TLS сервера роли проц
 Пакет [`loopback`](../vectors/loopback/README.md) — порог петли клиента своего кластера (`loopback`, 31 строка; ADR-0075 доп. 2026-10-26 (4) п. 1). Подстановку
 `host = SERVER_NAME` до шага 1 `peer` пакет `peer` не выражает (функция не меняется) — её проверяет приёмка уроков клиентов.
 
+Векторы `trust-set`: сертификаты заменены их отпечатками, sha256 hex DER сертификата (договор `fingerprint`), а чтения строк — входом. Ячейки — `op` и `input`. У `set` вход — `{own, members, ca_certs}`: `own` — отпечатки своих `ca.pem`, `ca.next.pem`; `members` — `{<member>: {ca?: [<fingerprint>…]} | "@garbled"}` (`ca` — Entry.ca из `domain/member-rows/<part>`; `"@garbled"` у члена — Entry.ca не по форме) или `"@garbled"` (строка `domain/member-rows/<part>` нечитаема); `ca_certs` — `{<member>: [<fingerprint>…] | "@garbled"}`, отпечатки сертификатов строки `ca-certs` (нет записи — строки нет). Родной выход `set` — отпечатки набора доверия по возрастанию, без повторов. У `check` вход — `{set, leaf_ca}`, набор и отпечаток центра, к которому сходится лист клиента; родной выход — `"trusted"` или `"refused"`.
+

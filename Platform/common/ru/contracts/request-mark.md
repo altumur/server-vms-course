@@ -261,6 +261,8 @@ limits:      FETCHED_COUNT, FETCHED_BYTES — предел длины fetched в
 запись присланного срока `valid_until` — векторы [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 Пакеты — у владельца (P/06.4); прочие состояния и `kept` векторов не имеют — шаги приёмки глав 6.4 и 3.6 и чтение.
 
+Векторы `deadline`: ячейка `input` таблицы `cases.tsv` — текст значения `valid_until` из тела просьбы, одно значение JSON, как прислано. Родной выход — один объект JSON: `{"written": <text>}` — элемент строки просьбы по писателю времени P/01.1 N0 (целое — без дробной части), `written` — строка; или `{"status": 400, "error": "bad deadline"}` — значение не конечное число JSON (отказ шага 1, P/06.4 N4 RequestError).
+
 Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 

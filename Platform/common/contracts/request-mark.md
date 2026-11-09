@@ -262,6 +262,8 @@ the name `SaidID(rid)` in `fetched` of the heartbeat — section «fetched» `sa
 the write of a sent term `valid_until` — the vectors [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 The packages are at the owner (P/06.4); the other states and `kept` have no vectors — the acceptance steps of chapters 6.4 and 3.6 and reading.
 
+The vectors `deadline`: the cell `input` of `cases.tsv` is the text of the value `valid_until` from the request body — one JSON value, as sent. The native output is one JSON object: `{"written": <text>}` — the element of the request row by the time writer of P/01.1 N0 (an integer — without a fractional part), `written` is a string; or `{"status": 400, "error": "bad deadline"}` — the value is not a finite JSON number (the refusal of step 1, P/06.4 N4 RequestError).
+
 The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 

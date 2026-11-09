@@ -112,4 +112,6 @@ ADR-0130 Addendum (10), Q3: ожидание замка при старте, в�
 
 Пакет [`presence-room`](../vectors/presence-room/README.md) (счёт `room`); режимы каталогов и файлов замков — строки `modes.tsv` пакета [`journal`](../vectors/journal/README.md) (вместе с журналом событий). (ADR-0083 доп. (32) п. 2)
 
+Ячейка `input` пакета `presence-room` — `{prefix, server, HOST_MEMORY_MB, WORKER_MEMORY_MB, locks}`: `prefix` — `slot.prefix` манифеста, `server` — `SERVER_NAME` (по ним номер `n` имени `<prefix>-<server>-<n>`), `HOST_MEMORY_MB` и `WORKER_MEMORY_MB` — значения файла роли, `locks` — поле `worker` каждого живого замка роли (flock занят). Родной выход — `{room, live}` строками, как в строке двери; сторона считает их по входу, без файлов.
+
 [Общие конечные бюджеты и границы приёмки](production-obligations.md) обязательны для применимых фаз этого договора.

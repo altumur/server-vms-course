@@ -112,4 +112,6 @@ ADR-0130 Addendum (10), Q3: startup lock waiting, including repeated inode compa
 
 The package [`presence-room`](../vectors/presence-room/README.md) (the count `room`); the modes of the directories and files of the locks are the rows of `modes.tsv` of the package [`journal`](../vectors/journal/README.md) (together with the event journal). (ADR-0083 addendum (32) item 2)
 
+The cell `input` of the package `presence-room` is `{prefix, server, HOST_MEMORY_MB, WORKER_MEMORY_MB, locks}`: `prefix` is the `slot.prefix` of the manifest and `server` is `SERVER_NAME` (by them the number `n` of the name `<prefix>-<server>-<n>`), `HOST_MEMORY_MB` and `WORKER_MEMORY_MB` are the values of the role file, `locks` is the field `worker` of each live lock of the role (the flock is held). The native output is `{room, live}`, strings as in the door row; a side computes them from the input, without files.
+
 [Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.
