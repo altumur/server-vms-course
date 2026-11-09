@@ -1,0 +1,29 @@
+# Данные случаев только для судьи
+
+Этот русский текст — производный от `forms/README.cases.md`, руками не правится (ADR-0121).
+
+Общие правила остаются в [README.md](README.md). Следующие исходные отрывки сохраняют прежние связи именованных случаев как материал только для судьи.
+
+<!-- original-mixed-case-paragraph -->
+
+| `domainconsole-alarms` | Собрать вход GET /domain/alarms из управляемых строк и настоящих поколений отчётов, затем вызвать обычную функцию alarms. Поколение reports/rev метки имеет байты, чей sha256 отличается от метки; объект testsub/seen без имени, именованный testsub/seen/a или testsub/seen/b с cluster m1 и свидетель без ts — объекты отчёта m1. Наблюдать states, alive_via, взятых и отброшенных свидетелей. |
+
+<!-- original-mixed-case-paragraph -->
+
+В каталоге 82 CALL шага 44 сценариев: девять сохранённых `console-forward-credentials`, все 39 прежних macro и 34 шага ревью. Все выбраны этапами. Полный договор credential-порта — [швы credential пересылки](../acceptance/README.md#швы-удостоверения-пересылки), включая настоящие первые hop P/06; они обязательны. Целиком этапы kit не генерирует. У P/10 нет своей семьи данных: импортированные схемы чтения проверяют двери и фикстуры, отсутствующий собственный выход `families` не обещается.
+
+<!-- original-mixed-case-paragraph -->
+
+- `domainconsole-alarms`: `mixed_server_camera` задаёт читаемые Entry server m1 и camera m2; подтверждённые метки/пустые поколения имеют received_at/sent_at/last_report 0, у камеры every=`camera_every`. Часы домена — now, retry_in не вход. Наблюдаются настоящие состояния, silent_since и silent_after, переданные сборщиком функции.
+
+<!-- original-mixed-case-paragraph -->
+
+- `domainconsole-read`: `single_member_version` размещает m1 в настоящей части с заданными rev/term и точным строковым index; сравнивает реальный entry/ETag. `served_url_neighbours` читает два настоящих вида: с заданным string URL и без читаемого URL. В первом валидном served-теле меняется только url на пять url_values, полная схема ServedView из опубликованного OpenAPI даёт пять исходов. Схема писателя View не меняется и не подменяет served. `folder_membership_own_read` использует настоящие живые папки и строку членства m1/testsub/counters/c1, считает вызовы писателя и воркера.
+
+<!-- original-mixed-case-paragraph -->
+
+- `domainconsole-pass`: `closed_route_owner_form` строит корректный запрос нейтральной фикстуры owner_operation P/08; управляемый HTTP-процесс domain возвращает полный валидный успех этой операции и записывает метод/путь/байты. Verify приходит настоящим ticket-путём консоли кластера с объявленным вызовом и обычным доверенным X-W2C-Ticket, не callback консоли домена. Наблюдаются dispatch, точные байты, валидность ответа владельца и ноль вызовов воркера. `ordinary_platform_forward` посылает корректную topology-правку: silence проверяет pending до срока и прежний timeout; oversize отдаёт полное тело 1048577 байт. Исключение worker-pass здесь не применяется, частичное тело upstream не показывается.
+
+<!-- original-mixed-case-paragraph -->
+
+`refusals` составной фикстуры устанавливает ровно эту объявленную карту второго рода у каждого hop. При несовпадении политики получается её код application/problem+json без вызова воркера; следующая консоль передаёт полный отказ неизменно.
