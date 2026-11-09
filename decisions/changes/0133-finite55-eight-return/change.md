@@ -1,0 +1,46 @@
+# Change 0133-finite55-eight-return
+
+change: 0133-finite55-eight-return rev 1 · lessons P/01, P/04, Platform/common · author spec103 · state review
+
+Authoring parent `f32c11ba8b1752c8b6987049828c9d9f921ba6c0`. Task P01.10.5.14 return: the Architect/intake card `P0110514-ONE-PASS-EXACT-EIGHT-REMAINDER-RETURN-CARD.json` (Root signature pending per that card) names eight mixed documents, disjoint from the sections accepted by P01.10.5.15 and P01.40. Only the card's line ranges are edited (plus blank lines adjacent to removed blocks).
+
+Within those ranges selected scenario/step/kit/fixture associations and proof identities are removed from the public document; each changed or removed line stays byte for byte in the adjacent existing `README.cases.md` (`### Original passage N` / `### Исходный отрывок N`). English is the source and the Russian translation is split consistently. Where a line mixed a generic clause with case data, the generic clause stays in the public document and the whole original line is preserved in the judge-only file. The generic duties listed in the card (`retain_generic_duties`) remain public. One heading (`### Sleeps` of the system acceptance) moves with its table; `git grep` found no reference to it. The TLS lines 27–33 and the batch sections are untouched.
+
+No number, field, code, behavior, form, route, requirement ID, `.tsv` or contract is changed. The statement is checked only as far as: `en_mirror.compare` reported no message for each of the eight README pairs and their `README.cases.md` before and after the edit; a separate inverse check confirmed that every changed or removed README line is present byte for byte in the appended part of its judge-only companion, and that the prior content of the companions is a byte prefix of the new content; `git diff --cached --check` is clean. Mirror compare covers structure, codes and references, not translation quality. The full `check_spec`, filters, exports and any runner or model execution are not claimed. Line-level ranges and kinds are in the external MAP.json of the session directory; this record is not model input.
+
+| Artifact | Operation | Before blob | After blob | After SHA256 |
+|---|---|---|---|---|
+| `Platform/01-store/acceptance/1/README.cases.md` | MODIFIED | f56c6d5ef9776c93ddd9822f610c99f30d396cf1 | d43868ec8bf4a34af438840fdc528acbb6c430d4 | fab69c7f65cbe8b473516545a2090aa9eb536333848537dbd448e9e2d2bb893f |
+| `Platform/01-store/acceptance/1/README.md` | MODIFIED | 2814bf255f4dad61ff292c921b1fbafa6e8e3f57 | 1f86c36ebdb7f3c62fe2c25f36cd21d2a4ae75ff | 6a42f668d64d536f0700955ccf9a5b854bb7bbefbb62d8cabadbb7a370cb4d17 |
+| `Platform/01-store/acceptance/2/README.cases.md` | MODIFIED | e986f485f49bbecb2b2a21310c408c805ab11170 | c000dbe3ae0f42572c57933b7480e9c0008f4c91 | 5bc7571a26887f9128a8bd4e955d60b91a3fbd3ea54226cb9d0682001e3d5240 |
+| `Platform/01-store/acceptance/2/README.md` | MODIFIED | 04a5caca552fe6e88945de40d72a4708e0c261f6 | 19051b1ec923570759b986b9481f4d4d4582fd9c | a73ba4f3ce3af6ee62dcdcdffe3386a05fda5fd24db11dd8f04c657601cd14d5 |
+| `Platform/01-store/acceptance/3/README.cases.md` | MODIFIED | fe45eae9064dead2e22ad9d63b7688654ad518d2 | 5ec7ea49f550bf66d0efb115286f1bb3d86f4b64 | e58266722640deb1600543e7f5f00348d1f1110d5f89033352f1647852bc0d8c |
+| `Platform/01-store/acceptance/3/README.md` | MODIFIED | 5b8d36bd80c576f424b4383169c5f90b145c2c6f | dcbd4a777731281dd5580575916019d426181f85 | f21bb3cf3905bb3e127cfbd30e7bd04b8a9aa1d49bf18e2d135955c10bdd46ee |
+| `Platform/01-store/ru/acceptance/1/README.cases.md` | MODIFIED | 252880c751fc72c98357546ad2e64cf041ec6fcf | 5c93d9261b289105a4c941f368ba5d7cf1672c61 | 7ce7809b504009f9509a2805c0b231b0c033e39ed2cb7367238e3d2198772196 |
+| `Platform/01-store/ru/acceptance/1/README.md` | MODIFIED | 69e11ea45a3bd9ed5cd9d80c46622c9aa48b2647 | fc609ecb4374b687a6af3f389173e04db61ec6b2 | 9c82368171ab8e059288fcbc5d581a340e257688e0b2bbf7dabd032416efa932 |
+| `Platform/01-store/ru/acceptance/2/README.cases.md` | MODIFIED | f52e8f11c0277fd23ce5d6f6fbdc3904bc8c7750 | 088323ee848a7c6d8b67003f1ad2d1a11cd87636 | 83598ef9f6ccf56ac2e1e260ba4582245bd1b97a8861a23c58cf20a8abcf85bf |
+| `Platform/01-store/ru/acceptance/2/README.md` | MODIFIED | c22f79466b539b9932ff1698af1c6c2b0ed21b57 | 984c74c4fc6f780c76cc27f03ad179fad3f9fb60 | 618c4588c3ea8bbb12ba5de4e3a349a5751bed403011c61b11ab87d29dd7105b |
+| `Platform/01-store/ru/acceptance/3/README.cases.md` | MODIFIED | aa116d3446487fed1863b9e2a1978fd18db39a03 | 1b2a6f1e4e2887ac3b91c3a1c037cd7e48111baf | f1f5401dad738368ecd2b0c1d9badec4fb7d64f8d742242b773151163176aa02 |
+| `Platform/01-store/ru/acceptance/3/README.md` | MODIFIED | 711205f17ad32efbd27e6b5172ff66ddf23bd05d | b15ed324ef3e6a233f95e3bf6bc2cce5ec0b99c7 | 1582ee14f4b8c9503e1398ef9af29b730fcf3bec5128c128a4b3d2555f09ac3a |
+| `Platform/04-controller/forms/README.cases.md` | MODIFIED | 6ce97e926af8930ab7bbbb4033f153c4f6363884 | bd607cb7bf4f0e4c2d0403837ff36ce2cebbeaed | e80e1b9dde6a12d5a6886f2f5fe29cd9a27d95784bc6f5a6d8b980679d5d7d73 |
+| `Platform/04-controller/forms/README.md` | MODIFIED | 9edba6a2802a9fed2009ed2699f980cf39498b61 | d669f700899eb195bf03b1c7a7cd449f234b0e42 | 9516c997f0e69ce70975436c7a426833d3f98f2876ff81f5fb4c0f434a4b8ab5 |
+| `Platform/04-controller/ru/forms/README.cases.md` | MODIFIED | bbb39f87e98555def1f73d29f7a0f9879689bb61 | 10abef1195901605bcf9973685c39635c3fbb318 | abb72bf5f2c744a6d479d92a60b1945cfdd85a8c03f32f256bf1973204ec3f35 |
+| `Platform/04-controller/ru/forms/README.md` | MODIFIED | 7266ab5e7992ff6994c349ac7b508ece76c2a52a | bf699cfc34fd3bd1d8d6c706c42e52c10c0975fc | 0db73256a6a5177ac5155004327278d6616b9367164874cac8c486f418c18d37 |
+| `Platform/common/acceptance/ops/README.cases.md` | MODIFIED | be676a1064df3fbd59fd5fd1c0766d6de110a677 | 8fb0031d725d987711a3bed7b87057fb5f83201f | c8b39862a40672659b978fa5b545378fc11c8154595a12904ab48c848a94b3cc |
+| `Platform/common/acceptance/ops/README.md` | MODIFIED | e4d82bb2a7eedd26600286f6caf0ca70a2617780 | e16171cf4133ab3a31b34cdba85e3366aa962091 | 490d1607faa1a0b8616c04e1eba528212cec491b0bbf6fb66fe0171165d43e76 |
+| `Platform/common/acceptance/pass/README.cases.md` | MODIFIED | f2767319a7d4627347bf5a0e08c46887f580d4d3 | 09a06e8fae5968786f48d0b1cd87b91434a36fb0 | 2cfcc71ac395be069833e85b8593da2a4e890efef82276459ddcb5056b04764a |
+| `Platform/common/acceptance/pass/README.md` | MODIFIED | 1a9f200e631b719f99a78a4d5919083661710c27 | 563524d3953fef5f3ed109d7a4db022b5acccdfa | dd9e898b01afa82762e5e916ea2949a44fd9feec9f98f5b951c06f70cfa3ee91 |
+| `Platform/common/acceptance/system/README.cases.md` | MODIFIED | bffebafdc265e989483a19cdc751db7f291fd1e8 | f787ce2c8dacd14fe4cdcddce660ae23b9dba481 | 174e6ff416e6a5c93693c94ac0a1dfad8f586ad8aa4df748bd44ea010be6af3c |
+| `Platform/common/acceptance/system/README.md` | MODIFIED | 0dfecaf11c3513f616e8142d9010b8984252c8bb | 81c6489798d9a178c3e2f790434c395ebba92a00 | 674046bfeb06388f80f815ed489e7d8fd742cd0d39cc90463b508732917029f8 |
+| `Platform/common/acceptance/tls/README.cases.md` | MODIFIED | e6cb0db762b8af6d6cc5b461f74e96e5ac388380 | d17d9e8c15d8f1eecdf0d7047268adbf70058ea4 | dd719a29e27b806fe98523771b45ecd5d9b19d5eea120c0d57d0dc3fa79356e5 |
+| `Platform/common/acceptance/tls/README.md` | MODIFIED | 553b150e3d5812bb9df1e7f1a4607be865bbd68e | 7592a4df9d54fa0392eaf4e7b4b9ab1c4a9cd865 | 1fddb5342b7b6fdff6b5bf24652f70e9134af4a8280e65aaf823189a631237d9 |
+| `Platform/common/ru/acceptance/ops/README.cases.md` | MODIFIED | f1dc79ee17db249b2657c6eedc1ba57dfb0178aa | abdee69df2d0b4bd0195cc09c33a027cda0a23f6 | 858f47dd5eabbc9eac988753b9a5dbf5bf79d5d6e5fa5f114830dab9e8131b47 |
+| `Platform/common/ru/acceptance/ops/README.md` | MODIFIED | ef1a1c613b6d391510b88468c00fc08ea3ef58d0 | 0392ad4c46381408b36fd76605363d247765b6f5 | 1037a4c954918f3c997e0678d1694697f8f09a7319699766a7d4bd63667332fd |
+| `Platform/common/ru/acceptance/pass/README.cases.md` | MODIFIED | 50dfa8852b0ec685327e00feefb02a59a1b22211 | 16137b50d2f02577613dca8870e13f62d1ccc881 | ce045cbccaa17e7ff1403b143321f626d141ed653cca6a1878af3709c1e5531c |
+| `Platform/common/ru/acceptance/pass/README.md` | MODIFIED | c7b42992b11e3214fc27d4bb1b8a776bd12301aa | 478d6597ccbfbcbba4b7a7bb27281b80854c1e67 | cdb76fc9d9604a4e942496443fa6abbab5e75268040b8021a3cf8a810306136d |
+| `Platform/common/ru/acceptance/system/README.cases.md` | MODIFIED | 5fa4b02305461467da2205264578a9cc9e5d2f67 | c50e2b87ded7753fdc8769d0859436e683c1ef4c | 6010bb9bc1f00061a4aa8f038f393ecdc36d035174f07c785a7d0cb9b8878619 |
+| `Platform/common/ru/acceptance/system/README.md` | MODIFIED | 3e7e4b4bf2710dcb09ea5f2d3c651f9ca384f300 | 34f8f3bd167b5b4d706c09da82a2d771b3a84f35 | 0fa28aff6f7d8aeaa37423cd165d5fbfe50d760a2e9737a5e6bdaccb17c9a04a |
+| `Platform/common/ru/acceptance/tls/README.cases.md` | MODIFIED | 823835b8a7404b8b3646b1abb53ce435eb462e1e | ce140617f2da1b7147e29b7bb4b0432bb80b5af5 | 2aad4c19b3c06f2fee144084960b5c264d0c9b1631dc899deeb40e5da8e01f35 |
+| `Platform/common/ru/acceptance/tls/README.md` | MODIFIED | 788c052632727f47af03e007135c4b9ac79aa875 | e9707a7a1370d624e81d04bfe81e816a1712a5f8 | 04f4617ea24b93db0d7d2d3c73042c5d72930932740cd128af04491cbf6fd1ec |
+
+This change record is Source/judge provenance outside model input. No filter/export/SourceREADY/GATE, native/model execution or old proof replay is claimed.

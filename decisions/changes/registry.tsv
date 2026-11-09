@@ -59,3 +59,6 @@ change	lesson	share	rev	state	sha	reviews	model
 0133-finite55-remaining	P/01–P/05,Platform/common	Спецификация	1	review	-	-	-
 0133-batch-p05-seams-split	P/01,P/05	Спецификация	1	review	-	-	-
 0133-defects-vector-split	Platform/common	Спецификация	1	review	-	-	-
+0133-finite55-eight-return	P/01,P/04,Platform/common	Спецификация	1	review	-	-	-
+0133-finite55-two-regressions	P/01	Спецификация	1	review	-	-	-
+0133-finite55-copy-file-associations	P/01	Спецификация	1	review	-	-	-
