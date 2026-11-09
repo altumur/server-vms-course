@@ -130,3 +130,12 @@ change. The leader after `-bootstrap` and the joins is `s1` (step 5 of each scen
 ### Original passage 9
 
 In total 24 scenarios / 292 steps, all automatic (sc. 07 — 18 steps, sc. 17 — 53, sc. 18 — 28; formerly sc. 07 was one step `@manual`; sc. 12 steps 23–26, 19, 20, 21 — the coverage audit of P/01; sc. 12 steps 27–32, 22–29 — its second pass, of them 25–29 on the group stand); sc. 15 — steps 1–8 (step 9 is in the acceptance of chapter 6.5, there it is step 1 of sc. 15); sc. 16 — 1 step. 08/6–9 — the floor only upwards, only admin (mutation check 7cecaf2 № 46, 47). Sc. 08: the replay memory of `op: floor` is in the store
+
+### Original passage 10
+
+The `bad-unreadable.jsonl` input below witnesses import refusal, not permission to omit a damaged row from backup.
+
+The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a correct copy;
+
+`copy-ok-unordered.jsonl` — the rows out of order (the reader does not require an order). `bad-*.jsonl` — one
+`copy` refusal per file; nothing is transferred on a refusal.
