@@ -9,7 +9,7 @@
     {
       "path": "Platform/01-store/acceptance/1/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
@@ -24,7 +24,7 @@
     {
       "path": "Platform/01-store/acceptance/2/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
@@ -64,7 +64,7 @@
     {
       "path": "Platform/01-store/acceptance/3/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
@@ -289,27 +289,27 @@
     {
       "path": "Platform/01-store/probes/README.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root P01.10.5.13: retain public observation contract after faithful separation of private judge CLI/instructions; current source admission is BLOCKED until accepted owner closure."
     },
     {
       "path": "Platform/01-store/probes/copy_stream.py",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
     },
     {
       "path": "Platform/01-store/probes/store_fitness.py",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
     },
     {
       "path": "Platform/01-store/probes/store_probe_http.py",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
     },
     {
       "path": "Platform/01-store/probes/store_probes.py",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
     },
     {
       "path": "Platform/01-store/ru/01-store.md",
@@ -454,7 +454,7 @@
     {
       "path": "Platform/01-store/vectors/rights-evaluator/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
@@ -7094,7 +7094,7 @@
     {
       "path": "Platform/02-installer/spec/02.3-installer.norms.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: ROOT_NORMATIVE_EXAMPLE_CLASSIFICATION_REQUIRED_NOT_CONFIRMED_CASE_DEFECT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: preserve canonical generic norms, remove only specific selected-corpus/case association under P01.10.5.14; current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/02-installer/spec/02.4-installer.norms.md",
@@ -8774,7 +8774,7 @@
     {
       "path": "Platform/03-worker/spec/03.2-worker.norms.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: ROOT_NORMATIVE_EXAMPLE_CLASSIFICATION_REQUIRED_NOT_CONFIRMED_CASE_DEFECT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: preserve canonical generic norms, remove only specific selected-corpus/case association under P01.10.5.14; current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/03-worker/spec/03.3-worker.n5.cases.md",
@@ -9019,7 +9019,7 @@
     {
       "path": "Platform/04-controller/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/04-controller/forms/daemon-flags.tsv",
@@ -9429,7 +9429,7 @@
     {
       "path": "Platform/05-resource/forms/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/05-resource/forms/daemon-flags.tsv",
@@ -12819,7 +12819,7 @@
     {
       "path": "Platform/common/acceptance/ops/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/acceptance/ops/probe-op.subsystem.yaml",
@@ -12839,7 +12839,7 @@
     {
       "path": "Platform/common/acceptance/pass/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/acceptance/pass/probe-f.subsystem.yaml",
@@ -12874,7 +12874,7 @@
     {
       "path": "Platform/common/acceptance/system/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/acceptance/system/inputs/cluster.json",
@@ -12889,7 +12889,7 @@
     {
       "path": "Platform/common/acceptance/tls/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_WHOLE_J_PUBLIC_ABI_NOT_ESTABLISHED. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/acceptance/tls/stand.json",
@@ -16624,12 +16624,12 @@
     {
       "path": "Platform/common/versions/DEFECTS.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_MIXED_LIBRARY_DOCUMENT_NO_PUBLIC_ALTERNATIVE. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/versions/README.md",
       "disposition": "model_and_judge",
-      "basis": "P01.10.7.2 finite-role review proposal: RESIDUAL_MIXED_LIBRARY_DOCUMENT_NO_PUBLIC_ALTERNATIVE. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+      "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
     },
     {
       "path": "Platform/common/versions/go.mod",
