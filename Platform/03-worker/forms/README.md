@@ -100,7 +100,7 @@ worker-contribution-cleanup loads two real valid manifests with distinct subsyst
 
 worker-holder-takeover runs two holder process epochs and a real blocked action callback. Record the real in-flight trace and holder/epoch changes as the fields old_call_unfinished_after_wait, cross_holder_exclusion_proven_by_wait and witness. The adapter derives these observations from the controlled IO/callback trace, not by returning constants. The seam does not require B to dispatch at the earliest permitted instant: a stronger barrier/fence may defer or reject it. It records why fixed wait alone is not cross-holder exclusion; the original single-holder s4 still requires maximum one unfinished call. No new alarm/event kind is introduced.
 
-worker-token-cache now distinguishes local now from verification.now at the receiver. The keep-current probe sets local now beyond exp but verifies and accepts the real current token at the recipient's still-valid time; receiver=accepted is that actual reply. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
+worker-token-cache now distinguishes local now from verification.now at the receiver. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
 
 ## Row-write bindings
 

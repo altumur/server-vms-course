@@ -15,3 +15,7 @@ The capture adapter obtains gen_readable from the current generation field codec
 ### Original passage 3
 
 worker-holder-takeover runs two holder process epochs and a real blocked action callback. A starts r1 at 0.2; B takes epoch2 at 1; the old callback returns at 30.2. At 11.2 the fixed 10.2-second wait of B has elapsed while the actual old call is still pending. Record the real in-flight trace and holder/epoch changes: old_call_unfinished_after_wait=true, cross_holder_exclusion_proven_by_wait=false, witness=overlap_possible_marked. The adapter derives these observations from the controlled IO/callback trace, not by returning constants. The seam does not require B to dispatch at the earliest permitted instant: a stronger barrier/fence may defer or reject it. It records why fixed wait alone is not cross-holder exclusion; the original single-holder s4 still requires maximum one unfinished call. No new alarm/event kind is introduced.
+
+### Original passage 4
+
+worker-token-cache now distinguishes local now from verification.now at the receiver. The keep-current probe sets local now beyond exp but verifies and accepts the real current token at the recipient's still-valid time; receiver=accepted is that actual reply. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
