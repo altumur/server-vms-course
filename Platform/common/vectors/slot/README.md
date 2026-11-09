@@ -15,9 +15,6 @@ the age of the observed version on the judge's clock, s (the observation contrac
 `released`, `taking`, `torn`; at `torn` also `takeable` — whether it may be captured by this version (gen reads and the version
 has been observed for no less than `TORN_STILL`; P/03.2 the outcomes `/until`, `/gen`). The comparison — JSON by value.
 
-11 rows: held, the boundary `SLOT_TERM` (44.999 — held, 45 — lapsed), released, taking, a finite `until` in the past, `until`
-of the order of 1e308 and beyond binary64 (MAY-UNTIL-D8-01), the boundary `TORN_STILL` (49.999 and 50), an unreadable `gen`.
-
 ## Run
 
 Without a stand: a side gives the input to its judgement of the slot (the reading and the clock are replaced by the input). The transitions (capture, renewal,

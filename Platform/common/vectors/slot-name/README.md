@@ -16,7 +16,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `next` | `{prefix, names}` → the next name `<prefix>-<max+1>` (a string) |
 | `role` | `{prefix, name, server}` (`server` — the field of the worker heartbeat or `null` — there is no heartbeat) → `{server, n}` (`n` — a string of decimal digits, without overflow) or `"not_role"` |
 
-17 rows: 3 `order`, 4 `next`, 10 `role`. The comparison is JSON by value.
+The comparison is JSON by value.
 
 ## Run
 

@@ -16,8 +16,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `ack` | `{peers, acked, answers, decommission?}`: `answers` — the answer of GET of the copy of each of the peers that is not in acked and is not decommissioned: a code (`404`, `200`, `500`) or `"silent"` (a non-answer); `decommission` — the servers of the listing `platform/decommission/` or `"@unconfirmed"`, no field — `[]` → `{"acked": [...]}` |
 | `remove` | `{tombstone, now, rewritten}`: `tombstone` — `{written, peers, acked}` or `"@garbled"` (unreadable); `now` — the wall seconds of the remover; `rewritten` — the key was written at the deleter again after `written` → `"remove"` or `"keep"` |
 
-The comparison is JSON by value; the arrays `peers` and `acked` — as sets (the order is not normed by the contract; in the table — in ascending
-byte order). 21 rows: 8 `peers`, 5 `ack`, 8 `remove`.
+The comparison is JSON by value; the arrays `peers` and `acked` — as sets (the order is not normed by the contract).
 
 ## Run
 

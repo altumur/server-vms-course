@@ -19,18 +19,14 @@ The table `NN.tsv` holds the families of the owner lesson NN (the column `owner`
 - `verdict` — `ok` or `refused`; `paths` — a JSON array of the refusal paths (the order does not matter); `outcome` — at the writer `[]`,
   at the reader — a JSON object «role → array of paths of the `<family>.outcomes.tsv` rows whose outcome applies to that role»
   (the empty path — the row as a whole);
-- `note` — a mutation of set «A» (`base` — the instance without a mutation; `<path>: <mutation>`, including the fields `key` of the families of P/08),
-  the case id of set «B», `catalog key: <placeholder> "<substitution>"` or `catalog key: literal` — a key not by the template, `add: …` —
-  a row added outside set «A» (a place of refusal, a defect of the library).
 
 The answer of an implementation to a row is the JSON `{"verdict", "paths", "outcome"}`: strictly compared are the verdict, the set of paths and
 the outcome (at the reader — by each role of `who`); `note` and `case` are the names of the row.
 
-The expectations are the dialect reference (the tag `dialect-reference-dc94d0fd1`) with the deltas of set «B» of ADR-0092 (`1e400` — a number outside
-binary64: a refusal of the place, the writer does not crash). The runner compares the verdict, the set of paths and the outcomes.
+The runner compares the verdict, the set of paths and the outcomes.
 
 The iteration order of mappings (D18): in Go the iteration of a `map` is random — the expression and the check must not depend on the order
-of keys (uniqueness and `prefix_free` — without element numbers); the set is run on Go more than once.
+of keys (uniqueness and `prefix_free` — without element numbers).
 
 ## Vector wire
 

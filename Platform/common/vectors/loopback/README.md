@@ -20,10 +20,7 @@ an object, no `url`, `url` not a string or not a URL with a scheme and a non-emp
 at a client such a URL is the `bad_url` of the contract: from the environment — a refusal of start, code 2; from a store row — as if there were no field
 (the review of the norms of ADR-0075 Kimi 80ee2b775, N6).
 
-31 rows: a v4 loopback (including the boundary and the scheme `http`), leading zeros, three parts, a part outside 0–255, a hexadecimal
-notation — a name; an IP outside the loopback, `0.0.0.0`; v6 `::1` in three notations — a loopback; with a zone, `::ffff:127.0.0.1`, `::`, another v6 — `ip`;
-names (`localhost` in two cases, a server name); a dot at the end — a name; `[::0.0.0.1]` (a v4 tail, the value `::1`) — a loopback;
-`[::127.0.0.1]` — `ip`; `userinfo@` before the host does not interfere; not a URL, an empty host, an input not an object, without `url`, `url` not a string — `@exit 2`. The notation of the host is taken as
+The notation of the host is taken as
 written, without normalisation by a URL parser (the contract `loopback`).
 
 ## Run

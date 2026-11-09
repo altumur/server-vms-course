@@ -16,8 +16,6 @@ the exact N as a decimal string) or `{refuse: "not_a_form"}`. The comparison —
 of the process at start; the function of the package in the single command `vectors` answers with code 0 and the output object `{refuse…}`
 (ACC-VECTORS-CONNECT-04; ACC-SCHEMA-REFUSE-EXIT-01, the Architect's decision 2026-10-27).
 
-9 rows: current1, exactly SCHEMA, SCHEMA+1, exact2^63, 0, 1.5, absence; finite-binary64 time and overflow. Positive starts use only the current schema.
-
 ## Run
 
 Without a stand: a side gives the input to its schema check function (the reading of the row is replaced by the input). A read error (wait for

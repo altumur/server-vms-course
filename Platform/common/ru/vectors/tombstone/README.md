@@ -16,8 +16,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | `ack` | `{peers, acked, answers, decommission?}`: `answers` — ответ GET копии каждого из peers, кого нет в acked и кто не выведен: код (`404`, `200`, `500`) или `"silent"` (неответ); `decommission` — серверы листинга `platform/decommission/` или `"@unconfirmed"`, нет поля — `[]` → `{"acked": [...]}` |
 | `remove` | `{tombstone, now, rewritten}`: `tombstone` — `{written, peers, acked}` или `"@garbled"` (нечитаемо); `now` — стенные секунды снимающего; `rewritten` — ключ записан у удалившего снова после `written` → `"remove"` или `"keep"` |
 
-Сравнение — JSON по значению; массивы `peers` и `acked` — как множества (порядок договором не нормирован; в таблице — по
-возрастанию байтов). 21 строка: 8 `peers`, 5 `ack`, 8 `remove`.
+Сравнение — JSON по значению; массивы `peers` и `acked` — как множества (порядок договором не нормирован).
 
 ## Прогон
 

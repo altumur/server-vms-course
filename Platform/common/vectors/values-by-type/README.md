@@ -25,8 +25,7 @@ UTF-8, LF, fields separated by TAB. Lines with `#` and empty lines are skipped, 
 
 ## Run
 
-A side takes a loaded manifest with a field of the needed type (`testsub2` has fields of all types, `int:inherit` — `keep_days`;
-`list:labels` — `testsub.labels`) and checks the rows by its own conversion code, without HTTP:
+A side takes a loaded manifest with a field of the needed type and checks the rows by its own conversion code, without HTTP:
 
 1. **`write`, `both`** — from `json` it gets the element of the row: the text is byte for byte equal to `row`; `@absent` — there is no element;
    `@refuse` — the conversion is refused as a type refusal of N4 (at `@refuse <word>` — with this `fault`); `@json X` — the text

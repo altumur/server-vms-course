@@ -20,12 +20,6 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | `expect` | `{"hold": "held"}` — it holds; `{"hold": "not_held"}` — it does not hold (released, an empty window, the bucket outside the window, there is no section); `{"hold": "unknown"}` — the addressee or the window are not read, the declaration is incomplete or the row did not decode: it holds by the rule «unread — held» («What a row holds» rows 2–3, «Declaration» `partial`), the row — in `garbled_rows.<table>` of the resource heartbeat |
 | `note` | the rule of the contract |
 
-38 rows: 11 `held`, 12 `not_held`, 15 `unknown`. The window — the ends inclusive (touching `since` by the end of the bucket and `until`
-by the beginning), `float` with a fractional second at both ends, `int` with the notation `.0` and with a fraction; `longest` shorter and longer than the window;
-`until = since` and `until < since`; `released` non-empty, `0` at an `int` field, empty, without an element, not declared, over unreadable
-fields; `unit` without an element, empty, with spaces (as is); `since`/`until` without an element, not reading as their type, with the sign
-`-` or `+` and with an exponent (not of the form of the reader `time` of the codec), a field of a non-numeric type; an incomplete declaration; an undecoded row; a manifest without `holds`.
-
 ## Run
 
 Without a stand: a side gives the declaration, the field types, the row and the bucket span to its function «whether a row holds a bucket» and
