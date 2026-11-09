@@ -48,7 +48,7 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
 
 ## Shared vector packages
 
-Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), the targets of this lesson include the four shared packages of the table. Each is run by the entry of the profile section `vectors` with the key of the table and calls the implementation's own function; the input, the output and the comparison are the README of the package and [the vector wire form](../../common/vectors/wire.md), the command is [the profile format](../../common/acceptance/PROFILE.md). The rows of the lesson `01-store` in [`consumers.tsv`](../../common/vectors/consumers.tsv) are the complete list of the shared tables assigned to this lesson.
+Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), the targets of this lesson include the five shared packages of the table. Each is run by the entry of the profile section `vectors` with the key of the table and calls the implementation's own function; the input, the output and the comparison are the README of the package and [the vector wire form](../../common/vectors/wire.md), the command is [the profile format](../../common/acceptance/PROFILE.md). The rows of the lesson `01-store` in [`consumers.tsv`](../../common/vectors/consumers.tsv) are the complete list of the shared tables assigned to this lesson.
 
 | Key in `vectors` | Target | Table | What runs in this lesson | Package |
 |---|---|---|---|---|
@@ -56,6 +56,7 @@ Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evalua
 | `common/log-mask` | `P/01/vectors-log-mask` | `cases.tsv` | the log mask of the store daemon and its CLI | [README](../../common/vectors/log-mask/README.md) |
 | `common/store-client` | `P/01/vectors-store-client` | `cases.tsv` | the parsing of a store answer by the CLI of the daemon (`admin_ops` through `admin.sock`, chapter 1.3 N1.3) | [README](../../common/vectors/store-client/README.md) |
 | `common/family-read` | `P/01/vectors-family-read` | `01.tsv` | the reading of the data families owned by this lesson (the catalogue column `owner`) by the common library of the implementation | [README](../../common/vectors/family-read/README.md) |
+| `common/crl` | `P/01/vectors-crl` | `cases.tsv` | the reading of the file `crl.pem` by the door that checks a TLS peer (chapter 1.3 N1.6) | [README](../../common/vectors/crl/README.md) |
 
 ## Order of work
 

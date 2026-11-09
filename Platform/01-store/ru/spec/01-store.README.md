@@ -47,7 +47,7 @@ unix-сокете): словарь операций (глава 1.1), файл �
 
 ## Общие пакеты векторов
 
-Кроме пакетов самого урока (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), цели этого урока включают четыре общих пакета из таблицы. Каждый запускается записью секции профиля `vectors` с ключом из таблицы и вызывает собственную функцию реализации; вход, выход и сравнение — README пакета и [форма провода векторов](../../../common/ru/vectors/wire.md), команда — [формат профиля](../../../common/ru/acceptance/PROFILE.md). Строки урока `01-store` в [`consumers.tsv`](../../../common/vectors/consumers.tsv) — полный список общих таблиц, назначенных этому уроку.
+Кроме пакетов самого урока (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), цели этого урока включают пять общих пакетов из таблицы. Каждый запускается записью секции профиля `vectors` с ключом из таблицы и вызывает собственную функцию реализации; вход, выход и сравнение — README пакета и [форма провода векторов](../../../common/ru/vectors/wire.md), команда — [формат профиля](../../../common/ru/acceptance/PROFILE.md). Строки урока `01-store` в [`consumers.tsv`](../../../common/vectors/consumers.tsv) — полный список общих таблиц, назначенных этому уроку.
 
 | Ключ в `vectors` | Цель | Таблица | Что запускается в этом уроке | Пакет |
 |---|---|---|---|---|
@@ -55,6 +55,7 @@ unix-сокете): словарь операций (глава 1.1), файл �
 | `common/log-mask` | `P/01/vectors-log-mask` | `cases.tsv` | маска лога демона хранилища и его CLI | [README](../../../common/ru/vectors/log-mask/README.md) |
 | `common/store-client` | `P/01/vectors-store-client` | `cases.tsv` | разбор ответа хранилища командами CLI демона (`admin_ops` через `admin.sock`, глава 1.3 N1.3) | [README](../../../common/ru/vectors/store-client/README.md) |
 | `common/family-read` | `P/01/vectors-family-read` | `01.tsv` | чтение семейств данных, которыми владеет этот урок (столбец каталога `owner`), общей библиотекой реализации | [README](../../../common/ru/vectors/family-read/README.md) |
+| `common/crl` | `P/01/vectors-crl` | `cases.tsv` | чтение файла `crl.pem` дверью, которая проверяет собеседника TLS (глава 1.3 N1.6) | [README](../../../common/ru/vectors/crl/README.md) |
 
 ## Порядок работы
 
