@@ -7,7 +7,7 @@
 # Resource ceilings by their own table and writer/retention outcomes are call surfaces here, not an invented fixed status.
 chapter	row	name	surface	code	kind	fields	headers	log	norm	word	response_schema	cause	outcome	diagnostic	caller
 5	1	resource_role	http	403	-	detail,error	-	-	P/05-R056; P/05 N4	-	ResourceDenied	resource: the role is not admitted before the handler (N2 «Admission to the resource doors»)	403	ResourceDenied	fix the access; TLS before HTTP is a separate refusal
-5	2	object_bad_input	http	400	-	error	-	-	P/05-R056; P/05 N4	-	ResourceError	object: scope/prefix/key not in form, including not UTF-8 and Cc/Zl/Zp; an empty or repeated parameter	400	ResourceError	fix the input
+5	2	object_bad_input	http	400	-	error	-	-	P/05-R056; P/05 N4	-	ResourceError	object: scope/prefix/key not in form, including not UTF-8 and Cc/Zl/Zp; an empty or repeated parameter, except an empty `prefix` of the object listing	400	ResourceError	fix the input
 5	3	object_forbidden_family	http	403	-	error	-	-	P/05-R056; P/05 N4	-	ResourceError	object: the family is not given (including `*` not a subsystem of the catalogue); a row object; a `prefix` under which there is no key of the door families	403	ResourceError	choose an allowed door
 5	4	object_missing	http	404	-	error	-	-	P/05-R056; P/05 N4	-	ResourceError	object: not among those who answered	404	ResourceError; X-Missing with an incomplete poll	do not derive absence on a silent server
 5	5	object_unreadable	http	503	-	error	-	-	P/05-R056; P/05 N4	-	ResourceError	object: the copy/listing does not read	503	ResourceError	repeat the read

@@ -408,7 +408,7 @@ Empty/repeated parameters, unknown parameters (`&foo=1`), other forms and values
 `timeout` — only ASCII digits (and a dot for `timeout`), non-ASCII digits — 400 (reconciliation of python and go M10/6–11, E14, E16). `since=0` —
 the client has no position: the answer at once is `{changed: true, seq, touched}` if under want there are lines in the buckets of the resource of any
 age; seq is an opaque monotonic number of the resource process, the client only compares it and passes it back
-(reconciliation of python and go M10/6–11, E46). The hint is given by the subsystem trees of the catalogue (`<sub>`, `<sub>.alarms`); the trees `console` and `audit`
+(reconciliation of python and go M10/6–11, E46). With `since` equal to the `seq` last returned by this resource process and no line under `want` written after that `seq`, the wait ends at its term with `{changed: false, seq}`; a line under `want` written after that `seq` answers `{changed: true, seq, touched}`. The hint is given by the subsystem trees of the catalogue (`<sub>`, `<sub>.alarms`); the trees `console` and `audit`
 give no hint (both implementations do so, there was no norm).
 This bounded profile does not require accepting any internal unit names: the periodic
 pass of the client stays mandatory and works without the hint.
@@ -851,7 +851,7 @@ with an incomplete poll X-Missing is required, completeness is not derived from 
 
 **Query parsing.** The resource door — by P/01.1 N2.1
 (query, the path byte for byte, HTTP by RFC 9112, an early refusal) with deviations: a refusal of query parsing — 400 ResourceError
-`{error}`; an empty or repeated parameter — 400; no path and an unsupported method — 404/405 without a body, including
+`{error}`; an empty or repeated parameter — 400, except an empty `prefix` of the object listing (200, R008; the Architect's decision of 2026-11-09); no path and an unsupported method — 404/405 without a body, including
 `OPTIONS`, `POST /events`, `PUT /v1/objects` (the listing), `GET`/`POST`/`DELETE` on `/mirror/…`; `PUT /v1/objects/{non-blob}` —
 the application 405 ResourceError (N4); `/buckets/{sub}/{unit}` — exactly two non-empty segments, `/buckets/testsub/`,
 `/buckets/../objects`, `/buckets/testsub%2Fc1` — 404 without a body; the bodies of `PUT` are bytes, JSON is not parsed (reconciliation of python and go M10/6–11,
