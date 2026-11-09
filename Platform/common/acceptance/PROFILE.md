@@ -175,7 +175,7 @@ The runner writes `{input}` as one UTF-8 JSON object, followed by LF. Its field 
 | `format` | Integer lexeme `1`. |
 | `package` | Package name from the profile entry. |
 | `table` | Nonempty relative table name inside the package, without empty, `.` or `..` slash segments, NUL, CR or LF. |
-| `case` | Nonempty UTF-8 row identity; a headerless row without a case uses `line-<physical source line>`. |
+| `case` | Nonempty UTF-8 row identity; a headerless row without a case uses `line-<physical source line>`. A case name that exists only on the judge side is sent as an opaque identifier, constant within the run; the judge keeps the mapping and the source case, line and SHA. |
 | `variant` | String `""`, `write` or `read`, as assigned by the package. |
 | `cells` | Object mapping nonempty input-column names to UTF-8 strings, including empty strings. |
 | `files` | Object mapping relative input-fixture names to canonical standard RFC 4648 Base64 of exact file bytes; `{}` is allowed. |

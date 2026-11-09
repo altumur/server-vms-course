@@ -1,6 +1,6 @@
 # Acceptance target routing, judge-only. One row per id of forms/targets.tsv; id is the only repeated column.
-# engine: the shared engine or scenario family that executes the target.
-# acceptance: JSON array of repository-relative directories holding its tables and inputs.
+# engine: the shared engine or scenario family, a closed word; what each executes: run — the scenarios.tsv of the first directory; extra — the probes of the README of the first directory (scenarios none); l06 — the scenarios.tsv of the first directory and the rows of expect.tsv of the second; l11, store_group, power_stand — the scenarios.tsv of the first directory; vector — the rows that the wire form assigns to the package.
+# acceptance: JSON array of repository-relative directories. The first holds the executable table of the target and scenarios applies to it alone; the others hold only inputs of that table, unless the engine word above names one. For vector the directories locate the tables and fixtures of the package.
 # scenarios: all | none | first-step:<directive> | not-first-step:<directive> | range:<first>-<last> (the number prefix of a scenario name).
 # parts: JSON array of {key,owner}, the parts of other lessons in the stand of this target.
 id	engine	acceptance	scenarios	parts

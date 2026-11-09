@@ -16,7 +16,7 @@ The judge is one shared engine. A lesson is only data. The engine branches only 
 
 <!-- req: P/AC-R029 -->
 
-The suites TLS and ER of [`tls/README.md`](../tls/README.md) are outside the first wave of the engine: their steps are written there as prose and the table of these steps is a separate piece of work.
+The first wave of the engine is the targets of P/01 with a stand, scenarios or vectors. Outside it are the combat targets of D7, load, the judgement of families (the package `common/family-read`), the stands of consoles and of several clusters (the target `system/05-power-pull` among them), VMS, and the suites TLS and ER of [`tls/README.md`](../tls/README.md): the steps of those suites are written there as prose and their table is a separate piece of work. The registry keeps these targets; the first wave is a selection of the run, not a branch of the engine.
 
 ## N1 Forms
 
@@ -40,7 +40,7 @@ In a table with a header, a row whose cell count differs from the header is a da
 
 <!-- req: P/AC-R006 -->
 
-The targets are the rows of the registry: the public table [`forms/targets.tsv`](../forms/targets.README.md) and the judge-side routing table `forms/targets.routing.tsv` in the same directory, which has one row for each `id` of the public table and repeats no other column. A target's owner, interfaces, keys, requirement anchors and flags come only from the public table; its engine family, acceptance directories, scenario selection and parts of other lessons come only from the routing table. The [target requirements](../runner-targets.README.md) define the columns they share.
+The targets are the rows of the registry: the public table [`forms/targets.tsv`](../forms/targets.README.md) and the judge-side routing table `forms/targets.routing.tsv` in the same directory, which has one row for each `id` of the public table and repeats no other column. A target's owner, interfaces, keys, requirement anchors and flags come only from the public table; its engine family, acceptance directories, scenario selection and parts of other lessons come only from the routing table. The [target requirements](../runner-targets.README.md) define the columns they share. In a routing row the first directory holds the table the target executes and the selection of scenarios applies to it alone; the other directories hold its inputs unless the engine word names them as executable.
 
 ### N1.4 Verdict of a target
 
@@ -58,7 +58,7 @@ The result of a target is GREEN, red, `not_executed`, `not_applicable` or `block
 
 <!-- req: P/AC-R030 -->
 
-The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key.
+The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class.
 
 <!-- req: P/AC-R031 -->
 
@@ -80,7 +80,7 @@ The gate `accept:<chapter>:<scenarios>` of a stage reads per scenario: a scenari
 
 <!-- req: P/AC-R010 -->
 
-A report given to the line that generates the implementation carries the name of a case, a norm anchor, the class of the mismatch and the tail of the stderr of a failed case, never an expected answer. The tail is at most 4 KiB, and every substring of at least 8 bytes that occurs in the inputs, fixtures or expectations of the case is cut out of it. A case name that exists only on the judge side is replaced by an opaque identifier, constant within the run.
+A report given to the line that generates the implementation carries the name of a case, a norm anchor, the class of the mismatch and the tail of the stderr of a failed case, never an expected answer. The tail is at most 4 KiB, and every substring of at least 8 bytes that occurs in the inputs, fixtures or expectations of the case is cut out of it. A case name that exists only on the judge side is replaced by an opaque identifier, constant within the run, in such a report and in the `case` of a request to the implementation.
 
 <!-- req: P/AC-R011 -->
 
@@ -185,7 +185,7 @@ The class of a chapter or a target over its steps is the first of `runner`, `sta
 
 <!-- req: P/AC-R038 -->
 
-A stand command that did not answer is a failure of the stand, not an outcome of the implementation: it could not start (the shell codes 126 and 127), it died by a signal, or its term expired.
+A command of the profile of the implementation that could not start (the shell codes 126 and 127), died by a signal or whose term expired has the class `implementation`. The class `stand` applies only to a command of the stand itself or a proxy of the judge.
 
 <!-- req: P/AC-R025 -->
 
@@ -199,7 +199,7 @@ The heartbeat of a stand-in worker that fails, or any other failure of a part of
 
 <!-- req: P/AC-R027 -->
 
-This lesson is checked mechanically over a stub of the protocols, not by a corpus of verdicts: the build of the judge; a dry listing that names every target of the registry, every selected scenario and every vector row; a parse of every table of the input with its forms; and a stub of the stand protocol that records the calls and answers only with the form, on which every target MUST actually call its interfaces.
+This lesson is checked mechanically over a stub of the protocols, not by a corpus of verdicts: the build of the judge; a dry listing that names every target of the first wave, every selected scenario and every vector row; a parse of every table of the input with its forms; and a stub of the stand protocol that records the calls and answers only with the form, on which every target of the first wave MUST actually call its interfaces.
 
 <!-- req: P/AC-R028 -->
 
