@@ -2767,6 +2767,11 @@ class Check:
             self.error(self.root / where, message)
         for name, value in stats.items():
             self.stats[name] = value
+        document = self.root / FAMILY_READ / "README.cases.md"
+        if document.is_file() and not document.is_symlink():
+            text = self.read(document)
+            if text is not None:
+                self.markdown(document, text)
         # Таблица на каждого урока-владельца семей со схемой (ревью Claude С-1); отложенная — исключение family-read
         # (урок P/NN, значение NN.tsv); таблица есть, а исключение осталось — устарело.
         package = self.root / FAMILY_READ
@@ -2922,7 +2927,7 @@ class Check:
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
                      "en",                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
                      "seams.tsv",                # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
-                     "sleeps.cases.md"}          # judge-only Markdown document, not an executable format
+                     "sleeps.cases.md", "README.cases.md"}  # judge-only Markdown, not an executable format
         legacy = acceptance == self.root / LEGACY_VERDICTS.parent
         if legacy:
             supported.add("spec_verdicts")
@@ -2949,9 +2954,9 @@ class Check:
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
                 elif item.name not in ("cases", "puts", "en", "spec_verdicts") and \
-                        (not item.is_file() or (item.name == "sleeps.cases.md" and item.is_symlink())):
+                        (not item.is_file() or (item.name in ("sleeps.cases.md", "README.cases.md") and item.is_symlink())):
                     self.error(item, "acceptance table/document must be a file")
-                elif item.name == "sleeps.cases.md":
+                elif item.name in ("sleeps.cases.md", "README.cases.md"):
                     document = self.read(item)
                     if document is not None:
                         self.markdown(item, document)
@@ -3067,6 +3072,7 @@ class Check:
     def vector_hashes(self):
         patterns = ("Platform/**/vectors/**/README.md",) if self.scope == "platform" else (
             "VMS/**/vectors/**/README.md",) if self.scope == "vms" else ("*/**/vectors/**/README.md",)
+        patterns += tuple(pattern.removesuffix("README.md") + "README.cases.md" for pattern in patterns)
         for readme in sorted(p for pattern in patterns for p in self.root.glob(pattern)):
             for line, text in enumerate(readme.read_text(encoding="utf-8").splitlines(), 1):
                 match = re.search(r"\]\(([^)]+)\)\s*\|\s*`([0-9a-f]{64})`", text)

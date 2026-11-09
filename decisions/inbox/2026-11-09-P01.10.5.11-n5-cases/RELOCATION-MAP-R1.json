@@ -1,0 +1,32 @@
+{
+ "parent_main": "e5399581ea0277dd7a80ab1187e31c30574dae5c",
+ "return_R1": true,
+ "files": [
+  {
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "changed_LF": 845,
+   "before_blob": "e890c8e3ec7aec440f9ca52745461315533486f9",
+   "after_blob": "847f2ea9aadf4fe9ed40acc798947ca36ad26aba",
+   "after_sha256": "a53a8dcf884751915961e0c52adcff94deb711380bd47c6b1008fb13e46e4ed2",
+   "cases_path": "Platform/06-console/spec/06.5-console.n5.cases.md",
+   "cases_before_blob": "0d45c8d016fdfc2aa80a2bf89466aab7385ccc06",
+   "cases_after_blob": "a79281213d8e1341db7c638b12375e088fc8e458",
+   "cases_after_sha256": "16b1c79642119bfa90628829cc44fa507c3db0dc624dabc015e1a389540bfec8",
+   "relocated_sha256": "74d75f5d5074b2e948a9da4adf539b823a1f08b4817f5aa01cd0f7f09777ce11",
+   "substring_of_line": true
+  },
+  {
+   "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
+   "changed_LF": 802,
+   "before_blob": "9d5869a6f0b2da73e99bdb62bd215f5571d306fb",
+   "after_blob": "98c80c79301a16bd7a09973f1bb8e8fbf060e633",
+   "after_sha256": "f075d6b39209135f39cd00e11b36b3540c24615cff314e75add70e80156d0636",
+   "cases_path": "Platform/06-console/ru/spec/06.5-console.n5.cases.md",
+   "cases_before_blob": "4e3c80e8d0025906aef16de00a81431a4384e28c",
+   "cases_after_blob": "b6eda9080a764d589ee558d48e95d2e6058052e6",
+   "cases_after_sha256": "e46989034e340c08e36986cc23c31465018f4c0a61bb191687468a5063e07f1e",
+   "relocated_sha256": "d7e4886b30977d74fdad913272012e22d44f7bf730ce6bd3c8e33eff61429dbc",
+   "substring_of_line": true
+  }
+ ]
+}

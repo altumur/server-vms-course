@@ -5,12 +5,10 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
 [`01.2-store.norms.md`](../../spec/01.2-store.norms.md) N5, the full bodies of the two routes are in
 [OpenAPI](../../spec/01-store.api.openapi.yaml).
-The file has 11 scenarios / 67 steps (mutation check 7cecaf2 № 28, 31: `never` for admin, `/v1/rights` only for admin; sc. 11–13 — the coverage audit of P/01 2026-10-30: `never` of the floor and of `domain/`, a role header on listing, the rights file — `@rights store`; sc. 14–15 — its second pass: the bounds of `never`, the domain roles, `comment`); the rights
-file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (the form of P/01.2 N1.2): the roles `console`,
-`testsubcontroller`, `testsubworker`, `testsub2worker` and the patterns the steps need — a subset of the rights output of P/02.5 N1.4 for
-`testsub` and `testsub2` (`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `testsub`. The runner puts it
-into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios were moved from the acceptance of M10/06
-(stage B) with the former numbers, steps and texts; the scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
+The rights
+file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (the form of P/01.2 N1.2).
+The runner puts it
+into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
 
 ## Profile interface
 
@@ -21,7 +19,7 @@ Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md).
 The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
 the method, `$name`, `ASSERT`; the expectation is a subset of fields, `index` may be omitted. Specific to the chapter:
 
-- `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key. For an identity refusal in scenario 08 — the socket role `testsubworker` and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role console does not replace the socket role.
+- `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key. For an identity refusal — the socket role and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role does not replace the socket role.
 
 An absent expectation body for 200 does not mean an empty answer. Its form is checked by the input
 contract of chapter 1.1; 403 is exactly the string fields kind/error without console fields. `$name` is bound only

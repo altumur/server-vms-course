@@ -7,6 +7,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/01-store/acceptance/1/README.md",
       "disposition": "model_and_judge",
       "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
@@ -20,6 +25,11 @@
       "path": "Platform/01-store/acceptance/1/seams.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/01-store/acceptance/2/README.md",
@@ -60,6 +70,11 @@
       "path": "Platform/01-store/acceptance/2/scenarios.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/01-store/acceptance/3/README.md",
@@ -327,14 +342,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/ru/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/01-store/ru/acceptance/1/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
     },
     {
+      "path": "Platform/01-store/ru/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/01-store/ru/acceptance/2/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/01-store/ru/acceptance/3/README.md",
@@ -402,6 +432,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/01-store/ru/vectors/rights-evaluator/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -460,6 +495,11 @@
       "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/01-store/vectors/rights-evaluator/README.md",
@@ -9027,6 +9067,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/04-controller/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/04-controller/forms/README.md",
       "disposition": "model_and_judge",
       "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
@@ -9090,6 +9135,11 @@
       "path": "Platform/04-controller/ru/acceptance/sleeps.cases.md",
       "disposition": "judge_only",
       "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/04-controller/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/04-controller/ru/forms/README.md",
@@ -9437,6 +9487,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/05-resource/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/05-resource/forms/README.md",
       "disposition": "model_and_judge",
       "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
@@ -9495,6 +9550,11 @@
       "path": "Platform/05-resource/ru/acceptance/sleeps.cases.md",
       "disposition": "judge_only",
       "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/05-resource/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/05-resource/ru/forms/README.md",
@@ -10492,9 +10552,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06.1-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06.1-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.2-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/ru/spec/06.2-console.norms.md",
@@ -10502,9 +10572,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06.3-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06.3-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.4-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/ru/spec/06.4-console.norms.md",
@@ -10512,9 +10592,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06.5-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06.5-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.6-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/ru/spec/06.6-console.norms.md",
@@ -10522,14 +10612,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06.7-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06.7-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/ru/spec/06.8-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/ru/spec/06.8-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/06-console/ru/spec/06.9-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/ru/spec/06.9-console.norms.md",
@@ -10597,49 +10702,94 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/06-console/spec/06.1-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/06-console/spec/06.1-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.2-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.2-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.3-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.3-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.4-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.4-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.5-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.5-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.6-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.6-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.7-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.7-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.8-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.8-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/06-console/spec/06.9-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/06-console/spec/06.9-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
     },
     {
       "path": "Platform/06-console/vectors/contender-projection/README.md",
@@ -12112,9 +12262,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/spec/08.1-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/08-domain/ru/spec/08.1-domain.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.10-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/ru/spec/08.10-domain.norms.md",
@@ -12122,9 +12282,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/spec/08.2-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/08-domain/ru/spec/08.2-domain.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.3-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/ru/spec/08.3-domain.norms.md",
@@ -12132,9 +12302,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/spec/08.4-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/08-domain/ru/spec/08.4-domain.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.5-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/ru/spec/08.5-domain.norms.md",
@@ -12142,14 +12322,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/spec/08.6-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/08-domain/ru/spec/08.6-domain.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/08-domain/ru/spec/08.7-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/08-domain/ru/spec/08.7-domain.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/08-domain/ru/spec/08.8-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/ru/spec/08.8-domain.norms.md",
@@ -12199,57 +12394,102 @@
     {
       "path": "Platform/08-domain/spec/08.0-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.1-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.1-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.10-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.10-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.2-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.2-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.3-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.3-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.4-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.4-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.5-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.5-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.6-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.6-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.7-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.7-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/08-domain/spec/08.8-domain.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/08-domain/spec/08.8-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
     },
     {
       "path": "Platform/08-domain/spec/08.9-domain.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
     },
     {
       "path": "Platform/08-domain/vectors/assemble/README.cases.md",
@@ -12872,9 +13112,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/09-agent/ru/spec/09.1-agent.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/09-agent/ru/spec/09.1-agent.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/09-agent/ru/spec/09.2-agent.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/09-agent/ru/spec/09.2-agent.norms.md",
@@ -12897,14 +13147,24 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/09-agent/spec/09.1-agent.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/09-agent/spec/09.1-agent.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
+    },
+    {
+      "path": "Platform/09-agent/spec/09.2-agent.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
     },
     {
       "path": "Platform/09-agent/spec/09.2-agent.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
     },
     {
       "path": "Platform/09-agent/vectors/follow/README.md",
@@ -13032,6 +13292,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/ru/spec/10-domain-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/10-domain-console/ru/spec/10-domain-console.norms.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -13057,9 +13322,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/10-domain-console/spec/10-domain-console.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted3e73 exact N5 private case-prose companion; ordinary source bytes retained only J."
+    },
+    {
       "path": "Platform/10-domain-console/spec/10-domain-console.norms.md",
       "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Root accepted exact23 N5 scope at3e73:21changed plus unchanged08.0/08.9 with generic readiness/name/norm scope. Specific setup/outcome associations are J; no blanket keyword/count ban or whole-course admission."
     },
     {
       "path": "Platform/10-domain-console/vectors/alarms/README.md",
@@ -13107,6 +13377,11 @@
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
     },
     {
+      "path": "Platform/common/acceptance/ops/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/common/acceptance/ops/README.md",
       "disposition": "model_and_judge",
       "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
@@ -13125,6 +13400,11 @@
       "path": "Platform/common/acceptance/ops/stand.json",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/acceptance/pass/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/acceptance/pass/README.md",
@@ -13153,13 +13433,23 @@
     },
     {
       "path": "Platform/common/acceptance/runner-targets.README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root accepted c518 exact minimal public target/owner/stand/address/key/requirement/norm contract. No driver/Runner anchors/J hashes/provenance recursively; old full224 contract remains J-only history."
+    },
+    {
+      "path": "Platform/common/acceptance/runner-targets.provenance.cases.md",
       "disposition": "judge_only",
-      "basis": "Root withdrew whole-M admission after P01.34 S4: frozen target table/companion retain Reader-code anchors and provenance; safe public projection pending, no current model exposure."
+      "basis": "Root-selected single historical opaque full224table and original README wrapper; private provenance/Runner references retained byte-exact only J, not the current routing contract."
     },
     {
       "path": "Platform/common/acceptance/runner-targets.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Root accepted c518 exact minimal public target/owner/stand/address/key/requirement/norm contract. No driver/Runner anchors/J hashes/provenance recursively; old full224 contract remains J-only history."
+    },
+    {
+      "path": "Platform/common/acceptance/system/README.cases.md",
       "disposition": "judge_only",
-      "basis": "Root withdrew whole-M admission after P01.34 S4: frozen target table/companion retain Reader-code anchors and provenance; safe public projection pending, no current model exposure."
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/acceptance/system/README.md",
@@ -13175,6 +13465,11 @@
       "path": "Platform/common/acceptance/system/scenarios.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/common/acceptance/tls/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/acceptance/tls/README.md",
@@ -13517,9 +13812,19 @@
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
     },
     {
+      "path": "Platform/common/ru/acceptance/ops/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/common/ru/acceptance/ops/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/pass/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/ru/acceptance/pass/README.md",
@@ -13527,9 +13832,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/acceptance/system/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
       "path": "Platform/common/ru/acceptance/system/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/tls/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/ru/acceptance/tls/README.md",
@@ -14130,6 +14445,11 @@
       "path": "Platform/common/ru/versions/DEFECTS.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/versions/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/ru/versions/README.md",
@@ -16940,6 +17260,11 @@
       "path": "Platform/common/versions/DEFECTS.md",
       "disposition": "model_and_judge",
       "basis": "Root finite55 selection: public generic obligation must remain at this whole file path after Source P01.10.5.14 clean/split or proven complete public alternative. Current mixed admission BLOCKED pending accepted closure."
+    },
+    {
+      "path": "Platform/common/versions/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
     },
     {
       "path": "Platform/common/versions/README.md",

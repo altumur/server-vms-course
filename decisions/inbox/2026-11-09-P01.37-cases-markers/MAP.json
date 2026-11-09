@@ -1,0 +1,353 @@
+{
+ "parent": "5aa766a005058f89dc406d9a06e6e54c9515cba3",
+ "files": [
+  {
+   "path": "Platform/06-console/acceptance/1/README.cases.md",
+   "before_blob": "48156039e7fb766128f08f72757f1afbe1f2e395",
+   "after_blob": "c7f71fc8d9c2def5c4895362c36b99c8ae8bb9e8",
+   "markers": 16
+  },
+  {
+   "path": "Platform/06-console/acceptance/2/README.cases.md",
+   "before_blob": "1a9219fe868bd23b3a436f6f4ca2dc3a854c5315",
+   "after_blob": "ec8ed4c999fac468f53bba49bed86b9c31994265",
+   "markers": 4
+  },
+  {
+   "path": "Platform/06-console/acceptance/3/README.cases.md",
+   "before_blob": "099c4ed9b5467dd765532f5e572e686bfbd9d725",
+   "after_blob": "88163ba424acb2c00fdc97b43a90b0cac4d5d82c",
+   "markers": 1
+  },
+  {
+   "path": "Platform/06-console/acceptance/4/README.cases.md",
+   "before_blob": "ffc54073e359e09112beaadf7a317fa7250e1ac3",
+   "after_blob": "c2edb52354bf83019ab32d45ad790311ee733c72",
+   "markers": 6
+  },
+  {
+   "path": "Platform/06-console/acceptance/5/README.cases.md",
+   "before_blob": "ea4cc928d011ab071356209483ecca872242f44a",
+   "after_blob": "f99a05b7fe46eb781cb245e52662b0264589a841",
+   "markers": 18
+  },
+  {
+   "path": "Platform/06-console/acceptance/6/README.cases.md",
+   "before_blob": "152066bc8bbe7f066c71f0c1c6cfd4134725abd0",
+   "after_blob": "341a637f673d9a0cf809dc3f86e617cd00d98793",
+   "markers": 14
+  },
+  {
+   "path": "Platform/06-console/acceptance/7/README.cases.md",
+   "before_blob": "99297ec7d408e17f2f569a46bb60a57494fe6e90",
+   "after_blob": "43e6e790d2ce2a415e4be84c390e25849f17424c",
+   "markers": 7
+  },
+  {
+   "path": "Platform/06-console/acceptance/8/README.cases.md",
+   "before_blob": "cc54baf4f818285a96ce1ef2ae2c8a8cebb080ca",
+   "after_blob": "98dec918085fdc0e99d65323a5d2d890e48853ff",
+   "markers": 4
+  },
+  {
+   "path": "Platform/06-console/acceptance/9/README.cases.md",
+   "before_blob": "36e8ed30a761608207c19321fbd28eeb9988f6a2",
+   "after_blob": "48434e0f672defb0458fd01668a6a180576682e2",
+   "markers": 1
+  },
+  {
+   "path": "Platform/06-console/forms/README.cases.md",
+   "before_blob": "0d173fccc129d56a71f8fa576d730d3abdf91e28",
+   "after_blob": "e504746a6acca356579bef8512032d37381fa7d1",
+   "markers": 2
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/1/README.cases.md",
+   "before_blob": "f0b20f3fb1b93bd261b9d2b9bb7d50c76397440e",
+   "after_blob": "eab634b26fc2a3a5f5c33aaca934353493ca14dd",
+   "markers": 16
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/2/README.cases.md",
+   "before_blob": "7c13e3c0014d50f08ad4879bf4b2dac46e3f221c",
+   "after_blob": "7e0485e8d3231a5d8a3353cdbc350197d2061ec4",
+   "markers": 4
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/3/README.cases.md",
+   "before_blob": "b59ac7da7d228bee080c88485cbeea2d332bf1f8",
+   "after_blob": "1959d0f202a664720dbd945722075e911d8a0832",
+   "markers": 1
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/4/README.cases.md",
+   "before_blob": "fd118737a3fd00b9772f3578f6ab8907a056f83f",
+   "after_blob": "6524ab3c25c3154d479c41367fbc743a53c0ad05",
+   "markers": 6
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/5/README.cases.md",
+   "before_blob": "f67d5cbc92066ff7701d4e57c711604da7d795d0",
+   "after_blob": "4026c552d21c80fcda11a4842ad2a6132e961b4a",
+   "markers": 18
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/6/README.cases.md",
+   "before_blob": "99044e8f142a620e32025550bef463a997c300d3",
+   "after_blob": "1fc9426e11401c09b9ae4c5c0e7691a92be04fe3",
+   "markers": 14
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/7/README.cases.md",
+   "before_blob": "51c204a2fefd96e3aefc34ee47dd37ad7b2c8da2",
+   "after_blob": "3a44fc6c2a82732b718a2afa551cfcf245e971fa",
+   "markers": 7
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/8/README.cases.md",
+   "before_blob": "84d97eadea89d62e140658e65fefadb8c1e022a0",
+   "after_blob": "9ab1f184228456547e624a714751d38b71eb9af5",
+   "markers": 4
+  },
+  {
+   "path": "Platform/06-console/ru/acceptance/9/README.cases.md",
+   "before_blob": "54d9321c353cd4ee5f01e3d919a395c43f1d9b6e",
+   "after_blob": "038e3679cf2920eec2f489f609451cfd8ea5bef7",
+   "markers": 1
+  },
+  {
+   "path": "Platform/06-console/ru/forms/README.cases.md",
+   "before_blob": "73841432bedefa60c3410ea32e1220ed68d5eb44",
+   "after_blob": "9bd7e53edf4ef1fe2b9b41afdde831e15123554e",
+   "markers": 2
+  },
+  {
+   "path": "Platform/06-console/ru/spec/06-console.README.cases.md",
+   "before_blob": "14948b38267c4a0d91ba95e8432d32339e6419c9",
+   "after_blob": "10a742a4f2ce4a6633d710d070babb788da849e9",
+   "markers": 2
+  },
+  {
+   "path": "Platform/06-console/spec/06-console.README.cases.md",
+   "before_blob": "6f6b28860578e21061d14479882c74df59c80567",
+   "after_blob": "32ebb432954fbd97a160c99c5c95e059cf7b6210",
+   "markers": 2
+  },
+  {
+   "path": "Platform/08-domain/acceptance/1/README.cases.md",
+   "before_blob": "7f89830702ac0a2497e19ba399bf18f256779249",
+   "after_blob": "7755373d0ca776e288e8aa2529669d5a8bcb5a19",
+   "markers": 3
+  },
+  {
+   "path": "Platform/08-domain/acceptance/10/README.cases.md",
+   "before_blob": "b07d244da9b15f10bb4db28153c4e13bc6be75cb",
+   "after_blob": "1069e89ae485b6b81c878090bcb8e720a04a9acd",
+   "markers": 1
+  },
+  {
+   "path": "Platform/08-domain/acceptance/3/README.cases.md",
+   "before_blob": "50b17b548bf4c126a9f13712c20d1198db437bdd",
+   "after_blob": "be442f05ef3f747176375f0efdca9beeb1ca712b",
+   "markers": 8
+  },
+  {
+   "path": "Platform/08-domain/acceptance/4/README.cases.md",
+   "before_blob": "df35cfd9e7bf2c17ac87e8c088e4b8d903587cb7",
+   "after_blob": "6a83640491f90382251b143999828c94cf2f7fb0",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/acceptance/5/README.cases.md",
+   "before_blob": "d6f57b07525be7cda701f9263c7d2330c2942199",
+   "after_blob": "4b99642af25523b94ff98d021b847c5d3e2eaebe",
+   "markers": 5
+  },
+  {
+   "path": "Platform/08-domain/acceptance/6/README.cases.md",
+   "before_blob": "338dfab43eca28a5dc8baaaf0ce7648d1b6e1e83",
+   "after_blob": "cdfc4dd18a68f5997f40230feb64b23d52b8df90",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/acceptance/7/README.cases.md",
+   "before_blob": "0285a0ff6aa27d6b37870e02914d9b3526f05817",
+   "after_blob": "3240e65bf8565ce06b69b319d92b4a0cc9c209b9",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/acceptance/8/README.cases.md",
+   "before_blob": "5385348d0aa76949bd1340f95ea1247fb9ba4c48",
+   "after_blob": "1e6b9c764cd3495d65b90df370960d68a53eeb9f",
+   "markers": 5
+  },
+  {
+   "path": "Platform/08-domain/acceptance/9/README.cases.md",
+   "before_blob": "3d81eba9b4f6881c89d8864657d16face6675d11",
+   "after_blob": "87eba7ff40afad1208c9746d046b31d1bbb1f6d7",
+   "markers": 2
+  },
+  {
+   "path": "Platform/08-domain/forms/README.cases.md",
+   "before_blob": "0bf45fbf2b663f9f9be657cd916006e0ec6a3157",
+   "after_blob": "2d112831dc047c064bc7c9c49acf19ef4a7252f6",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/1/README.cases.md",
+   "before_blob": "c3a9e1f3ae40bb8d3345981eaf30428ac643a74e",
+   "after_blob": "a15e3b67977a8d19d99c46ee54630294f449c57d",
+   "markers": 3
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/10/README.cases.md",
+   "before_blob": "359f8c30825de7a00683edebb72da2050a65d4db",
+   "after_blob": "b76081b5937036ea1a8a4a570a1790e635694246",
+   "markers": 1
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/3/README.cases.md",
+   "before_blob": "f54e8e6684ea4a8e664d122bcfc25ef15b232c8b",
+   "after_blob": "5df3f36fd3714c21f737d629741cf0d454ead12e",
+   "markers": 8
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/4/README.cases.md",
+   "before_blob": "bda5880c98bed4d0d76025c4cc0311b76fdb12a1",
+   "after_blob": "ae89697dfad494a4746c7f8333147532c41f9894",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/5/README.cases.md",
+   "before_blob": "53d06d0bf925a359e607fc08f150e0a2d84a6964",
+   "after_blob": "1997ab9cc1bfafcfbdde4af8a0f913da52b22ab8",
+   "markers": 5
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/6/README.cases.md",
+   "before_blob": "95d320d4d1b83548e4c23776de2ccbf031482232",
+   "after_blob": "cef32102fdfa945cfb4ae4764d66c814df21cc0a",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/7/README.cases.md",
+   "before_blob": "70f0ac06be8e02ccf2ee35e2b7a2c42409adf957",
+   "after_blob": "dd56b1ef70ccee108999883e6399dfb79aedd182",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/8/README.cases.md",
+   "before_blob": "45dd7ea91b3c2cea6b91a1a59533c23a2242e48a",
+   "after_blob": "18bae8817aab50f049e358b60091b8091686ba62",
+   "markers": 5
+  },
+  {
+   "path": "Platform/08-domain/ru/acceptance/9/README.cases.md",
+   "before_blob": "825d065b7d3e4bbf693403bc752bd994584c78a6",
+   "after_blob": "96b38099e73fb91b5986e3f8a0d887b0caada616",
+   "markers": 2
+  },
+  {
+   "path": "Platform/08-domain/ru/forms/README.cases.md",
+   "before_blob": "9ba6295aa0dfc0f48d7e9cf1093bf664d904dd2a",
+   "after_blob": "cdcef4f29a9faa323968749e0231a9687d0ad4fc",
+   "markers": 4
+  },
+  {
+   "path": "Platform/08-domain/ru/vectors/assemble/README.cases.md",
+   "before_blob": "dafcf59ff3acc2e0a12835cf933aed2771092de6",
+   "after_blob": "b33f5680b007138ee1d49193233280b5392bcc49",
+   "markers": 1
+  },
+  {
+   "path": "Platform/08-domain/ru/vectors/view/README.cases.md",
+   "before_blob": "d98f6ad592a0cc8f4d80a32dc7a2e0191394fc8d",
+   "after_blob": "085dffd6e1bf89cb6fbe50cbe90dc684a121c722",
+   "markers": 1
+  },
+  {
+   "path": "Platform/08-domain/vectors/assemble/README.cases.md",
+   "before_blob": "57ab045a697ecef08b7925937929eaebfb9fce55",
+   "after_blob": "6e84329503de69abed20f63554fe603c1238e0c3",
+   "markers": 1
+  },
+  {
+   "path": "Platform/08-domain/vectors/view/README.cases.md",
+   "before_blob": "ffc4fa904a5c400afd34d89b94970f94940630ba",
+   "after_blob": "62da4313f87a6aaa8a2f4adac45a017873bbb1c7",
+   "markers": 1
+  },
+  {
+   "path": "Platform/09-agent/acceptance/1/README.cases.md",
+   "before_blob": "4f389918f47448766767aefe6e10f03349249b1e",
+   "after_blob": "8cbc9c21c7ff69a169e82da1051308fb885eb31a",
+   "markers": 7
+  },
+  {
+   "path": "Platform/09-agent/acceptance/2/README.cases.md",
+   "before_blob": "010fcf0d495756ca9753ed350ed24f6c930f7258",
+   "after_blob": "bdcca0e8f8b5574e297093e3f7160c36c66ab918",
+   "markers": 1
+  },
+  {
+   "path": "Platform/09-agent/forms/README.cases.md",
+   "before_blob": "1303bca2e45f167f54bef72cd4e6c8b4f5594fce",
+   "after_blob": "08c78e1aee114e14208afa8ac857128fb3a030a9",
+   "markers": 4
+  },
+  {
+   "path": "Platform/09-agent/ru/acceptance/1/README.cases.md",
+   "before_blob": "cb952de431075c677c53e8b3645b46bed66ff9d8",
+   "after_blob": "3afda89ff5c5765fd6fe8d219f32829ee85305c4",
+   "markers": 7
+  },
+  {
+   "path": "Platform/09-agent/ru/acceptance/2/README.cases.md",
+   "before_blob": "02f68d212004e897f71248c2e8c8df211da78125",
+   "after_blob": "4b65e47e2bf82a38359f414ff303f25a89d75e17",
+   "markers": 1
+  },
+  {
+   "path": "Platform/09-agent/ru/forms/README.cases.md",
+   "before_blob": "ad3939c7c67579a8af9f2a209bef19780b656af9",
+   "after_blob": "24baabd573be7cb576e949cd8b52b957741bd1ee",
+   "markers": 4
+  },
+  {
+   "path": "Platform/10-domain-console/acceptance/README.cases.md",
+   "before_blob": "7df7d53ab61eed1e8fb7cc8320277714a57d6f09",
+   "after_blob": "d6170f15e538390b49ee918182ab459b6d7ecaee",
+   "markers": 9
+  },
+  {
+   "path": "Platform/10-domain-console/forms/README.cases.md",
+   "before_blob": "9305f5766299823cd706837c5ea7596958083350",
+   "after_blob": "f3b871204166e9354344505f40fefbdf1077436d",
+   "markers": 6
+  },
+  {
+   "path": "Platform/10-domain-console/ru/acceptance/README.cases.md",
+   "before_blob": "80d92e8ac6fd195636713679320517f3d532b24c",
+   "after_blob": "1fd65d64451c4b668b7a630863c900ebb00f8bba",
+   "markers": 9
+  },
+  {
+   "path": "Platform/10-domain-console/ru/forms/README.cases.md",
+   "before_blob": "a51a728df13dffd70154598126d1585898cfe4e2",
+   "after_blob": "78ce8a0963396b3cc473abdf08ae3071b87d4616",
+   "markers": 6
+  },
+  {
+   "path": "Platform/10-domain-console/ru/spec/10-domain-console.README.cases.md",
+   "before_blob": "5b3619f724174709779c6588cd662841439374f3",
+   "after_blob": "4d8c2be0da83c9063328a20869e71a6c591a7c99",
+   "markers": 1
+  },
+  {
+   "path": "Platform/10-domain-console/spec/10-domain-console.README.cases.md",
+   "before_blob": "71e9e6ce44b2d47a7714c0ce22f9aa8aa24a30da",
+   "after_blob": "3fdc038f4343bbf8940224f1783d4589f74b6749",
+   "markers": 1
+  }
+ ]
+}

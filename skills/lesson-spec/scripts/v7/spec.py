@@ -520,9 +520,13 @@ def family_read(root, catalog, judge=True):
     for p in sorted(d.iterdir()):
         if p.name in ("README.md", ".DS_Store", "en"):            # en — английский источник README (ADR-0121)
             continue
+        if p.name == "README.cases.md":
+            if not p.is_file() or p.is_symlink():
+                errors.append((FAMILY_READ / p.name, "family-read: case document must be a file"))
+            continue
         m = re.fullmatch(r"([0-9]{2})\.tsv", p.name)
         if not m:
-            errors.append((FAMILY_READ / p.name, "family-read: only README.md and NN.tsv (one table per owner lesson)"))
+            errors.append((FAMILY_READ / p.name, "family-read: only README.md, README.cases.md and NN.tsv (one table per owner lesson)"))
             continue
         lesson = m.group(1)
         stats["family_read_tables"] += 1

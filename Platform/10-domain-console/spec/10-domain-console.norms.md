@@ -496,7 +496,7 @@ exit:      0 — computed; 2 — an input not by the form (lost_after, a member 
 
 | № | Scenario | Norms |
 |---|---|---|
-| 02 | `02-silent-member` | N1.8; steps 04, 09 (delivery) — N1.2f; step 11 (the agent signature at `/events` of the member console) — a neighbour on the stand |
+| 02 | `02-silent-member` | N1.8; N1.2f |
 | 05 | `05-the-holders-page` | N1.7 |
 | 06 | `06-no-domain-here` | N1.2a, N1.2b, N1.2c, N1.2f; N4 |
 | 07 | `07-view-unreadable` | N1.2a, N1.2b, N1.2f; N4 |
@@ -512,6 +512,8 @@ exit:      0 — computed; 2 — an input not by the form (lost_after, a member 
 | 17 | `17-read-versions` | N1.2; the forwarding contract `pass`, `answer`; P/08.0 N1.9 |
 | 18 | `18-kept-door` | N1.2a; P/06.2 N1.4 |
 | 19 | `19-relay-door` | N1.2a; P/08.3 N1.2 |
+
+Detailed case descriptions and their expected outcomes are recorded in [judge-only N5 coverage](10-domain-console.n5.cases.md). Governing rules and the public acceptance scope remain in this chapter.
 
 The doors of the lesson on the stand of the chapters of lesson P/08 are neighbours on the stand (the rule «scenario — in the chapter of its outcome, neighbours — on the stand»,
 ADR-0083 addendum (13)):

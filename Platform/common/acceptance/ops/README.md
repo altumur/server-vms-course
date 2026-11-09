@@ -8,14 +8,6 @@ The scenarios of `door.pass.operations`: the acceptance with the memory of the c
 
 5 scenarios / 112 steps. The runner plays the worker: a scenario needs to keep a step call open and to write the step batch itself. The manifest is [`probe-op`](probe-op.subsystem.yaml): the table `repeats` — the memory of the caller, like `backend/repeats` (`service: true`), the unit row `things` — the target of a step. The kits [`stand.json`](stand.json) — for sc. 12 of the plan: the scenarios of this release go without `@tls-setup`, because the second console stands only on the stand without a kit.
 
-| № | Scenario | Norms |
-|---|---|---|
-| 03 | `03-accept-repeat`: two executors of one key, a lost 202 on a fall of the worker, a repeat on another instance of `backend`, the same `id`, a repeat of the key after the completion: one operation, the steps are executed once | N3 «accept», N4 |
-| 07 | `07-restart-with-outcome`: the leader is killed, the generation is rewritten, there is an outcome, the step is not executed again | N3 «leader», «step» step 4; the turn contract steps 2, 3 |
-| 07 | `07-restart-no-outcome`: the leader is stopped, the generation is rewritten, there is no outcome, a new call of the same step | N3 «leader» step 5, «step»; `ticket` step 1 |
-| 07 | `07-lost-batch-answer`: a lost answer of the batch, a repeat with the same key: the saved answer, not 412 | N2 «Step batch»; P/06.1 N3 «batch» |
-| 07 | `07-late-batch`: the leader on a process pause, another took the turn, a cancel, a late batch — `412 leader moved`, the outcome stays `cancel` | N2 «Step batch», N3 «finish», «Races» |
-
 `step_key` in `Idempotency-Key` is computed by the definition of N2 and checked against [`op-step/key.tsv`](../../../06-console/vectors/op-step/key.tsv). The `id` of the operations are random, written as they are.
 
 ## Preparation
@@ -65,7 +57,7 @@ There is no `@sleep`. `@pass-step-none` counts as a sleep ([the dictionary](../R
 
 ## The other scenarios of the plan
 
-Sc. 04–06, 08–13 of the [plan](../../../06-console/acceptance/9/README.md#plan-of-scenarios-after-adr-0094-b1) — by reading for now, the meaning is the former one:
+Sc. 04–06, 08–13 of the plan of [acceptance 6.9](../../../06-console/acceptance/9/README.md) — by reading for now, the meaning is the former one:
 
 | № | Scenario | Norms |
 |---|---|---|

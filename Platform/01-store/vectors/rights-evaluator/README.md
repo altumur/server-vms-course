@@ -17,13 +17,11 @@ for each row makes a probe through the socket of the role: `read` — `GET /v1/g
 The meaning of the evaluator is checked, not the bytes of the file (review of stage A: RA1-16, SA1-22).
 
 **What is covered:**
-- an exact pattern (`acc/exact`), a prefix (`acc/pre/*`: `*` only as the last character);
-- literal characters: `*` not last (`acc/a*b` — only the key `acc/a*b`, not `acc/axb`), `!` not first (`acc/p/!x`);
-- a final wildcard after a literal star: the role `star-prefix` has `a**` for each action; `a*`, `a*x` and `a**` are allowed, while `a` and `ax` are denied (P/01.2-R008);
-- `!` — the negation of the empty key, takes nothing away; `!*` — the negation of everything (the role `none`);
-- a negation wins regardless of its place in the list: `!acc/pre/secret/*` first, before the wider `acc/pre/*`, takes away
-  `acc/pre/secret/k1`, while `acc/pre/secret` (without `/` — not under the prefix of the negation) stays allowed (coverage audit P/01,
-  second pass, G07);
+- an exact pattern, a prefix (`*` only as the last character);
+- literal characters: `*` not last, `!` not first;
+- a final wildcard after a literal star (P/01.2-R008);
+- `!` — the negation of the empty key, takes nothing away; `!*` — the negation of everything;
+- a negation wins regardless of its place in the list;
 - the rights of one action do not give another (`write`, `delete`): `delete` is its own list, the evaluator has no `delete = write`;
   an empty or absent `delete` — no deletes (P/01.2 N1.2).
 

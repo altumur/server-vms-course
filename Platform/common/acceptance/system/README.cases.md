@@ -1,0 +1,15 @@
+# Judge-only case data
+
+This English text is the source; the Russian translation `ru/acceptance/system/README.cases.md` is derived from it (ADR-0121).
+
+Generic rules remain in [README.md](README.md). The following original passages preserve the existing named case associations as judge-only provenance.
+
+### Original passage 1
+
+| № | Drill | Norms |
+|---|---|---|
+| 05 | «pull the power»: the server failure table, the timing profile 45/90 with all tolerances, the return without moving back, except a declared `home` | [P/04](../../../04-controller/spec/04-controller.norms.md) N1.4a `power_pull` (`stays`, `lost`, `store`, `return`), N3 «pull the power (do nothing) — a drill», «fate», «pass()» step 7 (P/04-22); [P/05](../../../05-resource/spec/05-resource.norms.md) N1.4 «Bucket restore» (P/05-12); [P/01.3](../../../01-store/spec/01.3-store.norms.md) N1.3 (a restart by `member.json` without `join`) |
+| 06 | moved: sc. 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) (the store group stand, 2026-10-30) | [P/01.3](../../../01-store/spec/01.3-store.norms.md) N1.3 `floor`, N3 «recover the store» |
+| 07 | a part of a subsystem: after a reboot the share directories exist before the units, the part starts earlier than the workers, both without the subsystem file; the units by the keys; the producer writes into the share under `ProtectSystem=strict`, the consumer connects without `ReadWritePaths`; a stop of the part does not stop the worker | [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) N1.1 (`units`, `dirs`), N1.2 `W2C_SUB_ENV`, N1.7 `install`, N3 «server start» (ADR-0091 addendum (2), (3)) |
+| 08 | the worker program: the unit is the command of the runner, the runner executes `worker.exec` of the row with `W2C_MANIFEST_REV`; a change v1 → v2 through `manifest put` — v2 after a restart; the keys of the units are the installation source, `manifest put` does not change them; for a worker on the domain — by reading | [P/02.3](../../../02-installer/spec/02.3-installer.norms.md) N3 «Process start», «The worker program from the row», «The installation source»; [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) N1.1, N1.9 (ADR-0091 addendum (4)–(6)) |
+| 09 | add a subsystem to a working cluster (ADR-0115 addendum (21)–(24)): a degraded group — a refusal before the first restart; the leader — last (`-last`); a failed return between steps — the round stands; a changed manifest of a working subsystem — `get` replaces the previous file, the round passes on all servers (ADR-0115 addendum (26)); a repeat — «already done» on a passed one; after all — the switch-on; a box — only with `-allow-downtime`; `manifest get` with another hash — a refusal; three voters and a server with a door; the switch without restarts (ADR-0115 addendum (25)) | [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) N1.7 `add`, N1.9 `rollout`, `manifest get`; [P/02.5](../../../02-installer/spec/02.5-installer.norms.md) N3 «install»; [P/06.5](../../../06-console/spec/06.5-console.norms.md) N2 `/manifest/<sub>/source` |
