@@ -23,10 +23,7 @@ The adapters remain responsible for the durable `LogStore` and `StableStore`, mT
 
 The [pinned upstream module](https://raw.githubusercontent.com/hashicorp/raft/v1.7.3/go.mod) declares Go 1.20. The existing `go 1.22.0` and `toolchain go1.22.10` stay unchanged. The [release](https://github.com/hashicorp/raft/releases/tag/v1.7.3) and [FSM API](https://raw.githubusercontent.com/hashicorp/raft/v1.7.3/fsm.go) identify this dependency, not a substitute for the platform norms. Packaging must include its complete runtime dependency closure, module versions, checksums, licenses and provenance, and verify an isolated import/build from vendor without network access. This Source pin does not claim that the vendor or offline check has been delivered.
 
-**yaml-test-suite** — the data tag `data-2022-01-17`, the archive
-`https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
-`ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`; the inputs and outcomes of layer 1 —
-[the package `yaml-suite`](../vectors/yaml-suite/README.md).
+**yaml-test-suite** — the inputs and outcomes of layer 1 — [the package `yaml-suite`](../vectors/yaml-suite/README.md).
 
 **Known defects** of the pinned versions, their workarounds and vectors — [DEFECTS.md](DEFECTS.md); where a workaround stands in the layers — [the layers of V7](../LAYERS.md): § 3 «Expression» (the full match
 of `pattern`), § 4 (D13, D16), § 5 (a CEL execution error, the map iteration order D18), § 2 layer 4 (the place of refusal of

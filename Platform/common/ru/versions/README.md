@@ -23,10 +23,7 @@
 
 [Модуль закреплённой версии](https://raw.githubusercontent.com/hashicorp/raft/v1.7.3/go.mod) объявляет Go 1.20. Нынешние `go 1.22.0` и `toolchain go1.22.10` не меняются. [Выпуск](https://github.com/hashicorp/raft/releases/tag/v1.7.3) и [API FSM](https://raw.githubusercontent.com/hashicorp/raft/v1.7.3/fsm.go) определяют зависимость, а не заменяют нормы платформы. Поставка включает полное замыкание зависимостей времени исполнения, версии модулей, контрольные суммы, лицензии и происхождение; изолированный импорт и сборка из vendor проверяются без сети. Эта исходная фиксация не означает поставку vendor или выполнение проверки без сети.
 
-**yaml-test-suite** — тег данных `data-2022-01-17`, архив
-`https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
-`ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`; входы и исходы слоя 1 —
-[пакет `yaml-suite`](../vectors/yaml-suite/README.md).
+**yaml-test-suite** — входы и исходы слоя 1 — [пакет `yaml-suite`](../vectors/yaml-suite/README.md).
 
 **Известные дефекты** закреплённых версий, их обходы и векторы — [DEFECTS.md](DEFECTS.md); где обход стоит в слоях — [слои V7](../LAYERS.md): § 3 «Выражение» (полное совпадение
 `pattern`), § 4 (D13, D16), § 5 (ошибка исполнения CEL, порядок перебора отображения D18), § 2 слой 4 (место отказа

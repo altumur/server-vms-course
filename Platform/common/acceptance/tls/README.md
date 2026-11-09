@@ -3,10 +3,10 @@
 This English text is the source; the Russian translation `ru/acceptance/tls/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The debts of the stand of lessons 8–10 per ADR-0083 addendum (9) (the owner's decision, 387a71377): TLS between clusters
-(the server side, session resumption, the handshake by `ca-certs`) and the fourth cluster. The form
-of the directives was agreed by the Architect with «cammeta-acceptance» (2026-10-20); here are the data of «Specification»: the kit description,
-the logical doors and clients, the closed outcome of a probe and the expectations. The directives are the section [«Domain stand»](../README.md#domain-stand) of the common acceptance README (the forms were introduced by lesson M11/8 — the column
-«Lesson» of the dictionary; review analysis of stage B 8–10, № 22: M-1). The implementation profile declares `keys.tls_stand: 1`; without it the checks of this stand are not executed
+(the server side, session resumption, the handshake by `ca-certs`) and the fourth cluster.
+Here are the data: the kit description,
+the logical doors and clients, the closed outcome of a probe and the expectations. The directives are the section [«Domain stand»](../README.md#domain-stand) of the common acceptance README.
+The implementation profile declares `keys.tls_stand: 1`; without it the checks of this stand are not executed
 (not GREEN). Norms: the server side of the class `signed` — the role certificate contract «The server side: the class `signed`»
 ([P/08.0 N1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), the listener `SIGNER_URL` — the row `signer` of the same contract and
 [P/02.4 N1.6](../../../02-installer/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 addendum (20), addendum (21)); the CA fingerprints of a member, `on_accept`, `admin` —
