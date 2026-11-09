@@ -393,7 +393,7 @@ restore:    at start the resource pulls its closed buckets from the neighbours w
 ```
 
 
-The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again. A mirror peer is considered again next pass. These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary. A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue. The order of buckets between passes is not a contract.
+The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again. A mirror peer is considered again next pass. These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary. A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue. A 404 at the GET of a bucket that the peer listed is such a failure: the peer declared the copy and did not give it. The order of buckets between passes is not a contract.
 
 ### N1.6 Hint and HTTP representations
 
