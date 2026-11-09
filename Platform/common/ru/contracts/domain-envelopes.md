@@ -134,6 +134,8 @@ sealed:         конверт m1 с JSON-объектом секретного 
 случаев. Реализация проходит их своей функцией, без стенда. `keys_sealed` и содержимое
 `sealed` требуют публичных последовательностей проб содержимого [эксплуатационных обязанностей](../vectors/production-obligations/README.md); исполняемые привязки принадлежат раннеру и остаются NOTEXEC до поставки.
 
+Команда `seal-member` принимает `{seed, sealed}` и возвращает `{result: ok, plain}` или `{result: refused, reason}`. Команда `seal-member-round` принимает `{key, seed, plain}` и возвращает `{result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}`.
+
 Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 

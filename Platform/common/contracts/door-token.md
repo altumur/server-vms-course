@@ -124,6 +124,8 @@ the issue (`issue.tsv`: the seed of `door/signer`, `kid`, claims → JCS bytes a
 passes them with its own function, without a stand; at the stand the check by the holder remains a reading (P/06.5-05, P/03.4-08: the stand has no
 holder door that checks the token).
 
+The stand command `door-token-verify` of the profile `03-worker` (P/03.4 N5) gets the path of a file with one JSON object: for `verify.tsv` `{keys, authorization, now, unit, holder, path}`, for `place.tsv` `{keys, authorization, now, holder, path, place_units}`. `keys` is the value of the row `door/keys` as JSON, `authorization` and `path` are strings byte for byte, an empty `authorization` means no header, `now` is a number, `place_units` are the units whose data lie in the holder's place. stdout is exactly one JSON object in UTF-8 and LF: `{"result":"ok","claims":{…}}` with the read claims or `{"result":"forbidden"}`, code 0. An input not of this form gets code 2.
+
 The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 

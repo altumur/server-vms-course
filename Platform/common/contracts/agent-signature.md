@@ -72,3 +72,4 @@ The package [`agent-sig`](../vectors/agent-sig/README.md) (analysis of the revie
 a foreign key, the forms of `ms` and `sig`, a key of small order; the scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases; row 20 — precedence of the window check before cryptography (analysis of the review of stage B 8–10, № 3); rows 21–22 — AS-01/02; rows 23–25 — the header `X-Agent-For` (the input `for`, ADR-0111 item 16). Each checking side passes them with its own function, without a stand. There is also `batch-knock.tsv` — 6 rows of the signature of a batch knock ([the report acceptance contract](accept.md) «The batch knock»); performed by the process `domain`.
 
+A row of `batch-knock.tsv` checks the signature of the batch knock ([the report acceptance contract](accept.md#the-batch-knock)): the input is `{pub, domain, name, key, sig}` and the output is `{result: ok}` or `{result: refused}`.

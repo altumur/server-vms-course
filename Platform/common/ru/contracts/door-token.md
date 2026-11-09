@@ -124,6 +124,8 @@ claims — отказ, хотя значение целое (решение «А
 проходит их своей функцией, без стенда; на стенде проверка держателем остаётся чтением (P/06.5-05, P/03.4-08: у стенда нет
 двери держателя, которая проверяет токен).
 
+Команда стенда `door-token-verify` профиля `03-worker` (P/03.4 N5) получает путь файла с одним объектом JSON: для `verify.tsv` `{keys, authorization, now, unit, holder, path}`, для `place.tsv` `{keys, authorization, now, holder, path, place_units}`. `keys` — значение строки `door/keys` как JSON, `authorization` и `path` — строки байт в байт, пустой `authorization` — заголовка нет, `now` — число, `place_units` — единицы, данные которых лежат в месте держателя. stdout — ровно один объект JSON в UTF-8 и LF: `{"result":"ok","claims":{…}}` с прочитанными claims или `{"result":"forbidden"}`, код 0. Вход не этой формы — код 2.
+
 Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 
