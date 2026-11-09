@@ -52,8 +52,8 @@ by `@as testsub2worker`, the worker is not started (that it writes the row anew 
 (ADR-0091 items 1, 3) — likewise, on its own empty store, without `c1`: the ordering party `testsub` (its `worker.creates` to
 `testsub2/tallies`) is not started; the order row and the state row are put by steps 3, 8, 10 past the writer through the door
 of the store (`@as console`, `@as testsub2worker`) — the door is checked, not the library. Before
-scenarios 15, 16 and 18 the runner creates the counter `c1` in `testsub` (for `of` of `tallies`) — `console POST /counters` with
-its own `Idempotency-Key`, before the first step; in the other scenarios there is no `c1`. The resource is started by the command of the resource role
+scenarios 15, 16 and 18 the runner creates the counter `c1` in `testsub` (for `of` of `tallies`) — `console POST /counters {"name":"c1","start":0}` with
+its own `Idempotency-Key`, before the first step, and a status other than 201 is a failure of the stand; in the other scenarios there is no `c1`. The resource is started by the command of the resource role
 
 Scenarios 22–27 (the coverage audit of P/06, `audit-kimi` 9007ca60f) — likewise, each on its own empty store, without `c1` (the field `of`
 of `tallies` is a string, it does not require the counter to exist; likewise sc. 20), without workers, the controller and the domain; the resource

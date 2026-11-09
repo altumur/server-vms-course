@@ -19,7 +19,7 @@ differences: the catalogue of each cluster is `testsub` and `testsub2` (the orde
 there run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions, N5
 of the chapter) and the resource of its own server `srv-<cluster>`; before the steps the store of each cluster has the counter `testsub` `c1-<cluster>`
 (its own ref at each: a common `c1` would be contested, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1`
-`{zone: z1, server: srv-<cluster>}`. `console2` at `member` is the prefix `/testsub2`.
+`{zone: z1, server: srv-<cluster>}`: both are created through the console door of the cluster (`POST /counters {"name": "c1-<cluster>"}` and `POST /testsub2/shelves {"name": "sh1", "zone": "z1", "server": "srv-<cluster>"}` with the keys `prep-<cluster>-counters` and `prep-<cluster>-testsub2-shelves`), and a status other than 201 is a failure of the stand. `console2` at `member` is the prefix `/testsub2`.
 
 Scenarios with people (the former stand of the acceptance of M11/09):
 - the person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive
