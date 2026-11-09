@@ -2,7 +2,7 @@
 
 change: 0133-common-rest-forms-lift rev 1 · lessons Platform/common · author spec103 · state review
 
-The `unknown_field` outcome of the `row-check` vector lists all unknown names (the Architect's decision of 2026-11-09); a door names the smallest by P/06.1 N2.
+Publication parent `e1aa9267f0d30c1c61307a157028a5239ac1a0ee`. Task P01.10.5.6: input and output forms, cell encodings, native codes and result words that stood only in the judge-only READMEs of the packages `deadline`, `domain-founding`, `pool`, `presence-room`, `row-check`, `trust-set` and `turn` move to the section «Vectors» of their contracts (request-mark, domain-founding, pool, presence-lock, row-check, role-certificate, turn). No case value, fixture, new field or number. The `unknown_field` outcome of the `row-check` vector lists all unknown names (the Architect's decision of 2026-11-09); a door names the smallest by P/06.1 N2.
 
 | Artifact | Operation | Before blob | After blob | After SHA256 |
 |---|---|---|---|---|
