@@ -5,10 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the M11 dictionary of the acceptance README of
 M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
-[`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) N5. The scenarios were moved from the acceptance of M11/03 (04, 06–09) and
-M11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of M11/06:
-the number 06 is taken by a scenario of M11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (M11/03 sc. 14;
-the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections-1.tsv` (historical correction record)). In total 6 scenarios / 39 steps.
+[`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) N5. In total 6 scenarios / 39 steps.
 
 The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (the canonical package README lists the cases).
 The doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, through which the stand reads the view and the report, are doors of the domain
@@ -24,14 +21,13 @@ There are no units. There is no domain: the directive `@domain` of the first ste
 file is `{recovery}` in the instance directory.
 
 Do not speed up the clocks: LOST_AFTER 45 s, REPORT_EVERY 5 s, MARK_REFRESH 22.5 s, SHADOW_STALL 60 s; the `@until` terms are taken with
-a margin. At the door `holder` the runner sets `Idempotency-Key` on `PUT` too (sc. 15, assignments — chapter 8.6).
+a margin. At the door `holder` the runner sets `Idempotency-Key` on `PUT` too (assignments — chapter 8.6).
 
 ## scenarios.tsv
 
 The format is the dictionary of the «Stand» and the domain dictionary; the expectation is a subset of fields.
 
-Scenarios 06–09 repeat on the stand scenarios 01–05 of the acceptance of M11/01 (the vectors `view`): real reports of agents in
-`domain/members/<member>/reports/<rev>` and the holder's view.
+Selected scenarios use real reports of agents in `domain/members/<member>/reports/<rev>` and the holder's view (the vectors `view`).
 
 ## Kit seams
 

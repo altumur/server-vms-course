@@ -5,18 +5,12 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
 `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10). The norm of the lesson is
-[`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The scenarios were moved from the acceptances of M11/08 (sc. 05) and
-M11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
-the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (M11/08 sc. 05); sc. 10–16 —
-the second pass (Gemini, the section below); sc. 17–19 — after it (the section «Scenarios 17–19»). Scenario 04
-of the acceptance of M11/11 (the command `alarms`) — the vector [`vectors/alarms`](../vectors/alarms/README.md) (the current corpus). The other scenarios
-of M11/08 and M11/11 — at their chapters (the cluster console — chapter P/06.7; the shared document — [the acceptance of chapter 8.9](../../08-domain/acceptance/9/README.md);
-the agent side — [the acceptance of chapter 9.1](../../09-agent/acceptance/1/README.md)). The forms of foreign doors — their owners.
+[`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The command `alarms` — the vector [`vectors/alarms`](../vectors/alarms/README.md) (the current corpus). The forms of foreign doors — their owners.
 
 ## Stand
 
 The preparation is as the acceptance README of [chapter 8.3](../../08-domain/acceptance/3/README.md) («Preparation of each scenario», from
-M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); at sc. 02 — with a declaration of the shared in `testsub`, as the acceptance README of
+M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); for selected scenarios — with a declaration of the shared in `testsub`, as the acceptance README of
 [chapter 8.9](../../08-domain/acceptance/9/README.md):
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` — `int` with `inherit: 1`;
@@ -24,35 +18,30 @@ M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); at sc. 02 —
 
 The runner goes as the human `root` (the first administrator — chapter 8.4, the directive `@person`).
 
-- **Scenario 05** — the doors of the holder page (the norms N1.7). The calls of the module in the mode `domain` are checked by the test of the module at its
+- The doors of the holder page (the norms N1.7). The calls of the module in the mode `domain` are checked by the test of the module at its
   owner ([P/07](../../07-console-module/spec/07-console-module.norms.md) N1.6), not by this acceptance.
 
-Scenario 05 compares the JavaScript response bytes with the same [P/07 console.js](../../07-console-module/module/console.js) as the cluster console, at the existing synchronous `/platform/console.js?v=1`. The unchanged requests, statuses and headers remain mandatory. This byte-publication check does not replace the module-owner tests of UI language and date rendering; no locale fetch, new route or version is introduced.
+The JavaScript response bytes are compared with the same [P/07 console.js](../../07-console-module/module/console.js) as the cluster console, at the existing synchronous `/platform/console.js?v=1`. The unchanged requests, statuses and headers remain mandatory. This byte-publication check does not replace the module-owner tests of UI language and date rendering; no locale fetch, new route or version is introduced.
 
 The refusal `not in the directory` (a manifest without `domain.ref`, N1.2a) — by reading: the manifests of the stand (`testsub`, `testsub2`)
 have `domain.ref`.
 
-The neighbours on the stand: the edit of the shared document (sc. 02 step 03) is passed by the domain console to the process `domain` (the norms N1.3;
-the execution — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) N1.3); the content of `delivery` (steps 04, 09) —
+The neighbours on the stand: the edit of the shared document is passed by the domain console to the process `domain` (the norms N1.3;
+the execution — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) N1.3); the content of `delivery` —
 `view.shared` of chapter 8.9 (N1.6), the door `GET /domain/shared` — this lesson (P/10-14); the document is taken by the agent of the member
-([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md)); step 11 — the agent signature at `/events` of the cluster console of the member
-([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3; the plan of lesson 10 V6: the step is not split).
+([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md)); the agent signature at `/events` of the cluster console of the member
+([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3).
 
 The stand does not call the alarm page (the front once a second, the urgent report, `truncated`): the stand has no training subsystem that
 raises alarms. This is checked by the vector `alarms` and by reading.
 
 ## Coverage audit of P/10, the second pass (Gemini)
 
-Sc. 10–16 — the second pass of the coverage audit of P/10 (audit-coverage-gemini 798e11a44), the numbers — after sc. 09. The rows of the store of
+The rows of the store of
 `hold` are written by the runner through the door `member hold store` (`admin.sock`); it cannot delete a row under `domain/` (P/01.2 N1.3
 `never`: delete under `domain/` — only by the domain role), therefore the stand does not create «no row» — an unreadable row is written by a `put`
 not by the form of its family, and the former one — by a `put` of a value by the form. The writer of these rows is the process `domain` (the data catalogue); before
-the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain console is alive and answers itself.
-
-## Scenarios 17–19
-
-Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 — the doors `GET /domain/<sub>/kept/<name>` and
-`GET /domain/relays/<relay>` (the journal `corrections.tsv` (historical correction record), 2026-11-02); the numbers — after sc. 16.
+the spoiling it is stopped (`@on hold @sigterm domain`), the domain console is alive and answers itself.
 
 ## scenarios.tsv
 
@@ -69,7 +58,7 @@ The subset of expect does not replace the check of the full HTTP form of the Ope
 
 `credential=cookie` uses the live person-a session with no Authorization. `authorization-and-cookie` supplies a valid person-b Authorization together with person-a's cookie: both people are independently authorized, and the exact presented header must survive. `bad-authorization-and-cookie` supplies an invalid presented Authorization and a valid cookie; `bad-cookie` supplies an invalid person cookie. Neither may fall through to another credential or debug. `debug` uses the ordinary configured loopback debug person with no presented token/cookie; it may not manufacture a credential for the writer. `unrelated_session=b` additionally populates another real session/cache entry, while the request is still proved by person-a's session.
 
-`guard=ok` uses a valid unsafe writer operation, `PUT /domain/topology` with a matching base revision and valid body. For debug its local guards are valid and the writer is in the ordinary serving state, so the independent writer refusal is 401. `guard=csrf` makes only the **original** unsafe cookie request's Origin invalid. `guard=need` chooses a declared domain forwarding operation whose ordinary need resolution refuses under its published rule; `guard=may` keeps a valid resolved need but removes its necessary grant. These cases execute the relevant ordinary guard and retain its original refusal; they prescribe no new HTTP code. Identity failure likewise uses the ordinary guard. Fixture interventions may alter confirmed input data or I/O, never substitute the final guard decision.
+`guard=ok` uses a valid unsafe writer operation, `PUT /domain/topology` with a matching base revision and valid body. `guard=csrf` makes only the **original** unsafe cookie request's Origin invalid. `guard=need` chooses a declared domain forwarding operation whose ordinary need resolution refuses under its published rule; `guard=may` keeps a valid resolved need but removes its necessary grant. These cases execute the relevant ordinary guard and retain its original refusal; they prescribe no new HTTP code. Identity failure likewise uses the ordinary guard. Fixture interventions may alter confirmed input data or I/O, never substitute the final guard decision.
 
 The returned JSON normalizes actual observations: `refused` means a non-success response; `forward_calls` counts outgoing requests from the first console; `writer_calls` counts actual entry to the writer; `cookie_out`, `x_user_out` and `ticket_out` record the presence of those actual outgoing headers; `bearer_set` records creation of a Bearer by this hop; `authorization_unchanged` compares the actual presented/outgoing header bytes; `session_token_equal` compares the outgoing Bearer token to the exact token proved by this cookie session; `other_session_used` compares it to the unrelated session's distinct token. For a refusal before forwarding the header-presence/creation observations are false. No token bytes are printed. A panic, unrelated failure, omitted handler or precomputed expected answer fails the seam. The ordinary scenarios, existing worker/ticket rules and full stand remain mandatory.
 

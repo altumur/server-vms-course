@@ -31,13 +31,13 @@ of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 
 ## scenarios.tsv
 
-The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
+The units door of `testsub2` (the rows `tallies`; the tables door `shelves`; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the processes are restarted between scenarios (`@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
 
 ## Scenario boundaries
 
-Scenario boundaries: the processes are restarted between scenarios, the variables are reset, and **the store is kept** within the file — the scenarios run in order, and sc. 05 reads rows written earlier; the file begins with an empty store.
+Scenario boundaries: the processes are restarted between scenarios, the variables are reset, and **the store is kept** within the file — the scenarios run in order, and a later scenario reads rows written earlier; the file begins with an empty store.
 
-The file has 11 scenarios / 65 steps (sc. 10 — the coverage audit of P/06, sc. 11 — its second pass, Gemini). Before a full repeat a new instance gets empty
+The file has 11 scenarios / 65 steps. Before a full repeat a new instance gets empty
 application rows and claim memory, then the runner prepares c1 again. Parallel runs
 do not share an instance. Between the scenarios of one file c1, the tallies rows and the claims
 are kept; the ring stays the same, rotation and background changes during the file are forbidden.
@@ -58,7 +58,7 @@ store requests of this scenario. ASSERT does not perform an HTTP request.
   this new reason. No diagnostic repeats the original value of the secret.
 - The states of one's own/a foreign pending and of an unknown outcome — by chapter 6.1 N3; the outcome 503 is not done,
   a foreign claim is not removed. This check requires a model/an execution of the needed state,
-  the ordinary happy repeat of scenario 01 does not replace it.
+  the ordinary happy repeat does not replace it.
 - The ring: not set, set and readable, set and empty/damaged/unreadable; a separate
   opening with a foreign kid, a wrong row/field and a damaged envelope. An empty file
   does not admit the write of an open secret. Do not count a check of the prefix as a check of AES-GCM.
