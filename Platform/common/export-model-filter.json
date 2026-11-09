@@ -13177,6 +13177,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/contracts/vector-adapter.protocol.json",
+      "disposition": "model_and_judge",
+      "basis": "Existing Root-selected public derived-protocol destination now on published Source; NEW exact current artifact requires P01.10.10 Tools provenance/consistency and Root acceptance. Current admission BLOCKED; historical35ce not adopted."
+    },
+    {
       "path": "Platform/common/data/README.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
