@@ -267,6 +267,11 @@
       "basis": "P01.104: the code checks of P/01, rows of the kinds of the public dictionary without expected answers (ADR-0133 addendum (39) items 2, 5, 6)."
     },
     {
+      "path": "Platform/01-store/forms/code-rules.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/daemon-flags.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -287,9 +292,19 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/01-store/forms/stages.kit.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/stages.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/write-checks.probes.tsv",
@@ -13387,6 +13402,11 @@
       "basis": "P01.104: the closed dictionary of the kinds of code checks, public in the model input (ADR-0133 addendum (39) items 1, 7)."
     },
     {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
       "disposition": "model_and_judge",
       "basis": "P01.136: machine form of the payloads of the D7 bindings of README.md."
@@ -13880,6 +13900,11 @@
       "path": "Platform/common/export-model-filter.json",
       "disposition": "judge_only",
       "basis": "ONE authoritative Source filter file itself is delivered J-only, never M; no self-hash or C identity inside it."
+    },
+    {
+      "path": "Platform/common/forms.keys.sql",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
     },
     {
       "path": "Platform/common/ru/LAYERS.md",

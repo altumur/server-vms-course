@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The structure of the closed dictionary of the kinds of code checks",
+  "description": "Columns and order; name is the name type of the kind as the header of the form names it. Instance: {\"columns\": the header cells, \"rows\": the data rows as arrays of raw cells}; comment lines (#) are not rows. Rules that this schema does not express stay with the existing checks (OBSH.39.1 raw-map).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "columns",
+    "rows"
+  ],
+  "properties": {
+    "columns": {
+      "const": [
+        "kind",
+        "name",
+        "args",
+        "check"
+      ]
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 4,
+        "items": false,
+        "prefixItems": [
+          {
+            "title": "kind",
+            "type": "string"
+          },
+          {
+            "title": "name",
+            "type": "string",
+            "enum": [
+              "package",
+              "function",
+              "type",
+              "package or function"
+            ]
+          },
+          {
+            "title": "args",
+            "type": "string"
+          },
+          {
+            "title": "check",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -267,6 +267,11 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/code-rules.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addendum (12) item 2); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/daemon-flags.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
@@ -287,9 +292,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/stages.kit.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addendum (12) item 2); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/stages.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addendum (12) item 2); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/write-checks.probes.tsv",
@@ -13387,6 +13402,11 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addendum (12) item 2); outside the judge input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -13880,6 +13900,11 @@
       "path": "Platform/common/export-model-filter.json",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/common/forms.keys.sql",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addendum (12) item 2); outside the judge input."
     },
     {
       "path": "Platform/common/ru/LAYERS.md",

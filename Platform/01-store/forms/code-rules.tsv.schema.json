@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The structure of forms/code-rules.tsv of P/01",
+  "description": "Columns and order; kind and stage are keys of Platform/common/forms.keys.sql (code_kind, stage). Instance: {\"columns\": the header cells, \"rows\": the data rows as arrays of raw cells}; comment lines (#) are not rows. Rules that this schema does not express stay with the existing checks (OBSH.39.1 raw-map).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "columns",
+    "rows"
+  ],
+  "properties": {
+    "columns": {
+      "const": [
+        "id",
+        "kind",
+        "name",
+        "args",
+        "stage",
+        "norm"
+      ]
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 6,
+        "items": false,
+        "prefixItems": [
+          {
+            "title": "id",
+            "type": "string"
+          },
+          {
+            "title": "kind",
+            "type": "string"
+          },
+          {
+            "title": "name",
+            "type": "string"
+          },
+          {
+            "title": "args",
+            "type": "string",
+            "contentMediaType": "application/json",
+            "description": "One JSON object on one line with exactly the fields of the kind; checked by the existing guard (annotation only)."
+          },
+          {
+            "title": "stage",
+            "type": "string"
+          },
+          {
+            "title": "norm",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  }
+}
