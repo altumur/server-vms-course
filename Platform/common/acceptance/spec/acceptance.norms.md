@@ -58,7 +58,7 @@ The result of a target is GREEN, red, `not_executed`, `not_applicable` or `block
 
 <!-- req: P/AC-R030 -->
 
-The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; `MissingBinding`, when a case outside the target `P/01/production` needs a test-side input of R050 that the invocation does not name; the reasons of the table of N6.5 for the target `P/01/production`, which there also name a missing test-side input; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class. An `ASSERT` step runs like any other step and matches or does not; it is `not_executed` only when a name it compares is unbound because the earlier step that names it did not match or matched an `@oneof` branch that does not bind it, and then its reason is the scenario and the number of the latest earlier step of the scenario that names that name.
+The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, `installer_rights_check_missing`, `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; `no_machine_form`, for a probe of [`forms/extra.tsv`](../forms/extra.tsv) whose request and expectation exist only as the prose of a README, until the probe has a machine form; `MissingBinding`, when a case outside the target `P/01/production` needs a test-side input of R050 that the invocation does not name; the reasons of the table of N6.5 for the target `P/01/production`, which there also name a missing test-side input; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class. An `ASSERT` step runs like any other step and matches or does not; it is `not_executed` only when a name it compares is unbound because the earlier step that names it did not match or matched an `@oneof` branch that does not bind it, and then its reason is the scenario and the number of the latest earlier step of the scenario that names that name.
 
 <!-- req: P/AC-R031 -->
 
@@ -84,7 +84,7 @@ A report given to the line that generates the implementation carries the name of
 
 <!-- req: P/AC-R011 -->
 
-The report does not give out response bodies, stdout, stderr or the values of secrets: it gives at most the length, the digest and the content type of such a value. A secret is the value of a field whose name contains `token` or equals `authorization`, the value after `Bearer ` and the base64, base64url and hexadecimal encodings of these values, and a value the judge itself gave out as a secret. In the logs of implementation processes kept by the judge an exact secret value is replaced by `<redacted>`.
+The report does not give out response bodies, stdout, stderr or the values of secrets: it gives at most the length, the digest and the content type of such a value. For every judged step that received a response, the report gives the length in bytes, the SHA-256 digest and the content type of its body; a red step is never reported without them. A secret is the value of a field whose name contains `token` or equals `authorization`, the value after `Bearer ` and the base64, base64url and hexadecimal encodings of these values, and a value the judge itself gave out as a secret. In the logs of implementation processes kept by the judge an exact secret value is replaced by `<redacted>`.
 
 ## N2 Inputs
 
@@ -141,6 +141,10 @@ The terms of the stand are the tables «Terms of the stand» and «Terms of the 
 <!-- req: P/AC-R035 -->
 
 `@carry` is taken from the captured stream of the proxy of the runner, read as HTTP/1.1: keep-alive, several requests on a connection and chunked transfer are parsed, so that the judge does not narrow what an implementation may send.
+
+<!-- req: P/AC-R051 -->
+
+When the judge sends a request and the implementation answers before the judge has written the whole request, for example with a refusal of a body above the limit (RFC 9112 §9.6), the judge reads that response and judges the step by it. A write of the rest of the request that fails because the implementation closed the connection after its response is neither a mismatch of the step nor a failure of the transport of the stand. A step that received no response is judged as a step without a response.
 
 <!-- req: P/AC-R019 -->
 

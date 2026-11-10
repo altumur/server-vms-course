@@ -1,6 +1,7 @@
 # The probes of the targets of the engine extra (forms/targets.routing.tsv; the Architect's answer on P01.86): the checks of the README of the first directory of the target outside its scenarios.tsv, one row each.
 # The README is the source of each probe; this table lists them and adds no expectation. section: the anchor of the README section. probe: what the judge sends or prepares.
 # target: the id of the registry. expect: the outcome as the README writes it. norm: the norm of the outcome.
+# Until a probe has a machine form, the target lists it as not_executed with the reason no_machine_form (spec/acceptance.norms.md P/AC-R030); the machine form is a debt of the specification.
 target	id	section	probe	expect	norm
 P/01.1/extra	extra-full-key	Platform/01-store/acceptance/1/README.md#the-instance-of-the-chapter	on a separate instance with rights on acc/: keys of acc/ at the boundary lengths in UTF-8 bytes, Cyrillic and four-byte characters included, and the same set in a nonempty guard.key; an existing guard by its actual version, an absent one by index ""	the full UTF-8 representation is accepted up to the boundary; a file implementation is checked against its declared limit	P/01.1-16, P/01.1-22
 P/01.1/extra	extra-parameters	Platform/01-store/acceptance/1/README.md#the-instance-of-the-chapter	the row ceiling 524288 bytes and the HTTP body limit 1048576 bytes, by behaviour on a probe instance obtained like the scenario instances	both values hold; otherwise the run is not performed	P/01.1 N5
