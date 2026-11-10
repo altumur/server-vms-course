@@ -13502,6 +13502,21 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/acceptance/production/README.md",
+      "disposition": "judge_only",
+      "basis": "P01.136: stand data of the target P/01/production; judge only."
+    },
+    {
+      "path": "Platform/common/acceptance/production/bindings.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.136: stand data of the target P/01/production; judge only."
+    },
+    {
+      "path": "Platform/common/acceptance/production/input.json",
+      "disposition": "judge_only",
+      "basis": "P01.136: stand data of the target P/01/production; judge only."
+    },
+    {
       "path": "Platform/common/acceptance/runner-targets.README.md",
       "disposition": "model_and_judge",
       "basis": "Root accepted c518 exact minimal public target/owner/stand/address/key/requirement/norm contract. No driver/Runner anchors/J hashes/provenance recursively; old full224 contract remains J-only history."
@@ -13915,6 +13930,11 @@
       "path": "Platform/common/ru/acceptance/pass/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/production/README.md",
+      "disposition": "judge_only",
+      "basis": "P01.136: Russian mirror of the stand data of the target P/01/production."
     },
     {
       "path": "Platform/common/ru/acceptance/runner-targets.README.md",

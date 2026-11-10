@@ -13502,6 +13502,21 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/production/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/acceptance/production/bindings.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/acceptance/production/input.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
       "path": "Platform/common/acceptance/runner-targets.README.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -13913,6 +13928,11 @@
     },
     {
       "path": "Platform/common/ru/acceptance/pass/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/production/README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
