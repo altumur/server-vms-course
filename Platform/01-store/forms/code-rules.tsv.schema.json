@@ -1,59 +1,72 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "The structure of forms/code-rules.tsv of P/01",
-  "description": "Columns and order; kind and stage are keys of Platform/common/forms.keys.sql (code_kind, stage). Instance: {\"columns\": the header cells, \"rows\": the data rows as arrays of raw cells}; comment lines (#) are not rows. Rules that this schema does not express stay with the existing checks (OBSH.39.1 raw-map).",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "columns",
-    "rows"
-  ],
-  "properties": {
-    "columns": {
-      "const": [
-        "id",
-        "kind",
-        "name",
-        "args",
-        "stage",
-        "norm"
-      ]
+  "description": "Frictionless Table Schema of Platform/01-store/forms/code-rules.tsv (ADR-0125 addenda (12), (13); OBSH.39.1). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the rules this schema does not express stay with the existing checks (raw map of the change 0125-forms-standard-schemas).",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
     },
-    "rows": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "minItems": 6,
-        "items": false,
-        "prefixItems": [
-          {
-            "title": "id",
-            "type": "string"
-          },
-          {
-            "title": "kind",
-            "type": "string"
-          },
-          {
-            "title": "name",
-            "type": "string"
-          },
-          {
-            "title": "args",
-            "type": "string",
-            "contentMediaType": "application/json",
-            "description": "One JSON object on one line with exactly the fields of the kind; checked by the existing guard (annotation only)."
-          },
-          {
-            "title": "stage",
-            "type": "string"
-          },
-          {
-            "title": "norm",
-            "type": "string"
-          }
+    {
+      "name": "kind",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "args",
+      "type": "string",
+      "description": "One JSON object on one line with exactly the fields of the kind; checked by the existing guard.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "stage",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string"
+    }
+  ],
+  "primaryKey": [
+    "id"
+  ],
+  "foreignKeys": [
+    {
+      "fields": [
+        "stage"
+      ],
+      "reference": {
+        "resource": "stages_p01",
+        "fields": [
+          "stage"
+        ]
+      }
+    },
+    {
+      "fields": [
+        "kind"
+      ],
+      "reference": {
+        "resource": "code_kinds",
+        "fields": [
+          "kind"
         ]
       }
     }
-  }
+  ]
 }

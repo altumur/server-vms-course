@@ -269,7 +269,7 @@
     {
       "path": "Platform/01-store/forms/code-rules.tsv.schema.json",
       "disposition": "judge_only",
-      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/daemon-flags.tsv",
@@ -294,7 +294,7 @@
     {
       "path": "Platform/01-store/forms/stages.kit.tsv.schema.json",
       "disposition": "judge_only",
-      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/stages.tsv",
@@ -304,7 +304,7 @@
     {
       "path": "Platform/01-store/forms/stages.tsv.schema.json",
       "disposition": "judge_only",
-      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/write-checks.probes.tsv",
@@ -13404,7 +13404,7 @@
     {
       "path": "Platform/common/acceptance/forms/code-rules.tsv.schema.json",
       "disposition": "judge_only",
-      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
@@ -13900,11 +13900,6 @@
       "path": "Platform/common/export-model-filter.json",
       "disposition": "judge_only",
       "basis": "ONE authoritative Source filter file itself is delivered J-only, never M; no self-hash or C identity inside it."
-    },
-    {
-      "path": "Platform/common/forms.keys.sql",
-      "disposition": "judge_only",
-      "basis": "OBSH.39.1: standard structure/key data of check_spec (ADR-0125 addendum (12) item 2); course tooling, not a model input."
     },
     {
       "path": "Platform/common/ru/LAYERS.md",
@@ -17450,6 +17445,11 @@
       "path": "Platform/common/versions/requirements.txt",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/forms.datapackage.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/lessons.tsv",

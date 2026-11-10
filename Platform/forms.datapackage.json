@@ -1,0 +1,70 @@
+{
+  "name": "platform-forms",
+  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first group. Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
+  "resources": [
+    {
+      "name": "stages_p01",
+      "path": "01-store/forms/stages.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          23
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/stages.tsv.schema.json"
+    },
+    {
+      "name": "stages_kit_p01",
+      "path": "01-store/forms/stages.kit.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          18
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/stages.kit.tsv.schema.json"
+    },
+    {
+      "name": "code_rules_p01",
+      "path": "01-store/forms/code-rules.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          7
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/code-rules.tsv.schema.json"
+    },
+    {
+      "name": "code_kinds",
+      "path": "common/acceptance/forms/code-rules.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          16
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "common/acceptance/forms/code-rules.tsv.schema.json"
+    }
+  ]
+}

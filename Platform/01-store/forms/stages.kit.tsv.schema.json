@@ -1,93 +1,79 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "The structure of forms/stages.kit.tsv of P/01",
-  "description": "Structure only: the kit grammar of the header of the form; no relation of forms.keys.sql reads this form. Instance: {\"columns\": the header cells, \"rows\": the data rows as arrays of raw cells}; comment lines (#) are not rows. Rules that this schema does not express stay with the existing checks (OBSH.39.1 raw-map).",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "columns",
-    "rows"
-  ],
-  "properties": {
-    "columns": {
-      "const": [
-        "n",
-        "stage",
-        "goal",
-        "norms",
-        "gate",
-        "weight",
-        "kit",
-        "parts",
-        "depends",
-        "when"
-      ]
+  "description": "Frictionless Table Schema of Platform/01-store/forms/stages.kit.tsv (ADR-0125 addenda (12), (13); OBSH.39.1). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the rules this schema does not express stay with the existing checks (raw map of the change 0125-forms-standard-schemas).",
+  "fields": [
+    {
+      "name": "n",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "[1-9][0-9]*"
+      }
     },
-    "rows": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "minItems": 10,
-        "items": false,
-        "prefixItems": [
-          {
-            "title": "n",
-            "type": "string",
-            "pattern": "^[1-9][0-9]*$"
-          },
-          {
-            "title": "stage",
-            "type": "string"
-          },
-          {
-            "title": "goal",
-            "type": "string"
-          },
-          {
-            "title": "norms",
-            "type": "string"
-          },
-          {
-            "title": "gate",
-            "type": "string",
-            "pattern": "^(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build)(?:;(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build))*$"
-          },
-          {
-            "title": "weight",
-            "type": "string",
-            "enum": [
-              "1",
-              "2",
-              "3",
-              "4",
-              "5"
-            ]
-          },
-          {
-            "title": "kit",
-            "type": "string",
-            "pattern": "^(?:-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*)$",
-            "description": "- or parts of kit B separated by commas; a part named twice is checked by the existing guard."
-          },
-          {
-            "title": "parts",
-            "type": "string",
-            "pattern": "^(?:-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*)$",
-            "description": "- or parts of kit B separated by commas; a part named twice is checked by the existing guard."
-          },
-          {
-            "title": "depends",
-            "type": "string",
-            "pattern": "^(?:-|[1-9][0-9]*(?:,[1-9][0-9]*)*)$"
-          },
-          {
-            "title": "when",
-            "type": "string",
-            "contentMediaType": "text/x-cel",
-            "description": "CEL over the keys of the profile, empty — always applicable; checked by the existing CEL guard, not by this schema."
-          }
+    {
+      "name": "stage",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "goal",
+      "type": "string"
+    },
+    {
+      "name": "norms",
+      "type": "string"
+    },
+    {
+      "name": "gate",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build)(?:;(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build))*"
+      }
+    },
+    {
+      "name": "weight",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
         ]
       }
+    },
+    {
+      "name": "kit",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*"
+      }
+    },
+    {
+      "name": "parts",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*"
+      }
+    },
+    {
+      "name": "depends",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "-|[1-9][0-9]*(?:,[1-9][0-9]*)*"
+      }
+    },
+    {
+      "name": "when",
+      "type": "string",
+      "description": "CEL over the keys of the profile, empty: always applicable; checked by the existing CEL guard."
     }
-  }
+  ]
 }
