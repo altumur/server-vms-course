@@ -1,0 +1,16 @@
+id	when	cause	fix
+L22	trial t1	wrong invariant: startsAfterHang counted only while hungN>0, so a start after a cancelled load was not counted (single + deadline + rearm)	field hungEver added; the counter counts starts after any hang
+S10	trial t1	model parameters: POLICY=norm with a second user allowed a second row through B, so the run mixed C8 cross-user with the memory-expiry property	expiry runs moved to cancel_seen, shared=false (S08, S10, S13 in the main table): one cause per run
+C01,C02,C07,C08,C10,C13	trial t1	model artifact: nextEvent always contained s.t+1, so time moved in one-second steps and the witnesses did not fit into the depth (not a property)	event set without s.t+1; the "any" pick needs GAP=0 for the reissue to take the slot before the write, set for those runs and written in the report
+M05	trial t1	model artifact: a mount after the root was removed was allowed	guard not(rootGone) on mountRoot
+K06	trial t1	wrong invariant: compared the recorded age with the running time	the error is recorded at the moment of the show (ageErr)
+K08	trial t1	wrong invariant: answerDue was evaluated later than the timeout event	falseT recorded at the moment of the timeout
+K01-K08	main run 1 (rows removed from results.tsv, rerun)	model artifact found on reading the K03 trace: the wall-clock tick was not stopped by a due timer, so K03 (inv_wait_bounded, expect violation) matched without any clock jump (wallOff=0 at t=26); a match for a wrong reason, not a mismatch	one tick guard for both clocks: while waiting, time moves only if elapsed < T; K01-K08 rerun in the main table
+#run1	K01 | k_wall_up | inv_no_premature | witness | verify | 4 |  | CLOCK="wall", JUMP=100, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false | violation | violation | yes | 0.6 | timer_clock.qnt
+#run1	K02 | k_mono_up | inv_no_premature | property | verify | 8 |  | CLOCK="mono", JUMP=100, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false | ok | ok | yes | 0.6 | timer_clock.qnt
+#run1	K03 | k_wall_down | inv_wait_bounded | witness | verify | 9 |  | CLOCK="wall", JUMP=-100, T=20, D=1000, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false | violation | violation | yes | 0.6 | timer_clock.qnt
+#run1	K04 | k_mono_down | inv_wait_bounded | property | verify | 9 |  | CLOCK="mono", JUMP=-100, T=20, D=1000, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false | ok | ok | yes | 0.6 | timer_clock.qnt
+#run1	K05 | k_age_browser | inv_age_exact | witness | verify | 3 |  | CLOCK="mono", JUMP=0, T=20, D=25, SKEW=30, AGE="browser", SLEEP=0, WAKE_ANSWER_FIRST=false | violation | violation | yes | 0.5 | timer_clock.qnt
+#run1	K06 | k_age_server | inv_age_exact | control | verify | 5 |  | CLOCK="mono", JUMP=0, T=20, D=25, SKEW=30, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false | ok | ok | yes | 0.6 | timer_clock.qnt
+#run1	K07 | k_sleep | inv_no_false_timeout | witness | verify | 7 |  | CLOCK="mono", JUMP=0, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=60, WAKE_ANSWER_FIRST=false | violation | violation | yes | 0.6 | timer_clock.qnt
+#run1	K08 | k_sleep_ctrl | inv_no_false_timeout | control | verify | 7 |  | CLOCK="mono", JUMP=0, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=60, WAKE_ANSWER_FIRST=true | ok | ok | yes | 0.6 | timer_clock.qnt

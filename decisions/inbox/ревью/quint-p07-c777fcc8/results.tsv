@@ -1,0 +1,165 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+L01	load_free	inv_no_rollback	witness	verify	8		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.9	load_overlap.qnt
+L02	load_free	inv_quiescent_fresh	witness	verify	8		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.8	load_overlap.qnt
+L03	load_free	wit_rollback_quiescent	witness	verify	8		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.8	load_overlap.qnt
+L04	load_free	wit_heal	witness	verify	11		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	7.5	load_overlap.qnt
+L05	load_free	inv_inflight_le1	witness	verify	3		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.0	load_overlap.qnt
+L06	load_free	wit_inflight_all	witness	verify	4		POLICY="free", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.0	load_overlap.qnt
+L07	load_latest	inv_no_rollback	control	verify	12		POLICY="latest", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	30.5	load_overlap.qnt
+L08	load_latest	inv_quiescent_fresh	control	verify	12		POLICY="latest", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	37.0	load_overlap.qnt
+L09	load_latest	wit_latest_starves	witness	verify	9		POLICY="latest", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.9	load_overlap.qnt
+L10	load_revguard	inv_no_rollback	control	verify	12		POLICY="revguard", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	9.6	load_overlap.qnt
+L11	load_revguard_del	inv_no_rollback	witness	verify	9		POLICY="revguard", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=true	violation	violation	yes	3.7	load_overlap.qnt
+L12	load_revguard_del	inv_quiescent_fresh	witness	verify	9		POLICY="revguard", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=true	violation	violation	yes	3.5	load_overlap.qnt
+L13	load_revguard_del	wit_deletion_rollback	witness	verify	9		POLICY="revguard", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=true	violation	violation	yes	3.3	load_overlap.qnt
+L14	load_single	inv_no_rollback	control	verify	14		POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	64.3	load_overlap.qnt
+L15	load_single	inv_inflight_le1	control	verify	14		POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	4.9	load_overlap.qnt
+L16	load_single	inv_quiescent_fresh	control	verify	14		POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	18.6	load_overlap.qnt
+L17	load_single_nomerge	inv_quiescent_fresh	mutant	verify	8		POLICY="single_nomerge", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.3	load_overlap.qnt
+L18	load_single_hang	wit_stuck_after_hang	witness	verify	6		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.1	load_overlap.qnt
+L19	load_single_hang	inv_no_start_after_hang	property	verify	12		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	19.7	load_overlap.qnt
+L20	load_free_hang	wit_free_continues_after_hang	witness	verify	4		POLICY="free", NC=3, NW=2, HANG=true, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.1	load_overlap.qnt
+L21	load_free_hang	wit_hung_grow	witness	verify	5		POLICY="free", NC=3, NW=2, HANG=true, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.2	load_overlap.qnt
+L22	load_single_dl_rearm	inv_no_start_after_hang	control	verify	7		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=true, REARM=true, DEL=false	violation	violation	yes	1.2	load_overlap.qnt
+L23	load_single_dl_rearm	inv_quiescent_fresh	control	verify	14		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=true, REARM=true, DEL=false	ok	ok	yes	42.7	load_overlap.qnt
+L24	load_single_dl_norearm	inv_quiescent_fresh	mutant	verify	6		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=true, REARM=false, DEL=false	violation	violation	yes	1.2	load_overlap.qnt
+L25	load_single_dl_rearm	inv_no_rollback	control	verify	14		POLICY="single", NC=3, NW=2, HANG=true, DEADLINE=true, REARM=true, DEL=false	ok	ok	yes	153.9	load_overlap.qnt
+L26	load_single	wit_fresh_after_write	witness	verify	10		POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	violation	violation	yes	1.4	load_overlap.qnt
+A01	api_val_late	inv_no_false_not_applied	witness	verify	6		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="value_eq", FOREIGN=false, FOREIGN_SAME=false	violation	violation	yes	1.2	api_outcome.qnt
+A02	api_val_late	wit_late_after_read	witness	verify	6		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="value_eq", FOREIGN=false, FOREIGN_SAME=false	violation	violation	yes	1.2	api_outcome.qnt
+A03	api_val	inv_no_false_not_applied	property	verify	8		DOOR="put", IFMATCH=true, KEY=false, LATE=false, RULE="value_eq", FOREIGN=false, FOREIGN_SAME=false	ok	ok	yes	1.2	api_outcome.qnt
+A04	api_val_foreign	inv_no_false_not_applied	witness	verify	7		DOOR="put", IFMATCH=true, KEY=false, LATE=false, RULE="value_eq", FOREIGN=true, FOREIGN_SAME=false	violation	violation	yes	1.1	api_outcome.qnt
+A05	api_rev_foreign	inv_no_false_applied	witness	verify	6		DOOR="put", IFMATCH=true, KEY=false, LATE=false, RULE="rev_moved", FOREIGN=true, FOREIGN_SAME=false	violation	violation	yes	1.1	api_outcome.qnt
+A06	api_pos_late_same	inv_no_false_applied	witness	verify	6		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="positive_only", FOREIGN=true, FOREIGN_SAME=true	violation	violation	yes	1.1	api_outcome.qnt
+A07	api_pos_late	inv_no_false_applied	control	verify	9		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="positive_only", FOREIGN=true, FOREIGN_SAME=false	ok	ok	yes	1.5	api_outcome.qnt
+A08	api_pos_late	inv_no_false_not_applied	control	verify	9		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="positive_only", FOREIGN=true, FOREIGN_SAME=false	ok	ok	yes	1.2	api_outcome.qnt
+A09	api_pos_late	wit_unknown_while_applied	witness	verify	7		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="positive_only", FOREIGN=true, FOREIGN_SAME=false	violation	violation	yes	1.1	api_outcome.qnt
+A10	api_unk_late_same	inv_no_false_applied	control	verify	9		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=true	ok	ok	yes	1.3	api_outcome.qnt
+A11	api_unk_late_same	inv_no_false_not_applied	control	verify	9		DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=true	ok	ok	yes	1.2	api_outcome.qnt
+A12	api_marks_val	inv_no_false_applied	witness	verify	6		DOOR="marks", IFMATCH=false, KEY=false, LATE=true, RULE="value_eq", FOREIGN=true, FOREIGN_SAME=true	violation	violation	yes	1.1	api_outcome.qnt
+A13	api_marks_unk	inv_no_false_applied	control	verify	9		DOOR="marks", IFMATCH=false, KEY=false, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=true	ok	ok	yes	1.2	api_outcome.qnt
+A14	api_marks_unk	inv_one_effect	witness	verify	7		DOOR="marks", IFMATCH=false, KEY=false, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=true	violation	violation	yes	1.1	api_outcome.qnt
+A15	api_put_unk_nokey	wit_own_412	witness	verify	7		DOOR="put", IFMATCH=true, KEY=false, LATE=false, RULE="unknown", FOREIGN=false, FOREIGN_SAME=false	violation	violation	yes	1.1	api_outcome.qnt
+A16	api_put_unk_key	wit_own_412	control	verify	10		DOOR="put", IFMATCH=true, KEY=true, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=false	ok	ok	yes	1.2	api_outcome.qnt
+A17	api_put_unk_key	inv_one_effect	control	verify	10		DOOR="put", IFMATCH=true, KEY=true, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=false	ok	ok	yes	1.5	api_outcome.qnt
+A18	api_put_unk_noifm	inv_one_effect	witness	verify	7		DOOR="put", IFMATCH=false, KEY=false, LATE=false, RULE="unknown", FOREIGN=false, FOREIGN_SAME=false	violation	violation	yes	1.0	api_outcome.qnt
+D01	dl_20_refused	inv_no_false_not_handed	witness	verify	4		T=20, ONTIMEOUT="refused", RULE="naive", DS=Set(90), GW=100, LOST=false, MAXT=200, BOUND=150	violation	violation	yes	0.6	door_deadline.qnt
+D02	dl_20_refused	wit_not_handed_while_running	witness	verify	4		T=20, ONTIMEOUT="refused", RULE="naive", DS=Set(90), GW=100, LOST=false, MAXT=200, BOUND=150	violation	violation	yes	0.6	door_deadline.qnt
+D03	dl_20_reread_naive	inv_no_false_not_handed	witness	verify	6		T=20, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=150	violation	violation	yes	0.6	door_deadline.qnt
+D04	dl_20_reread_after	inv_no_false_not_handed	control	verify	10		T=20, ONTIMEOUT="unknown_reread", RULE="afterdl", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=150	ok	ok	yes	0.9	door_deadline.qnt
+D05	dl_none_lost	inv_wait_bounded	witness	verify	6		T=-1, ONTIMEOUT="refused", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=150	violation	violation	yes	0.6	door_deadline.qnt
+D06	dl_none	inv_wait_bounded	property	verify	10		T=-1, ONTIMEOUT="refused", RULE="naive", DS=Set(90), GW=100, LOST=false, MAXT=200, BOUND=150	ok	ok	yes	0.7	door_deadline.qnt
+D07	dl_105	inv_no_false_not_handed	control	verify	10		T=105, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=105	ok	ok	yes	0.8	door_deadline.qnt
+D08	dl_105	inv_wait_bounded	control	verify	10		T=105, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=105	ok	ok	yes	0.7	door_deadline.qnt
+D09	dl_20_reread_after	wit_unknown_end	witness	verify	10		T=20, ONTIMEOUT="unknown_reread", RULE="afterdl", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=150	violation	violation	yes	0.7	door_deadline.qnt
+D10	dl_90	inv_no_false_not_handed	mutant	verify	8		T=90, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=90	violation	violation	yes	0.6	door_deadline.qnt
+D11	dl_95	inv_no_false_not_handed	control	verify	10		T=95, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(90), GW=100, LOST=true, MAXT=200, BOUND=95	ok	ok	yes	0.8	door_deadline.qnt
+D12	dl_105_ok	wit_handed	witness	verify	8		T=105, ONTIMEOUT="unknown_reread", RULE="naive", DS=Set(1, 90), GW=100, LOST=false, MAXT=200, BOUND=105	violation	violation	yes	0.6	door_deadline.qnt
+S01	s_norm_shared	inv_no_cross	witness	verify	4		POLICY="norm", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	0.9	retry_session.qnt
+S02	s_norm_noshare	inv_no_cross	witness	verify	5		POLICY="norm", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	0.9	retry_session.qnt
+S03	s_cancel_shared	wit_cross_before_seen	witness	verify	4		POLICY="cancel_seen", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	0.9	retry_session.qnt
+S04	s_cancel_noshare	inv_no_cross	control	verify	8		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	ok	ok	yes	1.3	retry_session.qnt
+S05	s_cancel_notoast	inv_no_cross	mutant	verify	8		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=false, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	1.1	retry_session.qnt
+S06	s_recheck_shared	inv_no_cross	witness	verify	5		POLICY="recheck", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	0.9	retry_session.qnt
+S07	s_bound_shared	inv_no_cross	control	verify	8		POLICY="bound", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	ok	ok	yes	1.1	retry_session.qnt
+S08	s_cancel_numeric_exp	wit_double_after_expiry	witness	verify	7		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="numeric", KEEP_EXP=true, RELOAD=false	violation	violation	yes	1.0	retry_session.qnt
+S09	s_norm_named_exp	inv_one_row	property	verify	8		POLICY="norm", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=true, RELOAD=false	ok	ok	yes	1.2	retry_session.qnt
+S10	s_age_numeric_exp	inv_one_row	control	verify	10		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=true, IDKIND="numeric", KEEP_EXP=true, RELOAD=false	ok	ok	yes	2.3	retry_session.qnt
+S11	s_reload_numeric	inv_one_row	witness	verify	6		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=true, IDKIND="numeric", KEEP_EXP=false, RELOAD=true	violation	violation	yes	0.9	retry_session.qnt
+S12	s_reload_named	inv_one_row	property	verify	8		POLICY="norm", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=true	ok	ok	yes	1.3	retry_session.qnt
+S13	s_cancel_numeric_exp	inv_one_row	mutant	verify	7		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="numeric", KEEP_EXP=true, RELOAD=false	violation	violation	yes	1.0	retry_session.qnt
+S14	s_cancel_noshare	wit_completed	witness	verify	6		POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	violation	violation	yes	0.9	retry_session.qnt
+B01	b_m5	wit_exhaust_before_takeover	witness	verify	8		KINDS=Set("409"), LATS=Set(0), RAS=Set(), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B02	b_m5	inv_never_auto_ok	property	verify	9		KINDS=Set("409"), LATS=Set(0), RAS=Set(), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	ok	ok	yes	0.7	retry_budget.qnt
+B03	b_m5	inv_no_refused409	witness	verify	8		KINDS=Set("409"), LATS=Set(0), RAS=Set(), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B04	b_m5_unknown	inv_no_refused409	control	verify	10		KINDS=Set("409"), LATS=Set(0), RAS=Set(), CAP=-1, POLICY409="unknown", BUDGET=-1, TAKEOVER=30, LIM=3600	ok	ok	yes	0.8	retry_budget.qnt
+B05	b_m5_unknown	wit_manual_ok	witness	verify	9		KINDS=Set("409"), LATS=Set(0), RAS=Set(), CAP=-1, POLICY409="unknown", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B06	b_ra15	wit_auto_ok	witness	verify	7		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B07	b_timeouts	wit_auto_ok	witness	verify	6		KINDS=Set("409", "lost"), LATS=Set(0, 20), RAS=Set(), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B08	b_huge	wit_huge	witness	verify	7		KINDS=Set("503"), LATS=Set(0), RAS=Set(3600), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.6	retry_budget.qnt
+B09	b_huge_cap10	inv_total_le_lim	control	verify	9		KINDS=Set("503"), LATS=Set(0), RAS=Set(3600), CAP=10, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=30	ok	ok	yes	0.8	retry_budget.qnt
+B10	b_ra1	wit_faster_than_default	witness	verify	8		KINDS=Set("503"), LATS=Set(0), RAS=Set(1), CAP=-1, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B11	b_ra15_bud20	wit_budget_ends_unknown	witness	verify	7		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=-1, POLICY409="unknown", BUDGET=20, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B12	b_ra15_bud20	inv_never_auto_ok	control	verify	9		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=-1, POLICY409="unknown", BUDGET=20, TAKEOVER=30, LIM=3600	ok	ok	yes	0.8	retry_budget.qnt
+B13	b_ra15_bud60	wit_auto_ok	witness	verify	7		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=-1, POLICY409="unknown", BUDGET=60, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+B14	b_ra15_cap5	inv_never_auto_ok	control	verify	9		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=5, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	ok	ok	yes	0.7	retry_budget.qnt
+B15	b_ra15_cap10	wit_auto_ok	witness	verify	8		KINDS=Set("409"), LATS=Set(0), RAS=Set(15), CAP=10, POLICY409="refuse", BUDGET=-1, TAKEOVER=30, LIM=3600	violation	violation	yes	0.7	retry_budget.qnt
+H01	st_norm	inv_feed_burst_eq_nt	property	verify	10		NT=3, RECONN=5, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	ok	ok	yes	0.9	storm.qnt
+H02	st_norm	wit_all_at_once	witness	verify	7		NT=3, RECONN=5, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.8	storm.qnt
+H03	st_reconn1	wit_all_at_once	witness	verify	7		NT=3, RECONN=1, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.7	storm.qnt
+H04	st_reconn1	inv_feed_burst_eq_nt	property	verify	10		NT=3, RECONN=1, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	ok	ok	yes	0.9	storm.qnt
+H05	st_down7	wit_all_at_once	witness	verify	12		NT=3, RECONN=5, DOWN=7, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.9	storm.qnt
+H06	st_norm	inv_no_busy	witness	verify	7		NT=3, RECONN=5, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.7	storm.qnt
+H07	st_stag	inv_feed_burst_le_1	control	verify	13		NT=3, RECONN=5, DOWN=1, STAGGER=2, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	ok	ok	yes	1.1	storm.qnt
+H08	st_stag	wit_all_loaded_spread	witness	verify	11		NT=3, RECONN=5, DOWN=1, STAGGER=2, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.9	storm.qnt
+H09	st_mut	inv_feed_burst_le_1	mutant	verify	7		NT=3, RECONN=5, DOWN=1, STAGGER=0, PERIOD=5, LANE=2, OFFSETS=Set(1, 2, 3)	violation	violation	yes	0.8	storm.qnt
+H10	ba_norm	inv_follows_ra	witness	verify	3		PERIOD=5, RA=10, FOLLOW=false	violation	violation	yes	0.4	read_backoff.qnt
+H11	ba_follow	inv_follows_ra	control	verify	6		PERIOD=5, RA=10, FOLLOW=true	ok	ok	yes	0.4	read_backoff.qnt
+H12	ba_ra1	inv_follows_ra	property	verify	6		PERIOD=5, RA=1, FOLLOW=false	ok	ok	yes	0.4	read_backoff.qnt
+W01	w_none_repeat	inv_pages_le_lim	witness	verify	7		PAGES=3, FAULT="repeat", DETECT="none", BUDGET=-1, LIM=4, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+W02	w_none_clean	wit_over_poll	witness	verify	4		PAGES=3, FAULT="none", DETECT="none", BUDGET=-1, LIM=4, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+W03	w_none_clean	inv_no_false_fail	property	verify	6		PAGES=3, FAULT="none", DETECT="none", BUDGET=-1, LIM=4, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W04	w_none_clean	inv_done_all	property	verify	6		PAGES=3, FAULT="none", DETECT="none", BUDGET=-1, LIM=4, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W05	w_last_repeat	inv_pages_le_lim	control	verify	7		PAGES=3, FAULT="repeat", DETECT="last", BUDGET=-1, LIM=4, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W06	w_last_cycle	inv_pages_le_lim	mutant	verify	7		PAGES=3, FAULT="cycle", DETECT="last", BUDGET=-1, LIM=4, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+W07	w_set_cycle	inv_pages_le_lim	control	verify	7		PAGES=3, FAULT="cycle", DETECT="set", BUDGET=-1, LIM=4, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W08	w_bud5_cycle	inv_pages_le_lim	control	verify	8		PAGES=3, FAULT="cycle", DETECT="none", BUDGET=5, LIM=5, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W09	w_bud2_clean	inv_no_false_fail	mutant	verify	4		PAGES=3, FAULT="none", DETECT="none", BUDGET=2, LIM=4, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+W10	w_bud5_clean	inv_no_false_fail	control	verify	6		PAGES=3, FAULT="none", DETECT="none", BUDGET=5, LIM=5, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W11	w_bud5_clean	inv_done_all	control	verify	6		PAGES=3, FAULT="none", DETECT="none", BUDGET=5, LIM=5, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W12	w_bud5_set_cycle	inv_no_false_fail	property	verify	7		PAGES=3, FAULT="cycle", DETECT="set", BUDGET=5, LIM=5, POLL=5	ok	ok	yes	0.5	domain_walk.qnt
+W13	w_none_cycle	inv_pages_le_lim	mutant	verify	7		PAGES=3, FAULT="cycle", DETECT="none", BUDGET=-1, LIM=4, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+W14	w_bud5_clean	wit_done	witness	verify	6		PAGES=3, FAULT="none", DETECT="none", BUDGET=5, LIM=5, POLL=5	violation	violation	yes	0.5	domain_walk.qnt
+R01	r_text	inv_no_empty_on_damage	witness	verify	3		K=3, DEADLINE=-1, PARSE="empty_ok", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	violation	violation	yes	0.6	read_stall.qnt
+R02	r_ctrl_parse	inv_no_empty_on_damage	control	verify	8		K=3, DEADLINE=-1, PARSE="refuse", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	ok	ok	yes	0.7	read_stall.qnt
+R03	r_text	inv_wait_bounded	witness	verify	8		K=3, DEADLINE=-1, PARSE="empty_ok", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	violation	violation	yes	0.7	read_stall.qnt
+R04	r_ctrl_dl	inv_wait_bounded	control	verify	12		K=3, DEADLINE=3, PARSE="refuse", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	ok	ok	yes	0.9	read_stall.qnt
+R05	r_text	wit_ready_pending	witness	verify	10		K=3, DEADLINE=-1, PARSE="empty_ok", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	violation	violation	yes	0.7	read_stall.qnt
+R06	r_ctrl_dl	inv_mark_honest	mutant	verify	8		K=3, DEADLINE=3, PARSE="refuse", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	violation	violation	yes	0.6	read_stall.qnt
+R07	r_ctrl_mark	inv_mark_honest	control	verify	10		K=3, DEADLINE=3, PARSE="refuse", MARK=true, MANIFEST_UP=false, MAXT=20, LIM=4	ok	ok	yes	0.8	read_stall.qnt
+R08	r_text	wit_busy_card_behind	witness	verify	8		K=3, DEADLINE=-1, PARSE="empty_ok", MARK=false, MANIFEST_UP=false, MAXT=20, LIM=4	violation	violation	yes	0.6	read_stall.qnt
+C01	c_norm	inv_no_false_timeout	witness	verify	12		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	violation	violation	yes	1.4	conn_limit.qnt
+C02	c_norm	wit_waited_full	witness	verify	9		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	violation	violation	yes	0.8	conn_limit.qnt
+C03	c_l3	inv_no_false_timeout	control	verify	14		NT=2, L=3, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	9.3	conn_limit.qnt
+C04	c_l3	inv_start_at_once	control	verify	14		NT=2, L=3, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	13.6	conn_limit.qnt
+C05	c_dur1	inv_no_false_timeout	property	verify	14		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	34.0	conn_limit.qnt
+C06	c_dur1	inv_queue_le_wait	property	verify	14		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	47.8	conn_limit.qnt
+C07	c_any	inv_no_false_timeout	witness	verify	14		NT=2, L=2, PICK="any", TIMER="call", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=0, DEADLINE=20	violation	violation	yes	1.3	conn_limit.qnt
+C08	c_any	wit_starved	witness	verify	14		NT=2, L=2, PICK="any", TIMER="call", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=0, DEADLINE=20	violation	violation	yes	1.6	conn_limit.qnt
+C09	c_any_start	inv_no_false_timeout	control	verify	14		NT=2, L=2, PICK="any", TIMER="start", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=0, DEADLINE=20	ok	ok	yes	42.4	conn_limit.qnt
+C10	c_any_start	wit_starved	witness	verify	14		NT=2, L=2, PICK="any", TIMER="start", MAX_HELD=-1, DUR=1, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=0, DEADLINE=20	violation	violation	yes	1.4	conn_limit.qnt
+C11	c_held1	inv_no_false_timeout	control	verify	14		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	10.7	conn_limit.qnt
+C12	c_held1	inv_start_at_once	control	verify	14		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	ok	ok	yes	15.2	conn_limit.qnt
+C13	c_mut_held_eq_l	inv_no_false_timeout	mutant	verify	12		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=2, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	violation	violation	yes	1.4	conn_limit.qnt
+C14	c_held1	wit_write_done	witness	verify	8		NT=2, L=2, PICK="fifo", TIMER="call", MAX_HELD=1, DUR=6, CALLS=Set(1), OFFSETS=Set(15), WAIT=15, GAP=1, DEADLINE=20	violation	violation	yes	0.8	conn_limit.qnt
+F01	f_nonatomic	inv_one_holder	witness	verify	6		NT=2, ATOMIC=false, LEASE=false	violation	violation	yes	0.6	feed_leader.qnt
+F02	f_atomic	inv_one_holder	control	verify	8		NT=2, ATOMIC=true, LEASE=false	ok	ok	yes	0.6	feed_leader.qnt
+F03	f_atomic	wit_no_holder_after_close	witness	verify	4		NT=2, ATOMIC=true, LEASE=false	violation	violation	yes	0.6	feed_leader.qnt
+F04	f_atomic	inv_takeover_impossible	property	verify	8		NT=2, ATOMIC=true, LEASE=false	ok	ok	yes	0.6	feed_leader.qnt
+F05	f_atomic_lease	wit_takeover	witness	verify	5		NT=2, ATOMIC=true, LEASE=true	violation	violation	yes	0.6	feed_leader.qnt
+M01	m_norm	inv_one_instance	witness	verify	3		POLICY="norm", NM=2	violation	violation	yes	0.4	mount_life.qnt
+M02	m_norm	wit_two_feeds	witness	verify	3		POLICY="norm", NM=2	violation	violation	yes	0.4	mount_life.qnt
+M03	m_norm	inv_no_leak_after_remove	witness	verify	3		POLICY="norm", NM=2	violation	violation	yes	0.4	mount_life.qnt
+M04	m_refuse	inv_one_instance	control	verify	5		POLICY="refuse", NM=2	ok	ok	yes	0.4	mount_life.qnt
+M05	m_replace	inv_no_leak_after_remove	control	verify	5		POLICY="replace", NM=2	ok	ok	yes	0.4	mount_life.qnt
+M06	m_refuse	inv_no_leak_after_remove	mutant	verify	3		POLICY="refuse", NM=2	violation	violation	yes	0.4	mount_life.qnt
+Q1	q_small	wit_done	witness	verify	15		S=1, SC=1, PF=0, F=0, PG=1, SH=1, M=0	violation	violation	yes	0.4	cycle_cost.qnt
+Y1	q_small	inv_req_expected	property	verify	15		S=1, SC=1, PF=0, F=0, PG=1, SH=1, M=0	ok	ok	yes	0.4	cycle_cost.qnt
+Q2	q_mid	wit_done	witness	verify	36		S=4, SC=8, PF=3, F=1, PG=2, SH=8, M=0	violation	violation	yes	0.4	cycle_cost.qnt
+Y2	q_mid	inv_req_expected	property	verify	36		S=4, SC=8, PF=3, F=1, PG=2, SH=8, M=0	ok	ok	yes	0.4	cycle_cost.qnt
+Q3	q_feed	wit_done	witness	verify	50		S=2, SC=2, PF=0, F=0, PG=1, SH=2, M=2	violation	violation	yes	0.4	cycle_cost.qnt
+Y3	q_feed	inv_req_expected	property	verify	50		S=2, SC=2, PF=0, F=0, PG=1, SH=2, M=2	ok	ok	yes	0.4	cycle_cost.qnt
+Z01	load_single	inv_no_rollback	control	run	30	3000	POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	0.9	load_overlap.qnt
+Z02	load_single	inv_quiescent_fresh	control	run	30	3000	POLICY="single", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	0.9	load_overlap.qnt
+Z03	load_latest	inv_no_rollback	control	run	30	3000	POLICY="latest", NC=3, NW=2, HANG=false, DEADLINE=false, REARM=false, DEL=false	ok	ok	yes	0.9	load_overlap.qnt
+Z04	s_bound_shared	inv_no_cross	control	run	25	3000	POLICY="bound", SHARED=true, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	ok	ok	yes	0.6	retry_session.qnt
+Z05	s_cancel_noshare	inv_no_cross	control	run	25	3000	POLICY="cancel_seen", SHARED=false, CANCEL_TOAST=true, AGE_LIMIT=false, IDKIND="named", KEEP_EXP=false, RELOAD=false	ok	ok	yes	0.7	retry_session.qnt
+Z06	api_unk_late_same	inv_no_false_not_applied	control	run	25	3000	DOOR="put", IFMATCH=true, KEY=false, LATE=true, RULE="unknown", FOREIGN=true, FOREIGN_SAME=true	ok	ok	yes	0.6	api_outcome.qnt
+K01	k_wall_up	inv_no_premature	witness	verify	4		CLOCK="wall", JUMP=100, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false	violation	violation	yes	0.5	timer_clock.qnt
+K02	k_mono_up	inv_no_premature	property	verify	8		CLOCK="mono", JUMP=100, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false	ok	ok	yes	0.6	timer_clock.qnt
+K03	k_wall_down	inv_wait_bounded	witness	verify	9		CLOCK="wall", JUMP=-100, T=20, D=1000, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false	violation	violation	yes	0.6	timer_clock.qnt
+K04	k_mono_down	inv_wait_bounded	property	verify	9		CLOCK="mono", JUMP=-100, T=20, D=1000, SKEW=0, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false	ok	ok	yes	0.7	timer_clock.qnt
+K05	k_age_browser	inv_age_exact	witness	verify	3		CLOCK="mono", JUMP=0, T=20, D=25, SKEW=30, AGE="browser", SLEEP=0, WAKE_ANSWER_FIRST=false	violation	violation	yes	0.5	timer_clock.qnt
+K06	k_age_server	inv_age_exact	control	verify	5		CLOCK="mono", JUMP=0, T=20, D=25, SKEW=30, AGE="server_time", SLEEP=0, WAKE_ANSWER_FIRST=false	ok	ok	yes	0.5	timer_clock.qnt
+K07	k_sleep	inv_no_false_timeout	witness	verify	7		CLOCK="mono", JUMP=0, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=60, WAKE_ANSWER_FIRST=false	violation	violation	yes	0.5	timer_clock.qnt
+K08	k_sleep_ctrl	inv_no_false_timeout	control	verify	7		CLOCK="mono", JUMP=0, T=20, D=25, SKEW=0, AGE="server_time", SLEEP=60, WAKE_ANSWER_FIRST=true	ok	ok	yes	0.6	timer_clock.qnt
