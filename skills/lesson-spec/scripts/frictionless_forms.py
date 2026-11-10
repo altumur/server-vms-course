@@ -18,6 +18,14 @@ RESOURCES = {
     "code_rules_p01": "01-store/forms/code-rules.tsv",
     "code_kinds": "common/acceptance/forms/code-rules.tsv",
 }
+OPTIONAL_RESOURCES = {
+    "daemon_flags_p01": "01-store/forms/daemon-flags.tsv",
+    "refusals_p01": "01-store/forms/refusals.tsv",
+    "runtime_constants_p01": "01-store/forms/runtime-constants.tsv",
+    "write_checks_p01": "01-store/forms/write-checks.tsv",
+    "write_checks_probes_p01": "01-store/forms/write-checks.probes.tsv",
+}
+KNOWN_RESOURCES = {**RESOURCES, **OPTIONAL_RESOURCES}
 
 
 class FormInputError(ValueError):
@@ -63,21 +71,23 @@ def _read_json(path):
 
 
 def prepare(root):
-    """Load only the declared four resources, preserving physical row numbers."""
+    """Load every declared known resource, preserving physical row numbers."""
     root = Path(root).resolve()
     descriptor_path = _ordinary(root, PACKAGE)
     source = _read_json(descriptor_path)
     if not isinstance(source, dict) or not isinstance(source.get("resources"), list):
         raise FormInputError(f"{descriptor_path}: expected the selected form data package")
     names = [item.get("name") for item in source["resources"] if isinstance(item, dict)]
-    if len(names) != len(source["resources"]) or len(names) != len(RESOURCES) or \
-            any(not isinstance(name, str) for name in names) or set(names) != set(RESOURCES):
-        raise FormInputError(f"{descriptor_path}: resources differ from the selected four-form group")
+    if len(names) != len(source["resources"]) or any(not isinstance(name, str) for name in names) or \
+            len(names) != len(set(names)) or not set(RESOURCES) <= set(names) or \
+            not set(names) <= set(KNOWN_RESOURCES):
+        raise FormInputError(f"{descriptor_path}: resources differ from the selected four-form group "
+                             "and closed optional form set")
     prepared = copy.deepcopy(source)
     physical = {}
     for resource in prepared["resources"]:
         name = resource["name"]
-        relative = RESOURCES[name]
+        relative = KNOWN_RESOURCES[name]
         if resource.get("path") != relative or resource.get("schema") != relative + ".schema.json":
             raise FormInputError(f"{descriptor_path}: wrong Source path or schema for {name}")
         if "data" in resource or resource.get("format") != "tsv" or resource.get("encoding") != "utf-8" or \
@@ -141,8 +151,8 @@ def check(root, *, tables=None):
         return [f"{PACKAGE}: Frictionless table-schema pattern is invalid: {exc}"], {}
     errors = [f"{PACKAGE}: Frictionless {error.type}: {error.message}" for error in report.errors]
     task_names = [task.name for task in report.tasks]
-    if len(task_names) != len(RESOURCES) or set(task_names) != set(RESOURCES):
-        errors.append(f"{PACKAGE}: Frictionless did not validate the selected four form resources")
+    if len(task_names) != len(physical) or set(task_names) != set(physical):
+        errors.append(f"{PACKAGE}: Frictionless did not validate all declared form resources")
     if any(task.type != "table" for task in report.tasks):
         errors.append(f"{PACKAGE}: Frictionless did not use table validation for every selected resource")
     for task in report.tasks:
