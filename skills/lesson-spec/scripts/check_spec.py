@@ -608,6 +608,7 @@ REGISTERED_SHARED_LESSONS = {
         "instructions": Path("Platform/common/acceptance/spec/acceptance.README.md"),
     },
 }
+STAGE_NORM_REQUIRED = {"P/01"}   # ADR-0133 (43): explicit adoption; absence of item elements cannot opt out.
 INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
 INVENTORY_END = "<!-- checklist-inventory:end -->"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
@@ -1898,6 +1899,71 @@ class Check:
         if len(listed) == 2 and listed[0] != listed[1]:
             self.error(translation, "checklist inventory: the ids differ from the source "
                                     f"({sorted(listed[0] ^ listed[1])})")
+
+    def stage_norms(self, home, key):
+        """Required lessons cover all items; other lessons validate item elements they name."""
+        required = key in STAGE_NORM_REQUIRED
+        table = home / "forms/stages.tsv"
+        if not required and not table.exists() and not table.is_symlink():
+            return
+        if table.is_symlink() or not table.is_file():
+            self.error(table, "stage norms: expected an ordinary stages.tsv file")
+            return
+        text = self.read(table)
+        if text is None:
+            return
+        head = next((line.split("\t") for line in text.split("\n")
+                     if line and not line.startswith("#")), [])
+        if not {"stage", "norms"} <= set(head):
+            if required:
+                self.error(table, "stage norms: expected stage and norms columns")
+            return
+        if len(head) != len(set(head)):
+            self.error(table, "stage norms: expected unique stage and norms columns")
+            return
+        rows = self.tsv(table, len(head), head)
+        item = re.compile(r"P/[0-9]{2}\." + CHAPTER + r"-[0-9]{2}")
+        counts, stages = Counter(), {}
+        for line, cells in rows:
+            row = dict(zip(head, cells))
+            for element in row["norms"].split(";"):
+                value = element.strip()
+                if item.fullmatch(value):
+                    counts[value] += 1
+                    stages.setdefault(value, []).append(row["stage"])
+        if not required and not counts:
+            return
+        wanted = []
+        sources = sorted((home / "spec").glob("*.norms.md"))
+        if not sources:
+            self.error(home / "spec", "stage norms: no canonical norms files")
+        for path in sources:
+            if path.is_symlink() or not path.is_file():
+                self.error(path, "stage norms: expected an ordinary canonical norms file")
+                continue
+            body = self.read(path)
+            if body is None:
+                continue
+            for value in outline(body, None, "Readiness checklist")[1]:
+                if not item.fullmatch(value) or not value.startswith(key + "."):
+                    self.error(path, f"stage norms: malformed or foreign checklist item {value!r}")
+                else:
+                    wanted.append(value)
+        expected = set(wanted)
+        if required and not expected:
+            self.error(home / "spec", "stage norms: no canonical checklist items")
+        for value, count in Counter(wanted).items():
+            if count != 1:
+                self.error(home / "spec", f"stage norms: duplicate canonical checklist item {value}")
+        for value in sorted(expected if required else counts.keys() & expected):
+            if counts[value] == 0:
+                self.error(table, f"stage norms: checklist item {value} is at no stage")
+            elif counts[value] > 1:
+                self.error(table, f"stage norms: checklist item {value} repeats at stages {stages[value]}")
+        for value in sorted(counts.keys() - expected):
+            self.error(table, f"stage norms: {value} is no checklist item of this lesson")
+        self.stats["stage_norm_items"] += len(expected)
+        self.stats["stage_norm_placements"] += sum(counts.values())
 
     # Every directive a scenario uses is in a stand dictionary («Словарь директив»): the shared one of the Platform
     # module and the module's own (README of lesson 1), which adds only its new directives.
@@ -3396,6 +3462,8 @@ class Check:
             self.counts(path, text, key, all_ids, totals["scenarios"], path == instructions, totals["verdicts"],
                         total_choices or None, lecture=path == lesson)
         self.checklist_inventory(spec / f"{stem}.README.md", instructions, key, all_ids)
+        if not vms:
+            self.stage_norms(home, key)
         self.stale(key, acceptance)
         self.stats["lessons"] += 1
 
