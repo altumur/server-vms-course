@@ -828,6 +828,7 @@ class Check:
         self.lessons = None
         self.vms_request_forms = None
         self._refusal_words = None
+        self._standard_forms = None
         self.processes_checked = False
         self.catalog_checked = False
         self.idmap = None
@@ -2696,6 +2697,20 @@ class Check:
             if en_mirror.MARK in "\n".join(text.splitlines()[:12]) and not en.is_file():
                 self.error(ru, f"marked «{en_mirror.MARK}», but {self.name(en)} is missing")
 
+    def standard_forms(self):
+        """Validate the selected Platform package once and share its raw rows."""
+        if self._standard_forms is None:
+            self._standard_forms = {}, set()
+            if (self.root / "Platform/01-store").is_dir():
+                import frictionless_forms
+                tables, selected = self._standard_forms
+                selected.update(self.root / "Platform" / path for path in frictionless_forms.RESOURCES.values())
+                errors, stats = frictionless_forms.check(self.root, tables=tables)
+                for message in errors:
+                    self.error(self.root / frictionless_forms.PACKAGE, message)
+                self.stats.update(stats)
+        return self._standard_forms
+
     def check_tables(self):
         """ADR-0120 п. 2 (а): таблицы проверок команды `Platform/*/forms/*-checks.tsv` (в прежней раскладке — `data/`) — форма, CEL, функции #fn,
         параметры #lim и пробы `*-checks.probes.tsv`, сверенные прогоном (`check_tables.check`)."""
@@ -2705,8 +2720,13 @@ class Check:
             if path.parent.name == "data" and (path.parent.parent / "ru").is_dir():
                 self.error(path, "a form of a lesson in the layout of ADR-0124 lives in forms/; data/ holds the data "
                                  "families only (ADR-0124 п. 1)")
+        standard, selected = self.standard_forms()
         for path in check_tables.tables(self.root):
-            errors, stats = check_tables.check(path)
+            probes = path.with_name(path.name.replace(".tsv", ".probes.tsv"))
+            if any(file in selected and file not in standard for file in (path, probes)):
+                continue
+            errors, stats = check_tables.check(path, validated=standard.get(path),
+                                               validated_probes=standard.get(probes))
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
@@ -2725,22 +2745,18 @@ class Check:
         """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
         прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
         import check_forms
-        standard = {}
-        selected_standard = set()
-        if (self.root / "Platform/01-store").is_dir():
-            import frictionless_forms
-            selected_standard = {self.root / "Platform" / path for path in frictionless_forms.RESOURCES.values()}
-            errors, stats = frictionless_forms.check(self.root, tables=standard)
-            for message in errors:
-                self.error(self.root / frictionless_forms.PACKAGE, message)
-            self.stats.update(stats)
+        standard, selected_standard = self.standard_forms()
         for path in check_forms.flag_forms(self.root):
-            errors, stats = check_forms.check_flags(path)
+            if path in selected_standard and path not in standard:
+                continue
+            errors, stats = check_forms.check_flags(path, validated=standard.get(path))
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
         for path in check_forms.refusal_forms(self.root):
-            errors, stats = check_forms.check_refusals(path)
+            if path in selected_standard and path not in standard:
+                continue
+            errors, stats = check_forms.check_refusals(path, validated=standard.get(path))
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
@@ -2750,7 +2766,9 @@ class Check:
                 self.error(path, message)
             self.stats["seam_steps"] = self.stats.get("seam_steps", 0) + stats["seam_steps"]
         for path in check_forms.runtime_constant_forms(self.root):
-            errors, stats = check_forms.check_runtime_constants(path)
+            if path in selected_standard and path not in standard:
+                continue
+            errors, stats = check_forms.check_runtime_constants(path, validated=standard.get(path))
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)

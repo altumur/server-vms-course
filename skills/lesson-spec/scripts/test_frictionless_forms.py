@@ -193,7 +193,7 @@ class StandardFormControls(unittest.TestCase):
             with self.subTest(change=change):
                 path.write_bytes(saved)
                 self.package(change)
-                self.assertTrue(any("selected four-form group" in error for error in self.errors()))
+                self.assertTrue(any("selected nine-form group" in error for error in self.errors()))
 
     def test_resource_and_schema_paths_are_exact_source_owned_inputs(self):
         for key, value in [
@@ -358,7 +358,7 @@ class StandardFormControls(unittest.TestCase):
 
     def test_nonstring_resource_identity_is_a_metadata_error_not_a_crash(self):
         self.package(lambda descriptor: descriptor["resources"][0].update({"name": []}))
-        self.assertTrue(any("selected four-form group" in e for e in self.errors()))
+        self.assertTrue(any("selected nine-form group" in e for e in self.errors()))
 
 
 if __name__ == "__main__":

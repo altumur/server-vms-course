@@ -41,8 +41,15 @@ def refusal_forms(root):
     return sorted(Path(root).glob("Platform/*/forms/refusals.tsv"))
 
 
-def read(path, columns, extra=()):
+def read(path, columns, extra=(), *, validated=None):
     """Колонки — `columns`, затем по порядку подмножество `extra` (колонки нормы в форме)."""
+    if validated is not None:
+        if validated["path"] != Path(path):
+            return [f"{path.name}: standard form rows belong to a different Source file"], []
+        head = validated["columns"]
+        if any(column not in head for column in columns):
+            return [f"{path.name}: missing columns required by the semantic reader: {columns}"], []
+        return [], [dict(zip(head, cells)) for cells in validated["rows"]]
     lines = [line for line in Path(path).read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
     errors, rows = [], []
     head = lines[0].split("\t") if lines else []
@@ -96,20 +103,21 @@ def size(text):
     return None if not m else int(m[1]) * UNITS.get(m[2] or "", 1)
 
 
-def check_flags(path):
+def check_flags(path, *, validated=None):
     path = Path(path)
-    errors, rows = read(path, FLAG_COLUMNS)
+    errors, rows = read(path, FLAG_COLUMNS, validated=validated)
     stats = {"daemon_flags": len(rows)}
     env = cel_env()
     seen = set()
     for r in rows:
         where = f"{path.name}: {r['flag']}"
-        if not (FLAG_NAME.fullmatch(r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
+        if validated is None and (not (FLAG_NAME.fullmatch(r["flag"]) or r["flag"] in TWO_HYPHENS)
+                                  or r["flag"] in seen):
             errors.append(f"{where}: the name is not -flag, --flag, $ENV or <arg>, or repeats")
         seen.add(r["flag"])
-        if not TYPE.fullmatch(r["type"]):
+        if validated is None and not TYPE.fullmatch(r["type"]):
             errors.append(f"{where}: type {r['type']!r} is not of the closed vocabulary")
-        if not all(COMMAND.fullmatch(c) for c in r["commands"].split(",")):
+        if validated is None and not all(COMMAND.fullmatch(c) for c in r["commands"].split(",")):
             errors.append(f"{where}: commands {r['commands']!r} — not a list of lowercase command names")
         for column in ("required", "bad"):
             if r[column]:
@@ -632,20 +640,20 @@ def openapi_refusal_pairs(lesson):
     return pairs
 
 
-def check_refusals(path):
+def check_refusals(path, *, validated=None):
     path = Path(path)
     lesson = path.parent.parent
-    errors, rows = read(path, REF_COLUMNS, REF_EXTRA)
+    errors, rows = read(path, REF_COLUMNS, REF_EXTRA, validated=validated)
     stats = {"refusal_rows": len(rows)}
     names = set()
     for r in rows:
         where = f"{path.name}: {r['chapter']} row {r['row']} {r['name']}"
-        if not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in names:
+        if validated is None and (not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in names):
             errors.append(f"{where}: the name is not snake_case or repeats")
         names.add(r["name"])
-        if r["surface"] not in SURFACES:
+        if validated is None and r["surface"] not in SURFACES:
             errors.append(f"{where}: surface {r['surface']!r}")
-        if not re.fullmatch(r"[1-5][0-9]{2}|exit [0-9]+|exit !0|-", r["code"]):
+        if validated is None and not re.fullmatch(r"[1-5][0-9]{2}|exit [0-9]+|exit !0|-", r["code"]):
             errors.append(f"{where}: code {r['code']!r}")
         if r["surface"] == "http" and not re.fullmatch(r"[a-z]+", r["kind"]) and \
                 not (r["kind"] == "-" and r.get("response_schema")):
@@ -2302,12 +2310,12 @@ def runtime_constant_forms(root):
     return sorted(Path(root).glob("Platform/*/forms/runtime-constants.tsv"))
 
 
-def check_runtime_constants(path):
+def check_runtime_constants(path, *, validated=None):
     """ADR-0125 доп. (5), P/06: числовые константы урока — форма-норма. name уникален [A-Z][A-Z0-9_]*; value — положительное
     целое int64 без ведущих нулей; unit count|s|ms|bytes; norm — якорь требования этого урока, существующий в его нормах; meaning не пуст."""
     path = Path(path)
     lesson = path.parent.parent
-    errors, rows = read(path, CONST_COLUMNS)
+    errors, rows = read(path, CONST_COLUMNS, validated=validated)
     anchors = set()
     for norms in (lesson / "spec").glob("*.norms.md"):
         anchors |= set(ANCHOR.findall(norms.read_text(encoding="utf-8")))
@@ -2315,14 +2323,14 @@ def check_runtime_constants(path):
     seen = set()
     for r in rows:
         where = f"{path.name}: {r['name']}"
-        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", r["name"]) or r["name"] in seen:
+        if validated is None and (not re.fullmatch(r"[A-Z][A-Z0-9_]*", r["name"]) or r["name"] in seen):
             errors.append(f"{where}: name is not [A-Z][A-Z0-9_]* or repeats")
         seen.add(r["name"])
-        if not re.fullmatch(r"[1-9][0-9]*", r["value"]):
+        if validated is None and not re.fullmatch(r"[1-9][0-9]*", r["value"]):
             errors.append(f"{where}: value {r['value']!r} is not a positive integer")
         elif len(r["value"]) > 19 or len(r["value"]) == 19 and r["value"] > "9223372036854775807":
             errors.append(f"{where}: value {r['value']!r} exceeds positive int64")
-        if r["unit"] not in CONST_UNITS:
+        if validated is None and r["unit"] not in CONST_UNITS:
             errors.append(f"{where}: unit {r['unit']!r} not in {sorted(CONST_UNITS)}")
         g = REQ.fullmatch(r["norm"])
         if not g or g[1] != number:

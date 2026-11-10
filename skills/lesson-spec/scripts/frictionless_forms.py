@@ -17,15 +17,12 @@ RESOURCES = {
     "stages_kit_p01": "01-store/forms/stages.kit.tsv",
     "code_rules_p01": "01-store/forms/code-rules.tsv",
     "code_kinds": "common/acceptance/forms/code-rules.tsv",
-}
-OPTIONAL_RESOURCES = {
     "daemon_flags_p01": "01-store/forms/daemon-flags.tsv",
     "refusals_p01": "01-store/forms/refusals.tsv",
     "runtime_constants_p01": "01-store/forms/runtime-constants.tsv",
     "write_checks_p01": "01-store/forms/write-checks.tsv",
     "write_checks_probes_p01": "01-store/forms/write-checks.probes.tsv",
 }
-KNOWN_RESOURCES = {**RESOURCES, **OPTIONAL_RESOURCES}
 
 
 class FormInputError(ValueError):
@@ -79,15 +76,13 @@ def prepare(root):
         raise FormInputError(f"{descriptor_path}: expected the selected form data package")
     names = [item.get("name") for item in source["resources"] if isinstance(item, dict)]
     if len(names) != len(source["resources"]) or any(not isinstance(name, str) for name in names) or \
-            len(names) != len(set(names)) or not set(RESOURCES) <= set(names) or \
-            not set(names) <= set(KNOWN_RESOURCES):
-        raise FormInputError(f"{descriptor_path}: resources differ from the selected four-form group "
-                             "and closed optional form set")
+            len(names) != len(set(names)) or set(names) != set(RESOURCES):
+        raise FormInputError(f"{descriptor_path}: resources differ from the selected nine-form group")
     prepared = copy.deepcopy(source)
     physical = {}
     for resource in prepared["resources"]:
         name = resource["name"]
-        relative = KNOWN_RESOURCES[name]
+        relative = RESOURCES[name]
         if resource.get("path") != relative or resource.get("schema") != relative + ".schema.json":
             raise FormInputError(f"{descriptor_path}: wrong Source path or schema for {name}")
         if "data" in resource or resource.get("format") != "tsv" or resource.get("encoding") != "utf-8" or \
