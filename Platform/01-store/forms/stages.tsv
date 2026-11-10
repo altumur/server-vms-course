@@ -6,8 +6,11 @@
 # or * for all scenarios of that table (ADR-0126 addendum (7) items 1, 2); vectors:<package>
 # — the vectors of the lesson through the vector command of the implementation; build — the build of the profile; accept:<chapter>:<scenarios|*>
 # — the named scenarios of acceptance/<chapter>/scenarios.tsv (comma-separated) or * (all applicable) pass whole; named scenarios run without
-# the chapter-wide probes of the stand (the common acceptance README «Instance»), * — the full run of the target. A stage is closed when its
+# the chapter-wide probes of the stand (the common acceptance README «Instance»), * — the full run of the target; code:* — below. A stage is closed when its
 # gate and the gates of all former stages hold.
+# code:* — the rows of forms/code-rules.tsv whose stage is this stage or a stage of a smaller n hold, under the closed dictionary of the code checks
+# Platform/common/acceptance/forms/code-rules.tsv (ADR-0133 addendum (39)); the generation cycle checks them, not the acceptance; * is the only argument;
+# a row whose stage has no code:* in its gate is a data error.
 # weight — the relative weight 1–5.
 # Each stage row names its norms and the forms it builds on.
 # Columns: n, stage, goal, norms, gate, weight, depends, when.

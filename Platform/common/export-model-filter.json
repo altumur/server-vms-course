@@ -13377,6 +13377,11 @@
       "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P01.104: the closed dictionary of the kinds of code checks, public in the model input (ADR-0133 addendum (39) items 1, 7)."
+    },
+    {
       "path": "Platform/common/acceptance/forms/d7.schema.json",
       "disposition": "model_and_judge",
       "basis": "P01.86: machine form of the public test-side descriptors of README.md."

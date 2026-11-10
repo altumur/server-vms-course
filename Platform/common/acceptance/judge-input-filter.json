@@ -13377,6 +13377,11 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
       "path": "Platform/common/acceptance/forms/d7.schema.json",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."

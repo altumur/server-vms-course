@@ -44,6 +44,7 @@ The top-level field set is closed:
 | `adapters` | no | Mapping of the owned executable adapters below; `{}` is allowed. |
 | `vectors` | no | Mapping of package names to owned command templates containing `{input}`; `{}` is allowed. |
 | `artifacts` | yes | Nonempty mapping of labels to relative public build-result paths. |
+| `code` | no | Mapping of the names of the code checks of the lesson of the module to Go symbols of the implementation; `{}` is allowed. See [code-check names](#code-check-names). |
 
 The Platform module identities are `01-store`, `02-installer`, `03-worker`, `04-controller`, `05-resource`, `06-console`, `07-console-module`, `08-domain`, `09-agent` and `10-domain-console`. Their identity is independent of the implementation directory's name. The library profile `07-console-module` has `stand: {}`; its build and public artifacts remain required. The relay is a mode of the agent of `09-agent`, not another Platform profile.
 
@@ -146,6 +147,15 @@ The command's successful outer process exits zero and returns one UTF-8 JSON obj
 The outer response is compared as JSON, without requiring a trailing LF, key order or particular whitespace. Duplicate object fields, fractional/exponent numeric lexemes, booleans in integer fields and non-JSON numbers are invalid. Base64 must re-encode to the same spelling. The runner unwraps the native bytes and applies the package's published wire form and outcome comparison: whole JSON, subset, exact bytes, raw id without LF, refusal markers or native exit. It does not compute the algorithm for the implementation. An empty object expected by subset comparison means exactly empty; an unconstrained present value and an absent field retain the markers defined by the common stand.
 
 Each executed row is identified by full export SHA, source/table path and SHA, package, consumer, case and variant. A source line number identifies only the row at that exact pin. Every assigned row and direction must execute over the same candidate for full acceptance; a missing profile entry, blocked target or unexecuted check is not success.
+
+## Code-check names
+
+The field `code` serves the generation cycle (ADR-0133 addendum (39)). The acceptance checks only its shape, a mapping of keys to nonempty single-line strings, and does not use it otherwise. Its keys are the values of the column `name` of the rows of `forms/code-rules.tsv` of the lesson of the module. The kinds of those rows and their checks are in [the dictionary of the code checks](forms/code-rules.tsv). Each value names a Go symbol of the main module of the implementation:
+
+- a package: its import path, exactly as `go list` prints it;
+- a function or a type: `<import path>.<identifier>`, split at the last `.` after the last `/`; the identifier names a top-level function or type of that package.
+
+The dictionary gives the type of symbol of each kind. Several names may map to one symbol. While the lesson has rows, a profile without the field, or without a key for a name, fails the code checks of that name as no mapping, not as a skip. The generation cycle refuses a key that is not a name of the rows of the lesson.
 
 ## Assembly and input identity
 
