@@ -13452,6 +13452,16 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/forms/process-1.1.scenarios.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/process-1.3.scenarios.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
       "path": "Platform/common/acceptance/forms/production-input.schema.json",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."

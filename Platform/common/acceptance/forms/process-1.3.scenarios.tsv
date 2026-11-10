@@ -1,0 +1,13 @@
+# The process probes without D7 of the functional judge of P/01.3 (task P01.149; ADR-0130 Addendum (19) item 7): one scenario per probe, the thresholds are the first
+# approved budgets of Platform/01-store/spec/production-acceptance.md (ADR-0130 Addendum (9)). A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words
+# of its dictionary (@wire, @pause, @by, @close, @noreply, @hold, @io, @sigterm store included); no cell-json. The target P/01.3/daemon runs these rows through the column tables of
+# forms/targets.routing.tsv, every scenario on its own instance as the README of Platform/01-store/acceptance/3 says.
+# scenario	step	request	expect
+32-copy-raw	1	admin POST /v1/write {"op":"put","key":"testsub/copy-raw/a","items":{"n":"1"}}	200 {"index": "$a"}
+32-copy-raw	2	admin GET /v1/copy	200 @header Content-Type: =application/x-ndjson
+32-copy-raw	3	store GET /v1/copy	403 {"kind": "forbidden"}
+32-copy-raw	4	admin POST /v1/copy	405 @header Allow: =GET
+32-copy-raw	5	admin HEAD /v1/copy	200 @empty
+32-copy-raw	6	admin GET /v1/copy/x	404
+33-stop	1	@hold store 4	ok
+33-stop	2	@sigterm store	ok @by(15)

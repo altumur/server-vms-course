@@ -1,0 +1,102 @@
+# The process probes without D7 of the functional judge of P/01.1 (task P01.149; ADR-0130 Addendum (19) item 7): one scenario per probe, the thresholds are the first
+# approved budgets of Platform/01-store/spec/production-acceptance.md (ADR-0130 Addendum (9)). A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words
+# of its dictionary (@wire, @pause, @by, @close, @noreply, @hold, @io, @sigterm store included); no cell-json. The target P/01.1/door runs these rows through the column tables of
+# forms/targets.routing.tsv, every scenario on its own instance as the README of Platform/01-store/acceptance/1 says.
+# scenario	step	request	expect
+41-phase-idle	1	@wire @pause(1)	@noreply @by(60)
+42-phase-headers	1	@wire GET /v1/get?key=acc/42-phase-headers/x	@noreply @by(10)
+42-phase-headers	2	@wire GET /v1/get?key=acc/42-phase-headers/x HTTP/1.1\r\nHost: localhost\r\nX-A: a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a\r\n\r\n	400 @close {"kind":"badrequest"} @by(10)
+42-phase-headers	3	@wire GET /v1/get?key=acc/42-phase-headers/x HTTP/1.1\r\nHost: localhost\r\nX-A: a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a@pause(1)a\r\n\r\n	400 @header Connection: =close
+43-phase-body	1	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 10\r\n\r\n	400 @close {"kind":"badrequest"} @by(30)
+43-phase-body	2	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 10\r\n\r\n	400 @header Connection: =close
+44-drain	1	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 2097152\r\n\r\n{"op":"put","key":"acc/44-drain/c1","items":{"blob":"@big(2097088)	413 @close {"kind":"toolarge","limit":1048576} @by(5)
+44-drain	2	GET /v1/get?key=acc/44-drain/c1	200 {"items":null,"index":""}
+44-drain	3	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n200000\r\n@big(1048577)POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 54\r\n\r\n{"op":"put","key":"acc/44-drain/c2","items":{"v":"1"}}	413 @close {"kind":"toolarge","limit":1048576} @by(5)
+44-drain	4	GET /v1/get?key=acc/44-drain/c2	200 {"items":null,"index":""}
+45-write-bytes	1	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p01","items":{"blob":"@big(524000)"}}	200 {"index":"$p1"}
+45-write-bytes	2	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p02","items":{"blob":"@big(524000)"}}	200 {"index":"$p2"}
+45-write-bytes	3	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p03","items":{"blob":"@big(524000)"}}	200 {"index":"$p3"}
+45-write-bytes	4	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p04","items":{"blob":"@big(524000)"}}	200 {"index":"$p4"}
+45-write-bytes	5	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p05","items":{"blob":"@big(524000)"}}	200 {"index":"$p5"}
+45-write-bytes	6	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p06","items":{"blob":"@big(524000)"}}	200 {"index":"$p6"}
+45-write-bytes	7	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p07","items":{"blob":"@big(524000)"}}	200 {"index":"$p7"}
+45-write-bytes	8	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p08","items":{"blob":"@big(524000)"}}	200 {"index":"$p8"}
+45-write-bytes	9	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p09","items":{"blob":"@big(524000)"}}	200 {"index":"$p9"}
+45-write-bytes	10	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p10","items":{"blob":"@big(524000)"}}	200 {"index":"$p10"}
+45-write-bytes	11	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p11","items":{"blob":"@big(524000)"}}	200 {"index":"$p11"}
+45-write-bytes	12	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p12","items":{"blob":"@big(524000)"}}	200 {"index":"$p12"}
+45-write-bytes	13	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p13","items":{"blob":"@big(524000)"}}	200 {"index":"$p13"}
+45-write-bytes	14	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p14","items":{"blob":"@big(524000)"}}	200 {"index":"$p14"}
+45-write-bytes	15	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p15","items":{"blob":"@big(524000)"}}	200 {"index":"$p15"}
+45-write-bytes	16	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p16","items":{"blob":"@big(524000)"}}	200 {"index":"$p16"}
+45-write-bytes	17	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p17","items":{"blob":"@big(524000)"}}	200 {"index":"$p17"}
+45-write-bytes	18	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p18","items":{"blob":"@big(524000)"}}	200 {"index":"$p18"}
+45-write-bytes	19	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p19","items":{"blob":"@big(524000)"}}	200 {"index":"$p19"}
+45-write-bytes	20	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p20","items":{"blob":"@big(524000)"}}	200 {"index":"$p20"}
+45-write-bytes	21	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p21","items":{"blob":"@big(524000)"}}	200 {"index":"$p21"}
+45-write-bytes	22	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p22","items":{"blob":"@big(524000)"}}	200 {"index":"$p22"}
+45-write-bytes	23	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p23","items":{"blob":"@big(524000)"}}	200 {"index":"$p23"}
+45-write-bytes	24	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p24","items":{"blob":"@big(524000)"}}	200 {"index":"$p24"}
+45-write-bytes	25	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p25","items":{"blob":"@big(524000)"}}	200 {"index":"$p25"}
+45-write-bytes	26	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p26","items":{"blob":"@big(524000)"}}	200 {"index":"$p26"}
+45-write-bytes	27	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p27","items":{"blob":"@big(524000)"}}	200 {"index":"$p27"}
+45-write-bytes	28	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p28","items":{"blob":"@big(524000)"}}	200 {"index":"$p28"}
+45-write-bytes	29	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p29","items":{"blob":"@big(524000)"}}	200 {"index":"$p29"}
+45-write-bytes	30	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p30","items":{"blob":"@big(524000)"}}	200 {"index":"$p30"}
+45-write-bytes	31	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p31","items":{"blob":"@big(524000)"}}	200 {"index":"$p31"}
+45-write-bytes	32	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p32","items":{"blob":"@big(524000)"}}	200 {"index":"$p32"}
+45-write-bytes	33	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p33","items":{"blob":"@big(524000)"}}	200 {"index":"$p33"}
+45-write-bytes	34	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p34","items":{"blob":"@big(524000)"}}	200 {"index":"$p34"}
+45-write-bytes	35	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p35","items":{"blob":"@big(524000)"}}	200 {"index":"$p35"}
+45-write-bytes	36	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p36","items":{"blob":"@big(524000)"}}	200 {"index":"$p36"}
+45-write-bytes	37	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p37","items":{"blob":"@big(524000)"}}	200 {"index":"$p37"}
+45-write-bytes	38	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p38","items":{"blob":"@big(524000)"}}	200 {"index":"$p38"}
+45-write-bytes	39	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p39","items":{"blob":"@big(524000)"}}	200 {"index":"$p39"}
+45-write-bytes	40	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p40","items":{"blob":"@big(524000)"}}	200 {"index":"$p40"}
+45-write-bytes	41	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p41","items":{"blob":"@big(524000)"}}	200 {"index":"$p41"}
+45-write-bytes	42	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p42","items":{"blob":"@big(524000)"}}	200 {"index":"$p42"}
+45-write-bytes	43	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p43","items":{"blob":"@big(524000)"}}	200 {"index":"$p43"}
+45-write-bytes	44	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p44","items":{"blob":"@big(524000)"}}	200 {"index":"$p44"}
+45-write-bytes	45	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p45","items":{"blob":"@big(524000)"}}	200 {"index":"$p45"}
+45-write-bytes	46	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p46","items":{"blob":"@big(524000)"}}	200 {"index":"$p46"}
+45-write-bytes	47	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p47","items":{"blob":"@big(524000)"}}	200 {"index":"$p47"}
+45-write-bytes	48	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p48","items":{"blob":"@big(524000)"}}	200 {"index":"$p48"}
+45-write-bytes	49	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p49","items":{"blob":"@big(524000)"}}	200 {"index":"$p49"}
+45-write-bytes	50	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p50","items":{"blob":"@big(524000)"}}	200 {"index":"$p50"}
+45-write-bytes	51	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p51","items":{"blob":"@big(524000)"}}	200 {"index":"$p51"}
+45-write-bytes	52	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p52","items":{"blob":"@big(524000)"}}	200 {"index":"$p52"}
+45-write-bytes	53	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p53","items":{"blob":"@big(524000)"}}	200 {"index":"$p53"}
+45-write-bytes	54	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p54","items":{"blob":"@big(524000)"}}	200 {"index":"$p54"}
+45-write-bytes	55	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p55","items":{"blob":"@big(524000)"}}	200 {"index":"$p55"}
+45-write-bytes	56	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p56","items":{"blob":"@big(524000)"}}	200 {"index":"$p56"}
+45-write-bytes	57	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p57","items":{"blob":"@big(524000)"}}	200 {"index":"$p57"}
+45-write-bytes	58	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p58","items":{"blob":"@big(524000)"}}	200 {"index":"$p58"}
+45-write-bytes	59	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p59","items":{"blob":"@big(524000)"}}	200 {"index":"$p59"}
+45-write-bytes	60	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p60","items":{"blob":"@big(524000)"}}	200 {"index":"$p60"}
+45-write-bytes	61	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p61","items":{"blob":"@big(524000)"}}	200 {"index":"$p61"}
+45-write-bytes	62	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p62","items":{"blob":"@big(524000)"}}	200 {"index":"$p62"}
+45-write-bytes	63	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p63","items":{"blob":"@big(524000)"}}	200 {"index":"$p63"}
+45-write-bytes	64	POST /v1/write {"op":"put","key":"acc/45-write-bytes/p64","items":{"blob":"@big(524000)"}}	200 {"index":"$p64"}
+45-write-bytes	65	@io store $w0	ok
+45-write-bytes	66	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w01","items":{"blob":"@big(102400)"}}	200 {"index":"$q1"}
+45-write-bytes	67	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w02","items":{"blob":"@big(102400)"}}	200 {"index":"$q2"}
+45-write-bytes	68	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w03","items":{"blob":"@big(102400)"}}	200 {"index":"$q3"}
+45-write-bytes	69	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w04","items":{"blob":"@big(102400)"}}	200 {"index":"$q4"}
+45-write-bytes	70	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w05","items":{"blob":"@big(102400)"}}	200 {"index":"$q5"}
+45-write-bytes	71	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w06","items":{"blob":"@big(102400)"}}	200 {"index":"$q6"}
+45-write-bytes	72	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w07","items":{"blob":"@big(102400)"}}	200 {"index":"$q7"}
+45-write-bytes	73	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w08","items":{"blob":"@big(102400)"}}	200 {"index":"$q8"}
+45-write-bytes	74	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w09","items":{"blob":"@big(102400)"}}	200 {"index":"$q9"}
+45-write-bytes	75	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w10","items":{"blob":"@big(102400)"}}	200 {"index":"$q10"}
+45-write-bytes	76	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w11","items":{"blob":"@big(102400)"}}	200 {"index":"$q11"}
+45-write-bytes	77	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w12","items":{"blob":"@big(102400)"}}	200 {"index":"$q12"}
+45-write-bytes	78	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w13","items":{"blob":"@big(102400)"}}	200 {"index":"$q13"}
+45-write-bytes	79	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w14","items":{"blob":"@big(102400)"}}	200 {"index":"$q14"}
+45-write-bytes	80	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w15","items":{"blob":"@big(102400)"}}	200 {"index":"$q15"}
+45-write-bytes	81	POST /v1/write {"op":"put","key":"acc/45-write-bytes/w16","items":{"blob":"@big(102400)"}}	200 {"index":"$q16"}
+45-write-bytes	82	@io store $w1	ok
+45-write-bytes	83	ASSERT $w1 - $w0 <= 8197040	
+46-overflow	1	@hold store 64	ok
+46-overflow	2	GET /v1/get?key=acc/46-overflow/x	503 {"kind":"unavailable"} @by(1)
+46-overflow	3	GET /v1/get?key=acc/46-overflow/x	503 @header Retry-After: =1
+46-overflow	4	admin GET /v1/status	200

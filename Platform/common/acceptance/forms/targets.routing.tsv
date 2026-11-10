@@ -7,11 +7,11 @@
 # the README of the directory of the file says how a row runs.
 # parts: JSON array of {key,owner}, the parts of other lessons in the stand of this target.
 id	engine	acceptance	scenarios	tables	parts
-P/01.1/door	run	["Platform/01-store/acceptance/1"]	all	[]	[]
+P/01.1/door	run	["Platform/01-store/acceptance/1"]	all	["Platform/common/acceptance/forms/process-1.1.scenarios.tsv"]	[]
 P/01.1/extra	extra	["Platform/01-store/acceptance/1"]	none	["Platform/common/acceptance/forms/extra.scenarios.tsv"]	[]
 P/01.1/inproc	run	["Platform/01-store/acceptance/1"]	all	[]	[]
 P/01.2/rights	l06	["Platform/01-store/acceptance/2","Platform/01-store/vectors/rights-evaluator"]	all	["Platform/01-store/vectors/rights-evaluator/expect.tsv"]	[]
-P/01.3/daemon	l11	["Platform/01-store/acceptance/3","Platform/01-store/acceptance/2","Platform/common/data/testsub"]	not-first-step:@group-setup	[]	[]
+P/01.3/daemon	l11	["Platform/01-store/acceptance/3","Platform/01-store/acceptance/2","Platform/common/data/testsub"]	not-first-step:@group-setup	["Platform/common/acceptance/forms/process-1.3.scenarios.tsv"]	[]
 P/01.3/group	store_group	["Platform/01-store/acceptance/3","Platform/01-store/acceptance/2"]	first-step:@group-setup	[]	[]
 P/01/production	production	["Platform/01-store/acceptance/3","Platform/01-store/acceptance/2"]	none	[]	[]
 system/05-power-pull	power_stand	["Platform/common/acceptance/system","Platform/common/data/testsub"]	range:5-5	[]	[{"key":"console","owner":"06-console"},{"key":"manifest-put","owner":"02-installer"},{"key":"rights","owner":"02-installer"},{"key":"ring","owner":"02-installer"},{"key":"controller","owner":"04-controller"},{"key":"worker","owner":"03-worker"},{"key":"resource","owner":"05-resource"}]

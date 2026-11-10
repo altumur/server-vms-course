@@ -1,0 +1,17 @@
+# Change 0130-p01-process-probes
+
+change: 0130-p01-process-probes rev 1 · lessons P/01, Platform/common · author spec103 · state review
+
+Publication parent `c4b8f32c2360efc49fdf1e222584a37c8c40844e`. Task P01.149, ADR-0130 Addendum (19) item 7 and the Architect's answer on P01.149 (the tables are judge-side forms like `extra.scenarios.tsv`, because the grammar check of the chapter tables does not know the new words yet): the minimal set of production probes without D7 in the functional judge of P/01, as data of J. Chapter 1.1 (`forms/process-1.1.scenarios.tsv`, run by `P/01.1/door` through the column `tables`): 41-phase-idle, 42-phase-headers, 43-phase-body (D3, `BUDGET_IDLE`, `BUDGET_HEADERS`, `BUDGET_BODY`), 44-drain (D3, `BUDGET_DRAIN`), 45-write-bytes (D1, `BUDGET_WRITE_BYTES`), 46-overflow (`BUDGET_OVERFLOW_REFUSAL`, admin.sock alive). Chapter 1.3 (`forms/process-1.3.scenarios.tsv`, run by `P/01.3/daemon`): 32-copy-raw (D6, RUN-H02), 33-stop (D4, `BUDGET_STOP`). The thresholds are the first approved budgets (ADR-0130 Addendum (9)). New words of the dictionary of the common README (EN/RU, M and J): `@pause(<seconds>)`, `… @by(<seconds>)`, `@hold <door> <N>`, `@io store $<name>`, `@sigterm store` with `@exit <code>`. P/AC-R030: the closed reason `io_counter_unreadable` (a counter of `@io` that the judge cannot read is `not_executed`, not red). Rejected and left to the stage of the system: D5 (no means without D7), the rest by the report of the task; RUN-H01 not taken.
+
+| Artifact | Operation | Before blob | After blob | After SHA256 |
+|---|---|---|---|---|
+| `Platform/common/acceptance/README.md` | MODIFIED | c4b675a884e22db1f8725ff29009060ef7f45c3f | cceaf591dbf5fa8bf7aa1e09f79650d150ce572a | 50ae285495c6ad040727f1e9eac6c5589e992fefdc3cfdcfdf6fa36632f12e0c |
+| `Platform/common/acceptance/forms/process-1.1.scenarios.tsv` | ADDED | - | 887ac6fc1067acc2727345274ce699db54f1828c | 6ff4af797034641fbbe3cc48b91ed855260973461e58d3375e00816a25a091bc |
+| `Platform/common/acceptance/forms/process-1.3.scenarios.tsv` | ADDED | - | b85265823f4044267b883fe55d9c133535210b7b | 03ce9cecd110763dd644fc66c55abf172d16473d238339f28ea0523953bbf757 |
+| `Platform/common/acceptance/forms/targets.routing.tsv` | MODIFIED | 5b710734cd32c1062ecbdeb14d1a51b23de70b6f | 3fbdb88186a0963f92712c519c04299e96ace42a | 770c722c5700c071dc6687946ab218fc7c29f252776cc358255eeb00ecf09261 |
+| `Platform/common/acceptance/judge-input-filter.json` | MODIFIED | db04e75bdddd33e1fe33fea920d126669e81b71e | 857c514916298584d4c735c11027afdabb0c99f2 | 215676c4582641d1feb4a9877f5fea4a76aa6e9d1a135b6eaf64b05ee37c0616 |
+| `Platform/common/acceptance/spec/acceptance.norms.md` | MODIFIED | b167b193de05c77d89025bb59175195e7a7c8fe9 | cb1984eb06ae72a7e4216dd9d22915c113e40d72 | 1f862405edbcba5e01eacfa4003d888a46718e1164f133e1acb3f911fa800eba |
+| `Platform/common/export-model-filter.json` | MODIFIED | 158cdbaa15f00e8bc1354d6d05febb1813027458 | a3c416bc301d86dd049cac25c97d66652e753974 | 0dbdb86f459ec1fb63475b571410234139f2ad15c4945eb96d2f6eb45865db6b |
+| `Platform/common/ru/acceptance/README.md` | MODIFIED | 04f89e48333193d2d700efef9689322d68e18ca7 | 0f6fadcb24898cbb2328f926f5f31a1f0cac681a | ff73149e8ee71ea81c52f4d3cf951306591b8749ffd1addbaee6d146b0b5f1c9 |
+| `Platform/common/ru/acceptance/spec/acceptance.norms.md` | MODIFIED | 3b95b4df4aed426a0fab6034cdceb958d8494b9f | 61cbbff5b649bc79421ce100acbae680a57c768f | ed46e7a1daabbb175c3960fe133b64b7469733e4d435162eb4ddb0685b0e0bc1 |
