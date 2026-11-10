@@ -600,7 +600,14 @@ def chapter_key(path):
 
 # Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
 CHAPTER = r"(?:0|[1-9][0-9]?)"
-NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?)-[0-9]+"
+NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?|P/AC)-[0-9]+"
+REGISTERED_SHARED_LESSONS = {
+    "P/AC": {
+        "kind": "shared_acceptance_lesson_not_platform_process",
+        "norms": Path("Platform/common/acceptance/spec/acceptance.norms.md"),
+        "instructions": Path("Platform/common/acceptance/spec/acceptance.README.md"),
+    },
+}
 INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
 INVENTORY_END = "<!-- checklist-inventory:end -->"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
@@ -749,7 +756,7 @@ def composition_members(node):
             yield from composition_members(value)
 
 
-def outline(text):
+def outline(text, id_pattern=NORM_ID, checklist_title="Чеклист готовности"):
     """Norms text → (h2 headings, checklist ids): an id is the strong text that opens a list item of «Чеклист
     готовности» after `[ ]`/`[x]`."""
     tokens = MarkdownIt("commonmark").parse(text)
@@ -763,7 +770,7 @@ def outline(text):
             section = "".join(child.content for child in inline.children or []
                               if child.type in {"text", "code_inline"}).strip()
             headings.append(section)
-        if (token.type == "inline" and section == "Чеклист готовности" and
+        if (token.type == "inline" and section == checklist_title and
                 len(stack) == 3 and stack[0] in {"bullet_list_open", "ordered_list_open"} and
                 stack[1:] == ["list_item_open", "paragraph_open"]):
             children = [child for child in token.children or []
@@ -771,8 +778,11 @@ def outline(text):
             if (len(children) >= 4 and children[0].type == "text" and
                     re.fullmatch(r"\[[ xX]\]\s+", children[0].content) and
                     children[1].type == "strong_open" and children[2].type == "text" and
-                    children[3].type == "strong_close" and re.fullmatch(NORM_ID, children[2].content)):
+                    children[3].type == "strong_close" and
+                    (id_pattern is None or re.fullmatch(id_pattern, children[2].content))):
                 ids.append(children[2].content)
+            elif id_pattern is None:
+                ids.append("")                 # registered lessons reject a checklist row without an id
         if token.nesting == 1:
             stack.append(token.type)
         elif token.nesting == -1:
@@ -1651,6 +1661,88 @@ class Check:
                 self.error(path, f"missing section {title}")
         self.stats["norm_ids"] += len(ids)
         return ids
+
+    def registered_shared_lessons(self):
+        """Validate only explicitly registered nonprocess lessons, without process requirements."""
+        import check_forms
+        for prefix, registration in REGISTERED_SHARED_LESSONS.items():
+            source = self.root / registration["norms"]
+            instructions = self.root / registration["instructions"]
+            russian, ru_instructions = human_text(source, self.root), human_text(instructions, self.root)
+            paths = (source, instructions, russian, ru_instructions)
+            if not any(path.exists() or path.is_symlink() for path in paths):
+                continue                         # a source snapshot before introduction has no such lesson
+            texts = {}
+            for path in dict.fromkeys(paths):
+                if not path.is_file() or path.is_symlink():
+                    self.error(path, "registered shared lesson needs a regular nonsymlink document")
+                    continue
+                text = self.read(path)
+                if text is not None:
+                    texts[path] = text
+            if source not in texts or russian not in texts:
+                continue
+            if russian == source:
+                self.error(source, "registered shared lesson needs its Russian mirror")
+                continue
+            source_text, russian_text = texts[source], texts[russian]
+            # Reuse the norms parser; its ordinary numeric lesson defaults remain unchanged.
+            normalized = source_text.replace("## Implementation decides", "## Решает реализация").replace(
+                "## Readiness checklist", "## Чеклист готовности")
+            self.norms(source, normalized, prefix)
+            en_headings, en_ids = outline(source_text, None, "Readiness checklist")
+            ru_headings, ru_ids = outline(russian_text, None)
+            for path, headings, ids, decides, readiness in (
+                    (source, en_headings, en_ids, "Implementation decides", "Readiness checklist"),
+                    (russian, ru_headings, ru_ids, "Решает реализация", "Чеклист готовности")):
+                structural = [("N" + match[1]) if (match := re.match(r"[НN]([0-5])(?:\s|$)", title))
+                              else title for title in headings]
+                n6 = ("N6 Production qualification of P/01" if path == source
+                      else "N6 Боевая квалификация P/01")
+                n6_positions = [i for i, title in enumerate(structural) if title == n6]
+                required = [title for title in structural if title != n6]
+                if (required != [*(f"N{i}" for i in range(6)), decides, readiness]
+                        or len(n6_positions) > 1
+                        or any(i <= structural.index("N5") for i in n6_positions
+                               if "N5" in structural)):
+                    self.error(path, "registered shared lesson expects N0–N5, Implementation decides and Readiness checklist once in order")
+                if not ids:
+                    self.error(path, "registered shared lesson has no checklist ids")
+                for number, count in Counter(ids).items():
+                    if not re.fullmatch(re.escape(prefix) + r"-[0-9]+", number) or count != 1:
+                        self.error(path, f"duplicate, missing or foreign registered checklist id {number!r}")
+            if en_ids != ru_ids:
+                self.error(source, "ru↔en: registered checklist ids differ")
+            anchors = check_forms.ANCHOR.findall(source_text)
+            self.stats["req_anchors"] += len(anchors)
+            removed = check_forms.TOMBSTONE.findall(source_text)
+            if not anchors:
+                self.error(source, "registered shared lesson has no requirement anchors")
+            for number, count in Counter(anchors + removed).items():
+                if not re.fullmatch(re.escape(prefix) + r"-R[0-9]{3}", number):
+                    self.error(source, f"requirement anchor {number} is not of registered lesson {prefix}")
+                if count != 1:
+                    self.error(source, f"requirement anchor {number} repeats or reuses a removed number")
+            for path, text in texts.items():
+                if path != source and (check_forms.ANCHOR.search(text) or check_forms.TOMBSTONE.search(text)):
+                    self.error(path, "requirement anchors belong only to the registered English norms source")
+            for path in self.root.glob("Platform/**/*.md"):
+                if path in texts or path.is_symlink() or not path.is_file():
+                    continue
+                text = self.read(path)
+                if text is None or prefix + "-R" not in text:
+                    continue
+                for token in MarkdownIt("commonmark").parse(text):
+                    if token.type == "html_block":
+                        numbers = [number for marker in REQ_ANCHOR.finditer(token.content)
+                                   for number in (check_forms.ANCHOR.findall(marker.group()) +
+                                                  check_forms.TOMBSTONE.findall(marker.group()))]
+                        if any(number.startswith(prefix + "-") for number in numbers):
+                            self.error(path, f"{prefix} requirement anchors belong to {registration['norms']}")
+                            break
+            for path, text in texts.items():
+                self.markdown(path, text)
+            self.stats["registered_shared_lessons"] += 1
 
     # Counts and ranges a text states about the lesson must match its tables: a fix that adds a norm or
     # a scenario has to update every place that counts them. Only unambiguous whole-lesson phrases are read.
@@ -3519,7 +3611,7 @@ def _platform_phase(args, names):
         check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
     for name in names:
         check.lesson((check.root / name).resolve())
-    for method in ("vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
+    for method in ("registered_shared_lessons", "vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
                    "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms"):
         getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
