@@ -17333,18 +17333,18 @@
     },
     {
       "path": "Platform/common/versions/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Pinned library versions and module requirements; the engine builds offline against them (decision of the Architect, P01.77)."
     },
     {
       "path": "Platform/common/versions/go.mod",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Pinned library versions and module requirements; the engine builds offline against them (decision of the Architect, P01.77)."
     },
     {
       "path": "Platform/common/versions/go.sum",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Pinned library versions and module requirements; the engine builds offline against them (decision of the Architect, P01.77)."
     },
     {
       "path": "Platform/common/versions/requirements.txt",
