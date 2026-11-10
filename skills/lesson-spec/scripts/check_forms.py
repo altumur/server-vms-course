@@ -1242,7 +1242,12 @@ def decode_cell(text, decode):
 
 
 def wire_forms(root):
-    return sorted(Path(root).glob("Platform/common/vectors/wire.tsv"))
+    """One wire form in its public and optional judge-side physical carriers."""
+    base = Path(root) / "Platform/common/vectors"
+    canonical, cases = base / "wire.tsv", base / "wire.cases.tsv"
+    if not any(path.exists() or path.is_symlink() for path in (canonical, cases)):
+        return []
+    return [canonical] + ([cases] if cases.exists() or cases.is_symlink() else [])
 
 
 def lf_lines(path):
@@ -1601,7 +1606,7 @@ def _decoded(text, decode, err, what, line):
             err.add(f"{what}: the cell is not strict JSON ({str(exc)[:60]})", line)
 
 
-def check_wire(path):
+def check_wire(path, *, seen=None):
     """Форма провода векторов `Platform/common/vectors/wire.tsv` (wire.md; ADR-0125 доп. (1) п. 5, доп. (5)): 11 колонок
     литеральным TAB, тройка (package, table, surface) единственна, пакет и таблица существуют, header — шапка таблицы
     (или число позиционных полей), JSON-ячейки строгие по закрытым конструкторам, column — из header, when — CEL;
@@ -1625,7 +1630,7 @@ def check_wire(path):
     cel, env = wire_cel_env()
     cerr, owners_of = consumers(root)
     errors += cerr
-    seen = set()
+    seen = set() if seen is None else seen
     for no, line in body[1:]:
         cells = line.split("\t")
         if len(cells) != len(WIRE_COLUMNS):
