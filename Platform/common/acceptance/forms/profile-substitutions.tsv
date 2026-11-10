@@ -4,7 +4,7 @@
 # names: JSON array of the substitution names available to the template, nothing else. required: JSON array of the names the template must contain;
 # the exact flags of the command store, the assignment of AGENT_TOKEN_DIR and the address form of token-door are in the prose of PROFILE.md «Substitutions».
 section	key	owners	names	required
-stand	store1	["01-store"]	["data","rundir","socket","rights","body_limit","row_ceiling"]	[]
+stand	store1	["01-store"]	["data","rundir","socket","rights","body_limit","row_ceiling"]	["data"]
 stand	store	["01-store"]	["data","rundir","socket","rights","body_limit","row_ceiling"]	["data","rundir","rights","body_limit","row_ceiling"]
 stand	backup	["01-store"]	["socket","file"]	[]
 stand	import	["01-store"]	["data","file","index_base"]	[]
