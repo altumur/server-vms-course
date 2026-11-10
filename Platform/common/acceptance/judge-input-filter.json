@@ -262,6 +262,11 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
       "path": "Platform/01-store/forms/daemon-flags.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."

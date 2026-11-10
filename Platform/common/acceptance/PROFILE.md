@@ -153,7 +153,7 @@ Each executed row is identified by full export SHA, source/table path and SHA, p
 The field `code` serves the generation cycle (ADR-0133 addendum (39)). The acceptance checks only its shape, a mapping of keys to nonempty single-line strings, and does not use it otherwise. Its keys are the values of the column `name` of the rows of `forms/code-rules.tsv` of the lesson of the module. The kinds of those rows and their checks are in [the dictionary of the code checks](forms/code-rules.tsv). Each value names a Go symbol of the main module of the implementation:
 
 - a package: its import path, exactly as `go list` prints it;
-- a function or a type: `<import path>.<identifier>`, split at the last `.` after the last `/`; the identifier names a top-level function or type of that package.
+- a function or a type: `<import path>#<identifier>`; the identifier names a top-level function or type of that package. The sign `#` separates them because an import path may hold dots, as `gopkg.in/yaml.v3`. The value is written without quotes and without a space before `#`: a comment of the profile begins only at a `#` that follows an ASCII space or TAB ([files and scalar syntax](#files-and-scalar-syntax)), so a `#` directly after the import path belongs to the value.
 
 The dictionary gives the type of symbol of each kind. Several names may map to one symbol. While the lesson has rows, a profile without the field, or without a key for a name, fails the code checks of that name as no mapping, not as a skip. The generation cycle refuses a key that is not a name of the rows of the lesson.
 
