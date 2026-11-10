@@ -6,7 +6,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "[1-9][0-9]*"
+        "pattern": "(?:[1-9][0-9]*)"
       }
     },
     {
@@ -30,7 +30,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "(?:accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|seams:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build|code:\\*)(?:;(?:accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|seams:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build|code:\\*))*"
+        "pattern": "(?:(?:accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|seams:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build|code:\\*)(?:;(?:accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|seams:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build|code:\\*))*)"
       }
     },
     {
@@ -52,7 +52,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "-|[1-9][0-9]*(?:,[1-9][0-9]*)*"
+        "pattern": "(?:-|[1-9][0-9]*(?:,[1-9][0-9]*)*)"
       }
     },
     {

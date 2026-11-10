@@ -277,14 +277,29 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/daemon-flags.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/refusals.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -312,9 +327,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/write-checks.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/lifecycle.md",

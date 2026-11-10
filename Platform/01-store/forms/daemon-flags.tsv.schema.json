@@ -1,0 +1,69 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/daemon-flags.tsv (ADR-0125 addenda (12), (13); OBSH.39.3). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks (raw map of the change 0125-forms-table-schema-p01).",
+  "fields": [
+    {
+      "name": "flag",
+      "type": "string",
+      "description": "The prose name: -flag, --flag, $ENV or <arg>; the order and the agreement with the prose table stay with check_flags.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:--?[a-z][a-z0-9-]*|\\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9-]*>)"
+      }
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "description": "The closed vocabulary of the header.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:path|dir|file|addr|id|bool|duration|bytes:>0|int:[0-9]+\\.\\.[0-9]*|enum:[^|\\s]+(?:\\|[^|\\s]+)+|list:id@addr(?:/addr)?)"
+      }
+    },
+    {
+      "name": "default",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "default_text",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "required",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "commands",
+      "type": "string",
+      "description": "daemon or subcommands of admin_ops, comma-separated (header).",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:(?:daemon|status|join|leave|admit|backup|restore|import|recover|rights)(?:,(?:daemon|status|join|leave|admit|backup|restore|import|recover|rights))*)"
+      }
+    },
+    {
+      "name": "bad",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema. Empty: no refusal beyond type and required."
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "flag"
+  ]
+}

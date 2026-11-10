@@ -6,7 +6,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "[1-9][0-9]*"
+        "pattern": "(?:[1-9][0-9]*)"
       }
     },
     {
@@ -29,7 +29,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build)(?:;(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build))*"
+        "pattern": "(?:(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build)(?:;(?:tests:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+(?::seams)?|accept:[0-9]+(?:\\.[0-9]+)?:[^:;\\s]+|vectors:[a-z0-9-]+|build))*)"
       }
     },
     {
@@ -51,7 +51,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*"
+        "pattern": "(?:-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*)"
       }
     },
     {
@@ -59,7 +59,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*"
+        "pattern": "(?:-|(?:writecheck|door|flags|refusals|vectors|stagetests|launch)(?:,(?:writecheck|door|flags|refusals|vectors|stagetests|launch))*)"
       }
     },
     {
@@ -67,7 +67,7 @@
       "type": "string",
       "constraints": {
         "required": true,
-        "pattern": "-|[1-9][0-9]*(?:,[1-9][0-9]*)*"
+        "pattern": "(?:-|[1-9][0-9]*(?:,[1-9][0-9]*)*)"
       }
     },
     {

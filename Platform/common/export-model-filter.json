@@ -277,14 +277,29 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/forms/daemon-flags.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/forms/refusals.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -312,9 +327,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/write-checks.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/lifecycle.md",

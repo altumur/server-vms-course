@@ -1,0 +1,55 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/runtime-constants.tsv (ADR-0125 addenda (12), (13); OBSH.39.3). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks (raw map of the change 0125-forms-table-schema-p01).",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[A-Z][A-Z0-9_]*)"
+      }
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "description": "A positive decimal integer without leading zeros; the int64 range stays with check_runtime_constants.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[1-9][0-9]*)"
+      }
+    },
+    {
+      "name": "unit",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "count",
+          "s",
+          "ms",
+          "bytes"
+        ]
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "description": "A requirement anchor of P/01; its existence in the norms stays with check_runtime_constants.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:P/01\\.[0-9]+-R[0-9]{3})"
+      }
+    },
+    {
+      "name": "meaning",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:.*\\S.*)"
+      }
+    }
+  ],
+  "primaryKey": [
+    "name"
+  ]
+}
