@@ -839,12 +839,14 @@ def check_stage_parts(path):
     if errors:
         return errors, {}
     lesson = path.parent.parent
+    stage_rows = []
     for i, line in enumerate(lines[1:], 1):
         cells = line.split("\t")
         if len(cells) != len(head):
             errors.append(f"{path.name}: row {i}: {len(cells)} cells, expected {len(head)}")
             continue
         r = dict(zip(head, cells))
+        stage_rows.append(r)
         if "n" in r and r["n"] != str(i):
             errors.append(f"{path.name}: {r['stage']}: n {r['n']!r} — expected {i}")
         if r.get("depends", "-") != "-" and not all(d.isdigit() and 0 < int(d) < i for d in r["depends"].split(",")):
@@ -863,7 +865,30 @@ def check_stage_parts(path):
             names = r[column].split(",")
             if not set(names) <= KIT_PARTS or len(names) != len(set(names)):
                 errors.append(f"{path.name}: {r['stage']}: {column} {r[column]!r} — not a list of {sorted(KIT_PARTS)}")
+    if public:
+        errors += code_stage_errors(lesson, stage_rows)
     return errors, {"stage_rows": len(lines) - 1}
+
+
+def code_stage_errors(lesson, stages):
+    """Every declared code row is selected by its own or a later stage gate."""
+    path = lesson / "forms" / "code-rules.tsv"
+    if not path.exists() and not path.is_symlink():
+        return []
+    if path.is_symlink() or not path.is_file():
+        return ["code-rules.tsv: expected an ordinary file"]
+    errors, rows = read(path, ["id", "kind", "name", "args", "stage", "norm"])
+    positions = {row["stage"]: i for i, row in reversed(list(enumerate(stages)))}
+    last_gate = next((i for i in range(len(stages) - 1, -1, -1)
+                      if "code:*" in stages[i]["gate"].split(";")), None)
+    for row in rows:
+        stage = row["stage"]
+        where = f"code-rules.tsv: {row['id']}: stage {stage!r}"
+        if stage not in positions:
+            errors.append(f"{where} is not in stages.tsv")
+        elif last_gate is None or last_gate < positions[stage]:
+            errors.append(f"{where} has no code:* gate in its own or a later stage")
+    return errors
 
 
 ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)
