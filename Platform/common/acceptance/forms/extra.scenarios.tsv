@@ -1,0 +1,65 @@
+# The machine form of the probes of the target P/01.1/extra (task P01.142; review P01.138 B1): one scenario per probe of forms/extra.tsv, named by its id.
+# A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words of its dictionary (@wire, @halfclose, @rep, @profile, @close, @noreply included); no cell-json.
+# The target runs these rows through the column tables of forms/targets.routing.tsv; every scenario runs on its own instance as Platform/01-store/acceptance/1/README.md says.
+# The numbers are the stand parameters of P/01.1 N5 (body limit 1048576, row ceiling 524288) and the constants of Platform/01-store/forms/runtime-constants.tsv.
+# scenario	step	request	expect
+extra-parameters	1	POST /v1/write {"op":"put","key":"acc/extra-parameters/b1","items":{"blob":"@big(1048512)"}}	413 {"kind":"toolarge","key":"acc/extra-parameters/b1","size":1048516,"limit":524288}
+extra-parameters	2	POST /v1/write {"op":"put","key":"acc/extra-parameters/b2","items":{"blob":"@big(1048513)"}}	413 {"kind":"toolarge","limit":1048576}
+extra-parameters	3	POST /v1/write {"op":"put","key":"acc/extra-parameters/c1","items":{"blob":"@big(524284)"}}	200 {"index":"$a"}
+extra-parameters	4	POST /v1/write {"op":"put","key":"acc/extra-parameters/c2","items":{"blob":"@big(524285)"}}	413 {"kind":"toolarge","key":"acc/extra-parameters/c2","size":524289,"limit":524288}
+extra-full-key	1	POST /v1/write {"op":"put","key":"acc/@big(1020)","items":{"v":"1"},"cas":""}	200 {"index":"$a"}
+extra-full-key	2	POST /v1/write {"op":"put","key":"acc/@big(1021)","items":{"v":"1"},"cas":""}	400 {"kind":"badkey"}
+extra-full-key	3	POST /v1/write {"op":"put","key":"acc/\u0434@big(1018)","items":{"v":"1"},"cas":""}	200 {"index":"$c"}
+extra-full-key	4	POST /v1/write {"op":"put","key":"acc/\u0434@big(1019)","items":{"v":"1"},"cas":""}	400 {"kind":"badkey"}
+extra-full-key	5	POST /v1/write {"op":"put","key":"acc/\ud83d\ude00@big(1016)","items":{"v":"1"},"cas":""}	200 {"index":"$f"}
+extra-full-key	6	POST /v1/write {"op":"put","key":"acc/\ud83d\ude00@big(1017)","items":{"v":"1"},"cas":""}	400 {"kind":"badkey"}
+extra-full-key	7	POST /v1/write {"op":"put","key":"acc/extra-full-key/g1","items":{"v":"1"},"guard":{"key":"acc/@big(1020)","index":"$a"}}	200 {"index":"$g1"}
+extra-full-key	8	POST /v1/write {"op":"put","key":"acc/extra-full-key/h1","items":{"v":"1"},"guard":{"key":"acc/@big(1021)","index":""}}	400 {"kind":"badkey"}
+extra-full-key	9	POST /v1/write {"op":"put","key":"acc/extra-full-key/g2","items":{"v":"1"},"guard":{"key":"acc/\u0434@big(1018)","index":"$c"}}	200 {"index":"$g2"}
+extra-full-key	10	POST /v1/write {"op":"put","key":"acc/extra-full-key/h2","items":{"v":"1"},"guard":{"key":"acc/\u0434@big(1019)","index":""}}	400 {"kind":"badkey"}
+extra-full-key	11	POST /v1/write {"op":"put","key":"acc/extra-full-key/g3","items":{"v":"1"},"guard":{"key":"acc/\ud83d\ude00@big(1016)","index":"$f"}}	200 {"index":"$g3"}
+extra-full-key	12	POST /v1/write {"op":"put","key":"acc/extra-full-key/h3","items":{"v":"1"},"guard":{"key":"acc/\ud83d\ude00@big(1017)","index":""}}	400 {"kind":"badkey"}
+extra-full-key	13	POST /v1/write {"op":"put","key":"acc/extra-full-key/g9","items":{"v":"1"},"guard":{"key":"acc/\u0436@big(1018)","index":""}}	200 {"index":"$g9"}
+extra-raw-line	1	@wire GET /v1/list\r\n\r\n	400 {"kind":"badrequest"}
+extra-raw-line	2	@wire @big(@profile+1(request_line_limit))\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-raw-line	3	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Bad\r\n\r\n	400 {"kind":"badrequest"}
+extra-raw-line	4	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Bad : 1\r\n\r\n	400 {"kind":"badrequest"}
+extra-raw-line	5	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Bad: 1\r\n folded\r\n\r\n	400 {"kind":"badrequest"}
+extra-absolute-target	1	@wire GET http://localhost/v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\n\r\n	404 {"kind":"badrequest"}
+extra-cl-and-te	1	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 70\r\nTransfer-Encoding: chunked\r\n\r\n46\r\n{"op":"put","key":"acc/extra-cl-and-te/c1","items":{"v":"1"},"cas":""}\r\n0\r\n\r\n	200 @close {"index":"$a"}
+extra-cl-and-te	2	GET /v1/get?key=acc/extra-cl-and-te/c1	200 {"items":{"v":"1"},"index":"$a"}
+extra-http10-te	1	@wire POST /v1/write HTTP/1.0\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n46\r\n{"op":"put","key":"acc/extra-http10-te/c1","items":{"v":"1"},"cas":""}\r\n0\r\n\r\n	400 @close {"kind":"badrequest"}
+extra-http10-te	2	GET /v1/get?key=acc/extra-http10-te/c1	200 {"items":null,"index":""}
+extra-early-refusal	1	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 2097152\r\n\r\n{"op":"put","key":"acc/extra-early-refusal/c1","items":{"blob":"@big(65536)	413 @close {"kind":"toolarge","limit":1048576}
+extra-early-refusal	2	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 2097152\r\n\r\n{"op":"put","key":"acc/extra-early-refusal/c1","items":{"blob":"@big(65536)	413 @header Connection: =close
+extra-early-refusal	3	GET /v1/get?key=acc/extra-early-refusal/c1	200 {"items":null,"index":""}
+extra-line-ends	1	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\nX-A: 1\r\n\r\n	400 {"kind":"badrequest"}
+extra-line-ends	2	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-A: 1\r\r\n\r\n	400 {"kind":"badrequest"}
+extra-line-ends	3	@wire \r\nGET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	1	@wire GET /v1/get?key=acc/x\x00y HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	2	@wire GET /v1/get?key=acc/x\x01y HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	3	@wire GET /v1/get?key=acc/x\ty HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	4	@wire GET /v1/get?key=acc/x\x7fy HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	5	@wire GET /v1/get?key=acc/x#y HTTP/1.1\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
+extra-target-bytes	6	@wire GET /v1/get?key=acc/x%00y HTTP/1.1\r\nHost: localhost\r\n\r\n	200 {"items":null,"index":""}
+extra-header-size	1	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Pad: @big(65514)\r\n\r\n	200 {"items":null,"index":""}
+extra-header-size	2	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Pad: @big(65515)\r\n\r\n	400 {"kind":"badrequest"}
+extra-header-size	3	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\n@rep(2000,X-A: 1\r\n)\r\n	200 {"items":null,"index":""}
+extra-json-depth	1	POST /v1/write {"op":"put","key":"acc/extra-json-depth/c1","items":{"v":"1"},"z":@rep(127,[)@rep(127,])}	200 {"index":"$a"}
+extra-json-depth	2	POST /v1/write {"op":"put","key":"acc/extra-json-depth/c2","items":{"v":"1"},"z":@rep(128,[)@rep(128,])}	400 {"kind":"badrequest"}
+extra-json-depth	3	GET /v1/get?key=acc/extra-json-depth/c2	200 {"items":null,"index":""}
+extra-framing	1	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: +5\r\n\r\n12345	400 @close {"kind":"badrequest"}
+extra-framing	2	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 5\r\nContent-Length: 6\r\n\r\n12345	400 @close {"kind":"badrequest"}
+extra-framing	3	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 99999999999999999999999\r\n\r\n12345	413 @close {"kind":"toolarge","limit":1048576}
+extra-framing	4	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n0x5\r\n12345\r\n0\r\n\r\n	400 @close {"kind":"badrequest"}
+extra-framing	5	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: gzip, chunked\r\n\r\n5\r\n12345\r\n0\r\n\r\n	400 @close {"kind":"badrequest"}
+extra-framing	6	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n5\r\n12345\r\n0\r\n\r\n	400 @close {"kind":"badrequest"}
+extra-truncated-body	1	POST /v1/write {"op":"put","key":"acc/extra-truncated-body/c1","items":{"v":"1"},"cas":""}	200 {"index":"$a"}
+extra-truncated-body	2	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: 50\r\n\r\n{"op":"put","key":"a @halfclose	@noreply
+extra-truncated-body	3	GET /v1/get?key=acc/extra-truncated-body/c1	200 {"items":{"v":"1"},"index":"$a"}
+extra-truncated-body	4	@wire POST /v1/write HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n42\r\n{"op":"put","key":"acc/extra-truncated-body/c1","items":{"v":"2"}}\r\n @halfclose	@noreply
+extra-truncated-body	5	GET /v1/get?key=acc/extra-truncated-body/c1	200 {"items":{"v":"1"},"index":"$a"}
+extra-host-head	1	@wire GET /v1/get?key=acc/x HTTP/1.1\r\n\r\n	200 {"items":null,"index":""}
+extra-host-head	2	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nHost: other\r\n\r\n	200 {"items":null,"index":""}
+extra-host-head	3	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: a b/c\r\n\r\n	200 {"items":null,"index":""}
+extra-host-head	4	HEAD /v1/get?key=acc/x	404 @empty

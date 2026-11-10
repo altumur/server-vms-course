@@ -247,8 +247,12 @@ adds a row here (review analysis of stage B 3–5, № 33).
 | Form | Meaning | Lesson |
 |---|---|---|
 | `<METHOD> <path with query> [<body>]` | the path and the query go byte for byte, without re-encoding; the body is the bytes after the substitutions, invalid JSON is admissible; without a body text `POST` and `PUT` send `Content-Length: 0`, other methods send no body, on every door | 1 |
-| `@big(N)` | a substitution in any part of the request: a string of N bytes `x`; inside a JSON string — before serialization; the substitutions of a request go in the order `@spoil($name)`, then `$name`, then `@big(N)` | 1 |
+| `@big(N)` | a substitution in any part of the request: a string of N bytes `x`; inside a JSON string — before serialization; the substitutions of a request go in the order `@spoil($name)`, then `$name`, then `@profile(<name>)` and `@profile+1(<name>)`, then `@rep(N,<text>)`, then `@big(N)` | 1 |
 | `@raw <text>` | the body is the text as UTF-8 bytes, `application/octet-stream`; `Content-Length` — by the bytes; `@raw` — only in the place of the body, as the first word after the path (`<door> <METHOD> <path> @raw <text>`), at any door; «@raw» inside a JSON body or another word is ordinary text of the body, not a directive (Codex review of the runner series 4faf728) | 10 |
+| `@wire <text>` | raw HTTP: in the place of the method (`<door> @wire <text>`) the step opens a new connection to its door and writes exactly the bytes of the text, nothing added: no header, no `Content-Length`; the escapes `\r`, `\n`, `\t`, `\\` and `\xHH` (two hexadecimal digits) give one byte each and are read after the substitutions, another `\` is a data error of the table; the response is read as HTTP/1.1 on the same connection | P/01.1 (P01.142) |
+| `@halfclose` | the last word of a `@wire` request, after one space, not one of its bytes: after the bytes the judge closes the write side of the connection and goes on reading | P/01.1 (P01.142) |
+| `@rep(N,<text>)` | a substitution in any part of the request: the text repeated N times; the text runs to the first `)` and holds none | P/01.1 (P01.142) |
+| `@profile(<name>)` / `@profile+1(<name>)` | a substitution in any part of the request, also in the place of N of `@big(N)` and `@rep(N,<text>)`: the value of the integer key `<name>` of the profile field `keys` (`forms/profile-keys.tsv`), or this value plus 1, in decimal; there is no other arithmetic; an absent key leaves the step `not_executed` with its name as the reason | P/01.1 (P01.142) |
 | `@key(<word>)` / `@nokey` | `Idempotency-Key` on `POST` — by default `<run>-<scenario>-<step>`, fresh per run; `@key(<word>)` sets `<run>-<scenario>-<word>`, that is, `@key(N)` repeats the exact bytes of the key of step N of its scenario; `@nokey` — without the header | 3 |
 | `@as <role>` | the step and the following `store` steps of the scenario — from this role, through the socket `<role>.sock` (the section «Stand» above) | 6 |
 | `@header <Name>: <value>` before the method | add a header to one request; `@header Idempotency-Key: …` replaces the default key of the runner (`@key`) | 6; key — 3 |
@@ -293,6 +297,7 @@ adds a row here (review analysis of stage B 3–5, № 33).
 | the login of `root` after `@install domain` | 30 s | `signer POST /api/login` succeeds, with repeats |
 | the local door of a just started agent copy | 10 s | the process is alive at the end of the term; the term ends early when the socket of the door, created after the start, accepts a connection |
 | one HTTP step, raw HTTP included | 60 s | the answer of the door |
+| `@noreply`, and the end of reading after `@close` | 10 s | no byte of a response arrives, or the implementation closes the connection |
 | a command of «Stand» run by the stand (`manifest-put`, `backup`, `import`, `spoil-row`, `ring`, the commands of the installer) | 120 s | the exit of the command |
 | one row of a vector | 60 s | the exit of the command |
 | the command `move` | 150 s | the exit of the command |
@@ -319,6 +324,8 @@ adds a row here (review analysis of stage B 3–5, № 33).
 | `@header <Name>: =<text>` after the code | the header is present exactly once, and its value is equal to the text byte for byte; the text — up to the end of the cell; so a value is judged for which a substring would let a foreign address through (`Location`) | 6 (ADR-0094 B7; C06-HEADER-EXACT-01) |
 | `@file <path>` after the code | the body is equal to the file byte for byte; the path — from the root of the specification | 9 |
 | `<code> @empty` | the answer body is zero bytes; after `@empty` in the same cell one `@header` of the expectation is admissible | 6 (ADR-0094 B7; C06-HEADER-EXACT-01) |
+| `<code> @close …` | `@close` right after the code: after its response the implementation closes the connection, within the term of `@noreply`; the rest of the cell is judged as the expectation without `@close` | P/01.1 (P01.142) |
+| `@noreply` | the whole expectation: no byte of a response arrives until the implementation closes the connection or the term of `@noreply` in «Terms of the stand» ends; a response is a mismatch | P/01.1 (P01.142) |
 
 A subset in `expect` does not cancel the full form of the answer per the contract of the owner of the door. A response code that the contract of its door does not describe is a gap of the contract, the class `data` on the row of the contract, not a silent pass.
 

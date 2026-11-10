@@ -13417,6 +13417,11 @@
       "basis": "P01.86: machine form of the public test-side descriptors of README.md."
     },
     {
+      "path": "Platform/common/acceptance/forms/extra.scenarios.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.142: the machine form of the probes of P/01.1/extra; judge only."
+    },
+    {
       "path": "Platform/common/acceptance/forms/extra.tsv",
       "disposition": "judge_only",
       "basis": "P01.86: inventory of the probes of the extra targets, from the README of each chapter; an executable judge table."
