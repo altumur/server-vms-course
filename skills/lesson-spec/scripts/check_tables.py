@@ -24,11 +24,10 @@ LONE = re.compile(r"[\ud800-\udfff]")
 
 
 class Table:
-    def __init__(self, path):
+    def __init__(self, path, *, validated=None):
         self.path = Path(path)
         self.vars, self.lims, self.fns, self.rows, self.errors = {}, {}, {}, [], []
         lines = self.path.read_text(encoding="utf-8").splitlines()
-        body = [line for line in lines if not line.startswith("#")]
         for line in lines:
             if m := re.match(r"#var (\w+) (\S+) — ", line):
                 self.vars[m[1]] = m[2]
@@ -38,32 +37,39 @@ class Table:
                 self.fns[m[1]] = ([a.strip() for a in m[2].split(",") if a.strip()], m[3])
             elif re.match(r"#(var|lim|fn) ", line):
                 self.error(f"header line out of form: {line}")
-        if not body or body[0].split("\t") != COLUMNS:
-            self.error(f"columns must be {COLUMNS}")
-            return
-        for no, line in enumerate(body[1:], 2):
-            cells = line.split("\t")
-            if len(cells) != len(COLUMNS):
-                self.error(f"row {no}: {len(cells)} cells, expected {len(COLUMNS)}")
-                continue
-            self.rows.append(dict(zip(COLUMNS, cells)))
-        self.form()
+        if validated is not None:
+            from check_forms import read
+            errors, self.rows = read(self.path, COLUMNS, validated=validated)
+            self.errors.extend(errors)
+        else:
+            body = [line for line in lines if not line.startswith("#")]
+            if not body or body[0].split("\t") != COLUMNS:
+                self.error(f"columns must be {COLUMNS}")
+                return
+            for no, line in enumerate(body[1:], 2):
+                cells = line.split("\t")
+                if len(cells) != len(COLUMNS):
+                    self.error(f"row {no}: {len(cells)} cells, expected {len(COLUMNS)}")
+                    continue
+                self.rows.append(dict(zip(COLUMNS, cells)))
+        self.form(standard=validated is not None)
 
     def error(self, message):
         self.errors.append(f"{self.path.name}: {message}")
 
-    def form(self):
+    def form(self, *, standard=False):
         seen_groups, last_group = set(), None
-        ids = [row["id"] for row in self.rows]
-        for dup in sorted({i for i in ids if ids.count(i) > 1}):
-            self.error(f"id {dup} repeats (a stable address of a row, ADR-0122 доп. (1) п. 4)")
+        if not standard:
+            ids = [row["id"] for row in self.rows]
+            for dup in sorted({i for i in ids if ids.count(i) > 1}):
+                self.error(f"id {dup} repeats (a stable address of a row, ADR-0122 доп. (1) п. 4)")
         for k, row in enumerate(self.rows, 1):
             where = f"n {row['n']}"
-            if not re.fullmatch(r"[a-z][a-z0-9_-]*", row["id"]):
+            if not standard and not re.fullmatch(r"[a-z][a-z0-9_-]*", row["id"]):
                 self.error(f"{where}: id {row['id']!r} is not [a-z][a-z0-9_-]*")
             if row["n"] != str(k):
                 self.error(f"{where}: n must be {k} (rows in order, without gaps)")
-            if row["op"] != "*" and not re.fullmatch(r"[a-z]+(,[a-z]+)*", row["op"]):
+            if not standard and row["op"] != "*" and not re.fullmatch(r"[a-z]+(,[a-z]+)*", row["op"]):
                 self.error(f"{where}: op {row['op']!r} — * or a list of values")
             if not re.fullmatch(r"[a-z][a-z_]*", row["check"]):
                 self.error(f"{where}: check {row['check']!r} — a Latin name")
@@ -221,9 +227,9 @@ def weight(items):
     return total
 
 
-def check(table_path):
+def check(table_path, *, validated=None, validated_probes=None):
     """→ (errors, stats) of one table with its probes."""
-    table = Table(table_path)
+    table = Table(table_path, validated=validated)
     probes_path = table.path.with_name(table.path.name.replace(".tsv", ".probes.tsv"))
     if not probes_path.is_file():
         return table.errors + [f"{table.path.name}: no probes {probes_path.name} — the generator refuses a table "
@@ -238,16 +244,23 @@ def check(table_path):
     missing = set(table.lims) - set(lims)
     if missing:
         table.error(f"{probes_path.name}: no #lim value for {sorted(missing)}")
-    body = [line for line in lines if not line.startswith("#")]
-    if not body or body[0].split("\t") != PROBE_COLUMNS:
-        table.error(f"{probes_path.name}: columns must be {PROBE_COLUMNS}")
-        return table.errors, {}
-    for no, line in enumerate(body[1:], 2):
-        cells = line.split("\t")
-        if len(cells) != 4 or cells[1] not in {"only", "pair", "nopair", "pass"}:
-            table.error(f"{probes_path.name} row {no}: n, case only|pair|nopair|pass, sock, body")
-            continue
-        probes.append((no, *cells))
+    if validated_probes is not None:
+        from check_forms import read
+        errors, rows = read(probes_path, PROBE_COLUMNS, validated=validated_probes)
+        table.errors.extend(errors)
+        probes = [(no, *(row[column] for column in PROBE_COLUMNS))
+                  for no, row in enumerate(rows, 2)]
+    else:
+        body = [line for line in lines if not line.startswith("#")]
+        if not body or body[0].split("\t") != PROBE_COLUMNS:
+            table.error(f"{probes_path.name}: columns must be {PROBE_COLUMNS}")
+            return table.errors, {}
+        for no, line in enumerate(body[1:], 2):
+            cells = line.split("\t")
+            if len(cells) != 4 or cells[1] not in {"only", "pair", "nopair", "pass"}:
+                table.error(f"{probes_path.name} row {no}: n, case only|pair|nopair|pass, sock, body")
+                continue
+            probes.append((no, *cells))
     if table.errors:
         return table.errors, {}
     runner = Runner(table, lims, allows)
