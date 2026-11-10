@@ -1,0 +1,454 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The payloads of the D7 test-side evidence bindings",
+  "description": "Machine form of README.md «D7 test-side evidence bindings», paragraph «Payloads» (task P01.136). The payload of a request with the operation activate is this schema: one object of the capability of the request. The payloads of describe, sample and deactivate are the empty object. The payload of the record identity is the identity object of the descriptor; of activation and deactivation — $defs/transition; of observation — $defs/<capability>_observation of the capability of the process. The judge sets targets and the offset_seconds of a controlled clock domain at each activation; the other fields are the case binding. Integer fields are JSON integer tokens. The schema sets no numeric value of a norm.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/clock_activate"
+    },
+    {
+      "$ref": "#/$defs/storage_activate"
+    },
+    {
+      "$ref": "#/$defs/progress_activate"
+    },
+    {
+      "$ref": "#/$defs/fault_activate"
+    }
+  ],
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "absolute": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "empty": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "target": {
+      "description": "One process of the case on which the binding acts: member is the effective -id of the daemon (P/01.3 N1.3), dir its store directory (-dir), pid the process of the daemon or of the CLI that the case runs against that directory; path is the destination file when the CLI is backup.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "member",
+        "dir",
+        "pid"
+      ],
+      "properties": {
+        "member": {
+          "$ref": "#/$defs/text"
+        },
+        "dir": {
+          "$ref": "#/$defs/absolute"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "path": {
+          "$ref": "#/$defs/absolute"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    },
+    "clock_domain": {
+      "description": "A consuming wall-clock domain, named by the -id of its node. offset_seconds is present exactly when the mode is control: the offset of this domain from the independent monotonic baseline in the seconds of the wall stamps of the chapter.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "member",
+        "clock",
+        "boundary"
+      ],
+      "properties": {
+        "member": {
+          "$ref": "#/$defs/text"
+        },
+        "clock": {
+          "const": "wall"
+        },
+        "boundary": {
+          "enum": [
+            "admission_time"
+          ]
+        },
+        "offset_seconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "clock_activate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability",
+        "mode",
+        "domains",
+        "targets"
+      ],
+      "properties": {
+        "capability": {
+          "const": "clock"
+        },
+        "mode": {
+          "enum": [
+            "observe",
+            "control"
+          ]
+        },
+        "domains": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/clock_domain"
+          }
+        },
+        "targets": {
+          "$ref": "#/$defs/targets"
+        }
+      }
+    },
+    "storage_activate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability",
+        "object",
+        "medium",
+        "phases",
+        "states",
+        "targets"
+      ],
+      "properties": {
+        "capability": {
+          "const": "storage"
+        },
+        "object": {
+          "const": "store_directory"
+        },
+        "medium": {
+          "$ref": "#/$defs/text"
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "effect",
+              "publication",
+              "barrier"
+            ]
+          }
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "before",
+              "after",
+              "reopen"
+            ]
+          }
+        },
+        "targets": {
+          "$ref": "#/$defs/targets"
+        }
+      }
+    },
+    "progress_activate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability",
+        "operation",
+        "boundaries",
+        "resources",
+        "latch",
+        "targets"
+      ],
+      "properties": {
+        "capability": {
+          "const": "progress"
+        },
+        "operation": {
+          "enum": [
+            "write",
+            "copy",
+            "stop"
+          ]
+        },
+        "boundaries": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "pin",
+              "output_start",
+              "sink_block",
+              "cancel",
+              "release",
+              "stop_delivery",
+              "admission_stop",
+              "exit"
+            ]
+          }
+        },
+        "resources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "heap",
+              "memory",
+              "descriptors",
+              "connections",
+              "snapshots",
+              "mutation_lock"
+            ]
+          }
+        },
+        "latch": {
+          "enum": [
+            "none",
+            "sink"
+          ]
+        },
+        "targets": {
+          "$ref": "#/$defs/targets"
+        }
+      }
+    },
+    "fault_activate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability",
+        "phase",
+        "model",
+        "targets"
+      ],
+      "properties": {
+        "capability": {
+          "const": "fault"
+        },
+        "phase": {
+          "enum": [
+            "pre_effect",
+            "medium",
+            "barrier",
+            "recover_mark",
+            "backup_output",
+            "copy_after_headers"
+          ]
+        },
+        "model": {
+          "enum": [
+            "refuse",
+            "unknown",
+            "barrier_error",
+            "interrupt",
+            "output_error",
+            "stream_close"
+          ]
+        },
+        "targets": {
+          "$ref": "#/$defs/targets"
+        }
+      }
+    },
+    "transition": {
+      "description": "The payload of the records activation and deactivation: the members whose boundary actually changed and the reading of the monotonic clock of the provider at that change.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "monotonic_ns"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "monotonic_ns": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "clock_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domains",
+        "monotonic_ns"
+      ],
+      "properties": {
+        "domains": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "member",
+              "wall_seconds"
+            ],
+            "properties": {
+              "member": {
+                "$ref": "#/$defs/text"
+              },
+              "wall_seconds": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "monotonic_ns": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "storage_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "objects",
+        "barrier_attempts",
+        "barrier_errors",
+        "monotonic_ns"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "before",
+            "after",
+            "reopen"
+          ]
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/absolute"
+              },
+              "bytes": {
+                "$ref": "#/$defs/count"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "barrier_attempts": {
+          "$ref": "#/$defs/count"
+        },
+        "barrier_errors": {
+          "$ref": "#/$defs/count"
+        },
+        "monotonic_ns": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "progress_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "events",
+        "bytes",
+        "resources",
+        "monotonic_ns"
+      ],
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "boundary",
+              "monotonic_ns"
+            ],
+            "properties": {
+              "boundary": {
+                "$ref": "#/$defs/progress_activate/properties/boundaries/items"
+              },
+              "monotonic_ns": {
+                "$ref": "#/$defs/count"
+              }
+            }
+          }
+        },
+        "bytes": {
+          "$ref": "#/$defs/count"
+        },
+        "resources": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/progress_activate/properties/resources/items"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/count"
+          }
+        },
+        "monotonic_ns": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "fault_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "crossings",
+        "injected",
+        "monotonic_ns"
+      ],
+      "properties": {
+        "phase": {
+          "$ref": "#/$defs/fault_activate/properties/phase"
+        },
+        "crossings": {
+          "$ref": "#/$defs/count"
+        },
+        "injected": {
+          "$ref": "#/$defs/count"
+        },
+        "monotonic_ns": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    }
+  }
+}
