@@ -15319,7 +15319,7 @@
     {
       "path": "Platform/common/vectors/wire.cases.tsv",
       "disposition": "judge_only",
-      "basis": "P01.86: rows of the wire form whose selectors or expectations name the cases or input values of their tables; judge-side under the *.cases.* rule."
+      "basis": "P01.86, criterion narrowed after the review P01.87: rows of the wire form whose cells carry values taken from the judge-side case tables; judge-side under the *.cases.* rule."
     },
     {
       "path": "Platform/common/vectors/wire.md",
@@ -15329,7 +15329,7 @@
     {
       "path": "Platform/common/vectors/wire.tsv",
       "disposition": "model_and_judge",
-      "basis": "P01.86, the Architect's answer of 2026-11-10T08:48:33Z: the rows that name cases or input values moved to wire.cases.tsv; the whole remaining file is the public line protocol of the vectors."
+      "basis": "P01.86 and the review P01.87: the rows whose cells carry values of the judge-side case tables moved to wire.cases.tsv; the whole remaining file is the public line protocol of the vectors."
     },
     {
       "path": "Platform/common/vectors/yaml-suite/LICENSE",
