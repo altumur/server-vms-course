@@ -803,7 +803,7 @@ KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests",
              "slot-fate", "slot-release"}                                                # машины P/04 (ADR-0125 доп. (5))                                   # ADR-0125 доп. (5)
 CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
 GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
-                  rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)")
+                  rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)|code:\*")
 CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
 
 
@@ -839,12 +839,14 @@ def check_stage_parts(path):
     if errors:
         return errors, {}
     lesson = path.parent.parent
+    stage_rows = []
     for i, line in enumerate(lines[1:], 1):
         cells = line.split("\t")
         if len(cells) != len(head):
             errors.append(f"{path.name}: row {i}: {len(cells)} cells, expected {len(head)}")
             continue
         r = dict(zip(head, cells))
+        stage_rows.append(r)
         if "n" in r and r["n"] != str(i):
             errors.append(f"{path.name}: {r['stage']}: n {r['n']!r} — expected {i}")
         if r.get("depends", "-") != "-" and not all(d.isdigit() and 0 < int(d) < i for d in r["depends"].split(",")):
@@ -863,7 +865,30 @@ def check_stage_parts(path):
             names = r[column].split(",")
             if not set(names) <= KIT_PARTS or len(names) != len(set(names)):
                 errors.append(f"{path.name}: {r['stage']}: {column} {r[column]!r} — not a list of {sorted(KIT_PARTS)}")
+    if public:
+        errors += code_stage_errors(lesson, stage_rows)
     return errors, {"stage_rows": len(lines) - 1}
+
+
+def code_stage_errors(lesson, stages):
+    """Every declared code row is selected by its own or a later stage gate."""
+    path = lesson / "forms" / "code-rules.tsv"
+    if not path.exists() and not path.is_symlink():
+        return []
+    if path.is_symlink() or not path.is_file():
+        return ["code-rules.tsv: expected an ordinary file"]
+    errors, rows = read(path, ["id", "kind", "name", "args", "stage", "norm"])
+    positions = {row["stage"]: i for i, row in reversed(list(enumerate(stages)))}
+    last_gate = next((i for i in range(len(stages) - 1, -1, -1)
+                      if "code:*" in stages[i]["gate"].split(";")), None)
+    for row in rows:
+        stage = row["stage"]
+        where = f"code-rules.tsv: {row['id']}: stage {stage!r}"
+        if stage not in positions:
+            errors.append(f"{where} is not in stages.tsv")
+        elif last_gate is None or last_gate < positions[stage]:
+            errors.append(f"{where} has no code:* gate in its own or a later stage")
+    return errors
 
 
 ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)
@@ -909,16 +934,17 @@ def gate_errors(lesson, stage, check):
     каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
     `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
     главы (ADR-0125 доп. (5)). seams:<chapter>:<names|*> selects that chapter's seams.tsv;
-    accept selects scenarios.tsv. Both scopes are local to the declared lesson."""
+    accept selects scenarios.tsv. Both scopes are local to the declared lesson.
+    code:* selects the code-rules.tsv rows of this stage and former stages."""
     m = GATE.fullmatch(check)
     if not m:
         return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, seams:…, "
-                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:… or build"]
+                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:…, code:* or build"]
     if m[6]:
         if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
             return [f"stages.tsv: {stage}: no vector package {m[6]}"]
         return []
-    if check == "build":
+    if check in ("build", "code:*"):
         return []
     chapter = m[8] if m[7] else (m[10] or m[1] or m[4])
     owner = re.match(r"([0-9]+)-", lesson.name)
