@@ -18,6 +18,7 @@ import tsv_input
 import vector_consumers
 
 FORM = "Platform/common/vectors/wire.tsv"
+CASE_FORM = "Platform/common/vectors/wire.cases.tsv"
 CONSUMERS = "Platform/common/vectors/consumers.tsv"
 COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "expect", "compare", "markers", "native", "norm"]
 COMPARES = {"value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset", "turn"}
@@ -92,6 +93,7 @@ class Binding:
     markers: list
     native: object
     norm: str
+    source: str = FORM
 
     @property
     def key(self):
@@ -272,38 +274,47 @@ def check_native(n, where):
             raise WireError(f"{w}: frame raw is only for bytes")
 
 
-def parse(root, keys=None, surfaces=None):
-    """Return the form's [Binding]; any grammar violation raises WireError with its line number."""
+def form_paths(root):
+    """Canonical form and an existing exact-name companion; absence supports M-only roots."""
     root = Path(root)
-    path = root / FORM
-    if not path.is_file():
-        raise WireError(f"no {FORM}")
-    try:
-        source = tsv_input.read(path, names=COLUMNS, root=root)
-    except tsv_input.TSVError as exc:
-        raise WireError(str(exc)) from None
+    cases = root / CASE_FORM
+    return [root / FORM] + ([cases] if cases.exists() or cases.is_symlink() else [])
+
+
+def parse(root, keys=None, surfaces=None):
+    """Return bindings from both carriers, preserving source coordinates and shared uniqueness."""
+    root = Path(root)
     out, seen = [], set()
-    for no, r in source.rows:
-        w = f"{FORM}:{no}"
-        if not re.fullmatch(r"(common|\d\d-[a-z0-9-]+)/[a-z0-9-]+", r["package"]):
-            raise WireError(f"{w}: package {r['package']!r}")
-        if not re.fullmatch(r"vectors|layout|stand:[a-z0-9-]+", r["surface"]):
-            raise WireError(f"{w}: surface {r['surface']!r}")
-        key = (r["package"], r["table"], r["surface"])
-        if key in seen:
-            raise WireError(f"{w}: second row {key}")
-        seen.add(key)
-        if ((keys is not None and (r["package"], r["table"]) not in keys)
-                or (surfaces is not None and r["surface"] not in surfaces)):
-            continue  # only selected table grammars are used; incomplete P/06 is not silently executed
-        layout = r["surface"] == "layout"
-        js = {k: strict_json(r[k], f"{w} {k}") for k in ("inputs", "files", "expect", "markers")}
-        js["native"] = None if layout and r["native"] == "-" else strict_json(r["native"], f"{w} native")
-        js["compare"] = r["compare"] if r["compare"] in COMPARES | {"-"} else strict_json(r["compare"], f"{w} compare")
-        b = Binding(no, r["package"], r["table"], r["surface"], r["header"].split(","), js["inputs"], js["files"],
-                    js["expect"], js["compare"], js["markers"], js["native"], r["norm"])
-        check_binding(root, b, w)
-        out.append(b)
+    for path in form_paths(root):
+        name = path.relative_to(root).as_posix()
+        try:
+            source = tsv_input.read(path, names=COLUMNS, root=root)
+        except (tsv_input.TSVError, OSError, UnicodeError) as exc:
+            raise WireError(f"{name}: {exc}") from None
+        if source.raw.startswith(b"\xef\xbb\xbf") or b"\r" in source.raw:
+            raise WireError(f"{name}: BOM or CR — the form is UTF-8 with LF")
+        for no, r in source.rows:
+            w = f"{name}:{no}"
+            if not re.fullmatch(r"(common|\d\d-[a-z0-9-]+)/[a-z0-9-]+", r["package"]):
+                raise WireError(f"{w}: package {r['package']!r}")
+            if not re.fullmatch(r"vectors|layout|stand:[a-z0-9-]+", r["surface"]):
+                raise WireError(f"{w}: surface {r['surface']!r}")
+            key = (r["package"], r["table"], r["surface"])
+            if key in seen:
+                raise WireError(f"{w}: second row {key}")
+            seen.add(key)
+            if ((keys is not None and (r["package"], r["table"]) not in keys)
+                    or (surfaces is not None and r["surface"] not in surfaces)):
+                continue  # only selected table grammars are used; incomplete P/06 is not silently executed
+            layout = r["surface"] == "layout"
+            js = {k: strict_json(r[k], f"{w} {k}") for k in ("inputs", "files", "expect", "markers")}
+            js["native"] = None if layout and r["native"] == "-" else strict_json(r["native"], f"{w} native")
+            js["compare"] = r["compare"] if r["compare"] in COMPARES | {"-"} else strict_json(r["compare"], f"{w} compare")
+            b = Binding(no, r["package"], r["table"], r["surface"], r["header"].split(","), js["inputs"], js["files"],
+                        js["expect"], js["compare"], js["markers"], js["native"], r["norm"], name)
+            check_binding(root, b, w)
+            out.append(b)
+
     return out
 
 
@@ -567,7 +578,7 @@ def read_rows(root, b):
     """Return [(line, {column: cell})]; validate the header or positional fields against the form's header."""
     path = package_dir(root, b.package) / b.table
     if not path.is_file():
-        raise WireError(f"{FORM}:{b.line}: no {path.relative_to(root)}")
+        raise WireError(f"{b.source}:{b.line}: no {path.relative_to(root)}")
     positional = b.header[0] == "-"
     names = b.header[1:] if positional else b.header
     try:
@@ -717,7 +728,7 @@ class Expander:
 
     def run(self, b, owner):
         """Return ([Run], [Excluded]) for binding b and lesson owner (the lesson directory)."""
-        w = f"{FORM}:{b.line}"
+        w = f"{b.source}:{b.line}"
         if b.surface == "layout":
             return [], [Excluded(owner, b, 0, f"layout ({b.norm})")]
         pdir = package_dir(self.root, b.package)
@@ -873,7 +884,7 @@ def lesson_bindings(root, owner, bindings=None):
         for d in b.inputs:
             for o in re.findall(r'owner\s*==\s*"([^"]+)"', d.get("when", "")):
                 if o not in cons.get((b.package, b.table), set()):
-                    raise WireError(f"{FORM}:{b.line}: owner {o!r} is not a consumer of {b.package} {b.table}")
+                    raise WireError(f"{b.source}:{b.line}: owner {o!r} is not a consumer of {b.package} {b.table}")
     return [b for b in bindings
             if b.package.split("/", 1)[0] == owner or owner in cons.get((b.package, b.table), set())]
 

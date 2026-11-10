@@ -2658,11 +2658,14 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
-        for path in check_forms.wire_forms(self.root):          # провод векторов (wire.md, ADR-0125 доп. (5))
-            errors, stats = check_forms.check_wire(path)
+        wire_seen, wire_stats = set(), {}
+        for path in check_forms.wire_forms(self.root):          # one wire form, public and judge carriers
+            errors, stats = check_forms.check_wire(path, seen=wire_seen)
             for message in errors:
                 self.error(path, message)
-            self.stats.update(stats)
+            for name, value in stats.items():
+                wire_stats[name] = wire_stats.get(name, 0) + value
+        self.stats.update(wire_stats)
         for path in check_forms.stage_forms(self.root):
             errors, stats = check_forms.check_stage_parts(path)
             for message in errors:

@@ -98,19 +98,41 @@ def _source_scopes(source_scopes):
 def wire_headers(root, *, source_scopes=None):
     """Existing wire bindings and the scenario form name positional columns."""
     modules = _source_scopes(source_scopes)
-    wire = Path(root) / "Platform/common/vectors/wire.tsv"
-    lines = ([line.split("\t") for line in wire.read_bytes().decode("utf-8").split("\n")
-              if line and not line.startswith("#")] if wire.is_file() else [])
-    result = {}
-    for values in lines[1:]:
-        row = dict(zip(lines[0], values))
-        package = row["package"].split("/")
-        path = Path("Platform") / package[0] / "vectors" / Path(*package[1:]) / row["table"]
-        form = row["header"].split(",")
-        value = (form[1:] if form[0] == "-" else form, form[0] == "-")
-        if path in result and result[path] != value:
-            raise ValueError(f"{path}: conflicting wire column declarations")
-        result[path] = value
+    base = Path(root) / "Platform/common/vectors"
+    canonical, cases = base / "wire.tsv", base / "wire.cases.tsv"
+    present = lambda path: path.exists() or path.is_symlink()
+    wires = ([canonical] + ([cases] if present(cases) else [])) if any(
+        present(path) for path in (canonical, cases)) else []
+    columns = ["package", "table", "surface", "header", "inputs", "files",
+               "expect", "compare", "markers", "native", "norm"]
+    result, seen = {}, set()
+    for wire in wires:
+        try:
+            raw = wire.read_bytes()
+            text = raw.decode("utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise ValueError(f"{wire.name}: unreadable wire form: {exc}") from None
+        if raw.startswith(b"\xef\xbb\xbf") or b"\r" in raw:
+            raise ValueError(f"{wire.name}: BOM or CR — the form is UTF-8 with LF")
+        lines = [(no, line.split("\t")) for no, line in enumerate(text.split("\n"), 1)
+                 if line and not line.startswith("#")]
+        if not lines or lines[0][1] != columns:
+            raise ValueError(f"{wire.name}: columns must be {columns}")
+        for no, values in lines[1:]:
+            if len(values) != len(columns):
+                raise ValueError(f"{wire.name}:{no}: wrong wire row width")
+            row = dict(zip(columns, values))
+            triple = row["package"], row["table"], row["surface"]
+            if triple in seen:
+                raise ValueError(f"{wire.name}:{no}: the triple (package, table, surface) repeats")
+            seen.add(triple)
+            package = row["package"].split("/")
+            path = Path("Platform") / package[0] / "vectors" / Path(*package[1:]) / row["table"]
+            form = row["header"].split(",")
+            value = (form[1:] if form[0] == "-" else form, form[0] == "-")
+            if path in result and result[path] != value:
+                raise ValueError(f"{path}: conflicting wire column declarations")
+            result[path] = value
     # The existing acceptance form already fixes these columns. It permits its
     # traditional comment header and an ordinary header; neither is a data row.
     for module in modules:

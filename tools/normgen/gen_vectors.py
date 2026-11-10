@@ -1603,7 +1603,7 @@ def provenance():
         import wire
         runs, _ = wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
-        forms = sorted(paths | {ROOT / wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS}
+        forms = sorted(paths | set(wire.form_paths(ROOT)) | {ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS}
                        | set(turn_sources))
         return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire_api_p06.py", "wire.py", "wire_vectors.py",
@@ -1615,14 +1615,15 @@ def provenance():
         import wire_vectors
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
-        forms = sorted(paths | {ROOT / wire_vectors.wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
+        forms = sorted(paths | set(wire_vectors.wire.form_paths(ROOT)) | {ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
         return {"form": entries(forms), "generator": entry(Path(__file__).resolve()), "generators": generators,
                 "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
     forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS] + turn_sources
     if any(d.get("_form") for d in decls):
-        forms.append(ROOT / "Platform/common/vectors/wire.tsv")
+        import wire
+        forms.extend(wire.form_paths(ROOT))
     hand = ["vector_consumers.py", "consumer_vectors.py"]
     if any(d.get("_form") for d in decls):
         hand += ["wire.py", "wire_vectors.py", "wirert/full/go/check.go", "doorrt2/go/schema.go"]
