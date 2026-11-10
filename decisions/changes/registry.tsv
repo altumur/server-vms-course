@@ -89,3 +89,4 @@ change	lesson	share	rev	state	sha	reviews	model
 0135-p01-production-qualification	P/AC	Спецификация	1	review	-	-	-
 0133-p01-common-edit	P/01,P/AC,Platform/common	Спецификация	1	review	-	-	-
 0133-p01-go-build-environment	Platform/common	Спецификация	1	review	-	-	-
+0133-p01-store-directory-by-stand	Platform/common	Спецификация	1	review	-	-	-
