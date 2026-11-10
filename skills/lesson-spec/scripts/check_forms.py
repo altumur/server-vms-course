@@ -817,32 +817,37 @@ def stage_forms(root):
                    *Path(root).glob("Platform/*/forms/stages.kit.tsv")])
 
 
-def check_stage_parts(path):
+def check_stage_parts(path, *, validated=None):
     """ADR-0126 доп. (4) п. 13: колонки `kit` (этап закрыт пакетом целиком) и `parts` (части, которыми этап пользуется) —
     `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке; `n` идут по порядку с 1, `depends` —
     `-` или номера прежних этапов (ADR-0126 доп. (1)). Прочую сверку формы этапов ведёт `check_spec` («Архитектор»).
     ADR-0126(9) phase3: public stages.tsv forbids the kit/parts column heads and
     legacy tests: gates. Retained stages.kit.tsv keeps the legacy grammar."""
     path = Path(path)
-    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
-    head = lines[0].split("\t") if lines else []
+    if validated is None:
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
+        head = lines[0].split("\t") if lines else []
+        cell_rows = [line.split("\t") for line in lines[1:]]
+    else:
+        if validated["path"] != path:
+            return [f"{path.name}: standard form rows belong to a different Source file"], {}
+        head, cell_rows = validated["columns"], validated["rows"]
     # Check exact fields and parsed gate tokens, never unrelated words in prose.
     public = path.name == "stages.tsv"
     required = ("stage", "gate") + (("kit", "parts") if path.name == "stages.kit.tsv" else ())
     errors = [f"{path.name}: no column {c}" for c in required if c not in head]
-    if public and {"kit", "parts"} & set(head):
+    if validated is None and public and {"kit", "parts"} & set(head):
         errors.append(f"{path.name}: package columns kit/parts are not permitted in the public form")
-    if len(head) != len(set(head)):
+    if validated is None and len(head) != len(set(head)):
         errors.append(f"{path.name}: duplicate columns")
-    if ("kit" in head) != ("parts" in head):
+    if validated is None and ("kit" in head) != ("parts" in head):
         errors.append(f"{path.name}: kit and parts must both be present or both be absent")
     if errors:
         return errors, {}
     lesson = path.parent.parent
     stage_rows = []
-    for i, line in enumerate(lines[1:], 1):
-        cells = line.split("\t")
-        if len(cells) != len(head):
+    for i, cells in enumerate(cell_rows, 1):
+        if validated is None and len(cells) != len(head):
             errors.append(f"{path.name}: row {i}: {len(cells)} cells, expected {len(head)}")
             continue
         r = dict(zip(head, cells))
@@ -863,11 +868,11 @@ def check_stage_parts(path):
             if r[column] == "-":
                 continue
             names = r[column].split(",")
-            if not set(names) <= KIT_PARTS or len(names) != len(set(names)):
+            if (validated is None and not set(names) <= KIT_PARTS) or len(names) != len(set(names)):
                 errors.append(f"{path.name}: {r['stage']}: {column} {r[column]!r} — not a list of {sorted(KIT_PARTS)}")
     if public:
         errors += code_stage_errors(lesson, stage_rows)
-    return errors, {"stage_rows": len(lines) - 1}
+    return errors, {"stage_rows": len(cell_rows)}
 
 
 def code_stage_errors(lesson, stages):

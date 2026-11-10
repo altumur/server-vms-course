@@ -2725,6 +2725,15 @@ class Check:
         """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
         прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
         import check_forms
+        standard = {}
+        selected_standard = set()
+        if (self.root / "Platform/01-store").is_dir():
+            import frictionless_forms
+            selected_standard = {self.root / "Platform" / path for path in frictionless_forms.RESOURCES.values()}
+            errors, stats = frictionless_forms.check(self.root, tables=standard)
+            for message in errors:
+                self.error(self.root / frictionless_forms.PACKAGE, message)
+            self.stats.update(stats)
         for path in check_forms.flag_forms(self.root):
             errors, stats = check_forms.check_flags(path)
             for message in errors:
@@ -2825,7 +2834,9 @@ class Check:
                 wire_stats[name] = wire_stats.get(name, 0) + value
         self.stats.update(wire_stats)
         for path in check_forms.stage_forms(self.root):
-            errors, stats = check_forms.check_stage_parts(path)
+            if path in selected_standard and path not in standard:
+                continue  # Source structure/environment already failed; do not reinterpret it with a legacy parser.
+            errors, stats = check_forms.check_stage_parts(path, validated=standard.get(path))
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
