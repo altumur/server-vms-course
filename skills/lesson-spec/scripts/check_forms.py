@@ -803,7 +803,7 @@ KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests",
              "slot-fate", "slot-release"}                                                # машины P/04 (ADR-0125 доп. (5))                                   # ADR-0125 доп. (5)
 CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
 GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
-                  rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)")
+                  rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)|code:\*")
 CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
 
 
@@ -909,16 +909,17 @@ def gate_errors(lesson, stage, check):
     каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
     `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
     главы (ADR-0125 доп. (5)). seams:<chapter>:<names|*> selects that chapter's seams.tsv;
-    accept selects scenarios.tsv. Both scopes are local to the declared lesson."""
+    accept selects scenarios.tsv. Both scopes are local to the declared lesson.
+    code:* is the closed code-rules gate kind (ADR-0133 addendum (39))."""
     m = GATE.fullmatch(check)
     if not m:
         return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, seams:…, "
-                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:… or build"]
+                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:…, code:* or build"]
     if m[6]:
         if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
             return [f"stages.tsv: {stage}: no vector package {m[6]}"]
         return []
-    if check == "build":
+    if check in ("build", "code:*"):
         return []
     chapter = m[8] if m[7] else (m[10] or m[1] or m[4])
     owner = re.match(r"([0-9]+)-", lesson.name)
