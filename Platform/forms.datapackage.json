@@ -1,6 +1,6 @@
 {
   "name": "platform-forms",
-  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first group. Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
+  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
   "resources": [
     {
       "name": "stages_p01",
@@ -65,6 +65,86 @@
         }
       },
       "schema": "common/acceptance/forms/code-rules.tsv.schema.json"
+    },
+    {
+      "name": "daemon_flags_p01",
+      "path": "01-store/forms/daemon-flags.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          18
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/daemon-flags.tsv.schema.json"
+    },
+    {
+      "name": "refusals_p01",
+      "path": "01-store/forms/refusals.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          8
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/refusals.tsv.schema.json"
+    },
+    {
+      "name": "runtime_constants_p01",
+      "path": "01-store/forms/runtime-constants.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          2
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/runtime-constants.tsv.schema.json"
+    },
+    {
+      "name": "write_checks_p01",
+      "path": "01-store/forms/write-checks.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          19
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/write-checks.tsv.schema.json"
+    },
+    {
+      "name": "write_checks_probes_p01",
+      "path": "01-store/forms/write-checks.probes.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          15
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/write-checks.probes.tsv.schema.json"
     }
   ]
 }
