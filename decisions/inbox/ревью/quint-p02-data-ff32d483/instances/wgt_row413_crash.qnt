@@ -1,0 +1,3 @@
+module wgt_row413_crash {
+  import wgt_core(MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=true, VW=1000, RW=600000, VE=64, RE=64).* from "../put_weight"
+}

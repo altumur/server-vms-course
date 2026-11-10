@@ -1,0 +1,149 @@
+id	module	invariant	kind	tool	max_steps	samples	overrides	expect	actual	match	secs	file
+R01	race_norm	inv_row_names_parts	witness	verify	8		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	7.9	put_race.qnt
+R02	race_norm	wit_foreign_parts_deleted	witness	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	8.0	put_race.qnt
+R03	race_norm	wit_published_row_no_parts	witness	verify	11		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	17.9	put_race.qnt
+R04	race_atomic19	inv_row_names_parts	witness	verify	8		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	4.8	put_race.qnt
+R05	race_fine	inv_mark_le_row	property	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	41.8	put_race.qnt
+R06	race_fine	inv_mark_never_fell	property	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	34.9	put_race.qnt
+R07	race_fine	inv_view_never_fell	property	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	37.1	put_race.qnt
+R08	race_atomic19	inv_quiescent_published	property	verify	11		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	107.5	put_race.qnt
+R09	race_seq	wit_two_installers_finish	witness	verify	15		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	7.5	put_race.qnt
+R10	race_atomic19	wit_lagging_mark_not_lowered	witness	verify	10		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	8.6	put_race.qnt
+R11	race_nomark_cas	inv_mark_never_fell	mutant	verify	13		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=false, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	400.2	put_race.qnt
+R12	race_known	inv_row_names_parts	control	verify	11		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="known", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	76.8	put_race.qnt
+R13	race_known_revert	inv_row_names_parts	control	verify	9		N=2, D2=1, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="known", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	6.7	put_race.qnt
+R14	race_guard_post	inv_published_whole	control	verify	11		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	228.0	put_race.qnt
+R15	race_guard_post	inv_row_names_parts	witness	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	15.7	put_race.qnt
+R16	race_guard_post_rev	inv_published_whole	control	verify	11		N=2, D2=1, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	126.0	put_race.qnt
+R17	race_known_revert	inv_published_whole	control	verify	11		N=2, D2=1, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="known", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	11.0	put_race.qnt
+R18	race_mut_guard_only	inv_published_whole	mutant	verify	10		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	19.6	put_race.qnt
+R19	race_mut_post_only	inv_row_names_parts	mutant	verify	10		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	14.2	put_race.qnt
+R20	race_guard_post	wit_step19_race	witness	verify	9		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	violation	violation	yes	10.1	put_race.qnt
+R30	race_three_full_rowfirst	wit_mid_state	witness	verify	8		N=3, D2=3, D3=4, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	10.5	put_race.qnt
+R31	race_three_mid_rowfirst	inv_view_never_fell	witness	verify	9		N=2, D2=3, D3=4, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	violation	violation	yes	22.2	put_race.qnt
+R32	race_three_mid_rowfirst	wit_three_install_order	witness	verify	9		N=2, D2=3, D3=4, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	violation	violation	yes	23.5	put_race.qnt
+R33	race_three_mid_rowfirst	wit_view_fell_mark_row	witness	verify	11		N=2, D2=3, D3=4, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	violation	violation	yes	91.8	put_race.qnt
+R34	race_three_mid_viewfirst	inv_view_never_fell	control	verify	11		N=2, D2=3, D3=4, VIEW_FIRST=true, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	ok	ok	yes	281.5	put_race.qnt
+R35	race_three_mid_viewfirst	inv_mark_le_row	property	verify	9		N=2, D2=3, D3=4, VIEW_FIRST=true, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	ok	ok	yes	77.6	put_race.qnt
+R36	race_three_mid_rowfirst	inv_mark_never_fell	property	verify	9		N=2, D2=3, D3=4, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	ok	ok	yes	63.5	put_race.qnt
+R40	race_foreign	wit_conflicts_3	witness	verify	13		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	6.9	put_race.qnt
+R41	race_foreign	wit_conflicts_5	witness	verify	21		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	31.9	put_race.qnt
+R42	race_foreign_budget	inv_conflicts_bounded	control	verify	16		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=3, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	16.3	put_race.qnt
+R43	race_foreign_budget	wit_refused_by_budget	witness	verify	13		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=3, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	5.6	put_race.qnt
+R44	race_foreign_budget_mut	inv_conflicts_bounded	mutant	verify	17		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=3, MARK_CAS=true, ENFORCE=false, MID=false, COARSE=false	violation	violation	yes	12.8	put_race.qnt
+R45	race_foreign	inv_mark_le_row	property	verify	12		N=1, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=true, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	8.2	put_race.qnt
+R46	race_two_budget	inv_mark_never_fell	property	verify	10		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=3, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	51.1	put_race.qnt
+B01	race_break	inv_prev_whole	property	verify	10		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	92.2	put_race.qnt
+B02	race_break	inv_recovered	property	verify	13		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	202.8	put_race.qnt
+B03	race_break_other	inv_recovered	property	verify	13		N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	317.3	put_race.qnt
+B04	race_break	wit_row_without_mark_after_break	witness	verify	7		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	5.2	put_race.qnt
+B05	race_break	wit_view_without_mark_after_break	witness	verify	8		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	6.3	put_race.qnt
+B06	race_break	wit_recovery_rev_jumps	witness	verify	13		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	138.4	put_race.qnt
+B07	race_break	wit_recovery_unchanged	witness	verify	11		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	32.3	put_race.qnt
+B08	race_break	wit_old_parts_left_unchanged	witness	verify	13		N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	violation	violation	yes	54.3	put_race.qnt
+W01	cat_norm	inv_catalogue_valid	witness	verify	8		WINDOW=false, REVALIDATE=false, LOCK=false, CRASH=false	violation	violation	yes	0.9	catalogue_window.qnt
+W02	cat_norm	wit_both_checked_clean	witness	verify	8		WINDOW=false, REVALIDATE=false, LOCK=false, CRASH=false	violation	violation	yes	0.9	catalogue_window.qnt
+W03	cat_norm	wit_reader_code2	witness	verify	8		WINDOW=false, REVALIDATE=false, LOCK=false, CRASH=false	violation	violation	yes	1.0	catalogue_window.qnt
+W04	cat_window	inv_catalogue_valid	property	verify	10		WINDOW=true, REVALIDATE=false, LOCK=false, CRASH=false	ok	ok	yes	1.2	catalogue_window.qnt
+W05	cat_window	wit_second_refused	witness	verify	6		WINDOW=true, REVALIDATE=false, LOCK=false, CRASH=false	violation	violation	yes	0.8	catalogue_window.qnt
+W06	cat_recheck	inv_bad_reported	control	verify	10		WINDOW=false, REVALIDATE=true, LOCK=false, CRASH=false	ok	ok	yes	2.2	catalogue_window.qnt
+W07	cat_recheck	inv_catalogue_valid	control	verify	8		WINDOW=false, REVALIDATE=true, LOCK=false, CRASH=false	violation	violation	yes	0.8	catalogue_window.qnt
+W08	cat_lock	inv_no_bad_writes_with_lock	control	verify	10		WINDOW=false, REVALIDATE=false, LOCK=true, CRASH=false	ok	ok	yes	1.1	catalogue_window.qnt
+W09	cat_lock_crash	wit_lock_stuck	witness	verify	8		WINDOW=false, REVALIDATE=false, LOCK=true, CRASH=true	violation	violation	yes	0.8	catalogue_window.qnt
+W10	cat_norm	wit_all_ok_no_report	witness	verify	8		WINDOW=false, REVALIDATE=false, LOCK=false, CRASH=false	violation	violation	yes	0.9	catalogue_window.qnt
+O01	out_silent	inv_no_false_success	witness	verify	10		REACT="silent", MEM=true, RERUN=true	violation	violation	yes	1.0	put_outcome.qnt
+O02	out_silent	wit_code0_row_applied_mark_missing	witness	verify	10		REACT="silent", MEM=true, RERUN=true	violation	violation	yes	1.0	put_outcome.qnt
+O03	out_silent	wit_code0_parts_only	witness	verify	8		REACT="silent", MEM=true, RERUN=true	violation	violation	yes	1.0	put_outcome.qnt
+O04	out_silent	inv_mark_le_row	property	verify	12		REACT="silent", MEM=true, RERUN=true	ok	ok	yes	5.4	put_outcome.qnt
+O05	out_silent	inv_view_le_row	property	verify	12		REACT="silent", MEM=true, RERUN=true	ok	ok	yes	4.6	put_outcome.qnt
+O06	out_silent	inv_parts_before_row	property	verify	12		REACT="silent", MEM=true, RERUN=true	ok	ok	yes	2.7	put_outcome.qnt
+O07	out_silent	inv_rerun_converges	witness	verify	14		REACT="silent", MEM=true, RERUN=true	violation	violation	yes	1.1	put_outcome.qnt
+O08	out_ctrl	inv_no_false_success	control	verify	14		REACT="ctrl", MEM=true, RERUN=true	ok	ok	yes	2.9	put_outcome.qnt
+O09	out_ctrl	inv_rerun_converges	control	verify	14		REACT="ctrl", MEM=true, RERUN=true	ok	ok	yes	2.6	put_outcome.qnt
+O10	out_ctrl	wit_ambiguous_applied_retry	witness	verify	8		REACT="ctrl", MEM=true, RERUN=true	violation	violation	yes	0.9	put_outcome.qnt
+O11	out_ctrl	wit_rerun_after_exit1	witness	verify	16		REACT="ctrl", MEM=true, RERUN=true	violation	violation	yes	1.2	put_outcome.qnt
+O12	out_ctrl_nomem_norerun	inv_rev_one_step	witness	verify	14		REACT="ctrl", MEM=false, RERUN=false	violation	violation	yes	1.1	put_outcome.qnt
+O13	out_ctrl_norerun	inv_rev_one_step	property	verify	14		REACT="ctrl", MEM=true, RERUN=false	ok	ok	yes	1.3	put_outcome.qnt
+O14	out_mut_continue	inv_mark_le_row	mutant	verify	10		REACT="continue", MEM=true, RERUN=false	violation	violation	yes	1.0	put_outcome.qnt
+O15	out_mut_continue	wit_mark_above_row	mutant	verify	10		REACT="continue", MEM=true, RERUN=false	violation	violation	yes	1.0	put_outcome.qnt
+O16	out_silent_norerun	inv_rev_one_step	property	verify	12		REACT="silent", MEM=true, RERUN=false	ok	ok	yes	1.8	put_outcome.qnt
+O17	out_ctrl	inv_rev_one_step	witness	verify	14		REACT="ctrl", MEM=true, RERUN=true	violation	violation	yes	1.2	put_outcome.qnt
+G01	wgt_raised	inv_nothing_on_toolarge	witness	verify	8		MV=1048576, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G02	wgt_raised	wit_view413_after_row	witness	verify	8		MV=1048576, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G03	wgt_default_view	wit_view413_after_row	witness	verify	8		MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=524288, RW=1000, VE=524288, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G04	wgt_ctrl	inv_nothing_on_toolarge	control	verify	8		MV=1048576, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	ok	ok	yes	0.8	put_weight.qnt
+G05	wgt_ctrl	inv_no_row_without_view	control	verify	8		MV=1048576, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	ok	ok	yes	0.8	put_weight.qnt
+G06	wgt_ctrl	wit_refused_precheck	witness	verify	6		MV=1048576, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G07	wgt_raised	inv_no_row_without_view	witness	verify	8		MV=1048576, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G08	wgt_raised	wit_rev_climbs	witness	verify	12		MV=1048576, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1048500, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G09	wgt_row413	wit_row413_after_parts	witness	verify	6		MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1000, RW=600000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G10	wgt_row413	inv_orphans_le_1	witness	verify	14		MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1000, RW=600000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G11	wgt_row413	inv_orphans_le_2	witness	verify	18		MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1000, RW=600000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G12	wgt_ctrl_row	inv_no_orphan_at_all	control	verify	12		MV=524288, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=false, VW=1000, RW=600000, VE=64, RE=64	ok	ok	yes	0.8	put_weight.qnt
+G13	wgt_ctrl_crash	wit_crash_orphan	witness	verify	6		MV=524288, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=true, VW=1000, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G14	wgt_ctrl_crash	inv_no_orphan_at_all	witness	verify	6		MV=524288, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=true, VW=1000, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G15	wgt_ctrl_crash	wit_orphans_cleared	witness	verify	14		MV=524288, MB=1048576, ENV=256, PRECHECK=true, NEWDIG=true, CRASH=true, VW=1000, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+G16	wgt_fine	wit_published	witness	verify	8		MV=524288, MB=1048576, ENV=256, PRECHECK=false, NEWDIG=true, CRASH=false, VW=1000, RW=1000, VE=64, RE=64	violation	violation	yes	0.8	put_weight.qnt
+T01	start_mono	inv_no_serve_unconfirmed	property	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	ok	ok	yes	0.8	reader_start.qnt
+T02	start_mono	inv_code1_only_after_wait	property	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	ok	ok	yes	0.9	reader_start.qnt
+T03	start_mono	inv_wait_real_bounded	property	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	ok	ok	yes	0.9	reader_start.qnt
+T04	start_mono	inv_code2_confirmed	property	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	ok	ok	yes	0.8	reader_start.qnt
+T05	start_mono	wit_serve_after_outage	witness	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	violation	violation	yes	0.7	reader_start.qnt
+T06	start_mono	wit_code1	witness	verify	8		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	violation	violation	yes	0.6	reader_start.qnt
+T07	start_mono	wit_code2	witness	verify	6		START_WAIT=60, CLOCK="mono", JUMP=100, DTS=Set(1, 30, 60)	violation	violation	yes	0.6	reader_start.qnt
+T08	start_wall_fw	inv_code1_only_after_wait	witness	verify	6		START_WAIT=60, CLOCK="wall", JUMP=100, DTS=Set(1, 30, 60)	violation	violation	yes	0.6	reader_start.qnt
+T09	start_wall_fw	wit_wall_jump_premature_code1	witness	verify	6		START_WAIT=60, CLOCK="wall", JUMP=100, DTS=Set(1, 30, 60)	violation	violation	yes	0.6	reader_start.qnt
+T10	start_wall_back	inv_wait_real_bounded	witness	verify	8		START_WAIT=60, CLOCK="wall", JUMP=-100, DTS=Set(1, 30, 60)	violation	violation	yes	0.7	reader_start.qnt
+T11	start_wall_back	wit_wall_jump_long_wait	witness	verify	8		START_WAIT=60, CLOCK="wall", JUMP=-100, DTS=Set(1, 30, 60)	violation	violation	yes	0.7	reader_start.qnt
+M01	mark_norm	wit_stale_after_restore_lower	witness	verify	8		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M02	mark_norm	wit_new_differs	witness	verify	9		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M03	mark_norm	wit_stop_on_rise	witness	verify	10		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M04	mark_norm	wit_equal_rev_other_content	witness	verify	12		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M05	mark_norm	inv_no_stale_at_equal_rev	witness	verify	12		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M06	mark_ctrl	inv_no_stale_at_equal_rev	control	verify	14		CMP_DIG=true, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	ok	ok	yes	3.0	reader_mark.qnt
+M07	mark_ctrl	wit_stops_on_equal_rev_ctrl	witness	verify	12		CMP_DIG=true, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M08	mark_ctrl	wit_stale_after_restore_lower	witness	verify	8		CMP_DIG=true, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	violation	violation	yes	0.7	reader_mark.qnt
+M09	mark_wall	wit_poll_delayed_by_backward_jump	witness	verify	8		CMP_DIG=false, CLOCK="wall", PERIOD=30, JUMP=-100, DTS=Set(1, 30, 40)	violation	violation	yes	0.7	reader_mark.qnt
+M10	mark_norm	inv_stop_within_period	property	verify	10		CMP_DIG=false, CLOCK="mono", PERIOD=30, JUMP=-100, DTS=Set(1, 30)	ok	ok	yes	1.3	reader_mark.qnt
+H01	herd_norm	wit_all_at_once	witness	verify	8		NP=3, PERIOD=4, STAGGER=0, DOWN=1, OFFSETS=Set(0, 3)	violation	violation	yes	0.5	reader_herd.qnt
+H02	herd_norm	inv_burst_le_1	witness	verify	8		NP=3, PERIOD=4, STAGGER=0, DOWN=1, OFFSETS=Set(0, 3)	violation	violation	yes	0.5	reader_herd.qnt
+H03	herd_stagger	inv_burst_le_1	control	verify	23		NP=3, PERIOD=4, STAGGER=5, DOWN=1, OFFSETS=Set(0, 3)	ok	ok	yes	2.3	reader_herd.qnt
+H04	herd_stagger	wit_spread_max_one	witness	verify	23		NP=3, PERIOD=4, STAGGER=5, DOWN=1, OFFSETS=Set(0, 3)	violation	violation	yes	0.6	reader_herd.qnt
+H05	herd_mut_zero	inv_burst_le_1	mutant	verify	8		NP=3, PERIOD=4, STAGGER=0, DOWN=1, OFFSETS=Set(0, 3)	violation	violation	yes	0.5	reader_herd.qnt
+P01	pub_norm	inv_no_empty_after_crash	witness	verify	5		FS_EMPTY=true, BARRIER_DATA=false, BARRIER_DIR=false	violation	violation	yes	0.5	file_publish.qnt
+P02	pub_norm	wit_empty_file_after_crash	witness	verify	5		FS_EMPTY=true, BARRIER_DATA=false, BARRIER_DIR=false	violation	violation	yes	0.5	file_publish.qnt
+P03	pub_noempty	inv_no_empty_after_crash	property	verify	6		FS_EMPTY=false, BARRIER_DATA=false, BARRIER_DIR=false	ok	ok	yes	0.5	file_publish.qnt
+P04	pub_norm	wit_lost_publication	witness	verify	6		FS_EMPTY=true, BARRIER_DATA=false, BARRIER_DIR=false	violation	violation	yes	0.5	file_publish.qnt
+P05	pub_ctrl	inv_no_empty_after_crash	control	verify	6		FS_EMPTY=true, BARRIER_DATA=true, BARRIER_DIR=true	ok	ok	yes	0.5	file_publish.qnt
+P06	pub_ctrl	inv_reported_survives	control	verify	6		FS_EMPTY=true, BARRIER_DATA=true, BARRIER_DIR=true	ok	ok	yes	0.5	file_publish.qnt
+P07	pub_ctrl	wit_normal_publish	witness	verify	6		FS_EMPTY=true, BARRIER_DATA=true, BARRIER_DIR=true	violation	violation	yes	0.5	file_publish.qnt
+P08	pub_mut_nodata	inv_no_empty_after_crash	mutant	verify	5		FS_EMPTY=true, BARRIER_DATA=false, BARRIER_DIR=true	violation	violation	yes	0.5	file_publish.qnt
+P09	pub_mut_nodir	inv_reported_survives	mutant	verify	6		FS_EMPTY=true, BARRIER_DATA=true, BARRIER_DIR=false	violation	violation	yes	0.5	file_publish.qnt
+K1	cost_s2_p4	wit_done	witness	verify	10		S=2, P=4, W=4, D=4, C=0, UNCHANGED=false	violation	violation	yes	0.5	put_cost.qnt
+L1	cost_s2_p4	inv_reads_expected	property	verify	10		S=2, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q1	cost_s2_p4	inv_writes_expected	property	verify	10		S=2, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K2	cost_s8_p4	wit_done	witness	verify	10		S=8, P=4, W=4, D=4, C=0, UNCHANGED=false	violation	violation	yes	0.5	put_cost.qnt
+L2	cost_s8_p4	inv_reads_expected	property	verify	10		S=8, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q2	cost_s8_p4	inv_writes_expected	property	verify	10		S=8, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K3	cost_s64_p4	wit_done	witness	verify	10		S=64, P=4, W=4, D=4, C=0, UNCHANGED=false	violation	violation	yes	0.5	put_cost.qnt
+L3	cost_s64_p4	inv_reads_expected	property	verify	10		S=64, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q3	cost_s64_p4	inv_writes_expected	property	verify	10		S=64, P=4, W=4, D=4, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K4	cost_s2_p32	wit_done	witness	verify	10		S=2, P=32, W=32, D=32, C=0, UNCHANGED=false	violation	violation	yes	0.5	put_cost.qnt
+L4	cost_s2_p32	inv_reads_expected	property	verify	10		S=2, P=32, W=32, D=32, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q4	cost_s2_p32	inv_writes_expected	property	verify	10		S=2, P=32, W=32, D=32, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K5	cost_s2_p128	wit_done	witness	verify	10		S=2, P=128, W=128, D=128, C=0, UNCHANGED=false	violation	violation	yes	0.5	put_cost.qnt
+L5	cost_s2_p128	inv_reads_expected	property	verify	10		S=2, P=128, W=128, D=128, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q5	cost_s2_p128	inv_writes_expected	property	verify	10		S=2, P=128, W=128, D=128, C=0, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K6	cost_s8_p128_c3	wit_done	witness	verify	19		S=8, P=128, W=128, D=128, C=3, UNCHANGED=false	violation	violation	yes	0.6	put_cost.qnt
+L6	cost_s8_p128_c3	inv_reads_expected	property	verify	19		S=8, P=128, W=128, D=128, C=3, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+Q6	cost_s8_p128_c3	inv_writes_expected	property	verify	19		S=8, P=128, W=128, D=128, C=3, UNCHANGED=false	ok	ok	yes	0.5	put_cost.qnt
+K7	cost_s64_p128_unch	wit_done	witness	verify	10		S=64, P=128, W=0, D=0, C=0, UNCHANGED=true	violation	violation	yes	0.5	put_cost.qnt
+L7	cost_s64_p128_unch	inv_reads_expected	property	verify	10		S=64, P=128, W=0, D=0, C=0, UNCHANGED=true	ok	ok	yes	0.5	put_cost.qnt
+Q7	cost_s64_p128_unch	inv_writes_expected	property	verify	10		S=64, P=128, W=0, D=0, C=0, UNCHANGED=true	ok	ok	yes	0.5	put_cost.qnt
+Z01	race_norm	inv_mark_never_fell	property	run	40	3000	N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	1.8	put_race.qnt
+Z02	race_norm	inv_mark_le_row	property	run	40	3000	N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	1.8	put_race.qnt
+Z03	race_guard_post	inv_published_whole	control	run	40	3000	N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	1.9	put_race.qnt
+Z04	race_guard_post_rev	inv_published_whole	control	run	40	3000	N=2, D2=1, D3=3, VIEW_FIRST=false, ATOMIC19=false, CLEAN="guard", POSTPARTS=true, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	ok	yes	1.8	put_race.qnt
+Z05	race_three_mid_viewfirst	inv_view_never_fell	control	run	40	3000	N=2, D2=3, D3=4, VIEW_FIRST=true, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=true, COARSE=false	ok	ok	yes	1.8	put_race.qnt
+Z06	race_break	inv_recovered	property	run	40	3000	N=2, D2=2, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="norm", POSTPARTS=false, SEQ=true, CRASH=true, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=false	ok	ok	yes	2.0	put_race.qnt
+Z07	race_known	inv_row_names_parts	control	run	40	3000	N=2, D2=3, D3=3, VIEW_FIRST=false, ATOMIC19=true, CLEAN="known", POSTPARTS=false, SEQ=false, CRASH=false, FOREIGN=false, BUDGET=-1, MARK_CAS=true, ENFORCE=true, MID=false, COARSE=true	ok	violation	NO	1.1	put_race.qnt

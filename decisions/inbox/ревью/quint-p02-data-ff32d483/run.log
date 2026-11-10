@@ -1,0 +1,444 @@
+[23:23:51] R01 race_norm inv_row_names_parts rc=1 7.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_norm --max-steps 8 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_norm.qnt
+    out: } | [violation] Found an issue (6751ms). | error: found a counterexample
+[23:23:59] R02 race_norm wit_foreign_parts_deleted rc=1 8.0s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_norm --max-steps 9 --invariant wit_foreign_parts_deleted --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_norm.qnt
+    out: } | [violation] Found an issue (6788ms). | error: found a counterexample
+[23:24:17] R03 race_norm wit_published_row_no_parts rc=1 17.9s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_norm --max-steps 11 --invariant wit_published_row_no_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_norm.qnt
+    out: } | [violation] Found an issue (16682ms). | error: found a counterexample
+[23:24:22] R04 race_atomic19 inv_row_names_parts rc=1 4.8s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_atomic19 --max-steps 8 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_atomic19.qnt
+    out: } | [violation] Found an issue (3579ms). | error: found a counterexample
+[23:25:04] R05 race_fine inv_mark_le_row rc=0 41.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_fine --max-steps 9 --invariant inv_mark_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_fine.qnt
+    out: [ok] No violation found (40664ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:25:38] R06 race_fine inv_mark_never_fell rc=0 34.9s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_fine --max-steps 9 --invariant inv_mark_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_fine.qnt
+    out: [ok] No violation found (33744ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:26:16] R07 race_fine inv_view_never_fell rc=0 37.1s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_fine --max-steps 9 --invariant inv_view_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_fine.qnt
+    out: [ok] No violation found (35968ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:28:03] R08 race_atomic19 inv_quiescent_published rc=0 107.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_atomic19 --max-steps 11 --invariant inv_quiescent_published --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_atomic19.qnt
+    out: [ok] No violation found (106344ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:28:11] R09 race_seq wit_two_installers_finish rc=1 7.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_seq --max-steps 15 --invariant wit_two_installers_finish --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_seq.qnt
+    out: } | [violation] Found an issue (6355ms). | error: found a counterexample
+[23:28:19] R10 race_atomic19 wit_lagging_mark_not_lowered rc=1 8.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_atomic19 --max-steps 10 --invariant wit_lagging_mark_not_lowered --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_atomic19.qnt
+    out: } | [violation] Found an issue (7458ms). | error: found a counterexample
+[23:34:59] R11 race_nomark_cas inv_mark_never_fell rc=1 400.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_nomark_cas --max-steps 13 --invariant inv_mark_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R11.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_nomark_cas.qnt
+    out: } | [violation] Found an issue (399054ms). | error: found a counterexample
+[23:36:16] R12 race_known inv_row_names_parts rc=1 76.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_known --max-steps 11 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R12.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_known.qnt
+    out: } | [violation] Found an issue (75598ms). | error: found a counterexample
+[23:36:23] R13 race_known_revert inv_row_names_parts rc=1 6.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_known_revert --max-steps 9 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R13.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_known_revert.qnt
+    out: } | [violation] Found an issue (5522ms). | error: found a counterexample
+[23:40:11] R14 race_guard_post inv_published_whole rc=0 228.0s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_guard_post --max-steps 11 --invariant inv_published_whole --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R14.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post.qnt
+    out: [ok] No violation found (226804ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:40:27] R15 race_guard_post inv_row_names_parts rc=1 15.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_guard_post --max-steps 9 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R15.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post.qnt
+    out: } | [violation] Found an issue (14475ms). | error: found a counterexample
+[23:42:33] R16 race_guard_post_rev inv_published_whole rc=0 126.0s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_guard_post_rev --max-steps 11 --invariant inv_published_whole --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R16.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post_rev.qnt
+    out: [ok] No violation found (124791ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:42:44] R17 race_known_revert inv_published_whole rc=1 11.0s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_known_revert --max-steps 11 --invariant inv_published_whole --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R17.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_known_revert.qnt
+    out: } | [violation] Found an issue (9846ms). | error: found a counterexample
+[23:43:03] R18 race_mut_guard_only inv_published_whole rc=1 19.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_mut_guard_only --max-steps 10 --invariant inv_published_whole --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R18.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_mut_guard_only.qnt
+    out: } | [violation] Found an issue (18421ms). | error: found a counterexample
+[23:43:17] R19 race_mut_post_only inv_row_names_parts rc=1 14.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_mut_post_only --max-steps 10 --invariant inv_row_names_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R19.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_mut_post_only.qnt
+    out: } | [violation] Found an issue (12989ms). | error: found a counterexample
+[23:43:27] R20 race_guard_post wit_step19_race rc=1 10.1s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_guard_post --max-steps 9 --invariant wit_step19_race --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R20.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post.qnt
+    out: } | [violation] Found an issue (8860ms). | error: found a counterexample
+[23:43:38] R30 race_three_full_rowfirst wit_mid_state rc=1 10.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_full_rowfirst --max-steps 8 --invariant wit_mid_state --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R30.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_full_rowfirst.qnt
+    out: } | [violation] Found an issue (9349ms). | error: found a counterexample
+[23:44:00] R31 race_three_mid_rowfirst inv_view_never_fell rc=1 22.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_rowfirst --max-steps 9 --invariant inv_view_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R31.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_rowfirst.qnt
+    out: } | [violation] Found an issue (21054ms). | error: found a counterexample
+[23:44:24] R32 race_three_mid_rowfirst wit_three_install_order rc=1 23.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_rowfirst --max-steps 9 --invariant wit_three_install_order --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R32.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_rowfirst.qnt
+    out: } | [violation] Found an issue (22303ms). | error: found a counterexample
+[23:45:56] R33 race_three_mid_rowfirst wit_view_fell_mark_row rc=1 91.8s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_rowfirst --max-steps 11 --invariant wit_view_fell_mark_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R33.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_rowfirst.qnt
+    out: } | [violation] Found an issue (90635ms). | error: found a counterexample
+[23:50:37] R34 race_three_mid_viewfirst inv_view_never_fell rc=0 281.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_viewfirst --max-steps 11 --invariant inv_view_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R34.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_viewfirst.qnt
+    out: [ok] No violation found (280321ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:51:55] R35 race_three_mid_viewfirst inv_mark_le_row rc=0 77.6s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_viewfirst --max-steps 9 --invariant inv_mark_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R35.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_viewfirst.qnt
+    out: [ok] No violation found (76421ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:52:58] R36 race_three_mid_rowfirst inv_mark_never_fell rc=0 63.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_three_mid_rowfirst --max-steps 9 --invariant inv_mark_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R36.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_rowfirst.qnt
+    out: [ok] No violation found (62313ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:53:05] R40 race_foreign wit_conflicts_3 rc=1 6.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign --max-steps 13 --invariant wit_conflicts_3 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R40.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign.qnt
+    out: } | [violation] Found an issue (5662ms). | error: found a counterexample
+[23:53:37] R41 race_foreign wit_conflicts_5 rc=1 31.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign --max-steps 21 --invariant wit_conflicts_5 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R41.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign.qnt
+    out: } | [violation] Found an issue (30719ms). | error: found a counterexample
+[23:53:53] R42 race_foreign_budget inv_conflicts_bounded rc=0 16.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign_budget --max-steps 16 --invariant inv_conflicts_bounded --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R42.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign_budget.qnt
+    out: [ok] No violation found (15146ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:53:59] R43 race_foreign_budget wit_refused_by_budget rc=1 5.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign_budget --max-steps 13 --invariant wit_refused_by_budget --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R43.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign_budget.qnt
+    out: } | [violation] Found an issue (4392ms). | error: found a counterexample
+[23:54:11] R44 race_foreign_budget_mut inv_conflicts_bounded rc=1 12.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign_budget_mut --max-steps 17 --invariant inv_conflicts_bounded --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R44.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign_budget_mut.qnt
+    out: } | [violation] Found an issue (11602ms). | error: found a counterexample
+[23:54:20] R45 race_foreign inv_mark_le_row rc=0 8.2s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_foreign --max-steps 12 --invariant inv_mark_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R45.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_foreign.qnt
+    out: [ok] No violation found (7037ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:55:11] R46 race_two_budget inv_mark_never_fell rc=0 51.1s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_two_budget --max-steps 10 --invariant inv_mark_never_fell --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/R46.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_two_budget.qnt
+    out: [ok] No violation found (49995ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[23:56:43] B01 race_break inv_prev_whole rc=0 92.2s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 10 --invariant inv_prev_whole --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: [ok] No violation found (91070ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:00:06] B02 race_break inv_recovered rc=0 202.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 13 --invariant inv_recovered --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: [ok] No violation found (201701ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:05:23] B03 race_break_other inv_recovered rc=0 317.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break_other --max-steps 13 --invariant inv_recovered --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break_other.qnt
+    out: [ok] No violation found (316130ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:05:28] B04 race_break wit_row_without_mark_after_break rc=1 5.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 7 --invariant wit_row_without_mark_after_break --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: } | [violation] Found an issue (3998ms). | error: found a counterexample
+[00:05:35] B05 race_break wit_view_without_mark_after_break rc=1 6.3s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 8 --invariant wit_view_without_mark_after_break --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: } | [violation] Found an issue (5068ms). | error: found a counterexample
+[00:07:53] B06 race_break wit_recovery_rev_jumps rc=1 138.4s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 13 --invariant wit_recovery_rev_jumps --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: } | [violation] Found an issue (137218ms). | error: found a counterexample
+[00:08:25] B07 race_break wit_recovery_unchanged rc=1 32.3s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 11 --invariant wit_recovery_unchanged --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: } | [violation] Found an issue (31087ms). | error: found a counterexample
+[00:09:20] B08 race_break wit_old_parts_left_unchanged rc=1 54.3s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main race_break --max-steps 13 --invariant wit_old_parts_left_unchanged --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/B08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: } | [violation] Found an issue (53101ms). | error: found a counterexample
+[00:09:21] W01 cat_norm inv_catalogue_valid rc=1 0.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_norm --max-steps 8 --invariant inv_catalogue_valid --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_norm.qnt
+    out: } | [violation] Found an issue (396ms). | error: found a counterexample
+[00:09:21] W02 cat_norm wit_both_checked_clean rc=1 0.9s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_norm --max-steps 8 --invariant wit_both_checked_clean --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_norm.qnt
+    out: } | [violation] Found an issue (359ms). | error: found a counterexample
+[00:09:22] W03 cat_norm wit_reader_code2 rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_norm --max-steps 8 --invariant wit_reader_code2 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_norm.qnt
+    out: } | [violation] Found an issue (424ms). | error: found a counterexample
+[00:09:24] W04 cat_window inv_catalogue_valid rc=0 1.2s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_window --max-steps 10 --invariant inv_catalogue_valid --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_window.qnt
+    out: [ok] No violation found (700ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:24] W05 cat_window wit_second_refused rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_window --max-steps 6 --invariant wit_second_refused --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_window.qnt
+    out: } | [violation] Found an issue (301ms). | error: found a counterexample
+[00:09:27] W06 cat_recheck inv_bad_reported rc=0 2.2s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_recheck --max-steps 10 --invariant inv_bad_reported --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_recheck.qnt
+    out: [ok] No violation found (1651ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:27] W07 cat_recheck inv_catalogue_valid rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_recheck --max-steps 8 --invariant inv_catalogue_valid --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_recheck.qnt
+    out: } | [violation] Found an issue (325ms). | error: found a counterexample
+[00:09:29] W08 cat_lock inv_no_bad_writes_with_lock rc=0 1.1s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_lock --max-steps 10 --invariant inv_no_bad_writes_with_lock --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_lock.qnt
+    out: [ok] No violation found (618ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:29] W09 cat_lock_crash wit_lock_stuck rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_lock_crash --max-steps 8 --invariant wit_lock_stuck --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_lock_crash.qnt
+    out: } | [violation] Found an issue (303ms). | error: found a counterexample
+[00:09:30] W10 cat_norm wit_all_ok_no_report rc=1 0.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cat_norm --max-steps 8 --invariant wit_all_ok_no_report --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/W10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cat_norm.qnt
+    out: } | [violation] Found an issue (361ms). | error: found a counterexample
+[00:09:31] O01 out_silent inv_no_false_success rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 10 --invariant inv_no_false_success --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: } | [violation] Found an issue (480ms). | error: found a counterexample
+[00:09:32] O02 out_silent wit_code0_row_applied_mark_missing rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 10 --invariant wit_code0_row_applied_mark_missing --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: } | [violation] Found an issue (510ms). | error: found a counterexample
+[00:09:33] O03 out_silent wit_code0_parts_only rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 8 --invariant wit_code0_parts_only --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: } | [violation] Found an issue (459ms). | error: found a counterexample
+[00:09:39] O04 out_silent inv_mark_le_row rc=0 5.4s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 12 --invariant inv_mark_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: [ok] No violation found (4832ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:43] O05 out_silent inv_view_le_row rc=0 4.6s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 12 --invariant inv_view_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: [ok] No violation found (4047ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:46] O06 out_silent inv_parts_before_row rc=0 2.7s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 12 --invariant inv_parts_before_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: [ok] No violation found (2131ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:47] O07 out_silent inv_rerun_converges rc=1 1.1s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent --max-steps 14 --invariant inv_rerun_converges --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent.qnt
+    out: } | [violation] Found an issue (530ms). | error: found a counterexample
+[00:09:50] O08 out_ctrl inv_no_false_success rc=0 2.9s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl --max-steps 14 --invariant inv_no_false_success --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl.qnt
+    out: [ok] No violation found (2402ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:53] O09 out_ctrl inv_rerun_converges rc=0 2.6s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl --max-steps 14 --invariant inv_rerun_converges --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl.qnt
+    out: [ok] No violation found (2117ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:53] O10 out_ctrl wit_ambiguous_applied_retry rc=1 0.9s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl --max-steps 8 --invariant wit_ambiguous_applied_retry --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl.qnt
+    out: } | [violation] Found an issue (408ms). | error: found a counterexample
+[00:09:55] O11 out_ctrl wit_rerun_after_exit1 rc=1 1.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl --max-steps 16 --invariant wit_rerun_after_exit1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O11.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl.qnt
+    out: } | [violation] Found an issue (710ms). | error: found a counterexample
+[00:09:56] O12 out_ctrl_nomem_norerun inv_rev_one_step rc=1 1.1s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl_nomem_norerun --max-steps 14 --invariant inv_rev_one_step --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O12.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl_nomem_norerun.qnt
+    out: } | [violation] Found an issue (527ms). | error: found a counterexample
+[00:09:57] O13 out_ctrl_norerun inv_rev_one_step rc=0 1.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl_norerun --max-steps 14 --invariant inv_rev_one_step --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O13.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl_norerun.qnt
+    out: [ok] No violation found (774ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:09:58] O14 out_mut_continue inv_mark_le_row rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_mut_continue --max-steps 10 --invariant inv_mark_le_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O14.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_mut_continue.qnt
+    out: } | [violation] Found an issue (451ms). | error: found a counterexample
+[00:09:59] O15 out_mut_continue wit_mark_above_row rc=1 1.0s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_mut_continue --max-steps 10 --invariant wit_mark_above_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O15.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_mut_continue.qnt
+    out: } | [violation] Found an issue (435ms). | error: found a counterexample
+[00:10:01] O16 out_silent_norerun inv_rev_one_step rc=0 1.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_silent_norerun --max-steps 12 --invariant inv_rev_one_step --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O16.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_silent_norerun.qnt
+    out: [ok] No violation found (1283ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:02] O17 out_ctrl inv_rev_one_step rc=1 1.2s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main out_ctrl --max-steps 14 --invariant inv_rev_one_step --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/O17.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/out_ctrl.qnt
+    out: } | [violation] Found an issue (646ms). | error: found a counterexample
+[00:10:03] G01 wgt_raised inv_nothing_on_toolarge rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_raised --max-steps 8 --invariant inv_nothing_on_toolarge --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_raised.qnt
+    out: } | [violation] Found an issue (279ms). | error: found a counterexample
+[00:10:04] G02 wgt_raised wit_view413_after_row rc=1 0.8s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_raised --max-steps 8 --invariant wit_view413_after_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_raised.qnt
+    out: } | [violation] Found an issue (278ms). | error: found a counterexample
+[00:10:04] G03 wgt_default_view wit_view413_after_row rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_default_view --max-steps 8 --invariant wit_view413_after_row --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_default_view.qnt
+    out: } | [violation] Found an issue (277ms). | error: found a counterexample
+[00:10:05] G04 wgt_ctrl inv_nothing_on_toolarge rc=0 0.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl --max-steps 8 --invariant inv_nothing_on_toolarge --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl.qnt
+    out: [ok] No violation found (282ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:06] G05 wgt_ctrl inv_no_row_without_view rc=0 0.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl --max-steps 8 --invariant inv_no_row_without_view --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl.qnt
+    out: [ok] No violation found (282ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:07] G06 wgt_ctrl wit_refused_precheck rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl --max-steps 6 --invariant wit_refused_precheck --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl.qnt
+    out: } | [violation] Found an issue (276ms). | error: found a counterexample
+[00:10:07] G07 wgt_raised inv_no_row_without_view rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_raised --max-steps 8 --invariant inv_no_row_without_view --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_raised.qnt
+    out: } | [violation] Found an issue (279ms). | error: found a counterexample
+[00:10:08] G08 wgt_raised wit_rev_climbs rc=1 0.8s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_raised --max-steps 12 --invariant wit_rev_climbs --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_raised.qnt
+    out: } | [violation] Found an issue (286ms). | error: found a counterexample
+[00:10:09] G09 wgt_row413 wit_row413_after_parts rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_row413 --max-steps 6 --invariant wit_row413_after_parts --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_row413.qnt
+    out: } | [violation] Found an issue (279ms). | error: found a counterexample
+[00:10:10] G10 wgt_row413 inv_orphans_le_1 rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_row413 --max-steps 14 --invariant inv_orphans_le_1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_row413.qnt
+    out: } | [violation] Found an issue (288ms). | error: found a counterexample
+[00:10:11] G11 wgt_row413 inv_orphans_le_2 rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_row413 --max-steps 18 --invariant inv_orphans_le_2 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G11.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_row413.qnt
+    out: } | [violation] Found an issue (293ms). | error: found a counterexample
+[00:10:11] G12 wgt_ctrl_row inv_no_orphan_at_all rc=0 0.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl_row --max-steps 12 --invariant inv_no_orphan_at_all --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G12.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl_row.qnt
+    out: [ok] No violation found (294ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:12] G13 wgt_ctrl_crash wit_crash_orphan rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl_crash --max-steps 6 --invariant wit_crash_orphan --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G13.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl_crash.qnt
+    out: } | [violation] Found an issue (275ms). | error: found a counterexample
+[00:10:13] G14 wgt_ctrl_crash inv_no_orphan_at_all rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl_crash --max-steps 6 --invariant inv_no_orphan_at_all --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G14.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl_crash.qnt
+    out: } | [violation] Found an issue (276ms). | error: found a counterexample
+[00:10:14] G15 wgt_ctrl_crash wit_orphans_cleared rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_ctrl_crash --max-steps 14 --invariant wit_orphans_cleared --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G15.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_ctrl_crash.qnt
+    out: } | [violation] Found an issue (311ms). | error: found a counterexample
+[00:10:14] G16 wgt_fine wit_published rc=1 0.8s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main wgt_fine --max-steps 8 --invariant wit_published --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/G16.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/wgt_fine.qnt
+    out: } | [violation] Found an issue (280ms). | error: found a counterexample
+[00:10:15] T01 start_mono inv_no_serve_unconfirmed rc=0 0.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant inv_no_serve_unconfirmed --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: [ok] No violation found (412ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:16] T02 start_mono inv_code1_only_after_wait rc=0 0.9s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant inv_code1_only_after_wait --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: [ok] No violation found (447ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:17] T03 start_mono inv_wait_real_bounded rc=0 0.9s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant inv_wait_real_bounded --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: [ok] No violation found (437ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:18] T04 start_mono inv_code2_confirmed rc=0 0.8s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant inv_code2_confirmed --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: [ok] No violation found (386ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:19] T05 start_mono wit_serve_after_outage rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant wit_serve_after_outage --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: } | [violation] Found an issue (244ms). | error: found a counterexample
+[00:10:19] T06 start_mono wit_code1 rc=1 0.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 8 --invariant wit_code1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: } | [violation] Found an issue (208ms). | error: found a counterexample
+[00:10:20] T07 start_mono wit_code2 rc=1 0.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_mono --max-steps 6 --invariant wit_code2 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_mono.qnt
+    out: } | [violation] Found an issue (192ms). | error: found a counterexample
+[00:10:20] T08 start_wall_fw inv_code1_only_after_wait rc=1 0.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_wall_fw --max-steps 6 --invariant inv_code1_only_after_wait --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_wall_fw.qnt
+    out: } | [violation] Found an issue (210ms). | error: found a counterexample
+[00:10:21] T09 start_wall_fw wit_wall_jump_premature_code1 rc=1 0.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_wall_fw --max-steps 6 --invariant wit_wall_jump_premature_code1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_wall_fw.qnt
+    out: } | [violation] Found an issue (208ms). | error: found a counterexample
+[00:10:22] T10 start_wall_back inv_wait_real_bounded rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_wall_back --max-steps 8 --invariant inv_wait_real_bounded --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_wall_back.qnt
+    out: } | [violation] Found an issue (233ms). | error: found a counterexample
+[00:10:22] T11 start_wall_back wit_wall_jump_long_wait rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main start_wall_back --max-steps 8 --invariant wit_wall_jump_long_wait --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/T11.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/start_wall_back.qnt
+    out: } | [violation] Found an issue (233ms). | error: found a counterexample
+[00:10:23] M01 mark_norm wit_stale_after_restore_lower rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 8 --invariant wit_stale_after_restore_lower --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: } | [violation] Found an issue (236ms). | error: found a counterexample
+[00:10:24] M02 mark_norm wit_new_differs rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 9 --invariant wit_new_differs --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: } | [violation] Found an issue (250ms). | error: found a counterexample
+[00:10:25] M03 mark_norm wit_stop_on_rise rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 10 --invariant wit_stop_on_rise --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: } | [violation] Found an issue (271ms). | error: found a counterexample
+[00:10:25] M04 mark_norm wit_equal_rev_other_content rc=1 0.7s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 12 --invariant wit_equal_rev_other_content --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: } | [violation] Found an issue (261ms). | error: found a counterexample
+[00:10:26] M05 mark_norm inv_no_stale_at_equal_rev rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 12 --invariant inv_no_stale_at_equal_rev --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: } | [violation] Found an issue (261ms). | error: found a counterexample
+[00:10:29] M06 mark_ctrl inv_no_stale_at_equal_rev rc=0 3.0s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_ctrl --max-steps 14 --invariant inv_no_stale_at_equal_rev --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_ctrl.qnt
+    out: [ok] No violation found (2518ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:30] M07 mark_ctrl wit_stops_on_equal_rev_ctrl rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_ctrl --max-steps 12 --invariant wit_stops_on_equal_rev_ctrl --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_ctrl.qnt
+    out: } | [violation] Found an issue (257ms). | error: found a counterexample
+[00:10:31] M08 mark_ctrl wit_stale_after_restore_lower rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_ctrl --max-steps 8 --invariant wit_stale_after_restore_lower --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_ctrl.qnt
+    out: } | [violation] Found an issue (238ms). | error: found a counterexample
+[00:10:31] M09 mark_wall wit_poll_delayed_by_backward_jump rc=1 0.7s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_wall --max-steps 8 --invariant wit_poll_delayed_by_backward_jump --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_wall.qnt
+    out: } | [violation] Found an issue (235ms). | error: found a counterexample
+[00:10:33] M10 mark_norm inv_stop_within_period rc=0 1.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main mark_norm --max-steps 10 --invariant inv_stop_within_period --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/M10.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/mark_norm.qnt
+    out: [ok] No violation found (796ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:33] H01 herd_norm wit_all_at_once rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main herd_norm --max-steps 8 --invariant wit_all_at_once --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/H01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/herd_norm.qnt
+    out: } | [violation] Found an issue (132ms). | error: found a counterexample
+[00:10:34] H02 herd_norm inv_burst_le_1 rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main herd_norm --max-steps 8 --invariant inv_burst_le_1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/H02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/herd_norm.qnt
+    out: } | [violation] Found an issue (116ms). | error: found a counterexample
+[00:10:36] H03 herd_stagger inv_burst_le_1 rc=0 2.3s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main herd_stagger --max-steps 23 --invariant inv_burst_le_1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/H03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/herd_stagger.qnt
+    out: [ok] No violation found (1933ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:37] H04 herd_stagger wit_spread_max_one rc=1 0.6s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main herd_stagger --max-steps 23 --invariant wit_spread_max_one --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/H04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/herd_stagger.qnt
+    out: } | [violation] Found an issue (185ms). | error: found a counterexample
+[00:10:37] H05 herd_mut_zero inv_burst_le_1 rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main herd_mut_zero --max-steps 8 --invariant inv_burst_le_1 --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/H05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/herd_mut_zero.qnt
+    out: } | [violation] Found an issue (115ms). | error: found a counterexample
+[00:10:38] P01 pub_norm inv_no_empty_after_crash rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_norm --max-steps 5 --invariant inv_no_empty_after_crash --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P01.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_norm.qnt
+    out: } | [violation] Found an issue (97ms). | error: found a counterexample
+[00:10:38] P02 pub_norm wit_empty_file_after_crash rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_norm --max-steps 5 --invariant wit_empty_file_after_crash --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P02.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_norm.qnt
+    out: } | [violation] Found an issue (97ms). | error: found a counterexample
+[00:10:39] P03 pub_noempty inv_no_empty_after_crash rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_noempty --max-steps 6 --invariant inv_no_empty_after_crash --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P03.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_noempty.qnt
+    out: [ok] No violation found (103ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:39] P04 pub_norm wit_lost_publication rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_norm --max-steps 6 --invariant wit_lost_publication --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P04.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_norm.qnt
+    out: } | [violation] Found an issue (100ms). | error: found a counterexample
+[00:10:39] P05 pub_ctrl inv_no_empty_after_crash rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_ctrl --max-steps 6 --invariant inv_no_empty_after_crash --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P05.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_ctrl.qnt
+    out: [ok] No violation found (106ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:40] P06 pub_ctrl inv_reported_survives rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_ctrl --max-steps 6 --invariant inv_reported_survives --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P06.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_ctrl.qnt
+    out: [ok] No violation found (108ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:40] P07 pub_ctrl wit_normal_publish rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_ctrl --max-steps 6 --invariant wit_normal_publish --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P07.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_ctrl.qnt
+    out: } | [violation] Found an issue (106ms). | error: found a counterexample
+[00:10:41] P08 pub_mut_nodata inv_no_empty_after_crash rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_mut_nodata --max-steps 5 --invariant inv_no_empty_after_crash --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P08.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_mut_nodata.qnt
+    out: } | [violation] Found an issue (97ms). | error: found a counterexample
+[00:10:41] P09 pub_mut_nodir inv_reported_survives rc=1 0.5s expect=violation actual=violation match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main pub_mut_nodir --max-steps 6 --invariant inv_reported_survives --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/P09.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/pub_mut_nodir.qnt
+    out: } | [violation] Found an issue (105ms). | error: found a counterexample
+[00:10:42] K1 cost_s2_p4 wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p4 --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K1.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p4.qnt
+    out: } | [violation] Found an issue (135ms). | error: found a counterexample
+[00:10:42] L1 cost_s2_p4 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p4 --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L1.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p4.qnt
+    out: [ok] No violation found (152ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:43] Q1 cost_s2_p4 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p4 --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q1.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p4.qnt
+    out: [ok] No violation found (137ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:44] K2 cost_s8_p4 wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p4 --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K2.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p4.qnt
+    out: } | [violation] Found an issue (135ms). | error: found a counterexample
+[00:10:44] L2 cost_s8_p4 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p4 --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L2.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p4.qnt
+    out: [ok] No violation found (141ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:45] Q2 cost_s8_p4 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p4 --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q2.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p4.qnt
+    out: [ok] No violation found (137ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:45] K3 cost_s64_p4 wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p4 --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K3.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p4.qnt
+    out: } | [violation] Found an issue (133ms). | error: found a counterexample
+[00:10:46] L3 cost_s64_p4 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p4 --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L3.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p4.qnt
+    out: [ok] No violation found (140ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:46] Q3 cost_s64_p4 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p4 --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q3.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p4.qnt
+    out: [ok] No violation found (137ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:47] K4 cost_s2_p32 wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p32 --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K4.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p32.qnt
+    out: } | [violation] Found an issue (135ms). | error: found a counterexample
+[00:10:47] L4 cost_s2_p32 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p32 --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L4.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p32.qnt
+    out: [ok] No violation found (140ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:48] Q4 cost_s2_p32 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p32 --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q4.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p32.qnt
+    out: [ok] No violation found (137ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:48] K5 cost_s2_p128 wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p128 --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K5.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p128.qnt
+    out: } | [violation] Found an issue (135ms). | error: found a counterexample
+[00:10:49] L5 cost_s2_p128 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p128 --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L5.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p128.qnt
+    out: [ok] No violation found (139ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:49] Q5 cost_s2_p128 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s2_p128 --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q5.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s2_p128.qnt
+    out: [ok] No violation found (138ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:50] K6 cost_s8_p128_c3 wit_done rc=1 0.6s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p128_c3 --max-steps 19 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K6.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p128_c3.qnt
+    out: } | [violation] Found an issue (170ms). | error: found a counterexample
+[00:10:50] L6 cost_s8_p128_c3 inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p128_c3 --max-steps 19 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L6.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p128_c3.qnt
+    out: [ok] No violation found (159ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:51] Q6 cost_s8_p128_c3 inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s8_p128_c3 --max-steps 19 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q6.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s8_p128_c3.qnt
+    out: [ok] No violation found (157ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:51] K7 cost_s64_p128_unch wit_done rc=1 0.5s expect=violation actual=violation match=yes; trace check of the ordered claim ok
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p128_unch --max-steps 10 --invariant wit_done --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/K7.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p128_unch.qnt
+    out: } | [violation] Found an issue (127ms). | error: found a counterexample
+[00:10:52] L7 cost_s64_p128_unch inv_reads_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p128_unch --max-steps 10 --invariant inv_reads_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/L7.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p128_unch.qnt
+    out: [ok] No violation found (137ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:52] Q7 cost_s64_p128_unch inv_writes_expected rc=0 0.5s expect=ok actual=ok match=yes
+    cmd: quint verify --server-endpoint localhost:18828 --main cost_s64_p128_unch --max-steps 10 --invariant inv_writes_expected --out-itf /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/runs/Q7.itf.json /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/cost_s64_p128_unch.qnt
+    out: [ok] No violation found (135ms). | You may increase --max-steps. | Use --verbosity to produce more (or less) output.
+[00:10:54] Z01 race_norm inv_mark_never_fell rc=0 1.8s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_norm --max-samples 3000 --max-steps 40 --invariant inv_mark_never_fell /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_norm.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0xf8733855e85febe1 --backend=rust to reproduce.
+[00:10:56] Z02 race_norm inv_mark_le_row rc=0 1.8s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_norm --max-samples 3000 --max-steps 40 --invariant inv_mark_le_row /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_norm.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0x699724914bb8a661 --backend=rust to reproduce.
+[00:10:58] Z03 race_guard_post inv_published_whole rc=0 1.9s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_guard_post --max-samples 3000 --max-steps 40 --invariant inv_published_whole /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0xec5d09671d7af44d --backend=rust to reproduce.
+[00:11:00] Z04 race_guard_post_rev inv_published_whole rc=0 1.8s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_guard_post_rev --max-samples 3000 --max-steps 40 --invariant inv_published_whole /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_guard_post_rev.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0xc3bd0b5cb3c726f --backend=rust to reproduce.
+[00:11:01] Z05 race_three_mid_viewfirst inv_view_never_fell rc=0 1.8s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_three_mid_viewfirst --max-samples 3000 --max-steps 40 --invariant inv_view_never_fell /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_three_mid_viewfirst.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0xba92b2c3a9de70f6 --backend=rust to reproduce.
+[00:11:03] Z06 race_break inv_recovered rc=0 2.0s expect=ok actual=ok match=yes
+    cmd: quint run --backend=rust --n-threads=1 --main race_break --max-samples 3000 --max-steps 40 --invariant inv_recovered /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_break.qnt
+    out: You may increase --max-samples and --max-steps. | Use --verbosity to produce more (or less) output. | Use --seed=0xcf933676eeb59cd9 --backend=rust to reproduce.
+[00:11:05] Z07 race_known inv_row_names_parts rc=1 1.1s expect=ok actual=violation match=NO
+    cmd: quint run --backend=rust --n-threads=1 --main race_known --max-samples 3000 --max-steps 40 --invariant inv_row_names_parts /home/pilot/review103-claude-adr0130-p02-data-quint/decisions/inbox/ревью/quint-p02-data-ff32d483/instances/race_known.qnt
+    out: Use --verbosity=3 to show executions. | Use --seed=0x6e0f820e137dd4bb --backend=rust to reproduce. | error: Invariant violated
