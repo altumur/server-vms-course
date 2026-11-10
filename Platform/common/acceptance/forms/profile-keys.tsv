@@ -1,0 +1,13 @@
+# The keys of the profile field keys (PROFILE.md «Parameters in keys»; the Architect's answer on P01.86). The set is closed; PROFILE.md refers to this form and does not repeat it.
+# type: text — a nonempty single-line string; int:<min>..<max> — an integer scalar in the range, an empty <max> has no upper bound; enum:<a>|<b> — exactly one listed word,
+# a string scalar, or an integer scalar when every word is a decimal integer. absent: owner — the owning acceptance judges presence, default and applicability;
+# not_executed — the checks or targets that need the key are not executed, never PASS. outside: what a value outside the type is: format_error — the profile is refused
+# before builds or processes start; not_executed — the target that uses the key is not executed, never PASS.
+key	type	absent	outside
+role	text	owner	format_error
+role_header	text	owner	format_error
+request_line_limit	int:1..	not_executed	format_error
+path_style	enum:json|dotted	owner	format_error
+tls_stand	enum:0|1	owner	format_error
+pass_stand	enum:0|1	owner	format_error
+store_build	enum:raft|box	not_executed	not_executed

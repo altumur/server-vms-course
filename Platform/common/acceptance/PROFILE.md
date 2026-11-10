@@ -18,6 +18,15 @@ The files are UTF-8. The reader accepts an initial UTF-8 BOM and LF, CRLF or CR 
 
 Inline-comment separation uses ASCII space or TAB. Indentation itself uses spaces in pairs; a TAB in indentation is refused. Single-quoted strings represent a quote by `''`. Double-quoted strings support the YAML escape letters `0 a b t n v f r e`, escaped space, quote, slash and backslash, and `N _ L P`, plus `x` with 2 hexadecimal digits, `u` with 4 and `U` with 8. Hex escapes must name a Unicode scalar, not a surrogate or a value above U+10FFFF. Destination text fields still reject decoded NUL, CR or LF. These Source documents use LF; this does not impose a new LF-only restriction on profile input.
 
+### Specification pin and Source pin
+
+Two pins name different commits; neither replaces the other.
+
+- **`spec_version`**, the profile field together with the repository's root `SPEC_VERSION`, names the commit of the specification export that the implementation is built against: the export the implementation reads.
+- **`source_pin`**, a field of the [seam bridge descriptor](README.md#explicit-test-side-seam-bridge), of the [D7 descriptor](README.md#d7-test-side-evidence-bindings) and of the input of the production qualification of the judge, names the full 40-hex commit of the Source: the course repository from which the exports are cut and from which the judge takes the tables of the run.
+
+The delivery marker `COURSE_COMMIT` of an export records its Source commit. The run passport records both pins and that marker. Equality or difference of the two strings is not inferred from their names: they name commits of different repositories.
+
 ## Profile fields
 
 The top-level field set is closed:
@@ -48,24 +57,11 @@ The profile and repository pin name the export's Git commit, not the source-cour
 
 Each profile declares only its own commands. Equal algorithm names in different modules remain separate commands of those consumers. A missing required command or neighbor blocks the selected target before execution; another module's command does not replace it. A partial profile does not imply complete acceptance.
 
-| Platform module | Its `stand` keys |
-| --- | --- |
-| `01-store` | `store1`, `store`, `backup`, `import`, `jcs`, `store-op`, `spoil-row` |
-| `02-installer` | `load`, `manifest-put`, `canonical`, `rights`, `rights-check`, `ring`, `workers-script`, `platform-lists`, `exec`, `install-order`, `env-line` |
-| `03-worker` | `worker`, `creates-key`, `said-id`, `said-read`, `door-token-verify`, `group-of` |
-| `04-controller` | `controller`, `pass_print`, `order`, `shrink-victim`, `shrink-allowed`, `group-of`, `near-of`, `fresh-age` |
-| `05-resource` | `resource`, `object-put`, `object-spoil` |
-| `06-console` | `console`, `console3`, `fault`, `rid`, `request-digest`, `values-by-type`, `resolve`, `said-id`, `said-read`, `door-token-issue`, `fresh-age`, `password-hash`, `covers` |
-| `07-console-module` | none |
-| `08-domain` | `install-domain`, `first-admin`, `domain`, `move`, `view`, `assemble`, `issue`, `password-hash` |
-| `09-agent` | `agent`, `join`, `join-batch`, `token-door`, `follow` |
-| `10-domain-console` | `domain-console`, `alarms`, `covers` |
+The `stand` keys of each Platform module, its adapters and the shared algorithm names are the rows of [`forms/profile-substitutions.tsv`](forms/profile-substitutions.tsv): the column `owners` names the modules whose profile may declare a key, and this section does not repeat them. `07-console-module` owns no `stand` key. A shared algorithm name is admitted to every Platform module except `07-console-module`. Admission of a name does not assign every shared package to every module: the package README and the published [vector wire form](../vectors/wire.md) assign its consumers, tables, directions and native interface. A profile entry does not establish execution coverage.
 
-Except for `07-console-module`, the reader also permits the shared algorithm names `keys`, `agent-sig`, `accept`, `record`, `ask-sig`, `may`, `peer`, `token`, `seal`, `seal-round`, `seal-member`, `seal-member-round`, `sealing-aad`, `sealing-envelope`, `sealing-open`, `sealing-ring`, `revoked` and `crl`. Admission of a name does not assign every shared package to every module: the package README and the published [vector wire form](../vectors/wire.md) assign its consumers, tables, directions and native interface. A profile entry does not establish execution coverage.
+Every `build`, `unit`, `stand`, `adapters` and vector command runs from the directory containing its own profile, including when the assembly replaces a part. Commands use `/bin/sh`. The implementation chooses its program names, flags and wrappers, except the flags of the command `store` fixed under [substitutions](#substitutions). `build` and `unit` receive no template substitutions. The explicit build phase builds each needed module once before inputs are fixed. A nonzero build result stops the stand before acceptance. Without a build phase, declared artifacts must already exist. Unit commands run only when explicitly requested. No rebuild occurs after source, profile and artifact identities are fixed or during acceptance. During a run the export's `HEAD` equals the pinned commit and its working tree is clean; the stand checks this before the build, after the build and after acceptance.
 
-Every `build`, `unit`, `stand`, `adapters` and vector command runs from the directory containing its own profile, including when the assembly replaces a part. Commands use `/bin/sh`. The implementation chooses its program names, flags and wrappers, except the flag of `{rights}` in the command `store` below. `build` and `unit` receive no template substitutions. The explicit build phase builds each needed module once before inputs are fixed. A nonzero build result stops the stand before acceptance. Without a build phase, declared artifacts must already exist. Unit commands run only when explicitly requested. No rebuild occurs after source, profile and artifact identities are fixed or during acceptance. During a run the export's `HEAD` equals the pinned commit and its working tree is clean; the stand checks this before the build, after the build and after acceptance.
-
-Build and unit stdin is closed (`/dev/null`). Their inherited environment is limited to present values of `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `TMPDIR`, `TMP`, `TEMP`, `LANG`, `LC_ALL`, `LC_CTYPE` and `TZ`; the driver environment, including `CAMMETA_SPECS`, is not inherited. These build/unit rules do not define a new environment map in a profile. After a `build` or `unit` command exits, no process of its process group remains: the stand ends the whole group.
+Build and unit stdin is closed (`/dev/null`). Their inherited environment is limited to present values of `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `TMPDIR`, `TMP`, `TEMP`, `LANG`, `LC_ALL`, `LC_CTYPE` and `TZ`; the driver environment, including `CAMMETA_SPECS`, is not inherited. These build/unit rules do not define a new environment map in a profile. For the Go toolchain the stand also passes to `build` and `unit` the present values of `GOMODCACHE`, `GOCACHE`, `GOPATH`, `GOFLAGS`, `GOTOOLCHAIN` and `GOSUMDB` of its caller and always sets `GOPROXY=off`: a build uses only the module cache that the stand provides, with the modules of [the pinned versions](../versions/README.md), and never reaches a module proxy. Stand processes do not receive these variables. After a `build` or `unit` command exits, no process of its process group remains: the stand ends the whole group.
 
 Artifact labels use ASCII letters, digits, `_`, `.` and `-`. Each path is nonempty and relative to the profile directory. Its resolved target must remain inside that directory and must not be the directory itself. An artifact is a file or a separate result directory. File identities use exact bytes; directory identities use relative file names and their bytes. Instance data belongs to stand directories rather than artifacts. A shared library follows its published common contract and its source/dependency identities enter the run passport; this does not authorize importing a neighboring module's private code.
 
@@ -75,17 +71,7 @@ Profile loading resolves artifact ownership; it does not require outputs to exis
 
 The key set is closed. Parameter values belong to their profile rather than a merged last-writer-wins map.
 
-The recognized key `store_build` is used by store-group targets. `raft` selects group execution; `box` makes the group target not applicable; omission or any other selection remains unexecuted, never PASS. The current profile loader recognizes this key without a separate type or value check. This admission boundary is not permission to add new build kinds or to infer a successful group run.
-
-| Key | Value and purpose |
-| --- | --- |
-| `role` | Nonempty single-line role name; the owning acceptance contract sets permitted roles and its default. |
-| `role_header` | Nonempty single-line name of the role-forwarding HTTP header. |
-| `request_line_limit` | Positive integer: the implementation's request-line limit, counted without CRLF. Missing it leaves the limit-boundary checks unexecuted. |
-| `path_style` | String `json` or `dotted` for loader diagnostic paths. |
-| `tls_stand` | Integer `0` or `1`. A capability declaration does not itself request a TLS run. |
-| `pass_stand` | Integer `0` or `1`. |
-| `store_build` | Store build selection used by the owning group acceptance; `raft` and `box` retain their distinct applicability. |
+The keys, the type of each value, the meaning of an absent key and of a value outside its type are the rows of [`forms/profile-keys.tsv`](forms/profile-keys.tsv); this section does not repeat them. A type is `text`, a nonempty single-line string; `int:<min>..<max>`, an integer scalar in the range, an empty `<max>` without an upper bound; or `enum:<a>|<b>`, exactly one listed word: a string scalar, or an integer scalar when every word is a decimal integer. The column `outside` is `format_error`, the profile is refused before builds or processes start, or `not_executed`, the target that uses the key is not executed, never PASS. `store_build` is `enum:raft|box` with `outside` `not_executed`: `raft` selects group execution, `box` makes the group target not applicable, and omission or another value leaves it not executed, not a format error (the Architect's answer on P01.86). This admission is not permission to add new build kinds or to infer a successful group run.
 
 An optional key is omitted rather than supplied as YAML null. A key's presence, defaults and applicability are judged by its owning acceptance. An accepted YAML profile is not proof that an implementation or an acceptance target is complete.
 
@@ -93,40 +79,9 @@ An optional key is omitted rather than supplied as YAML null. A key's presence, 
 
 A template may use only the names available to that particular command. There is no union of all stand values available to every command. An unknown name, field lookup, conversion or format specifier is a format error. Literal braces are `{{` and `}}`.
 
-| Command | Available names |
-| --- | --- |
-| `store1`, `store` | `data`, `rundir`, `socket`, `rights`, `body_limit`, `row_ceiling` |
-| `store-op` | `socket`, `dir`, `id`, `tls`, `args` |
-| `spoil-row` | `data`, `key`, `what` |
-| `backup` | `socket`, `file` |
-| `import` | `data`, `file`, `index_base` |
-| `load` | `file` |
-| `manifest-put` | `socket`, `file` |
-| `rights`, `rights-check` | `manifests`, `deployment`, `file` |
-| `ring` | `file` |
-| `worker` | `data`, `rundir`, `socket`, `manifest`, `sub`, `name`, `server`, `agent_tokens` |
-| `controller` | `data`, `rundir`, `socket`, `manifest`, `sub`, `server` |
-| `resource` | `data`, `rundir`, `socket`, `manifest`, `rport`, `server` |
-| `console` | `data`, `rundir`, `socket`, `manifest`, `port`, `cport` |
-| `console3` | `data`, `rundir`, `socket`, `manifest`, `port` |
-| `pass_print` | `data`, `sub` |
-| `object-put` | `data`, `socket`, `key`, `file` |
-| `object-spoil` | `data`, `socket`, `key` |
-| `install-domain` | `data`, `socket`, `domain`, `recovery` |
-| `first-admin` | `data`, `socket`, `name` |
-| `domain`, `domain-console` | `data`, `socket`, `port` |
-| `agent` | `data`, `rundir`, `socket`, `agent_tokens`, `relay_port` |
-| `join` | `data`, `socket`, `domain`, `recovery` |
-| `join-batch` | `data`, `socket`, `domain`, `recovery`, `batch`, `batch_key` |
-| `token-door` | `agent_tokens`, `role` |
-| `move` | `console`, `recovery`, `args` |
-| Other admitted algorithm keys | `input` |
-| `adapters.door` | `data` |
-| `adapters.load` | none |
-| `adapters.tables7` | `fields` |
-| Every `vectors` entry | `input`, required in the template |
+The names available to a command are the column `names` of its row in [`forms/profile-substitutions.tsv`](forms/profile-substitutions.tsv); the column `required` names those its template must contain. A command without a row has no template names.
 
-`data` is the instance data directory; `rundir` is the directory that holds `socket` and the role sockets, one run directory per instance. `socket` is the selected store socket; `rights` is the prepared rights file; the command `store` holds exactly one occurrence `-rights {rights}` or `-rights={rights}`. `manifest` and `manifests` are stand manifest directories for commands assigned them. `file` and `input` are operation/vector input paths. `port`, `rport`, `cport` and `relay_port` are the corresponding stand ports. Store test parameters are `body_limit`, `row_ceiling` and `index_base`. The remaining values name the subsystem, instance/worker, server, deployment, object key, fields file, domain, recovery file, console URL, local token-door directory, role or join batch named by the owning stand contract. The meaning of `dir`, `id`, `tls`, `what`, `batch` and `batch_key` is fixed by the command's owning acceptance contract, not inferred from another command with a similar name.
+`data` is the instance data directory; `rundir` is the directory that holds `socket` and the role sockets, one run directory per instance. `socket` is the selected store socket; `rights` is the prepared rights file. The command `store` holds exactly one occurrence of each of `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}`, each also writable as `-name=value`, and none of the flags that the [store group stand](README.md#store-group-stand) appends: `-id`, `-tls`, `-api`, `-tuning`, `-raft`, `-raft-bind`, `-bootstrap`, `-join`, `-group-size`, `-force`, `-door`, `-voters`. The stand sets those flags, and only the stand; a repeated daemon flag is a start refusal (P/01.3 N1.3; the Architect's answer on P01.86). `manifest` and `manifests` are stand manifest directories for commands assigned them. `file` and `input` are operation/vector input paths. `port`, `rport`, `cport` and `relay_port` are the corresponding stand ports. Store test parameters are `body_limit`, `row_ceiling` and `index_base`. The remaining values name the subsystem, instance/worker, server, deployment, object key, fields file, domain, recovery file, console URL, local token-door directory, role or join batch named by the owning stand contract. The meaning of `dir`, `id`, `tls`, `what`, `batch` and `batch_key` is fixed by the command's owning acceptance contract, not inferred from another command with a similar name.
 
 The runner shell-quotes substituted paths and individual values. Do not add shell quotes around a placeholder. `args` is a prepared sequence of quoted arguments where the owning command assigns it, not arbitrary shell text. `token-door` is an address rather than a shell command: its entire value is exactly `unix:{agent_tokens}/{role}.sock`; its URI substitutions are raw. Do not prefix this address with a command or a directory change.
 

@@ -13377,6 +13377,41 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/forms/d7.schema.json",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/extra.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/production-input.schema.json",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/production.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-keys.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+      "disposition": "include",
+      "basis": "Common acceptance: the judge lesson."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.README.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -15280,6 +15315,11 @@
       "path": "Platform/common/vectors/values-by-type/cases.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/wire.cases.tsv",
+      "disposition": "include",
+      "basis": "Vector wire form and consumer registry named by spec/acceptance.README.md."
     },
     {
       "path": "Platform/common/vectors/wire.md",

@@ -35,3 +35,5 @@ Who executes — the store (`01-store`: the evaluator of P/01.2 N1.3, and in the
 ## Vector wire
 
 The wire of `expect.tsv` is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+
+`{rights}` in «Run» above is the substitution of the command `stand.store` of that stand run ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)), not a name of the vector command. The vector target of the package is separate: the profile entry `vectors` `01-store/rights-evaluator` receives only `{input}`, and the rights file reaches its native function as the fixture `rights.json` in `files` of the envelope ([unified vector command](../../../common/acceptance/PROFILE.md#unified-vector-command)). Its native output is one JSON string, `allow` or `deny`.

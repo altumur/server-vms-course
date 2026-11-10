@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The input of the production qualification of P/01",
+  "description": "Machine form of N6.2 of spec/acceptance.norms.md (the Architect's answer on P01.86). format and source_pin are required; an absent budgets key, manager or volume is not a data error: the entries that need it are not_executed with its name as the reason (N6.5). The value of a budget key is no threshold without its approved threshold_ref. Integer fields are JSON integer tokens.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "source_pin"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "source_pin": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "budgets": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "output",
+          "cancellation",
+          "response_write",
+          "commit_wait",
+          "door_attempts",
+          "replay_limit",
+          "admin_connections",
+          "writer_hold",
+          "disk",
+          "descriptors",
+          "id_collection"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "unit",
+          "threshold_ref"
+        ],
+        "properties": {
+          "value": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "threshold_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "manager": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stop_deadline_seconds",
+        "teardown_margin_seconds"
+      ],
+      "properties": {
+        "stop_deadline_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "teardown_margin_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -31,6 +31,8 @@ log lines past the mask: their diagnostics go through `w2cctl` — the same mask
 write to the log file. The store daemon and the CLI (`01-store`) do not load manifests — their catalog is empty (the contract `log-mask`
 `rule`) (C01-C02-LOG-MASK-ROLES-01, the Architect's decision 2026-10-27).
 
+For P/01 the route of its target is this package with the fixture `fields.yaml` of `secret-in` alone: P/01 has no `secret-in` target and executes `cases.tsv` only, and `mask_in.tsv` is executed by `06-console` alone. In the vector the catalog rule comes from that fixture at every consumer, `01-store` included, although the catalog of the store daemon at work is empty (the Architect's answer on P01.86).
+
 The value of a field `type: url` — the vectors [`../secret-in/`](../secret-in/README.md): in a free text an address ends at a space,
 a quote, `\`, `<` or `>` (the address contract A2), in the value of a field — it does not.
 

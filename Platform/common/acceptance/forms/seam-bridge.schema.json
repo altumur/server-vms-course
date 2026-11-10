@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SEAM_BRIDGE.json: the descriptor of the explicit test-side seam bridge",
+  "description": "Machine form of README.md «Explicit test-side seam bridge» (the Architect's answer on P01.86). The identity and invoke forms are those of d7.schema.json. scope is the id of a target of the registry, optionally followed by # and the name of one of its scenarios or cases. Integer fields are JSON integer tokens, never booleans, fractions or exponents; duplicate fields, a BOM and non-JSON numbers are refused; argv[0] equals identity.executable.path. The judge checks these by the prose; the schema does not express them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "source_pin",
+    "scope",
+    "bridge"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "source_pin": {
+      "$ref": "#/$defs/pin"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "bridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "invoke"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "invoke": {
+          "$ref": "#/$defs/invoke"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pin": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "absolute": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "scope": {
+      "type": "string",
+      "pattern": "^P/[^#\\s]+(#\\S+)?$"
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/absolute"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "executable",
+        "artifacts"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/text"
+        },
+        "executable": {
+          "$ref": "#/$defs/file"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          }
+        },
+        "provenance_ref": {
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "invoke": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "argv",
+        "cwd"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/absolute"
+            }
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "$ref": "#/$defs/absolute"
+        }
+      }
+    }
+  }
+}

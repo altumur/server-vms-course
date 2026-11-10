@@ -27,6 +27,8 @@ The declarations of the two fields are vector data, not a reference to the VMS c
 of the field by the form of P/02.1 N1.2a). The rule of the catalog for nested addresses (A8) is the union of the rules of these two fields with the common
 dictionary N1.1 `common_words`.
 
+The same `fields.yaml` is the fixture of the [log-mask vectors](../log-mask/README.md#run) at every consumer of those; a consumer of log-mask alone, such as `01-store`, executes no row of this package.
+
 ## Run
 
 A side reads each row by the rule of the named field:

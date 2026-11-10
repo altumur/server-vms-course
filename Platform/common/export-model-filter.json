@@ -13377,6 +13377,41 @@
       "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
+      "path": "Platform/common/acceptance/forms/d7.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "P01.86: machine form of the public test-side descriptors of README.md."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/extra.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.86: inventory of the probes of the extra targets, from the README of each chapter; an executable judge table."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/production-input.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.86: machine form of N6 of spec/acceptance.norms.md; judge-only as that norm."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/production.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.86: machine form of N6 of spec/acceptance.norms.md; judge-only as that norm."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-keys.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P01.86: machine form of PROFILE.md, the public profile interface."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P01.86: machine form of PROFILE.md, the public profile interface."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "P01.86: machine form of the public test-side descriptors of README.md."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.README.md",
       "disposition": "model_and_judge",
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 generic public target form/flags/profile semantics, wholefile."
@@ -15282,14 +15317,19 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/wire.cases.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.86: rows of the wire form whose selectors or expectations name the cases or input values of their tables; judge-side under the *.cases.* rule."
+    },
+    {
       "path": "Platform/common/vectors/wire.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
       "path": "Platform/common/vectors/wire.tsv",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+      "disposition": "model_and_judge",
+      "basis": "P01.86, the Architect's answer of 2026-11-10T08:48:33Z: the rows that name cases or input values moved to wire.cases.tsv; the whole remaining file is the public line protocol of the vectors."
     },
     {
       "path": "Platform/common/vectors/yaml-suite/LICENSE",

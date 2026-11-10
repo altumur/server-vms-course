@@ -1,0 +1,38 @@
+# The inventory of the target P/01/production (N6 of spec/acceptance.norms.md; the Architect's answer on P01.86): the 17 case groups and the 13 probes, one row each.
+# The rows name the entries and add no outcome: the observed outcomes are in the row of the source. kind: group or probe. source: the row that owns the entry.
+# executed_by: the probe that executes a group as its initial state or stage, - when the entry is executed by itself; the result is shown under both names (P/AC-R040).
+# inputs: JSON array of what the entry needs, closed words: a D7 capability (clock, storage, progress, fault), a field of the input of N6.2 (manager, volume),
+# a key of its budgets, group (the store group stand) or a means of the engine (two_way_partition, raft_snapshot); [] for a group: its needs are the third column of its row.
+# An absent need gives not_executed with that word as the reason (N6.5); group on keys.store_build: box gives not_applicable.
+# term: JSON array of the budget names of its row (first approved budgets), the keys of N6.2, the constants of the runtime-constants form or leader_wait (the effective -leader-wait); [] — the outcome is judged.
+id	kind	source	executed_by	inputs	term
+RUN-W01	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_WRITE_P99","BUDGET_WRITE_GROWTH","BUDGET_WRITE_BYTES"]
+RUN-W02	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_IMPORT_ORDINARY","BUDGET_IMPORT_WORST","BUDGET_IMPORT_GROWTH"]
+RUN-W03	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	[]
+RUN-W04	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_MEMORY_ORDINARY","BUDGET_MEMORY_WORST"]
+RUN-T01	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_DRAIN"]
+RUN-T02	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_DRAIN"]
+RUN-T03	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_IDLE","BUDGET_HEADERS","BUDGET_BODY"]
+RUN-L01	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	[]
+RUN-L02	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["leader_wait","BUDGET_BACKUP_STALL"]
+RUN-L03	group	Platform/01-store/spec/production-acceptance.md#case-groups	prod-stop	[]	["BUDGET_STOP"]
+RUN-F01	group	Platform/01-store/spec/production-acceptance.md#case-groups	prod-fault-stage	[]	[]
+RUN-F02	group	Platform/01-store/spec/production-acceptance.md#case-groups	prod-fault-stage	[]	[]
+RUN-F03	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	[]
+RUN-F04	group	Platform/01-store/spec/production-acceptance.md#case-groups	prod-fault-stage	[]	[]
+RUN-H01	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	["BUDGET_BACKUP_ORDINARY","BUDGET_BACKUP_WORST"]
+RUN-H02	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	[]
+RUN-H03	group	Platform/01-store/spec/production-acceptance.md#case-groups	-	[]	[]
+prod-stop	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["progress","manager"]	["BUDGET_STOP"]
+prod-fault-stage	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault","storage"]	[]
+prod-leader-loss	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","two_way_partition"]	["leader_wait"]
+prod-import-interrupted	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","writer_hold"]	["writer_hold"]
+prod-recover-interrupted	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault"]	[]
+prod-disk-fd	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["volume","disk","descriptors"]	["disk","descriptors"]
+prod-clock-group	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","clock","raft_snapshot"]	["CLOCK_SKEW"]
+prod-reply-commit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","response_write","commit_wait"]	["response_write","commit_wait"]
+prod-door-attempts	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","door_attempts"]	["leader_wait","door_attempts"]
+prod-replay-limit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["replay_limit"]	["replay_limit"]
+prod-admin-limit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["admin_connections"]	["admin_connections"]
+prod-backup-temp	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault","cancellation"]	["cancellation"]
+prod-id-age	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["clock"]	["ID_REPLAY_MIN_AGE","ID_REPLAY_MIN_RECORDS"]

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/wire.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124).
 
-The norm is [`wire.tsv`](wire.tsv), by the Architect’s decision under ADR-0125 addendum (1) item 5 and addendum (5). The initial slice covers the vector tables of P/01 and P/02; subsequent declared rows extend the registry. A missing binding is an undeclared adapter, never a performed test. The write-checks probes in P/01 forms are judged by their own check table and probes grammar; this slice does not change that transport. The package README retains the algorithm, consumer obligation, meaning of the inputs and native fields, and reading or stand checks outside the function. It refers to this form for the wire, without a second wire declaration.
+The norm is [`wire.tsv`](wire.tsv) together with `wire.cases.tsv`, by the Architect’s decision under ADR-0125 addendum (1) item 5 and addendum (5): one form in two files with one grammar. `wire.cases.tsv` holds the rows whose selectors or expectations name the cases or input values of their tables, and it is judge-side; the triple `(package,table,surface)` is unique across both files (the Architect's answer on P01.86). The initial slice covers the vector tables of P/01 and P/02; subsequent declared rows extend the registry. A missing binding is an undeclared adapter, never a performed test. The write-checks probes in P/01 forms are judged by their own check table and probes grammar, through the envelope of [P/01 write-checks transport](#p01-write-checks-transport) below; they have no row in this form. The package README retains the algorithm, consumer obligation, meaning of the inputs and native fields, and reading or stand checks outside the function. It refers to this form for the wire, without a second wire declaration.
 
 ## Rows and sources
 
@@ -137,3 +137,14 @@ The only selections are placement for04-controller; signer for08-domain and09-ag
 ## Scope of the P/06 slice
 
 The P/06 declarations cover every table assigned to 06-console by consumers.tsv and its own lesson tables. Journal modes and requests-body are layout, with their separate process/HTTP duties preserved. Compatible stand and vectors bindings name independent surfaces; they do not claim that a runner publishes both. Other owners receive only the projections explicitly selected in these rows; this slice does not close their whole lessons or their undeclared tables. The native.schema check is over the complete actual answer before comparison ignores. The explicit ignore_stdout true marker alone disables stdout content, frame and schema checks, while retaining the native exit check.
+
+## P/01 write-checks transport
+
+The package `01-store/write-checks` evaluates [`write-checks.tsv`](../../01-store/forms/write-checks.tsv) by the implementation's own function (P/01.1 N2.1, the order of command and batch checks). Its probe table lies in the forms of the lesson, not under `vectors/`, and two of its cells come from the parameter lines of the probes, so it has no row in this form. Its envelope of the [unified vector command](../acceptance/PROFILE.md#unified-vector-command) is fixed here (the Architect's answer on P01.86):
+
+- `package` is `01-store/write-checks`, `table` is `write-checks.probes.tsv`, `case` is `line-<physical source line>`, `variant` is `""` and `files` is `{}`;
+- `cells` are exactly `sock`, `body`, `lim` and `allow`, strings as P/01.1 N2.1 describes them: `sock` and `body` are the cells of the row; `lim` is one JSON object text for every row, from the `#lim` lines of the probes; `allow` is one JSON array text for every row, from the `#allow` lines in their order;
+- every row is executed except a row of the case `nopair`, whose body is prose;
+- the native output is one JSON object, compared by value: `{"n": 0}`, or `{"n", "code", "kind"}` with the code and kind of row `n` of `write-checks.tsv`.
+
+The profile of `01-store` declares the `vectors` entry `01-store/write-checks`; without it the target is not executed.

@@ -98,6 +98,10 @@ The judge receives a pinned export of this specification and an implementation r
 
 The stand manifests `testsub` and `testsub2` come from [`Platform/common/data/testsub/`](../../data/testsub/README.md). The judge takes no scenario, table or fixture from outside the pinned export.
 
+<!-- req: P/AC-R050 -->
+
+Test-side inputs of a run are files that the invocation of the judge names explicitly; the engine decides the syntax of that invocation. They have three closed forms: the [seam bridge descriptor](../README.md#explicit-test-side-seam-bridge) ([schema](../forms/seam-bridge.schema.json)), the [D7 descriptor](../README.md#d7-test-side-evidence-bindings) ([schema](../forms/d7.schema.json)) and the input of the production qualification of N6.2 ([schema](../forms/production-input.schema.json)). A file with the field `bridge` is a seam bridge descriptor, one with `providers` is a D7 descriptor, and one with neither field and without `scope` is the input of N6.2; a file of none of these forms, or invalid against its schema, is a data error of the run. A descriptor serves the target whose id is its `scope`, or, when the scope is that id followed by `#` and the name of a scenario or case, that one case; a descriptor of a case wins over one of its target, and two descriptors of one form for one scope are a data error. The input of N6.2 serves the target `P/01/production`; a second one is a data error. The `source_pin` of every test-side input equals the Source commit of the run, the delivery marker `COURSE_COMMIT` of the pinned export ([the two pins](../PROFILE.md#specification-pin-and-source-pin)); another pin is a data error. A case that needs a test-side input which the invocation does not name is `not_executed` (`MissingBinding`), as N6.5 and the D7 bindings say. The judge searches no working directory, profile, implementation repository or environment variable for these files.
+
 ### N2.2 Interfaces of the implementation
 
 <!-- req: P/AC-R014 -->
@@ -215,7 +219,7 @@ This section assigns the production qualification of P/01 to the judge (ADR-0135
 
 <!-- req: P/AC-R040 -->
 
-The target `P/01/production` of the registry has the engine word `production`. Its inventory (N1.4) is the 17 [case groups](../../../01-store/spec/production-acceptance.md#case-groups) `RUN-*` and the 13 probes of N6.3, which are the rows of [the probe debt](../../../01-store/spec/production-acceptance.md#probe-debt) by name. An entry is executed once: `RUN-L03` is the first initial state of `prod-stop`, and `RUN-F01`, `RUN-F02`, `RUN-F04` are the stages of `prod-fault-stage`; their results are shown under both names.
+The target `P/01/production` of the registry has the engine word `production`. Its inventory (N1.4) is the 17 [case groups](../../../01-store/spec/production-acceptance.md#case-groups) `RUN-*` and the 13 probes of N6.3, which are the rows of [the probe debt](../../../01-store/spec/production-acceptance.md#probe-debt) by name. An entry is executed once: `RUN-L03` is the first initial state of `prod-stop`, and `RUN-F01`, `RUN-F02`, `RUN-F04` are the stages of `prod-fault-stage`; their results are shown under both names. The rows of [`forms/production.tsv`](../forms/production.tsv) list this inventory with the inputs and terms of each entry; the table names the entries and adds no outcome.
 
 <!-- req: P/AC-R041 -->
 
@@ -305,7 +309,8 @@ An implementation is to name in its description:
 2. the form of its evidence files and their names, beyond the report of N1.5; the budgets of a target and the reserve of a scenario (N3.3);
 3. parallelism in a run that is not credited (a credited run is one target at a time, N3.3);
 4. the printing form of the dry listing;
-5. the means of the two-way partition and of a Raft snapshot of N6.3, and the instruments of N6.
+5. the means of the two-way partition and of a Raft snapshot of N6.3, and the instruments of N6;
+6. the syntax of the invocation that names the test-side inputs of N2.1.
 
 ## Readiness checklist
 

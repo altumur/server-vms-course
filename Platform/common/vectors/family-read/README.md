@@ -19,6 +19,7 @@ The table `NN.tsv` holds the families of the owner lesson NN (the column `owner`
 - `verdict` — `ok` or `refused`; `paths` — a JSON array of the refusal paths (the order does not matter); `outcome` — at the writer `[]`,
   at the reader — a JSON object «role → array of paths of the `<family>.outcomes.tsv` rows whose outcome applies to that role»
   (the empty path — the row as a whole);
+- the refusal path of an absent required field is the JSON Pointer of that field: the pointer of the object that lacks it, then `/` and the field name (`/floor` for a field of the top level). It is neither the pointer of that object (`""` at the top level) nor both. JSON Schema 2020-12 reports `required` at the object; this table names the field;
 
 The answer of an implementation to a row is the JSON `{"verdict", "paths", "outcome"}`: strictly compared are the verdict, the set of paths and
 the outcome (at the reader — by each role of `who`); `note` and `case` are the names of the row.
