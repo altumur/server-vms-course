@@ -1,0 +1,91 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/read-checks.tsv (ADR-0125 addenda (12), (13); P01.228). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks.",
+  "fields": [
+    {
+      "name": "n",
+      "type": "string",
+      "description": "The order 1, 2, …; physical order stays with the existing check.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[1-9][0-9]*)",
+        "unique": true
+      }
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "description": "rd-<check>, stable, not renumbered.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:rd-[a-z][a-z0-9_]*)"
+      }
+    },
+    {
+      "name": "op",
+      "type": "string",
+      "description": "* in every row: the request object has no field op.",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "*"
+        ]
+      }
+    },
+    {
+      "name": "group",
+      "type": "string"
+    },
+    {
+      "name": "each",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema."
+    },
+    {
+      "name": "check",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[a-z][a-z0-9_]*)"
+      }
+    },
+    {
+      "name": "when",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "code",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[1-5][0-9][0-9])"
+      }
+    },
+    {
+      "name": "kind",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[a-z][a-z0-9_]*)"
+      }
+    },
+    {
+      "name": "fault",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema. Empty: no fields."
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "id"
+  ]
+}
