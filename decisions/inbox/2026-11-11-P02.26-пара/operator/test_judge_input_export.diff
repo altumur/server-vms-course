@@ -1,0 +1,44 @@
+--- test_judge_input_export.py (P01.73, 19 controls)
++++ test_judge_input_export.py (P02.26, 21 controls)
+@@ -110,11 +110,41 @@
+                              ("Platform/common/ru/acceptance/README.md", "translation"),
+                              ("Platform/02-installer/acceptance/1/spec_verdicts/a.txt", "verdict"),
+                              ("Platform/x/mutants/a.txt", "verdict"),
++                             ("Platform/x/acceptance/1/legacy_spec_verdicts/a.txt", "verdict"),
++                             ("Platform/x/acceptance/1/spec_verdicts.tsv", "verdict"),
++                             ("Platform/x/acceptance/1/Spec_Verdicts/a.txt", "verdict"),
+                              ("Platform/common/acceptance/runner-targets.provenance.cases.md", "named"),
+                              ("Platform/01-store/probes/README.cases.md", "named")):
+             with self.subTest(path):
+                 self.refused(needle, files={**GOOD, path: "x\n"}, include=INC | {path})
+ 
++    def test_judge_table_named_verdicts_is_not_the_corpus(self):
++        # P02.26: P/02 acceptance/1/verdicts.tsv (engine word verdicts) is judge input;
++        # its sibling spec_verdicts/ (the verdict corpus) stays refused.
++        p = "Platform/02-installer/acceptance/1/verdicts.tsv"
++        with tempfile.TemporaryDirectory() as tmp:
++            gd, c, b = make(tmp, {**GOOD, p: "case\tverdict\n"}, INC | {p})
++            op.build(gd, c, b, os.path.join(tmp, "out"))
++            out = op.git(os.path.join(tmp, "out", "JI.git"), "ls-tree", "-r", "--name-only", "HEAD").decode().split()
++            self.assertIn(p, out)
++        q = "Platform/02-installer/acceptance/1/spec_verdicts/a.txt"
++        self.refused("verdict", files={**GOOD, p: "x\n", q: "x\n"}, include=INC | {p, q})
++
++    def test_code_class_not_applied_to_acceptance_inputs(self):
++        # P02.26: fixtures inside acceptance/<n>/inputs/ pass the code class;
++        # code elsewhere is refused, and the judge-name text check still applies there.
++        p = "Platform/06-console/acceptance/5/inputs/testsub2/app.js"
++        with tempfile.TemporaryDirectory() as tmp:
++            gd, c, b = make(tmp, {**GOOD, p: "// fixture\n"}, INC | {p})
++            op.build(gd, c, b, os.path.join(tmp, "out"))
++            out = op.git(os.path.join(tmp, "out", "JI.git"), "ls-tree", "-r", "--name-only", "HEAD").decode().split()
++            self.assertIn(p, out)
++        for q in ("Platform/01-store/acceptance/1/probe.js", "Platform/01-store/probes/x.py",
++                  "Platform/01-store/acceptance/inputs/x.py", "Platform/01-store/acceptance/1/x/inputs/y.js"):
++            with self.subTest(q):
++                self.refused("code", files={**GOOD, q: "x\n"}, include=INC | {q})
++        self.refused("names the existing judge", files={**GOOD, p: "harness.py\n"}, include=INC | {p})
++
+     def test_filter_cannot_include_itself(self):
+         def m(d):
+             [r for r in d["files"] if r["path"] == op.FILTER][0]["disposition"] = "include"
