@@ -13,7 +13,7 @@ The profile is `01-store` in the [generic profile and assembly contract](../../.
 
 The format is the dictionary of directives and doors of the common acceptance README. Specific to chapter 1.1:
 
-- `expect` is `<code> <JSON body>`; the JSON is compared whole; `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch.
+- `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch.
 - For a `200` answer to `GET /v1/list` the **order of names inside `keys`** is also checked: the sequence of names decoded from the JSON in the order received MUST equal the sequence in `expect`, which is given by UTF-8 bytes. The runner keeps this order when parsing the answer and does not sort what it received before the comparison. For an empty `keys` the sequence is empty. Spaces and the way of JSON escaping are insignificant; the order of other objects, `items` included, is still not checked.
 - `$name` binds only a JSON string (N1: a version is a string on the wire); a number or another type is a mismatch of the step.
 - Only for a body refusal the optional field `size` is admitted: if it is present, it is the integer
