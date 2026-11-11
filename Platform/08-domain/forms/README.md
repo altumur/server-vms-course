@@ -71,7 +71,7 @@ Each case has a new temporary root and valid neutral background: catalogue, doma
 | `domain-turn-write` | Inject an unknown outcome at a real turn-guarded row batch. Observe entry to the process barrier and absence of an unexamined repeated write; recovery still follows the existing turn/store read procedure. |
 | `domain-turn-release` | Run the actual SIGTERM release path. Replace the owned turn with a real different owner/version before its release CAS. The new owner is preserved; the test does not use an unconditional clear. |
 
-The additional seams use the same actual implementation paths. `domain-versioned-edit` also runs role-lines and folder/membership HTTP operations, reads actual store indexes, and retries the same saved request after a committed lost answer; it never synthesizes revision for membership. Folder deletion is verified against the actual tombstone and its ETag.
+The seams `domain-role-http` and `domain-person-login` below and the additional operations of `domain-versioned-edit` use the same actual implementation paths. `domain-versioned-edit` also runs role-lines and folder/membership HTTP operations, reads actual store indexes, and retries the same saved request after a committed lost answer; it never synthesizes revision for membership. Folder deletion is verified against the actual tombstone and its ETag.
 
 `domain-role-http` invokes ordinary authenticated role POST/PUT/GET/DELETE and batch handlers, the real spread pass, the real member copy receiver and its local `may`. Fixtures seed valid neutral users/groups/roles, live folders and confirmed member rows. No fixture bypasses the tested door. Read back actual supervision after each write. Counters observe actual target writes, not only response codes.
 

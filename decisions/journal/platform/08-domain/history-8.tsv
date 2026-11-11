@@ -217,3 +217,4 @@ P/08.8-R016	spec/08.8-domain.norms.md#N5	ADR-0113 addendum (5)	2026-11-11	(ADR-0
 -	acceptance/8/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
 -	acceptance/8/README.md#intro	M11/01	2026-11-11	(before the merge, the dictionary of the M11 README of the acceptance M11/01)
 -	acceptance/8/README.md#stand	M11/03	2026-11-11	; from the acceptance README of M11/03
+-	spec/08.8-domain.norms.md#readiness-checklist	the Quint model v113 (cammeta-quint, outside the course)	2026-11-11	, the Quint model `v113`

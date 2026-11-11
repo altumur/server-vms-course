@@ -158,3 +158,4 @@ req_id	file	source	date	removed
 -	spec/08-domain.api.openapi.yaml#/components/schemas/PlacementEdit/properties/origin/description	run 41 R41-10	2026-11-11	; run 41 R41-10
 -	spec/08-domain.api.openapi.yaml#/components/schemas/KeptEdit/properties/seq/description	run 41 R41-09	2026-11-11	; run 41 R41-09
 -	spec/08-domain.api.openapi.yaml#/components/schemas/StrandedItem/properties/value/description	the decision of the Architect on cammeta-go M11-10 № 16	2026-11-11	; the decision of the Architect on cammeta-go M11-10 № 16
+-	spec/08-domain.README.md#task	id-map.tsv (decisions/history/platform)	2026-11-11	P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).

@@ -28,7 +28,7 @@ history, the queue — by the eleven chapters of the lesson; pass the N5 accepta
 
 <!-- checklist-inventory:end -->
 
-The inventory is built from the readiness checklists below; all 90 full ids must occur exactly once. P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).
+The inventory is built from the readiness checklists below; all 90 full ids must occur exactly once. P/08.9-04 is free: the alarm list at the holder is P/10-06 of lesson P/10.
 
 The lesson covers the holder side.
 The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
@@ -290,7 +290,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.0 N1.9 | writing the target and the claim row by two writes; putting the index into the answer body | the target and the claim — one batch `op: batch`; the index of the batch is unknown before the write, so the `ETag` of a replay is the index of the claim row itself or its field `index` |
 | 8.0 N1.9 | the print of a body with a password by an ordinary hash | HMAC `print` of chapter P/06.2 N1 under the holder ring |
 | 8.0 N1.8, 8.4 N1.10 | trusting `X-W2C-Client` from any connection or counting the login limit by the TCP peer of the process | the header — only on a connection of the role `domainconsole` (the client certificate, SAN), otherwise — the address of the TCP peer; without it all people are one address of the console |
-| 8.0 N1.6 | requesting a client certificate and accepting any leaf, or refusing a foreign CA by an HTTP answer after the handshake; resuming sessions | a presented one — check it in the handshake by its own ca.pem, ca.next.pem for the CA, the validity, EKU `clientAuth` — an alert; do not resume sessions (the role certificate contract `signer`) |
+| 8.0 N1.6 | requesting a client certificate and accepting any leaf, or refusing a foreign CA by an HTTP answer after the handshake; resuming sessions | a presented one — check it in the handshake by its own ca.pem, ca.next.pem (the CA, the validity, EKU `clientAuth`) — an alert; do not resume sessions (the role certificate contract `signer`) |
 | 8.0 N1.8 | rewriting 409 `deposed`, 503 `frozen`, 503 `standby` into a common refusal | the answer of the process — by its own word in `error`; the console gives it out as it came |
 | 8.2 N1.1 | pinning the root by the first set that arrived | the root is pinned only by the installation and the acceptance (chapter 8.3); without `pinned` — `no_pin` |
 | 8.2 N1.2 | rewriting the set at an equal `rev` | an equal one — `holding`, the row does not change |
