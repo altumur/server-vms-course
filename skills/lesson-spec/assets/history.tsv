@@ -1,0 +1,5 @@
+req_id	file	source	date	removed
+{{P/NN.K-RNNN}}	{{spec/NN.K-slug.norms.md#N3}}	{{ADR, решение, ревью или находка; номер ADR — здесь}}	{{YYYY-MM-DD}}	{{снятый текст дословно}}
+-	{{spec/NN.K-slug.norms.md#intro}}	{{источник}}	{{YYYY-MM-DD}}	{{снятый текст вводной части}}
+-	{{spec/NN-slug.api.openapi.yaml#/components/schemas/Name}}	{{источник}}	{{YYYY-MM-DD}}	{{снятый текст description}}
+-	{{acceptance/K/README.md#heading-anchor}}	{{источник}}	{{YYYY-MM-DD}}	{{снятый текст}}
