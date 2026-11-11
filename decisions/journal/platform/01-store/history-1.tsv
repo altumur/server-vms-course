@@ -33,3 +33,28 @@ P/01.1-R145	spec/01.1-store.norms.md#N4	moved to the store client contract; SC-W
 -	acceptance/1/README.md#adr-0129-core-clarification-witnesses	ADR-0129 core clarification: earlier seams kept	2026-11-06	The original six seam scenarios and all 73 steps remain byte-exact. Added
 -	acceptance/1/README.md#replay-and-last-admission-metadata	earlier seam steps and gates kept	2026-11-06	; former steps and store_core gates are unchanged
 -	acceptance/1/README.md#admitted-mismatches-and-admission-number-domain-adr-0129-addendum-10-item-3	ADR-0129 addendum (10) item 3: earlier seams kept	2026-11-06	The complete previous 15 seam scenarios / 239 steps remain byte-exact.
+-	spec/01.1-store.norms.md#intro	ADR-0080	2026-10-13	; ADR-0080
+-	spec/01.1-store.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+-	spec/01.1-store.norms.md#intro	ADR-0120 addendum (1)	2026-11-04	 (ADR-0120, addendum (1))
+P/01.1-R011	spec/01.1-store.norms.md#N0	ADR-0083	2026-10-18	 of ADR-0083
+P/01.1-R013	spec/01.1-store.norms.md#N0	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+P/01.1-R013	spec/01.1-store.norms.md#N0	ADR-0130 Addendum (14) item 4	2026-11-08	 (ADR-0130 Addendum (14) item 4)
+P/01.1-R149	spec/01.1-store.norms.md#N0	ADR-0130 Addendum (10)	2026-11-08	 (ADR-0130 Addendum (10))
+P/01.1-R019	spec/01.1-store.norms.md#N1	ADR-0074 addendum 1	2026-10-12	 (ADR-0074 addendum 1)
+P/01.1-R019	spec/01.1-store.norms.md#N1	ADR-0091 item 1, rev. 11	2026-10-22	 (ADR-0091 item 1, rev. 11)
+P/01.1-R019	spec/01.1-store.norms.md#N1	ADR-0094 B9; ADR-0094 addendum (12) item 1	2026-10-30	 (ADR-0094 B9, addendum (12) item 1)
+P/01.1-R020	spec/01.1-store.norms.md#N1	ADR-0095 § 2	2026-10-30	 (ADR-0095 § 2)
+P/01.1-R055	spec/01.1-store.norms.md#N2.1	ADR-0120 item 2 (a)	2026-11-04	 (ADR-0120 item 2 (a))
+P/01.1-R146	spec/01.1-store.norms.md#N2.1	ADR-0125 addendum (2)	2026-11-04	; ADR-0125 addendum (2)
+P/01.1-R066	spec/01.1-store.norms.md#N3	ADR-0021	2026-10-03	 (ADR-0021)
+P/01.1-R068	spec/01.1-store.norms.md#N3	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+P/01.1-R088	spec/01.1-store.norms.md#N3	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+P/01.1-R098	spec/01.1-store.norms.md#N3	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+P/01.1-R131	spec/01.1-store.norms.md#N3	ADR-0094 addendum (12) item 1	2026-10-30	 (ADR-0094 addendum (12) item 1)
+P/01.1-R135	spec/01.1-store.norms.md#N3	ADR-0094 addendum (12) item 2	2026-10-30	 (ADR-0094 addendum (12) item 2)
+P/01.1-R141	spec/01.1-store.norms.md#N3	ADR-0130 Addendum (14) item 1	2026-11-08	 (ADR-0130 Addendum (14) item 1)
+P/01.1-R143	spec/01.1-store.norms.md#N4	ADR-0125	2026-11-04	 (ADR-0125)
+P/01.1-R144	spec/01.1-store.norms.md#N4	ADR-0091 item 1	2026-10-22	; ADR-0091 item 1
+P/01.1-R144	spec/01.1-store.norms.md#N4	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/01.1-store.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/01.1-store.norms.md#readiness-checklist	ADR-0094 B9 (P/01.1-28)	2026-10-29	 (ADR-0094 B9)
