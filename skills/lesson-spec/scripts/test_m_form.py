@@ -126,7 +126,8 @@ class AcceptedFormPasses(AcceptedForm):
 
     def test_run_through_check_spec_method_only_for_checked_lessons(self):
         check = Check(self.root, scope="platform")
-        check.m_form()                                   # no lesson checked in this run — nothing to judge
+        with patch.object(m_form, "M_FORM_COMMON", ()):
+            check.m_form()                               # no lesson checked in this run, no common input — nothing to judge
         self.assertEqual(check.stats["history_phrases"], 0)
         check.lessons_seen.add("01")
         check.m_form()
@@ -168,8 +169,9 @@ class HistoryPhrases(AcceptedForm):
         common = self.root / "Platform/common/acceptance/README.md"
         common.write_text("# Common acceptance\n\nA stand (analysis of the review of stage B 3–5, № 33).\n",
                           encoding="utf-8")
-        check = self.run_checks()
-        self.assertFalse([e for e in check.errors if "common/acceptance" in e], "not included yet")
+        with patch.object(m_form, "M_FORM_COMMON", ()):
+            check = self.run_checks()
+        self.assertFalse([e for e in check.errors if "common/acceptance" in e], "not included")
         with patch.object(m_form, "M_FORM_COMMON", ("Platform/common/acceptance/",)):
             check = self.run_checks()
         self.assert_error(check, "Platform/common/acceptance/README.md", 3, "analysis of the review")
@@ -236,10 +238,11 @@ class IndexRefs(AcceptedForm):
 
     def test_file_addresses_two_roots_no_fallback(self):
         # Both roots of the accepted index pass (the base test); a wrong prefix fails: no search over a second root.
-        self.replace(self.REL, "`Platform/common/acceptance/README.md` «Store group stand»",
-                     "`common/acceptance/README.md` «Store group stand»")
-        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "`group_stand`"),
-                          "no file `common/acceptance/README.md`")
+        # after P01.229 the group stand lives in the lesson; the course-root address left in the index is the seam protocol
+        self.replace(self.REL, "`Platform/common/acceptance/seams.md` «Seam adapter protocol»",
+                     "`common/acceptance/seams.md` «Seam adapter protocol»")
+        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "`seam_bridge`"),
+                          "no file `common/acceptance/seams.md`")
 
     def test_lesson_root_address_is_not_resolved_from_the_course_root(self):
         self.replace(self.REL, "`forms/daemon-flags.tsv` (`-max-value`)", "`forms/nothing.tsv` (`-max-value`)")
