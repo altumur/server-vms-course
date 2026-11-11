@@ -37,7 +37,7 @@ both test prefixes are empty — `acc/` and `other/`. Cleaning the rows `acc/<sc
 is not enough: it does not clear the replay memory. Versions need not start from a given number.
 
 The preparation of the instance, its data directory and its rights is done by the runner before the scenario starts; the checked requests
-go only from the indicated role with rights on `acc/`. A row outside those rights is written by the runner in the preparation (not a checked request) through `admin.sock` of the instance (`{socket}` of «Stand» of the common README); a listing sees its name
+go from the indicated role with rights on `acc/`, except the steps through the door `admin` of the dictionary. A row outside those rights is written by such a step through `admin.sock` of the instance (`{socket}` of «Stand» of the common README); a listing sees its name
 and version without the value, although the role has no read rights there (N3 «list»). A query of `POST /v1/write` and a body of `GET` are not read; `Infinity` and a BOM in the body — N2.1.
 Parallel scenarios use different instances and share neither rows nor the `id` memory.
 

@@ -103,9 +103,9 @@ s19 starts at the existing clock2000000000. +0.0000001 is converted to the same 
 
 ### Original passage 15
 
-go only from the indicated role with rights on `acc/`. Scenario 21 does not receive additional rights on `other/`: before its first step the runner in the preparation (not a checked request)
-writes the row `other/21-rights/c9` `{n: "1"}` through `admin.sock` of the instance (`{socket}` of «Stand»); step 6 sees its name
-and version without the value, although the role has no read rights on `other/` (N3 «list»). In sc. 24 step 7 — the query of a `POST` is not
+go from the indicated role with rights on `acc/`, except the steps through the door `admin`. Scenario 21 does not receive additional rights on `other/`: its step 1
+writes the row `other/21-rights/c9` `{n: "1"}` through the door `admin` (`admin.sock` of the instance, `{socket}` of «Stand») and binds its version `$v`; step 7 sees its name
+and the same version without the value, although the role has no read rights on `other/` (N3 «list»). In sc. 24 step 7 — the query of a `POST` is not
 read, step 8 — the body of a `GET` is not read; in sc. 26 steps 9–10 — `Infinity` and a BOM in the body (N2.1).
 
 ### Original passage 16
