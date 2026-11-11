@@ -13,7 +13,7 @@ Give the platform objects, events and their reading; give the resource the clean
 - The canon is the [norms](05-resource.norms.md), the definitions of N0 — per P/01.1; the file contracts are
   [the event journal](../../common/contracts/event-journal.md) and [the presence lock](../../common/contracts/presence-lock.md).
 - The [HTTP contract](05-resource.api.openapi.yaml) expresses N2.
-- The [acceptance](../acceptance/README.md) (judge-only: P/05-R006–P/05-R058) sets the preparation and the observations.
+- The [acceptance](../acceptance/README.md) (judge-only: stand preparation and observation instructions) sets the preparation and the observations.
 - The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
 The objects use the store vocabulary of P/01.1, the roles — [P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) and
@@ -82,6 +82,6 @@ Check the id for collisions of the composite names a-e1-j/node:1:aaaaaa and a/j-
 
 ## Forms and implementation stages
 
-The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: P/05-R006–P/05-R058) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
+The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: object/copy probes P/05-R006, P/05-R017, P/05-R034–P/05-R036, P/05-R038, P/05-R045; event/query probes P/05-R020, P/05-R023, P/05-R049, P/05-R050; resource/wait probes P/05-R025, P/05-R026, P/05-R030, P/05-R032, P/05-R052–P/05-R054; route probes P/05-R042, P/05-R057) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
 
 The numeric source of independent scalars is [runtime-constants.tsv](../forms/runtime-constants.tsv); HTTP values stay in the current [OpenAPI form](05-resource.api.openapi.yaml), high/low in the P/02 space form. Scenario 41 observes early stability; synchronous s63 separately awaits the real end of relieve. Declared s63–s67 and family cells require actual execution, never an adapter answer from expect. The ms support is still a separate dependency, not PASS.
