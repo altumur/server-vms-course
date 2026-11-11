@@ -6,7 +6,7 @@ This English text is the source; the Russian translation `ru/acceptance/forms/ta
 
 ## Table form
 
-UTF-8, physical LF rows, TAB-separated cells. The first row is the header:
+UTF-8, physical LF rows, TAB-separated cells. The first row is the header, and the columns are read by its names ([table header and columns by name](../README.md#table-header-and-columns-by-name)):
 
 ```text
 id\towner\tstand_commands\tstand_addresses\tkeys\trequirements\tnorm_anchors\tflags
