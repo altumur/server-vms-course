@@ -58,6 +58,27 @@ FILL_PATH = re.compile(r"[a-z0-9][a-z0-9._/-]*")
 CEILING_TABLE = "puts-ceiling.tsv"                      # глава 2.2: потолок не по умолчанию, пятая колонка (аудит P/02, B00)
 PUTS_FILE = re.compile(r"[a-z0-9][a-z0-9_-]*")
 EXPECT = re.compile(r"(0|2) ([1-9][0-9]*|-)")
+ROW_SPOIL = "@row-spoil"                               # P/02 (P02.33): <field> — поле items строки манифеста = "x"
+ROW_FIELD = re.compile(r"[a-z][a-z0-9_]*")
+STDERR = " @stderr "                                    # P/02 (P02.33): хвост expect «@stderr ~<text>[ ~<text>…]»
+
+
+def split_expect(expect):
+    """expect таблицы установок → (match кода и rev, [подстроки stderr]) или (None, текст ошибки); грамматика — README общей приёмки."""
+    head, sep, tail = expect.partition(STDERR)
+    m = EXPECT.fullmatch(head)
+    if not m:
+        return None, "expect is `<code 0|2> <rev|->`, then optionally `@stderr ~<text>`"
+    if not sep:
+        return m, []
+    if not tail.startswith("~"):
+        return None, "@stderr is followed by ~<text> (several separated by « ~»)"
+    subs = tail[1:].split(" ~")
+    if any(not x for x in subs):
+        return None, "@stderr substrings are not empty"
+    if m.group(1) == "0":
+        return None, "@stderr only with a code other than 0"
+    return m, subs
 
 
 def loader(root):
@@ -476,6 +497,12 @@ class Chapter:
                         shell_args.append(arg)
                     i += 2
                     continue
+                if t == ROW_SPOIL:
+                    arg = tokens[i + 1] if i + 1 < len(tokens) else ""
+                    if not ROW_FIELD.fullmatch(arg):
+                        bad.append(t)
+                    i += 2
+                    continue
                 if t == FILE_FILL:
                     path, size = (tokens[i + 1:i + 3] + ["", ""])[:2]
                     if not FILL_PATH.fullmatch(path) or ".." in path or not re.fullmatch(r"[1-9][0-9]*", size):
@@ -491,9 +518,9 @@ class Chapter:
                     bad.append(t)
                 i += 1
             if bad or not names or tokens[0].startswith("@") or not PUTS_FILE.fullmatch(tokens[-1]) \
-                    or (len(tokens) > 1 and tokens[-2] == SHELL_PUT) or (len(tokens) > 2 and tokens[-3] == FILE_FILL):
+                    or (len(tokens) > 1 and tokens[-2] in (SHELL_PUT, ROW_SPOIL)) or (len(tokens) > 2 and tokens[-3] == FILE_FILL):
                 self.error(where, "line %d: puts — file names through one space (directives %s between them%s)"
-                           % (no, ", ".join(sorted(PUTS_DIRECTIVES | STORE_DIRECTIVES | {SHELL_PUT + " <оболочка>", FILE_FILL + " <путь> <байтов>"})),
+                           % (no, ", ".join(sorted(PUTS_DIRECTIVES | STORE_DIRECTIVES | {SHELL_PUT + " <оболочка>", FILE_FILL + " <путь> <байтов>", ROW_SPOIL + " <поле>"})),
                               "" if view else "; @view-* only with the canonical column"))
                 continue
             directives = {t for t in tokens if t.startswith("@")}
@@ -510,9 +537,9 @@ class Chapter:
                 used_shells.add(t)
                 if t not in shells:
                     self.error(where, "line %d: no file puts/%s.shell.html" % (no, t))
-            m = EXPECT.fullmatch(expect)
-            if not m:
-                self.error(where, "line %d: expect is `<code 0|2> <rev|->`" % no)
+            m, problem = split_expect(expect)
+            if m is None:
+                self.error(where, "line %d: %s" % (no, problem))
                 continue
             if ceiling and not re.fullmatch(r"[1-9][0-9]*", cols[4]):
                 self.error(where, "line %d: ceiling is a positive integer (the store's row ceiling of the instance)" % no)
