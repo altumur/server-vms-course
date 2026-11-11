@@ -1,6 +1,6 @@
 # Acceptance P/06.6 — control doors
 
-This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) N5. 17 scenarios / 195 steps.
@@ -26,7 +26,7 @@ reset between them.
 A separate store and a new console without a domain, access only from the loopback by chapter 6.3 N1.3 `open` (there are no keys — only from the
 loopback, the name operator). The current testsub from the common testdata is loaded: unit.id = name, rows = counters,
 placement.servers has the effective default shared (the key is not set in testsub). Its controller works, and the resource `srv-a` — by a first step (`@start resource`: the console reads the heartbeats through the objects door
-of the resource of its own server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); there are no workers, ordered processes and background
+of the resource of its own server); there are no workers, ordered processes and background
 writers. The servers srv-b, srv-nobody are unknown.
 The creation of a drain does not declare a server known for the operations labels/decommission.
 
@@ -61,7 +61,7 @@ it reads `platform/drain` and `platform/servers/srv-a` outside the subsystem pre
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
 the variables/replay memory. Load the unchanged testsub and testsub2; root is testsub, the second is available under /testsub2;
 there is no domain, requests come from the loopback. The background controller/resource/worker do not work before @start. The store is fresh and empty — there is no row
-platform/schema, the runner does not write it (reading of the commits «cammeta-acceptance» 2026-10-20). For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for
+platform/schema, the runner does not write it. For each POST that creates a unit the runner issues a fresh Idempotency-Key, kept only for
 the replays of the same step.
 
 By reading: the query version is only ASCII [1-9][0-9]* whole; reconcile all the reasons of 409 of the schema raise (N3 «raise_schema»,
@@ -77,7 +77,7 @@ Selected scenarios share one instance, the state is not reset between them. Befo
 resets the store (rows and objects) and the variables. After the last step wait for the stop of all the created processes,
 then delete the state.
 
-## Versions of the settings snapshots (ADR-0094 B4)
+## Versions of the settings snapshots
 
 A fresh stand, the resource `srv-a` by the first step; there are no rows `testsub/policy`, `platform/drain`, `platform/servers/srv-a`, `platform/schema` before the scenario.
 

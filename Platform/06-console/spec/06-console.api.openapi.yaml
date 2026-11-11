@@ -1,29 +1,24 @@
-# P/06 — doors of the cluster console process: HTTP contract (one process door — one lesson contract, lesson 6 plan V6).
+# P/06 — doors of the cluster console process: HTTP contract (one process door — one lesson contract).
 # Chapters refer to their paths (the description of each path names its chapter): 6.1 — /{rows}, /{rows}/{id},
 # /{rows}/{id}/{blob_field}, /{table}, /{table}/{name}, /console/batch; 6.3 — /session (the session form and the w2c_glass cookie at /session/break-glass);
 # 6.4 — /events (merge by the console), /marks, /{sub}/requests, /{sub}/asked/{sha16}; 6.5 — pages, /platform/*, /healthz,
 # /manifest, /{sub}/manifest, /mounts, /servers, /resources, /where, /metrics, /{sub}/…, door.pass /{pass}; 6.6 — /policy, /drain,
-# /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (late layer, introduced by lessons 8 and 10) —
+# /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 —
 # /session/break-glass (door order), /domain/{sub}/books/{book}, forwarding of /domain and /domain/{route} (transitions 1–2 of the forwarding
 # contract), /heartbeats, /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, forwarding
-# to the signer of /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations and the operation doors. The paths of chapter 6.7 are merged from the contracts M11/5, M11/8, M11/9, M11/10, M11/11
-# (the cluster console side; move of lesson 10, stage B, without a change of behaviour): forwarding has only the codes of transitions 1–2
-# (the forwarding contract Platform/common/contracts/forwarding.md «Refusals by transition»; analysis of review of stage A 8–10, decision 3),
-# the answer of the domain console as it came — ForwardAnswer (like PassAnswer at door.pass); for forwarding to the signer the process answer is
-# a $ref to the operations of the OpenAPI of lesson P/08 (decision of the Architect on plans 8–10, item 9); the schemas of the deadline record, of the pair, of the pointer and
+# to the signer of /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations and the operation doors.
+# Forwarding has only the codes of transitions 1–2 of Platform/common/contracts/forwarding.md «Refusals by transition»;
+# the answer of the domain console as it came — ForwardAnswer (like PassAnswer at door.pass). For forwarding to the signer the process answer is
+# a $ref to the operations of the OpenAPI of lesson P/08; the schemas of the deadline record, of the pair, of the pointer and
 # of the member name — a $ref to the OpenAPI of lesson P/08, no copies. The common console codes (chapter 6.5 N2, N4) are listed at their doors
-# of chapter 6.7, as at the others: 429 — at every forwarding door, 405 — at /domain/move, as at /api/held, /domain/keys (analysis of review
-# of stage B 8–10, № 12). The login of people POST /api/login is a forwarding door, transitions 1–2 (chapter 6.7 N1.2 process; analysis of review
-# of stage B 8–10, № 11).
-# Merged from the contracts M10/3, M10/4, M10/8 (the console half), M10/9 (without the module contract — P/07; the path
-# /platform/console.js stays with the console), M10/10 (without the resource door — P/05; /drain of M10/10 coincided with M10/4) — stage B,
-# without a change of behaviour, except the fixes of the analysis of review of stage A 6–7: № 16, № 24 — the copies of M2_*, M3_*, M4_* are reduced to
-# the originals (answers 400–429 — the originals of M10/9; ManifestView and FieldView at /{sub}/manifest and /mounts — the original GET /manifest;
-# Server — RFC 1123 per M10/4; at UnitId and WorkerName the phrase about the file profile is removed — norm 6.1 (was M10/3 N1.3):
-# there is no narrower profile; at 503 of the observations /servers, /resources, /where, /metrics — the word error unavailable, the answer
-# Unavailable; Retry-After — as a string, as at the original); № 25 — the door.pass path with local refusals;
-# № 29 — an empty emergency login password is not cut off by the schema (401 per the norm). The answer schemas of /events shared with the resource,
-# and SubsystemName — a $ref to the P/05 contract (decision V7 of the lesson 6 plan), no copies.
+# of chapter 6.7, as at the others: 429 — at every forwarding door, 405 — at /domain/move, as at /api/held, /domain/keys.
+# The login of people POST /api/login is a forwarding door, transitions 1–2 (chapter 6.7 N1.2 process).
+# The module contract belongs to P/07; /platform/console.js stays with the console. The resource door belongs to P/05.
+# Answers 400–429 use the shared response schemas. ManifestView and FieldView at /{sub}/manifest and /mounts are the same as at GET /manifest.
+# Server — RFC 1123; UnitId and WorkerName follow norm 6.1 N1.3 without a narrower file profile.
+# At 503 of the observations /servers, /resources, /where, /metrics — error unavailable, the answer Unavailable; Retry-After — a string.
+# The door.pass path has local refusals. An empty emergency login password is not cut off by the schema (401 per the norm).
+# The answer schemas of /events shared with the resource, and SubsystemName — a $ref to the P/05 contract, no copies.
 openapi: 3.1.0
 info:
   title: P/06 — doors of the cluster console
@@ -131,7 +126,7 @@ paths:
           minimum: 0
           maximum: 33554432
   /console/batch:
-    description: Chapter 6.1 N2 «Batch door», N3 «batch» — writing the rows of a unit and of its parts by one store operation, all or nothing (ADR-0094 B9).
+    description: Chapter 6.1 N2 «Batch door», N3 «batch» — writing the rows of a unit and of its parts by one store operation, all or nothing.
       The door is common, gets no subsystem prefix; the rows are named by full keys.
     post:
       summary: Write rows as a batch
@@ -192,7 +187,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchRefused'
         '422':
-          description: The same key, another body (ADR-0094 addendum (14)).
+          description: The same key, another body.
           content:
             application/json:
               schema:
@@ -202,7 +197,7 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
   /folders:
-    description: Chapter 6.8 N2 — cluster folders (ADR-0096). The door is common, gets no subsystem prefix.
+    description: Chapter 6.8 N2 — cluster folders. The door is common, gets no subsystem prefix.
     get:
       summary: Live cluster folders
       parameters:
@@ -293,7 +288,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FolderRefused'
         '422':
-          description: The same key, another body (ADR-0094 addendum (14)).
+          description: The same key, another body.
           content:
             application/json:
               schema:
@@ -329,7 +324,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for the other reasons.
@@ -433,7 +428,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FolderRefused'
         '422':
-          description: The same key, another body (ADR-0094 addendum (14)).
+          description: The same key, another body.
           content:
             application/json:
               schema:
@@ -492,7 +487,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FolderRefused'
         '422':
-          description: The same key, another body (ADR-0094 addendum (14)).
+          description: The same key, another body.
           content:
             application/json:
               schema:
@@ -523,7 +518,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for the other reasons.
@@ -531,7 +526,7 @@ paths:
                 type: string
                 const: '1'
   /{sub}/operations:
-    description: Chapter 6.9 N2 — admission of a group operation (ADR-0095). There is no listing door.
+    description: Chapter 6.9 N2 — admission of a group operation. There is no listing door.
     parameters:
     - name: sub
       in: path
@@ -651,7 +646,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for the other reasons.
@@ -1017,9 +1012,9 @@ paths:
         '200':
           description: Full JSON body; HEAD carries no body
   /session/break-glass:
-    description: Chapter 6.7 N1.10 (late layer; from M11/9 N1.6) — the emergency login door at the cluster console by order,
+    description: Chapter 6.7 N1.10 — the emergency login door at the cluster console by order,
       GLASS_SESSION, GLASS_SESSIONS_MAX and the log; the limit and the accounting of attempts — P/08.4 N1.10 (an own count of the console door); the session, the cookie
-      w2c_glass and the answer form — chapter 6.3 N1.3 session (analysis of review of stage A 8–10, № 40 / decision 8, № 41).
+      w2c_glass and the answer form — chapter 6.3 N1.3 session.
     post:
       summary: Emergency login
       responses:
@@ -1135,7 +1130,7 @@ paths:
         in: query
         required: false
         description: 'Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: number
           default: 0
@@ -1143,7 +1138,7 @@ paths:
         in: query
         required: false
         description: 'The bound is not included, the window from ≤ t < to. Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: number
           default: 1000000000000.0
@@ -1166,7 +1161,7 @@ paths:
         in: query
         required: false
         description: 'An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$, then 1…10000; otherwise 400, detail
-          — limit (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          — limit (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: integer
           minimum: 1
@@ -1211,7 +1206,7 @@ paths:
         in: query
         required: false
         description: 'Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: number
           default: 0
@@ -1219,7 +1214,7 @@ paths:
         in: query
         required: false
         description: 'The bound is not included, the window from ≤ t < to. Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: number
           default: 1000000000000.0
@@ -1242,7 +1237,7 @@ paths:
         in: query
         required: false
         description: 'An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$, then 1…10000; otherwise 400, detail
-          — limit (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          — limit (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: integer
           minimum: 1
@@ -1381,7 +1376,7 @@ paths:
             schema:
               $ref: '#/components/schemas/MarkInput'
   /changes:
-    description: Chapter 6.1 N2 «Change feed» — a feed of rows by long polling; the door is common, no subsystem prefix (ADR-0094 B2, addendum (3) item 6).
+    description: Chapter 6.1 N2 «Change feed» — a feed of rows by long polling; the door is common, no subsystem prefix.
     get:
       summary: 'Which rows changed after the number'
       parameters:
@@ -1469,7 +1464,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for the other reasons.
@@ -1477,7 +1472,7 @@ paths:
                 type: string
                 const: '1'
   /{sub}/next_id:
-    description: Chapter 6.1 N2 «Counter door» — reading the counter <sub>/next_id; the subsystem is always named in the path (ADR-0094 B4).
+    description: Chapter 6.1 N2 «Counter door» — reading the counter <sub>/next_id; the subsystem is always named in the path.
     parameters:
     - name: sub
       in: path
@@ -1538,7 +1533,7 @@ paths:
               schema:
                 type: string
         '503':
-          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
+          description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before a repeat of a change, read the state.
           headers:
             Retry-After:
               description: Required with the value 1 on busy; not promised for the other reasons.
@@ -2206,7 +2201,7 @@ paths:
                 type: string
                 const: '1'
   /manifest/{sub}/source:
-    description: Chapter 6.5 N2 «GET /manifest/<sub>/source» — the full manifest form for describing the backend VMS view (ADR-0116 addendum (4)–(6)); ManifestView does not change.
+    description: Chapter 6.5 N2 «GET /manifest/<sub>/source» — the full manifest form for describing the backend VMS view; ManifestView does not change.
     parameters:
     - name: sub
       in: path
@@ -2229,7 +2224,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          description: No admin on * and no ticket with the entry GET manifest/<s>/source — denied (ADR-0116 addendum (7))
+          description: No admin on * and no ticket with the entry GET manifest/<s>/source — denied
           content:
             application/json:
               schema:
@@ -2260,7 +2255,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          description: No admin on * and no ticket with the entry GET manifest/<s>/source — denied (ADR-0116 addendum (7))
+          description: No admin on * and no ticket with the entry GET manifest/<s>/source — denied
           content:
             application/json:
               schema:
@@ -2496,8 +2491,7 @@ paths:
                 type: string
         '503':
           description: A required store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review analysis of stage A 6–7,
-            № 24); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -2570,8 +2564,7 @@ paths:
                 type: string
         '503':
           description: A required store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review analysis of stage A 6–7,
-            № 24); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -2650,8 +2643,7 @@ paths:
                 type: string
         '503':
           description: A required store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review analysis of stage A 6–7,
-            № 24); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -2662,7 +2654,7 @@ paths:
         '200':
           description: Full JSON body; HEAD has no body
   /heartbeats:
-    description: Chapter 6.7 N1.6 pulse (ADR-0112 addendum (12) item 3) — heartbeats of the subsystem, only the heartbeat.door fields; no key — 404.
+    description: Chapter 6.7 N1.6 pulse — heartbeats of the subsystem, only the heartbeat.door fields; no key — 404.
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -2740,8 +2732,7 @@ paths:
                 type: string
         '503':
           description: A required store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review analysis of stage A 6–7,
-            № 24); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); lane busy — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -2752,8 +2743,7 @@ paths:
         '200':
           description: Full JSON body; HEAD has no body
   /where/{id}:
-    description: Chapter 6.5 — /where (P/06.5-05); the forms Where, NotPlaced, Door and the codes — the doors of N2 of former M10/4 (chapter 6.6,
-      P/06.6-03).
+    description: Chapter 6.5 — /where (P/06.5-05); the forms Where, NotPlaced, Door and the codes — the doors of chapter 6.6 N2 (P/06.6-03).
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -2848,8 +2838,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -2873,7 +2862,7 @@ paths:
     get:
       summary: Holder door of a place
       description: Hold not known — the hold row or the heartbeat of the holder cannot be read — 503 unavailable, not 404
-        (the observation contract «Hold of a place» unknown; V7 item 3, the decision of the Architect of 2026-10-28, P1; line 27 of the list).
+        (the observation contract «Hold of a place» unknown).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -2963,8 +2952,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3001,7 +2989,7 @@ paths:
     get:
       summary: Holder door of a place
       description: Hold not known — the hold row or the heartbeat of the holder cannot be read — 503 unavailable, not 404
-        (the observation contract «Hold of a place» unknown; V7 item 3, the decision of the Architect of 2026-10-28, P1; line 27 of the list).
+        (the observation contract «Hold of a place» unknown).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -3091,8 +3079,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3166,8 +3153,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3240,8 +3226,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3466,7 +3451,7 @@ paths:
       schema:
         $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
   /policy:
-    description: Chapter 6.6 — the doors of N2 of former M10/4.
+    description: Chapter 6.6 — the doors of N2.
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -3605,8 +3590,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3786,8 +3770,7 @@ paths:
                 type: string
         '503':
           description: A mandatory read or write of the store not confirmed — error unavailable (the doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, there is nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD carries no body
           headers:
             Retry-After:
@@ -3843,8 +3826,7 @@ paths:
       - name: labels
         in: query
         required: false
-        description: Labels separated by commas, without repeats; a repeated label — 400 (the decision of the Architect of 2026-10-20, analysis of review
-          of stage B 6–7).
+        description: Labels separated by commas, without repeats; a repeated label — 400.
         schema:
           type: string
           pattern: "^(?:(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?)$"
@@ -3965,8 +3947,7 @@ paths:
       - name: labels
         in: query
         required: false
-        description: Labels separated by commas, without repeats; a repeated label — 400 (decision of the Architect of 2026-10-20, analysis of review
-          of stage B 6–7).
+        description: Labels separated by commas, without repeats; a repeated label — 400.
         schema:
           type: string
           pattern: "^(?:(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?)$"
@@ -4008,8 +3989,7 @@ paths:
                 type: string
         '503':
           description: A mandatory store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -4128,7 +4108,7 @@ paths:
         '503':
           $ref: '#/components/responses/Unavailable'
   /unplaceable:
-    description: Chapter 6.6 (06.6-console.norms.md) — the N2 doors of former M10/4.
+    description: Chapter 6.6 (06.6-console.norms.md) — the N2 doors.
     servers:
     - url: '{origin}'
       description: The short path selects CONSOLE_ROOT.
@@ -4210,8 +4190,7 @@ paths:
                 type: string
         '503':
           description: A mandatory store read or write is not confirmed — error unavailable (doors of chapter 6.6; for the
-            observations /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by analysis of review of stage A 6–7,
-            № 24); the lane is taken — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
+            observations /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane is taken — busy with Retry-After 1; keys existed, nothing to check trust with — denied (the gate of chapter
             6.3, shut). Before repeating a change, read the state; HEAD has no body
           headers:
             Retry-After:
@@ -4354,7 +4333,7 @@ paths:
               $ref: '#/components/headers/ETag'
           description: Full JSON body; HEAD has no body
   /domain/{sub}/books/{book}:
-    description: 'Chapter 6.7 N1.1 (06.7-console.norms.md; from M11/5 N2) — the book door of this member at the cluster console (of the member and
+    description: 'Chapter 6.7 N1.1 (06.7-console.norms.md) — the book door of this member at the cluster console (of the member and
       of the holder): the cluster holds the domain — row domain/<sub>/<book>/<CLUSTER>, otherwise the copy domain/<sub>/<book>; fields outside
       show and secrets are never in the answer; the book segment is compared with the book name of the manifest byte for byte. An own door of the console, not
       forwarded.'
@@ -4474,7 +4453,7 @@ paths:
       (Platform/common/contracts/forwarding.md), hops 1–2: the cluster console forwards to the domain console of its own box
       (holds, view.url; hop 2) or to the cluster console of the holder (CLUSTERS; hop 1) and returns the answer as it came. Here — only the codes of hops 1–2;
       the answer of the domain console (view, hop 2) — the OpenAPI of lesson P/10, the codes of the domain process (hop 3) — the OpenAPI of lesson P/08; this
-      contract does not list them (forwarding contract «Refusals by transition»; analysis of review of stage A 8–10, decision 3).'
+      contract does not list them (forwarding contract «Refusals by transition»).'
     get:
       summary: 'Forwarding: domain view'
       responses:
@@ -4675,7 +4654,7 @@ paths:
         default:
           description: the answer of the domain console to HEAD as it came, without a body
   /domain/at/{cluster}/events:
-    description: 'Chapter 6.7 N1.6 read (ADR-0111 item 15) — reading the journal at the console of another member; the right is judged by the target console.'
+    description: 'Chapter 6.7 N1.6 read — reading the journal at the console of another member; the right is judged by the target console.'
     parameters:
     - name: cluster
       in: path
@@ -4722,7 +4701,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/heartbeats:
-    description: 'Chapter 6.7 N1.6 pulse (ADR-0112 addendum (12) item 3) — the subsystem heartbeat at the console of another member; the right is judged by the target console.'
+    description: 'Chapter 6.7 N1.6 pulse — the subsystem heartbeat at the console of another member; the right is judged by the target console.'
     parameters:
     - name: cluster
       in: path
@@ -4774,7 +4753,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/{rows}:
-    description: 'Chapter 6.7 N1.6 read (ADR-0111 item 15) — reading a list at the console of another member; the right is judged by the target console.'
+    description: 'Chapter 6.7 N1.6 read — reading a list at the console of another member; the right is judged by the target console.'
     parameters:
     - name: cluster
       in: path
@@ -4828,7 +4807,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/{rows}/{id}:
-    description: 'Chapter 6.7 N1.6 read, route (ADR-0111 item 15; ADR-0112 addendum (13) item 10) — reading a row or a door route at the console of another member; the right is judged by the target console.'
+    description: 'Chapter 6.7 N1.6 read, route — reading a row or a door route at the console of another member; the right is judged by the target console.'
     parameters:
     - name: cluster
       in: path
@@ -4894,7 +4873,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/{rows}/{id}/{tail}:
-    description: 'Chapter 6.7 N1.6 read, route (ADR-0111 item 15; ADR-0112 addendum (13) item 10) — a door route with a tail at the console of another member; the right is judged by the target console.'
+    description: 'Chapter 6.7 N1.6 read, route — a door route with a tail at the console of another member; the right is judged by the target console.'
     parameters:
     - name: cluster
       in: path
@@ -4966,7 +4945,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/where/{id}:
-    description: 'Chapter 6.7 N1.6, N3 «at a member» (from M11/8 N1.5) — where of a unit at the console of another member: forwarding to
+    description: 'Chapter 6.7 N1.6, N3 «at a member» — where of a unit at the console of another member: forwarding to
       CLUSTERS[cluster]/<sub>/where/<id> with X-W2C-Via, the answer of the member console as it came (the door was issued by the member console with its own
       key, the forwarding one does not re-sign it). Only GET and HEAD; another method or form — 404 not a route handed to a
       member.'
@@ -5023,7 +5002,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/at/{cluster}/{sub}/where/{table}/{place}:
-    description: 'Chapter 6.7 N1.6, N3 «at a member» (from M11/8 N1.5) — where of a place at the console of another member; query (?unit=) — as it
+    description: 'Chapter 6.7 N1.6, N3 «at a member» — where of a place at the console of another member; query (?unit=) — as it
       came.'
     parameters:
     - name: cluster
@@ -5091,7 +5070,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/keys:
-    description: 'Chapter 6.7 N1.11 (from M11/9 N1.8) — rows and key families of the domain in the store of this cluster; an own door
+    description: 'Chapter 6.7 N1.11 — rows and key families of the domain in the store of this cluster; an own door
       of the cluster console, not forwarded; view.'
     get:
       summary: Rows and key families of the domain of this cluster
@@ -5132,7 +5111,7 @@ paths:
         '503':
           description: as for GET, without a body
   /domain/shared/{sub}:
-    description: 'Chapter 6.7 N1.14, N3 resolve (from M11/11 N1.5) — values of the shared fields domain.shared of the manifest for this cluster
+    description: 'Chapter 6.7 N1.14, N3 resolve — values of the shared fields domain.shared of the manifest for this cluster
       and unit: unit → domain → inherit; the document of this cluster — at a member the object domain/shared (copy), at the holder —
       the object domain/shared-docs/rev-<rev> that the pointer names. An own door of the cluster console, not forwarded; view.'
     parameters:
@@ -5199,7 +5178,7 @@ paths:
       the login to the domain console of its own box (holds, view.url; hop 2) or to the cluster console of the holder (CLUSTERS; hop 1) and returns the answer as
       it came. Here — only the codes of hops 1–2; the answer of the domain console (operation passLogin of the OpenAPI of lesson P/10) and of the domain process
       (operation login of the OpenAPI of lesson P/08) — as it came, this contract does not list them (forwarding contract
-      «Refusals by transition»; analysis of review of stage A 8–10, decision 3; analysis of review of stage B 8–10, № 11).'
+      «Refusals by transition»).'
     post:
       summary: 'Forwarding: login of domain people'
       responses:
@@ -5220,7 +5199,7 @@ paths:
         default:
           $ref: '#/components/responses/ForwardAnswer'
   /api/held:
-    description: 'Chapter 6.7 N1.12 (from M11/10 N1.4) — the term record, the key set and the backup pair of this cluster; an open door
+    description: 'Chapter 6.7 N1.12 — the term record, the key set and the backup pair of this cluster; an open door
       (open_routes of the gate contract): Authorization is not read, an invalid Bearer — also 200 (X13).'
     get:
       summary: Term record, key set and backup pair of this cluster
@@ -5328,7 +5307,7 @@ paths:
         '503':
           description: The part is not readable
   /api/backup:
-    description: 'Chapter 6.7 N1.13 (from M11/10 N1.9) — the backup of this cluster to a signed member: headers
+    description: 'Chapter 6.7 N1.13 — the backup of this cluster to a signed member: headers
       X-W2C-Member, X-W2C-Time, X-W2C-Signature (ask signature contract Platform/common/contracts/ask-sig.md, ask = backup);
       an open door of the gate (open_routes), it checks the signature itself.'
     get:
@@ -5413,7 +5392,7 @@ paths:
         '503':
           description: as for GET, without a body
   /api/prepare:
-    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9) — forwarding to the signer: the cluster console passes the door to the domain process of its own
+    description: 'Chapter 6.7 N1.8 — forwarding to the signer: the cluster console passes the door to the domain process of its own
       box (SIGNER_URL); path, body, X-W2C-Member, X-W2C-Time, X-W2C-Signature and Idempotency-Key — as they came; it does not ask for
       identity (the signature — ask signature contract); deadline 10 s. Here — the codes of the forwarding cluster console (400 one hop, 413, 404 no signer here,
       502 did not answer); the answer of the process — as it came, operation handoverPrepare of the OpenAPI of lesson P/08.'
@@ -5464,7 +5443,7 @@ paths:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
   /api/take:
-    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9) — forwarding to the signer, as /api/prepare; deadline 90 s. The answer of the process — as it
+    description: 'Chapter 6.7 N1.8 — forwarding to the signer, as /api/prepare; deadline 90 s. The answer of the process — as it
       came, operation handoverTake of the OpenAPI of lesson P/08.'
     post:
       summary: 'Forwarding to the signer: the target takes the domain'
@@ -5515,7 +5494,7 @@ paths:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
   /domain/verify:
-    description: 'Chapter 6.7 N1.15 (ADR-0119) — checking the credentials of a second person without login: only by a ticket with the entry
+    description: 'Chapter 6.7 N1.15 — checking the credentials of a second person without login: only by a ticket with the entry
       domain/verify in calls; the console forwards to the domain process exactly {user, password} (POST /api/verify of lesson P/08), then judges need
       of the checked one by its own copy of grants and roles, and supervision (the gate and handover contract «Supervision»).'
     post:
@@ -5579,11 +5558,11 @@ paths:
                 - $ref: '#/components/schemas/ConsoleRefusal'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
   /domain/move:
-    description: 'Chapter 6.7 N1.8 (from M11/8 N1.9; P/06.7-17) — emergency move here: the cluster console of the target asks for
+    description: 'Chapter 6.7 N1.8 (P/06.7-17) — emergency move here: the cluster console of the target asks for
       the identity and the admin grant of this cluster (the gate by the console mode; need of the gate contract: POST /domain/move →
       admin on *) and passes the door to the domain process of its own box (SIGNER_URL) with the proven name in the header X-W2C-User
-      (P/08.8 N1.8 by; an X-W2C-User that came from the client is removed, C08-MOVED-BY-01); deadline 90 s. The answer of the process — as it came,
-      operation move of the OpenAPI of lesson P/08 (the body, the steps of the move and the refusals — P/08.8 N1.8). Only from the loopback a root signature in X-W2C-Time and X-W2C-Signature replaces the token (P/08.8 N1.8 by_file; C08-MOVE-BY-FILE-01).'
+      (P/08.8 N1.8 by; an X-W2C-User that came from the client is removed); deadline 90 s. The answer of the process — as it came,
+      operation move of the OpenAPI of lesson P/08 (the body, the steps of the move and the refusals — P/08.8 N1.8). Only from the loopback a root signature in X-W2C-Time and X-W2C-Signature replaces the token (P/08.8 N1.8 by_file).'
     post:
       summary: 'Forwarding to the signer: emergency move here'
       parameters:
@@ -5743,7 +5722,7 @@ components:
         - name: deleted
           in: query
           required: false
-          description: Exactly 1, only together with about — the output of tombstones (N2 «Tombstones by about»; ADR-0094 addendum (5) item 1).
+          description: Exactly 1, only together with about — the output of tombstones (N2 «Tombstones by about»).
           schema:
             const: '1'
         - name: about
@@ -5818,8 +5797,7 @@ components:
           '503':
             description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also
               the lane is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but there is nothing to check
-              trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and
-              denied were added by M10/9; HEAD carries no body
+              trust with — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); HEAD carries no body
             headers:
               Retry-After:
                 description: Required with the value 1 at busy; not promised for the other reasons.
@@ -5852,7 +5830,7 @@ components:
         schema:
           $ref: '#/components/schemas/UnitId'
         description: Exactly one id; the grammar depends on unit.id (N1.3). The segment is percent-decoded after the route is chosen;
-          not UTF-8 or not by the grammar — 400 error badkey (N2; C06-UNIT-ID-BADKEY-01, decision of the Architect 2026-10-28). A path longer than one id — 404, except the bytes door /{rows}/{id}/{blob_field}
+          not UTF-8 or not by the grammar — 400 error badkey (N2). A path longer than one id — 404, except the bytes door /{rows}/{id}/{blob_field}
           of chapter 6.1 (another method on it — 405); a wrong named id — 400.
       put:
         summary: edit fields; revision grows at every successful edit
@@ -6225,7 +6203,7 @@ components:
                 schema:
                   $ref: '#/components/schemas/TableDeleted'
           '409':
-            description: CAS repeats exhausted; references to the row do not hinder the deletion (chapter 6.1, ADR-0057)
+            description: CAS repeats exhausted; references to the row do not hinder the deletion (chapter 6.1)
             content:
               application/json:
                 schema:
@@ -6284,7 +6262,7 @@ components:
                 $ref: '#/components/headers/ETag'
             description: Full JSON body; HEAD carries no body
     PassRoot:
-      description: 'Chapter 6.5 (P/06.5-12) — door.pass (from M10/11 N1.8, N2; analysis of review of stage A 6–7, № 25): a route whose
+      description: 'Chapter 6.5 (P/06.5-12) — door.pass: a route whose
         first segment is in door.pass is passed to the live worker of the subsystem with a door (definition — 6.5) with the least name:
         method, path, query, a body of no more than 1 MiB, the headers Authorization, Content-Type, Idempotency-Key, X-Operator; the client
         to the worker — with the role certificate, if there is one. The gate of the console checks its own first, the worker checks the credentials
@@ -6294,14 +6272,13 @@ components:
         «Forwarding door.pass» (the participant — the domain console).'
       servers:
       - url: '{origin}'
-        description: The short path selects CONSOLE_ROOT (analysis of review of stage B 6–7, № 7).
+        description: The short path selects CONSOLE_ROOT.
         variables:
           origin:
             default: http://localhost
             description: Origin of the actual console without a trailing /; this is an example address, not a server setting.
       - url: '{origin}/{sub}'
-        description: The name explicitly selects a loaded subsystem, CONSOLE_ROOT included; door.pass — of its manifest (analysis of review of stage
-          B 6–7, № 7).
+        description: The name explicitly selects a loaded subsystem, CONSOLE_ROOT included; door.pass — of its manifest.
         variables:
           origin:
             default: http://localhost
@@ -6632,7 +6609,7 @@ components:
       in: header
       required: false
       description: 'Optional at this door: absent — the pass is as before, a repeat is a new write; present — the replay memory (chapter
-        6.1 N3 «replay memory»; ADR-0094 B3).'
+        6.1 N3 «replay memory»).'
       schema:
         $ref: '#/components/schemas/IdempotencyKey'
     IfMatch:
@@ -6686,7 +6663,7 @@ components:
           description: The current row in the read form of the door, secrets masked; only with the right to read this row, no row or a tombstone — no field.
     VerifyInput:
       type: object
-      description: Chapter 6.7 N1.15 (ADR-0119).
+      description: Chapter 6.7 N1.15.
       required:
       - user
       - password
@@ -6719,11 +6696,11 @@ components:
               uniqueItems: true
               items:
                 type: string
-                description: '<sub>/<id>: the name of the subsystem, «/», id — one non-empty segment without «/» (ADR-0119 addendum (13) item 2)'
+                description: '<sub>/<id>: the name of the subsystem, «/», id — one non-empty segment without «/»'
                 pattern: ^(?:[a-z][a-z0-9_-]{0,31}/[^/]+)$
     VerifyAnswer:
       type: object
-      description: Chapter 6.7 N1.15 (ADR-0119); need and supervision — only when the request has need.
+      description: Chapter 6.7 N1.15; need and supervision — only when the request has need.
       required:
       - user
       additionalProperties: false
@@ -6780,7 +6757,7 @@ components:
               const: true
     ManifestSource:
       type: object
-      description: Chapter 6.5 N2 «GET /manifest/<sub>/source» (ADR-0116 addendum (6)).
+      description: Chapter 6.5 N2 «GET /manifest/<sub>/source».
       required:
       - name
       - rev
@@ -6800,7 +6777,7 @@ components:
         served:
           type: integer
           minimum: 1
-          description: The revision the console serves — equal to rev; the installation waits for 200 with served = its own rev (ADR-0115 addendum (20)).
+          description: The revision the console serves — equal to rev; the installation waits for 200 with served = its own rev.
         sha256:
           type: string
           pattern: ^(?:[0-9a-f]{64})$
@@ -6812,7 +6789,7 @@ components:
         secret_defaults:
           type: array
           uniqueItems: true
-          description: The names of the *_secret fields for which the manifest set a default — <field> or <t>.<field>, in ascending byte order; the value is not given out (ADR-0116 addendum (5)).
+          description: The names of the *_secret fields for which the manifest set a default — <field> or <t>.<field>, in ascending byte order; the value is not given out.
           items:
             type: string
     ManifestView:
@@ -7110,7 +7087,7 @@ components:
           - blob
         default:
           description: The default of the field as written; none — null. For a *_secret field — always null, even if the manifest set it
-            (the value of a secret is not given out; P/06.5 N2 «GET /manifest»; C10-MOUNT-FIELDS-1D6).
+            (the value of a secret is not given out; P/06.5 N2 «GET /manifest»).
         required:
           type: boolean
         fixed:
@@ -7274,7 +7251,7 @@ components:
       description: 'A slot name by P/03.2 N1.4: prefix of 1–8 lowercase Latin letters and a non-empty suffix of lowercase Latin
         letters/digits with single hyphens between the parts. The match of prefix with slot.prefix of the chosen manifest is checked separately.'
     Server:
-      description: The server name — an RFC 1123 host name (chapter 6.6, former M10/4 N2.1; check of python and go 2026-10-18).
+      description: The server name — an RFC 1123 host name (chapter 6.6 N2.1).
       type: string
       minLength: 1
       maxLength: 253
@@ -7406,8 +7383,7 @@ components:
         reason:
           description: "As read from the placement or intent row, empty included — 200, without replacing it
             with an invented word; a non-empty reason is the duty of the writer, the controller (P/04 N3 «Reason», P/04-18); the reader
-            is tolerant, the writer canonical, as EventRow (guesses of stage C C06-WHERE-EMPTY-33-01, R05-G02, the Architect's decision of
-            2026-10-23)."
+            is tolerant, the writer canonical, as EventRow."
           type: string
         directory:
           anyOf:
@@ -7436,12 +7412,11 @@ components:
         expires:
           type: integer
           maximum: 9007199254740991
-          description: Integer wall-clock seconds of issue + 120 — the same number as expires in the claims of the token (the door token contract;
-            review of stage B 6–7, item 10).
+          description: Integer wall-clock seconds of issue + 120 — the same number as expires in the claims of the token (the door token contract).
         routes:
           type: array
           minItems: 1
-          description: The door.routes routes with the token and rank admission allowed to the person on the unit (chapter 6.5 N3; ADR-0115 addendum (19)); none — there is no door field.
+          description: The door.routes routes with the token and rank admission allowed to the person on the unit (chapter 6.5 N3); none — there is no door field.
           items:
             type: string
             minLength: 1
@@ -7547,13 +7522,13 @@ components:
           - admin
         sub:
           type: string
-          description: the subsystem of the row; no field — all subsystems and platform (ADR-0097 §1)
+          description: the subsystem of the row; no field — all subsystems and platform
         scope:
           type: string
           minLength: 1
         role:
           type: string
-          description: the name of the role, if the row acts through it; a direct row — without the field (ADR-0098 §4)
+          description: the name of the role, if the row acts through it; a direct row — without the field
     OpenSession:
       type: object
       required:
@@ -7649,7 +7624,7 @@ components:
           type: boolean
           enum:
           - true
-          description: step 4a of the right contract applies; a field of the answer, not a row; otherwise there is no field (the gate and pass contract `session` `admin`, ADR-0100 §1)
+          description: step 4a of the right contract applies; a field of the answer, not a row; otherwise there is no field (the gate and pass contract `session` `admin`)
         grants:
           type: array
           description: "one element per (cap, sub, scope, source); for via ticket these are the rows of its person; order is the gate-and-pass contract session grants."
@@ -7662,11 +7637,11 @@ components:
     ServerTime:
       type: number
       minimum: 0
-      description: wall-clock seconds of the console that answered (the time of P/01.1 N0, as the writer writes it; the gate and pass contract `session` `server_time`, ADR-0094 B6)
+      description: wall-clock seconds of the console that answered (the time of P/01.1 N0, as the writer writes it; the gate and pass contract `session` `server_time`)
     ClusterTimezone:
       type: string
       pattern: '^(?:[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*)$'
-      description: the IANA time zone name, a cluster setting, not the OS of the server; the value of `TIMEZONE`, not set — `UTC` (the environment file contract «Environment variables»; the gate and pass contract `session` `timezone`, ADR-0094 B6)
+      description: the IANA time zone name, a cluster setting, not the OS of the server; the value of `TIMEZONE`, not set — `UTC` (the environment file contract «Environment variables»; the gate and pass contract `session` `timezone`)
     Session:
       oneOf:
       - $ref: '#/components/schemas/OpenSession'
@@ -7698,7 +7673,7 @@ components:
         password:
           type: string
           description: An empty string passes the body parse and gets 401 at the password check, counted against the attempt limit (chapter
-            6.7 N1.10, steps 2 and 5; formerly M11/9 N1.6 door; review of stage A 6–7, item 29; review of stage A 8–10, item 41); who and why are non-empty.
+            6.7 N1.10, steps 2 and 5); who and why are non-empty.
     LoggedIn:
       type: object
       required:
@@ -7743,15 +7718,14 @@ components:
           - 'null'
           minimum: 0
           description: The heartbeat field placement.capacity.from — a number as in the heartbeat, fractional without rounding; no field — capacity.default;
-            not a number — null (P/04 N1.3; the cammeta-go log, lesson 9 item 5).
+            not a number — null (P/04 N1.3).
         labels:
           anyOf:
           - type: array
             items:
               $ref: '#/components/schemas/Label'
           - type: 'null'
-          description: The labels of the server of the worker, as ServerRow.labels; null — the source row platform/servers/<s> does not read (chapter 6.5 N2;
-            C06-WORKER-LABELS-129-04, the common output rule of stage 3).
+          description: The labels of the server of the worker, as ServerRow.labels; null — the source row platform/servers/<s> does not read (chapter 6.5 N2).
         place:
           type: string
           minLength: 1
@@ -7793,12 +7767,12 @@ components:
           type: boolean
           description: true when under the worker name there is at least one fresh contender mark of any state (an unreadable one too, marked by name_conflict_unreadable)
             (refused, nameless, waiting); the name is a key segment, marks «-» are not included (N3 «/servers» «Contenders»; the observation
-            contract «Freshness of a contender mark»; C06-CONTENDER-FRESH-33-01, C06-CONTENDER-PROJECTION-33-01).
+            contract «Freshness of a contender mark»).
         name_conflict_unreadable:
           type: boolean
           const: true
           description: Under the worker name there is a fresh contender mark that does not read (including name ≠ the key segment) —
-            the conflict is counted in name_conflict too; there is no field when there are no such marks (N3 «/servers» «Contenders»; V7 item 3, the Architect's decision of 2026-10-28, P1; line 22 of the list).
+            the conflict is counted in name_conflict too; there is no field when there are no such marks (N3 «/servers» «Contenders»).
         status:
           type: object
           additionalProperties:
@@ -7897,7 +7871,7 @@ components:
         resource_heard_at:
           description: 'Wall-clock seconds of the console (the time of P/01.1 N0) when it first read the current version of the resource heartbeat
             as readable (the observation contract «Observation of a version»); with the same version it does not move; an unreadable version, a non-answer and
-            absence do not change it; there was no readable heartbeat — null; at of the writer is not used (chapter 6.5 N2; C06-SERVER-DIAGNOSTICS-163-01, decision of the Architect of 2026-10-27).'
+            absence do not change it; there was no readable heartbeat — null; at of the writer is not used (chapter 6.5 N2).'
           anyOf:
           - type: number
           - type: 'null'
@@ -7910,7 +7884,7 @@ components:
           - $ref: '#/components/schemas/DiskSpace'
           - type: 'null'
         labels:
-          description: null — the source row platform/servers/<s> does not read (chapter 6.5 N2; the Architect's answer of 2026-10-25, G-18).
+          description: null — the source row platform/servers/<s> does not read (chapter 6.5 N2).
           anyOf:
           - type: array
             items:
@@ -7921,7 +7895,7 @@ components:
           items:
             $ref: '#/components/schemas/Label'
         labels_source:
-          description: null — the source row platform/servers/<s> does not read (chapter 6.5 N2; the Architect's answer of 2026-10-25, G-18).
+          description: null — the source row platform/servers/<s> does not read (chapter 6.5 N2).
           enum:
           - console
           - node
@@ -7934,7 +7908,7 @@ components:
           - $ref: '#/components/schemas/DecommissionRequest'
           - type: 'null'
         decommissioned:
-          description: null — the source row of the output does not read (chapter 6.5 N2; the Architect's answer of 2026-10-25, G-03).
+          description: null — the source row of the output does not read (chapter 6.5 N2).
           anyOf:
           - type: boolean
           - type: 'null'
@@ -8092,7 +8066,7 @@ components:
           enum:
           - loopback
           - mtls
-          description: the mode of the resource door by ADR-0075 (P/05 N1.4; review of stage B 3–5, item 28)
+          description: the mode of the resource door (P/05 N1.4)
         cert_until:
           type: number
     ResourceRow:
@@ -8132,12 +8106,12 @@ components:
             minimum: 1
           - type: 'null'
           description: null — the resource schema is unknown (schema of the heartbeat is not an integer; chapter 6.5 N2, chapter 6.6 N1.1a
-            heartbeat; review of stage B 6–7, item 6).
+            heartbeat).
         build:
           anyOf:
           - type: string
           - type: 'null'
-          description: null — build of the heartbeat is not a string, unknown (V7 item 3, the Architect's decision of 2026-10-28, P1; line 14 of the list).
+          description: null — build of the heartbeat is not a string, unknown.
         usage:
           type: integer
           minimum: 0
@@ -8218,8 +8192,8 @@ components:
             minimum: 0
         retention_garbled:
           description: Subsystems for which any term (<sub>/retention or <sub>/alarms_retention) has wrong days, regardless of
-            retention_withheld, in ascending byte order (P/05 N3 retain, N4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01);
-            null — the heartbeat field is not in form, unknown (V7 item 3, the Architect's decision of 2026-10-28, P1; line 14 of the list).
+            retention_withheld, in ascending byte order (P/05 N3 retain, N4);
+            null — the heartbeat field is not in form, unknown.
           anyOf:
           - type: array
             minItems: 1
@@ -8229,8 +8203,8 @@ components:
           - type: 'null'
         retention_withheld:
           description: Why the dependent tree of the subsystem was not removed in the retention pass — one reason in the order unknown → days_garbled
-            → holds_unread (P/05 N3 retain, N4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01); null — the heartbeat field is not in
-            form, unknown (V7 item 3, the Architect's decision of 2026-10-28, P1; line 14 of the list).
+            → holds_unread (P/05 N3 retain, N4); null — the heartbeat field is not in
+            form, unknown.
           unevaluatedProperties: false
           anyOf:
           - type: object
@@ -8242,7 +8216,7 @@ components:
           - type: 'null'
         settings_unread:
           description: The settings rows of the resource pass that did not read — mirror (the mirror step and the copies of bodies are not executed),
-            space (the relieve step is not executed); none such — there is no field (P/05 N1.4; V7 item 3, the Architect's decision of 2026-10-28, P1; lines 20, 21 of the list).
+            space (the relieve step is not executed); none such — there is no field (P/05 N1.4).
           type: array
           minItems: 1
           uniqueItems: true
@@ -8279,7 +8253,7 @@ components:
           minLength: 1
         server:
           description: The server field of the fresh heartbeat of the holder; "" in the heartbeat — "?". The place row is not needed —
-            its absence, unreadability or an empty server_field do not change the answer (N3; C06-WHERE-PLACE-SERVER-33-01).
+            its absence, unreadability or an empty server_field do not change the answer (N3).
           anyOf:
           - $ref: '#/components/schemas/Server'
           - const: '?'
@@ -8347,7 +8321,7 @@ components:
         labels:
           type: array
           uniqueItems: true
-          description: Without repeats; a repeated label — 400 (the label alphabet; review of stage B 6–7, item 40).
+          description: Without repeats; a repeated label — 400 (the label alphabet).
           items:
             $ref: '#/components/schemas/Label'
     LabelProbe:
@@ -8363,7 +8337,7 @@ components:
           type: array
           uniqueItems: true
           description: Units that will leave the server (will not come to it), in ascending UTF-8 byte order of the reference — chapter 6.6
-            N2.1 (review of stage B 6–7, item 33).
+            N2.1.
           items:
             $ref: '#/components/schemas/SubsystemUnitRef'
     LabelsWritten:
@@ -8376,7 +8350,7 @@ components:
           type: array
           uniqueItems: true
           description: Units that will leave the server (will not come to it), in ascending UTF-8 byte order of the reference — chapter 6.6
-            N2.1 (review of stage B 6–7, item 33).
+            N2.1.
           items:
             $ref: '#/components/schemas/SubsystemUnitRef'
     DecommissionInput:
@@ -8508,8 +8482,7 @@ components:
         is refused. Types, required, enum, url, blob, json and fixed/inherit are checked by N1 and in the order of N3, not by one
         validator of the common schema. null for a field with inherit — «not set», the value is inherited again; for other fields, except
         json, null — 400 (N2). PUT contains the changeable fields; an empty or null secret keeps the previous one (chapter 6.2 N3 «create/edit»,
-        step 3; on a change of a field from bound_to — 400 «must be given anew»). The platform names worker, placement were added by M10/4;
-        phase, observed_revision — by M10/5.
+        step 3; on a change of a field from bound_to — 400 «must be given anew»). The platform names are worker, placement, phase and observed_revision.
     Unit:
       type: object
       required:
@@ -8529,7 +8502,7 @@ components:
           required: [by, at, keep]
           additionalProperties: false
           readOnly: true
-          description: The order row of another subsystem (P/06.1 N1.2 made; ADR-0091 item 1); set by the library of the customer, the client does not set it.
+          description: The order row of another subsystem (P/06.1 N1.2 made); set by the library of the customer, the client does not set it.
           properties:
             by: {type: string}
             at: {type: number}
@@ -8539,7 +8512,7 @@ components:
           type: object
           readOnly: true
           additionalProperties: true
-          description: The active states of the unit by unit.state (P/06.1 N2 «State in the response»; ADR-0091 item 3); the value — by the schema unit.state.<name>.
+          description: The active states of the unit by unit.state (P/06.1 N2 «State in the response»); the value — by the schema unit.state.<name>.
       patternProperties:
         "^(?:[\\s\\S]*_secret)$":
           type: string
@@ -8548,8 +8521,7 @@ components:
           - '***'
       additionalProperties: true
       description: 'A typed unit row. The other fields are set by unit.fields: int/float — JSON numbers, bool — a boolean,
-        list — an array, json — a JSON value, string/url/blob — strings; a secret is empty or the mask "***" (chapter 6.2, mask, added
-        by M10/7). An absent inherit and json null are not added to the answer. An open set of names supports an arbitrary
+        list — an array, json — a JSON value, string/url/blob — strings; a secret is empty or the mask "***" (chapter 6.2, mask). An absent inherit and json null are not added to the answer. An open set of names supports an arbitrary
         manifest and does not permit foreign fields.'
     CreatedUnit:
       unevaluatedProperties: false
@@ -8829,7 +8801,7 @@ components:
       - properties:
           error:
             const: in flight
-      description: A refusal of the replay memory of a door with an optional key (chapter 6.1 N3 «replay memory»; ADR-0094 B3).
+      description: A refusal of the replay memory of a door with an optional key (chapter 6.1 N3 «replay memory»).
     BatchInput:
       type: object
       required: [writes]
@@ -9222,7 +9194,7 @@ components:
       type: string
       minLength: 1
       maxLength: 200
-      description: rid by N1.5 — at most 200 bytes of UTF-8, without / \ " ' and control characters (ADR-0060); maxLength does not replace the byte
+      description: rid by N1.5 — at most 200 bytes of UTF-8, without / \ " ' and control characters; maxLength does not replace the byte
         check.
       not:
         anyOf:
@@ -9317,7 +9289,7 @@ components:
         withheld:
           description: Units whose labels are unknown (the unit row is unreadable or its read is not confirmed) and whose rows
             are therefore hidden from a grant by labels; only to the caller with a view grant by labels; without repeats, in ascending
-            byte order; none such — there is no field (P/06.4 N2 «Who can see a row», the merge contract step 5a; C06-EVENTS-LABEL-SOURCE-138-07).
+            byte order; none such — there is no field (P/06.4 N2 «Who can see a row», the merge contract step 5a).
           type: array
           minItems: 1
           uniqueItems: true
@@ -9336,11 +9308,11 @@ components:
         occurred:
           type: number
           minimum: 0
-          description: The moment the mark is about; at most 3 fraction digits (chapter 6.4 N2; ADR-0112 addendum (13) item 7).
+          description: The moment the mark is about; at most 3 fraction digits (chapter 6.4 N2).
         to:
           type: number
           minimum: 0
-          description: The end of the span; only together with occurred and not less than it, otherwise 400; at most 3 fraction digits (chapter 6.4 N2; ADR-0117 addendum (3) item 2).
+          description: The end of the span; only together with occurred and not less than it, otherwise 400; at most 3 fraction digits (chapter 6.4 N2).
       description: Extra fields are accepted and ignored; note when absent — an empty string. The type of note is checked, its length
         is not limited by the lesson.
     MarkWritten:
@@ -9430,13 +9402,13 @@ components:
           type: string
           minLength: 1
           description: The value of the action field of the request body, not the name of the handler; a body without action has no field (the request contract
-            «Mark»; review of stage B 6–7, item 16).
+            «Mark»).
         error:
           type: string
           maxLength: 200
         reply:
           type: string
-          description: The JSON text of the perform answer (the request contract «Mark», C06-MARK-REPLY-01).
+          description: The JSON text of the perform answer (the request contract «Mark»).
         late:
           const: 'true'
       allOf:
@@ -9592,7 +9564,7 @@ components:
           anyOf:
           - type: string
           - type: 'null'
-          description: null — build of the heartbeat is not a string, unknown (for the worker and the resource; V7 item 3, the Architect's decision of 2026-10-28, P1; line 14 of the list).
+          description: null — build of the heartbeat is not a string, unknown (for the worker and the resource).
         ts:
           type: number
         live:
@@ -9686,8 +9658,7 @@ components:
           - ..
         - pattern: "^(?:[\\s\\S]*/[\\s\\S]*)$"
       description: 'The name of a table row — chapter 6.1 N1.6 (`<sub>/<t>/<name>`) and N3 «table — write a row» step 1: the name from
-        key is not empty, without `/`, not `.` and not `..`; the grammar of the unit id (N1.3, UnitId) does not apply to it (review of
-        stage B 6–7, item 1). The limit — the full store key (P/01.1).'
+        key is not empty, without `/`, not `.` and not `..`; the grammar of the unit id (N1.3, UnitId) does not apply to it. The limit — the full store key (P/01.1).'
     TableRow:
       type: object
       required:
@@ -9699,12 +9670,12 @@ components:
         revision:
           type: integer
           minimum: 0
-          description: The counter of the writes of the row (N1.6; ADR-0094 B4); 0 — the field does not read.
+          description: The counter of the writes of the row (N1.6); 0 — the field does not read.
         index:
           $ref: '#/components/schemas/StoreIndex'
         held_by:
           description: by of the active place hold (the observation contract «Hold of a place»), otherwise null;
-            an unconfirmed read of the hold or of the heartbeat — null, not 503 (N1.6; C06-TABLE-HELD-BY-33-01).
+            an unconfirmed read of the hold or of the heartbeat — null, not 503 (N1.6).
           anyOf:
           - $ref: '#/components/schemas/WorkerName'
           - type: 'null'
@@ -9859,8 +9830,7 @@ components:
             no signer here, no such book shown, …).
         detail:
           type: string
-      description: A refusal of the own doors of chapter 6.7 and of transitions 1–2 of the forwarding contract `{error, detail}` (chapter 6.7 N4; from M11/5, M11/8,
-        M11/9, M11/10, M11/11).
+      description: A refusal of the own doors of chapter 6.7 and of transitions 1–2 of the forwarding contract `{error, detail}` (chapter 6.7 N4).
     DomainKeys:
       type: object
       description: The answer of GET /domain/keys (chapter 6.7 N1.11).
@@ -10026,7 +9996,7 @@ components:
             $ref: '#/components/schemas/GuardUnavailable'
     Unavailable:
       description: A required read or write of the store is not confirmed — error unavailable (the doors of chapter 6.6; for the observations
-        /servers, /resources, /where, /metrics — chapter 6.5 N4, the word fixed by the review of stage A 6–7, item 24); the lane
+        /servers, /resources, /where, /metrics — chapter 6.5 N4); the lane
         is busy — busy with Retry-After 1; there were keys, nothing to check the trust with — denied (the gate of chapter 6.3, shut). Before
         a repeat of a change, read the state.
       headers:
@@ -10071,8 +10041,7 @@ components:
     UnitUnavailable:
       description: The store is unavailable — error with the text store unavailable; the answer under the key is not remembered. Also the lane
         is busy — error busy and Retry-After 1 (chapter 6.5 N4 «lane busy»), or there were keys, but nothing to check the trust with
-        — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»); the words busy and denied were added by
-        M10/9.
+        — error denied (the gate of chapter 6.3, shut; chapter 6.5 N4 «keys existed, no verifier available»).
       headers:
         Retry-After:
           description: Required with the value 1 on busy; not promised for the other reasons.
@@ -10220,7 +10189,7 @@ components:
       description: 'The answer of the domain console as it came (chapter 6.7 N1.5; the forwarding contract «Forwarding is one function» answer):
         status, Content-Type, X-Unreachable and the body without parsing and wrapping. The forms and codes — the operation of the OpenAPI of lesson P/10 by the row
         of the table «Domain doors» (transition 2) and the OpenAPI of lesson P/08 (transition 3); this contract does not list them (the forwarding contract
-        «Refusals by transition»; review of stage A 8–10, decision 3).'
+        «Refusals by transition»).'
       content:
         '*/*':
           schema: {}

@@ -1,9 +1,9 @@
 # Cluster console — lifecycle (lesson P/06)
 
-The lifecycle contract of the process `console` (ADR-0083 addendum (2) item 1). The rows refer to the chapters of the lesson and do not
-retell them (stage B, the move of lesson 6).
+The lifecycle contract of the process `console`. The rows refer to the chapters of the lesson and do not
+retell them.
 
-This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 [P/02.3]: ../02-installer/spec/02.3-installer.norms.md
 [P/02.4]: ../02-installer/spec/02.4-installer.norms.md
@@ -49,12 +49,12 @@ None: the setting channel is the environment only ([P/02.4] N1.2 «The setting c
   against the roots it knows itself from the environment: the store directory with `PLATFORM_STORE=file://…`, the objects root
   (`OBJECTS`), the events root (`RESOURCE_ROOT` / `EVENTS`). With the store door through the daemon socket (`configstore://…`)
   the `-dir` of the daemon and the directories of its copies are not known to the console — the installation excludes them (the layout of P/02.4 N1.1); there are no new
-  variables (C08-RING-FORBIDDEN-ROOTS-01, the decision of the Domain Specification; the class in P/06 — the decision of the Specification).
+  variables.
 - **The events root of its own server** — the journal `audit/console/e1/…` under an exclusive file lock and the operator
   marks `console/<instance>/e1/…`; the names — one `%XX` encoding ([the event journal contract](../common/contracts/event-journal.md),
   [P/06.4] N1.2 `writer`, `marks`).
 - **The objects root** — the bodies `<sub>/blobs/sha256-<hex>` ([P/06.1] N1.5); the tombstones `.gone/<object-key>` — a resource row, the console
-  is a participant `put` in it ([P/05](../05-resource/spec/05-resource.norms.md) N1.1 «Tombstones»; review analysis of stage A 6–7, № 17).
+  is a participant `put` in it ([P/05](../05-resource/spec/05-resource.norms.md) N1.1 «Tombstones»).
 - **Store rows** — the doors of units and tables, the requests and their accounting, the cleanup marks, the drain, the policy, the server labels,
   the decommission of servers, the schema ([catalogue]: the rows where the participant is `console`).
 
@@ -63,7 +63,7 @@ None: the setting channel is the environment only ([P/02.4] N1.2 «The setting c
 | Code | When | Norm |
 |---|---|---|
 | 0 | a manifest change — stop, the supervisor starts it again | [P/02.3] N3 «Manifest change» |
-| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review analysis of stage A 6–7, B2) | [P/02.3] N3 «Manifest change», N4 |
+| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark | [P/02.3] N3 «Manifest change», N4 |
 | 2 | the store schema is above its own or not a number | [P/06.6] N3 «console start — schema check» |
 | 2 | the manifest is not read or is refused | [P/02.3] N3 «Process start» |
 | 2 | `CONSOLE_ROOT` is empty or not from the catalogue | [P/06.5] N1.1 `root`, N4 |
@@ -78,7 +78,7 @@ An unreadable family row during the resealing at start — a log line, the start
 
 The deletion of bodies — by a separate command of the implementation with the flag `--writers-stopped` (the command name — [P/06.1] «Implementation decides»
 item 9), not by the process `console`: the operator runs it in an exclusive window, when the writers are stopped. The codes —
-[P/06.1] N2 «Sweep window command» (review analysis of stage A 6–7, № 8):
+[P/06.1] N2 «Sweep window command»:
 
 | Code | When | Norm |
 |---|---|---|
@@ -90,15 +90,14 @@ item 9), not by the process `console`: the operator runs it in an exclusive wind
 
 - **Readiness** — the port `CONSOLE_PORT` ([Stand]); the callback listener is opened before it, if there is one.
 - **SIGTERM** — an orderly exit. The claim `<sub>/idem/*` stays in the row, a client retry with the same key completes it
-  ([P/06.1] N3 «create», N4); the requests stay in the rows, the reaper of the next process completes them ([P/06.4] N3 «reaper»); the leader gives up the queue of operations, another holder picks them up ([P/06.9] N3 «leader»)
-  (review analysis of stage A 6–7, № 7).
+  ([P/06.1] N3 «create», N4); the requests stay in the rows, the reaper of the next process completes them ([P/06.4] N3 «reaper»); the leader gives up the queue of operations, another holder picks them up ([P/06.9] N3 «leader»).
 - **Restart** — `Restart=always`, `RestartSec=2`, except the code 2 ([P/02.4] N1.1). The stand has the directive
   `@restart console` ([Stand]).
 
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`).
 
 - The command of the «Stand» with the substitution `{port}`; `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`,
   `CONSOLE_PORT={port}`, `PLATFORM_STORE` — the role socket, `SECRETS_KEY={data}/etc/secrets/platform.key` — the ring, which the runner creates

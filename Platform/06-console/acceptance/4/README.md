@@ -1,9 +1,9 @@
 # Acceptance P/06.4 — requests and events of the console
 
-This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) N5. The preparation, the comparison and the evidence below are the parts of the former README needed by these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../05-resource/spec/05-resource.norms.md) —
+The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) N5. The forms of foreign doors belong to their owners ([P/05](../../../05-resource/spec/05-resource.norms.md) —
 the doors of the resource, [P/01.1](../../../01-store/spec/01.1-store.norms.md) — the store).
 
 ## Preparation of each scenario
@@ -54,22 +54,21 @@ with @any in the TSV is still bound to be a full mark of one of the three forms 
 ## Evidence outside TSV
 
 These are tasks for the implementation/stand, not checks already performed. Objects, events, the index, wait, streams, retention/holds and
-free space are in [the acceptance of P/05](../../../05-resource/acceptance/README.md); the holder and the mark are in
+free space are in [the acceptance of P/05](../../../05-resource/acceptance/README.md) (judge-only: checking material outside M); the holder and the mark are in
 [the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md).
 
 Reading of the branches and the schema confirm only the corresponding order/form. Timers,
 processes, file barriers, network breaks and the cryptographic identity require separate
 observations.
 
-The freshness boundary of a door row at the merge is `≤ LOST_AFTER` ([the observation contract](../../../common/contracts/observation.md);
-analysis of the review of stage A 6–7, № 1): a resource whose door row changed exactly 45 s ago is alive — the boundary is checked by the vector
-[`fresh-age`](../../../common/vectors/fresh-age/README.md), not by a step (a controlled clock is needed; analysis of the review of stage B 6–7, № 20).
+The freshness boundary of a door row at the merge is `≤ LOST_AFTER` ([the observation contract](../../../common/contracts/observation.md)): a resource whose door row changed exactly 45 s ago is alive — the boundary is checked by the vector
+[`fresh-age`](../../../common/vectors/fresh-age/README.md), not by a step (a controlled clock is needed).
 
-## Additional check of the class of errors of run 36 (Kimi)
+## Additional checks
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
-## Check of the class of errors R37 (Codex)
+## Additional source checks
 
 For the ordinary substitution of requests.key strings are needed; :int accepts a finite number, bool is excluded, truncation towards zero and the decimal notation are common.
 

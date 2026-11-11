@@ -1,6 +1,6 @@
 # Acceptance P/06.8 — cluster folders (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The norm of the chapter is [`06.8-console.norms.md`](../../spec/06.8-console.norms.md) N5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 12 scenarios / 189 steps.
@@ -31,14 +31,14 @@ The format is [the dictionary of directives and doors](../../../common/acceptanc
 | an unconfirmed read: 503, the reaper removes nothing | a refusal of the store on the read of a particular key is needed |
 | a member from a second subsystem | `testsub2` holds `display.tree.group_by`, and `display.tree.folders` next to it is forbidden; the code is one, only the prefix of the reference differs |
 
-## Static deletion profile and exact entity bytes (ADR-0127 C2)
+## Static deletion profile and exact entity bytes
 
 Before a folder-enabled profile is installed, use the existing P02.3 manifest put entry and effective Status.max_body/max_value, then its finite-profile validator before every installation write, including unchanged. The owned 13 form/arithmetic witnesses are Platform/02-installer/forms/finite-profile.cases.json; missing/H/multiplicity/provenance negatives need the Architect's separate judge and do not become passing from JSON Schema alone. The actual implementation's complete descriptors and mixed-packet coverage must be proved separately. Declare a sufficient existing body_limit/row_ceiling for the actual stand; no acceptance.yaml key is invented and AssemblyError is not an installer refusal.
 
 The 6 codec witnesses in ../../forms/deletion-body-witnesses.json count whole compact UTF-8 entities; the sufficient whole-profile test is distinct from one favorable packet's size. Check actual emitted target/done/auxiliary requests and Content-Length or decoded chunk data when proving IO; HTTP framing is excluded. This source addition performs no such store/console run, changes no existing scenario/seam or native command, and does not introduce a mutation-time DELETE refusal.
 
 
-ADR-0129(17): a unit deletion and explicit folder/memberof rows in the same batch must agree on the deletion consequences. A retained deleted unit or restoring membership gives existing 400 no membership with field at the conflicting writes row before any target mutation. Consistent explicit rows are used once; missing automatic consequences, their full size and guards remain ordinary. No silent body rewrite or full-folder traversal is permitted. The separate Z10 over-limit unreadable branches remain unchanged.
+a unit deletion and explicit folder/memberof rows in the same batch must agree on the deletion consequences. A retained deleted unit or restoring membership gives existing 400 no membership with field at the conflicting writes row before any target mutation. Consistent explicit rows are used once; missing automatic consequences, their full size and guards remain ordinary. No silent body rewrite or full-folder traversal is permitted. The separate Z10 over-limit unreadable branches remain unchanged.
 
 
 The separately declared added seam rows use the existing ports described by the forms README for their exact interventions and real observations. All earlier seam cells and process scenario bytes are preserved; source selection/translation does not execute an adapter or IO.

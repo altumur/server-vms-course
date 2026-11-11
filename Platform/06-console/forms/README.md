@@ -1,6 +1,6 @@
 # P/06 forms and console seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). Forms express the existing norms under ADR-0125 addendum (5).
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export. Forms express the existing norms.
 
 ## Catalogue-bound HTTP contract
 
@@ -27,7 +27,7 @@ A specialization removes only `in: path` parameters already replaced with catalo
 
 [runtime-constants.tsv](runtime-constants.tsv) is the numeric source of its 34 declared constants. Header is `name value unit norm meaning`, literal TAB. Name is unique `[A-Z][A-Z0-9_]*`; value is a positive JSON integer, no quotes; unit is `count|s|bytes`; norm is an existing req anchor of its owning chapter; meaning is text. No expression language or new environment knob is introduced. The cited procedure owns dependent formulas and conditional use: in particular OPS_KEEP cannot undercut the subsystem acceptance-memory term. These literals may be emitted with core; they do not declare a wholly generated stage.
 
-The numeric source of each folder bound is its row of `runtime-constants.tsv`. JSON Schema is a second machine carrier with the same value, not an independent default. The equality is a `check_spec` obligation (ADR-0129 addendum (5) item 1); prose and dependent formulas refer to the row name.
+The numeric source of each folder bound is its row of `runtime-constants.tsv`. JSON Schema is a second machine carrier with the same value, not an independent default. The equality is a `check_spec` obligation; prose and dependent formulas refer to the row name.
 
 | Source row | Second carrier JSON pointer |
 |---|---|
@@ -43,7 +43,7 @@ CLAIM_TAKEOVER_AFTER, DONE_ANSWER_KEEP, SWEEP_GRACE, SWEEP_MARK_EVERY, DOOR_TOKE
 
 ## Numeric loader supplement
 
-`numeric-loader.cases.tsv` is the separate ADR-0127 P06 C3 loader set, not part of the947 P02 corpus or220 canonical cases. Header is `case input expect relation norm`, literal TAB; input is an exact existing YAML file relative to this forms directory. For each of the9 rows call the existing P02.1 N2 `load(bytes,file)` with the input's unchanged UTF-8 bytes and actual source path. This is the same loader entry as the corpus, no new native command/class/role. The input contains no expected result; the roster supplies only the judge. `ok` requires a manifest; `refused:relations` requires the existing relations refusal, with the listed relation as sole cause. The set is4 refused/5 ok; worker.deletes numeric is refused even with fixed protection, whereas protected numeric retire/ends and named neighbors load. The original21 accepted numeric cases remain unchanged. Exact schemas/view and rule49 remain unchanged. The Architect supplies the separate strict supplemental binding for rows160–162; no exception or old-corpus replacement is added here. Source-loader execution does not prove installer, worker, physical deletion, native or SUT execution.
+`numeric-loader.cases.tsv` (judge-only: checking material outside M) is the separate P06 C3 loader set, not part of the947 P02 corpus or220 canonical cases. Header is `case input expect relation norm`, literal TAB; input is an exact existing YAML file relative to this forms directory. For each of the9 rows call the existing P02.1 N2 `load(bytes,file)` with the input's unchanged UTF-8 bytes and actual source path. This is the same loader entry as the corpus, no new native command/class/role. The input contains no expected result; the roster supplies only the judge. `ok` requires a manifest; `refused:relations` requires the existing relations refusal, with the listed relation as sole cause. The set is4 refused/5 ok; worker.deletes numeric is refused even with fixed protection, whereas protected numeric retire/ends and named neighbors load. The original21 accepted numeric cases remain unchanged. Exact schemas/view and rule49 remain unchanged. The separate strict supplemental binding applies to rows160–162; no exception or old-corpus replacement is added here. Source-loader execution does not prove installer, worker, physical deletion, native or SUT execution.
 
 ## Console localization
 
@@ -63,7 +63,7 @@ Each scenario has a new temporary root and valid catalogue, rows, identity, perm
 
 | CALL port | Intervention and observation |
 |---|---|
-| `console-repeat` | Run the regular keyed write path over real pending/done claim rows; compare target writes after the retry, excluding claim/diagnostic writes. Bodies differ only at one valid customer field. For the ADR-0127 POST continuation cases, perform the first real target write over the declared tombstone or absent row, lose its reply and stop before done; observe the unchanged pending version for 30 s and take it with another console. Read intended revision/born through the implementation's real claim codec, not a newly required public claim schema. A late old executor uses its former guard. For unknown planning-save outcome, no target call occurs before a confirmed owned reread; compare actual target bytes to the saved intent. |
+| `console-repeat` | Run the regular keyed write path over real pending/done claim rows; compare target writes after the retry, excluding claim/diagnostic writes. Bodies differ only at one valid customer field. For the POST continuation cases, perform the first real target write over the declared tombstone or absent row, lose its reply and stop before done; observe the unchanged pending version for 30 s and take it with another console. Read intended revision/born through the implementation's real claim codec, not a newly required public claim schema. A late old executor uses its former guard. For unknown planning-save outcome, no target call occurs before a confirmed owned reread; compare actual target bytes to the saved intent. |
 | `console-next-id` | Invoke real numeric recovery with an unreadable counter and controlled list outcomes; issue no id until the full history is confirmed. |
 | `console-body-window` | Invoke the implementation-chosen maintenance command/entry point with its actual acknowledgement flag. Use real objects, list versions and controlled monotonic time. Inject list CAS rejection before the first deletion; count actual unlinks. |
 | `console-secret-edit` | Use a valid manifest with address credentials and password_secret; valid old envelopes are made/opened by the regular crypto code on a temporary ring. Count actual target/done-claim writes. The fixture password is test data; scan the actual refusal for it. |
@@ -87,10 +87,10 @@ Each scenario has a new temporary root and valid catalogue, rows, identity, perm
 
 [stages.tsv](stages.tsv) has 11 stages, all kit `-`, with 64 CALL scenario rows across nine chapters. The gates are aids, not full acceptance. Every own/common vector assignment and additional probe/reading remains required. The 77 requests-body HTTP rows and 21 accepted-json round trips require the real store+console judge; native worker 52 does not replace console 77. The newly released runner target P/06/vectors-requests-body is this HTTP obligation; no pure native console command or kit function PASS is invented. Late domain process tests need the actual neighbours 08–10 and cannot be closed by unit fixtures.
 
-The ADR-0129(17) additions use only these same ports. Build the state a case names as real rows: the pending claim, any saved reservation or intended revision/born, and a valid target row. Observe the unchanged pending for the declared eligibility interval and take it by the normal CAS path. No input bypasses the normal claim codec, gate or ownership.
+The additions use only these same ports. Build the state a case names as real rows: the pending claim, any saved reservation or intended revision/born, and a valid target row. Observe the unchanged pending for the declared eligibility interval and take it by the normal CAS path. No input bypasses the normal claim codec, gate or ownership.
 
 For the unit-delete additions, run a real unit-delete batch with a readable valid one-folder membership and valid current rights/CAS/guards. `writes[0]` deletes U, `writes[1]` is the explicit folder when supplied, and `writes[2]` is the explicit membership when supplied. Counters observe actual target unit/folder/memberof mutations after setup, excluding setup/claim/journal from those named counters only. unique_target_keys inspects the real emitted target batch. Current auxiliary/gone effects, admission, full size accounting and atomicity still apply. The adapter is never passed expected results.
 
-## Accepted ADR-0127 review: computed TLS default
+## Computed TLS default
 
 For W2C_TLS_DIR unset, execute the common environment resolver under a Linux profile and a macOS profile: /etc/w2c/tls versus <W2C_BOX>/tls. A supplied path is used verbatim and Given remains true; omission remains Given=false even after resolution. daemon-flags default=- means computed, never the literal string "-" or an unconditional Linux path. These are resolver/start checks, not new flags or an edit of the common env-file contract. VerifyUnavailable is the own verify503 form only; all other ConsoleRefusal properties remain unchanged.
