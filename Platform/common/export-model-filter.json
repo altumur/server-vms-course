@@ -13512,6 +13512,16 @@
       "basis": "P01.86: machine form of the public test-side descriptors of README.md."
     },
     {
+      "path": "Platform/common/acceptance/forms/engine-code-rules.tsv",
+      "disposition": "judge_only",
+      "basis": "P02.49: the code checks of the judge engine (ADR-0135 addendum (13) item 4); in the J input, not in the model input."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/engine-code-rules.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P02.49: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/extra.scenarios.tsv",
       "disposition": "judge_only",
       "basis": "P01.142: the machine form of the probes of P/01.1/extra; judge only."
