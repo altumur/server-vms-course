@@ -612,7 +612,7 @@ REGISTERED_SHARED_LESSONS = {
 # optional h2 after the readiness checklist, in both languages. Its ids are checklist ids (id-map, ru↔en), they carry no
 # stage of stages.tsv and may not be placed on one.
 SYSTEM_EN, SYSTEM_RU = "System checklist", "Перечень урока системы"
-STAGE_NORM_REQUIRED = {"P/01", "P/02"}   # ADR-0133 (43): explicit adoption; absence of item elements cannot opt out.
+STAGE_NORM_REQUIRED = {"P/01", "P/02", "P/03"}   # ADR-0133 (43): explicit adoption; absence of item elements cannot opt out.
 INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
 INVENTORY_END = "<!-- checklist-inventory:end -->"
 # A section of an old lesson that moved keeps only a pointer: its text starts with «Перенесено в»; «Остаётся здесь» —
