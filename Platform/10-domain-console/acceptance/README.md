@@ -1,16 +1,15 @@
 # Acceptance P/10 — the domain console
 
-This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../common/acceptance/domain-stand.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
-`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10). The norm of the lesson is
+`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`). The norm of the lesson is
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The command `alarms` — the vector [`vectors/alarms`](../vectors/alarms/README.md) (the current corpus). The forms of foreign doors — their owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../../08-domain/acceptance/3/README.md) («Preparation of each scenario», from
-M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); for selected scenarios — with a declaration of the shared in `testsub`, as the acceptance README of
+The preparation is as the acceptance README of [chapter 8.3](../../08-domain/acceptance/3/README.md) («Preparation of each scenario»: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`); for selected scenarios — with a declaration of the shared in `testsub`, as the acceptance README of
 [chapter 8.9](../../08-domain/acceptance/9/README.md):
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` — `int` with `inherit: 1`;
@@ -35,7 +34,7 @@ the execution — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) N1.3)
 The stand does not call the alarm page (the front once a second, the urgent report, `truncated`): the stand has no training subsystem that
 raises alarms. This is checked by the vector `alarms` and by reading.
 
-## Coverage audit of P/10, the second pass (Gemini)
+## Store rows on the stand
 
 The rows of the store of
 `hold` are written by the runner through the door `member hold store` (`admin.sock`); it cannot delete a row under `domain/` (P/01.2 N1.3
@@ -52,7 +51,7 @@ The subset of expect does not replace the check of the full HTTP form of the Ope
 
 ## Forwarding credential seams
 
-[seams.tsv](seams.tsv) uses `scenario step request expect`, literal TAB, and the CALL/JSON grammar of [P/02](../../02-installer/forms/README.md). `CALL console-forward-credentials <JSON>` is an acceptance adapter over the ordinary gate, HTTP forwarding and writer admission, not a new product API or native vectors command. P/06.7 uses the same port. Each case has a fresh temporary root, valid catalogue, confirmed holder, readable rows, current turn, ordinary keys/signatures, independent real sessions for persons `a` and `b`, and the grants needed by the selected valid operation. The adapter obtains tokens and cookie proof through the ordinary code. It does not supply a successful gate result or echo an expectation.
+[seams.tsv](seams.tsv) (judge-only: acceptance cases for P/10-R016) uses `scenario step request expect`, literal TAB, and the CALL/JSON grammar of [P/02](../../02-installer/forms/README.md). `CALL console-forward-credentials <JSON>` is an acceptance adapter over the ordinary gate, HTTP forwarding and writer admission, not a new product API or native vectors command. P/06.7 uses the same port. Each case has a fresh temporary root, valid catalogue, confirmed holder, readable rows, current turn, ordinary keys/signatures, independent real sessions for persons `a` and `b`, and the grants needed by the selected valid operation. The adapter obtains tokens and cookie proof through the ordinary code. It does not supply a successful gate result or echo an expectation.
 
 `transition` is the **first external cookie hop**: 1 is a non-holder cluster console, 2 the holder's cluster console, 3 a direct request to the domain console. For 1/2, use the actual cluster-console forwarding path; running only domainconsole is insufficient. Subsequent receivers and the final writer run their ordinary admission code. A controlled HTTP transport may intercept the outgoing request at the first hop and deliver it to those ordinary handlers; it does not replace their identity, need, may or CSRF decisions. This port alone is not the full multi-process stand.
 
@@ -64,6 +63,6 @@ The returned JSON normalizes actual observations: `refused` means a non-success 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
+[seams.tsv](seams.tsv) (judge-only: acceptance cases for P/10-R016) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
 
-The review added eight alarms neighbours and 34 effect CALL steps. The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.
+The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

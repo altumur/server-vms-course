@@ -1,0 +1,60 @@
+req_id	file	source	date	removed
+-	spec/08.9-domain.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/08.9-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(the domain process; ADR-0080; module «Platform» — ADR-0083)
+P/08.9-R002	spec/08.9-domain.norms.md#N1	reconciliation of M11, A22	2026-11-11	added by the reconciliation of M11, A22)
+P/08.9-R002	spec/08.9-domain.norms.md#N1	the Architect's decision of 2026-10-20	2026-10-20	(the Architect's decision of 2026-10-20)
+P/08.9-R002	spec/08.9-domain.norms.md#N1	ADR-0032	2026-11-11	(ADR-0032)
+P/08.9-R002	spec/08.9-domain.norms.md#N1	ADR-0010	2026-11-11	(ADR-0010)
+P/08.9-R002	spec/08.9-domain.norms.md#N1	the Architect's decision on the questions of M11/11; C6	2026-11-11	The Architect's decision on the questions of M11/11; C6
+P/08.9-R002	spec/08.9-domain.norms.md#N1	the Architect's decision on the questions of M11/11; C6	2026-11-11	«exact document».
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	review of stage A 8–10, № 26	2026-11-11	(review of stage A 8–10, № 26)
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	G6	2026-11-11	by the order G6, as the objects
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	the Architect's decision of 2026-10-20 on the questions of the assembly of lesson 8, item 2; the Architect's decision, review of stage B 8–10, № 1, ADR-0083 addendum (15)	2026-10-20	(the Architect's decision of 2026-10-20 on the questions of the assembly of lesson 8, item 2; the Architect's decision, review of stage B 8–10, № 1, ADR-0083 addendum (15))
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	reconciliation of M11, A1	2026-11-11	(added by the reconciliation of M11, A1)
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	C08-SHARED-SPLIT-BATCH-01	2026-11-11	, C08-SHARED-SPLIT-BATCH-01
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	M11/11	2026-11-11	, added by M11/11
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	C08-CATALOG-SHARED-WORKER-01	2026-11-11	(C08-CATALOG-SHARED-WORKER-01)
+P/08.9-R003	spec/08.9-domain.norms.md#N1.2	C6	2026-11-11	(C6)
+P/08.9-R004	spec/08.9-domain.norms.md#N1.3	ADR-0032	2026-11-11	ADR-0032;
+P/08.9-R004	spec/08.9-domain.norms.md#N1.3	reconciliation of M11, A9	2026-11-11	; added by the reconciliation of M11, A9
+P/08.9-R004	spec/08.9-domain.norms.md#N1.3	reconciliation of M11, A6	2026-11-11	(reconciliation of M11, A6)
+P/08.9-R004	spec/08.9-domain.norms.md#N1.3	reconciliation of M11, A7	2026-11-11	(reconciliation of M11, A7)
+P/08.9-R005	spec/08.9-domain.norms.md#N1.4	C08-FORMER-SHARED-01	2026-11-11	; C08-FORMER-SHARED-01
+P/08.9-R006	spec/08.9-domain.norms.md#N1.6	M11/11	2026-11-11	, added by M11/11
+P/08.9-R006	spec/08.9-domain.norms.md#N1.6	the pilot of the data family schemas, D2	2026-11-11	(added by the pilot of the data family schemas, D2)
+P/08.9-R006	spec/08.9-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11, A5	2026-11-11	(the Architect's decision on the reconciliation of M11, A5)
+P/08.9-R006	spec/08.9-domain.norms.md#N1.6	C10-SHARED-EMPTY-DELIVERY-01	2026-11-11	(C10-SHARED-EMPTY-DELIVERY-01)
+P/08.9-R007	spec/08.9-domain.norms.md#N1.8	the Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2	2026-11-11	Moved to lesson P/10
+P/08.9-R007	spec/08.9-domain.norms.md#N1.8	the Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2	2026-11-11	(the
+P/08.9-R007	spec/08.9-domain.norms.md#N1.8	the Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2	2026-11-11	Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2)
+P/08.9-R008	spec/08.9-domain.norms.md#N1.9	C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25	2026-10-25	(moved there without a
+P/08.9-R008	spec/08.9-domain.norms.md#N1.9	C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25	2026-10-25	change of behaviour; C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25)
+P/08.9-R009	spec/08.9-domain.norms.md#N2	ADR-0032	2026-11-11	ADR-0032;
+P/08.9-R009	spec/08.9-domain.norms.md#N2	M11/11	2026-11-11	(added by M11/11)
+P/08.9-R010	spec/08.9-domain.norms.md#N3	the Architect's decision, review of stage B 8–10, № 1, ADR-0083 addendum (15); the schedule of Codex R-B810-01, Claude R-1	2026-11-11	(the Architect's decision, review of stage B 8–10, № 1, ADR-0083 addendum (15); the schedule of Codex R-B810-01, Claude R-1)
+P/08.9-R011	spec/08.9-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11; coverage audit of P/08; its second pass (Gemini); ADR-0094 B3, B4	2026-11-11	, scenario 01 from M11/11 (the number and the steps are the former ones), scenario 07 — coverage audit of P/08, scenario 08 — its second pass (Gemini), scenario 09 — ADR-0094 B3, B4
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11 sc. 04	2026-11-11	former M11/11 sc. 04: the
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A1	2026-11-11	A1), and the nobody's object
+P/08.9-R011	spec/08.9-domain.norms.md#N5	G6	2026-11-11	writes over by the order G6,
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A14	2026-11-11	, A14
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11 «Implementation decides» item 1	2026-11-11	(M11/11 «Implementation decides» item 1)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11 «Implementation decides» item 2	2026-11-11	(item 2)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11-02, -03, -04, -06, -09; id-map	2026-11-11	The items of the chapter are M11/11-02, -03, -06, -09 and the 8.9 part of the row M11/11-04 by the `note`
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11-02, -03, -04, -06, -09; id-map	2026-11-11	of id-map (the move of lesson 8).
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A1	2026-11-11	(A1)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	G6	2026-11-11	is overwritten by the order G6 (
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A9	2026-11-11	(A9)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A6	2026-11-11	(A6)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A7	2026-11-11	(A7)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	coverage audit of P/08, second pass by Gemini	2026-11-11	(coverage audit of P/08, second pass by Gemini)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11 sc. 02	2026-11-11	(former M11/11 sc. 02)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A5	2026-11-11	(A5)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11-08; the Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2; id-map	2026-11-11	(M11/11-08) is moved to lesson P/10 as P/10-06 (the Architect's decision on the review of stage A 8–10, № 8; the plan of lesson 8 V2; id-map (historical record)).
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11 sc. 04	2026-11-11	(former M11/11 sc. 04)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	reconciliation of M11, A14	2026-11-11	(A14)
+P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11-04; id-map	2026-11-11	8.9 part of the row M11/11-04 by the `note` of id-map; the
+-	acceptance/9/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	acceptance/9/README.md#intro	the plan of lesson 8 V5	2026-11-11	; the plan of lesson 8 V5
+-	acceptance/9/README.md#stand	M11/03	2026-11-11	, from M11/03

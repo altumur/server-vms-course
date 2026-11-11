@@ -1,23 +1,21 @@
 # Acceptance P/08.4 — people and grants (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters; formerly — the M11 dictionary of the acceptance README of
-M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.4-domain.norms.md`](../../spec/08.4-domain.norms.md) N5. In total 33 scenarios / 498 steps.
 
-The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (the canonical package README lists the cases).
+The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (judge-only: the vectors of the function may; the canonical package README lists the cases).
 
 ## Stand
 
-The preparation is as the acceptance of [chapter 8.5](../5/README.md) (formerly the acceptance README of
-M11/05): the catalogue `testsub` and `testsub2`, the counter
+The preparation is as the acceptance of [chapter 8.5](../5/README.md): the catalogue `testsub` and `testsub2`, the counter
 `c1-<cluster>` and the shelf `sh1` on each cluster, the training writer of contributions. The doors `holder`, `member`, `signer` and the directives
 `@domain`, `@person`, `@stop agent` — the section «Domain stand» of the common acceptance README.
 
 - The person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive
-  `@admin`): an assignment of the role `admin`, there is no direct row in `domain/grants/domain` (ADR-0100 §5). The runner goes as them by default:
+  `@admin`): an assignment of the role `admin`, there is no direct row in `domain/grants/domain`. The runner goes as them by default:
   step 4a at the domain door and `admin` `*` in the grants row of each cluster of the stand.
 - `@person -` is without a token; `root` is returned by the directive `@person root …`.
 - `$ta` is the token of `ann` from the login answer; the steps with `@header Authorization: Bearer $ta` go on her behalf, the others — on behalf of
@@ -34,4 +32,4 @@ The format is the dictionary of the «Stand» and the section «Domain stand» o
 
 ## Kit seams
 
-[CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) (judge-only: the seams of the chapter; they check P/08.4-R013 `first`, P/08.0-R006 for the role and group rows, P/08.4-R007, P/08.4-R004) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

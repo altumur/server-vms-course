@@ -1,15 +1,13 @@
 # P/09 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/09-agent.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/09-agent.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/09-agent.md` (for people, not in the export).
 
 ## Task
 
 Implement the process `domainagent` in the language `<LANG>`: the agent of a member and the relay mode — by the two chapters of the lesson; pass
-the N5 acceptance of the chapters and close their readiness checklists. 45 norms in all: P/09.1-01…36 and P/09.2-01…09; the correspondence to the former ids
-— `id-map.tsv` (historical record). The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
-ADR-0083 addendum (1), (14)). The holder side — lesson [P/08](../../08-domain/spec/08-domain.README.md), the domain console — lesson P/10,
+the N5 acceptance of the chapters and close their readiness checklists. 45 norms in all: P/09.1-01…36 and P/09.2-01…09. The holder side — lesson [P/08](../../08-domain/spec/08-domain.README.md), the domain console — lesson P/10,
 the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
 - **9.1.** The agent of a member: the member key and the member side in the acceptance (`join`); the report pass whole or as a delta with a signature; the book
@@ -42,13 +40,13 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   of the publication, of the holder's answer, of the token request and of the package — the original is in [the OpenAPI of the process
   `domain`](../../08-domain/spec/08-domain.api.openapi.yaml) (`Publication`, `Carry`, `HolderAsk`, `Batch`,
   `RelayAnswer`): the relay door refers to them, the agent calls the holder doors by it.
-- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the paragraphs «Data» of the chapters; ADR-0088); the forms shared by
+- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the paragraphs «Data» of the chapters); the forms shared by
   a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
-  family schema is self-contained, ADR-0092).
+  family schema is self-contained).
 - The acceptance of the chapters checks the norms: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). The stand of several
   clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand».
   The vectors of the lesson — [`follow`](../vectors/follow/README.md) (9.1); the common ones — [`agent-sig`](../../common/vectors/agent-sig/README.md),
-  [`peer`](../../common/vectors/peer/README.md) (9.1), [`accept`](../../common/vectors/accept/README.md) (9.2). Flags,
+  [`peer`](../../common/vectors/peer/README.md) (9.1), [`accept`](../../common/vectors/accept/README.md) (9.2) (judge-only: the common vector packages). Flags,
   environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
 - The lecture (`ru/09-agent.md`, for people, not in the export) explains the mechanism and the examples.
 
@@ -118,10 +116,10 @@ relies on the agent pass.
 ### Chapter 9.2 — the relay mode
 
 1. The door and the relay pass of N3: its own copy and `rev` of each member (the function «accept» over its own memory — [the report
-   acceptance contract](../../common/contracts/accept.md), the vectors [`accept`](../../common/vectors/accept/README.md)), the deltas
+   acceptance contract](../../common/contracts/accept.md), the vectors [`accept`](../../common/vectors/accept/README.md) (judge-only: a common vector package)), the deltas
    against the confirmed base, the packages, the return of the untaken publications into the memory (step 5).
 2. The check of the member signature at the door — [the agent signature contract](../../common/contracts/agent-signature.md), the key — from `keys`
-   of the package answer; the vectors [`agent-sig`](../../common/vectors/agent-sig/README.md).
+   of the package answer; the vectors [`agent-sig`](../../common/vectors/agent-sig/README.md) (judge-only: a common vector package).
 3. `domain_age` in the answer to the member (N1.4).
 4. The server side of the door — [the role certificate contract](../../common/contracts/role-certificate.md#the-server-side-the-class-signed).
 5. The stand: the scenarios of [the acceptance of the chapter](../acceptance/2/README.md).

@@ -1,21 +1,20 @@
-# P/09 — doors of the process domainagent: HTTP contract (one file of the lesson, «its own part» of a chapter — by a tag; the move plan of lesson 9
-# § 4 «OpenAPI», V9). Tag local-door — chapter 9.1 (09.1-agent.norms.md): POST /tokens/{sub}/{kind}, the local token door
+# P/09 — doors of the process domainagent: HTTP contract (one file of the lesson, «its own part» of a chapter — by a tag).
+# Tag local-door — chapter 9.1 (09.1-agent.norms.md): POST /tokens/{sub}/{kind}, the local token door
 # of the member's agent; the canon of the door — the contract Platform/common/contracts/local-token-door.md (the role socket, identity, body,
 # TOKEN_BODY, TOKEN_WAIT, refusals «at the agent»), here — only the HTTP form: path, bodies, codes. Tag relay — chapter 9.2
 # (09.2-agent.norms.md): the relay door (RELAY=1) — POST /api/member/{member}, GET /api/carry/{member},
-# POST /api/tokens/{member}/{sub}/{kind}, plus the six forwarded GETs of chapter 9.2 N2 below. Ten operations are listed; the four existing operationIds remain unchanged.
+# POST /api/tokens/{member}/{sub}/{kind}, plus the six forwarded GETs of chapter 9.2 N2 below. Ten operations are listed.
 # The bodies that the relay carries, and the bodies of the holder that the agent returns «as they came», — by a relative $ref to the OpenAPI
-# of the process domain (../../08-domain/spec/08-domain.api.openapi.yaml; plan 9 V3: one form per wire, no copies):
+# of the process domain (../../08-domain/spec/08-domain.api.openapi.yaml; one form per wire, no copies):
 # Publication, Carry, HolderAsk, Refusal, TokenRefusal, Deposed, StandbyBody, RequestId, the parameters Member, Sub, Kind,
-# AgentSignature, the answer TokenRefused. This contract does not list the codes of the holder's transitions (analysis of review of stage A 8–10,
-# decision 3): at the token door of the relay they are the operation holderToken of OpenAPI 08; at the local door the agent returns the code and body
+# AgentSignature, the answer TokenRefused. This contract does not list the codes of the holder's transitions:
+# at the token door of the relay they are the operation holderToken of OpenAPI 08; at the local door the agent returns the code and body
 # of the holder as they came — their forms by a reference to OpenAPI 08. The relay door's own codes — P/09.2 N2, the body — the common Refusal
 # of OpenAPI 08 (without narrowing). The refusals of the local door — the contract «Refusals» and P/09.1 N4.
-# From the contract M11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with the schemas LocalAsk, Given,
-# the answers Unavailable, InvalidReply — stage B, without a change of behaviour; Sub, Kind, RequestId — by a reference to OpenAPI 08
-# (the same form); the copy of Refusal of M11/7 (the reason list) is replaced by a reference to TokenRefusal, Deposed, StandbyBody of OpenAPI 08 and
-# by its own form AgentRefusal for the refusals of the agent itself. The contract M11/4 had no paths of the relay door (only the description
-# «the same forms as at the holder; codes — N2 of the lesson»): the paths of tag relay are written by P/09.2 N2.
+# The path /tokens/{sub}/{kind} has the schemas LocalAsk, Given,
+# the answers Unavailable, InvalidReply; Sub, Kind, RequestId — by a reference to OpenAPI 08
+# (the same form); the refusals — by a reference to TokenRefusal, Deposed, StandbyBody of OpenAPI 08 and
+# by its own form AgentRefusal for the refusals of the agent itself. The paths of tag relay are written by P/09.2 N2.
 openapi: 3.1.0
 info:
   title: P/09 — doors of the process domainagent
@@ -252,7 +251,7 @@ paths:
                 $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenSealed'
         '502':
           description: 'The holder did not answer — did not answer, as forwarding does (the forwarding contract «Forwarding is one function»
-            answer; the Architect''s decision on the M11 check, Y8; P/09.2 N2, N4)'
+            answer; P/09.2 N2, N4)'
           content:
             application/json:
               schema:
@@ -277,7 +276,7 @@ paths:
       tags:
       - relay
       operationId: relayMemberRow
-      summary: 'Forward to the holder: Row of a part at the request of a member (the report intake contract; ADR-0113)'
+      summary: 'Forward to the holder: Row of a part at the request of a member (the report intake contract)'
       description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
         The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
       responses:
@@ -310,7 +309,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody. Under N1.4 rows, if the holder does not
             answer and no signed row exists in memory, return the same 503; a cached signed row follows the existing 200 branch.'
           content:
@@ -382,7 +381,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody.'
           content:
             application/json:
@@ -409,7 +408,7 @@ paths:
       - relay
       operationId: relayTopologyBody
       summary: 'Forward to the holder: Body of the member topology {doc, via} at a new sha256 of the topology field of the answer
-        (chapter 8.3 N1.2 carry; ADR-0113 addendum (47) item 3)'
+        (chapter 8.3 N1.2 carry)'
       description: 'P/09.2 N2: keep the member signature and upstream answer as received. The holder success form belongs to P/08.
         The members row may also come from the existing signed-row memory under N1.4; no other reply is synthesized.'
       responses:
@@ -454,7 +453,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody.'
           content:
             application/json:
@@ -528,7 +527,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody.'
           content:
             application/json:
@@ -601,7 +600,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody.'
           content:
             application/json:
@@ -675,7 +674,7 @@ paths:
           description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global
             503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an
             admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or
-            knock for the GET case (P/09.2 N1.4, N2; review M1). That own branch has no Retry-After. A holder 503 is passed through
+            knock for the GET case (P/09.2 N1.4, N2). That own branch has no Retry-After. A holder 503 is passed through
             with its original headers and body; it is not rewritten as RelayNothingBody.'
           content:
             application/json:
@@ -689,7 +688,7 @@ paths:
             or body form; the owner operation remains authoritative.
         '404':
           description: 'reason: empty_part — there is no row of the part, the head of the current term is written, the copy is
-            removed; the head is not written — 503 unavailable, the copy is kept (ADR-0113 addendum (47) item 1); not_a_book —
+            removed; the head is not written — 503 unavailable, the copy is kept; not_a_book —
             the book is not to "*"; without reason — not a member (P/08.3 N2).'
           content:
             application/json:
@@ -715,7 +714,7 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/RelayRefusalPlain'}
     RelayNothingYet:
-      description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global 503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or knock for the GET case (P/09.2 N1.4, N2; review M1).'
+      description: 'The text is the relay has nothing from the domain for <member> yet. Before the first holder batch: global 503 before signature and without a knock, including strangers. Afterwards POST hold without an answer, or GET of an admitted member with no cached carry after membership/key/signature checks: 503. No Retry-After, invented carry, or knock for the GET case (P/09.2 N1.4, N2).'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/RelayNothingBody'}
@@ -823,12 +822,12 @@ components:
       required: [error]
       additionalProperties: false
       description: 'At the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 did not answer of the relay
-        — also 503 (the contract «The door» no_queue, «Refusals»; analysis of review of stage B 8–10, № 22, Claude M-4)'
+        — also 503 (the contract «The door» no_queue, «Refusals»)'
       properties:
         error: {const: unavailable}
         detail: {type: string}
     RelayCarry:
-      description: 'Carry from this particular member cache; domain_age is its monotonic age, not age of the latest unrelated batch. Empty/other-member batches cannot refresh it; restart clears the cache (P/09.2 N1.4; review C1).'
+      description: 'Carry from this particular member cache; domain_age is its monotonic age, not age of the latest unrelated batch. Empty/other-member batches cannot refresh it; restart clears the cache (P/09.2 N1.4).'
       allOf:
         - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Carry'
       required: [domain_age]

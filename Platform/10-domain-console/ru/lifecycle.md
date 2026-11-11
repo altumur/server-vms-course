@@ -1,14 +1,14 @@
 # Консоль домена — жизненный цикл (урок P/10)
 
-Контракт жизненного цикла процесса консоли домена `domainconsole` (ADR-0083 доп. (2) п. 1): запуск, настройка, диск, выход. Нормы —
-[P/10](spec/10-domain-console.norms.md) (стадия B).
+Контракт жизненного цикла процесса консоли домена `domainconsole`: запуск, настройка, диск, выход. Нормы —
+[P/10](spec/10-domain-console.norms.md).
 
-Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
+Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом.
 
 ## Запуск
 
 - Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`, `W2C_ROLE=domainconsole`,
-  `User=w2c`, группы `w2c-store w2c-events` (разбор ревью стадии A 8–10, № 33); кольца и группы `w2c-secrets` нет —
+  `User=w2c`, группы `w2c-store w2c-events`; кольца и группы `w2c-secrets` нет —
   [P/02.4 N1.12](../../02-installer/ru/spec/02.4-installer.norms.md); общее юнитов — P/02.4 N1.1 `common`
   ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md)).
 - У кластера-держателя, рядом с процессом `domain`. Строк держателя консоль не пишет: правки передаёт процессу
@@ -20,14 +20,14 @@
 
 ## Окружение
 
-Канал настройки — только окружение P/02.4 N1.2 и раскладка `PLATFORM_DIR` (второй пилот, N-4).
+Канал настройки — только окружение P/02.4 N1.2 и раскладка `PLATFORM_DIR`.
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
 | `W2C_ROLE` | роль `domainconsole` | юнит | P/02.4 N1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS` / `PLATFORM_OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | состояние, дверь хранилища, корни объектов и событий (журнал роли пишется) | P/02.4 N1.2 | P/02.4 N1.2 «Канал настройки и раскладка» |
-| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 N1.6, [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | [DOMAIN_CONSOLE_HOST/DOMAIN_CONSOLE_PORT — умолчание формы](../forms/daemon-flags.tsv) — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 N1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, S-3) | [P/02.4 N1.12](../../02-installer/ru/spec/02.4-installer.norms.md) |
-| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../../common/ru/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | [SIGNER_URL — умолчание формы](../forms/daemon-flags.tsv) (стенд одной машины, как [жизненный цикл P/08](../../08-domain/ru/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 N1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 N1.8); [P/08.2 N1.3](../../08-domain/ru/spec/08.2-domain.norms.md) |
+| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 N1.6, [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit`) | [DOMAIN_CONSOLE_HOST/DOMAIN_CONSOLE_PORT — умолчание формы](../forms/daemon-flags.tsv) — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 N1.6 `process`) | [P/02.4 N1.12](../../02-installer/ru/spec/02.4-installer.norms.md) |
+| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../../common/ru/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | [SIGNER_URL — умолчание формы](../forms/daemon-flags.tsv) (стенд одной машины, как [жизненный цикл P/08](../../08-domain/ru/lifecycle.md)) | [P/10 N1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 N1.8); [P/08.2 N1.3](../../08-domain/ru/spec/08.2-domain.norms.md) |
 | `LOGIN_URL` | вход людей, значение `login_url` в `/session` | [LOGIN_URL из формы](../forms/daemon-flags.tsv) | [договор сторожевой и передачи](../../common/ru/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 N1.2](../../08-domain/ru/spec/08.4-domain.norms.md); P/02.4 N1.2 |
 | `TIMEZONE` | часовой пояс: значение `timezone` в `/session`; из `w2c.env` своей коробки; пустое или не по форме — код 2 | [TIMEZONE из формы](../forms/daemon-flags.tsv) | [договор файла окружения](../../common/ru/contracts/env-file.md); [P/10 N1.7](spec/10-domain-console.norms.md) `session` |
 | `W2C_TLS_DIR` | комплект роли `domainconsole` и свои `ca.pem`, `ca.next.pem` — объединение центров двери роли | P/02.4 N1.6 | [P/10 N1.4](spec/10-domain-console.norms.md) `roles`, `server.role`; [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit` |
@@ -70,9 +70,9 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) N1.1 `dirs`).
 
 Стенд нескольких кластеров ([общий README приёмки](../../common/ru/acceptance/domain-stand.md#стенд-домена), раздел «Стенд домена»): `@start domain` поднимает процессы `domain` и консоли домена на
 `hold`; дверь `holder <запрос>` — консоль домена на `hold`, `holder@<кластер>` — на другом кластере после переноса;
 `Idempotency-Key` у `POST`, `PUT`, `DELETE` — по правилу `@key`. `{data}` — `PLATFORM_DIR` кластера ([общий README
-приёмки](../../common/ru/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
+приёмки](../../common/ru/acceptance/README.md) «Стенд»).

@@ -1,10 +1,9 @@
 # Acceptance P/09.1 — the agent of a member (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the stand of several clusters; formerly — the M11 dictionary of the acceptance README
-of M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
 [the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). In total 22 scenarios / 252 steps.
 
 The agent side in the scenarios of other chapters — the list «Neighbours on the stand» of the norm of the chapter, N5.
@@ -12,7 +11,7 @@ The agent side in the scenarios of other chapters — the list «Neighbours on t
 ## Stand
 
 **Preparation of each scenario** — as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md)
-(«Preparation of each scenario»; from the acceptance README of M11/03): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
+(«Preparation of each scenario»): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
 its own empty store, its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue
 — only `testsub`; the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
 There are no units. There is no domain: it is set up by the directive `@domain` of the first step of each scenario. The domain name is `acme`.
@@ -51,16 +50,16 @@ for the holder's answer, and an edit received before the key was spoiled is a ra
 a member, the refusals of the keeper's agent by the sum and by `record` (the holder does not send such a document), a break of the road of the local token door,
 an answer from the relay memory and `as_of` of the grants copy (on the stand `as_of` is visible only as a store row, and its freshening is
 no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client and the first contact (the stand without TLS). The bytes of the agent signature
-— the package [`agent-sig`](../../../common/vectors/agent-sig/README.md), the function `peer` — the package
-[`peer`](../../../common/vectors/peer/README.md), the function `follow` — the package [`follow`](../../vectors/follow/README.md).
+— the package [`agent-sig`](../../../common/vectors/agent-sig/README.md) (judge-only: a common vector package), the function `peer` — the package
+[`peer`](../../../common/vectors/peer/README.md) (judge-only: a common vector package), the function `follow` — the package [`follow`](../../vectors/follow/README.md).
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+[seams.tsv](seams.tsv) (judge-only: the seam table) provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
-## Anywhere copy hash (G09-ANYWHERE-HASH-01)
+## Anywhere copy hash
 
-The five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) specify the complete-body
+The five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) (judge-only: the vector table) specify the complete-body
 digest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file
 next to the table; expect is a JSON subset of the observations, not an input to the implementation.
 

@@ -1,14 +1,14 @@
 # Acceptance P/08.9 — the shared document of the domain
 
-This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
-section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 V5). The norm of the chapter is
+section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`). The norm of the chapter is
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) N5. The forms of foreign doors are for their owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario», from M11/03: the clusters `hold`, `m1`,
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario»: the clusters `hold`, `m1`,
 `m2`, the catalog `testsub`), with a declaration of the shared in `testsub`:
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` is an `int` with `inherit: 1`;
@@ -30,4 +30,4 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.9; they check N1.2 `write` and N1.3 `order` steps 3–6) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

@@ -22,6 +22,15 @@ RESOURCES = {
     "runtime_constants_p01": "01-store/forms/runtime-constants.tsv",
     "write_checks_p01": "01-store/forms/write-checks.tsv",
     "write_checks_probes_p01": "01-store/forms/write-checks.probes.tsv",
+    "read_checks_p01": "01-store/forms/read-checks.tsv",               # P01.228: the forms of P01.176
+    "read_checks_probes_p01": "01-store/forms/read-checks.probes.tsv",
+    "rights_checks_p01": "01-store/forms/rights-checks.tsv",
+    "rights_checks_probes_p01": "01-store/forms/rights-checks.probes.tsv",
+    "service_checks_p01": "01-store/forms/service-checks.tsv",
+    "service_checks_probes_p01": "01-store/forms/service-checks.probes.tsv",
+    "status_fields_p01": "01-store/forms/status-fields.tsv",
+    "metrics_p01": "01-store/forms/metrics.tsv",
+    "group_p01": "01-store/forms/group.tsv",
     "engine_code_rules": "common/acceptance/forms/engine-code-rules.tsv",
 }
 

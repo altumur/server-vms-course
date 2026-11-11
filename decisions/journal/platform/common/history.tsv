@@ -131,12 +131,12 @@ req_id	file	source	date	removed
 -	acceptance/PROFILE.md#substitutions	the Architect's decision on P01.89.6	2026-11-10	; the Architect's decision on P01.89.6
 -	acceptance/PROFILE.md#code-check-names	ADR-0133 addendum (39)	2026-11-09	 (ADR-0133 addendum (39))
 -	acceptance/forms/targets.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
--	acceptance/forms/code-rules.tsv#intro	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	 (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them; listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49)
+-	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	 (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them; listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49)
 -	acceptance/forms/d7-payload.schema.json#/description	task P01.136	2026-11-10	 (task P01.136)
 -	acceptance/forms/d7.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
 -	acceptance/forms/seam-bridge.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
--	acceptance/forms/profile-keys.tsv#intro	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
--	acceptance/forms/profile-substitutions.tsv#intro	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/forms/profile-keys.tsv#header	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/forms/profile-substitutions.tsv#header	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
 -	acceptance/ops/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
 -	acceptance/ops/README.md#intro	ADR-0095	2026-10-30	ADR-0095; 
 -	acceptance/ops/README.md#sleeps-sleep	ADR-0080 addendum (17) item 4	2026-10-18	, ADR-0080 addendum (17) item 4

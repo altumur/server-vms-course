@@ -1,13 +1,10 @@
-# P/10 — doors of the domain console (domainconsole, port 8444): the HTTP contract of the lesson (transfer plan of lesson 10, § 4). Merged from
-# the contracts M11/1, M11/3, M11/4, M11/6, M11/8, M11/9, M11/11 (paths of the domain console; M11/4, M11/6 — from history, removed
-# by commit 9) — stage B, without a change of behaviour. Codes — only of transition 2 of the forwarding contract
-# Platform/common/contracts/forwarding.md «Refusals by transition» (analysis of review of stage A 8–10, decision 3): the TLS role door
+# P/10 — doors of the domain console (domainconsole, port 8444): the HTTP contract of the lesson. Codes — only of transition 2 of the forwarding contract
+# Platform/common/contracts/forwarding.md «Refusals by transition»: the TLS role door
 # (401/403 no_role, wrong_role, bad_chain; a handshake refusal — without an HTTP answer), the gate (401/403 denied, 503 shut and unavailable),
 # 404 not a domain route, 400/408/413 of the body, 502 of the pass, door.pass and the refusals of its own reads; the codes of transitions 1–2 (the forwarding console
 # of the cluster) are not listed here, there is no Forwarded answer. Doors that the console passes to the process domain — without a bare
-# default: the answers of the process — $ref to the operation and components of the OpenAPI of lesson P/08 (decision of the Architect on plans 8–10, item 9),
-# a coinciding code — anyOf of its own body and the body of the process. Page, module, /session, /healthz — $ref to the paths of the OpenAPI of P/06
-# (V7 of the plan of lesson 6). Schemas of the view, units, shadow report, member list, topology, placement, grant row, shared
+# default: the answers of the process — $ref to the operation and components of the OpenAPI of lesson P/08,
+# a coinciding code — anyOf of its own body and the body of the process. Page, module, /session, /healthz — $ref to the paths of the OpenAPI of P/06. Schemas of the view, units, shadow report, member list, topology, placement, grant row, shared
 # document and delivery — OpenAPI of P/08 ($ref), no copies.
 openapi: 3.1.0
 info:
@@ -31,11 +28,10 @@ paths:
         in: query
         required: false
         schema: {type: string}
-        description: "Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most DOMAIN_PAGE_MEMBERS MemberState elements per page (P/10 N1.2a, G10-PAGE-CURSOR-01). Encoding is chosen by the implementation."
+        description: "Opaque continuation returned by GET /domain, including a boundary within one part. Without it, start the traversal; at most DOMAIN_PAGE_MEMBERS MemberState elements per page (P/10 N1.2a). Encoding is chosen by the implementation."
     get:
       summary: Domain view (N1.2a)
-      description: 'Answered by the domain console itself (P/10-01); the field url of the view that is not readable (not a string) — null in the answer (V7
-        item 3, decision of the Architect 2026-10-28; row 53 of the list).'
+      description: 'Answered by the domain console itself (P/10-01); the field url of the view that is not readable (not a string) — null in the answer.'
       responses:
         '200':
           description: Object domain/view of the last pass of the holder and age
@@ -226,7 +222,7 @@ paths:
         '404':
           description: 'In the order of N1.2a: there is no such manifest; not in the directory — the manifest has no domain.ref; rows are not its own; no domain here; no such member — the member is not in the list; a path with . or .. — not a domain route'
         '503':
-          description: 'A read door of the domain console: the row it answers with (the view, the shadow, domain/member-rows/<part>, domain/topology, domain/placement, the assignment record, the pointer domain/shared and its document), exists but is not readable — 503 {error: "unavailable"}, not 404 and not «there is no row» (V7 item 3, the decision of the Architect of 2026-10-28, P1; rows 42, 43, 50, 54 of the list); the gate shut — the gate and pass contract shut'
+          description: 'A read door of the domain console: the row it answers with (the view, the shadow, domain/member-rows/<part>, domain/topology, domain/placement, the assignment record, the pointer domain/shared and its document), exists but is not readable — 503 {error: "unavailable"}, not 404 and not «there is no row»; the gate shut — the gate and pass contract shut'
   '/domain/{sub}/{rows}':
     get:
       summary: Units of the subsystem in the domain view (N1.2a)
@@ -276,7 +272,7 @@ paths:
         schema:
           type: string
           pattern: ^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$
-        description: Units of one view row of this part (P/08.3 N1.1; ADR-0113 addendum (22)); without cursor; repeated, empty, not a part or together with cluster — 400.
+        description: Units of one view row of this part (P/08.3 N1.1); without cursor; repeated, empty, not a part or together with cluster — 400.
     head:
       summary: 'HEAD: the same code and headers as for GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'
       responses:
@@ -302,7 +298,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation editCreate of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
       requestBody:
@@ -474,7 +470,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation membersAdmit of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -849,7 +845,7 @@ paths:
   /domain/topology:
     get:
       summary: Domain topology (N1.2c)
-      description: 'From the row domain/topology, not from the view: right after PUT — a new rev (P/10-08, T1); PUT — pass to the process.'
+      description: 'From the row domain/topology, not from the view: right after PUT — a new rev (P/10-08); PUT — pass to the process.'
       responses:
         '200':
           headers:
@@ -888,7 +884,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation topologyPut of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -1034,7 +1030,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation placementPut of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -1122,7 +1118,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation placementDelete of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
@@ -1136,7 +1132,7 @@ paths:
         '400':
           description: 'Transition 2 — body or request not read — the common refusal of console request parsing or chunked (P/06.5
             N2, N4; the gate-and-pass contract `body`). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId
-            placementDelete, answer 400 (ref not by the name grammar; analysis of review of stage B 8–10, № 7)'
+            placementDelete, answer 400 (ref not by the name grammar)'
           content:
             application/json:
               schema:
@@ -1234,8 +1230,7 @@ paths:
           headers:
             ETag:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/headers/ETag'
-          description: '{doc, delivery, declared}; delivery — view.shared as is (x-opaque: the form is judged by the writer, P/08.9 N1.6;
-            C10-SHARED-OPAQUE-COPY-01); no field or {} — before P/08.9 N1.6 by the view (term 0, rev 0; C10-SHARED-EMPTY-DELIVERY-01)'
+          description: '{doc, delivery, declared}; delivery — view.shared as is (x-opaque: the form is judged by the writer, P/08.9 N1.6); no field or {} — before P/08.9 N1.6 by the view (term 0, rev 0)'
           content:
             application/json:
               schema:
@@ -1268,7 +1263,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation sharedPut of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -1377,14 +1372,14 @@ paths:
         schema:
           type: number
         description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric
-          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).
+          query parameters»); the default — now − ALARMS_WINDOW (N1.8 door).
       - name: until
         in: query
         required: false
         schema:
           type: number
         description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric
-          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now (N1.8 door).
+          query parameters»); the default — now (N1.8 door).
     head:
       summary: 'HEAD: the same code and headers as GET, without a body (P/06.5 N2; the forwarding contract «Domain doors»)'
       responses:
@@ -1407,14 +1402,14 @@ paths:
         schema:
           type: number
         description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric
-          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now − ALARMS_WINDOW (N1.8 door).
+          query parameters»); the default — now − ALARMS_WINDOW (N1.8 door).
       - name: until
         in: query
         required: false
         schema:
           type: number
         description: Time by the grammar of the time reader of the row codec after URL decoding (the gate-and-pass contract «Numeric
-          query parameters»; C06-EVENTS-QUERY-LEXEME-162-01); the default — now (N1.8 door).
+          query parameters»); the default — now (N1.8 door).
   /manifest:
     get:
       summary: Manifest of the domain console — there is no root (N1.7 manifest)
@@ -1490,7 +1485,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation login of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -1623,7 +1618,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation membersRemove of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
@@ -1707,7 +1702,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation memberCaSet of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -1805,7 +1800,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation editUpdate of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
       requestBody:
@@ -1890,7 +1885,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation editDelete of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IdempotencyKey'
       requestBody:
@@ -1976,7 +1971,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation usersList of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/get/responses/200'
@@ -2017,8 +2012,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract, shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId usersList,
-            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by M11/12))'
+            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby))'
           content:
             application/json:
               schema:
@@ -2033,7 +2027,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation usersListHead of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1users/head/responses/200'
@@ -2069,7 +2063,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation userCreate of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2161,7 +2155,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation userUpdate of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2255,7 +2249,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation userDelete of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
@@ -2313,8 +2307,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract, shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId userDelete,
-            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9; analysis of review
-            of stage A 8–10, № 38); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
+            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
           content:
             application/json:
               schema:
@@ -2329,7 +2322,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupsList of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups/get/responses/200'
@@ -2370,8 +2363,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId groupsList,
-            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by M11/12))'
+            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby))'
           content:
             application/json:
               schema:
@@ -2386,7 +2378,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupsListHead of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups/head/responses/200'
@@ -2422,7 +2414,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupCreate of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2514,7 +2506,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupUpdate of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2608,7 +2600,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation groupDelete of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
@@ -2666,8 +2658,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId groupDelete,
-            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9; analysis of review
-            of stage A 8–10, № 38); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
+            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
           content:
             application/json:
               schema:
@@ -2682,7 +2673,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation rolesList of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles/get/responses/200'
@@ -2723,8 +2714,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId rolesList,
-            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by M11/12))'
+            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby))'
           content:
             application/json:
               schema:
@@ -2739,7 +2729,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation rolesListHead of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles/head/responses/200'
@@ -2775,7 +2765,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation roleCreate of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2867,7 +2857,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation roleUpdate of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -2961,7 +2951,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation roleDelete of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       parameters:
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/RepeatKey
       - $ref: ../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/IfMatch
@@ -3019,8 +3009,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a trace of the domain exists, but there is nothing to check with (the gate-and-pass
             contract shut; P/06.3 N1.8) or unavailable — the access check row exists, but is not readable (N1.5; rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId roleDelete,
-            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9; analysis of review
-            of stage A 8–10, № 38); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
+            answer 503 (unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9); frozen (P/08.8 N1.7); standby (P/08.10 N1.7))'
           content:
             application/json:
               schema:
@@ -3035,7 +3024,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation domainBatch of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3131,7 +3120,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): method, path with query, body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation grantsPut of the OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3220,7 +3209,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation breakGlassList of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass/get/responses/200'
@@ -3261,8 +3250,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a domain trace exists, but there is nothing to check with (the gate and pass
             contract shut; P/06.3 N1.8) or unavailable — the row of the access check exists but is not readable (N1.5; the rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId breakGlassList,
-            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by M11/12))'
+            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby))'
           content:
             application/json:
               schema:
@@ -3277,7 +3265,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation breakGlassListHead of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       responses:
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1break-glass/head/responses/200'
@@ -3321,7 +3309,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation breakGlassSet of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3409,7 +3397,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation tokenRevoke of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3473,7 +3461,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation handover of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3548,7 +3536,7 @@ paths:
       description: 'The domain console passes the request to the process domain (N1.3, N1.3a): the method, the path with query, the body, Authorization,
         Idempotency-Key, If-Match as they came; X-W2C-Client is set by the console (the forwarding contract «Client address»). The answers of the process
         (transition 3) — by a reference to the operation strandedApply of OpenAPI P/08, as they came; its own codes — of transition 2 (the forwarding contract
-        «Refusals by transition»); there is no bare default (the decision of the Architect on plans 8–10, item 9).'
+        «Refusals by transition»); there is no bare default.'
       requestBody:
         required: true
         content:
@@ -3612,8 +3600,7 @@ paths:
           description: 'Transition 2 — the gate shut — there were keys or a domain trace exists, but there is nothing to check with (the gate and pass
             contract shut; P/06.3 N1.8) or unavailable — the row of the access check exists but is not readable (N1.5; the rule
             «Unreadable row», form Unavailable). Transition 3 — the answer of the process domain as it came: OpenAPI P/08, operationId strandedApply,
-            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby;
-            added by M11/12))'
+            answer 503 (Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby))'
           content:
             application/json:
               schema:
@@ -3626,8 +3613,7 @@ paths:
       in door.pass of the manifest <sub>, the domain console passes to the worker at the domain of this subsystem
       (the address — the pulse domain/<sub>/heartbeat) by the path /<segment>[/…] with query, as a client of the role
       domainconsole; the headers, the body, the answer and the codes — the gate-and-pass contract «Pass of door.pass».
-      The answer of the worker — as received (default: this is the answer of the worker, not of the process domain;
-      the decision item 9 on the pass to the process does not concern it). One path segment is told apart by the loaded
+      The answer of the worker — as received (default: this is the answer of the worker, not of the process domain). One path segment is told apart by the loaded
       manifest: unit.rows — /domain/{sub}/{rows}, door.pass — this path (as /{rows} and /{pass} of OpenAPI P/06);
       a path longer than one segment is passed the same way. Every console follows forwarding.md Domain worker pass
       hop policy. The optional digest is only a consistency claim; each hop independently derives and validates its
@@ -4503,8 +4489,7 @@ paths:
         pattern: ^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$
     get:
       operationId: passBookAllPartPerson
-      summary: 'Pass to domain: Part of the book to "*" for a person (chapter 8.5 N2; ADR-0113 addendum (26) item
-        2)'
+      summary: 'Pass to domain: Part of the book to "*" for a person (chapter 8.5 N2)'
       description: Transition 2 runs the ordinary domain-console gate and role admission. The request and complete
         transition-3 response are passed as received to GET /domain/{sub}/books/{book}/*/{part} (P/08 operation bookAllPartPerson);
         no bare default replaces its forms. X-W2C-Client is set by the console. Cookie and Authorization follow the
@@ -4681,8 +4666,7 @@ components:
             $ref: '#/components/schemas/GateOrRole403'
     ReadUnavailable:
       description: 'A read door of the domain console: the row it answers with (the view, the shadow, domain/member-rows/<part>, domain/topology,
-        domain/placement, the assignment record, the pointer domain/shared and its document), exists but is not readable — 503 {error: "unavailable"}, not 404 and not «there is no row» (V7
-        item 3, the decision of the Architect of 2026-10-28, P1; rows 42, 43, 50, 54 of the list); the gate shut — the gate and pass
+        domain/placement, the assignment record, the pointer domain/shared and its document), exists but is not readable — 503 {error: "unavailable"}, not 404 and not «there is no row»; the gate shut — the gate and pass
         contract shut'
       content:
         application/json:
@@ -4715,7 +4699,7 @@ components:
             $ref: "#/components/schemas/ForwardingRefusal"
     NoDomain:
       description: 'There is no view (not built) — no domain here (N1.2a, N1.2b, N1.2c); at GET /domain/members — also when the row
-        domain/member-rows/<part> does not exist (N1.2b); the view exists but is not readable — 503 unavailable (ReadUnavailable; V7 item 3, P1)'
+        domain/member-rows/<part> does not exist (N1.2b); the view exists but is not readable — 503 unavailable (ReadUnavailable)'
       content:
         application/json:
           schema:
@@ -4760,7 +4744,7 @@ components:
       required:
       - error
       additionalProperties: false
-      description: 'Refusal of the own doors of the domain console (N4): error — a word of the closed list data/refusal-words.tsv (ADR-0094 B5), detail — an explanation.
+      description: 'Refusal of the own doors of the domain console (N4): error — a word of the closed list data/refusal-words.tsv, detail — an explanation.
         There is no field field: the own doors read, they have no body.'
       properties:
         error:
@@ -4784,7 +4768,7 @@ components:
       additionalProperties: false
       description: 'Refusal of the TLS role door before the gate (N1.4 server.role; the words of the contract peer); only at the TLS door (the kit
         exists), 401 no_role — the client did not present a leaf; without the kit (no_kit) the door is on the loopback over HTTP without the role check —
-        there are no such refusals, X-Operator: console is removed (C10-ROLE-NOKIT-01)'
+        there are no such refusals, X-Operator: console is removed'
       properties:
         error:
           enum:
@@ -4898,7 +4882,7 @@ components:
           - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/SharedDoc'
         delivery:
           description: 'view.shared as it is; the schema — the form that the process domain writes (P/08.9 N1.6); the console does not judge
-            the form (N1.2f, C10-SHARED-OPAQUE-COPY-01)'
+            the form (N1.2f)'
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Delivery'
         declared:
           type: object

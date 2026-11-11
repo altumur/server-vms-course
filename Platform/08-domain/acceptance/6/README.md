@@ -1,10 +1,9 @@
 # Acceptance P/08.6 — placement and kept edits (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters; formerly the dictionary of the M11 README of the acceptance
-M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) N5; [the contract](../../spec/08-domain.api.openapi.yaml),
 the lecture (`ru/08-domain.md`, for people, not in the export). In total 12 scenarios / 261 steps.
 
@@ -14,8 +13,7 @@ through which the stand reads placements, the view and the units, are doors of t
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»;
-formerly the acceptance README of M11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own
+As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own
 empty store, its own `{data}`, its own role sockets and console and resource ports, its own ring (P/06.2 N1.2), a manifest catalog of
 only `testsub` (`domain.edit: [start, labels]`, `domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource
 of its own server (`srv-hold`, `srv-m1`, `srv-m2`). There are no units. There is no domain: it is set by the directive `@domain` of the first step of each
@@ -31,14 +29,13 @@ scenario. The domain name is `acme`; the recovery file is `{recovery}` in the in
 The format is the dictionary of the «Stand» and the dictionary of the domain; an expectation is a subset of fields. `$id` is the id of the kept edit from the 202 answer.
 
 Selected steps also observe the side of the member's agent (the copies `domain/placed*`, the application of an edit
-through the units door) — items of [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit
-(ADR-0083 addendum (13)).
+through the units door) — items of [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit.
 
 ## Placement counter after the start
 
 The process `domain`, at its start and at each new taking of the queue `domain/signer-turn` — before the first answer to an agent — raises
-the counter `domain/placement` by 1 (P/08.6 N3, C08-PLACEMENT-BUMP-TURN-01).
+the counter `domain/placement` by 1 (P/08.6 N3).
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: `acceptance/6/seams.tsv`; checks P/08.6-R005, P/08.6-R006, P/08.6-R013) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

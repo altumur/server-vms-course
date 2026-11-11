@@ -1,6 +1,6 @@
 {
   "name": "platform-forms",
-  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3) and the judge engine code-check form (P02.49). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
+  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3) the judge engine code-check form (P02.49) and the forms of P01.176: the orders of read, rights and service checks with their probes, Status, metrics and the group (P01.228). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
   "resources": [
     {
       "name": "stages_p01",
@@ -145,6 +145,150 @@
         }
       },
       "schema": "01-store/forms/write-checks.probes.tsv.schema.json"
+    },
+    {
+      "name": "read_checks_p01",
+      "path": "01-store/forms/read-checks.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          17
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/read-checks.tsv.schema.json"
+    },
+    {
+      "name": "read_checks_probes_p01",
+      "path": "01-store/forms/read-checks.probes.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          10
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/read-checks.probes.tsv.schema.json"
+    },
+    {
+      "name": "rights_checks_p01",
+      "path": "01-store/forms/rights-checks.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          19
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/rights-checks.tsv.schema.json"
+    },
+    {
+      "name": "rights_checks_probes_p01",
+      "path": "01-store/forms/rights-checks.probes.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          9
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/rights-checks.probes.tsv.schema.json"
+    },
+    {
+      "name": "service_checks_p01",
+      "path": "01-store/forms/service-checks.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          18
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/service-checks.tsv.schema.json"
+    },
+    {
+      "name": "service_checks_probes_p01",
+      "path": "01-store/forms/service-checks.probes.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          7
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/service-checks.probes.tsv.schema.json"
+    },
+    {
+      "name": "status_fields_p01",
+      "path": "01-store/forms/status-fields.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          12
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/status-fields.tsv.schema.json"
+    },
+    {
+      "name": "metrics_p01",
+      "path": "01-store/forms/metrics.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          6
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/metrics.tsv.schema.json"
+    },
+    {
+      "name": "group_p01",
+      "path": "01-store/forms/group.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          6
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "01-store/forms/group.tsv.schema.json"
     },
     {
       "name": "engine_code_rules",
