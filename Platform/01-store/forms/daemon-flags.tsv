@@ -24,6 +24,7 @@ flag	type	default	default_text	required	commands	bad	norm
 -raft	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-raft"])	P/01.3 N1.3 group
 -raft-bind	addr	=-raft	-raft	false	daemon		P/01.3 N1.3 group
 -api	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-api"])	P/01.3 N2
+-api-bind	addr	=-api	-api	false	daemon		P/01.3 N1.3 «Daemon flags»
 -bootstrap	bool	false	off	false	daemon	"-join" in f	P/01.3 N1.3 join
 -join	addr	-	-	false	daemon	!("-tls" in f)	P/01.3 N1.3 join
 -group-size	enum:1|3|5	1	1	false	daemon		P/01.3 N1.3 group

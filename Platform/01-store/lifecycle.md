@@ -45,7 +45,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 | Path | What | Norm |
 |---|---|---|
 | `<PLATFORM_DIR>/configstore` (`-dir`) | the daemon's data directory; the on-disk format — the implementation decides (P/01.1 «Implementation decides» item 3) | P/02.4 N1.2 «The setting channel and the layout» |
-| `<-dir>/FORMAT` | the format mark `{format, version, impl}`: written first into an empty directory; a foreign one or none in a non-empty directory — a refusal, code 2 | P/01.3 N1.3 `format` |
+| `<-dir>/FORMAT` | the format mark `{format, version, impl}`: written first into an empty directory; a foreign one or none in a non-empty directory — a refusal, code 2; the directory keeps the start mode of its first write, another mode — a refusal, code 2, the mode changes only by a copy | P/01.3 N1.3 `format` |
 | `<-dir>/member.json` | the partners and `how` after joining; a restart is not a join | P/01.3 N1.3 `group.join` (the path inside `-dir` — the implementation decides) |
 | `/run/configstore/admin.sock`, `/run/configstore/<role>.sock` | flat; inherited from the `.socket` units: `admin.sock` 0600, a role socket 0660 with the role's group (`SocketGroup=`); a socket that was not passed the daemon creates itself in `-sockets`: `admin.sock` 0600, a role socket 0660 with the process's group | P/01.3 N1.3 `sockets`; P/02.4 N1.1 |
 | `/etc/w2c/configstore-rights.json` (`-rights`) | the rights file; without the file — only `admin.sock`; there is no live reload | P/01.2 N1.2 |

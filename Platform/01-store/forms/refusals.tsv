@@ -44,7 +44,7 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	4	service_method	http	405	badrequest	-	-	-	P/01.3 N2
 1.3	5	start_config	start	exit 2	-	-	-	cause	P/01.3 N1.3 refuse_start
 1.3	6	start_flags	start	exit 2	-	-	-	flag,socket	P/01.3 N1.3; forms/daemon-flags.tsv
-1.3	7	start_format	start	exit 2	-	-	-	dir,mark	P/01.3 N1.3 format
+1.3	7	start_format	start	exit 2	-	-	-	dir,mark,mode	P/01.3 N1.3 format
 1.3	8	box_no_raft	start	exit 2	-	-	-	«this build has no raft»	P/01.3 N1.3 box
 1.3	9	box_last_voter	http	409	refused	-	-	-	P/01.3 N1.3 box
 1.3	9	box_admit	cli	exit !0	-	-	-	«the last voter»	P/01.3 N1.3 box
