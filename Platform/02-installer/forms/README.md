@@ -52,7 +52,9 @@ The metadata encoding, the byte proofs and the skeleton sizes of the judge's own
 [`stages.tsv`](stages.tsv) is a plan, not a behavior norm (ADR-0126). `verdicts:2.1:*` selects the first column of `verdicts.tsv`;
 `puts:2.2:*` and `puts:2.3:*` select `puts.tsv`; `accept` selects only `scenarios.tsv`. Comma-separated names select exact rows;
 `*` selects the full target, including its other published variants. A generated projection does not claim execution of excluded steps.
-`tests:2.K:<scenario,...>:seams` selects the seams below. A `build` gate confirms a build; the checklist still judges installation,
+`seams:2.K:<scenario,...>` selects the seams below ([`stages.kit.tsv`](stages.kit.tsv) writes the same selection
+`tests:2.K:<scenario,...>:seams`). The `norms` column places each item of the readiness checklists of `spec/*.norms.md` at exactly one
+stage; the items of the system checklists stand at no stage (ADR-0130 Addendum (19) item 6). A `build` gate confirms a build; the checklist still judges installation,
 units, TLS, external clients and operator windows by their named methods. It does not convert those checks to passed execution.
 
 ## Non-HTTP seams: exact request and expectation grammar

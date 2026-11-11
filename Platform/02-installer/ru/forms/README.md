@@ -34,7 +34,7 @@ chapter row name surface code kind fields headers log norm word cause outcome di
 
 ## Gates этапов
 
-[`stages.tsv`](../../forms/stages.tsv) — план (ADR-0126). `verdicts:2.1:*` выбирает первую колонку `verdicts.tsv`, `puts:2.2:*` и `puts:2.3:*` — `puts.tsv`, `accept` — только `scenarios.tsv`. Имена через запятую — точный выбор, `*` — полная цель с опубликованными вариантами. `tests:2.K:<scenario,...>:seams` — швы ниже. `build` подтверждает сборку; установка ОС, units, TLS, клиенты и операторские окна судятся методами чеклиста, исполненными этим не становятся.
+[`stages.tsv`](../../forms/stages.tsv) — план (ADR-0126). `verdicts:2.1:*` выбирает первую колонку `verdicts.tsv`, `puts:2.2:*` и `puts:2.3:*` — `puts.tsv`, `accept` — только `scenarios.tsv`. Имена через запятую — точный выбор, `*` — полная цель с опубликованными вариантами. `seams:2.K:<scenario,...>` — швы ниже (в [`stages.kit.tsv`](../../forms/stages.kit.tsv) тот же выбор пишется `tests:2.K:<scenario,...>:seams`). Столбец `norms` ставит каждый пункт чеклистов готовности `spec/*.norms.md` ровно на один этап; пункты перечней урока системы ни на каком этапе не стоят (ADR-0130 доп. (19) п. 6). `build` подтверждает сборку; установка ОС, units, TLS, клиенты и операторские окна судятся методами чеклиста, исполненными этим не становятся.
 
 ## Точная грамматика швов без HTTP
 
