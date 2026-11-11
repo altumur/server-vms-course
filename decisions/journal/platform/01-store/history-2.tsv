@@ -1,0 +1,15 @@
+req_id	file	source	date	removed
+-	spec/01.2-store.norms.md#p012--store-rights-norms	chapter moved from M10/6, stage B (ADR-0083 addendum (1))	2026-10-19	The chapter was moved from M10/6 (stage B, ADR-0083 addendum (1): without a change of behaviour);
+P/01.2-R006	spec/01.2-store.norms.md#N1.1	role-name decision C7 (decisions/inbox, for people)	2026-10-15	; decision C7 role-name decision (2026-10-15, C7; for people)
+P/01.2-R008	spec/01.2-store.norms.md#N1.2	reconciliation of python and go M10/6–11; cammeta-go log, lesson 6 № 2	2026-10-18	reconciliation of python and go M10/6–11: both so; log of cammeta-go, lesson 6 № 2; 
+P/01.2-R009	spec/01.2-store.norms.md#N1.2	reconciliation of python and go M10/6–11	2026-10-18	 (reconciliation of python and go M10/6–11: both so)
+P/01.2-R010	spec/01.2-store.norms.md#N1.3	reconciliation of python and go M10/6–11, R12	2026-10-18	 (reconciliation of python and go M10/6–11, R12)
+P/01.2-R010	spec/01.2-store.norms.md#N1.3	Specification's decision, C01-NEVER-DOMAIN-ROLE-01	2026-10-29	 (C01-NEVER-DOMAIN-ROLE-01, the Specification's decision)
+P/01.2-R017	spec/01.2-store.norms.md#N3	reconciliation of python and go M10/6–11	2026-10-18	; reconciliation of python and go M10/6–11: both so
+-	acceptance/2/README.md#properties-of-sc-1113	coverage audit P/01, session audit-kimi, commit 399e4783b (heading)	2026-10-30	Coverage audit of P/01
+-	acceptance/2/README.md#properties-of-sc-1113	coverage audit P/01, session audit-kimi, commit 399e4783b	2026-10-30	The session audit-kimi (2026-10-30, commit 399e4783b, `coverage audit P01 (for people)`): properties that were formerly checked by reading.
+-	acceptance/2/README.md#properties-of-sc-1113	review of the Specification 38, R38-06	2026-10-30	, R38-06
+-	acceptance/2/README.md#properties-of-sc-1113	coverage audit P/01, item A09	2026-10-30	 (A09)
+-	acceptance/2/README.md#properties-of-sc-1415	coverage audit P/01, second pass (Gemini), commit 6a5817f88 (heading)	2026-10-30	Coverage audit of P/01, second pass
+-	acceptance/2/README.md#properties-of-sc-1415	coverage audit P/01, second pass (Gemini), commit 6a5817f88, G04	2026-10-30	The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
+-	acceptance/2/README.md#properties-of-sc-1415	C01-NEVER-DOMAIN-ROLE-01	2026-10-30	; C01-NEVER-DOMAIN-ROLE-01

@@ -1,0 +1,35 @@
+req_id	file	source	date	removed
+P/01.1-R002	spec/01.1-store.norms.md#N0	Architect's decision 2026-10-18; reconciliation of python and go M10/6–11: E19, T6, C2, C3	2026-10-18	(the Architect's decision of 2026-10-18, reconciliation of python and go M10/6–11: E19, T6, C2, C3)
+P/01.1-R006	spec/01.1-store.norms.md#N0	Architect's decision 2026-10-18; the store pilot	2026-10-18	(the Architect's decision of 2026-10-18, the store pilot)
+P/01.1-R014	spec/01.1-store.norms.md#N0	moved from M11/1 N0; review of stage A 8–10, № 19 / decision 4	2026-10-20	; moved from M11/1 N0 without a change of behaviour (review of stage A 8–10, № 19 / decision 4)
+P/01.1-R015	spec/01.1-store.norms.md#N0	review of stage B 8–10, № 22	2026-10-20	; review of stage B 8–10, № 22
+P/01.1-R019	spec/01.1-store.norms.md#N1	C01-VERSION-ISSUED-01	2026-10-30	; C01-VERSION-ISSUED-01
+P/01.1-R019	spec/01.1-store.norms.md#N1	MAY-UNTIL-D8-01	2026-10-25	; MAY-UNTIL-D8-01
+P/01.1-R019	spec/01.1-store.norms.md#N1	C01-TIME-NUMBER-EXACT-01	2026-10-29	 (C01-TIME-NUMBER-EXACT-01)
+P/01.1-R020	spec/01.1-store.norms.md#N1	review A1	2026-10-31	, review A1
+P/01.1-R023	spec/01.1-store.norms.md#N2	guess of stage C SC-WIRE78-G01 / C08-SDK-06	2026-10-25	(SC-WIRE78-G01 / C08-SDK-06)
+P/01.1-R028	spec/01.1-store.norms.md#N2	Architect's decision 2026-10-29, C01-ROW-INDEX-LOST-01	2026-10-29	(C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29)
+P/01.1-R088	spec/01.1-store.norms.md#N3	C01-ADMITTED-ON-REFUSAL-01	2026-10-29	; C01-ADMITTED-ON-REFUSAL-01
+P/01.1-R144	spec/01.1-store.norms.md#N4	added by M10/11 (connection_limit_doors)	2026-10-17	added by M10/11: 
+P/01.1-R144	spec/01.1-store.norms.md#N4	added by M10/11 (floor_not_higher)	2026-10-17	(added by M10/11) 
+P/01.1-R145	spec/01.1-store.norms.md#N4	moved to the store client contract; SC-WIRE78-G01	2026-10-25	 (moved there without a change; SC-WIRE78-G01)
+-	spec/01.1-store.norms.md#N5	mutation probe 2026-10-14	2026-10-14	 (the mutation probe of 2026-10-14: behind the door 39 % of mutants survived, in stores without a door — all)
+-	spec/01.1-store.norms.md#implementation-decides	the store pilot, A10 (item 3)	2026-10-18	; the store pilot, A10
+-	spec/01.1-store.norms.md#implementation-decides	Architect's decision 2026-10-29, C01-ROW-INDEX-LOST-01 (item 5)	2026-10-29	; C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29
+-	spec/01.1-store.norms.md#implementation-decides	log of cammeta-python, lesson 11 № 24 (item 8)	2026-10-18	 (log of cammeta-python, lesson 11 № 24)
+-	spec/01.1-store.norms.md#implementation-decides	C01-CHUNK-LINE-LIMIT-01 (item 9)	2026-10-29	 (C01-CHUNK-LINE-LIMIT-01)
+-	spec/01.1-store.norms.md#implementation-decides	reconciliation of python and go 2026-10-18 (item 9)	2026-10-18	 (reconciliation of python and go 2026-10-18)
+-	spec/01.1-store.norms.md#readiness-checklist	C01-VERSION-ISSUED-01 (P/01.1-07)	2026-10-30	 (C01-VERSION-ISSUED-01)
+-	spec/01.1-store.norms.md#readiness-checklist	R29-01 (P/01.1-16)	2026-10-15	, R29-01
+-	spec/01.1-store.norms.md#readiness-checklist	C01-ROW-INDEX-LOST-01 (P/01.1-17)	2026-10-29	 (C01-ROW-INDEX-LOST-01)
+-	spec/01.1-store.norms.md#readiness-checklist	move from M11 (P/01.1-24)	2026-10-20	 (before the move — the acceptance of M11)
+-	spec/01.1-store.norms.md#readiness-checklist	review of stage A 8–10, № 19 / decision 4 (P/01.1-24)	2026-10-20	 (review of stage A 8–10, № 19 / decision 4)
+-	acceptance/1/README.md#the-instance-of-the-chapter	R29-01	2026-10-15	R29-01, 
+-	acceptance/1/README.md#additional-check-of-the-class-of-errors	run 36 (Kimi), heading	2026-10-16	 of run 36 (Kimi)
+-	acceptance/1/README.md#extra-fields-of-a-command	K37-05, heading	2026-10-16	 (K37-05)
+-	acceptance/1/README.md#extra-fields-of-a-command	R38-06	2026-10-17	 R38-06
+-	acceptance/1/README.md#a-key-that-is-absent-or-not-a-string	G39-07, heading	2026-10-17	 (G39-07)
+-	acceptance/1/README.md#request-parsing-n21-p011-23	reconciliation of python and go 2026-10-18	2026-10-18	, reconciliation of python and go 2026-10-18
+-	acceptance/1/README.md#adr-0129-core-clarification-witnesses	ADR-0129 core clarification: earlier seams kept	2026-11-06	The original six seam scenarios and all 73 steps remain byte-exact. Added
+-	acceptance/1/README.md#replay-and-last-admission-metadata	earlier seam steps and gates kept	2026-11-06	; former steps and store_core gates are unchanged
+-	acceptance/1/README.md#admitted-mismatches-and-admission-number-domain-adr-0129-addendum-10-item-3	ADR-0129 addendum (10) item 3: earlier seams kept	2026-11-06	The complete previous 15 seam scenarios / 239 steps remain byte-exact.

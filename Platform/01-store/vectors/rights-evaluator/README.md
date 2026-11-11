@@ -2,10 +2,10 @@
 
 This English text is the source; the Russian translation `ru/vectors/rights-evaluator/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/01, chapter 1.2 (at stage A the norm is P/01.2 N1.2 `pattern`, N1.3 «Evaluator»). The input is the rights file
-`rights.json`, the output is `expect.tsv`: a row `role action key expect`, `expect` — `allow` or `deny`.
+The owner is lesson P/01, chapter 1.2 (the norm is P/01.2 N1.2 `pattern`, N1.3 «Evaluator»). The input is the rights file
+`rights.json`, the output is `expect.tsv` (judge-only: `rights.json`, `expect.tsv`; they check P/01.2-R008 and P/01.2-R010): a row `role action key expect`, `expect` — `allow` or `deny`.
 
-**Run.** The runner starts a fresh store with `rights.json` as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md); review analysis of stage B 3–5, № 33) and
+**Run.** The runner starts a fresh store with `rights.json` as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md)) and
 for each row makes a probe through the socket of the role: `read` — `GET /v1/get?key=<key>`, `write` — `POST /v1/write` `put`, `delete` —
 `POST /v1/write` `delete` (without `cas`; an absent row is deleted successfully, M10/1 N3). The outcome of the probe:
 - `deny` — `403 forbidden`;
@@ -14,7 +14,7 @@ for each row makes a probe through the socket of the role: `read` — `GET /v1/g
 - 5xx, a transport error and any other answer — an undetermined outcome: the probe counts neither as `allow` nor as `deny`, the run
   is not green.
 
-The meaning of the evaluator is checked, not the bytes of the file (review of stage A: RA1-16, SA1-22).
+The meaning of the evaluator is checked, not the bytes of the file.
 
 **What is covered:**
 - an exact pattern, a prefix (`*` only as the last character);
@@ -25,15 +25,12 @@ The meaning of the evaluator is checked, not the bytes of the file (review of st
 - the rights of one action do not give another (`write`, `delete`): `delete` is its own list, the evaluator has no `delete = write`;
   an empty or absent `delete` — no deletes (P/01.2 N1.2).
 
-Reconciliation of python and go M10/6–11 («`*` in the middle is literal», both implementations); the Architect's decision by the log of
-cammeta-go, lesson 6 № 2.
-
 ## Who executes
 
-Who executes — the store (`01-store`: the evaluator of P/01.2 N1.3, and in the store in the process too, P/01.1-22) — all rows, through the door of its role sockets. Do not execute: the agent in the process (`09-agent`, P/09.1 N1.11 `rights`) — the rights of its components are checked by the store in the process; the installer's rights generator (`02-installer`, P/02.5 N3 «generate_rights» step 4) — its own rule of covering the patterns of secret rows, not an evaluator of actions; the console (`06-console`, P/06.3) only refers to P/01.2 (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes — the store (`01-store`: the evaluator of P/01.2 N1.3, and in the store in the process too, P/01.1-22) — all rows, through the door of its role sockets. Do not execute: the agent in the process (`09-agent`, P/09.1 N1.11 `rights`) — the rights of its components are checked by the store in the process; the installer's rights generator (`02-installer`, P/02.5 N3 «generate_rights» step 4) — its own rule of covering the patterns of secret rows, not an evaluator of actions; the console (`06-console`, P/06.3) only refers to P/01.2 (a row is executed by the role whose norm calls its function).
 
 ## Vector wire
 
-The wire of `expect.tsv` is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `expect.tsv` (judge-only: the table itself) is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
 
-`{rights}` in «Run» above is the substitution of the command `stand.store` of that stand run ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)), not a name of the vector command. The vector target of the package is separate: the profile entry `vectors` `01-store/rights-evaluator` receives only `{input}`, and the rights file reaches its native function as the fixture `rights.json` in `files` of the envelope ([unified vector command](../../../common/acceptance/PROFILE.md#unified-vector-command)). Its native output is one JSON string, `allow` or `deny`.
+`{rights}` in «Run» above is the substitution of the command `stand.store` of that stand run ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)), not a name of the vector command. The vector target of the package is separate: the profile entry `vectors` `01-store/rights-evaluator` receives only `{input}`, and the rights file reaches its native function as the fixture `rights.json` (judge-only: the file itself) in `files` of the envelope ([unified vector command](../../../common/acceptance/PROFILE.md#unified-vector-command)). Its native output is one JSON string, `allow` or `deny`.
