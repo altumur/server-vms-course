@@ -1,0 +1,160 @@
+--- test_b7_export_pair.py.e466f70a
++++ test_b7_export_pair.py
+@@ -1,4 +1,9 @@
+-"""Four NEW operator controls, retained synthetic evidence; no historical suite."""
++"""Four NEW operator controls, retained synthetic evidence; no historical suite.
++
++P02.52: the fixture filter is written in the bytes of an assembled filter (JSON indent 2,
++final LF), because the authorization binds the blob of those bytes (ADR-0135 addendum (14),
++common acceptance README «assembled from the lessons» item 4). The controls of the lists of
++the lessons are in the class LessonListControls below."""
+ import hashlib
+ import json
+ import os
+@@ -17,6 +22,14 @@
+            GIT_AUTHOR_DATE="2026-11-08T00:00:00Z", GIT_COMMITTER_DATE="2026-11-08T00:00:00Z")
+ 
+ 
++def canonical(doc):
++    return (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode()
++
++
++def by_path(records):
++    return sorted(records, key=lambda r: r["path"].encode())
++
++
+ def git(repo, *args, data=None):
+     return subprocess.check_output(["git", "--git-dir=" + str(repo), *args], input=data, env=ENV, stderr=subprocess.PIPE)
+ 
+@@ -77,7 +90,7 @@
+         roster = {p for p in self.fixture if p.startswith("Platform/")} | {op.FILTER, op.MARKER}
+         roles = {p: "model_and_judge" if p in self.public or (keep_wire and p in {op.WIRE, self.case}) else "judge_only" for p in roster}
+         f = {"version": 1, "files": [{"path": p, "disposition": roles[p], "basis": "synthetic role"} for p in sorted(roster)], "own_export_markers": []}
+-        self.fixture[op.FILTER] = ("100644", (json.dumps(f, ensure_ascii=False) + "\n").encode())
++        self.fixture[op.FILTER] = ("100644", canonical(f))
+         self.roles = roles
+         root_tree = tree(self.source, self.fixture)
+         c = git(self.source, "commit-tree", root_tree, data=b"Synthetic input fixture only\n").strip().decode()
+@@ -169,4 +182,122 @@
+         self.assertTrue((Path(collided.exception.path)/'FAILED-RETAINED.json').is_file())
+ 
+ 
++LESSON = "Platform/01-store/"
++LIST = LESSON + "forms/export.json"
++TARGETS = LESSON + "forms/targets.tsv"
++ROUTING = LESSON + "forms/targets.routing.tsv"
++
++
++class LessonListControls(OperatorControls):
++    """ADR-0135 addendum (14): the model filter is the common filter and the model records of the lists."""
++
++    def setUp(self):
++        super().setUp()
++        self.fixture[TARGETS] = ("100644", b"id\towner\n")
++        self.fixture[ROUTING] = ("100644", b"id\troute\n")
++        self.public = self.public | {TARGETS}
++
++    def build_lists(self, mutate=None, roles=None):
++        roster = {p for p in self.fixture if p.startswith("Platform/")} | {op.FILTER, op.MARKER, LIST}
++        role = {p: "model_and_judge" if p in self.public else "judge_only" for p in roster}
++        role.update(roles or {})
++        recs = lambda ps: by_path({"path": p, "disposition": role[p], "basis": "synthetic role"} for p in ps)
++        own = {p for p in roster if p.startswith(LESSON)}
++        common = {"version": 1, "files": recs(roster - own), "own_export_markers": []}
++        lst = {"version": 1, "model": recs(own),
++               "judge": by_path({"path": p, "disposition": "include", "basis": "synthetic role"} for p in own)}
++        if mutate:
++            mutate(common, lst)
++        self.fixture[op.FILTER] = ("100644", canonical(common))
++        self.fixture[LIST] = ("100644", canonical(lst))
++        self.roles = role
++        c = git(self.source, "commit-tree", tree(self.source, self.fixture), data=b"Synthetic input fixture only\n").strip().decode()
++        assembled = dict(common, files=by_path(common["files"] + list(lst["model"])))
++        self.assembled = canonical(assembled)
++        self.authorization.update(source_C=c, filter_blob=op._blob_id(self.assembled),
++                                  wire_blob=files(self.source, c)[op.WIRE][2])
++        return c
++
++    def refused(self, needle=None, **kw):
++        self.commit = self.build_lists(**kw)
++        with self.assertRaises(op.Refused) as e:
++            op.compose_pair(self.source, self.commit, self.products / "refused", authorization_json=self.auth())
++        self.assertEqual(list(self.products.iterdir()), [])
++        if needle:
++            self.assertIn(needle, str(e.exception))
++
++    def test_lists_give_the_M_of_the_equivalent_common_filter(self):
++        self.commit = self.build()          # the same files, every record in the common filter, no list
++        old = op.compose_pair(self.source, self.commit, self.products / "old", authorization_json=self.auth())
++        self.commit = self.build_lists()
++        out = self.products / "new"
++        new = op.compose_pair(self.source, self.commit, out, authorization_json=self.auth())
++        # The M of each is its files and the marker of its own C: the files are the same.
++        mo = files(self.products / "old" / "M.git", old["passport"]["M"]["commit"])
++        mt = files(out / "M.git", new["passport"]["M"]["commit"])
++        self.assertEqual({p: v for p, v in mo.items() if p != op.MARKER}, {p: v for p, v in mt.items() if p != op.MARKER})
++        self.assertIn(LIST, files(out / "J.git", new["passport"]["J"]["commit"]))
++        self.assertIn(TARGETS, mt); self.assertNotIn(ROUTING, mt); self.assertNotIn(LIST, mt)
++        passport = new["passport"]
++        self.assertEqual((out / "FILTER-M.json").read_bytes(), self.assembled)
++        self.assertEqual(passport["filter_blob"], op._blob_id(self.assembled))
++        self.assertEqual(passport["filter_sources"], {op.FILTER: files(self.source, self.commit)[op.FILTER][2],
++                                                      LIST: files(self.source, self.commit)[LIST][2]})
++
++    def test_old_layout_binds_the_canonical_bytes(self):
++        self.commit = self.build()
++        raw = self.fixture[op.FILTER][1]
++        self.fixture[op.FILTER] = ("100644", raw.replace(b"\n  ", b"\n    "))   # same JSON, other bytes
++        c = git(self.source, "commit-tree", tree(self.source, self.fixture), data=b"x\n").strip().decode()
++        self.authorization.update(source_C=c, filter_blob=files(self.source, c)[op.FILTER][2])
++        with self.assertRaises(op.Refused):
++            op.compose_pair(self.source, c, self.products / "raw-blob", authorization_json=self.auth())
++        self.authorization["filter_blob"] = op._blob_id(raw)
++        r = op.compose_pair(self.source, c, self.products / "canonical", authorization_json=self.auth())
++        self.assertEqual((self.products / "canonical" / "FILTER-M.json").read_bytes(), raw)
++        self.assertEqual(r["passport"]["filter_sources"], {op.FILTER: files(self.source, c)[op.FILTER][2]})
++
++    def test_common_file_blob_is_not_the_bound_blob_when_lists_exist(self):
++        self.commit = self.build_lists()
++        self.authorization["filter_blob"] = files(self.source, self.commit)[op.FILTER][2]
++        with self.assertRaises(op.Refused) as e:
++            op.compose_pair(self.source, self.commit, self.products / "common-blob", authorization_json=self.auth())
++        self.assertIn("authorization C/filter/wire mismatch", str(e.exception))
++        self.assertEqual(list(self.products.iterdir()), [])
++
++    def test_routing_of_the_judge_never_in_M(self):
++        self.refused("lesson form", roles={ROUTING: "model_and_judge"})
++
++    def test_list_never_in_M(self):
++        self.refused("lesson form", roles={LIST: "model_and_judge"})
++
++    def test_targets_in_M(self):
++        self.refused("lesson form", roles={TARGETS: "judge_only"})
++
++    def test_list_names_a_file_outside_its_lesson(self):
++        def m(common, lst):
++            moved = [r for r in common["files"] if r["path"] == "Platform/common/vectors/wire.md"][0]
++            common["files"].remove(moved)
++            lst["model"] = by_path(lst["model"] + [moved])
++            lst["judge"] = by_path(lst["judge"] + [dict(moved, disposition="include")])
++        self.refused("exactly the files of its lesson", mutate=m)
++
++    def test_list_misses_a_file_of_its_lesson(self):
++        def m(common, lst):
++            for side in ("model", "judge"):
++                lst[side] = [r for r in lst[side] if r["path"] != ROUTING]
++        self.refused("exactly the files of its lesson", mutate=m)
++
++    def test_list_not_sorted(self):
++        self.refused("not sorted", mutate=lambda common, lst: lst["model"].reverse())
++
++    def test_record_in_the_common_filter_and_in_a_list(self):
++        def m(common, lst):
++            common["files"] = by_path(common["files"] + [r for r in lst["model"] if r["path"] == TARGETS])
++        self.refused("duplicate filter path", mutate=m)
++
++    def test_list_extra_field(self):
++        self.refused("exactly version 1, model and judge", mutate=lambda common, lst: lst.update(extra=[]))
++
++
+ if __name__=='__main__':unittest.main(verbosity=2)

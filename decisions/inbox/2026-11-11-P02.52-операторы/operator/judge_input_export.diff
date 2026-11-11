@@ -1,0 +1,151 @@
+--- judge_input_export.py.4eeef782
++++ judge_input_export.py
+@@ -5,6 +5,12 @@
+ classified exactly once. Included files keep path, mode and blob; nothing is sliced.
+ The forbidden classes below cannot be opted in by a filter record. Refuses rather
+ than repairs, and never writes to an existing output.
++
++P02.52 (ADR-0135 addendum (14) item 3): the second filter is assembled from the common
++J filter and the `judge` records of the lists `Platform/NN-<process>/forms/export.json`
++of the lessons, by the rule of the common acceptance README («Target registry and export
++lists assembled from the lessons», items 2-4). The bound blob is the blob of the
++assembled bytes; without lesson lists they are the canonical common filter.
+ """
+ import argparse, hashlib, json, os, re, subprocess, sys, tempfile
+ 
+@@ -20,6 +26,11 @@
+     FILTER,
+ }
+ CORPUS = {"spec_verdicts", "legacy_spec_verdicts"}
++# ADR-0135 addendum (14) item 2: the list of the files of a lesson; item 3: the forms of every lesson.
++LESSON_LIST = re.compile(r"Platform/(\d\d-[a-z0-9-]+)/forms/export\.json\Z")
++LESSON_FORM = re.compile(r"Platform/\d\d-[a-z0-9-]+/(forms/(?:targets\.tsv|targets\.routing\.tsv|export\.json))\Z")
++LESSON_RULES = {"forms/targets.tsv": "include", "forms/targets.routing.tsv": "include",
++                "forms/export.json": "exclude"}
+ # Names of the existing judge's code and of its inventory; none occurs in a norm.
+ FORBIDDEN_TEXT = re.compile(rb"c_targets|c_store|harness\.py|bcb22c07|P01\.28")
+ ENV = {"GIT_AUTHOR_NAME": "judge-input", "GIT_AUTHOR_EMAIL": "judge-input@invalid",
+@@ -54,7 +65,7 @@
+ 
+ def forbidden_class(path):
+     parts = path.split("/")
+-    if path in FORBIDDEN_PATHS:
++    if path in FORBIDDEN_PATHS or LESSON_LIST.fullmatch(path):
+         return "named exclusion"
+     if "ru" in parts:
+         return "translation"
+@@ -82,6 +93,77 @@
+     return out
+ 
+ 
++def blob_id(raw):
++    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
++
++
++def load_json(raw, what):
++    def unique(pairs):
++        d = dict(pairs)
++        if len(d) != len(pairs):
++            raise Refused(f"duplicate JSON key in {what}")
++        return d
++    try:
++        return json.loads(raw.decode("utf8"), object_pairs_hook=unique)
++    except ValueError as e:
++        raise Refused(f"{what} is not JSON: {e}")
++
++
++def sorted_records(records, what):
++    """An array of records sorted by path as UTF-8 bytes, one record per path (shape is checked later)."""
++    if not isinstance(records, list):
++        raise Refused(f"{what}: records are not an array")
++    keys = []
++    for rec in records:
++        if not isinstance(rec, dict) or not isinstance(rec.get("path"), str):
++            raise Refused(f"{what}: filter record {rec!r}")
++        keys.append(rec["path"].encode("utf8"))
++    for k in sorted({k for k in keys if keys.count(k) > 1}):
++        raise Refused(f"{what}: duplicate path {k.decode()}")
++    if keys != sorted(keys):
++        raise Refused(f"{what}: records not sorted by path as UTF-8 bytes")
++    return records
++
++
++def assemble(gd, entries):
++    """ADR-0135 addendum (14): common J filter + `judge` records of every lesson list → (bytes, sources).
++
++    A list is exactly {version: 1, model, judge}; each array is sorted, names every file of its
++    lesson directory once and no other file. A path has one record in one place. The assembled
++    filter keeps the fields and their order of the common file; its `files` are all records sorted
++    by path as UTF-8 bytes; its bytes are JSON, indent 2, non-ASCII as is, LF, final LF.
++    """
++    if FILTER not in entries:
++        raise Refused("J has no common judge-input filter")
++    doc = load_json(git(gd, "cat-file", "blob", entries[FILTER][1]), "the filter")
++    if not isinstance(doc, dict) or "files" not in doc:
++        raise Refused("filter top level")
++    records = list(sorted_records(doc["files"], FILTER))
++    sources = {FILTER: entries[FILTER][1]}
++    for path in sorted(entries, key=lambda q: q.encode("utf8")):
++        m = LESSON_LIST.fullmatch(path)
++        if not m:
++            continue
++        lst = load_json(git(gd, "cat-file", "blob", entries[path][1]), path)
++        if (not isinstance(lst, dict) or set(lst) != {"version", "model", "judge"}
++                or type(lst["version"]) is not int or lst["version"] != 1):
++            raise Refused(f"{path}: a lesson list is exactly version 1, model and judge")
++        prefix = f"Platform/{m.group(1)}/"
++        own = {q for q in entries if q.startswith(prefix)}
++        for side in ("model", "judge"):
++            named = {r["path"] for r in sorted_records(lst[side], f"{path} {side}")}
++            if named != own:
++                raise Refused(f"{path} {side}: names other than the files of its lesson: {sorted(named ^ own)[:5]}")
++        records.extend(lst["judge"])
++        sources[path] = entries[path][1]
++    keys = [r["path"] for r in records]
++    for k in sorted({k for k in keys if keys.count(k) > 1}):
++        raise Refused(f"duplicate path {k}: a record in the common filter and in a lesson list")
++    out = dict(doc)
++    out["files"] = sorted(records, key=lambda r: r["path"].encode("utf8"))
++    return (json.dumps(out, ensure_ascii=False, indent=2) + "\n").encode("utf8"), sources
++
++
+ def parse_filter(raw):
+     def unique(pairs):
+         d = dict(pairs)
+@@ -140,15 +222,20 @@
+     if os.path.lexists(output):
+         raise Refused("output exists")
+     entries = read_tree(j_git, j_commit)
+-    if FILTER not in entries or entries[FILTER][1] != filter_blob:
+-        raise Refused("filter blob of J differs from the bound one")
++    raw, sources = assemble(j_git, entries)
++    if blob_id(raw) != filter_blob:
++        raise Refused("assembled filter blob of J differs from the bound one")
+     if MARKER not in entries:
+         raise Refused("J has no source marker")
+-    seen, included = parse_filter(git(j_git, "cat-file", "blob", filter_blob))
++    seen, included = parse_filter(raw)
+     if seen != set(entries):
+         raise Refused(f"filter and J differ: {sorted(seen ^ set(entries))[:5]}")
+     if FILTER in included:
+         raise Refused("the filter cannot include itself")
++    for p in sorted(seen):
++        form = LESSON_FORM.fullmatch(p)
++        if form and (p in included) != (LESSON_RULES[form.group(1)] == "include"):
++            raise Refused(f"lesson form against the common rule (gives {LESSON_RULES[form.group(1)]}): {p}")
+     for p in sorted(included):
+         why = forbidden_class(p)
+         if why:
+@@ -176,9 +263,12 @@
+     passport = {"version": 1, "source_C": course, "j_commit": j_commit,
+                 "j_tree": git(j_git, "rev-parse", j_commit + "^{tree}").decode().strip(),
+                 "second_filter_path": FILTER, "second_filter_blob": filter_blob,
++                "second_filter_sources": sources, "second_filter_file": "FILTER-JI.json",
+                 "j_input_commit": commit, "j_input_tree": tree, "ref": REF,
+                 "files_in_j": len(entries), "files_in_j_input": len(selected),
+                 "operator_sha256": sha256_file(__file__)}
++    with open(os.path.join(tmp, "FILTER-JI.json"), "xb") as f:
++        f.write(raw)
+     with open(os.path.join(tmp, "PASSPORT-JI.json"), "x") as f:
+         json.dump(passport, f, indent=2, sort_keys=True)
+         f.write("\n")

@@ -1,0 +1,148 @@
+--- b7_export_pair.py.654d246d
++++ b7_export_pair.py
+@@ -4,6 +4,12 @@
+ This operator reads committed Source only. It does not select C, approve a filter,
+ prove receipt authenticity, run GREEN, materialize model views or launch a trial.
+ No invocation on an actual course/export is authorized by this preparation.
++
++P02.52 (ADR-0135 addendum (14) item 3): the model filter is assembled from the common
++filter and the `model` records of the lists `Platform/NN-<process>/forms/export.json` of
++the lessons, by the rule of the common acceptance README («Target registry and export
++lists assembled from the lessons», items 2-4). The blob bound by the authorization is the
++blob of the assembled bytes; without lesson lists they are the canonical common filter.
+ """
+ from __future__ import annotations
+ 
+@@ -30,6 +36,12 @@
+ # the judge-side rows live in wire.cases.tsv, which is J-only, as is every case table either file names.
+ WIRE_CASES = "Platform/common/vectors/wire.cases.tsv"
+ DERIVED = "Platform/common/contracts/vector-adapter.protocol.json"
++# ADR-0135 addendum (14) item 2: the list of the files of a lesson; item 3: the forms of every lesson.
++LESSON_LIST = re.compile(r"Platform/(\d\d-[a-z0-9-]+)/forms/export\.json\Z")
++LESSON_FORM = re.compile(r"Platform/\d\d-[a-z0-9-]+/(forms/(?:targets\.tsv|targets\.routing\.tsv|export\.json))\Z")
++LESSON_RULES = {"forms/targets.tsv": "model_and_judge",          # the public target table
++                "forms/targets.routing.tsv": "judge_only",       # the routing of the judge never reaches the model
++                "forms/export.json": "judge_only"}               # as the common filters
+ SHA1 = re.compile(r"[0-9a-f]{40}\Z")
+ SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+ ENV = {"PATH": os.defpath, "LC_ALL": "C", "GIT_CONFIG_NOSYSTEM": "1",
+@@ -200,10 +212,68 @@
+     return entries
+ 
+ 
+-def _classification(entries):
++def _blob_id(raw):
++    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
++
++
++def _sorted_records(records):
++    """An array of records sorted by path as UTF-8 bytes, one record per path (shape is checked later)."""
++    if not isinstance(records, list):
++        raise Refused("filter records are not an array")
++    keys = []
++    for item in records:
++        if not isinstance(item, dict) or not isinstance(item.get("path"), str):
++            raise Refused("filter record shape")
++        keys.append(item["path"].encode("utf-8"))
++    if len(set(keys)) != len(keys):
++        raise Refused("duplicate filter path")
++    if keys != sorted(keys):
++        raise Refused("filter records not sorted by path as UTF-8 bytes")
++    return records
++
++
++def _assemble(entries, side="model"):
++    """ADR-0135 addendum (14): common filter + `side` records of every lesson list → (bytes, value, sources).
++
++    A list is exactly {version: 1, model, judge}; each array is sorted, names every file of its
++    lesson directory once and no other file. A path has one record in one place. The assembled
++    value keeps the fields and their order of the common file; its `files` are all records sorted
++    by path as UTF-8 bytes; its bytes are JSON, indent 2, non-ASCII as is, LF, final LF.
++    """
+     if FILTER not in entries:
+         raise Refused("one committed course filter missing")
+     value = _json(entries[FILTER][2])
++    if not isinstance(value, dict) or "files" not in value:
++        raise Refused("unsupported schema1 filter; self-marker exceptions not implemented")
++    records = list(_sorted_records(value["files"]))
++    sources = {FILTER: entries[FILTER][1]}
++    for path in sorted(entries, key=lambda p: p.encode("utf-8")):
++        match = LESSON_LIST.fullmatch(path)
++        if not match:
++            continue
++        lesson = _json(entries[path][2])
++        if (not isinstance(lesson, dict) or set(lesson) != {"version", "model", "judge"}
++                or type(lesson["version"]) is not int or lesson["version"] != 1):
++            raise Refused("lesson list must be exactly version 1, model and judge")
++        prefix = "Platform/" + match.group(1) + "/"
++        own = {p for p in entries if p.startswith(prefix)}
++        for name in ("model", "judge"):
++            named = [item["path"] for item in _sorted_records(lesson[name])]
++            if set(named) != own:
++                raise Refused("lesson list must name exactly the files of its lesson directory")
++        records.extend(lesson[side])
++        sources[path] = entries[path][1]
++    keys = [item["path"].encode("utf-8") for item in records]
++    if len(set(keys)) != len(keys):
++        raise Refused("duplicate filter path")
++    assembled = dict(value)
++    assembled["files"] = sorted(records, key=lambda item: item["path"].encode("utf-8"))
++    raw = (json.dumps(assembled, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
++    return raw, assembled, sources
++
++
++def _classification(entries):
++    value = _assemble(entries)[1]
+     if (not isinstance(value, dict) or set(value) != {"version", "files", "own_export_markers"}
+             or type(value["version"]) is not int or value["version"] != 1
+             or not isinstance(value["files"], list) or value["own_export_markers"] != []):
+@@ -223,6 +293,10 @@
+         raise Refused("filter does not cover exact full J roster")
+     if selected[FILTER] != "judge_only" or selected[MARKER] != "model_and_judge":
+         raise Refused("filter must be J-only; Course marker must be in both")
++    for p, role in selected.items():
++        form = LESSON_FORM.fullmatch(p)
++        if form and role != LESSON_RULES[form.group(1)]:
++            raise Refused("lesson form classified against the common rule (routing or list must be J-only)")
+     return selected
+ 
+ 
+@@ -310,7 +384,7 @@
+     if (not isinstance(a, dict) or set(a) != AUTH_KEYS or type(a["version"]) is not int
+             or a["version"] != 1 or a["authorization"] != "ROOT_AFTER_STEP6_GREEN_AND_FILTER_REVIEW"):
+         raise Refused("Root release authorization metadata required")
+-    if a["source_C"] != commit or a["filter_blob"] != entries[FILTER][1] or a["wire_blob"] != entries[WIRE][1]:
++    if a["source_C"] != commit or a["filter_blob"] != _blob_id(_assemble(entries)[0]) or a["wire_blob"] != entries[WIRE][1]:
+         raise Refused("authorization C/filter/wire mismatch")
+     for k in ("derived_sha256", "source_acceptance_sha256", "green_check_sha256", "different_provider_filter_review_sha256"):
+         if not isinstance(a[k], str) or not SHA256.fullmatch(a[k]):
+@@ -486,6 +560,7 @@
+             raise Refused("approved public derived contract must be in both views")
+         model = {p: e for p, e in entries.items() if selected[p] == "model_and_judge"}
+         _legacy_model_content_guard(model)
++        filter_raw, _value, filter_sources = _assemble(entries)
+         # Creation is possible only after all preflight checks. No mutation of C.
+         new_stage = ".b7-stage-" + uuid.uuid4().hex
+         os.mkdir(new_stage, 0o700, dir_fd=parent_fd)
+@@ -500,16 +575,18 @@
+             finally: os.close(fd)
+         passport = {"format": "b7-pair-private-v1", "created_utc": _utc(), "C": source_C,
+                     "M": model_meta, "J": judge_meta, "filter_path": FILTER,
+-                    "filter_blob_on_C": entries[FILTER][1],
+-                    "filter_sha256": hashlib.sha256(entries[FILTER][2]).hexdigest(),
++                    "filter_blob": _blob_id(filter_raw),
++                    "filter_sha256": hashlib.sha256(filter_raw).hexdigest(),
++                    "filter_sources": filter_sources, "filter_file": "FILTER-M.json",
+                     "authorization_sha256": hashlib.sha256(authorization_json).hexdigest(),
+                     "trusted_authorization": authorization, "registered_cases_removed": len(cases),
+                     "operator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+-                    "projection": "full_committed_Platform_J_one_exact_filter_M",
++                    "projection": "full_committed_Platform_J_one_assembled_filter_M",
+                     "canonical_git_metadata": {"actor": ACTOR, "epoch": 0,
+                         "epoch_is_execution_time": False, "config_sha256": hashlib.sha256(CONFIG).hexdigest()},
+                     "mechanical_pair_only": True, "receipt_authenticity_verified": False,
+                     "namespace_or_runtime_qualified": False, "Owner_pin_or_launch_selected": False}
++        _write(stage_fd, "FILTER-M.json", filter_raw)
+         _write(stage_fd, "PASSPORT-TRUSTED-ONLY.json", (json.dumps(passport, ensure_ascii=False, indent=2) + "\n").encode())
+         os.fsync(stage_fd)
+         _publish(parent_fd, stage, output_dir.name)
