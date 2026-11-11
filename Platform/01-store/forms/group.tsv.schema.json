@@ -1,0 +1,37 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/group.tsv (ADR-0125 addenda (12), (13); P01.228). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks.",
+  "fields": [
+    {
+      "name": "key",
+      "type": "string",
+      "description": "A closed name of the #key lines of the header.",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "transport",
+          "plain",
+          "stand_size"
+        ],
+        "unique": true
+      }
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "description": "Its value by the grammar of its #key line; the grammar stays with the reading of the form.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "key"
+  ]
+}

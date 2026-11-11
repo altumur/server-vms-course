@@ -292,9 +292,19 @@
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
     },
     {
+      "path": "Platform/01-store/forms/group.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/metrics.tsv",
       "disposition": "model_and_judge",
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/metrics.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",
@@ -302,9 +312,19 @@
       "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
     },
     {
+      "path": "Platform/01-store/forms/read-checks.probes.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/read-checks.tsv",
       "disposition": "model_and_judge",
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/refusals.tsv",
@@ -322,9 +342,19 @@
       "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
     },
     {
+      "path": "Platform/01-store/forms/rights-checks.probes.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/rights-checks.tsv",
       "disposition": "model_and_judge",
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/rights-checks.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
@@ -342,9 +372,19 @@
       "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
     },
     {
+      "path": "Platform/01-store/forms/service-checks.probes.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/01-store/forms/service-checks.tsv",
       "disposition": "model_and_judge",
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -370,6 +410,11 @@
       "path": "Platform/01-store/forms/status-fields.tsv",
       "disposition": "model_and_judge",
       "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/status-fields.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.228: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
       "path": "Platform/01-store/forms/targets.routing.tsv",
@@ -914,9 +959,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/group.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/metrics.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/metrics.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",
@@ -924,9 +979,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/read-checks.probes.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/read-checks.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/refusals.tsv",
@@ -944,9 +1009,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/rights-checks.probes.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/rights-checks.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/rights-checks.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
@@ -964,9 +1039,19 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/01-store/forms/service-checks.probes.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
       "path": "Platform/01-store/forms/service-checks.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -992,6 +1077,11 @@
       "path": "Platform/01-store/forms/status-fields.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/status-fields.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P01.228: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
       "path": "Platform/01-store/forms/targets.routing.tsv",

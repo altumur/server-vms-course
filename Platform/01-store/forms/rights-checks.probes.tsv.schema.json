@@ -1,0 +1,44 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/rights-checks.probes.tsv (ADR-0125 addenda (12), (13); P01.228). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks.",
+  "fields": [
+    {
+      "name": "n",
+      "type": "string",
+      "description": "A row n of rights-checks.tsv, 0 for pass; no foreign key: 0 is no row, and the evaluation stays with the existing check.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:0|[1-9][0-9]*)"
+      }
+    },
+    {
+      "name": "case",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "only",
+          "pair",
+          "nopair",
+          "pass"
+        ]
+      }
+    },
+    {
+      "name": "sock",
+      "type": "string",
+      "description": "A role of the socket or peer:<role> of a connection over -api (#var sock of the table); checked by the existing check.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:(?:peer:)?[a-z][a-z0-9_-]*)"
+      }
+    },
+    {
+      "name": "body",
+      "type": "string",
+      "description": "The request object as JSON, or for nopair why the row has no pair; JSON and the outcome stay with the existing check.",
+      "constraints": {
+        "required": true
+      }
+    }
+  ]
+}
