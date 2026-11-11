@@ -1,0 +1,57 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/status-fields.tsv (ADR-0125 addenda (12), (13); P01.228). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks.",
+  "fields": [
+    {
+      "name": "field",
+      "type": "string",
+      "description": "A field of the answer object of GET /v1/status.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[a-z][a-z0-9_]*)",
+        "unique": true
+      }
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "description": "The JSON form of the value; its words stay with the reading of the form.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "required_when",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "allowed_when",
+      "type": "string",
+      "description": "CEL; checked by the existing CEL guard on the raw text, not by this schema.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "value_rule",
+      "type": "string",
+      "description": "What the value is, by the mode and the role; - when the type says all.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "field"
+  ]
+}

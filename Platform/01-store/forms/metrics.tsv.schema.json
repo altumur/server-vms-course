@@ -1,0 +1,60 @@
+{
+  "description": "Frictionless Table Schema of Platform/01-store/forms/metrics.tsv (ADR-0125 addenda (12), (13); P01.228). Every field is a raw string: no type coercion. Constraints only where the header of the form or the existing check states them; CEL, JSON, owner, typed, numeric and prose-agreement rules stay with the existing checks.",
+  "fields": [
+    {
+      "name": "series",
+      "type": "string",
+      "description": "A text series of GET /metrics; the list is closed.",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:[a-z_][a-z0-9_]*)",
+        "unique": true
+      }
+    },
+    {
+      "name": "labels",
+      "type": "string",
+      "description": "name=value|value… of each label, - without labels; the grammar of several labels is not stated by the header and is not judged here.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "gauge",
+          "counter"
+        ]
+      }
+    },
+    {
+      "name": "emitted_by",
+      "type": "string",
+      "description": "voter, box, door through «, ».",
+      "constraints": {
+        "required": true,
+        "pattern": "(?:(?:voter|box|door)(?:, (?:voter|box|door))*)"
+      }
+    },
+    {
+      "name": "value_rule",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "series"
+  ]
+}
