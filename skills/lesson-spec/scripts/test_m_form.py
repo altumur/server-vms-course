@@ -360,7 +360,7 @@ class ProductionScoped(AcceptedForm):
     def test_definition_in_n0_and_acting_labels_pass(self):
         check = self.run_checks()
         self.assertEqual(check.errors, [])
-        self.assertEqual(check.stats["production_scoped"], 6)       # R148, R150, item 32 — source and translation
+        self.assertEqual(check.stats["production_scoped"], 22)      # P/01 after P01.176 (one requirement per item) — source and translation
 
     def test_acting_label_inside_a_paragraph(self):
         self.replace(self.REL, "Persistence of an ordinary fixed-size write MUST be incremental:",
@@ -410,6 +410,11 @@ class ChecklistMarks(AcceptedForm):
                 self.replace(self.REL, item, bad)
                 self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, bad), words)
 
+    def add_withdrawn(self):
+        """A withdrawn checklist item in source and translation, before item 32 (P/01 has none since P01.176)."""
+        self.replace(self.REL, "- [ ] **P/01.1-32** ", "- [ ] **P/01.1-90** removed: `ADR-0133`\n- [ ] **P/01.1-32** ")
+        self.replace("ru/" + self.REL, "- [ ] **P/01.1-32** ", "- [ ] **P/01.1-90** снята: `ADR-0133`\n- [ ] **P/01.1-32** ")
+
     def test_production_label_before_the_mark_and_withdrawn_item(self):
         self.assertIn("- [ ] **P/01.1-32** **Scope: production.** [stand]",
                       (self.home / self.REL).read_text(encoding="utf-8"))
@@ -418,11 +423,13 @@ class ChecklistMarks(AcceptedForm):
         self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, "**P/01.1-32** [stand]"),
                           "goes between the id and the mark")
         self.setUp()
-        self.replace(rel, "- [ ] **P/01.1-24** removed:", "- [ ] **P/01.1-24** [reading] removed:")
-        self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, "**P/01.1-24** [reading]"),
+        self.add_withdrawn()
+        self.replace(rel, "- [ ] **P/01.1-90** removed:", "- [ ] **P/01.1-90** [reading] removed:")
+        self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, "**P/01.1-90** [reading]"),
                           "a withdrawn item has no mark")
         self.setUp()
-        self.replace(rel, "- [ ] **P/01.1-24** removed: `ADR-0133`", "- [ ] **P/01.1-24** removed: `ADR-0133` [reading]")
+        self.add_withdrawn()
+        self.replace(rel, "- [ ] **P/01.1-90** removed: `ADR-0133`", "- [ ] **P/01.1-90** removed: `ADR-0133` [reading]")
         self.assertEqual(self.run_checks().errors, [])     # the words after a withdrawal are no mark
 
     def test_translation_has_the_same_english_words(self):
@@ -432,9 +439,10 @@ class ChecklistMarks(AcceptedForm):
                 ("- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15** [чтение]", "a closed list"),
                 ("- [ ] **P/01.1-03** [test, reading]", "- [ ] **P/01.1-03** [reading, test]", "differs from the source"),
                 ("**P/01.1-32** **Охват: боевой.** [stand]", "**P/01.1-32** **Охват: боевой.** [test]", "differs"),
-                ("- [ ] **P/01.1-24** снята:", "- [ ] **P/01.1-24** [test] снята:", "a withdrawn item has no mark")):
+                ("- [ ] **P/01.1-90** снята:", "- [ ] **P/01.1-90** [test] снята:", "a withdrawn item has no mark")):
             with self.subTest(after=after):
                 self.setUp()
+                self.add_withdrawn()
                 self.replace(rel, before, after)
                 self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, after), words)
 
@@ -480,8 +488,9 @@ class StageA(AcceptedForm):
             errors = self.run_checks().errors
         self.assertTrue(any("in M_FORM_LESSONS and in M_FORM_STAGE_A" in e for e in errors), errors)
 
-    def test_stage_a_set_is_empty_for_now(self):
-        self.assertEqual(m_form.M_FORM_STAGE_A, set())
+    def test_stage_a_set_names_lessons_outside_the_full_form(self):
+        self.assertFalse(m_form.M_FORM_STAGE_A & m_form.M_FORM_LESSONS)
+        self.assertTrue(all(re.fullmatch(r"P/(0[2-9]|10)", x) for x in m_form.M_FORM_STAGE_A), m_form.M_FORM_STAGE_A)
 
 
 class LessonWithoutList(AcceptedForm):
