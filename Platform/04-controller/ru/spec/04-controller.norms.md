@@ -67,10 +67,10 @@ platform/decommission/<сервер>:           # писатель — конс�
   request_index: <version>             # exact fixed platform/decommission/<host> index
   asked_at, at: <time>                 # request at and plan acceptance time
   manifest_rev: <revision>
-  remaining: [{name: <slot name>, index: <version>},...]  # JSON; original versions, no later substitution
-  from: [<owned from prefix>,...]     # fixed full prefixes, each ending in /
-  released, skipped: [<slot name>,...]
-  current: [<slot name>,...]          # at most BATCH_WRITES - 1, the confirmed release chunk
+  remaining: [{name: <slot name>, index: <version>}, ...]  # JSON; original versions, no later substitution
+  from: [<owned from prefix>, ...]     # fixed full prefixes, each ending in /
+  released, skipped: [<slot name>, ...]
+  current: [<slot name>, ...]          # at most BATCH_WRITES - 1, the confirmed release chunk
   cleanup_index: "" | <version>        # empty means the progress row's own index, before its first cleanup rewrite
   slot_cursor, from_cursor: <count>    # next current slot and its next from prefix
   units, holds: <lists>                # fixed final-mark metadata, same form as decommissioned

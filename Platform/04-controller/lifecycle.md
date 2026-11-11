@@ -5,13 +5,13 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 The lifecycle contract of the process `<sub>controller`. The rows refer to the norms of the
 lesson [P/04] and of the neighbouring lessons and do not retell them.
 
-[P/02.3]:../02-installer/spec/02.3-installer.norms.md
-[P/02.4]:../02-installer/spec/02.4-installer.norms.md
-[P/02.5]:../02-installer/spec/02.5-installer.norms.md
+[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
+[P/02.5]: ../02-installer/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
-[P/06.6]:../06-console/spec/06.6-console.norms.md
-[Stand]:../common/acceptance/README.md
-[catalogue]:../common/data/catalog.tsv
+[P/06.6]: ../06-console/spec/06.6-console.norms.md
+[Stand]: ../common/acceptance/README.md
+[catalogue]: ../common/data/catalog.tsv
 
 ## Launch
 

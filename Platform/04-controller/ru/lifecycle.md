@@ -5,13 +5,13 @@
 
 Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом.
 
-[P/02.3]:../../02-installer/ru/spec/02.3-installer.norms.md
-[P/02.4]:../../02-installer/ru/spec/02.4-installer.norms.md
-[P/02.5]:../../02-installer/ru/spec/02.5-installer.norms.md
+[P/02.3]: ../../02-installer/ru/spec/02.3-installer.norms.md
+[P/02.4]: ../../02-installer/ru/spec/02.4-installer.norms.md
+[P/02.5]: ../../02-installer/ru/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
-[P/06.6]:../../06-console/ru/spec/06.6-console.norms.md
-[Стенд]:../../common/ru/acceptance/README.md
-[каталог]:../../common/data/catalog.tsv
+[P/06.6]: ../../06-console/ru/spec/06.6-console.norms.md
+[Стенд]: ../../common/ru/acceptance/README.md
+[каталог]: ../../common/data/catalog.tsv
 
 ## Запуск
 
