@@ -1,7 +1,7 @@
 # P/04 forms and controller seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121).
-These forms express the existing controller norms (ADR-0125 addendum (5)); no controller HTTP door is introduced.
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export.
+These forms express the existing controller norms; no controller HTTP door is introduced.
 
 ## Inputs and refusals
 
@@ -32,7 +32,7 @@ cleanup, decommission batches and placement turn/intent procedures remain their 
 
 ## Seams
 
-[acceptance/seams.tsv](../acceptance/seams.tsv) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
+[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R026–P/04-R066) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
 those of [the P/03 forms README](../../03-worker/forms/README.md) and [the P/02 forms README](../../02-installer/forms/README.md): CALL with one
 JSON value, object subset, exact empty objects/lists, fresh scenario roots; no shell. The single-chapter address is `4`, with no acceptance subdirectory.
 The port names normalize tests, not the implementation API. Invoke the real controller functions and record effects, never return a canned expect.
@@ -60,7 +60,7 @@ fields are decoded values; release_items are store wire strings. A normal refusa
 These witnesses supplement the reading checklist and common vectors; they do not close an OS process race or a scenario they do not execute.
 The stage plan is [stages.tsv](stages.tsv); all runner scenarios and assigned common tables remain required, with row selections from their package README.
 
-### Review ADR-0127 composed pass witnesses
+### Composed pass witnesses
 
 The existing controller-pass port accepts fixture controls. These controls select a valid synthetic environment, not an expected answer and not an implementation API. Run real controller code through the normal pass. Complete testsub2 with grows, per/capacity, places.table/places.wanted and the existing valid shelf/place fields; no field or role is invented outside its manifest form. Instantiate every live number with a real name and a fresh heartbeat; give each the stated available capacity. The wanted_holder actually holds an admissible place with a readable wanted row. empty_workers have no unit assignment. no_shortage_for is established by previous actual passes on the virtual clock, not by writing an internal timer. Use enough free remaining capacity to satisfy hysteresis, so wanted is the targeted restriction.
 
@@ -86,7 +86,7 @@ Begin like the restart witness, then deliberately corrupt the persisted pending 
 
 The acting [runtime-constants.tsv](runtime-constants.tsv) has only name/value/unit/norm/meaning: positive JSON integers through int64, units count/s/bytes. These are not new environment options. Borrowed values retain their common/P01/P05 owners. Numeric SLOT_TERM/LOST_AFTER machine carriers and pending maxItems stay literal with explicit bindings for an independent subject checker; no symbolic alias is introduced.
 
-## Current reports and ADR0129(15) witnesses
+## Current reports and witnesses
 
 Positive backgrounds come from the current writer: placement has manifest_rev and nonempty reason; active intent has nonempty reason, idle does not require it; a report has the three mandatory counters; a snapshot has one unit.rows array, including []. Raw family-read is never completed or repaired. Absence before the first object publication is not a malformed wrapper. Recovery goes through pending after a confirmed release, not an early final mark; the exact old guards stay.
 

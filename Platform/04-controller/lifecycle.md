@@ -1,9 +1,9 @@
 # Controller — lifecycle (lesson P/04)
 
-This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The lifecycle contract of the process `<sub>controller` (ADR-0083 addendum (2) item 1). The rows refer to the norms of the
-lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
+The lifecycle contract of the process `<sub>controller`. The rows refer to the norms of the
+lesson [P/04] and of the neighbouring lessons and do not retell them.
 
 [P/02.3]: ../02-installer/spec/02.3-installer.norms.md
 [P/02.4]: ../02-installer/spec/02.4-installer.norms.md
@@ -33,7 +33,7 @@ lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
 | `SERVER_NAME` | its own server; not by the grammar of the slot suffix — code 2 | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
 | `BOX_ID` | the box | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | the terms of the fate of a hung slot and the reachability budget | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4, «Implementation decides» item 4 |
-| `W2C_SHRINK_AFTER` | stand only: the shrink term `SHRINK_AFTER`, s; when set — a loud journal line at start; outside the stand it is not set (review of stage B 3–5, № 18) | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
+| `W2C_SHRINK_AFTER` | stand only: the shrink term `SHRINK_AFTER`, s; when set — a loud journal line at start; outside the stand it is not set | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.4 `SHRINK_AFTER` |
 | `CLUSTER` | the cluster name in the snapshot shard | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, [P/04] N1.3a |
 | `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/<sub>controller` | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2, N1.6 |
 | `W2C_ENV`, `W2C_SUB_ENV` | the environment files: the common one and the subsystem one | process start | [daemon-flags.tsv](forms/daemon-flags.tsv); [P/02.4] N1.2 |
@@ -56,9 +56,8 @@ argument of the runner command is the subsystem name `<sub>`.
 - **Objects** in the objects root: the pass report `<sub>/controller/pass` ([P/04] N1.2), the snapshot shards
   `<sub>/snapshot/<worker>`, `<sub>/snapshot/unplaced` ([P/04] N1.3a). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).
 - **Cluster objects** (the heartbeats of workers and resources, the reports) the controller reads through the resource of its own server (the
-  objects door [P/05](../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27); a stand that needs the worker heartbeats
-  puts a resource on the server of the controller ([P/04] N3 «pass()» step 0; ADR-0084 addendum (2) R17; review of stage A
-  3–5, № 22).
+  objects door [P/05](../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../common/contracts/object-client.md) `door`); a stand that needs the worker heartbeats
+  puts a resource on the server of the controller ([P/04] N3 «pass()» step 0).
 - **Reads**: the worker heartbeats `<sub>/heartbeats/<name>`, the resource heartbeat `platform/resources/<server>/heartbeat`,
   `platform/manifest/<sub>` and the mark `/rev`, `platform/schema`, `platform/servers/*`, `platform/doors/*`,
   `platform/decommission/*`, `platform/drain`, the slots `<sub>/slots/<name>`, the places `<sub>/holds/<place>` ([catalogue]);
@@ -72,7 +71,7 @@ argument of the runner command is the subsystem name `<sub>`.
 | Code | When | Norm |
 |---|---|---|
 | 0 | a manifest change: the mark `platform/manifest/<sub>/rev` is above the remembered one or has disappeared — stop, the supervisor starts it again | [P/02.3] N3 «Manifest change» |
-| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review of stage A 6–7, B2) | [P/02.3] N3 «Manifest change», N4 |
+| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark | [P/02.3] N3 «Manifest change», N4 |
 | 2 | the store schema is above its own or not a number | [P/04] N3 «controller start — schema check» |
 | 2 | there is no manifest row or mark, the read is not confirmed, `sha256` is not the right one, the manifest or the catalogue is refused | [P/02.3] N3 «Process start» |
 | 2 | the environment file is not by the grammar; `SERVER_NAME` is not by the grammar; `W2C_ROLE` is not the role of the command | [P/02.4] N1.2, N4 |
@@ -93,14 +92,14 @@ argument of the runner command is the subsystem name `<sub>`.
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`).
 
 - The command of the «Stand» with the substitution `{sub}` (`testsub` when there is no `<sub>`); `{data}` is `PLATFORM_DIR`, the stand turns
   the substitutions into the environment of [P/02.4] N1.2 ([Stand] «One data directory»).
 - The command printing the pass report — a template with `{data}` and `{sub}` ([Stand]).
-- The rights of the stand of the acceptances moved from M10/4–11 (review of stage B 3–5, № 34) — `{rights}` from the manifests of the stand by the rights output command ([Stand]).
+- The rights of the acceptance stand — `{rights}` from the manifests of the stand by the rights output command ([Stand]).
 
 ## Open
 
 - The pass outcome when the resource of the server is unreadable the controller derives from the resource heartbeat and the presence lock (P/05 N1.4, [the presence lock contract](../common/contracts/presence-lock.md));
-  the second pilot confirmed the replaceability of the controller on the common state — it has no open lifecycle rows.
+  the controller resumes from the common state and has no open lifecycle rows.
