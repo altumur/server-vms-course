@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/vectors/rights-eval
 The owner is lesson P/01, chapter 1.2 (the norm is P/01.2 N1.2 `pattern`, N1.3 «Evaluator»). The input is the rights file
 `rights.json`, the output is `expect.tsv` (judge-only: `rights.json`, `expect.tsv`; they check P/01.2-R008 and P/01.2-R010): a row `role action key expect`, `expect` — `allow` or `deny`.
 
-**Run.** The runner starts a fresh store with `rights.json` as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md)) and
+**Run.** The runner starts a fresh store with `rights.json` (judge-only: the file itself) as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md)) and
 for each row makes a probe through the socket of the role: `read` — `GET /v1/get?key=<key>`, `write` — `POST /v1/write` `put`, `delete` —
 `POST /v1/write` `delete` (without `cas`; an absent row is deleted successfully, M10/1 N3). The outcome of the probe:
 - `deny` — `403 forbidden`;
