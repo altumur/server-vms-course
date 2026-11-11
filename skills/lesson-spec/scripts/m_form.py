@@ -1,0 +1,698 @@
+"""Checks of the reading form of M (ADR-0133 addendum (56); P01.175; decisions of the Architect 2026-11-11 on the
+lesson-spec proposal, item 4; review P01.214 C1–C5). Six checks, each a FAIL with its file and line:
+
+- `history_phrases` — no origin text in the files of M: a closed list of history phrases (both languages) and `ADR-0`
+  outside tombstones, in the English sources and their translations of the lessons of `M_FORM_LESSONS` and of the
+  common inputs of `M_FORM_COMMON`;
+- `index_refs` — the `## Index` table of every chapter: each requirement exists in the norms of the lesson, ascending,
+  once; each file address exists (`Platform/…` and `VMS/…` from the course root, any other path from the lesson root,
+  no fallback root; the words in parentheses and «…» are not addresses); the translation has the same rows;
+- `see_also_refs` — the «See also» line of a requirement is exactly the union of the ids of all index rows of its
+  topics over the chapters of the lesson without the id itself, ascending, once; a requirement in no row has none;
+  the translation has the same lines in the same order;
+- `judge_only_refs` — a Markdown link or a path in backquotes from a Markdown file of M to a judge-only file (the
+  assembled export lists) has the marker «(judge-only: …)» in the same sentence (a heading, a quoted section name «…»
+  and the textual `sc. NN` are outside this check);
+- `production_scoped` — the acting label «**Scope: production.**» opens the first paragraph after its req anchor or
+  stands right after the id of a checklist item; a quoted label («**Scope: production.**», its definition in N0) does
+  not act;
+- `history_rows` — the history files `decisions/journal/<module>/<lesson>/history[-K].tsv`: the header
+  `req_id file source date removed`, `req_id` `-` or a requirement of the lesson, `file#fragment` exists by its kind
+  (`#intro`; `#N0`…`#N5` with subsections — the section of the norms by its number in any language; `#/…` in YAML or
+  JSON — a JSON Pointer into the parsed document; any other fragment of Markdown — a heading anchor), an ISO date,
+  nonempty source and removed text.
+
+Built text is judged at its builder: `data/*.schema.json` (v7.build from the dialect and `common.form.yaml`) and the
+families block of the norms (`<!-- families:begin -->` … `<!-- families:end -->`, v7/section.py) are not read by
+`history_phrases`. See references/validation.md, «Форма M».
+"""
+import datetime
+import fnmatch
+import json
+import posixpath
+import re
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
+
+import yaml
+
+# Lessons whose M is in the reading form (P01.175, P01.177). A lesson enters when its form is brought in by its own
+# task: the checks run on a lesson only after its norms carry no history, their index and «See also» lines.
+M_FORM_LESSONS = {"P/01"}
+
+# The common inputs (paths under Platform/common/ that the common filter gives to M) read by `history_phrases`. Empty:
+# on main 2026-11-11 the common inputs carry history (Platform/common/acceptance/: 107 phrases and 148 ADR numbers in
+# the sources and translations; the whole Platform/common: 1715 and 1454). They enter by the word of the Architect
+# after the common acceptance is cleaned; a prefix, e.g. "Platform/common/acceptance/".
+M_FORM_COMMON = ()
+
+# Closed list of history phrases (ADR-0133 addendum (56) item 1). A paraphrase passes — the review by the checklist.
+HISTORY_PHRASES = re.compile("|".join([
+    r"Architect's decision", r"decision of the Architect", r"Decided by the Architect",
+    r"reconciliation of python and go", r"(?<![A-Za-z])moved from", r"without a change of behaviour",
+    r"analysis of (?:the )?review", r"review of stage",
+    r"решени[еяю] «?Архитектора", r"решил «?Архитектор", r"сверк[аиуе] python и go", r"перенес[её]н[а-я]* из",
+    r"без изменения поведения", r"разбор[а-я]* ревью", r"ревью стади[ия]",
+]), re.I)
+ADR_NUMBER = re.compile(r"ADR-0")                       # decision item 2: a number of an ADR is origin too
+# Not history (decision items 2, 3): a tombstone of a removed requirement and a withdrawn checklist item «снята: `ADR`»
+# keep an id from reuse; a row of a closed list added by another lesson names that lesson, not an ADR.
+TOMBSTONE = re.compile(r"<!-- removed: \S+ by ADR-[0-9]{4} -->")
+WITHDRAWN = re.compile(r"\*\*[^*\s]+\*\*\s+(?:снята|withdrawn|removed):\s*`?ADR-[0-9]{4}`?")
+
+# ADR numbers outside the norms that stay for now, by lesson, as paths from the lesson root (fnmatch). Item 2 of the
+# decision removes the numbers from the text of the norms; P01.177 removed them from spec/*.norms.md. The forms keep
+# theirs until P01.176 (the Architect on P01.177). The other files of M have not been cleaned yet: they enter by the
+# word of the Architect. An exact path whose source and translation carry no number any more is stale — an error.
+ADR_LATER = {
+    "P/01": {
+        "forms/*.tsv": "comments and the column norm of the forms — включить после P01.176",
+        "README.md": "outside the norms; not cleaned by P01.177",
+        "lifecycle.md": "outside the norms; not cleaned by P01.177",
+        "spec/01-store.README.md": "outside the norms; not cleaned by P01.177",
+        "spec/01-store.api.openapi.yaml": "outside the norms; not cleaned by P01.177",
+        "spec/production-acceptance.md": "outside the norms; not cleaned by P01.177",
+        "acceptance/1/README.md": "outside the norms; not cleaned by P01.177",
+        "acceptance/2/README.md": "outside the norms; not cleaned by P01.177",
+        "acceptance/3/README.md": "outside the norms; not cleaned by P01.177",
+        "data/configstore-doors.outcomes.tsv": "outside the norms; not cleaned by P01.177",
+        "data/epoch_floor.outcomes.tsv": "outside the norms; not cleaned by P01.177",
+        "vectors/jcs/README.md": "outside the norms; not cleaned by P01.177",
+        "vectors/rights-evaluator/README.md": "outside the norms; not cleaned by P01.177",
+    },
+}
+BUILT = ("data/*.schema.json",)                          # v7.build: judged at the dialect and common.form.yaml
+BUILT_BLOCK = ("<!-- families:begin -->", "<!-- families:end -->")   # v7/section.py
+
+LANG = {"en": {"index": "## Index", "see": "See also:"}, "ru": {"index": "## Указатель", "see": "См. также:"}}
+JUDGE_MARKS = ("judge-only:", "только для судьи:")         # «(judge-only: …)», also «(`X`; judge-only: …)»
+LABELS = ("**Scope: production.**", "**Охват: боевой.**")
+REQ = r"P/[0-9]{2}(?:\.[0-9]+)?-R[0-9]{3}"
+REQ_ID = re.compile(REQ)
+REQ_ANCHOR = re.compile(r"<!-- req: (" + REQ + r") -->")
+REMOVED_ANCHOR = re.compile(r"<!-- removed: (" + REQ + r") by ADR-[0-9]{4} -->")
+CHECK_ITEM = re.compile(r"^\s*- \[[ x]\] \*\*[^*\s]+\*\*\s+")
+HISTORY_HEADER = ["req_id", "file", "source", "date", "removed"]
+HISTORY_FILE = re.compile(r"history(?:-((?:0|[1-9][0-9]?)))?\.tsv")
+SECTION_NUMBER = re.compile(r"N[0-9](?:\.[0-9]+[a-z]?)*")
+TEXT_SUFFIXES = {".md", ".tsv", ".yaml", ".yml", ".json"}
+
+
+def req_key(value):
+    m = re.fullmatch(r"P/([0-9]{2})(?:\.([0-9]+))?-R([0-9]{3})", value)
+    return (int(m[1]), int(m[2] or 0), int(m[3])) if m else (999, 999, 999)
+
+
+def fenced_lines(text):
+    """(line number, line, inside a code fence) for every line; a fence line itself counts as inside."""
+    fence = None
+    for n, line in enumerate(text.splitlines(), 1):
+        stripped = line.lstrip()
+        if fence is None and (stripped.startswith("```") or stripped.startswith("~~~")):
+            fence = stripped[:3]
+            yield n, line, True
+            continue
+        if fence is not None:
+            if stripped.startswith(fence):
+                fence = None
+            yield n, line, True
+            continue
+        yield n, line, False
+
+
+class Lesson:
+    """A lesson of M_FORM_LESSONS: its home, the files of M (sources) by its forms/export.json, the chapter norms."""
+
+    def __init__(self, check, key, home):
+        self.check, self.key, self.home = check, key, home
+        self.rel = home.relative_to(check.root).as_posix()
+        self.number = key.split("/")[1]
+        self.chapters = sorted(
+            (p for p in (home / "spec").glob("*.norms.md")
+             if re.fullmatch(rf"{self.number}(?:\.(?:0|[1-9][0-9]?))?-[^.]+\.norms\.md", p.name)),
+            key=lambda p: [int(x) if x.isdigit() else x for x in re.split(r"([0-9]+)", p.name)])
+        self._req = None
+
+    def chapter_of(self, path):
+        m = re.fullmatch(rf"{self.number}\.([0-9]+)-.*", path.name)
+        return m[1] if m else None
+
+    def translation(self, path):
+        return self.home / "ru" / path.relative_to(self.home)
+
+    def m_files(self, model):
+        """The sources of M of the lesson: model_and_judge records under its directory, outside ru/."""
+        out = []
+        for path, disposition in model.items():
+            if disposition == "model_and_judge" and path.startswith(self.rel + "/") and \
+                    not path[len(self.rel) + 1:].startswith("ru/"):
+                out.append(self.check.root / path)
+        return sorted(out)
+
+    def requirements(self):
+        """{id: (norms file, line)} of the req anchors and the set of removed ids over the English chapter norms."""
+        if self._req is None:
+            live, removed = {}, set()
+            for norms in self.chapters:
+                text = norms.read_text(encoding="utf-8")
+                for n, line in enumerate(text.splitlines(), 1):
+                    for m in REQ_ANCHOR.finditer(line):
+                        live.setdefault(m[1], (norms, n))
+                    removed.update(REMOVED_ANCHOR.findall(line))
+            self._req = (live, removed)
+        return self._req
+
+
+def export_model(check):
+    """{repository path: disposition} of the assembled M (common filter and the lesson lists)."""
+    import export_lists
+    assembled, _, _ = export_lists.assemble(check.root)
+    return {r["path"]: r["disposition"] for r in assembled["model"]}
+
+
+def lesson_homes(check, lessons):
+    homes = {}
+    for _, row in check.lessons_table()[1]:
+        key = f"P/{row.get('lesson')}"
+        if key in M_FORM_LESSONS and (lessons is None or row.get("lesson") in lessons) and row.get("dir"):
+            homes[key] = check.root / "Platform" / row["dir"]
+    return homes
+
+
+def run(check, lessons=None):
+    """All six checks over the lessons of M_FORM_LESSONS that this run checks (`lessons` — lesson numbers; None — all)
+    and the common inputs of M_FORM_COMMON."""
+    homes = lesson_homes(check, lessons)
+    if not homes and not M_FORM_COMMON:
+        return
+    model = export_model(check)
+    for key, home in sorted(homes.items()):
+        lesson = Lesson(check, key, home)
+        if not (home / "forms/export.json").is_file():
+            check.error(home / "forms/export.json", f"{key} is in M_FORM_LESSONS: the files of M come from its list")
+            continue
+        files = lesson.m_files(model)
+        history_phrases(check, lesson, files)
+        index_refs(check, lesson)
+        see_also_refs(check, lesson)
+        judge_only_refs(check, lesson, files, model)
+        production_scoped(check, lesson, files)
+        history_rows(check, lesson)
+    common_history(check, model)
+
+
+# --- history_phrases ---------------------------------------------------------------------------------------------
+
+def _later(lesson, rel):
+    return next((glob for glob in ADR_LATER.get(lesson.key, {}) if fnmatch.fnmatchcase(rel, glob)), None) \
+        if lesson is not None else None
+
+
+def scan_history(check, path, later=None):
+    """Errors for the history phrases and ADR numbers of one file; returns the count of ADR numbers it carries."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        check.error(path, str(exc))
+        return 0
+    numbers, built = 0, False
+    for n, line in enumerate(text.splitlines(), 1):
+        if line.strip() == BUILT_BLOCK[0]:
+            built = True
+        if built:
+            built = line.strip() != BUILT_BLOCK[1]
+            continue
+        for m in HISTORY_PHRASES.finditer(line):
+            check.error(path, f"line {n}: history in M «{m.group(0)}» — origin is a row of "
+                              "decisions/journal/<module>/<lesson>/history[-K].tsv, not text of M (ADR-0133 addendum (56))")
+        bare = WITHDRAWN.sub("", TOMBSTONE.sub("", line))
+        found = len(ADR_NUMBER.findall(bare))
+        numbers += found
+        if found and later is None:
+            check.error(path, f"line {n}: an ADR number in M — origin, not a norm: the rule in words, the number to "
+                              "the column source of the history file (decision of the Architect 2026-11-11, item 2)")
+    check.stats["history_phrases"] += 1
+    return numbers
+
+
+def history_phrases(check, lesson, files):
+    carried = {}
+    for source in files:
+        rel = source.relative_to(lesson.home).as_posix()
+        if source.suffix not in TEXT_SUFFIXES or any(fnmatch.fnmatchcase(rel, b) for b in BUILT):
+            continue
+        later = _later(lesson, rel)
+        for path in (source, lesson.translation(source)):
+            if path.is_file():
+                carried[rel] = carried.get(rel, 0) + scan_history(check, path, later)
+                if later is not None:
+                    check.stats["history_adr_later"] += 1
+    for glob in ADR_LATER.get(lesson.key, {}):
+        if not any(ch in glob for ch in "*?[") and not carried.get(glob):
+            check.error(lesson.home / glob, f"stale ADR_LATER entry of {lesson.key}: the file carries no ADR number "
+                                            "(or is not in M) — remove the entry from m_form.ADR_LATER")
+
+
+def common_history(check, model):
+    if not M_FORM_COMMON:
+        return
+    common = check.root / "Platform/common"
+    for path, disposition in sorted(model.items()):
+        if disposition != "model_and_judge" or not any(path.startswith(p) for p in M_FORM_COMMON):
+            continue
+        source = check.root / path
+        if source.suffix not in TEXT_SUFFIXES or not source.is_file():
+            continue
+        scan_history(check, source)
+        translation = common / "ru" / source.relative_to(common)
+        if translation.is_file():
+            scan_history(check, translation)
+
+
+# --- index_refs ----------------------------------------------------------------------------------------------------
+
+def index_rows(path, language):
+    """[(line, topic, requirements cell, [addresses])] of the index table of a chapter; None — no index."""
+    heading = LANG[language]["index"]
+    rows, inside, seen = [], False, False
+    for n, line, fence in fenced_lines(path.read_text(encoding="utf-8")):
+        if fence:
+            continue
+        if line.startswith("## ") or line.startswith("# "):
+            inside = line.strip() == heading
+            seen |= inside
+            continue
+        if not inside or not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 3 or set("".join(cells)) <= set("-: ") or cells[0] in ("Topic", "Тема"):
+            continue
+        rows.append((n, cells[0], cells[1], file_addresses(cells[2])))
+    return rows if seen else None
+
+
+def file_addresses(cell):
+    """The backquoted addresses at the top level of a Files cell: not inside parentheses or «…»."""
+    out, depth, quote, i = [], 0, 0, 0
+    while i < len(cell):
+        ch = cell[i]
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif ch == "«":
+            quote += 1
+        elif ch == "»":
+            quote = max(0, quote - 1)
+        elif ch == "`":
+            end = cell.find("`", i + 1)
+            if end < 0:
+                break
+            if depth == 0 and quote == 0:
+                out.append(cell[i + 1:end])
+            i = end
+        i += 1
+    return out
+
+
+def resolve_address(check, lesson, address):
+    """`Platform/…`, `VMS/…` — from the course root, any other path — from the lesson root; no fallback root."""
+    base = check.root if address.split("/", 1)[0] in ("Platform", "VMS") else lesson.home
+    target = Path(posixpath.normpath((base / address).as_posix()))
+    try:
+        target.relative_to(check.root)
+    except ValueError:
+        return None
+    return target
+
+
+def index_refs(check, lesson):
+    live, removed = lesson.requirements()
+    for norms in lesson.chapters:
+        rows = index_rows(norms, "en")
+        translation = lesson.translation(norms)
+        ru_rows = index_rows(translation, "ru") if translation.is_file() else None
+        if rows is None:
+            if ru_rows is not None:
+                check.error(translation, "the translation has an index, the source has none")
+            continue
+        for n, _, cell, addresses in rows:
+            ids = [token.strip() for token in cell.split(",") if token.strip()]
+            for token in ids:
+                check.stats["index_refs"] += 1
+                if not REQ_ID.fullmatch(token):
+                    check.error(norms, f"line {n}: index: «{token}» is not a requirement id P/NN.K-RNNN")
+                elif token in removed:
+                    check.error(norms, f"line {n}: index: {token} is a removed requirement")
+                elif token not in live:
+                    check.error(norms, f"line {n}: index: {token} is not a requirement of {lesson.key}")
+            good = [t for t in ids if REQ_ID.fullmatch(t)]
+            if good != sorted(set(good), key=req_key):
+                check.error(norms, f"line {n}: index: the requirements go ascending, each once")
+            for address in addresses:
+                check.stats["index_refs"] += 1
+                target = resolve_address(check, lesson, address)
+                if target is None or not target.exists():
+                    check.error(norms, f"line {n}: index: no file `{address}` (Platform/… and VMS/… from the course "
+                                       f"root, other paths from the lesson root {lesson.rel}/)")
+        if ru_rows is None:
+            if translation.is_file():
+                check.error(translation, f"the source has an index, the translation has no «{LANG['ru']['index']}»")
+            continue
+        if len(ru_rows) != len(rows):
+            check.error(translation, f"index: {len(ru_rows)} rows, the source has {len(rows)}")
+            continue
+        for (n, _, cell, addresses), (_, _, en_cell, en_addresses) in zip(ru_rows, rows):
+            if REQ_ID.findall(cell) != REQ_ID.findall(en_cell) or addresses != en_addresses:
+                check.error(translation, f"line {n}: index row differs from the source in its requirements or files")
+
+
+# --- see_also_refs -------------------------------------------------------------------------------------------------
+
+def see_lines(path, language):
+    """[(line, current req anchor or None, [tokens])] of the «See also» lines outside code."""
+    word, out, current = LANG[language]["see"], [], None
+    for n, line, fence in fenced_lines(path.read_text(encoding="utf-8")):
+        if fence:
+            continue
+        m = REQ_ANCHOR.search(line)
+        if m:
+            current = m[1]
+        stripped = line.strip()
+        if stripped.startswith(word):
+            tokens = [t.strip() for t in stripped[len(word):].strip().rstrip(".").split(",") if t.strip()]
+            out.append((n, current, tokens))
+    return out
+
+
+def see_also_refs(check, lesson):
+    live, removed = lesson.requirements()
+    expected = {}
+    for norms in lesson.chapters:
+        for _, _, cell, _ in index_rows(norms, "en") or []:
+            ids = set(REQ_ID.findall(cell))
+            for value in ids:
+                expected.setdefault(value, set()).update(ids - {value})
+    for norms in lesson.chapters:
+        lines = see_lines(norms, "en")
+        have = {}
+        for n, current, tokens in lines:
+            check.stats["see_also_refs"] += 1
+            if current is None:
+                check.error(norms, f"line {n}: «See also» before any requirement anchor")
+                continue
+            if current in have:
+                check.error(norms, f"line {n}: a second «See also» line of {current} (first at line {have[current][0]})")
+                continue
+            have[current] = (n, tokens)
+            for token in tokens:
+                if not REQ_ID.fullmatch(token):
+                    check.error(norms, f"line {n}: See also of {current}: «{token}» is not a requirement id")
+                elif token in removed or token not in live:
+                    check.error(norms, f"line {n}: See also of {current}: {token} is not a requirement of {lesson.key}")
+            ids = [t for t in tokens if REQ_ID.fullmatch(t)]
+            if ids != sorted(set(ids), key=req_key):
+                check.error(norms, f"line {n}: See also of {current}: ascending, each id once")
+            want = expected.get(current, set())
+            if not want:
+                check.error(norms, f"line {n}: See also of {current}, which is in no index row of {lesson.key}")
+                continue
+            missing, extra = sorted(want - set(ids), key=req_key), sorted(set(ids) - want - {current}, key=req_key)
+            if current in ids:
+                check.error(norms, f"line {n}: See also of {current} names itself")
+            if missing or extra:
+                check.error(norms, f"line {n}: See also of {current} is not the union of its index topics without "
+                                   f"itself: missing {', '.join(missing) or '-'}; extra {', '.join(extra) or '-'}")
+        for value, (where, _) in sorted(live.items(), key=lambda item: req_key(item[0])):
+            if where == norms and expected.get(value) and value not in have:
+                check.error(norms, f"line {live[value][1]}: {value} is in an index row and has no «See also» line")
+        translation = lesson.translation(norms)
+        if not translation.is_file():
+            continue
+        ru = see_lines(translation, "ru")
+        for i in range(max(len(ru), len(lines))):
+            if i >= len(ru):
+                check.error(translation, f"line {ru[-1][0] if ru else 1}: no «{LANG['ru']['see']}» line for «See also» "
+                                         f"of the source line {lines[i][0]} (outside code, as in the source)")
+                break
+            if i >= len(lines):
+                check.error(translation, f"line {ru[i][0]}: «{LANG['ru']['see']}» without a «See also» in the source")
+                break
+            if ru[i][2] != lines[i][2]:
+                check.error(translation, f"line {ru[i][0]}: «{LANG['ru']['see']}» differs from «See also» of the source "
+                                         f"line {lines[i][0]}")
+                break
+
+
+# --- judge_only_refs -----------------------------------------------------------------------------------------------
+
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-ZА-ЯЁ«\[*(`])")
+CODE_SPAN = re.compile(r"`([^`\n]+)`")
+LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\s*\)")
+PATHISH = re.compile(r"[\w.*/<>{}-]+\.[A-Za-z0-9]+")
+
+
+def units(text):
+    """(first line, text) of every sentence of the Markdown prose outside code; headings are left out; a table row
+    and a list item start a unit of their own."""
+    block, start = [], None
+
+    def flush():
+        if block:
+            joined, first = "\n".join(block), start
+            offset = 0
+            for part in SENTENCE_END.split(joined):
+                at = joined.find(part, offset)
+                yield first + joined.count("\n", 0, at), part
+                offset = at + len(part)
+
+    out = []
+    for n, line, fence in fenced_lines(text):
+        stripped = line.strip()
+        boundary = fence or not stripped or stripped.startswith("#") or stripped.startswith("|") or \
+            re.match(r"^\s*(?:[-*+]|[0-9]+[.)])\s", line) or stripped.startswith("<!--")
+        if boundary:
+            out.extend(flush())
+            block, start = [], None
+            if fence or not stripped or stripped.startswith("#") or stripped.startswith("<!--"):
+                continue
+            if stripped.startswith("|"):
+                out.append((n, stripped))
+                continue
+        if start is None:
+            start = n
+        block.append(line)
+    out.extend(flush())
+    return out
+
+
+def quoted(text, at):
+    """Inside «…» — a quoted name of a section, not a reference."""
+    return text.count("«", 0, at) > text.count("»", 0, at)
+
+
+def judge_only_refs(check, lesson, files, model):
+    judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p}
+    seen_model = {p for p, d in model.items() if d == "model_and_judge"}
+    own_judge = {posixpath.basename(p) for p in judge if p.startswith(lesson.rel + "/")}
+    own_model = {posixpath.basename(p) for p in seen_model if p.startswith(lesson.rel + "/")}
+    root = check.root
+
+    def rel(path):
+        return posixpath.normpath(path.as_posix() if isinstance(path, Path) else path)
+
+    def target_of(token, base_dir, link):
+        token = unquote(urlsplit(token).path) if link else token
+        if not token or (not link and not PATHISH.fullmatch(token)):
+            return None
+        candidates = [rel((base_dir / token).relative_to(root) if (base_dir / token).is_relative_to(root) else token)]
+        if not link:
+            candidates.append(rel(f"{lesson.rel}/{token}"))
+            if token.split("/", 1)[0] in ("Platform", "VMS"):
+                candidates.append(rel(token))
+        for candidate in candidates:
+            parts = candidate.split("/")
+            if len(parts) > 3 and parts[0] in ("Platform", "VMS") and parts[2] == "ru":
+                candidate = "/".join(parts[:2] + parts[3:])        # a translation of a file is that file for M
+            if candidate in judge:
+                return candidate
+            if "*" in candidate and any(fnmatch.fnmatchcase(j, candidate) for j in judge) and \
+                    not any(fnmatch.fnmatchcase(m, candidate) for m in seen_model):
+                return candidate
+        if not link and "/" not in token:
+            name = token
+            if name in own_judge and name not in own_model:
+                return f"{lesson.rel}/…/{name}"
+            if "*" in name and any(fnmatch.fnmatchcase(j, name) for j in own_judge) and \
+                    not any(fnmatch.fnmatchcase(m, name) for m in own_model):
+                return f"{lesson.rel}/…/{name}"
+        return None
+
+    for source in files:
+        if source.suffix != ".md":
+            continue
+        for path in (source, lesson.translation(source)):
+            if not path.is_file():
+                continue
+            base_dir = (path.parent if path == source else source.parent).resolve()
+            link_dir = path.parent.resolve()
+            for first, sentence in units(path.read_text(encoding="utf-8")):
+                marked = any(mark in sentence for mark in JUDGE_MARKS)
+                found = [(m.start(), m.group(1), False) for m in CODE_SPAN.finditer(sentence)] + \
+                        [(m.start(), m.group(1), True) for m in LINK_TARGET.finditer(sentence)]
+                for at, token, link in sorted(found):
+                    target = target_of(token, link_dir if link else base_dir, link)
+                    if target is None or quoted(sentence, at):
+                        continue
+                    check.stats["judge_only_refs"] += 1
+                    if not marked:
+                        n = first + sentence.count("\n", 0, at)
+                        check.error(path, f"line {n}: a reference to the judge-only file {target} without "
+                                          "«(judge-only: …)» in the same sentence (the file is not in M)")
+
+
+# --- production_scoped ---------------------------------------------------------------------------------------------
+
+def production_scoped(check, lesson, files):
+    for source in files:
+        if source.suffix != ".md":
+            continue
+        for path in (source, lesson.translation(source)):
+            if not path.is_file():
+                continue
+            translated = path != source
+            previous = ""                        # the last nonblank line before this one
+            blank = True
+            for n, line, fence in fenced_lines(path.read_text(encoding="utf-8")):
+                if fence:
+                    previous, blank = line, False
+                    continue
+                code = [(m.start(), m.end()) for m in CODE_SPAN.finditer(line)]
+                for label in LABELS:
+                    start = line.find(label)
+                    while start >= 0:
+                        acting = not line[:start].rstrip().endswith("«") and \
+                            not any(a <= start < b for a, b in code)
+                        if acting:
+                            check.stats["production_scoped"] += 1
+                            item = CHECK_ITEM.match(line)
+                            opens = re.fullmatch(r"\s*(?:[-*+]\s+)?", line[:start]) is not None
+                            # The source: the first paragraph after its req anchor. The translation has no anchors
+                            # (en_mirror holds it to the source): the start of a paragraph.
+                            first = REQ_ANCHOR.search(previous) is not None or \
+                                (translated and (blank or previous.lstrip().startswith("<!--")))
+                            if item and item.end() == start or opens and first:
+                                pass
+                            elif opens:
+                                check.error(path, f"line {n}: the label {label} opens a paragraph that is not the first "
+                                                  "after a req anchor: a production requirement is its own requirement")
+                            else:
+                                check.error(path, f"line {n}: the label {label} inside a paragraph: it opens the first "
+                                                  "paragraph of its requirement or follows the id of a checklist item; "
+                                                  "a mention is quoted «…»")
+                        start = line.find(label, start + 1)
+                if line.strip():
+                    previous, blank = line, False
+                else:
+                    blank = True
+
+
+# --- history_rows --------------------------------------------------------------------------------------------------
+
+def _pointer(document, fragment):
+    value = document
+    for part in fragment.split("/")[1:]:
+        part = unquote(part).replace("~1", "/").replace("~0", "~")
+        if isinstance(value, list) and re.fullmatch(r"0|[1-9][0-9]*", part) and int(part) < len(value):
+            value = value[int(part)]
+        elif isinstance(value, dict) and part in value:
+            value = value[part]
+        else:
+            return False
+    return True
+
+
+def _sections(path):
+    numbers = set()
+    for _, line, fence in fenced_lines(path.read_text(encoding="utf-8")):
+        m = None if fence else re.match(r"^#{1,6}\s+(N[0-9](?:\.[0-9]+[a-z]?)*)(?:\s|$)", line)
+        if m:
+            numbers.add(m[1])
+    return numbers
+
+
+def history_rows(check, lesson):
+    module = "vms" if lesson.key.startswith("V/") else "platform"
+    journal = check.root / "decisions/journal" / module / lesson.home.name
+    if not journal.is_dir():
+        return
+    live, removed = lesson.requirements()
+    chapters = {lesson.chapter_of(p) for p in lesson.chapters}
+    parsed = {}
+    for path in sorted(journal.iterdir()):
+        m = HISTORY_FILE.fullmatch(path.name)
+        if not m:
+            continue
+        if m[1] is not None and m[1] not in chapters:
+            check.error(path, f"a history file of chapter {m[1]}, which {lesson.key} has not")
+        lines = path.read_bytes().decode("utf-8").split("\n")
+        if lines and lines[-1] == "":
+            lines.pop()
+        if not lines or lines[0].split("\t") != HISTORY_HEADER:
+            check.error(path, f"line 1: the header is {' '.join(HISTORY_HEADER)} (TAB-separated)")
+            continue
+        for n, line in enumerate(lines[1:], 2):
+            check.stats["history_rows"] += 1
+            cols = line.split("\t")
+            if len(cols) != len(HISTORY_HEADER):
+                check.error(path, f"line {n}: {len(cols)} fields, expected {len(HISTORY_HEADER)}")
+                continue
+            req_id, address, source, date, text = cols
+            if req_id != "-" and not REQ_ID.fullmatch(req_id):
+                check.error(path, f"line {n}: req_id «{req_id}» is neither - nor a requirement id")
+            elif req_id != "-" and req_id not in live and req_id not in removed:
+                check.error(path, f"line {n}: req_id {req_id} is not a requirement of {lesson.key}")
+            if not source.strip():
+                check.error(path, f"line {n}: an empty source")
+            if not text.strip():
+                check.error(path, f"line {n}: an empty removed text")
+            try:
+                if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", date):
+                    raise ValueError
+                datetime.date.fromisoformat(date)
+            except ValueError:
+                check.error(path, f"line {n}: date «{date}» is not an ISO date YYYY-MM-DD")
+            problem = address_problem(check, lesson, address, parsed)
+            if problem:
+                check.error(path, f"line {n}: file «{address}»: {problem}")
+
+
+def address_problem(check, lesson, address, parsed):
+    """None, or why `file#fragment` of a history row does not resolve (P01.214 C3)."""
+    name, hashed, fragment = address.partition("#")
+    if not name or not hashed or not fragment:
+        return "expected <path from the lesson root>#<fragment>"
+    if name.split("/", 1)[0] in ("ru", "journal") or name.startswith("/") or ".." in name.split("/"):
+        return "a path of a source from the lesson root (not ru/, journal/, absolute or outside)"
+    target = lesson.home / name
+    if not target.is_file():
+        return f"no file {lesson.rel}/{name}"
+    if fragment == "intro":
+        return None if target.suffix == ".md" else "#intro addresses the introduction of a Markdown file"
+    if SECTION_NUMBER.fullmatch(fragment):
+        if target.suffix != ".md":
+            return f"#{fragment} addresses a section of norms in Markdown"
+        return None if fragment in _sections(target) else f"no section {fragment} (a heading «{fragment} …»)"
+    if fragment.startswith("/"):
+        if target.suffix not in (".yaml", ".yml", ".json"):
+            return "a JSON Pointer #/… addresses YAML or JSON"
+        if target not in parsed:
+            try:
+                text = target.read_text(encoding="utf-8")
+                parsed[target] = json.loads(text) if target.suffix == ".json" else yaml.safe_load(text)
+            except (OSError, UnicodeError, ValueError, yaml.YAMLError) as exc:
+                return f"unreadable: {exc}"
+        return None if _pointer(parsed[target], fragment) else f"no JSON Pointer {fragment}"
+    if target.suffix != ".md":
+        return "a heading anchor addresses Markdown"
+    return None if fragment in check.anchors(target) else f"no heading anchor #{fragment}"

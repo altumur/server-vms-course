@@ -2806,6 +2806,12 @@ class Check:
             self.error(path, message)
         self.stats.update(stats)
 
+    def m_form(self):
+        """The reading form of M (ADR-0133 addendum (56), P01.175; m_form.py): history_phrases, index_refs, see_also_refs,
+        judge_only_refs, production_scoped, history_rows over the lessons of m_form.M_FORM_LESSONS this run checks."""
+        import m_form
+        m_form.run(self, {f"{n}" for n in self.lessons_seen})
+
     def check_forms(self):
         """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
         прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
@@ -3775,7 +3781,7 @@ def _platform_phase(args, names):
         check.lesson((check.root / name).resolve())
     for method in ("registered_shared_lessons", "vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
                    "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms",
-                   "target_registry", "export_lists"):
+                   "target_registry", "export_lists", "m_form"):
         getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
     return check
