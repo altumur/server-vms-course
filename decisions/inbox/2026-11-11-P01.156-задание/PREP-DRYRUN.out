@@ -1,0 +1,15 @@
+loop_head 561ea2c05a4627e024899cdacaaa4b35ec554570
+stages 11 ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'rights', 'daemon_doors', 'daemon_copy', 'durable', 'group']
+code_at ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'daemon_copy', 'durable', 'group']
+mech_only ['rights', 'daemon_doors']
+when_unevaluated ['group'] excluded []
+norm_trace 55 {'model': 1, 'store_core': 11, 'http': 8, 'rights_eval': 1, 'rights': 8, 'daemon_doors': 1, 'daemon_copy': 3, 'durable': 6, 'group': 16}
+profile_probe_on True
+prep_violations 0 []
+m_passport_violations []
+profile_probe 'yes' PrepError: stages.profile_probe must be true or false
+profile_probe 1 prep ok
+profile_probe None prep ok
+profile_probe False prep ok
+control wrong_sha True
+control other_M True
