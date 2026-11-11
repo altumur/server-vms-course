@@ -568,8 +568,8 @@
     },
     {
       "path": "Platform/02-installer/acceptance/1/README.md",
-      "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "disposition": "model_and_judge",
+      "basis": "P02.34 (audit P02.20, item 6): the profile interface of chapter 2.1 (stand.load, adapters.load, keys.path_style) and the reference to the form «Loader verdicts»; public as the README of acceptance/1 of P/01."
     },
     {
       "path": "Platform/02-installer/acceptance/1/cases/a103_calls_book_deep.subsystem.yaml",
@@ -4752,6 +4752,26 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/02-installer/acceptance/1/cases/r32_secrets_readers_delete.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a case of the loader corpus of chapter 2.1; judge-only as the other files of acceptance/1/cases."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/cases/r32_secrets_readers_inner_star.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a case of the loader corpus of chapter 2.1; judge-only as the other files of acceptance/1/cases."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/cases/r32_secrets_readers_negation.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a case of the loader corpus of chapter 2.1; judge-only as the other files of acceptance/1/cases."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/cases/r32_secrets_readers_star.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a case of the loader corpus of chapter 2.1; judge-only as the other files of acceptance/1/cases."
+    },
+    {
       "path": "Platform/02-installer/acceptance/1/cases/r37_named_delete_after.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -6272,6 +6292,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/02-installer/acceptance/3/puts/list-other-a-notes.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: an installation input of chapter 2.3; judge-only as the other files of acceptance/3/puts."
+    },
+    {
       "path": "Platform/02-installer/acceptance/3/puts/list-other-a.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -6412,6 +6437,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/02-installer/acceptance/3/puts/probe-rows-ledger.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: an installation input of chapter 2.3; judge-only as the other files of acceptance/3/puts."
+    },
+    {
       "path": "Platform/02-installer/acceptance/3/puts/probe.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -6452,9 +6482,19 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/02-installer/acceptance/3/puts/self-rows-ok.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: an installation input of chapter 2.3; judge-only as the other files of acceptance/3/puts."
+    },
+    {
       "path": "Platform/02-installer/acceptance/3/puts/self-rows.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/puts/self-table-ok.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: an installation input of chapter 2.3; judge-only as the other files of acceptance/3/puts."
     },
     {
       "path": "Platform/02-installer/acceptance/3/puts/self-table.subsystem.yaml",
@@ -6495,6 +6535,11 @@
       "path": "Platform/02-installer/acceptance/3/puts/user.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/puts/with-table-notes.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: an installation input of chapter 2.3; judge-only as the other files of acceptance/3/puts."
     },
     {
       "path": "Platform/02-installer/acceptance/3/puts/with-table.subsystem.yaml",
@@ -6655,6 +6700,26 @@
       "path": "Platform/02-installer/acceptance/5/variants/v14-refused-secrets-reads-nested/vb.subsystem.yaml",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v15-name18-roles/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "P02.35: a file of a rights variant of chapter 2.5; judge-only as the other files of acceptance/5/variants."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v15-name18-roles/s12345678901234567.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a file of a rights variant of chapter 2.5; judge-only as the other files of acceptance/5/variants."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v16-secret-prefix/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "P02.35: a file of a rights variant of chapter 2.5; judge-only as the other files of acceptance/5/variants."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v16-secret-prefix/va.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "P02.35: a file of a rights variant of chapter 2.5; judge-only as the other files of acceptance/5/variants."
     },
     {
       "path": "Platform/02-installer/acceptance/5/variants/v2-requests/expect.tsv",
@@ -6900,6 +6965,11 @@
       "path": "Platform/02-installer/forms/README.md",
       "disposition": "model_and_judge",
       "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+    },
+    {
+      "path": "Platform/02-installer/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P02.32: the code checks of P/02, rows of the kinds of the public dictionary without expected answers (ADR-0133 addendum (39) items 2, 5, 6)."
     },
     {
       "path": "Platform/02-installer/forms/daemon-flags.tsv",
@@ -8393,8 +8463,8 @@
     },
     {
       "path": "Platform/02-installer/vectors/install-order/README.md",
-      "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_AFTER_CURRENT_PUBLIC_NATIVE_PROTOCOL_MATERIALIZED. Existing accepted public generic definitions retained."
+      "disposition": "model_and_judge",
+      "basis": "P02.34 (audit P02.20, item 6): the input, output and native form of the package; public as the README of the other four packages of P/02."
     },
     {
       "path": "Platform/02-installer/vectors/install-order/cases.tsv",

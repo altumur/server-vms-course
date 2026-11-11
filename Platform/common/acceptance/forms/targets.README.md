@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/forms/targets.README.md` is derived from it and is not edited by hand (ADR-0121).
 
-[`targets.tsv`](targets.tsv) is the registry of acceptance targets. The form is for every lesson. The rows of P/01 are filled first, with the same cells as their rows in [`runner-targets.tsv`](../runner-targets.tsv); the targets of the other lessons are only in that table for now. The row `P/01/production` exists only here: it is not in that table.
+[`targets.tsv`](targets.tsv) is the registry of acceptance targets. The form is for every lesson. The rows of P/01 and P/02 are filled, with the same cells as their rows in [`runner-targets.tsv`](../runner-targets.tsv); the targets of the other lessons are only in that table for now. The rows `P/01/production`, `P/02.1/seams`, `P/02.4/seams` and `P/02.5/variants` exist only here: they are not in that table. A routing row has one engine word, so the seams of P/02.1 and P/02.4 and the rights variants of P/02.5 are targets of their own beside the verdicts of P/02.1 and the scenarios of P/02.5. Of P/02, `P/02/vectors-canonical` and `P/02/vectors-workers-script` are the rows `P/02.2/vectors` and `P/02.4/vectors` of that table, named after their packages as the other `P/02/vectors-*`; the condition `rights_check` of the row `P/02.5/rights` of that table stands here at `P/02.5/variants`, whose `check.tsv` calls `stand.rights-check`. The row `P/02.1/put` of that table is not a target: P/02.1 has no installation sample (the [acceptance of P/02.1](../../../02-installer/acceptance/1/README.md#no-installation-sample)).
 
 ## Table form
 
