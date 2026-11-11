@@ -8,7 +8,7 @@ Generic rules remain in [README.md](README.md). The following original passages 
 
 | Scenarios | Subject | Norm |
 |---|---|---|
-| `s1-put-invalid-source` | an invalid candidate is refused by manifest put with code 2 and the source name; the source file stays intact | P/02.3 N3 step 1, N4 |
+| `s1-put-invalid-source` | an invalid candidate is refused by manifest put with code 2 and the source name; the source file stays intact | P/02.3 N3 «Manifest change» step 1, N4 |
 | `s2-new-existing`, `s3-rotate-invalid` | a refused creation or ring check leaves the existing file byte-for-byte intact | P/02.4 N1.9 secrets; P/02.4-14 |
 | `s4-new-exclusive` | concurrent O_EXCL creation at one path directly in `$data` succeeds once; the command creates no parent directory ([layout](../../forms/README.md#scenario-layout)) | P/02.4 N1.9 secrets new |
 | `s12-secrets-walk-unknown`, `s13-secrets-walk-kept` | the selection of the secrets walk: an unknown `identity/x` is listed with code 1, the kept rows leave the selection | P/02.4 N1.9 «Walk»; P/02.4-14 |
