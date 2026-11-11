@@ -19,12 +19,11 @@ Without a stand: the function of the implementation receives the input (the colu
 or `domain` without `value`, `unit` or `domain.value` `null` with `union`, an extra field, a field without `inherit`, not `document` and
 not `group_by` — the full list is there).
 The other cases of code 2 are by reading (N5). The exit codes follow the principle of the «Domain stand» of the common acceptance
-README («Command exit codes-vectors M11»: `field` and `domain` are the trusted input of the caller, code 2).
+README: `field` and `domain` are the trusted input of the caller, code 2.
 
 ## Files
 
-UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header; `note` is the scenario and step
-of the acceptance M11.
+UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header; `note` is an internal judge label for the case.
 
 | File | Input → expectation |
 |---|---|

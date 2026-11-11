@@ -94,7 +94,7 @@ owner form; the presence of a file does not prove the correctness of the referen
 
 ## Checks outside the sequential HTTP file
 
-The status of all the checks of the README outside `scenarios.tsv` (judge-only: checking material outside M) (this section, «Additional checks», the counterexamples of runs) is
+The status of all the checks of the README outside `scenarios.tsv` (judge-only: checking material outside M) (this section, «Additional checks», additional examples) is
 «checked by reading»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
 with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.

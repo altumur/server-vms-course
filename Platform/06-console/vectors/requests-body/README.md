@@ -49,7 +49,7 @@ This is the fixture's selected configuration, not a fallback of a running proces
 
 ## Rules
 
-The writing rules (the same text stays in the header comment of the table):
+In the header of `requests_body.tsv` (judge-only: vector inputs and expectations), `M10/3` and `M10/8` are internal judge labels for chapters P/06.1 and P/06.4 respectively. The writing rules are:
 
 ```text
   scalars in a request row

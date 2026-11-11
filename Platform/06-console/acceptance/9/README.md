@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/9/README
 The norm of the chapter is [`06.9-console.norms.md`](../../spec/06.9-console.norms.md) N5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 2 scenarios / 8 steps.
 
-**There is no dry run by an implementation.** The chapter is part of the rights increment and waits for the credit of increment B.
+**There is no dry run by an implementation.**
 
 ## Preparation
 
@@ -21,4 +21,4 @@ Scenarios of the plan table that the TSV does not run — by reading. The algori
 
 
 
-retry-failed still uses the ordinary acceptance procedure. Conflicting memory CAS is existing 412 row moved with key/index and field /memory/cas, distinct from per-step expectedVersion; matching CAS permits 202. Unknown acceptance outcomes and cleanup retain the ordinary rules. There is no retry-admission CALL port among the current ports: this HTTP/IO binding must be proved by the actual ordinary operation setup, and is not counted as executed by a source or schema preview.
+`retry-failed` uses the ordinary acceptance procedure. Conflicting memory CAS is existing 412 row moved with key/index and field /memory/cas, distinct from per-step expectedVersion; matching CAS permits 202. Unknown acceptance outcomes and cleanup retain the ordinary rules. There is no retry-admission CALL port among the current ports: this HTTP/IO binding must be proved by the actual ordinary operation setup, and is not counted as executed by a source or schema preview.

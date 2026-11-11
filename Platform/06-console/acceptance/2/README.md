@@ -19,7 +19,7 @@ the refusal is empty or names the field from `fault`, the text of the refusal do
 ## The rules of the two fields of the table (acceptance data)
 
 `secret-in` is read by the rule of the field named in the row. The declarations of these fields are data of this acceptance, not
-a reference to the VMS catalogue: an implementation of chapter 6.2 is not obliged to know the manifests `cam` and `rec`. The catalogue rule for nested addresses and for `log-mask` is the union of the rules of these two fields with the common
+a reference to the VMS catalogue: an implementation of chapter 6.2 is not obliged to know the manifests `cam` and `rec`. The declarations coincide with `unit.fields.source` of the manifest `cam` and `tables.volumes.fields.url` of the manifest `rec`. The catalogue rule for nested addresses and for `log-mask` is the union of the rules of these two fields with the common
 dictionary (N1.1 of the chapter). The form of each key is the summary table of P/02.1 N1.2a and N1.1 of chapter 6.2.
 
 The declarations are the vector file [`fields.yaml`](../../../common/vectors/secret-in/fields.yaml) (judge-only: checking material outside M): the key is the name of a field from the column `field`

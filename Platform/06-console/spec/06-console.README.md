@@ -170,7 +170,7 @@ This is a suggested order, not a mandatory structure of the code.
 8. Fill all the items of the checklist of chapter P/06.1. For the parts outside the TSV attach the reading evidence by the table of subjects of N5
    (for each subject a scenario or an exercise of the owner lesson is named there) or the result of the corresponding stand
    [P/04](../../04-controller/spec/04-controller.norms.md), [P/05](../../05-resource/spec/05-resource.norms.md), chapters 6.2–6.6
-   and lessons M11. A reference to a future stand is not a check by itself.
+   and lessons P/08–P/10. A reference to a future stand is not a check by itself.
 
 ### Chapter 6.2 — the write of secrets
 
@@ -220,7 +220,7 @@ This is a suggested order, not a mandatory structure of the code.
    `cluster_rows`, `unit_of`, `reach`, `names`); the action `reach.requests` — the field `action` of the request body
    ([chapter 6.4](06.4-console.norms.md) N1.5 `action`).
 4. Pass the acceptance of [chapter 6.3](../acceptance/3/README.md) — scenario 03, in isolation. Check separately the grants with the domain
-   stand (M11): the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
+   stand: the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
 
 ### Chapter 6.4 — requests and events
 

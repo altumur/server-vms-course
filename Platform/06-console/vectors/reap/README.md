@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/reap/README
 
 The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N3 «reaper», `gone`, `expired`) through [the contract of the request and its
 mark](../../../common/contracts/request-mark.md) «States of an executed request and its mark» (the rows «reaper, append, …»). The participant is the console reaper. The bytes are written by
-the Specification; the rows were composed by the text of the contract, not by the code of implementations.
+the Specification.
 
 ## `cases.tsv`
 

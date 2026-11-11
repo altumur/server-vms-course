@@ -8,7 +8,7 @@ The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `dig
 
 The bytes of the table are written by the Specification. The conformance of the product is by its acceptance against this table.
 
-The table follows [the contract of the request and its mark](../../../common/contracts/request-mark.md). The product copy is checked against these bytes.
+The table follows [the contract of the request and its mark](../../../common/contracts/request-mark.md). The product copy is checked against these bytes. In the header of `digest.tsv` (judge-only: vector inputs and expectations), `M10/8 N1.5` and `lesson-owner M10/8` are internal judge labels for chapter P/06.4, whose N1.5 defines `digest`.
 
 ## `digest.tsv`
 
