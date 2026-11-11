@@ -21,7 +21,8 @@ print("mode_stages", ms)
 lab = {}
 for it in items:
     ln = open(os.path.join(t["specs"], les, "spec", it["file"]), encoding="utf-8").read().split("\n")[it["line"] - 1]
-    m = re.match(r"^- \[ \] \*\*[^*]+\*\*\s*\[([^\]]+)\]", ln)
+    # the mark stands right after the id or after the label «**Scope: production.**» (P01.228; fixed by P01.248)
+    m = re.match(r"^- \[ \] \*\*[^*]+\*\*(?: \*\*Scope: production\.\*\*)?\s*\[([^\]]+)\]", ln)
     lab[it["id"]] = m.group(1) if m else None
 print("mode_items", len(got), "marks", dict(Counter(lab[i] for i in got)))
 print("mode items without the mark test", [i for i in got if "test" not in (lab[i] or "")])
