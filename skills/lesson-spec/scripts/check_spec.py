@@ -2796,6 +2796,16 @@ class Check:
             self.error(path, message)
         self.stats.update(stats)
 
+    def export_lists(self):
+        """ADR-0135 addendum (14): the export filters M and J assembled from the common filters and the lists
+        forms/export.json of the lessons (`export_lists`): form of a list, a lesson's files each named once in model and in
+        judge, one record per path, M and J name the same paths, the routing of the judge never in M."""
+        import export_lists
+        _filters, errors, stats = export_lists.assemble(self.root)
+        for path, message in errors:
+            self.error(path, message)
+        self.stats.update(stats)
+
     def check_forms(self):
         """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
         прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
@@ -3765,7 +3775,7 @@ def _platform_phase(args, names):
         check.lesson((check.root / name).resolve())
     for method in ("registered_shared_lessons", "vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
                    "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms",
-                   "target_registry"):
+                   "target_registry", "export_lists"):
         getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
     return check
