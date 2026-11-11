@@ -31,9 +31,12 @@ A lesson of `M_FORM_STAGE_A` is judged by stage A of its form only: `history_phr
 `data/*.tsv`, `judge_only_refs` and `history_rows`. A lesson without `forms/export.json` takes its files of M from the
 common filter M (`export_lists`, ADR-0135 addendum (14)).
 
-Built text is judged at its builder: `data/*.schema.json` (v7.build from the dialect and `common.form.yaml`) and the
-families block of the norms (`<!-- families:begin -->` … `<!-- families:end -->`, v7/section.py) are not read by
-`history_phrases`. See references/validation.md, «Форма M».
+Built text: `data/*.schema.json` (v7.build from the dialect and `common.form.yaml`) is not read by `history_phrases`.
+The built blocks of the norms (`<!-- form|families|canonical:begin -->` … `:end -->`, v7/sections.py) are read as any
+text of M; at stage A a finding in a block that a file the stage does not judge carries (the lesson's data/*.schema.json
+and data/*.tsv, the common data catalog) is that file's, counted as history_block_carried. `judge_only_refs` takes a
+bare name of a platform file of the data catalog (`ca.pem`) for that file, not a judge-only file of the course of the
+same name. See references/validation.md, «Форма M».
 """
 import datetime
 import fnmatch
@@ -53,7 +56,7 @@ M_FORM_LESSONS = {"P/01"}
 # the judge-only markers, before their norms get the index, «See also», the marks of the checklist (stage B). Only
 # history_phrases (outside STAGE_A_OUTSIDE), judge_only_refs and history_rows run on them. A lesson leaves the set when
 # it enters M_FORM_LESSONS: a lesson in both is an error.
-M_FORM_STAGE_A = {"P/03", "P/04", "P/07"}  # этап А принят и влит (OBSH.41); P/02 — после OBSH.42 (номера ADR в построенных блоках form/canonical), P/05, P/06 — после вливания
+M_FORM_STAGE_A = {"P/02", "P/03", "P/04", "P/05", "P/06", "P/07", "P/08", "P/09", "P/10"}  # этап А принят (OBSH.41); P/02, P/05, P/06, P/08–P/10 — с построенными блоками без номеров ADR (OBSH.42)
 STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data are cleaned at stage B
 
 # The common inputs (paths under Platform/common/ that the common filter gives to M) read by `history_phrases`. Empty:
@@ -90,16 +93,19 @@ ADR_LATER = {
         "acceptance/1/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/2/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/3/README.md": "outside the norms; not cleaned by P01.177",
-        "data/configstore-doors.outcomes.tsv": "their texts are in the families block of 01.3: together with the "
-                                               "rebuild of the families block (OBSH.42)",
-        "data/epoch_floor.outcomes.tsv": "their texts are in the families block of 01.3: together with the rebuild of "
-                                         "the families block (OBSH.42)",
         "vectors/jcs/README.md": "outside the norms; not cleaned by P01.177",
         "vectors/rights-evaluator/README.md": "outside the norms; not cleaned by P01.177",
     },
 }
 BUILT = ("data/*.schema.json",)                          # v7.build: judged at the dialect and common.form.yaml
-BUILT_BLOCK = ("<!-- families:begin -->", "<!-- families:end -->")   # v7/section.py
+# The built blocks of the norms between their markers (v7/sections.py): the words of the builder and the values of the
+# files it builds from. history_phrases reads a block as any text of M. At stage A a finding in a block whose text a
+# file the stage does not judge carries (CARRIERS of the lesson, the common data catalog) is a finding of that file:
+# it is counted (history_block_carried) and judged with the file at stage B; the words of the builder are judged here.
+BLOCK_MARKER = re.compile(r"<!-- (form|families|canonical):(begin|end) -->")
+CARRIERS = ("data/*.schema.json", "data/*.tsv")          # from the lesson root
+CATALOG = "Platform/common/data/catalog.tsv"
+CARRIED_WINDOW = 24                                     # characters of context beside a finding, inside its cell
 
 LANG = {"en": {"index": "## Index", "see": "See also:"}, "ru": {"index": "## Указатель", "see": "См. также:"}}
 JUDGE_MARKS = ("judge-only:", "только для судьи:")         # «(judge-only: …)», also «(`X`; judge-only: …)»
@@ -243,36 +249,97 @@ def _later(lesson, rel):
         if lesson is not None else None
 
 
-def scan_history(check, path, later=None):
-    """Errors for the history phrases and ADR numbers of one file; returns the count of ADR numbers it carries."""
+def carried_text(check, lesson):
+    """The text that the files a built block of a lesson at stage A builds from carry and the stage does not judge: the
+    string values of its data/*.schema.json, the lines of its data/*.tsv and of the common data catalog (one line each,
+    as a table cell has them)."""
+    out = []
+
+    def strings(node):
+        if isinstance(node, str):
+            out.append(node)
+        elif isinstance(node, dict):
+            for k, v in node.items():
+                strings(k)
+                strings(v)
+        elif isinstance(node, list):
+            for v in node:
+                strings(v)
+
+    paths = sorted({p for glob in CARRIERS for p in lesson.home.glob(glob)}) + [check.root / CATALOG]
+    for path in paths:
+        try:
+            text = path.read_text(encoding="utf-8")
+            if path.suffix == ".json":
+                strings(json.loads(text))
+            else:
+                out.extend(text.split("\n"))
+        except (OSError, UnicodeError, ValueError):
+            continue                                    # the file's own checks name it
+    return "\n".join(s.replace("\n", " ") for s in out)
+
+
+def _unescape(text):
+    return text.replace("\\|", "|").replace("\\<", "<")
+
+
+def carried(corpus, line, start, end):
+    """A finding at line[start:end] of a built block is carried by a file of the corpus: a context of CARRIED_WINDOW
+    characters before or after it, inside its table cell, stands in the corpus as is."""
+    bars = [-1] + [i for i, ch in enumerate(line) if ch == "|" and (i == 0 or line[i - 1] != "\\")] + [len(line)]
+    lo = max(b for b in bars if b < start) + 1
+    hi = min(b for b in bars if b >= end)
+    for a, b in ((max(lo, start - CARRIED_WINDOW), end), (start, min(hi, end + CARRIED_WINDOW))):
+        window = _unescape(line[a:b]).strip()
+        if len(window) >= end - start + CARRIED_WINDOW // 2 and window in corpus:
+            return True
+    return False
+
+
+def _carried_counted(check, corpus, line, m):
+    if carried(corpus, line, m.start(), m.end()):
+        check.stats["history_block_carried"] += 1
+        return True
+    return False
+
+
+def scan_history(check, path, later=None, corpus=None):
+    """Errors for the history phrases and ADR numbers of one file; returns the count of ADR numbers it carries.
+    `corpus` — at stage A, carried_text of the lesson: a finding in a built block that it carries is not an error here."""
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         check.error(path, str(exc))
         return 0
-    numbers, built = 0, False
+    numbers, block = 0, None
     for n, line in enumerate(text.splitlines(), 1):
-        if line.strip() == BUILT_BLOCK[0]:
-            built = True
-        if built:
-            built = line.strip() != BUILT_BLOCK[1]
+        marker = BLOCK_MARKER.fullmatch(line.strip())
+        if marker:
+            block = marker[1] if marker[2] == "begin" else None
             continue
+        where = f" (in the built block «{block}»: the builder or the file it builds from, then rebuild)" if block else ""
+        carriable = block is not None and corpus is not None
         for m in HISTORY_PHRASES.finditer(line):
-            check.error(path, f"line {n}: history in M «{m.group(0)}» — origin is a row of "
-                              "decisions/journal/<module>/<lesson>/history[-K].tsv, not text of M (ADR-0133 addendum (56))")
+            if not (carriable and _carried_counted(check, corpus, line, m)):
+                check.error(path, f"line {n}: history in M «{m.group(0)}» — origin is a row of "
+                                  "decisions/journal/<module>/<lesson>/history[-K].tsv, not text of M (ADR-0133 addendum "
+                                  f"(56)){where}")
         bare = WITHDRAWN.sub("", TOMBSTONE.sub("", line))
-        found = len(ADR_NUMBER.findall(bare))
-        numbers += found
+        found = [m for m in ADR_NUMBER.finditer(bare)                         # a block has no tombstone to shift
+                 if not (carriable and bare == line and _carried_counted(check, corpus, line, m))]
+        numbers += len(found)
         if found and later is None:
             check.error(path, f"line {n}: an ADR number in M — origin, not a norm: the rule in words, the number to "
-                              "the column source of the history file (decision of the Architect 2026-11-11, item 2)")
+                              f"the column source of the history file (decision of the Architect 2026-11-11, item 2){where}")
     check.stats["history_phrases"] += 1
     return numbers
 
 
 def history_phrases(check, lesson, files, outside=()):
-    """`outside` — globs from the lesson root not judged at this stage of the form (STAGE_A_OUTSIDE)."""
+    """`outside` — globs from the lesson root not judged at this stage of the form (STAGE_A_OUTSIDE); at that stage the
+    findings of the built blocks carried by the files they build from are those files' (carried_text)."""
     carried = {}
+    corpus = carried_text(check, lesson) if outside else None
     for source in files:
         rel = source.relative_to(lesson.home).as_posix()
         if source.suffix not in TEXT_SUFFIXES or any(fnmatch.fnmatchcase(rel, b) for b in BUILT + tuple(outside)):
@@ -280,7 +347,7 @@ def history_phrases(check, lesson, files, outside=()):
         later = _later(lesson, rel)
         for path in (source, lesson.translation(source)):
             if path.is_file():
-                carried[rel] = carried.get(rel, 0) + scan_history(check, path, later)
+                carried[rel] = carried.get(rel, 0) + scan_history(check, path, later, corpus)
                 if later is not None:
                     check.stats["history_adr_later"] += 1
     for glob in ADR_LATER.get(lesson.key, {}):
@@ -528,10 +595,28 @@ def quoted(text, at):
     return text.count("«", 0, at) > text.count("»", 0, at)
 
 
+def platform_files(check):
+    """The names of the files of the platform: the last segment of each `file` key of the common data catalog that is
+    a name, not a placeholder (`/etc/w2c/tls/ca.pem` → `ca.pem`). A bare name of one of them in M is that file of the
+    platform, which M defines, not a file of the course of the same name."""
+    names = set()
+    try:
+        lines = (check.root / CATALOG).read_text(encoding="utf-8").split("\n")
+    except (OSError, UnicodeError):
+        return names                                    # the catalog's own checks name it
+    for line in lines:
+        cols = line.split("\t")
+        if len(cols) > 1 and not line.startswith("#") and cols[1] == "file":
+            name = cols[0].rsplit("/", 1)[-1]
+            if name and not re.search(r"[<>%*]", name):
+                names.add(name)
+    return names
+
+
 def judge_only_refs(check, lesson, files, model):
     judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p}
     seen_model = {p for p, d in model.items() if d == "model_and_judge"}
-    own_judge = {posixpath.basename(p) for p in judge if p.startswith(lesson.rel + "/")}
+    own_judge = {posixpath.basename(p) for p in judge if p.startswith(lesson.rel + "/")} - platform_files(check)
     own_model = {posixpath.basename(p) for p in seen_model if p.startswith(lesson.rel + "/")}
     root = check.root
 

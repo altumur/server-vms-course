@@ -34,6 +34,10 @@ MAIN_MENDS = [
      "with `rights.json` (judge-only: the file itself) as `{rights}`"),
     ("ru/vectors/rights-evaluator/README.md", "с `rights.json` как `{rights}`",
      "с `rights.json` (только для судьи: сам файл) как `{rights}`"),
+    # the families block of 01.3 built before OBSH.42 (rebuilt after P01.233: python -m v7.sections …01.3-store.norms.md)
+    ("spec/01.3-store.norms.md", "JSON Schema 2020-12 of the family (ADR-0092). An instance",
+     "JSON Schema 2020-12 of the family. An instance"),
+    ("ru/spec/01.3-store.norms.md", "JSON Schema 2020-12 семьи (ADR-0092). Экземпляр", "JSON Schema 2020-12 семьи. Экземпляр"),
 ]
 
 
@@ -193,11 +197,12 @@ class HistoryPhrases(AcceptedForm):
         self.replace("spec/01.1-store.norms.md", "Normative keywords follow", "A row removed from the store; keywords follow")
         self.assertEqual(self.run_checks().errors, [])
 
-    def test_adr_later_keeps_outcomes_and_judges_forms_and_a_new_file(self):
-        # P01.176 removed the numbers from forms/*.tsv: a form is judged; data/*.outcomes.tsv wait for OBSH.42.
-        self.assertNotIn("forms/*.tsv", m_form.ADR_LATER["P/01"])
+    def test_adr_later_judges_forms_outcomes_and_a_new_file(self):
+        # P01.176 removed the numbers from forms/*.tsv, OBSH.42 from the headers of data/*.outcomes.tsv: both are judged.
+        self.assertFalse([g for g in m_form.ADR_LATER["P/01"] if g.startswith(("forms/", "data/"))])
         self.replace("data/epoch_floor.outcomes.tsv", "\n", "\n# the outcomes of ADR-0129\n")
-        self.assertEqual(self.run_checks().errors, [], "data/*.outcomes.tsv — with the families block (OBSH.42)")
+        self.assert_error(self.run_checks(), f"{HOME}/data/epoch_floor.outcomes.tsv", 2, "an ADR number in M")
+        self.replace("data/epoch_floor.outcomes.tsv", "\n# the outcomes of ADR-0129\n", "\n")
         self.replace("forms/runtime-constants.tsv", "\n", "\n# the constants of ADR-0129\n")
         self.assert_error(self.run_checks(), f"{HOME}/forms/runtime-constants.tsv", 2, "an ADR number in M")
         self.replace("probes/README.md", "\n", "\nThe probes of ADR-0133.\n")
@@ -211,11 +216,30 @@ class HistoryPhrases(AcceptedForm):
         errors = self.run_checks().errors
         self.assertTrue(any("vectors/rights-evaluator/README.md: stale ADR_LATER" in e for e in errors), errors)
 
-    def test_built_text_is_judged_at_its_builder(self):
-        rel = "spec/01.3-store.norms.md"
-        self.replace(rel, "<!-- families:end -->", "the Architect's decision of 2026-10-27\n<!-- families:end -->")
+    def test_built_block_is_text_of_m(self):
+        # OBSH.42: the block between its markers is read as any text of M, in the source and in the translation.
+        for rel in ("spec/01.3-store.norms.md", "ru/spec/01.3-store.norms.md"):
+            self.replace(rel, "<!-- families:end -->", "the Architect's decision of 2026-10-27\n<!-- families:end -->")
+        check = self.run_checks()
+        for rel in ("spec/01.3-store.norms.md", "ru/spec/01.3-store.norms.md"):
+            self.assert_error(check, f"{HOME}/{rel}", self.line_of(rel, "the Architect's decision of 2026-10-27"),
+                              "in the built block «families»")
+
+    def test_built_schema_is_not_read(self):
         self.replace("data/epoch_floor.schema.json", '"description": "', '"description": "the Architect\'s decision; ')
-        self.assertEqual(self.run_checks().errors, [])
+        self.assertFalse([e for e in self.run_checks().errors if "epoch_floor.schema.json" in e])
+
+    def test_builders_write_no_origin(self):
+        # The words of the builders of the blocks (v7/section.py, v7/view.py): the rule in words, no ADR, no history.
+        import v7.sections
+        out = []
+        for rel in ("Platform/02-installer/spec/02.1-installer.norms.md", "Platform/02-installer/spec/02.2-installer.norms.md"):
+            for at in (ROOT / rel, ROOT / rel.replace("/spec/", "/ru/spec/")):
+                kinds = ("form",) if "02.1" in rel else ("canonical",)
+                out += [v7.sections.built(kind, ROOT / rel, ROOT, at=at) for kind in kinds]
+        for text in out:
+            self.assertFalse(m_form.ADR_NUMBER.search(text), text[:200])
+            self.assertFalse(m_form.HISTORY_PHRASES.search(text), text[:200])
 
 
 class IndexRefs(AcceptedForm):
@@ -348,6 +372,18 @@ class JudgeOnlyRefs(AcceptedForm):
                  "The section «`seams.tsv` — scenarios over the seams of the process» explains them.")
         self.replace(self.REL, "\n## ", "\n## `seams.tsv` again\n\n## ")
         self.assertEqual(self.run_checks().errors, [])
+
+    def test_bare_name_of_a_platform_file_is_not_the_judge_only_file(self):
+        # OBSH.42 (P08.26): `ca.pem` of the norms is the platform file /etc/w2c/tls/ca.pem, not an input of acceptance.
+        line = self.add("The group of the socket is in `group.json` of the daemon.")   # acceptance/3/inputs/group.json
+        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", line, "judge-only file")
+        catalog = self.root / m_form.CATALOG
+        catalog.parent.mkdir(parents=True, exist_ok=True)
+        rows = catalog.read_text(encoding="utf-8") if catalog.is_file() else "key\tkind\towner\n"
+        catalog.write_text(rows + "/etc/w2c/group.json\tfile\tP/01\n<events root>/<sub>.tsv\tfile\tP/01\n",
+                           encoding="utf-8")
+        self.assertEqual(m_form.platform_files(Check(self.root, scope="platform")) & {"<sub>.tsv"}, set())
+        self.assertFalse([e for e in self.run_checks().errors if "judge-only file" in e])
 
     def test_translation_reference_is_judged_by_its_source(self):
         rel = "ru/" + self.REL
@@ -485,6 +521,29 @@ class StageA(AcceptedForm):
         self.assertIn(f"{HOME}/README.md: line 2: history in M", errors)
         self.assertIn("judge-only file", errors)
         self.assertIn("#row:999: no row", errors)
+
+    def test_stage_a_block_finding_carried_by_a_data_file_is_that_file(self):
+        # OBSH.42: at stage A the text a data file carries into the block is judged with the file at stage B; the words
+        # of the builder are judged now.
+        rel, outcomes = "spec/01.3-store.norms.md", "data/epoch_floor.outcomes.tsv"
+        said = "the whole row is unreadable: epoch issue — the issue is refused"
+        carried = "the whole row is unreadable (the Architect's decision of 2026-10-27): epoch issue — the issue is refused"
+        self.replace(outcomes, said, carried)
+        for norms in (rel, "ru/" + rel):
+            self.replace(norms, said, carried)
+        self.replace(rel, "JSON Schema 2020-12 of the family. An instance", "JSON Schema 2020-12 of the family "
+                                                                          "(ADR-0092). An instance")
+        check = self.run_stage_a()
+        self.assertEqual([e for e in check.errors if "built block" not in e], [])
+        self.assert_error(check, f"{HOME}/{rel}", self.line_of(rel, "(ADR-0092)"), "in the built block «families»")
+        self.assertEqual(len(check.errors), 1, check.errors)
+        self.assertEqual(check.stats["history_block_carried"], 2)
+        with patch.object(m_form, "M_FORM_LESSONS", {"P/01"}):
+            errors = self.run_checks().errors              # stage B: the carried text is an error too
+        self.assert_error_in(errors, f"{HOME}/{rel}", self.line_of(rel, "the Architect's decision of 2026-10-27"))
+
+    def assert_error_in(self, errors, rel, line):
+        self.assertTrue([e for e in errors if e.startswith(f"{rel}: line {line}: history in M")], errors)
 
     def test_a_lesson_in_both_sets_is_an_error(self):
         with patch.object(m_form, "M_FORM_STAGE_A", {"P/01"}):
