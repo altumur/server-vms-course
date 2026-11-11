@@ -1,0 +1,30 @@
+# The code checks of lesson P/02 (ADR-0133 addenda (28), (39) items 2, 5; audit P02.20, appendix B, and the answer of the Architect on it): rows of the
+# kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the checks; no expected
+# answer. name: the name that the profile field code (of the profile of 02-installer) maps to a symbol of the candidate; the names are not code paths.
+# stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later stage that holds code:*. norm:
+# the norms of the subject. Cores: canonical (the projection), rights_core (the derivation of rights), order_core (the installation order), rollout_core
+# (the voter poll); the machine of the poll in the form Step(State, Event) -> (State, []Effect) is rollout_step. The loader manifest_load has no
+# pure_core row: the pinned libraries of its layers import standard packages that the forbid of a core names; the purity of loading is judged by the
+# seams s1–s4 of acceptance/1/seams.tsv. The pinned libraries of the loader are requires_module rows of stage manifest-load.
+id	kind	name	args	stage	norm
+C01	complexity	manifest_load	{"max_branches": 15, "max_lines": 80}	manifest-load	P/02.1 N3 load
+C02	requires_module	yaml	{"module": "go.yaml.in/yaml/v3", "from": "Platform/common/versions/go.mod"}	manifest-load	P/02.1 N1.1; P/02.1 N3 load; P/02.1 «Implementation decides»; Platform/common/versions/README.md
+C03	requires_module	json_schema	{"module": "github.com/santhosh-tekuri/jsonschema/v6", "from": "Platform/common/versions/go.mod"}	manifest-load	P/02.1 «Form»; P/02.1 N3 load; P/02.1 «Implementation decides»; Platform/common/versions/README.md
+C04	requires_module	cel	{"module": "github.com/google/cel-go", "from": "Platform/common/versions/go.mod"}	manifest-load	P/02.1 N1.4; P/02.1 N3 load; P/02.1 «Implementation decides»; Platform/common/versions/README.md
+C05	pure_core	canonical	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	canonical	P/02.2 N1.1
+C06	property_tests	canonical_view	{}	canonical	P/02.2 N1.1; P/02.2 N3 build view
+C07	complexity	canonical	{"max_branches": 15, "max_lines": 80}	canonical	P/02.2 N1.1
+C08	pure_core	rights_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	rights	P/02.5 N1; P/02.5 N3 generate_rights
+C09	property_tests	rights_derive	{}	rights	P/02.5 N1; P/02.5 N3 generate_rights
+C10	complexity	rights_core	{"max_branches": 15, "max_lines": 80}	rights	P/02.5 N1; P/02.5 N3 generate_rights
+C11	pure_core	order_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	install-order	P/02.4 N1.7 order
+C12	property_tests	install_order	{}	install-order	P/02.4 N1.7 order
+C13	table_driven	daemon_flags	{"form": "Platform/02-installer/forms/daemon-flags.tsv", "min_cell": 9}	operator-files	P/02.4 N1.9 Command options; forms/daemon-flags.tsv
+C14	table_driven	operator_commands	{"form": "Platform/02-installer/forms/operator-commands.tsv", "min_cell": 9}	operator-files	P/02.4 N1.9; forms/operator-commands.tsv
+C15	exhaustive	operator_command	{"form": "Platform/02-installer/forms/operator-commands.tsv", "column": "command"}	operator-files	P/02.4 N1.9; forms/operator-commands.tsv
+C16	table_driven	refusals	{"form": "Platform/02-installer/forms/refusals.tsv", "min_cell": 9}	operator-files	P/02.1 N4; P/02.2 N4; P/02.3 N4; P/02.4 N4; P/02.5 N4; forms/refusals.tsv
+C17	exhaustive	refusal_surface	{"form": "Platform/02-installer/forms/refusals.tsv", "column": "surface"}	operator-files	P/02.1 N4; P/02.2 N4; P/02.3 N4; P/02.4 N4; P/02.5 N4; forms/refusals.tsv
+C18	pure_core	rollout_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	rollout-poll	P/02.4 N1.9 poll
+C19	step_form	rollout_step	{"core": "rollout_core"}	rollout-poll	P/02.4 N1.9 poll; forms/rollout-poll.machine.yaml
+C20	property_tests	rollout_step	{}	rollout-poll	P/02.4 N1.9 poll; forms/rollout-poll.machine.yaml
+C21	complexity	rollout_core	{"max_branches": 15, "max_lines": 80}	rollout-poll	P/02.4 N1.9 poll
