@@ -1,0 +1,71 @@
+{
+  "description": "Frictionless Table Schema of Platform/common/acceptance/forms/engine-code-rules.tsv (ADR-0125 addenda (12), (13); ADR-0135 addendum (13) item 4; task P02.49). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the map, the sets of packages and the args stay with the generation cycle of the engine. Not yet a resource of Platform/forms.datapackage.json: the Architect registers it after P02.49.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "kind",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "core",
+          "module"
+        ]
+      }
+    },
+    {
+      "name": "args",
+      "type": "string",
+      "description": "One JSON object on one line with exactly the fields of the kind; checked by the existing guard.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "stage",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "tables",
+          "plan",
+          "protocol",
+          "verdicts"
+        ]
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string"
+    }
+  ],
+  "primaryKey": [
+    "id"
+  ],
+  "foreignKeys": [
+    {
+      "fields": [
+        "kind"
+      ],
+      "reference": {
+        "resource": "code_kinds",
+        "fields": [
+          "kind"
+        ]
+      }
+    }
+  ]
+}
