@@ -1,14 +1,13 @@
 # P/10 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/10-domain-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/10-domain-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or the human) who writes code by the lesson. The explanation of «why» is `ru/10-domain-console.md` (for people, not in the export).
 
 ## Task
 
 Implement the process `domainconsole` on the holder's box in the language `<LANG>`; pass the acceptance of N5 and close the readiness
-checklist. There are 17 norms in all: P/10-01…17; The lesson is assembled from
-the lessons M11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, ADR-0083 addendum (1), (14)). The process `domain` is
+checklist. There are 17 norms in all: P/10-01…17; The process `domain` is
 lesson [P/08](../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../09-agent/spec/09-agent.README.md), the forwarding
 of the cluster console is chapter P/06.7.
 
@@ -63,7 +62,7 @@ This is a suggested order, not a mandatory structure of the code.
 6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of N5).
 
-The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit [seams](../acceptance/seams.tsv) supplement the scenarios of step 6 and the reading, they do not replace them.
+The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit [seams](../acceptance/seams.tsv) (judge-only: acceptance cases for P/10-R016) supplement the scenarios of step 6 and the reading, they do not replace them.
 
 ## Pitfalls of the language and the library
 
@@ -71,7 +70,7 @@ The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.ts
 |---|---|---|
 | N1.8 | Throw away the alarms of a silent member | The alarms of the last report stay, plus the silence row. |
 | N1.3 | Recompute `deposed`, `frozen`, `standby` of the process | The answer of the process is as it came (P/08.0 N1.8 `answers`). |
-| N1.2c | Serve the topology from the view | From the row `domain/topology`: the new `rev` right after a PUT (T1). |
+| N1.2c | Serve the topology from the view | From the row `domain/topology`: the new `rev` right after a PUT. |
 | N1.4 | Resume TLS sessions at the role door | Tickets and PSK are turned off: each connection is a full handshake by the current union. |
 | N1.4 | Pass on an arrived `X-W2C-Client` | One that arrived from outside is stripped, like `X-User`; the console sets it itself. |
 
