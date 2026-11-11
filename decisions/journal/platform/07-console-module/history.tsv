@@ -1,0 +1,190 @@
+req_id	file	source	date	removed
+-	README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	README.md#intro	ADR-0124	2026-11-11	(ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`)
+-	spec/07-console-module.README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/07-console-module.README.md#task	the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119	2026-11-05	(the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119)
+-	spec/07-console-module.README.md#order-of-work	review analysis of stage A 6–7, № 31	2026-11-11	(review
+-	spec/07-console-module.README.md#order-of-work	review analysis of stage A 6–7, № 31	2026-11-11	analysis of stage A 6–7, № 31)
+-	spec/07-console-module.README.md#order-of-work	C07-F01 (a guess of stage C)	2026-11-11	; C07-F01
+-	spec/07-console-module.README.md#traps-of-the-language-and-the-library	the Architect's decision of 2026-10-21	2026-10-21	, the Architect's decision of 2026-10-21
+-	spec/07-console-module.README.md#boundary-checks	ADR-0129 addendum (18)	2026-11-07	For ADR-0129(18), 
+-	spec/07-console-module.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/07-console-module.norms.md#intro	the move plan of lesson 7, V4	2026-11-11	(the move plan of lesson 7, V4)
+-	spec/07-console-module.norms.md#intro	M10/9; ADR-0083 addendum (1)	2026-11-11	The lesson is moved from M10/9 (stage B,
+-	spec/07-console-module.norms.md#intro	M10/9; ADR-0083 addendum (1)	2026-11-11	ADR-0083 addendum (1): without a change of behaviour): N1.4 and N1.5 (the numbers of the subsections are the former numbers of M10/9), the row of N5 «module by contract»,
+-	spec/07-console-module.norms.md#intro	M10/9	2026-11-11	the checklist items M10/9-06, -07.
+-	spec/07-console-module.norms.md#intro	the move plan of lesson 7, V5	2026-11-11	(plan, V5)
+-	spec/07-console-module.norms.md#intro	the move of lessons 8–10, stage B, commit 10; the move plan of lesson 8, § 5	2026-11-11	its text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan
+-	spec/07-console-module.norms.md#intro	the move of lessons 8–10, stage B, commit 10; the move plan of lesson 8, § 5	2026-11-11	of lesson 8, § 5, row P/07 N1.6) from M11/8 N1.8 `module`, M11/11 N1.6 `declared` and the module description § 7, § 10a.
+-	spec/07-console-module.norms.md#intro	review analysis of stage A 6–7, № 6	2026-11-11	(review analysis of stage A 6–7, № 6)
+-	spec/07-console-module.norms.md#intro	the Architect's decision of 2026-10-21	2026-10-21	were brought
+-	spec/07-console-module.norms.md#intro	the Architect's decision of 2026-10-21	2026-10-21	to it by a change of behaviour after the commit of the lesson
+-	spec/07-console-module.norms.md#intro	the Architect's decision of 2026-10-21	2026-10-21	; the Architect's decision of 2026-10-21
+-	spec/07-console-module.norms.md#intro	review analysis of stage B 3–5, № 34	2026-11-11	(M10 and M11 were moved whole; review analysis of stage B 3–5, № 34)
+-	spec/07-console-module.norms.md#N1	review analysis of stage B 6–7, № 30; Claude M-5	2026-11-11	(review analysis of stage B 6–7,
+-	spec/07-console-module.norms.md#N1	review analysis of stage B 6–7, № 30; Claude M-5	2026-11-11	№ 30; Claude M-5)
+-	spec/07-console-module.norms.md#N1.4	M10/10	2026-11-11	; added by M10/10
+-	spec/07-console-module.norms.md#N1.4	M10/10	2026-11-11	(added by M10/10)
+-	spec/07-console-module.norms.md#N1.4	ADR-0112 addendum (23) item 2	2026-11-11	(ADR-0112 addendum (23) item 2)
+-	spec/07-console-module.norms.md#N1.4	ADR-0112 addendum (23) item 1	2026-11-11	(ADR-0112 addendum (23) item 1)
+-	spec/07-console-module.norms.md#N1.4	ADR-0094 B2	2026-11-11	; ADR-0094 B2
+-	spec/07-console-module.norms.md#N1.4	ADR-0094 B2	2026-11-11	(ADR-0094 B2: the scope — the rows of units and of tables)
+-	spec/07-console-module.norms.md#N1.4	C07-API-RETRY-UNITS-ONLY-01 (a guess of stage C)	2026-11-11	(C07-API-RETRY-UNITS-ONLY-01)
+-	spec/07-console-module.norms.md#N1.5	ADR-0129 addendum (18) items 1, 2	2026-11-07	For the accepted path and editor corrections of ADR-0129(18), 
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (27) item 3	2026-11-11	(ADR-0091 addendum (27) item 3)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (25) item 1	2026-11-11	(ADR-0091 addendum (25) item 1)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (28), (29)	2026-11-11	(ADR-0091 addendum (28), (29))
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (25) item 1	2026-11-11	(ADR-0091 addendum (25) item 1)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (24) item 1, addendum (27) item 1	2026-11-11	(ADR-0091 addendum (24) item 1, addendum (27) item 1)
+-	spec/07-console-module.norms.md#N1.5	ADR-0129 addendum (7)	2026-11-11	(ADR-0129 addendum (7))
+-	spec/07-console-module.norms.md#N1.5	ADR-0094 B4	2026-11-11	(ADR-0094 B4)
+-	spec/07-console-module.norms.md#N1.5	C07-PLACEMENT-IF-MATCH-01 (a guess of stage C)	2026-11-11	, C07-PLACEMENT-IF-MATCH-01
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (28), (29)	2026-11-11	(ADR-0091 addendum (28), (29))
+-	spec/07-console-module.norms.md#N1.5	C07-API-RETRY-UNITS-ONLY-01 (a guess of stage C)	2026-11-11	(C07-API-RETRY-UNITS-ONLY-01)
+-	spec/07-console-module.norms.md#N1.5	review analysis of stage B 6–7, № 27	2026-11-11	(review analysis of stage B 6–7,
+-	spec/07-console-module.norms.md#N1.5	review analysis of stage B 6–7, № 27	2026-11-11	№ 27)
+-	spec/07-console-module.norms.md#N1.5	ADR-0094 B5	2026-11-11	; ADR-0094 B5
+-	spec/07-console-module.norms.md#N1.5	ADR-0094 B4; ADR-0091 addendum (28) item 3	2026-11-11	(ADR-0094 B4; ADR-0091 addendum (28) item 3)
+-	spec/07-console-module.norms.md#N1.5	ADR-0119 addendum (10)	2026-11-11	; ADR-0119 addendum (10)
+-	spec/07-console-module.norms.md#N1.5	ADR-0097 §4, ADR-0099 §6	2026-11-11	(ADR-0097 §4, ADR-0099 §6)
+-	spec/07-console-module.norms.md#N1.5	ADR-0100 §1	2026-11-11	(ADR-0100 §1)
+-	spec/07-console-module.norms.md#N1.5	review analysis of stage B 6–7, № 28	2026-11-11	(review analysis of stage B 6–7, № 28)
+-	spec/07-console-module.norms.md#N1.5	C07-SESSION-EVENT-01; the Architect's decision of 2026-11-01; the analysis of the VMS pass	2026-11-01	(C07-SESSION-EVENT-01, the Architect's decision of 2026-11-01, the analysis of the VMS pass)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (22) item 2, addendum (24) item 2, addendum (25) item 2	2026-11-11	(ADR-0091 addendum (22) item 2, addendum (24) item 2, addendum (25) item 2)
+-	spec/07-console-module.norms.md#N1.5	C07-TREE-REPAINT-01 (a guess of stage C)	2026-11-11	, C07-TREE-REPAINT-01
+-	spec/07-console-module.norms.md#N1.5	C07-DIALOG-CONFIRM-RESULT-01 (a guess of stage C)	2026-11-11	(C07-DIALOG-CONFIRM-RESULT-01)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (22) item 1	2026-11-11	; ADR-0091 addendum (22) item 1
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (22) item 2, addendum (24) item 2, addendum (25) item 2	2026-11-11	(ADR-0091 addendum (22)
+-	spec/07-console-module.norms.md#N1.5	ADR-0091 addendum (22) item 2, addendum (24) item 2, addendum (25) item 2	2026-11-11	item 2, addendum (24) item 2, addendum (25) item 2)
+-	spec/07-console-module.norms.md#N1.5	ADR-0094 B7	2026-11-11	; ADR-0094 B7
+-	spec/07-console-module.norms.md#N1.5	ADR-0121 addendum (10)	2026-11-11	(ADR-0121 addendum (10))
+-	spec/07-console-module.norms.md#N1.6	the move plan of lesson 7, V5	2026-11-11	the move plan of lesson 7, V5; 
+-	spec/07-console-module.norms.md#N1.6	the move of lessons 8–10, stage B, commit 10; the move plan of lesson 8, § 5	2026-11-11	The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 N1.6): the parts
+-	spec/07-console-module.norms.md#N1.6	M11/8 N1.8; M11/11 N1.6; CONSOLE-MODULE.md § 7, § 10a	2026-11-11	about the module from M11/8 N1.8 `module`, M11/11 N1.6 `declared` and the module description
+-	spec/07-console-module.norms.md#N1.6	M11/8 N1.8; M11/11 N1.6; CONSOLE-MODULE.md § 7, § 10a	2026-11-11	[`CONSOLE-MODULE.md`](../CONSOLE-MODULE.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
+-	spec/07-console-module.norms.md#N1.6	CONSOLE-MODULE.md § 10a; review analysis of stage A 6–7, № 27, № 30	2026-11-11	§ 10a (the holder page) (review analysis of stage A 6–7, № 27, № 30).
+-	spec/07-console-module.norms.md#N1.6	ADR-0091 addendum (24) item 6, addendum (27) item 3	2026-11-11	; ADR-0091
+-	spec/07-console-module.norms.md#N1.6	ADR-0091 addendum (24) item 6, addendum (27) item 3	2026-11-11	addendum (24) item 6, addendum (27) item 3)
+-	spec/07-console-module.norms.md#N1.6	the former N1.6 (M11 → P/06.7, P/10)	2026-11-11	The origin of the lines: `reads`, `writes` (`/domain/*`), `order`, `never`, `objects`, `adds`, the field `domain` of `refresh` — the former
+-	spec/07-console-module.norms.md#N1.6	the former N1.6 (M11 → P/06.7, P/10); review analysis of stage B 6–7, № 30 (Claude M-5)	2026-11-11	N1.6 (the addresses of M11 → P/06.7, P/10); `login_url`, `refresh {access}` and the section `access` of the default `sections` — review analysis of
+-	spec/07-console-module.norms.md#N1.6	review analysis of stage B 6–7, № 30 (Claude M-5); CONSOLE-MODULE.md § 7, § 10a; M11/8 N1.8	2026-11-11	stage B 6–7, № 30 (Claude M-5); `domain`, `access`, `held` — the description § 7; `holder` — § 10a and M11/8 N1.8 `module`;
+-	spec/07-console-module.norms.md#N1.6	M11/11 N1.6; CONSOLE-MODULE.md § 10a	2026-11-11	`schema` — M11/11 N1.6 `declared` and § 10a.
+-	spec/07-console-module.norms.md#N1.6	the Architect's decision of 2026-10-21	2026-10-21	; the Architect's decision of 2026-10-21
+-	spec/07-console-module.norms.md#N1.6	M11/8 N1.8	2026-11-11	(M11/8 N1.8 `module`)
+-	spec/07-console-module.norms.md#N2	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#N2	ADR-0082 addendum 13	2026-11-11	(ADR-0082 addendum 13)
+-	spec/07-console-module.norms.md#N2	the platform/subsystem boundary note §1.1; ADR-0002	2026-11-11	in the sense of the boundary (`platform/subsystem boundary note`, for the human)
+-	spec/07-console-module.norms.md#N2	the platform/subsystem boundary note §1.1; ADR-0002	2026-11-11	§1.1 (ADR-0002, for the human)
+-	spec/07-console-module.norms.md#N2	ADR-0015	2026-11-11	(ADR-0015, for the human)
+-	spec/07-console-module.norms.md#N2	the move plan of lesson 7, V1	2026-11-11	; the move plan of lesson 7, V1
+-	spec/07-console-module.norms.md#N2	review analysis of stage A 6–7, № 6	2026-11-11	(review analysis of stage A 6–7, № 6)
+-	spec/07-console-module.norms.md#N2	the Architect's decision of 2026-10-21	2026-10-21	(the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	ADR-0129 addendum (18)	2026-11-07	The ADR-0129(18) checks
+-	spec/07-console-module.norms.md#N5	ADR-0129 addendum (18) item 9; review findings C6, A1	2026-11-07	C6/A1/N5/P/07-07/08
+-	spec/07-console-module.norms.md#N5	the move plan of lesson 7, V2	2026-11-11	; the move plan of lesson 7, V2
+-	spec/07-console-module.norms.md#N5	review analysis of stage A 6–7, № 31	2026-11-11	(review analysis of stage A 6–7,
+-	spec/07-console-module.norms.md#N5	review analysis of stage A 6–7, № 31	2026-11-11	№ 31)
+-	spec/07-console-module.norms.md#N5	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#N5	ADR-0080 addendum 16	2026-11-11	(ADR-0080 addendum 16)
+-	spec/07-console-module.norms.md#N5	the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119	2026-11-05	(the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119)
+-	spec/07-console-module.norms.md#N5	review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	(review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	(review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	(review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	(review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	(review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	ADR-0094 B2	2026-11-11	(ADR-0094 B2)
+-	spec/07-console-module.norms.md#N5	the second pass of the coverage audit of P/07, Gemini, 2026-10-30	2026-10-30	by the second pass of the coverage audit (Gemini, 2026-10-30): 
+-	spec/07-console-module.norms.md#N5	the Architect's decision of 2026-10-21	2026-10-21	(the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	the Architect's decision of 2026-10-21	2026-10-21	(the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	the Architect's decision of 2026-10-21	2026-10-21	(the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#N5	the coverage audit of P/07, 2026-10-30	2026-10-30	by the coverage audit of P/07 (2026-10-30): 
+-	spec/07-console-module.norms.md#N5	the second pass of the coverage audit of P/07, Gemini	2026-10-30	the second pass of Gemini: 
+-	spec/07-console-module.norms.md#N5	the second pass of the coverage audit of P/07, Gemini	2026-10-30	the second pass of Gemini: 
+-	spec/07-console-module.norms.md#N5	ADR-0091 addendum (22)–(27)	2026-11-11	(ADR-0091 addendum (22)–(27))
+-	spec/07-console-module.norms.md#N5	the second pass of the coverage audit of P/07, Gemini	2026-10-30	(the second pass of the coverage audit, Gemini)
+-	spec/07-console-module.norms.md#N5	ADR-0094 B4	2026-11-11	(ADR-0094 B4)
+-	spec/07-console-module.norms.md#N5	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
+-	spec/07-console-module.norms.md#N5	ADR-0096	2026-11-11	(ADR-0096)
+-	spec/07-console-module.norms.md#N5	ADR-0112 addendum (23)	2026-11-11	(ADR-0112 addendum (23))
+-	spec/07-console-module.norms.md#N5	ADR-0119 addendum (10)	2026-11-11	(ADR-0119 addendum (10))
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review	2026-11-11	Accepted ADR-0127 review criteria
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	the ADR-0127 review delivery	2026-11-11	 in this delivery
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C1	2026-11-11	(review C1)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C2	2026-11-11	(C2)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C3	2026-11-11	(C3)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C4	2026-11-11	(C4)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C5	2026-11-11	(C5)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C6	2026-11-11	(C6)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C7	2026-11-11	(C7)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	the ADR-0127 review delivery	2026-11-11	, no module execution or byte change in this source delivery
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding M2	2026-11-11	(M2)
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	ADR-0127 review, finding C6	2026-11-11	Review C6 is adopted by the related P/06 `FieldView.hidden` form
+-	spec/07-console-module.norms.md#criteria-and-debt-of-the-published-module-bytes	the ADR-0127 review delivery	2026-11-11	This source change
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0080 addendum 16	2026-11-11	(ADR-0080 addendum 16)
+-	spec/07-console-module.norms.md#implementation-decides	the Architect's decision of 2026-10-21; review analysis of stage A 6–7, № 6; review analysis of stage B 6–7, № 26–29	2026-10-21	(the Architect's decision of 2026-10-21; review analysis of stage A 6–7, № 6, findings A-30, A-31;
+-	spec/07-console-module.norms.md#implementation-decides	the Architect's decision of 2026-10-21; review analysis of stage A 6–7, № 6; review analysis of stage B 6–7, № 26–29	2026-10-21	review analysis of stage B 6–7, № 26–29; findings of Claude M-1, M-2, M-3, M-5)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«a», «e»)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«zh»)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«b», «v»)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«g»)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«d»)
+-	spec/07-console-module.norms.md#implementation-decides	findings of the review of stage B 6–7, № 26–29 (letters)	2026-10-21	(«z»)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0080 addendum 16; the Architect's decision of 2026-10-21	2026-10-21	(ADR-0080
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0080 addendum 16; the Architect's decision of 2026-10-21	2026-10-21	addendum 16; the Architect's decision of 2026-10-21)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#implementation-decides	the coverage audit of P/07, 2026-10-30	2026-10-30	; the coverage audit of P/07, 2026-10-30
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0094 B5, addendum (13) item 3	2026-11-11	; ADR-0094 B5, addendum (13) item 3
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0094 B2	2026-11-11	; ADR-0094 B2
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0005	2026-11-11	(ADR-0005)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0112 addendum (23)	2026-11-11	; ADR-0112 addendum (23)
+-	spec/07-console-module.norms.md#implementation-decides	ADR-0119 addendum (10)	2026-11-11	; ADR-0119 addendum (10)
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6)
+-	spec/07-console-module.norms.md#readiness-checklist	review analysis of stage A 6–7, № 31; review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	; review analysis of stage A 6–7, № 31; review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21
+-	spec/07-console-module.norms.md#readiness-checklist	review analysis of stage A 6–7, № 31	2026-11-11	; analysis, № 31
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0091 addendum (22)–(27)	2026-11-11	(ADR-0091 addendum (22)–(27))
+-	spec/07-console-module.norms.md#readiness-checklist	review analysis of stage A 6–7, № 6; review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21	2026-10-21	; analysis, № 6; review analysis of stage B 6–7, № 29; the Architect's decision of 2026-10-21
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0094 B4	2026-11-11	(ADR-0094 B4)
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0094 B2	2026-11-11	(ADR-0094 B2)
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0096	2026-11-11	(ADR-0096)
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0112 addendum (23)	2026-11-11	(ADR-0112 addendum (23))
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0119 addendum (10)	2026-11-11	(ADR-0119 addendum (10))
+-	spec/07-console-module.norms.md#readiness-checklist	ADR-0127 review, finding C6	2026-11-11	C6 — 
+-	spec/07-console-module.norms.md#readiness-checklist	the ADR-0127 review delivery	2026-11-11	this delivery neither edits nor executes module bytes and
+-	CONSOLE-MODULE.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-11	(ADR-0121; ADR-0124 addendum (1) item 4)
+-	CONSOLE-MODULE.md#1-what-it-is	the convention of 2026-10-05; ADR-0018	2026-10-05	; the convention of 2026-10-05, the same as ADR-0018 for the product
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	ADR-0091 addendum (24), (27)	2026-11-11	, ADR-0091 addendum (24), (27)
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	the former product console	2026-11-11	(as in the former product console)
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	ADR-0112 addendum (23)	2026-11-11	; ADR-0112 addendum (23)
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	ADR-0091 addendum (28), (29)	2026-11-11	(ADR-0091 addendum (28), (29))
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	ADR-0091 addendum (25) item 1	2026-11-11	, ADR-0091 addendum (25) item 1
+-	CONSOLE-MODULE.md#3-mounting-and-life-cycle	the owner's decision of 2026-10-04 (ADR-0003)	2026-10-04	, by the owner's decision (2026-10-04),
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0013	2026-11-11	(ADR-0013)
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0050	2026-11-11	(ADR-0050)
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0091 addendum (28), (29)	2026-11-11	; ADR-0091 addendum (28), (29)
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0094 B4	2026-11-11	; ADR-0094 B4
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0094 B5	2026-11-11	, ADR-0094 B5
+-	CONSOLE-MODULE.md#5-session-and-requests	ADR-0119 addendum (10)	2026-11-11	; ADR-0119 addendum (10)
+-	CONSOLE-MODULE.md#7-module-sections	CONSOLE-MODULE.md § 2	2026-11-11	; moved from § 2
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	a check against the product console; the Architect's decisions	2026-11-11	(a check against the product console, the Architect's decisions)
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	the former product console	2026-11-11	An immediate creation with a placeholder address, as in the former console, is not reproduced
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	ADR-0002	2026-11-11	(ADR-0002)
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	the former product console	2026-11-11	was not in the former console, it
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	the former product console; the owner's decision of 2026-10-04	2026-10-04	the former product console had no table view with mass editing (only the styles remained), so it is not part of «exactly like it»
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	ADR-0005	2026-11-11	(ADR-0005)
+-	CONSOLE-MODULE.md#what-else-the-module-does-itself	ADR-0050	2026-11-11	(ADR-0050)
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	ADR-0031	2026-11-11	, ADR-0031
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	the history of `about`	2026-11-11	, as it did `about` before
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	the owner's rule on compatibility (ADR-0003)	2026-11-11	(the owner's rule on compatibility)
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	the removal of addGroupValues, 2026-10-05	2026-10-05	`addGroupValues` is removed (2026-10-05)
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	ADR-0010	2026-11-11	(ADR-0010)
+-	CONSOLE-MODULE.md#9-what-the-shell-adds	the owner's decision of 2026-10-04	2026-10-04	(the owner's decision of 2026-10-04: the new console looks and works exactly like the former product console)
+-	CONSOLE-MODULE.md#10-without-a-shell-the-minimal-page-and-testsub	ADR-0018	2026-11-11	; the former `vms/console.html` is removed, ADR-0018
+-	CONSOLE-MODULE.md#10a-the-domain-holder-page	ADR-0015	2026-11-11	, ADR-0015
+-	CONSOLE-MODULE.md#10a-the-domain-holder-page	ADR-0061	2026-10-06	(ADR-0061, 2026-10-06)
+-	CONSOLE-MODULE.md#10a-the-domain-holder-page	the classification of 2026-10-06	2026-10-06	(the classification of 2026-10-06)
+-	CONSOLE-MODULE.md#10a-the-domain-holder-page	ADR-0003; rule 5 of the session rules	2026-11-11	All human `/api/*` (including `/api/state`, `/api/keys`) go away in the commit where the page becomes the module (ADR-0003); the course renames its human `/api/*` in the domain console to `/domain/*` on the same day (rule 5 of `the session rules`).
+-	CONSOLE-MODULE.md#10a-the-domain-holder-page	PROVENANCE	2026-11-11	Until this commit the holder has a temporary trimmed `page.html` without the VMS parts (a debt in PROVENANCE).

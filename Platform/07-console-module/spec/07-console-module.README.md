@@ -1,6 +1,6 @@
 # P/07 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/07-console-module.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/07-console-module.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes or checks the console module from the lesson. The explanation of «why» is
 `ru/07-console-module.md` (for people, not in the export).
@@ -13,7 +13,7 @@ of the console does not write it, the owner of the specification keeps its bytes
 by rewriting (P/06.5 N1.1 `module`: a check of the completeness of the contract, not a way to implement). The norms of the lesson are
 P/07-01…08.
 
-For a generation line, the completion criterion is packaging of the published bytes unchanged plus scenario 01 of acceptance 6.5 (`?v=1`). The line does not rewrite JavaScript and has no separate executable module profile. The three module tests and readiness items P/07-07 and P/07-08 are an explicit debt of the owner of the published common module bytes, neither PASS nor FAIL of the line (the Architect's decision of 2026-11-05 under ADR-0112 and ADR-0119).
+For a generation line, the completion criterion is packaging of the published bytes unchanged plus scenario 01 of acceptance 6.5 (`?v=1`). The line does not rewrite JavaScript and has no separate executable module profile. The three module tests and readiness items P/07-07 and P/07-08 are an explicit debt of the owner of the published common module bytes, neither PASS nor FAIL of the line.
 
 ## Inputs and their priority
 
@@ -37,10 +37,10 @@ The following behaviour is the responsibility of the owner of the common module 
 1. Connect the closed may. Tell apart a replay of one request and a new action; allow an automatic replay only by
    the memory of the owner. For an unknown PUT/table — a read first (N1.5). The three states of the session by which `may` judges —
    [chapter 6.3](../../06-console/spec/06.3-console.norms.md) N1.3 `session`.
-2. Check the module/shell separately: the jsdom test of the owner of the specification `Source/tests/console` by the subjects of N5 (review
-   analysis of stage A 6–7, № 31). An implementation neither reads nor runs the jsdom tests of N5: they check the published bytes
+2. Check the module/shell separately: the jsdom test of the owner of the specification `Source/tests/console` by the subjects of N5.
+   An implementation neither reads nor runs the jsdom tests of N5: they check the published bytes
    of the module at the owner of the specification; the proof of an implementation is the bytes of the module as they are and the load of `?v=1` (sc. 01 of the acceptance
-   of chapter 6.5; C07-F01).
+   of chapter 6.5).
 3. The library for the shell turns the absent field `door` of the HTTP answer `Where` into `null` (N1.5 `where`). Check
    this level separately from HTTP: a `Where` without a trustworthy door has no field `door` — the check of the door is in
    [the instructions of P/06](../../06-console/spec/06-console.README.md), chapter 6.5.
@@ -52,11 +52,11 @@ The following behaviour is the responsibility of the owner of the common module 
 | N1.5 | A key cache by method/path/body merges two clicks | A key per logical action; a new call is independent. |
 
 The published module keeps a key per action and replays by itself only the `POST` of units, and `may` without grants gives `true` only
-with `open: true` («Implementation decides» item 1 of the norms is closed, the Architect's decision of 2026-10-21); the evidence is the jsdom tests by the table of N5.
+with `open: true` («Implementation decides» item 1 of the norms is closed); the evidence is the jsdom tests by the table of N5.
 
 ## Boundary checks
 
-For ADR-0129(18), compare the proposed changes against N1.5/N1.6 and the current canonical module, not a historical witness. Keep the full original URL and CAS/replay behaviour; retain integer input on a local refusal and preserve typed list elements. Before worker changes, obtain the exact public-context disposition; before cursor code, fix the six-projection assembly and incomplete-read plan. Check current pending 0/1/null separately from outcomes; J-P07-01 stays a separate test scope. Disabled sections cannot be entered by mouse or keyboard. Publication checks still compare the same three files byte for byte at the existing routes and version. Existing unrelated debts remain open.
+Compare the proposed changes of the module against N1.5/N1.6 and the current canonical module, not a historical witness. Keep the full original URL and CAS/replay behaviour; retain integer input on a local refusal and preserve typed list elements. Before worker changes, obtain the exact public-context disposition; before cursor code, fix the six-projection assembly and incomplete-read plan. Check current pending 0/1/null separately from outcomes; J-P07-01 stays a separate test scope. Disabled sections cannot be entered by mouse or keyboard. Publication checks still compare the same three files byte for byte at the existing routes and version. Existing unrelated debts remain open.
 
 The module calls nothing outside N1.4 `reads`/`writes`; the paths of `never` (`/{sub}/requests`, `/api/backup`, `/resources`, tables outside
 `servers.show`, the doors of the holders) do not appear among the requests intercepted by the jsdom test, neither on mounting nor on
