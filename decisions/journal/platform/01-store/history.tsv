@@ -20,3 +20,40 @@ req_id	file	source	date	removed
 -	vectors/rights-evaluator/README.md#rights-evaluator--vector	reconciliation of python and go M10/6–11; Architect's decision by the log of cammeta-go, lesson 6 № 2	2026-10-18	Reconciliation of python and go M10/6–11 («`*` in the middle is literal», both implementations); the Architect's decision by the log of cammeta-go, lesson 6 № 2.
 -	vectors/rights-evaluator/README.md#who-executes	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
 -	vectors/rights-evaluator/README.md#who-executes	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	forms/daemon-flags.tsv.schema.json#/description	ADR-0125 item 2, addendum (1) item 5	2026-11-04	; ADR-0125 item 2, addendum (1) item 5
+-	forms/daemon-flags.tsv.schema.json#/fields/7	the store pilot, A1; ADR-0125 addendum (2) item 1 (row -dir)	2026-11-04	; A1; ADR-0125 addendum (2) item 1
+-	forms/daemon-flags.tsv.schema.json#/fields/7	the store pilot, A3; ADR-0125 addendum (2) item 1 (row -sockets)	2026-11-04	; A3; ADR-0125 addendum (2) item 1
+-	forms/daemon-flags.tsv.schema.json#/fields/7	ADR-0125 addendum (2) item 7 (row -rights)	2026-11-04	; ADR-0125 addendum (2) item 7
+-	forms/daemon-flags.tsv.schema.json#/fields/7	ADR-0125 addendum (2) item 4 (row -raft)	2026-11-04	; ADR-0125 addendum (2) item 4
+-	forms/daemon-flags.tsv.schema.json#/fields/7	finding C01-STATUS-MEMBERS-NOAPI; ADR-0125 addendum (2) item 4 (row -api)	2026-11-04	; C01-STATUS-MEMBERS-NOAPI; ADR-0125 addendum (2) item 4
+-	forms/daemon-flags.tsv.schema.json#/fields/7	guess of stage C S02, decision 2026-10-23 (row -isolated)	2026-10-23	; S02
+-	forms/daemon-flags.tsv.schema.json#/fields/7	guess of stage C S02, decision 2026-10-23 (row -upper)	2026-10-23	; S02
+-	forms/daemon-flags.tsv.schema.json#/fields/7	ADR-0125 addendum (2) item 3 (row -voters)	2026-11-04	; ADR-0125 addendum (2) item 3
+-	forms/daemon-flags.tsv.schema.json#/fields/7	finding label B7 (row -max-value)	2026-11-04	; B7
+-	forms/daemon-flags.tsv.schema.json#/fields/7	ADR-0125 addendum (2) item 1 (row -groups)	2026-11-04	; ADR-0125 addendum (2) item 1
+-	forms/daemon-flags.tsv.schema.json#/fields/7	ADR-0125 addendum (2) item 1 (row --from)	2026-11-04	; ADR-0125 addendum (2) item 1
+-	forms/refusals.tsv.schema.json#/description	ADR-0125 item 2, addendum (1) item 5	2026-11-04	; ADR-0125 item 2, addendum (1) item 5
+-	forms/refusals.tsv.schema.json#/fields/9	ADR-0091 (row expired)	2026-10-22	; ADR-0091
+-	forms/refusals.tsv.schema.json#/fields/9	ADR-0091 (row early)	2026-10-22	; ADR-0091
+-	forms/refusals.tsv.schema.json#/fields/9	guess of stage C S02, decision 2026-10-23 (row recover_isolated)	2026-10-23	; S02
+-	forms/refusals.tsv.schema.json#/fields/9	guess of stage C S02, decision 2026-10-23 (row recover_upper)	2026-10-23	; S02
+-	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (2) (row start_data_dir_owned)	2026-11-08	; ADR-0130 addendum (2)
+-	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (2) (row local_data_dir_owned)	2026-11-08	; ADR-0130 addendum (2)
+P/01.3-R035	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (15) item 6 (row replay_limit)	2026-11-09	; ADR-0130 addendum (15) item 6
+-	forms/stages.tsv.schema.json#/description	ADR-0126, addendum (1)	2026-11-04	 (ADR-0126, addendum (1))
+-	forms/stages.tsv.schema.json#/description	ADR-0126 addendum (7) item 3	2026-11-04	 (ADR-0126 addendum (7) item 3)
+-	forms/stages.kit.tsv.schema.json#/description	ADR-0126, addendum (1)	2026-11-04	 (ADR-0126, addendum (1))
+-	forms/stages.kit.tsv.schema.json#/description	ADR-0126 addendum (7) item 3	2026-11-04	 (ADR-0126 addendum (7) item 3)
+-	forms/stages.tsv.schema.json#/description	ADR-0083 addendum (156) item 1; ADR-0126 addendum (9) item 1	2026-11-08	 (ADR-0083 addendum (156) item 1; ADR-0126 addendum (9) item 1)
+-	forms/stages.tsv.schema.json#/description	ADR-0126 addendum (7) items 1, 2	2026-11-04	 (ADR-0126 addendum (7) items 1, 2)
+-	forms/stages.tsv.schema.json#/description	ADR-0133 addendum (39)	2026-11-09	 (ADR-0133 addendum (39))
+-	forms/stages.tsv.schema.json#/description	ADR-0133 addendum (43)	2026-11-10	 (ADR-0133 addendum (43))
+-	forms/stages.kit.tsv.schema.json#/description	ADR-0125 addendum (4) items 1, 2, 7; ADR-0126 addendum (7) items 1, 2	2026-11-04	 (ADR-0125 addendum (4) items 1, 2, 7; ADR-0126 addendum (7) items 1, 2)
+-	forms/stages.kit.tsv.schema.json#/description	ADR-0125 (the generators); ADR-0083 addendum (95) item 3; ADR-0126 addenda (2) item 1, (4), (7) item 4	2026-11-04	the generators of ADR-0125; launch — the daemon frame, ADR-0083 addendum (95) item 3), - — none (ADR-0126 addenda (2) item 1, (4), (7) item 4)
+-	forms/code-rules.tsv.schema.json#/description	ADR-0133 addenda (28), (39) items 2, 5, 6	2026-11-09	 (ADR-0133 addenda (28), (39) items 2, 5, 6)
+-	forms/write-checks.tsv.schema.json#/description	ADR-0120 item 2 (a)	2026-11-04	; ADR-0120 item 2 (a)
+-	forms/write-checks.tsv.schema.json#/description	ADR-0122 addendum (1) item 4	2026-11-04	 (ADR-0122 addendum (1) item 4)
+-	forms/write-checks.probes.tsv.schema.json#/description	ADR-0120 item 2 (a); the Architect's answer of 2026-11-04, question 2	2026-11-04	 (ADR-0120 item 2 (a); the Architect's answer of 2026-11-04, question 2)
+-	forms/refusals.tsv.schema.json#/fields/9	finding C01-BOX-DOOR-01 (row box_no_raft)	2026-11-04	; C01-BOX-DOOR-01
+-	acceptance/1/README.md#directives-of-chapters-11-and-12	Codex review of series A (row @rights store, moved from the dictionary of the common acceptance README)	2026-10-30	, Codex review of series A
+-	acceptance/1/README.md#seam-normalization	the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4 (moved from the common acceptance README «P/01 seam normalization»)	2026-11-08	 (the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4)

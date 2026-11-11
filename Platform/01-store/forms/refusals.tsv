@@ -1,4 +1,4 @@
-# The refusal catalogue of the store (P/01.1–P/01.3 N4; ADR-0125 item 2, addendum (1) item 5): the code, the kind, the word, the fields, the norm.
+# The refusal catalogue of the store (P/01.1–P/01.3 N4): the code, the kind, the word, the fields, the norm. The table is the source of these columns; the prose of N4 refers to it.
 # The roles of the three: the OpenAPI *Fault — the form of the body; this table — the catalogue; write-checks.tsv — the order and the conditions of the write command.
 # chapter — 1.1, 1.2, 1.3; row — the number of the row of the N4 table of the chapter (from 1); a prose row with two outcomes is two rows with one row.
 # name — the condition, snake_case, unique in the file; where a row is a check of write-checks.tsv, the same name as its check.
@@ -12,8 +12,8 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.1	4	identity	http	403	forbidden	-	-	-	P/01.2 N3 «check»; P/01.3 N4
 1.1	5	rights	http	403	forbidden	-	-	-	P/01.2 N4
 1.1	6	cas_mismatch	http	409	conflict	index,key?	-	-	P/01.1 N3
-1.1	7	expired	http	409	expired	-	-	-	P/01.1 N3 «Admission time»; ADR-0091
-1.1	8	early	http	409	early	-	-	-	P/01.1 N3; ADR-0091
+1.1	7	expired	http	409	expired	-	-	-	P/01.1 N3 «Admission time»
+1.1	8	early	http	409	early	-	-	-	P/01.1 N3
 1.1	9	guard_mismatch	http	412	guard	key,index	-	-	P/01.1 N3
 1.1	10	weight	http	413	toolarge	limit,key,size	-	-	P/01.1 N1 row.items.ceiling
 1.1	11	body_limit	http	413	toolarge	limit,size?	-	-	P/01.1 N2
@@ -45,7 +45,7 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	5	start_config	start	exit 2	-	-	-	cause	P/01.3 N1.3 refuse_start
 1.3	6	start_flags	start	exit 2	-	-	-	flag,socket	P/01.3 N1.3; forms/daemon-flags.tsv
 1.3	7	start_format	start	exit 2	-	-	-	dir,mark	P/01.3 N1.3 format
-1.3	8	box_no_raft	start	exit 2	-	-	-	«this build has no raft»	P/01.3 N1.3 box; C01-BOX-DOOR-01
+1.3	8	box_no_raft	start	exit 2	-	-	-	«this build has no raft»	P/01.3 N1.3 box
 1.3	9	box_last_voter	http	409	refused	-	-	-	P/01.3 N1.3 box
 1.3	9	box_admit	cli	exit !0	-	-	-	«the last voter»	P/01.3 N1.3 box
 1.3	10	join_parity	http	409	refused	-	-	-	P/01.3 N1.3 join
@@ -64,15 +64,15 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	23	copy_input	cli	exit !0	-	-	-	cause	P/01.3 N1.3 copy
 1.3	24	clock_early	cli	exit !0	-	-	-	phase,cause	P/01.3 N3
 1.3	25	recovery_unsafe	cli	exit !0	-	-	-	phase,cause	P/01.3 N3
-1.3	26	recover_isolated	cli	exit !0	-	-	-	-isolated	P/01.3 N3 step 0; S02
-1.3	27	recover_upper	cli	exit !0	-	-	-	upper,N	P/01.3 N3 step 0; S02
+1.3	26	recover_isolated	cli	exit !0	-	-	-	-isolated	P/01.3 N3 step 0
+1.3	27	recover_upper	cli	exit !0	-	-	-	upper,N	P/01.3 N3 step 0
 1.3	28	recover_peers	cli	exit !0	-	-	-	element,cause	P/01.3 N3 recover
 1.3	29	copy_method	http	405	badrequest	-	Allow: GET	-	P/01.3 N2 HTTP copy
 1.3	30	copy_admin_only	http	403	forbidden	-	-	-	P/01.3 N2 HTTP copy
 1.3	31	copy_snapshot_unavailable	http	503	unavailable	-	-	-	P/01.3 N2 HTTP copy
-1.3	32	start_data_dir_owned	start	exit 2	-	-	-	dir	P/01.3 N1.3 ownership; ADR-0130 addendum (2)
-1.3	33	local_data_dir_owned	cli	exit !0	-	-	-	dir	P/01.3 N1.3 ownership; local box import/restore and recover; ADR-0130 addendum (2)
-1.3	34	replay_limit	http	503	unavailable	-	Retry-After	-	P/01.3 R035; ADR-0130 addendum (15) item 6
+1.3	32	start_data_dir_owned	start	exit 2	-	-	-	dir	P/01.3 N1.3 ownership
+1.3	33	local_data_dir_owned	cli	exit !0	-	-	-	dir	P/01.3 N1.3 ownership; local box import/restore and recover
+1.3	34	replay_limit	http	503	unavailable	-	Retry-After	-	P/01.3 R035
 1.3	35	import_held	http	503	unavailable	-	-	-	P/01.3 N1.3 import
 1.3	36	admin_not_leader	http	503	unavailable	-	-	-	P/01.3 N1.3 admin_ops; P/01.3 N2
 1.3	36	admin_not_leader_cli	cli	exit !0	-	-	-	«not the leader»	P/01.3 N1.3 admin_ops; P/01.3 R018

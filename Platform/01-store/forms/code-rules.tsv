@@ -1,4 +1,4 @@
-# The code checks of lesson P/01 (ADR-0133 addenda (28), (39) items 2, 5, 6): rows of the kinds of the closed dictionary Platform/common/acceptance/forms/
+# The code checks of lesson P/01: rows of the kinds of the closed dictionary Platform/common/acceptance/forms/
 # code-rules.tsv, which defines the columns, the outcome and the checks; no expected answer. name: the name that the profile field code maps to a symbol
 # of the candidate; the names are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of
 # every later stage that holds code:*. norm: the norms of the subject. Cores: write_model (the checks of the write command), jcs, store_core (admission,

@@ -22,8 +22,8 @@ participant); the alarm history — [chapter 8.9](../../08-domain/spec/08.9-doma
 <!-- req: P/10-R001 -->
 ## N0 Vocabulary
 
-Normative keywords follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary)
-(including the order of output arrays, scope — lessons 8–10).
+Normative keywords follow the [course canon](../../common/NORMATIVE-TERMS.md). The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary);
+the order of output arrays is P/08.0 N0 «Order of output arrays» (scope — lessons 8–10).
 
 <!-- req: P/10-R002 -->
 The [common production obligations](../../common/contracts/production-obligations.md) and the selected MB3 rules in the common contracts apply here (ADR-0130 Addendum (10)). Use exactly one marker reread before silent: a changed marker with no exact fresh generation is temporarily unconfirmed; defer the derived snapshot and use existing 503 unavailable on a door requiring the confirmed read, not a new member state.

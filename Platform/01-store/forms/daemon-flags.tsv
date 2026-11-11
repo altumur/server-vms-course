@@ -1,4 +1,4 @@
-# The daemon flags of the store (P/01.3 N1.3 «Daemon flags»; ADR-0125 item 2, addendum (1) item 5). A closed set: a flag outside the table or not of its command is a start refusal, code 2 (P/01.3 N4).
+# The daemon flags of the store (P/01.3 N1.3 «Daemon flags»). The table is the source of the flags; the prose refers to it and does not repeat it. A closed set: a flag outside the table or not of its command is a start refusal, code 2 (P/01.3 N4).
 # The flag names are those of the prose (--from with two hyphens, as admin_ops writes it). Rows in the order of the prose table; one prose row of three connection limits is three rows. An empty cell is -.
 # type — a closed vocabulary: path, dir (directory path), file (file path), addr (host:port), id (member id, P/01.3 N2), bool (no value),
 # enum:<a>|<b>…, int:<min>..<max> (max may be empty), bytes:>0 (an integer of bytes, > 0), duration, list:id@addr, list:id@addr/addr.
@@ -16,30 +16,30 @@
 #var cmd string — the command: daemon or a subcommand of admin_ops
 #fn loopback(string) -> bool — the host of the address is on the loopback: 127.0.0.0/8, ::1 or localhost (normgen prims)
 flag	type	default	default_text	required	commands	bad	norm
--dir	path	-	-	true	daemon,recover,restore,import		P/01.3 N1.3 format; A1; ADR-0125 addendum (2) item 1
+-dir	path	-	-	true	daemon,recover,restore,import		P/01.3 N1.3 format
 -id	id	$SERVER_NAME	SERVER_NAME	"-join" in f || "-door" in f || ("-group-size" in f && f["-group-size"] in [3, 5])	daemon,recover		P/01.3 N1.3; P/01.3 N2; no -id and no SERVER_NAME — a start refusal (P/01.3 N1.3 daemon refuse_start)
--sockets	dir	/run/configstore	/run/configstore	false	daemon,status,join,leave,admit,backup,restore,import,rights		P/01.3 N1.3 sockets; A3; ADR-0125 addendum (2) item 1
--rights	file	-	-	false	daemon		P/01.2 N1.2; without it — only admin.sock, not a refusal (P/01.2 N4; ADR-0125 addendum (2) item 7)
+-sockets	dir	/run/configstore	/run/configstore	false	daemon,status,join,leave,admit,backup,restore,import,rights		P/01.3 N1.3 sockets
+-rights	file	-	-	false	daemon		P/01.2 N1.2; without it — only admin.sock, not a refusal (P/01.2 N4)
 -tls	dir	-	-	"-join" in f || ("-api" in f && !loopback(f["-api"])) || ("-raft" in f && !loopback(f["-raft"]))	daemon		P/01.3 N1.6
--raft	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-raft"])	P/01.3 N1.3 group; ADR-0125 addendum (2) item 4
+-raft	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-raft"])	P/01.3 N1.3 group
 -raft-bind	addr	=-raft	-raft	false	daemon		P/01.3 N1.3 group
--api	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-api"])	P/01.3 N2; C01-STATUS-MEMBERS-NOAPI; ADR-0125 addendum (2) item 4
+-api	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-api"])	P/01.3 N2
 -bootstrap	bool	false	off	false	daemon	"-join" in f	P/01.3 N1.3 join
 -join	addr	-	-	false	daemon	!("-tls" in f)	P/01.3 N1.3 join
 -group-size	enum:1|3|5	1	1	false	daemon		P/01.3 N1.3 group
 -force	bool	false	off	false	daemon,join,restore,import,recover		P/01.3 N1.3 join; P/01.3 N3
--isolated	bool	false	off	true	recover		P/01.3 N3 step 0; S02
--upper	int:0..9007199254740991	-	-	false	recover		P/01.3 N3 step 0; S02
+-isolated	bool	false	off	true	recover		P/01.3 N3 step 0
+-upper	int:0..9007199254740991	-	-	false	recover		P/01.3 N3 step 0
 -peers	list:id@addr/addr	-	-	true	recover		P/01.3 N3 recover
 -door	bool	false	off	false	daemon	"-raft" in f || "-raft-bind" in f || "-bootstrap" in f || "-join" in f || "-group-size" in f	P/01.3 N1.3 door; P/01.3 N1.3 box
--voters	list:id@addr	-	-	"-door" in f	daemon		P/01.3 N1.3 door; ADR-0125 addendum (2) item 3
+-voters	list:id@addr	-	-	"-door" in f	daemon		P/01.3 N1.3 door
 -tuning	enum:default|lan|slow	default	default	false	daemon		P/01.3 N1.3 tuning
 -leader-wait	duration	5s	5s	false	daemon		P/01.3 N1.3 leader_wait
--max-value	bytes:>0	524288	512KiB	false	daemon,import,restore		P/01.1 N4; B7; P/01.3 N1.3 import
+-max-value	bytes:>0	524288	512KiB	false	daemon,import,restore		P/01.1 N4; P/01.3 N1.3 import
 -max-body	bytes:>0	1048576	1MiB	false	daemon		P/01.1 N2
 -max-conns	int:1..	64	64	false	daemon		P/01.1 N4
 -api-conns	int:1..	32	32	false	daemon		P/01.1 N4
 -api-per-address	int:1..	8	8	false	daemon		P/01.1 N4
 -index-base	int:0..	0	0	false	import		P/01.3 N1.3 import
--groups	bool	false	off	false	rights		P/01.3 N1.3 admin_ops; ADR-0125 addendum (2) item 1
---from	file	-	-	true	restore,import		P/01.3 N1.3 admin_ops; ADR-0125 addendum (2) item 1
+-groups	bool	false	off	false	rights		P/01.3 N1.3 admin_ops
+--from	file	-	-	true	restore,import		P/01.3 N1.3 admin_ops

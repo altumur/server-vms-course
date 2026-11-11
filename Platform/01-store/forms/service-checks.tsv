@@ -1,0 +1,25 @@
+# The order of checks of a request to the service doors of the store daemon (P/01.3 N2). The norm refers to this table and does not repeat it in prose.
+# The input of the table is the request after the HTTP framing of P/01.1 N2.1 and before its body is parsed as JSON: one object
+# {method, path, query, size, role_header}. Rows in the order of n: the first row whose when is true gives the refusal code, kind and the fields fault;
+# none — the request goes on to the body form of its door (P/01.3 N2) and then to the membership and state checks of its procedure (P/01.3 N3).
+# The paths /v1/write, /v1/rights, /v1/get and /v1/list belong to chapters 1.1 and 1.2: of this table only the rows of the frame, the route and the method
+# of their owners apply to them; their identity, body and rights checks follow the order of their owners (P/01.1 N2.1, forms/write-checks.tsv, P/01.2 N3).
+# The table does not know the mode: on a box a role header on any socket, admin.sock included, and a forwarding from the role configstore-door on -api are 403
+# by P/01.2 N1.3 identity and P/01.3 N1.3 box, before the body; these rows are not in the table.
+# op — * for every row: the request object has no op. group and each are empty: the table has no lists.
+# when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
+#var body dyn — the request object: method — the HTTP method as sent (GET, POST, HEAD, …); path — the path of the request target, byte for byte; query — the string after ?, "" without one, no row reads it; size — the number of entity-body bytes, 0 without a body; role_header — the value of the role forwarding header, null without one
+#var sock string — the caller: admin — admin.sock; <role> — the socket <role>.sock of a role; configstore, configstore-door — the verified role of the certificate of a daemon of the group on -api (P/01.3 N1.6)
+#var lone list<string> — not read by this table
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#lim BODY_LIMIT — P/01.3 N1.3 the flag -max-body: the effective entity-body read limit of every request, whatever the method
+# id — the stable address of the row: sc-<check>, apart from the order n; not renumbered
+n	id	op	group	each	check	when	code	kind	fault	norm
+1	sc-service_body_limit	*			service_body_limit	body.size > lim.BODY_LIMIT	413	toolarge	{"limit": lim.BODY_LIMIT}	P/01.3-R221
+2	sc-service_no_route	*			service_no_route	!(body.path in ["/v1/status", "/v1/join", "/v1/leave", "/metrics", "/v1/copy", "/v1/write", "/v1/rights", "/v1/get", "/v1/list"])	404	badrequest		P/01.3-R221; P/01.1 N2.1
+3	sc-no_route	*			no_route	(body.path == "/v1/write" && body.method != "POST") || (body.path == "/v1/rights" && body.method != "GET")	404	badrequest		P/01.3-R221; P/01.1 N2.1; P/01.2 N2
+4	sc-service_method	*			service_method	(body.path in ["/v1/status", "/metrics"] && body.method != "GET") || (body.path in ["/v1/join", "/v1/leave"] && body.method != "POST")	405	badrequest		P/01.3-R221
+5	sc-copy_method	*			copy_method	body.path == "/v1/copy" && body.method != "GET"	405	badrequest		P/01.3-R033; P/01.3-R240
+6	sc-identity	*			identity	body.path in ["/v1/status", "/v1/join", "/v1/leave", "/metrics", "/v1/copy"] && body.role_header != null && !(sock in ["admin", "configstore", "configstore-door"])	403	forbidden		P/01.3-R072; P/01.2 N3 «check» steps 1–2
+7	sc-join_role_socket	*			join_role_socket	body.path in ["/v1/join", "/v1/leave"] && !(sock in ["admin", "configstore"])	403	forbidden		P/01.3-R016; P/01.3-R059
+8	sc-copy_admin_only	*			copy_admin_only	body.path == "/v1/copy" && sock != "admin"	403	forbidden		P/01.3-R033; P/01.3-R237

@@ -8,13 +8,13 @@ This file is for the agent (or person) who writes code from the lesson. The expl
 
 Implement the process `domain` of the domain holder in the language `<LANG>`: the door of the process, the domain trust, the acceptance of reports, the view and
 the shadow report, people and grants, books, placement and edits, the issue of tokens, the term and the move, the shared document and the alarm
-history, the queue — by the eleven chapters of the lesson; pass the N5 acceptance of the chapters and close their readiness checklists. 89 norms in all:
+history, the queue — by the eleven chapters of the lesson; pass the N5 acceptance of the chapters and close their readiness checklists. 90 norms in all:
 
 <!-- checklist-inventory:begin -->
 
 | chapter | ids |
 |---|---|
-| 8.0 | `P/08.0-01`, `P/08.0-02`, `P/08.0-03`, `P/08.0-04` |
+| 8.0 | `P/08.0-01`, `P/08.0-02`, `P/08.0-03`, `P/08.0-04`, `P/08.0-05` |
 | 8.1 | `P/08.1-01`, `P/08.1-02`, `P/08.1-03`, `P/08.1-04`, `P/08.1-05`, `P/08.1-06`, `P/08.1-07`, `P/08.1-08`, `P/08.1-09`, `P/08.1-10`, `P/08.1-11` |
 | 8.2 | `P/08.2-01`, `P/08.2-02`, `P/08.2-03`, `P/08.2-04`, `P/08.2-05`, `P/08.2-06`, `P/08.2-07`, `P/08.2-08`, `P/08.2-09`, `P/08.2-10`, `P/08.2-11` |
 | 8.3 | `P/08.3-01`, `P/08.3-02`, `P/08.3-03`, `P/08.3-04`, `P/08.3-05`, `P/08.3-06`, `P/08.3-07`, `P/08.3-08`, `P/08.3-09`, `P/08.3-10`, `P/08.3-11`, `P/08.3-12`, `P/08.3-13`, `P/08.3-14` |
@@ -28,7 +28,7 @@ history, the queue — by the eleven chapters of the lesson; pass the N5 accepta
 
 <!-- checklist-inventory:end -->
 
-The inventory is built from the readiness checklists below; all 89 full ids must occur exactly once. P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).
+The inventory is built from the readiness checklists below; all 90 full ids must occur exactly once. P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).
 
 The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
 ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster

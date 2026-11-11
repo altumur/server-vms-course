@@ -24,6 +24,27 @@ of these bytes, `rev` `"1"`; the rights file `{rights}` is the ready input of ch
 steps 9–10: the copy `backup` carries the manifest rows). The resource, the controller, the console and the workers are not needed by the chapter. The stand store of the chapter is
 a single member of a box without `-api` (N1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this (judge-only: sc. 08 step 8, sc. 15 steps 1–2, sc. 11 steps 9–10, sc. 16; checks P/01.3-R006, P/01.3-R016, P/01.3-R017).
 
+## Directives of chapter 1.3
+
+Only the acceptance of P/01 uses the words below; the [dictionary of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) names each of them with a reference to this section. «Stand», «Role sockets» and «Terms of the stand» are those of the common acceptance README. The words of chapters 1.1 and 1.2 (`@hold`, `@by` and the others) are in the [acceptance README of chapter 1.1](../1/README.md#directives-of-chapters-11-and-12).
+
+**Door.**
+
+| Door | Where |
+|---|---|
+| `restored` | the door through `admin.sock` of the store instance which the last `@import store` of the scenario brought up |
+
+**Stand directives** — not HTTP; the answer is `ok` or a refusal of the runner.
+
+| Form | Meaning |
+|---|---|
+| `@restart store` | SIGTERM to the store, wait for the exit, start it with the same command with the same `{data}`, wait for its readiness by the rule of «Role sockets» |
+| `@sigterm store` | on the stand of one store: SIGTERM to the process group of the store; the expectation `ok` — the process exited, `@exit <code>` — it exited with this code, not by a signal |
+| `@backup store <name>` | take a copy of the stand store with the command `backup` of «Stand» into a file of the runner `<name>` (it lives until the end of the scenario); `ok` — code 0 and the file in the form of P/01.3 N1.3 `copy` (a header, Row rows, keys in ascending byte order); otherwise a refusal of the runner |
+| `@backup store <name> in-data` | the command `backup` of «Stand» with `{file}` = `{data}/configstore/<name>` — inside the data directory of the stand store (`-dir`); the expectation `refused` — code ≠ 0 and there is no file `{data}/configstore/<name>` |
+| `@import store <file>` / `@import store backup <name>` | the input is a file from the acceptance directory of the lesson or a copy `@backup store <name>` of this scenario; the runner takes a new empty `{data}`, calls the command `import` of «Stand» with `{index_base}` — the `index` of the header of the input (the header is not readable — `0`), then on this `{data}` starts a second store instance with the command of «Stand» with its own `{socket}` and waits for its readiness by the rule of «Role sockets» — its door is `restored`. The expectation `ok` — the code of `import` is 0; `refused` — code ≠ 0 (that the directory remained without rows is seen by the following steps `restored`). The stand store is not touched |
+| `@foreign store nolabel` / `@foreign store otherlabel` | a second store instance with the same command with a new directory `{data}` and its own `{socket}`; before the start the runner puts into the store directory `{data}/configstore`: `nolabel` — a file `rows` with the bytes `x` and without `FORMAT`; `otherlabel` — `FORMAT` with the bytes `{"format":"w2c-acceptance-foreign","version":1,"impl":"runner"}`. `ok` — the process exited with code 2 no later than 10 s and the directory tree (names, bytes) is the same as before the start; otherwise a refusal of the runner. The stand store is not touched (P/01.3 N1.3 `format`) |
+
 ## Batch and restart (sc. 30)
 
 The batch `op: batch` on the stand store (P/01.1 N3 «write batch», ADR-0094 B9): the rows and the `id` memory survive `@restart store`, a replay answers
@@ -71,7 +92,7 @@ the map of a single member of a box is `{}` (N1.3 `-api`, `box`; N2 `GET /v1/sta
 
 The group stand is the section «Store group stand» of the common README: the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
 [`inputs/group.json`](inputs/group.json) (judge-only: `acceptance/3/inputs/group.json`, kits by P/01.3-R009, P/01.3-R010, P/01.3-R011) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
-(the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it. The box store build
+(the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it. The size of the stand group and the transport of its traffic are the keys `stand_size` and `transport` of [`forms/group.tsv`](../../forms/group.tsv). The box store build
 (`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31 are not_applicable for it, not red; without
 the marker they are not executed (common README, «Store group stand») (judge-only: sc. 07, 17, 18, 25–29, 31; checks P/01.3-R006, P/01.3-R007, P/01.3-R011, P/01.3-R016, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R022, P/01.3-R032, P/01.2-R025, P/01.1-R062).
 

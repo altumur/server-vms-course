@@ -1,0 +1,34 @@
+# Inputs of the table read-checks.tsv: the generator builds tests from them, check_spec checks every input against the table.
+# case: only — row n is violated first and no later evaluable row is violated; pair — row n is violated first and the nearest later evaluable row too;
+# nopair — row n has no pair, body says why; pass — no row is violated (n is 0). Evaluable — whose when evaluates on this input without a CEL error.
+# Only a row after which no row of this input is evaluable, or the last row of the table, has no pair.
+# body — the request object of the table; a lone surrogate \udc80–\udcff in a query value stands for a decoded byte that is not UTF-8.
+# Parameter values and rights are the probes' own, small ones (the norm has only the #lim names of the table):
+#lim BODY_LIMIT 16
+#allow reader read acc/
+#allow admin *
+n	case	sock	body
+0	pass	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"], "x": ["1", "2"]}, "size": 0}
+0	pass	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/\u0000"]}, "size": 16}
+0	pass	reader	{"method": "GET", "path": "/v1/list", "query": {}, "size": 0}
+0	pass	reader	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["zzz/\udc80/../"]}, "size": 3}
+0	pass	reader	{"method": "POST", "path": "/v1/write", "query": {"key": ["a", "b"]}, "size": 5, "role_header": "admin"}
+1	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 17}
+1	only	reader	{"method": "POST", "path": "/v1/write", "query": {}, "size": 17}
+1	pair	reader	{"method": "PATCH", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 17}
+2	only	reader	{"method": "PATCH", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0}
+2	only	reader	{"method": "HEAD", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0}
+2	pair	reader	{"method": "POST", "path": "/v1/list", "query": {"prefix": ["acc/", "acc/"]}, "size": 0}
+3	only	reader	{"method": "GET", "path": "/v1/get", "query": {}, "size": 0}
+3	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a", "acc/a"]}, "size": 0}
+3	only	reader	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["", ""]}, "size": 0}
+3	pair	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["/a", "acc/a"]}, "size": 0}
+4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": [""]}, "size": 0}
+4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["a/../b"]}, "size": 0}
+4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/\udcff"]}, "size": 0}
+4	pair	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["/a"]}, "size": 0, "role_header": "console"}
+5	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "admin"}
+5	only	reader	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "reader"}
+5	pair	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": "admin"}
+6	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0}
+6	nopair	reader	the last row; a listing has no rights row

@@ -1,0 +1,30 @@
+# The fields of the answer of GET /v1/status (P/01.3 N2). The norm refers to this table and does not repeat it in prose; the JSON schema Status
+# of the contract (spec/01-store.api.openapi.yaml) carries the same fields.
+# A row is a field of the answer object. required_when — the field MUST be present when the expression is true; allowed_when — the field MAY be present
+# only when the expression is true, otherwise it is absent. type — the JSON form of the value; value_rule — what the value is, by the mode and the role.
+# required_when and allowed_when are CEL. Variables:
+#var mode string — box (the store of a box, one voter without raft), group (a voter of a raft group, a group of one included), door (a door without a vote)
+#var role string — the Raft state of the instance: leader, follower, candidate, shutdown; a box is leader; a door has none, ""
+#var ahead double — by how many seconds the admission time of the last record is ahead of the clock of this instance
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#lim CLOCK_SKEW — P/01.1 N0 «Cluster clocks»; the value — forms/runtime-constants.tsv
+# MemberId — a member identifier of P/01.3 N2 (1–128 ASCII characters: the first a letter/digit, then letters/digits/_/./-). uint64 — a JSON integer 0 … 2^64 − 1, exact.
+field	type	required_when	allowed_when	value_rule	norm
+id	MemberId	true	true	-id of this instance	P/01.3-R211
+state	Leader | Follower | Candidate | Shutdown | Door	true	true	box: Leader; door: Door; group: the Raft state of the voter	P/01.3-R211; P/01.3-R169
+leader	string	true	true	the -api address of the leader, as in members; empty if the leader is unknown or was started without -api; box: its own -api address, empty without -api	P/01.3-R211; P/01.3-R169
+leader_id	string	true	true	the id of the leader; empty if the leader is unknown; box: its own id	P/01.3-R211; P/01.3-R169
+term	uint64	true	true	door: 0; box: 1	P/01.3-R211; P/01.3-R169
+commit	uint64	true	true	door: 0	P/01.3-R211
+applied	uint64	true	true	door: 0	P/01.3-R211
+voters	array of MemberId	true	true	the ids of the voters; box: [<id>]	P/01.3-R211; P/01.3-R169
+members	map MemberId → non-empty string	true	true	id → the -api address; a member without -api is not in the map, the map can be {}; a value is never empty; box: {<id>: <api>}, without -api {}	P/01.3-R211; P/01.3-R169
+tls	boolean	true	true	-	P/01.3-R211
+max_value	integer ≥ 1	true	true	this instance's effective row-weight ceiling in bytes, the value of -max-value (the row weight of P/01.1), separately from -max-body; the acceptance stand parameters are P/01.3 N5	P/01.3-R211
+max_body	integer ≥ 1	true	true	this instance's actual configured -max-body in entity-body bytes (including JSON whitespace and an actual LF, excluding HTTP framing); its default is owned only by forms/daemon-flags.tsv; not derived from max_value; the installer reads it for the static finite-profile check before writes; a local observation, not a confirmation by the majority	P/01.3-R211
+base	uint64	false	true	-	P/01.3-R211
+again	uint64	false	true	-	P/01.3-R211
+role	string	mode == "door"	true	door: door	P/01.3-R211
+last_snapshot	uint64	false	true	-	P/01.3-R211
+out	array of MemberId	false	true	-	P/01.3-R211
+admission_ahead	number > CLOCK_SKEW	(mode == "box" || role == "leader") && ahead > double(lim.CLOCK_SKEW)	(mode == "box" || role == "leader") && ahead > double(lim.CLOCK_SKEW)	by how many seconds the admission time of the last record is ahead of the clock; a follower and a door without a vote have no field	P/01.3-R109; P/01.3-R211

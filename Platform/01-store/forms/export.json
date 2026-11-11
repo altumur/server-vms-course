@@ -287,6 +287,26 @@
       "basis": "ADR-0135 addendum (14) item 2 (P02.51): the M and J lists of the files of P/01; judge-only as the common filter Platform/common/export-model-filter.json."
     },
     {
+      "path": "Platform/01-store/forms/group.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/metrics.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.probes.tsv",
+      "disposition": "judge_only",
+      "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -297,6 +317,16 @@
       "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
+      "path": "Platform/01-store/forms/rights-checks.probes.tsv",
+      "disposition": "judge_only",
+      "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/rights-checks.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+    },
+    {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -305,6 +335,16 @@
       "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
       "disposition": "judge_only",
       "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.probes.tsv",
+      "disposition": "judge_only",
+      "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -325,6 +365,11 @@
       "path": "Platform/01-store/forms/stages.tsv.schema.json",
       "disposition": "judge_only",
       "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/status-fields.tsv",
+      "disposition": "model_and_judge",
+      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
     },
     {
       "path": "Platform/01-store/forms/targets.routing.tsv",
@@ -864,6 +909,26 @@
       "basis": "ADR-0135 addendum (14) item 2 (P02.51): the M and J lists of the files of P/01; excluded as the common filters, not engine input."
     },
     {
+      "path": "Platform/01-store/forms/group.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/metrics.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.probes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/read-checks.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
@@ -874,6 +939,16 @@
       "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
+      "path": "Platform/01-store/forms/rights-checks.probes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/rights-checks.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
       "path": "Platform/01-store/forms/runtime-constants.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
@@ -882,6 +957,16 @@
       "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
       "disposition": "exclude",
       "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.probes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
     },
     {
       "path": "Platform/01-store/forms/stages.kit.tsv",
@@ -902,6 +987,11 @@
       "path": "Platform/01-store/forms/stages.tsv.schema.json",
       "disposition": "exclude",
       "basis": "OBSH.39.1: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/status-fields.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
     },
     {
       "path": "Platform/01-store/forms/targets.routing.tsv",

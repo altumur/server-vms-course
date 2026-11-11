@@ -889,3 +889,4 @@ M11/11 sc. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows o
 - (new)	P/04-30	4	leaving silent with a live worker and a silent resource of its server; the term of the fate on drill 05	split off P/04-13; ADR-0130 addendum (19) item 6
 - (new)	P/04-31	4	the order on the host: systemd does not raise the instance, a number above want stopped by the script (R28)	split off P/04-14; ADR-0130 addendum (19) item 6
 - (new)	P/04-32	4	the lifecycle of the controller process: READY, WATCHDOG at decision boundaries, SIGTERM, Restart by the P/02.4 unit	raised from lifecycle.md «Signals and readiness»; ADR-0130 addendum (19) item 6; the Architect's answer on P04.21, question 5 (b)
+- (new)	P/08.0-05	8.0	the order of output arrays — scope lessons 8–10	moved from P/01.1-24 (withdrawn); rule N0 P/08.0 (P/08.0-R011, P/08.0-R012); ADR-0133 addendum (70) item 2, addendum (71) item 2

@@ -1,16 +1,16 @@
-# The stages of the implementation of lesson P/01 (ADR-0126, addendum (1)): one possible order, a plan, not a norm. The norms are read in full
+# The stages of the implementation of lesson P/01: one possible order, a plan, not a norm. The norms are read in full
 # by the rule of the implementer (the implementation README, «Inputs»); the advice is in the README, the checklist — «Done when».
-# gate — a list of checks separated by «;», the stage is closed when all of them hold (ADR-0126 addendum (7) item 3); a check is
+# gate — a list of checks separated by «;», the stage is closed when all of them hold; a check is
 # <kind>:<argument>[:<argument>] without spaces: tests:<chapter>:<scenarios|*>[:seams] — the tests of kit B (the part stagetests) from the
-# named scenarios of acceptance/<chapter>/scenarios.tsv, translated by their prefix, or of seams.tsv with :seams (ADR-0125 addendum (4)
-# items 1, 2, 7; ADR-0126 addendum (7) items 1, 2); vectors:<package>
+# named scenarios of acceptance/<chapter>/scenarios.tsv, translated by their prefix, or of seams.tsv with :seams;
+# vectors:<package>
 # — the vectors of the lesson through the vector command of the implementation; build — the build of the profile; accept:<chapter>:<scenarios|*>
 # — the named scenarios of acceptance/<chapter>/scenarios.tsv (comma-separated) or * (all applicable) pass whole; named scenarios run without
 # the chapter-wide probes of the stand (the common acceptance README «Instance»), * — the full run of the target. A stage is closed when its
 # gate and the gates of all former stages hold. weight — the relative weight 1–5; kit — the parts of kit B that close the stage whole (checked by the first move; red — a defect of the kit, stop); parts — the parts of kit B
 # the stage uses (the stage is given to the model as usual, the parts are named in the note of the milestone); both comma-separated of writecheck,
-# door, flags, refusals, vectors, stagetests, launch (the generators of ADR-0125; launch — the daemon frame, ADR-0083 addendum (95)
-# item 3), - — none (ADR-0126 addenda (2) item 1, (4), (7) item 4);
+# door, flags, refusals, vectors, stagetests, launch (the generators of kit B; launch — the daemon frame),
+# - — none;
 # depends — the n of former stages, comma-separated, - — none; when — CEL over the keys of the profile, empty — always applicable.
 # The one-box daemon work is split into daemon_doors (24 acceptance steps, weight 1), then daemon_copy (51 steps, weight 3).
 # Functional gates and engineering group preparation are separate from production qualification: spec/production-acceptance.md.

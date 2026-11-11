@@ -1,0 +1,40 @@
+# Inputs of the table service-checks.tsv: the generator builds tests from them, check_spec checks every input against the table.
+# case: only — row n is violated first and no later evaluable row is violated; pair — row n is violated first and the nearest later evaluable row too;
+# nopair — row n has no pair, body says why; pass — no row is violated (n is 0). Evaluable — whose when evaluates on this input without a CEL error.
+# Only a row after which no row of this input is evaluable, or a row that no later row can join, has no pair.
+# Parameter values are the probes' own, small ones (the norm has only the #lim names of the table):
+#lim BODY_LIMIT 8
+n	case	sock	body
+0	pass	console	{"method": "GET", "path": "/v1/status", "query": "", "size": 0, "role_header": null}
+0	pass	console	{"method": "GET", "path": "/metrics", "query": "", "size": 8, "role_header": null}
+0	pass	admin	{"method": "POST", "path": "/v1/join", "query": "", "size": 8, "role_header": null}
+0	pass	configstore	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
+0	pass	admin	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": null}
+0	pass	console	{"method": "POST", "path": "/v1/write", "query": "x=1", "size": 4, "role_header": "admin"}
+0	pass	console	{"method": "GET", "path": "/v1/rights", "query": "", "size": 0, "role_header": null}
+0	pass	console	{"method": "HEAD", "path": "/v1/get", "query": "key=a", "size": 0, "role_header": null}
+1	only	console	{"method": "GET", "path": "/v1/status", "query": "", "size": 9, "role_header": null}
+1	only	admin	{"method": "POST", "path": "/v1/join", "query": "", "size": 100, "role_header": null}
+1	pair	console	{"method": "PUT", "path": "/v1/nothing", "query": "", "size": 9, "role_header": null}
+2	only	console	{"method": "GET", "path": "/v1/status/", "query": "", "size": 0, "role_header": "console"}
+2	only	admin	{"method": "HEAD", "path": "/v2/status", "query": "", "size": 0, "role_header": null}
+2	nopair	console	the path is outside the table: every later row names a path of the table
+3	only	console	{"method": "GET", "path": "/v1/write", "query": "", "size": 0, "role_header": null}
+3	only	console	{"method": "HEAD", "path": "/v1/rights", "query": "", "size": 0, "role_header": "console"}
+3	nopair	console	the paths /v1/write and /v1/rights: no later row names them
+4	only	console	{"method": "HEAD", "path": "/v1/status", "query": "", "size": 0, "role_header": null}
+4	only	console	{"method": "POST", "path": "/metrics", "query": "", "size": 8, "role_header": null}
+4	only	admin	{"method": "GET", "path": "/v1/join", "query": "", "size": 0, "role_header": null}
+4	only	admin	{"method": "PUT", "path": "/v1/leave", "query": "", "size": 0, "role_header": null}
+4	nopair	console	the next row names only /v1/copy, which this row does not name
+5	only	admin	{"method": "HEAD", "path": "/v1/copy", "query": "", "size": 0, "role_header": null}
+5	pair	console	{"method": "POST", "path": "/v1/copy", "query": "", "size": 0, "role_header": "admin"}
+6	only	console	{"method": "GET", "path": "/v1/status", "query": "", "size": 0, "role_header": "admin"}
+6	only	writer	{"method": "GET", "path": "/metrics", "query": "", "size": 8, "role_header": "console"}
+6	pair	console	{"method": "POST", "path": "/v1/join", "query": "", "size": 0, "role_header": "admin"}
+7	only	console	{"method": "POST", "path": "/v1/join", "query": "", "size": 8, "role_header": null}
+7	only	configstore-door	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
+7	nopair	console	the next row names only /v1/copy, which this row does not name
+8	only	console	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": null}
+8	only	configstore	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": "console"}
+8	nopair	console	the last row of the table

@@ -24,6 +24,36 @@ doors of the common acceptance README. Specific to chapter 1.1:
   `key` included, are not admitted (the common rule of `error` is kept). For a weight refusal the fields `key` and `size`
   are mandatory and are compared as before.
 
+## Directives of chapters 1.1 and 1.2
+
+Only the acceptance of P/01 uses the words below; the [dictionary of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) names each of them with a reference to this section. «Stand», «Role sockets» and «Terms of the stand» are those of the common acceptance README. The words of chapter 1.3 are in its [acceptance README](../3/README.md#directives-of-chapter-13).
+
+**Request.**
+
+| Form | Meaning |
+|---|---|
+| `@wire <text>` | raw HTTP: in the place of the method (`<door> @wire <text>`) the step opens a new connection to its door and writes exactly the bytes of the text, nothing added: no header, no `Content-Length`; the escapes `\r`, `\n`, `\t`, `\\` and `\xHH` (two hexadecimal digits) give one byte each and are read after the substitutions, another `\` is a data error of the table; the response is read as HTTP/1.1 on the same connection |
+| `@halfclose` | the last word of a `@wire` request, after one space, not one of its bytes: after the bytes the judge closes the write side of the connection and goes on reading |
+| `@rep(N,<text>)` | a substitution in any part of the request: the text repeated N times; the text runs to the first `)` and holds none |
+| `@profile(<name>)` / `@profile+1(<name>)` | a substitution in any part of the request, also in the place of N of `@big(N)` and `@rep(N,<text>)`: the value of the integer key `<name>` of the profile field `keys` (`Platform/common/acceptance/forms/profile-keys.tsv`), or this value plus 1, in decimal; there is no other arithmetic; an absent key leaves the step `not_executed` with its name as the reason |
+| `@pause(<seconds>)` | inside the bytes of a `@wire` request: the judge stops writing for that many seconds, a decimal number, and then writes the rest; meanwhile it reads the connection |
+
+**Stand directives** — not HTTP; the answer is `ok` or a refusal of the runner.
+
+| Form | Meaning |
+|---|---|
+| `@rights store <file\|none>` | SIGTERM to the stand store, wait for the exit, start it with the same command with the same `{data}` and the rights file `<file>` (the path from the acceptance directory of the lesson; the runner puts it into `{rights}`) or without `-rights` (`none`: in the command template of «Stand» the runner removes the occurrence `-rights {rights}` or `-rights={rights}` — the flag with the substitution `{rights}`, not any word `-rights`: in a composite command it may belong not to the store — and changes nothing else; `<file>` — the same `{rights}` points to it; there is no such occurrence in the template or there is more than one — the scenario is not_executed with a reason); the expectation: `ok` — the store is ready by the rule of «Role sockets» (`none` — without a rights file); the runner sends no request for this (`/v1/status` of chapter 1.3 may still be a stub at the stage `rights`); `@exit 2` — the process exited with code 2 no later than 10 s (the file is not in the form of P/01.2 N1.2, N4); the file of the previous row does not carry over to the following scenarios |
+| `@hold <door> <N>` | open N connections to the door and write nothing on them; they stay open until the end of the scenario, then the judge closes them; the expectation `ok` — all N were accepted |
+| `@io store $<name>` | bind the name to the number of bytes that the processes of the store caused to be written to storage: the field `write_bytes` of `/proc/<pid>/io`, summed over the process group of the store; the expectation `ok`. When the judge cannot read this counter, for example under another account, the step and every step that compares the name are `not_executed` with the reason `io_counter_unreadable`, not red |
+
+**Expectation.**
+
+| Form | Meaning |
+|---|---|
+| `<code> @close …` | `@close` right after the code: after its response the implementation closes the connection, within the term of `@noreply`; the rest of the cell is judged as the expectation without `@close` |
+| `@noreply` | the whole expectation: no byte of a response arrives until the implementation closes the connection or the term of `@noreply` in «Terms of the stand» ends; a response is a mismatch |
+| `… @by(<seconds>)` | the last word of an expectation: the response, the close of `@close` or `@noreply`, or the exit after `@sigterm store` comes no later than that many seconds after the start of the step, instead of the term of `@noreply`; with `@noreply` the implementation must also close the connection within it. It is an upper bound: the judge records the resolution of its clock and of its scheduling separately and does not widen the bound |
+
 ## The instance of the chapter
 
 An additional check of the full key (P/01.1-16,22) runs beyond the scenario TSV on a separate instance
@@ -56,7 +86,19 @@ The runner passes the bytes of the body from `request` after the substitutions, 
 [`seams.tsv`](seams.tsv) (judge-only: `acceptance/1/seams.tsv`) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`
 memory does not forget by time alone (P/01.1-11), equality and both sides of fractional admission-time bounds for put, delete and batch
 (P/01.1-25), the admission time retains its fraction when clocks go back and after a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
-restart (P/01.1-31). The runner executes them through the seam adapter, by the [normalization of the common acceptance README](../../../common/acceptance/README.md#p01-seam-normalization) (the directives `@clock`, `@reopen`, `@parallel` are defined there and in the header of the file). The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `seams:1.1:<scenarios>` in their `gate`.
+restart (P/01.1-31). The runner executes them through the seam adapter, by the [normalization below](#seam-normalization) (the directives `@clock`, `@reopen`, `@parallel` are defined there and in the header of the file). The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `seams:1.1:<scenarios>` in their `gate`.
+
+### Seam normalization
+
+P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/README.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.
+
+| `name` | Step | `input` | Observation |
+|---|---|---|---|
+| `store-http` | `GET` or `POST` | closed object: required `method` and `target` (the path with the query, as written in the step), optional `body` (the text of the body of the step as one string, absent when the step has none) | `{kind: "value", value: {"status": <integer>, "body": <string>}}`: the status and the whole response body |
+| `clock` | `@clock +N` or `@clock -N` | closed object `{"shift": <string>}`: the shift in the same syntax as the step | `{kind: "value", value: {}}` |
+| `reopen` | `@reopen` | `{}` | `{kind: "value", value: {}}` |
+
+`store-http` reaches the ordinary request handling of the store; it is not a new door. `clock` moves the controlled clock of the store by N seconds, cumulatively; the clock starts at 2000000000 and the implementation chooses how it is controlled. `reopen` closes the store and opens it again on the same data directory with the same clock. An HTTP step's `<code> <JSON body>` is compared as in the acceptance of chapter 1.1, and a directive's `ok` matches an empty object value. `@parallel K` follows the grammar of P/02 and the exception in that bridge. The `CALL` ports of P/01.3 are in its [acceptance README](../3/README.md).
 
 ## Additional check of the class of errors
 

@@ -1,4 +1,4 @@
-# The order of checks of a command and a batch POST /v1/write (P/01.1 N2.1; ADR-0120 item 2 (a)). The norm refers to this table and does not repeat it in prose.
+# The order of checks of a command and a batch POST /v1/write (P/01.1 N2.1). The norm refers to this table and does not repeat it in prose.
 # The input of the table is the body already parsed as JSON by N2.1 (HTTP framing, the body limit, RFC 8259, JSON_DEPTH — before the table). Rows in the order of n:
 # the first row whose when is true gives the refusal code, kind and the fields fault; none — the command goes on to N3. The table does not read the store state (cas and guard by value, the id memory) — that is N3.
 # op — which commands the row applies to: * — all, otherwise a comma list of values of body.op. group — consecutive rows with one group form a group:
@@ -15,7 +15,7 @@
 #fn weight(map) -> int — the weight of items of N1: the sum of UTF-8 byte lengths of all names and values
 #fn finite(double) -> bool — finite in binary64 (1e400 is not)
 #fn allowed(string, string, string) -> bool — full permission for the effective role, operation read | write | delete and key by P/01.2 N3 «check», including never and admin/internal-role exceptions; not only the ordinary-role file evaluator
-# id — the stable address of the row (ADR-0122 addendum (1) item 4): wc-<check> (a check name repeated at op batch — wc-batch_<check>), apart from the order n; not renumbered
+# id — the stable address of the row: wc-<check> (a check name repeated at op batch — wc-batch_<check>), apart from the order n; not renumbered
 n	id	op	group	each	check	when	code	kind	fault	norm
 1	wc-body_object	*			body_object	type(body) != map	400	badrequest		P/01.1 N2.1
 2	wc-op	*			op	!has(body.op) || type(body.op) != string || !(body.op in ["put", "delete", "batch", "floor"])	400	badrequest		P/01.1 N4
