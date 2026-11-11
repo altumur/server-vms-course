@@ -27,6 +27,7 @@ P/03.7-R011	spec/03.7-worker.norms.md#N1.6	reconciliation of M11; log of cammeta
 P/03.7-R011	spec/03.7-worker.norms.md#N1.6	stage A, A3	2026-10-19	 (stage A, A3)
 P/03.7-R017	spec/03.7-worker.norms.md#N3	review of stage B 3–5, V1	2026-10-20	; review of stage B 3–5, V1
 P/03.7-R018	spec/03.7-worker.norms.md#N3	ADR-0110 addendum (23) item 2	2026-11-03	 (ADR-0110 addendum (23) item 2)
+P/03.7-R019	spec/03.7-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.
 P/03.7-R022	spec/03.7-worker.norms.md#N5	move of the acceptance of M11/05: former sc. 04	2026-10-20	 (former M11/05 sc. 04)
 P/03.7-R022	spec/03.7-worker.norms.md#N5	move of the acceptance of M11/02: former sc. 12	2026-10-20	 (the rows of former sc. 12 of the acceptance of M11/02)
 -	spec/03.7-worker.norms.md#implementation-decides	move of M11/7: former item 2 of «Implementation decides»	2026-10-17	 (formerly item 2 of «Implementation decides» M11/7)

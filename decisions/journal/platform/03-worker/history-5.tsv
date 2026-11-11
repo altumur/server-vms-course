@@ -4,6 +4,7 @@ P/03.5-R009	spec/03.5-worker.norms.md#N3	reconciliation of python and go M10/6�
 P/03.5-R009	spec/03.5-worker.norms.md#N3	stage C guess W03-G02; Architect's decision 2026-10-23	2026-10-23	; the stage C guess W03-G02, the Architect's decision of 2026-10-23
 P/03.5-R009	spec/03.5-worker.norms.md#N3	C03-PLACE-SEALED-LEAVE-01	2026-11-01	, C03-PLACE-SEALED-LEAVE-01
 P/03.5-R009	spec/03.5-worker.norms.md#N3	ADR-0091 addendum (9) items 5–6, addendum (10)	2026-10-23	 (ADR-0091 addendum (9) items 5–6, addendum (10))
+P/03.5-R012	spec/03.5-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.
 P/03.5-R016	spec/03.5-worker.norms.md#N5	reconciliation of python and go M10/6–11, S2, S19	2026-10-20	 (S2, S19)
 P/03.5-R016	spec/03.5-worker.norms.md#N5	moved from N5 of M10/7; reconciliation of python and go M10/6–11	2026-10-20	 (moved from N5 of M10/7; reconciliation of python and go M10/6–11)
 -	spec/03.5-worker.norms.md#implementation-decides	moved from M10/7, part of its «Implementation decides» item 1 (item 1)	2026-10-20	(`LoadCredential`, a mount, a variable) — part of item 1 of «Implementation decides» of M10/7 (who else holds

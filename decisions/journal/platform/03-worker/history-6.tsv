@@ -54,6 +54,7 @@ P/03.6-R032	spec/03.6-worker.norms.md#N3	M10/8 N3 «States of an executed reques
 P/03.6-R032	spec/03.6-worker.norms.md#N3	Architect's decision 2026-10-20; review of stage B 6–7	2026-10-20	; (the Architect's decision of 2026-10-20, review of stage B 6–7)
 P/03.6-R032	spec/03.6-worker.norms.md#N3	ADR-0054 addendum 2026-10-11	2026-10-11	 (ADR-0054 addendum 2026-10-11)
 P/03.6-R032	spec/03.6-worker.norms.md#N3	ADR-0054 addendum 2026-10-17	2026-10-17	 (ADR-0054 addendum 2026-10-17)
+P/03.6-R033	spec/03.6-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.
 P/03.6-R036	spec/03.6-worker.norms.md#N5	numbering of the acceptance of M10/08	2026-10-20	The scenario numbers are the former acceptance numbers of M10/08.
 P/03.6-R038	spec/03.6-worker.norms.md#N5	ADR-0091	2026-10-22	ADR-0091; 
 P/03.6-R042	spec/03.6-worker.norms.md#N5	moved from P/08.5 N5; stage C guess W03-G04; Architect's decision 2026-10-23	2026-10-23	 (moved from P/08.5 N5 without a change of bytes; stage C guess W03-G04, the Architect's decision of 2026-10-23)

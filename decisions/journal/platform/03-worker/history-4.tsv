@@ -47,6 +47,7 @@ P/03.4-R025	spec/03.4-worker.norms.md#N3	analysis of review of stage B 3–5, �
 P/03.4-R026	spec/03.4-worker.norms.md#N3	moved to the door token contract; analysis of review of stage B 3–5, V1	2026-10-20	; moved there from this section; review analysis of stage B 3–5, V1
 P/03.4-R026	spec/03.4-worker.norms.md#N3	Architect's decision 2026-10-20, analysis of review of stage B 6–7	2026-10-20	; (the Architect's decision 2026-10-20, review analysis of stage B 6–7)
 P/03.4-R026	spec/03.4-worker.norms.md#N3	analysis of review of stage B 6–7, № 9	2026-10-20	; review analysis of stage B 6–7, № 9
+P/03.4-R027	spec/03.4-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.
 P/03.4-R030	spec/03.4-worker.norms.md#N5	comparison of python and go M10/3–5, item 24	2026-10-20	; comparison of python and go M10/3–5, item 24
 P/03.4-R030	spec/03.4-worker.norms.md#N5	the move plan of lesson 3, V2	2026-10-20	 (the move plan of lesson 3, V2)
 P/03.4-R030	spec/03.4-worker.norms.md#N5	VMS request «heartbeat and a garbled row» (sc. 13); second pass of the coverage audit of P/03 (sc. 36, 37)	2026-10-30	 (sc. 13 — VMS request «heartbeat and a garbled row»; sc. 36, 37 — the second pass of the coverage audit of P/03)
