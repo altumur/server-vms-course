@@ -2786,6 +2786,16 @@ class Check:
                 self.error(path, message)
             self.stats.update(stats)
 
+    def target_registry(self):
+        """ADR-0135 addendum (14): the acceptance target registry assembled from the common header and the rows of the lessons
+        (`target_registry`): common header in every source, unique ids, a lesson's rows owned by it, one routing row per
+        target in the same place."""
+        import target_registry
+        _targets, _routing, errors, stats = target_registry.assemble(self.root)
+        for path, message in errors:
+            self.error(path, message)
+        self.stats.update(stats)
+
     def check_forms(self):
         """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
         прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
@@ -3754,7 +3764,8 @@ def _platform_phase(args, names):
     for name in names:
         check.lesson((check.root / name).resolve())
     for method in ("registered_shared_lessons", "vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
-                   "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms"):
+                   "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms",
+                   "target_registry"):
         getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
     return check
