@@ -1,0 +1,126 @@
+word	scope	status	code	norm
+@absent	P01.243:51	есть	expect.go:347–351,423–424	AC/README.md:336
+@any	P01.243:51	есть	expect.go:421–422	AC/README.md:336
+@as	P01.243:51	есть	scen.go:78–89; scenrun.go:489–490,608–616	AC/README.md:274
+@backup	P01.243:51	есть вызов и checkCopyForm; полная схема копии не квалифицирована	directive.go:481–553	AC/README.md:297–298
+@big(	P01.243:51	есть	scenrun.go:422–425	AC/README.md:266
+@clock	P01.243:51	есть в швах	scenrun.go:1059–1062	AC/README.md:476–484
+@cut	P01.243:51	есть для store@id	directive.go:136–145	AC/README.md:650
+@exit	P01.243:51	есть	expect.go:60–66; directive.go:417–431,367–371; group.go:218–266	AC/README.md:330
+@file	P01.243:51	ожидание HTTP есть; директивы швов нет, F12	expect.go:126–128; scenrun.go:930–937,1065–1066	AC/README.md:345; P02/forms/README.md:78–82
+@file-fill	P01.243:51	есть	cmdrun.go:627–636	AC/README.md:437
+@foreign	P01.243:51	есть	directive.go:652–696	AC/README.md:300
+@group-setup	P01.243:51	есть; группа проверяется отдельным разбором	directive.go:130–131; group.go:112–165	AC/README.md:646
+@header	P01.243:51	есть	scen.go:91–99; scenrun.go:698–705,908–925	AC/README.md:275,343–344
+@import	P01.243:51	есть	directive.go:556–624	AC/README.md:299
+@mend	P01.243:51	есть для store@id	directive.go:136–145	AC/README.md:650
+@restart	P01.243:51	есть для store и store@id; не console	directive.go:281–309	AC/README.md:290,294,649
+@rev-delete	P01.243:51	есть	cmdrun.go:598–599	AC/README.md:432
+@rev-max	P01.243:51	есть	cmdrun.go:604–610	AC/README.md:434
+@rev-spoil	P01.243:51	есть	cmdrun.go:602–603	AC/README.md:433
+@row-spoil	P01.243:51	есть	cmdrun.go:611–619	AC/README.md:435
+@shell-put	P01.243:51	есть	cmdrun.go:620–626	AC/README.md:436
+@sigkill	P01.243:51	есть	directive.go:319–374	AC/README.md:285,648
+@sigterm	P01.243:51	есть	directive.go:319–374	AC/README.md:285,291,648
+@sleep	P01.243:51	есть	directive.go:42–48	AC/README.md:301
+@spoil	P01.243:51	row/row-index и подстановка есть; object не исполняется	directive.go:439–478; scenrun.go:371–380,454–466	AC/README.md:289,293,335
+@stderr	P01.243:51	есть	cmdrun.go:461–476	AC/README.md:438
+@store-op	P01.243:51	есть; группа проверяется отдельным разбором	directive.go:134–135; group.go:267–319	AC/README.md:651
+@store-start	P01.243:51	есть; группа проверяется отдельным разбором	directive.go:132–133; group.go:166–266	AC/README.md:647
+@time	P01.243:51	есть	expect.go:425–436	AC/README.md:337
+@tls	P01.243:51	есть; группа проверяется отдельным разбором	directive.go:146–147; group.go:320–459	AC/README.md:652–653
+@until	P01.243:51	частично; F05	directive.go:49–65; scenrun.go:746–772	AC/README.md:303
+@view-delete	P01.243:51	есть	cmdrun.go:596–597	AC/README.md:430
+@view-spoil	P01.243:51	есть	cmdrun.go:600–601	AC/README.md:431
+ASSERT	P01.243:51	есть	scen.go:113–119; scenrun.go:503–592	AC/README.md:276–277
+compare:object-sets	P01.243:51	есть	vecrun.go:814–826	Platform/common/vectors/wire.md:71
+compare:raw	P01.243:51	есть	vecrun.go:796–802,850–859	Platform/common/vectors/wire.md:71
+compare:set	P01.243:51	есть	vecrun.go:809–813,904–930	Platform/common/vectors/wire.md:71
+compare:subset	P01.243:51	есть	vecrun.go:803–808,860–903	Platform/common/vectors/wire.md:71
+compare:value	P01.243:51	есть	vecrun.go:834–837; jsonx/jsonx.go:Equal	Platform/common/vectors/wire.md:71
+route:extra	P01.243:51	есть	plan.go:211–212,233–314; scenrun.go:99–161	AC/forms/targets.routing.tsv:2,13
+route:l06	P01.243:51	есть	run.go:113–114; plan.go:191–210,256–257; scenrun.go:1227–1271	AC/forms/targets.routing.tsv:2,15
+route:l11	P01.243:51	есть	run.go:113–114; plan.go:191–210	AC/forms/targets.routing.tsv:2,16
+route:production	P01.243:51	есть dispatch; положительная квалификация отсутствует, см. INDEX	run.go:123–124; prodrun.go:101–127	AC/forms/targets.routing.tsv:2,18
+route:puts	P01.243:51	есть	run.go:117–118; cmdplan.go:68–81; cmdrun.go:350–639	AC/forms/targets.routing.tsv:2,32–33
+route:run	P01.243:51	частично; F12	plan.go:191–210; scenrun.go:967–1081	AC/forms/targets.routing.tsv:2,12,14,30,34,36
+route:store_group	P01.243:51	есть; F01/F03/F05	run.go:113–114; plan.go:191–210	AC/forms/targets.routing.tsv:2,17
+route:variants	P01.243:51	есть	run.go:119–120; cmdplan.go:82–170; cmdrun.go:643–822	AC/forms/targets.routing.tsv:2,37
+route:vector	P01.243:51	есть	run.go:121–122; vecplan.go:48–114; vecrun.go:497–607	AC/forms/targets.routing.tsv:2,20–27,31,35,38–53
+route:verdicts	P01.243:51	есть	run.go:115–116; cmdplan.go:50–67; cmdrun.go:152–232	AC/forms/targets.routing.tsv:2,28–29
+surface:stand	P01.243:51	есть	vecplan.go:65–67; vecrun.go:570–574,601–602	Platform/common/vectors/wire.md:15,37,49
+surface:vectors	P01.243:51	есть	vecplan.go:63–64; vecrun.go:559–569,587–600	Platform/common/vectors/wire.md:15,35,49
+@raw	другие формы словаря	есть	scen.go:212–218; http.go:250–277	AC/README.md:267
+@wire	другие формы словаря	есть	scen.go:223–253; http.go:73–154	AC/README.md:268
+@halfclose	другие формы словаря	есть	scen.go:225–228; http.go	AC/README.md:269
+@rep(	другие формы словаря	есть	scenrun.go:407–421	AC/README.md:270
+@profile(	другие формы словаря	есть; отсутствующий ключ → NOTEXEC	scenrun.go:400–406	AC/README.md:271
+@profile	другие формы словаря	форма @profile+1 есть; отдельного слова @profile без скобок нет	scenrun.go:400–406	AC/README.md:271
+@pause(	другие формы словаря	есть	scen.go:WirePieces; http.go:Exchange.Do	AC/README.md:272
+@key(	другие формы словаря	частично; F13	scenrun.go:710–715	AC/README.md:273
+@nokey	другие формы словаря	есть	scen.go:100–109; scenrun.go:710	AC/README.md:273
+@start	другие формы словаря	есть startRole для обычных ролей; domain/agent не исполнены	directive.go:148–149,763–876	AC/README.md:283,314,739,743,744,745,754,758,760
+@grow	другие формы словаря	не исполняется; общий отказ движка	directive.go:155; scen.go:33–47	AC/README.md:284
+@freeze	другие формы словаря	есть SIGSTOP и автовозврат; полная квалификация лимита вне ревью	directive.go:100–119	AC/README.md:286
+@thaw	другие формы словаря	есть SIGCONT	directive.go:100–119	AC/README.md:286
+@put	другие формы словаря	object не исполняется	directive.go:152–153,473–478	AC/README.md:288
+@rights	другие формы словаря	есть; после ожидаемого exit2 F04	directive.go:120–121,376–436	AC/README.md:292
+@append	другие формы словаря	есть event/event-raw; не исследован доменный on	directive.go:150–151,698–761	AC/README.md:295,296,688,689
+@together	другие формы словаря	есть конкурентные обмены; квалификация порядка последних байтов вне ревью	directive.go:158–211	AC/README.md:302,605
+@hold	другие формы словаря	есть	directive.go:68–84	AC/README.md:304
+@io	другие формы словаря	есть /proc counter и unreadable	directive.go:213–253	AC/README.md:305
+@manual	другие формы словаря	учёт без исполнения, not_applicable	directive.go:40–41	AC/README.md:306
+@install	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:317,738
+@noreply	другие формы словаря	есть	expect.go; scenrun.go:748–754,843–869	AC/README.md:320,348
+@close	другие формы словаря	есть	expect.go; scenrun.go:755–759,896–897	AC/README.md:320,347
+@oneof	другие формы словаря	есть	expect.go; scenrun.go:874–884	AC/README.md:332
+@spoil(	другие формы словаря	есть подстановка	scenrun.go:371–380,454–466	AC/README.md:335
+@not(	другие формы словаря	есть matcher	expect.go:437–455	AC/README.md:338
+@empty	другие формы словаря	есть	scenrun.go:927–929	AC/README.md:346
+@by(	другие формы словаря	есть	scenrun.go:751–758,871–872	AC/README.md:349
+@pass-worker	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:576,600
+@pass-open	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:577,599
+@pass-answer	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:578,602
+@pass-chunk	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:579,603
+@pass-result	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:580,602
+@pass-abort	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:581,603
+@pass-closed	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:582
+@pass-fill	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:583,603,604
+@pass-seen	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:584
+@pass-call	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:585
+@pass-step	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:586
+@pass-step-answer	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:587
+@pass-step-none	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:588
+@pass-step-drop	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:589
+@stream-open	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:590,603
+@stream-wait	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:591
+@stream-none	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:592
+@stream-close	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:593
+@person	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:606,741
+@server-start	другие формы словаря	есть ветка	directive.go:92–93; servers.go:serverStart	AC/README.md:684
+@power-pull	другие формы словаря	есть ветка	directive.go:94–95; servers.go:powerPull	AC/README.md:685
+@power-back	другие формы словаря	есть ветка	directive.go:96–97; servers.go:powerBack	AC/README.md:686
+@stop	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:746,755
+@join	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:747
+@domain	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:748
+@clock	другие формы словаря	domain clock не исполняется; seam clock есть в строке gate	directive.go:155; scenrun.go:1059–1062	AC/README.md:750
+@verify	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:752
+@move	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:756
+@on	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:757,758
+@env	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:759
+@carry	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:762
+@clusters	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:763
+@tls-setup	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:764
+@kit-start	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:765
+@tls-kit	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:766
+@cut-route	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:768
+@mend-route	другие формы словаря	не исполняется: parser принимает, dispatch отсутствует; вне выбранных 39 целей	scen.go:33–47; directive.go:155	AC/README.md:768
+@profile+1(	дополнительные формы	есть	scenrun.go:400–406	AC/README.md:271
+RUN	дополнительные формы	не исполняется; F12	scen.go:120–136; scenrun.go:1065–1066	P02/forms/README.md:67–74
+CALL	дополнительные формы	есть; корни контекста шва не заданы, F12	scenrun.go:1032–1042	P02/forms/README.md:75–77
+@read	дополнительные формы	не исполняется; F12	scenrun.go:1065–1066	P02/forms/README.md:80–82
+@reopen	дополнительные формы	есть в швах	scenrun.go:1063–1064	AC/README.md:482–484
+@parallel	дополнительные формы	есть K frames; file/RUN проектируются неполно, F12	scenrun.go:1000–1014	AC/README.md:519
+route:power_stand	дополнительные формы	есть dispatch; в P01.243 не выбран	run.go:113–114; servers.go	AC/forms/targets.routing.tsv:2
+surface:layout	дополнительные формы	не исполняется по норме; не function PASS	vecplan.go:48–114	Platform/common/vectors/wire.md:15
+compare:turn	дополнительные формы	есть ветка и ограничение с литералом пакета, F11	vecrun.go:827–833; wirecheck.go:561–562	Platform/common/vectors/wire.md:129–135

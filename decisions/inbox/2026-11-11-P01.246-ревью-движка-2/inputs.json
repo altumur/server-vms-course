@@ -1,0 +1,1717 @@
+{
+  "task": "P01.246",
+  "created_utc": "2026-11-11T22:40:58.889862+00:00",
+  "workspace": "/home/pilot/wt-task-P01.246",
+  "branch": "task/P01.246",
+  "initial_course_base": "555431292d32ff2351d07c94059aa5f08ce15412",
+  "course_base_after_fetch": "fed0334d1fbc382fa4fef7860c1890c1f3e9d70b",
+  "source_root": "/home/pilot/owner-receipts/P01.245-engine2-src-20261111",
+  "archive_sha256_by_P01245": "b244d533b36d08a7c0a7a2a64d75f1dfb8614c7efe33526e7a82d96a610c3bea",
+  "source_checksum_manifest_sha256": "df60e875391216c7c7333e7d3ea52101e88cc7a3cdc15d35cbdf4214f4fdc3f6",
+  "verified_source_files": [
+    {
+      "path": "./GUESSES.md",
+      "size": 13059,
+      "sha256": "644134d2a99966f0fa8a941ef90e18ad5a463eadb3cd5221b10591c5ffd0d41d"
+    },
+    {
+      "path": "./NOTES.md",
+      "size": 7209,
+      "sha256": "d3641d112777c7066c84bfd21c6ee0fee5633feb83d9195eeaebbe42e49a31c7"
+    },
+    {
+      "path": "./PLAN.md",
+      "size": 4909,
+      "sha256": "04728eb45b4b01b80d4dc371fded985e0156a5aeeba9f9cb5b046cb7325e303b"
+    },
+    {
+      "path": "./README.txt",
+      "size": 207,
+      "sha256": "21e6cc930744c1cf3811fcfa8cbf2709596dc6109fae2d5f460863cf1dbd01d1"
+    },
+    {
+      "path": "./SPEC_VERSION",
+      "size": 41,
+      "sha256": "3d07fd629d9c970dfc6192e358b3dabc77a532e853c93d23e09f85f30afcf346"
+    },
+    {
+      "path": "./engine/cmd/judge/main.go",
+      "size": 1634,
+      "sha256": "13e07f590bbc8de3dea872b3f9359239875f798a526817bcdfeae412eb5f8b27"
+    },
+    {
+      "path": "./engine/cmd/judge/main_test.go",
+      "size": 1747,
+      "sha256": "db70ef68dd195c91455b7afdb791a510538b3d7b421a8b3bf28eaaff7067ea1b"
+    },
+    {
+      "path": "./engine/go.mod",
+      "size": 600,
+      "sha256": "afc4dca9246f3f118cd059d075994206bc285c730838f91b68888a97579cae47"
+    },
+    {
+      "path": "./engine/go.sum",
+      "size": 2463,
+      "sha256": "768d396cfa3a9d109f3b005c3021ac9ac93ce9cec79be45077789d33389c9c36"
+    },
+    {
+      "path": "./engine/internal/core/adapter.go",
+      "size": 3147,
+      "sha256": "61b557a51852a55120f28902fd73f18bafa0d34d5e71ab0d932c3894a7c3da3c"
+    },
+    {
+      "path": "./engine/internal/core/bindings.go",
+      "size": 8886,
+      "sha256": "b196394f258515d1596fc3fba369ad0f3159bb8cd84e0eb08e17a2932d3843ed"
+    },
+    {
+      "path": "./engine/internal/core/cel.go",
+      "size": 2127,
+      "sha256": "d6bfe612602e473a5f0e38e563ac2bc8bb70762ff028ffdf5d6880836561d191"
+    },
+    {
+      "path": "./engine/internal/core/cmdplan.go",
+      "size": 8554,
+      "sha256": "1e6f963f78a6aa37babaab5f09e1a56c14d7a87945527ba9d269c0e0307b5711"
+    },
+    {
+      "path": "./engine/internal/core/cmdrun.go",
+      "size": 22952,
+      "sha256": "7560a398aacf50dc9f5468131e92716d96a93080a887fd4d5ad2354c7bcbd2fd"
+    },
+    {
+      "path": "./engine/internal/core/d7.go",
+      "size": 2188,
+      "sha256": "3d6cb40239fd591027e107b6adbc7433483dee5eaefc443ca8e5be2b4f392752"
+    },
+    {
+      "path": "./engine/internal/core/directive.go",
+      "size": 23593,
+      "sha256": "cf5465468f414f8cd452eec38da8d006793d54d460f1383a6c36fdafa80ee515"
+    },
+    {
+      "path": "./engine/internal/core/e2e_test.go",
+      "size": 12856,
+      "sha256": "e2e6047e30e1a1c03309e5b4d80a0d2c958e5851edf6e140580343813a272261"
+    },
+    {
+      "path": "./engine/internal/core/envrec.go",
+      "size": 1392,
+      "sha256": "ec74e98f33f254f05d06b762a66e4516f97f44145fc90ba2e4059512138aa7bc"
+    },
+    {
+      "path": "./engine/internal/core/expect.go",
+      "size": 13454,
+      "sha256": "7bce98ea99e89d91d308a240de7c80cd25346acb5ca991af0b9b17889ea2430a"
+    },
+    {
+      "path": "./engine/internal/core/expect_test.go",
+      "size": 11578,
+      "sha256": "fec3a2b7bf5c4be6f2b70656775238a0a10310a11d0069d5e0ccb7c486e92318"
+    },
+    {
+      "path": "./engine/internal/core/families_test.go",
+      "size": 7824,
+      "sha256": "7e6496d970c1a57fd7824c81305f81ef8efe984cdd5db2ea4de881fdd721404f"
+    },
+    {
+      "path": "./engine/internal/core/group.go",
+      "size": 13619,
+      "sha256": "0038c8a4560586b51faf4d51277e459dd72a97ff4e87c748aaa319b753020f39"
+    },
+    {
+      "path": "./engine/internal/core/group_test.go",
+      "size": 6688,
+      "sha256": "9b305968db868b9eb0e96ff341ce3a31b3b2e3cb257afa641eba801a100bcb94"
+    },
+    {
+      "path": "./engine/internal/core/helper_test.go",
+      "size": 7046,
+      "sha256": "fb7883b188cb8e65b3c0d790f6a44b77f2610097aaa1188743ce5d43b5673dc4"
+    },
+    {
+      "path": "./engine/internal/core/http.go",
+      "size": 7849,
+      "sha256": "08142ad994a6787b7b8c59c8ee48ed9047156294f56467f4036865f73d0b9abb"
+    },
+    {
+      "path": "./engine/internal/core/listing.go",
+      "size": 3408,
+      "sha256": "5b244f128f87532648502afa1589e72d48615775b611c7f9fa7b7bc0d09fde88"
+    },
+    {
+      "path": "./engine/internal/core/plan.go",
+      "size": 8258,
+      "sha256": "8ade7108ba50f443f8fa98fc8d3714358292814cccf642faa4f8cd7c19ee0b9a"
+    },
+    {
+      "path": "./engine/internal/core/pool.go",
+      "size": 800,
+      "sha256": "4e8b11ff485f09d8f0e0a2cf6384a45031f66cd10b74c62016cdc53520653749"
+    },
+    {
+      "path": "./engine/internal/core/probes.go",
+      "size": 3854,
+      "sha256": "0f4b65ccae699de3e917a976c04c0391954f5eaf5a2d55987ebfc6f67575ade3"
+    },
+    {
+      "path": "./engine/internal/core/proc.go",
+      "size": 9244,
+      "sha256": "a79b87a630833a1113ffda24e77cfd8054f6968c287e6c313829d2e6d2da2a15"
+    },
+    {
+      "path": "./engine/internal/core/prodrun.go",
+      "size": 7729,
+      "sha256": "9a93a462d9eee76e77ad92b8433193efca7590442efaba20ed94c1eb0c6ea7fb"
+    },
+    {
+      "path": "./engine/internal/core/report.go",
+      "size": 6393,
+      "sha256": "baeb58ee590935d786c1c8d3ad5cba7c3385ad5b1e42cb1ba560d9302aeb3898"
+    },
+    {
+      "path": "./engine/internal/core/run.go",
+      "size": 10890,
+      "sha256": "2e7d917b67ff1fd4203fd30d8a1f9f1197100d441bf9cd9c4a29bd11122a7898"
+    },
+    {
+      "path": "./engine/internal/core/scen.go",
+      "size": 9962,
+      "sha256": "3adf3bfd74ad91627c97e9bc865c2a67b634da1a1c1002ce7a006b6474acd581"
+    },
+    {
+      "path": "./engine/internal/core/scenrun.go",
+      "size": 35296,
+      "sha256": "bcdec4f07065d3c6fec2a94066c08ac471c447436638ae015e4de92a03aaa9ea"
+    },
+    {
+      "path": "./engine/internal/core/seal.go",
+      "size": 1454,
+      "sha256": "d57a67c63fc88a4bb8686016de95bd332dcea1249432349d5283b64d65f78f67"
+    },
+    {
+      "path": "./engine/internal/core/servers.go",
+      "size": 8473,
+      "sha256": "a67d7a26ff711167cfdd1d62267b8b70b37f6139d1effdf009c5cb1feeb2715e"
+    },
+    {
+      "path": "./engine/internal/core/spec.go",
+      "size": 24266,
+      "sha256": "33cff8154419e519940ae56400ce1c840d533d356968427b783bb856c828269f"
+    },
+    {
+      "path": "./engine/internal/core/spec_test.go",
+      "size": 14111,
+      "sha256": "23e6ad524306177758aec1e6a21bd91f5f837dccd738ea0fc848d3f30219b105"
+    },
+    {
+      "path": "./engine/internal/core/stand.go",
+      "size": 19009,
+      "sha256": "61e58cb3511091e2172078a077c339cb014515959f8df42ccbef21f4ef2eca50"
+    },
+    {
+      "path": "./engine/internal/core/testutil_test.go",
+      "size": 104,
+      "sha256": "ad7505dc49309d31dc45a9f351e1665e59f31d54e8ac566a92b33f9ba1dfe9da"
+    },
+    {
+      "path": "./engine/internal/core/vecplan.go",
+      "size": 6831,
+      "sha256": "08fd205d4ef26f6f2c51933972671f1a319540bd531694be37569340ec1a7913"
+    },
+    {
+      "path": "./engine/internal/core/vecrun.go",
+      "size": 27887,
+      "sha256": "ede90ac79bec92fde53e2c092ad33ae9a5b12fd495fda4354701f76e131d6113"
+    },
+    {
+      "path": "./engine/internal/core/vector_test.go",
+      "size": 6944,
+      "sha256": "b2a5126d447a42f31da1ea062ce927163bc1a7be970e348b8f01b0b364558489"
+    },
+    {
+      "path": "./engine/internal/core/wirecheck.go",
+      "size": 17500,
+      "sha256": "9bf6be0921c4e038e8f706e64cef9dce2c4a5f26a67fa1781fb0f6ad6a29b8ba"
+    },
+    {
+      "path": "./engine/internal/jsonx/jsonx.go",
+      "size": 12607,
+      "sha256": "6bbbce77548ce122a5a28783765b31363b6935f093de3174734f4283213cf5aa"
+    },
+    {
+      "path": "./engine/internal/jsonx/jsonx_test.go",
+      "size": 1391,
+      "sha256": "f8e897a8c65078c2caaaac2753599f18afc34112f5817c6ca857e0b191afd1db"
+    },
+    {
+      "path": "./engine/internal/prof/profile.go",
+      "size": 15948,
+      "sha256": "a40d885d1aa790e81b72e139a56b03c263dfb1e1231296f74fd002b399914321"
+    },
+    {
+      "path": "./engine/internal/prof/profile_test.go",
+      "size": 7978,
+      "sha256": "ced086ce1ac92637393837b6e43e16b41e47d2b888f834e629d93d204bb398bc"
+    },
+    {
+      "path": "./engine/internal/prof/yaml.go",
+      "size": 8458,
+      "sha256": "0abb4b6865fcd7fd2410cb160b22e11031636f771f3915aaece6fec418f39a04"
+    },
+    {
+      "path": "./engine/internal/tsv/tsv.go",
+      "size": 7443,
+      "sha256": "14bce5287f7859a2a35453fb22f5ff2ac7d8472ace41557b0849944af4ce4713"
+    },
+    {
+      "path": "./engine/internal/tsv/tsv_test.go",
+      "size": 3635,
+      "sha256": "e518cddae6823b33a6614dae1e9e87b4a570ce408d774863c017b567a8cb3bcd"
+    }
+  ],
+  "J_repo": "/home/pilot/run-p0226-pair-20261111/ji-4694190a17/JI.git",
+  "J_commit": "49e622795ca96b2e73904f1da5d203f2d103b2d5",
+  "materialized_J_blobs": [
+    {
+      "path": "Platform/01-store/acceptance/1/README.cases.md",
+      "size": 13411,
+      "sha256": "189363576a1fcaefbf2cdc6331dbf13ee9bab2b395287489f3558694ee306c2e",
+      "blob": "b2bdb93de2057152af72d31d4a40911206a9b64f"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "size": 17961,
+      "sha256": "36577cc391c0f8c86bbccbcd8542b3825a2d18d3b636a1cfd7144a32d78b0f86",
+      "blob": "1ef04cc5f5ca42750247b23fa898a93280fc2d26"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+      "size": 76236,
+      "sha256": "4a7431e62c6e5484d906f58a9a6b990d74181e27fa4a37979ba4b114eefc0dfe",
+      "blob": "bdcb11d3fdd0b279af40a9d7d0f0eda780b89bd2"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "size": 47616,
+      "sha256": "f90b38073e0020cdbbf6ab7ac81e98a2f19774f6f7b453225e1ce7205403e9bf",
+      "blob": "0b11167db2add7c186ea6950f8b4dd65c5d8e3c7"
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.cases.md",
+      "size": 4861,
+      "sha256": "5f7fb160bc4ad036c15ccd4365f4166120e74e44bc31dc289b0cd71af6609c38",
+      "blob": "e9ae7f3df2ca3f81f9f9950d3ea562d4645b6fee"
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.md",
+      "size": 8006,
+      "sha256": "4d40800049a855de8d378792aa2a9b6fab7fb59c0cb7faaf56439f1dd88e1425",
+      "blob": "0c2b36be806bab66af2778d8e93a6442982492d2"
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/scenarios.tsv",
+      "size": 19900,
+      "sha256": "722911eadc7e98cb7b7664f7c272afcf00ae42a0086eeff866bc32705997464b",
+      "blob": "70af98ad5f8f3c7996623b962cd3c9a02efbe58e"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.cases.md",
+      "size": 15036,
+      "sha256": "68c93348ddfd853f0cb8793000f5e91086dafba30c0e3aabd0b109d6c94e706b",
+      "blob": "30833bd20ef1d333772bdbcd4c1cb84564e87bb8"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "size": 24655,
+      "sha256": "46fba18f355666f801d700edb92fc748e81ae4571af2f3518e2bf48cc33bdbf6",
+      "blob": "6cc67ef2d6d00f93a98f40db841492043710aea6"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "size": 27273,
+      "sha256": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+      "blob": "019a5e23838480e2ab8a4c1a2a77b2da49ca278c"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/seams.tsv",
+      "size": 978,
+      "sha256": "9a657855ca1850c3bdd8cd320d18d881dbf61c6d9ea4e582c83e0ae7d1354d05",
+      "blob": "8784d99ac4b9224852bc2b625d11df8e5a6bc407"
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.layers.tsv",
+      "size": 794,
+      "sha256": "f9fc249e4ff9938120810c2109cc3c6225bb4281538641e895779be236fbc88c",
+      "blob": "6352e11aa51aa871d544b7fb1c9a19e479fac51e"
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.outcomes.tsv",
+      "size": 428,
+      "sha256": "b24083716a70f709048e99659901ece2bc22ed9d904fe7883558d60c1d0f1c7b",
+      "blob": "117169ab2eb097aaf35240e55eb401b5799006bc"
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.layers.tsv",
+      "size": 873,
+      "sha256": "59dc184bb582a9ab1ac2629d84eb50cca25fb8a98c8d3bfccc0d3f95138b9dcf",
+      "blob": "729636bb5aadc794ada9c964eccb7e6a98906e62"
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.outcomes.tsv",
+      "size": 1065,
+      "sha256": "ba25c35ad1e5b3f580640d64ce7922d1e7752735101d90eb4738b66e45ae2283",
+      "blob": "0e5f03d20a901d36149a2bc4c40fbdd915f1efc4"
+    },
+    {
+      "path": "Platform/01-store/forms/code-rules.tsv",
+      "size": 3494,
+      "sha256": "cf8e92d21719a6de12dd3a88bfbd90d0db766877fd30b6aef3d9ab787f215786",
+      "blob": "f5639ff6affe1a78142b8e3e5e0758dbf06ce78f"
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "size": 4764,
+      "sha256": "590b5b3817f8fd7271e82cdbad9aea9ef8522eae928247f20ba1586e7253f164",
+      "blob": "a6dda1ca3f442dce80292cd17eda497afb42cf53"
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "size": 6061,
+      "sha256": "2755a833a5b5e1430dacbba54a240b1b59003284a02c9e288bae8ebbab186c2b",
+      "blob": "d7a46f479b6b8e10d3d66eb689e3e5fd89395e20"
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "size": 1967,
+      "sha256": "0bb59d5b17f30a6bbb4eb6267987712b5b20d7158d8f0fd718269329cb068ee4",
+      "blob": "54a936e06939ef4e23fd14c6b134d4987d560e3a"
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv",
+      "size": 5924,
+      "sha256": "13c8a761368775b4e8cb3a4a5febcb75d6ac9cb7844358c3cc60d54ae65ab30c",
+      "blob": "f7d320fd294defd6846cf59baf56a2dccbc5036c"
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "size": 6861,
+      "sha256": "8c7b281e21c1b7c7f226f94acd697d2d5e492756e6a7c7dbb3aa8e423e0f6069",
+      "blob": "68d73905b8f89dd15910dc3add76899acfe83845"
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv",
+      "size": 8885,
+      "sha256": "eb28949ae665ea166fc8ff4f163190410cab068f6179878665ed04cff7cc02a3",
+      "blob": "0669e9b7d26bf1c45a7fec78752e32793e5cf05e"
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv",
+      "size": 8508,
+      "sha256": "23c626ef5251ac5048074039122b67e48a56c0da066233649aa24aae784b6777",
+      "blob": "b8b8a4394eaba11a20543ea06b12a354e1bdfabe"
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "size": 2092,
+      "sha256": "e6a96f80433c8346b2c7393142cd651626e8f938b2c7ffbe1c2601989672ac1f",
+      "blob": "c05cd78bce6fafd2845586c0a614a0185244fe1d"
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "size": 21929,
+      "sha256": "f1de821c6e9e40a3edd2784b891fc07d8601a6c871d2c26dcfed791b64776c06",
+      "blob": "95fd2de1be26ea0de80d40e44a7135b0928c82c3"
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/README.md",
+      "size": 2488,
+      "sha256": "a8d7e077f6f9382dae25e2162434e1be6551289e936b638e26574806bbf096c4",
+      "blob": "41bed2d5977ee3e7094c9e19071d9337d728f067"
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
+      "size": 3124,
+      "sha256": "17bc96b81af30ab5a74e7f4b00032e2815da23c9b8f14f1133de70166681dd0a",
+      "blob": "ced699d2b969fefa5686b2d4bead699459d0e00d"
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+      "size": 1112,
+      "sha256": "1e67fc644c363bb4896c15e072bd2bf8b4c3a99ced927bd35b26d5ed1bf03255",
+      "blob": "b8b7480b1daa2bbe2f1d99e0a8e1ba1be3926bee"
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "size": 3707,
+      "sha256": "2c7728d92ec9cdaf5dac8e31b943eb693a9b85184e62a4dcc2c079aa18105273",
+      "blob": "5fc2656cf458b69bcde58137e27c4f8eae9eab0f"
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
+      "size": 1391,
+      "sha256": "876920a12c287becc9bed4d195121c56787682caed20dc9018c31c4b0fae51ca",
+      "blob": "4c694453f180530caedc1bdbf841ba2b2252899c"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/README.md",
+      "size": 19931,
+      "sha256": "404bc787d53ac2f4db247d3d6c1c36faf8e0a5e75121031f929e87df61c8227c",
+      "blob": "725791bb191baf9399dfca2f8ee5dd323913bbc9"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/classes.tsv",
+      "size": 10018,
+      "sha256": "8e38138bb28ee74a04a345d218201809a1cdbe496428f9eee2198069b121d8c9",
+      "blob": "a0a13e607638a3e0711131a63ff6eaa591bec121"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/diagnostics.tsv",
+      "size": 3314,
+      "sha256": "d76bccb3c35daa97ae639b20b21c537582387cb91377ba88c294c4578e01509f",
+      "blob": "66384690e63cb29bf2b9be0b983eb65d7121ece3"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/seams.tsv",
+      "size": 3969,
+      "sha256": "a312936ef578142ae0e810e0b58b75ad349f8574baca673cf4d71ca8da97b664",
+      "blob": "3939040e9c379376a559e3839468ebcaad4a0388"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/1/verdicts.tsv",
+      "size": 29753,
+      "sha256": "50b53cfe7f944b8df53c81aa117909c505e926c89da99502405d5334659073fe",
+      "blob": "f2d3c69776090d4d0bc1595fb59fa1381c3426ae"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/2/README.cases.md",
+      "size": 4093,
+      "sha256": "881fb6e3fdda594807cc1dfd17129ae4b6a225372e08e1944e45b3ada6d0521e",
+      "blob": "8d0e6a062c297c5a077964cc63e28007822d32ff"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/2/README.md",
+      "size": 6722,
+      "sha256": "bd7ec28ea26937607bce7d1865f74d43d20dc776a16dd4607495679744349353",
+      "blob": "20bc4d143a6c5bc6ef7c3251486ab9a955ff868d"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/2/puts-ceiling.tsv",
+      "size": 1015,
+      "sha256": "9cde372259c93061414107cce9e132e5a2b89567baf0459bab1c3867d34c21c9",
+      "blob": "2e77d948118e6a068f791fb6058ac6b71182f714"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/2/puts.tsv",
+      "size": 1388,
+      "sha256": "b8733586789592e8a59c3bb185c91f1c0c87b40f62963ac111046812db05c494",
+      "blob": "7c5e2bd27ba77be571a36e49fe6e9e94d08a6fc4"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/README.cases.md",
+      "size": 7663,
+      "sha256": "73f7166a209cdc8f2050935d1c711c88dd6ae8ee8377bd5413bbc8ac1b295b32",
+      "blob": "672905f94ec5f7b97522063964ad8ffdb8835888"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/README.md",
+      "size": 9226,
+      "sha256": "e1315b1285f2e2e1e2afa51123590043aae1d29f1600e6c42065b969dc421866",
+      "blob": "38caac32bde5232846ad44c65026d3852f247e94"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/3/puts.tsv",
+      "size": 6993,
+      "sha256": "b5bae19ac97a21b7fa569b3057ebf0a8840565ad6c016eb7dbeec0b6fb718e2d",
+      "blob": "deff398c871602e92efb4d85cb0b0e534bc88734"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/4/README.cases.md",
+      "size": 2215,
+      "sha256": "3d63a31fb598fe4d96366d1932ba64def778dbceec98129d02be19b612d59da0",
+      "blob": "f806e2128a252a8234c6e2bfda1528f49df0389c"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/4/README.md",
+      "size": 5680,
+      "sha256": "5e50363b7e37cfe92aa5428cec1435052377df67a0d3a4c66ea9264e647e6ddd",
+      "blob": "ebad040326c487f9d0a9aaf96b115c564d1fa185"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/4/seams.tsv",
+      "size": 11641,
+      "sha256": "1f3c19f3258776c6d9b1993935b7ec8a6c1f216d7cae68f9d9567912ef44fe65",
+      "blob": "21f3d3f371c0d7d51a1ec0980aab30468cd154e2"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/README.cases.md",
+      "size": 11307,
+      "sha256": "80dd8d8b0b077663e58dec8dd5b92bd39305fd9ad940415611dbccc4397fc074",
+      "blob": "25e3326ec29db90e7da6dd9ef74f7c56d359cdf2"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/README.md",
+      "size": 11718,
+      "sha256": "9a18fe85ade2417f87ccab1d9ecb9dba2507cb37533e62a189ad9c0565707436",
+      "blob": "e3c4bf4f9993fd5c61acd9e42fa5d8b70c2d5317"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/scenarios.tsv",
+      "size": 8896,
+      "sha256": "d260a45122936136e62d9824842d49cc09023f71570c66258d24dcdcf51212c7",
+      "blob": "d0e799a7bace2fa60d87771ddebaabb4c7722c74"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v1-base/expect.tsv",
+      "size": 2862,
+      "sha256": "b79f71c36faa07aa2eab9851d00e14eb0f6b8919211577ca5f12c7eb70b8cd1b",
+      "blob": "1cfba1054938c73e8adb4aed5bc1c1c4bb69a735"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v10-worker-domain-reads/expect.tsv",
+      "size": 1586,
+      "sha256": "d302093ff627289a2d4a4ba776bc53534bfc9db659879171a485d1464c7b0348",
+      "blob": "dd9b1e3a7783ae679e519a885f7474394c9c1fd2"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v11-controller-cross-tables/expect.tsv",
+      "size": 956,
+      "sha256": "6e61fdb82c89527cdc9840fdd9dab2b6addd81fc81de3f7c385ccfd46114928a",
+      "blob": "3f7e372ef0becc0e80002be34195b3797cbfafd7"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v12-check-rights/check.tsv",
+      "size": 1115,
+      "sha256": "1090b4af9e9085585e26cec7ec2b87e7f642c3e128c4d7434ff45f2e1d3ad4ee",
+      "blob": "48519c3cce41b5b8e8f97a89ca27cdaa3b7fc871"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v15-name18-roles/expect.tsv",
+      "size": 664,
+      "sha256": "baf890ad89473d65949d14fdd13263d3a43c3a85e325fc49a1051f77e28c04ba",
+      "blob": "87e322b5762d49e4b932ff41bdb5170a97df86c9"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v16-secret-prefix/expect.tsv",
+      "size": 445,
+      "sha256": "738baad555a09ae95d1c22a3987bbdf3a531f024ed8d0ee86ece951379ba6c00",
+      "blob": "c7031b33380a47f72d84c6a98ac110260fd9be94"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v2-requests/expect.tsv",
+      "size": 441,
+      "sha256": "d888f1e2d133665362d80482f4faf6b709a75a395e778e8ca59db0a42af18f76",
+      "blob": "612580cb51c683f69dc9b96e8b82317c1b99f76e"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v3-objects-rows/expect.tsv",
+      "size": 303,
+      "sha256": "10c9a504164771f4454f41291ab24f6944a4c440693bfb31de6e55efeb8007dd",
+      "blob": "527b3b5c5e26283b28319969e6884c5b070cacdb"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v4-domain-kept/expect.tsv",
+      "size": 705,
+      "sha256": "d9b7b52fa3d2498163db1b89745d72adc28476eb289d8b053f3be2f6151b4c7c",
+      "blob": "c87eae2199540e5561ad7b06f5201a67a73dffb7"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v5-secret-domainworker/expect.tsv",
+      "size": 564,
+      "sha256": "06ce3e4bce5f7605fb06c248e069b39e556e683f698ab28e3e7df18f63bd00f8",
+      "blob": "287d101e60cab7a20672ff69e3c20fe8a3ed405b"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v6-near-about-ref/expect.tsv",
+      "size": 1244,
+      "sha256": "eb8c2f320268d98d2e24459da8705a49e5f19501851972ef79bd0f0ca16aba26",
+      "blob": "0ddc12739d27a57a10ad3a653a905308cb904f14"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v7-must-match/expect.tsv",
+      "size": 855,
+      "sha256": "1ac4b129a809a60f383918b4543d3135c234ec16fa7e7568b040a30a5bc312b6",
+      "blob": "96c4a979066705abcac47b95a4a74a3ed67c94fb"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v8-worker-writes-deletes/expect.tsv",
+      "size": 1014,
+      "sha256": "3b922b58acc887da3de42767da3dd4a719c5c6ddcca7e7b464a3182ccadb2bae",
+      "blob": "59418eeb2d01e06567ca1e4f25e56493390df30c"
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v9-asked-free-resource/expect.tsv",
+      "size": 1385,
+      "sha256": "c18db6c549dfefddd3797dc65fe3a18b3b8ba169c90646702d0a44f8ec67aeeb",
+      "blob": "80d8e41d67fe02221dc6c10614621f742ef8f260"
+    },
+    {
+      "path": "Platform/02-installer/data/alarms-retention.layers.tsv",
+      "size": 793,
+      "sha256": "9977b5068775cd055ab73c52425f78a04be1ce8113b12536ff26895db1e189d6",
+      "blob": "d814187f756f8340ab8c90ed0f663fa1c4f09702"
+    },
+    {
+      "path": "Platform/02-installer/data/alarms-retention.outcomes.tsv",
+      "size": 620,
+      "sha256": "c4dec774045e1d4b0fc43cfddea90632fa2f5ac4241c97e3adf409bc1e41ef15",
+      "blob": "4716885aad963cd2d574a6bd712141c6ce004b68"
+    },
+    {
+      "path": "Platform/02-installer/data/canonical-row.layers.tsv",
+      "size": 1014,
+      "sha256": "839ed6efce3493c72144947434c2755d97005c3a2d12a5ff897f02dbcc6cb8be",
+      "blob": "b10a5372ce7020a2319758866a766a9f293d0f9d"
+    },
+    {
+      "path": "Platform/02-installer/data/canonical-row.outcomes.tsv",
+      "size": 1622,
+      "sha256": "52364e278a00a9ddb12244afc82e23e02779e4ad816f2d30aa981e524202d532",
+      "blob": "9dd6b370c80e14c4625900c22c8ff17900f4b8ca"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-file.layers.tsv",
+      "size": 863,
+      "sha256": "4a5360f6aea0266f1b229a7a1905885ff8830dad78357b0b6a3bfd9b718dd565",
+      "blob": "969c267762c2d7d12e58657ea54bb5962a362c78"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-file.outcomes.tsv",
+      "size": 1032,
+      "sha256": "8dd4b193814b3d0655567279c486a7da88940747c063c7f446dfefbc3bc6e9ec",
+      "blob": "4ee51fd3fbe40b75bf4a3d8d70ca8ab963c9b68d"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-rev.layers.tsv",
+      "size": 934,
+      "sha256": "625907095128bb2008a63e0a28cd599ee326e7ec0c84ae4eb1828c1828f0d087",
+      "blob": "dbe9e9c17a3082a7b1b14f2fe472a0978ad267ea"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-rev.outcomes.tsv",
+      "size": 5162,
+      "sha256": "0f50241a769258ffece4ab8c4ff52282ad893806819c51734e6b781957731e31",
+      "blob": "e839399d681ae1cb757732b88d261c65c42234a1"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-row.layers.tsv",
+      "size": 1087,
+      "sha256": "4ac2814829022ca14184613247c1f5284844bd895a08bac5aa2675de98ec9029",
+      "blob": "d9cdb2e0eebccedc13b63a6dc4f1e648d7868f53"
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-row.outcomes.tsv",
+      "size": 4852,
+      "sha256": "7bcbc365aed7cce6866528c43332f50a8d49683f3f75441e6cefec11f3663d21",
+      "blob": "2a274d184eeaec5c010a5376ebf2b21220826203"
+    },
+    {
+      "path": "Platform/02-installer/data/mirror.layers.tsv",
+      "size": 838,
+      "sha256": "211ecb3cc1a24b9fe58ddf2f3004962722f4d5783673439644dd8d077c1d6a68",
+      "blob": "28c9d427d0408c6046b772145ac3dabaf249c29c"
+    },
+    {
+      "path": "Platform/02-installer/data/mirror.outcomes.tsv",
+      "size": 746,
+      "sha256": "f3ac99d29601eb9bf3803694af9670ba3eefd1df38ebd3d925bf56fdfa98fe95",
+      "blob": "2c1c8d62a263ddaa1398492cc509d58df9c10453"
+    },
+    {
+      "path": "Platform/02-installer/data/retention.layers.tsv",
+      "size": 793,
+      "sha256": "9977b5068775cd055ab73c52425f78a04be1ce8113b12536ff26895db1e189d6",
+      "blob": "d814187f756f8340ab8c90ed0f663fa1c4f09702"
+    },
+    {
+      "path": "Platform/02-installer/data/retention.outcomes.tsv",
+      "size": 613,
+      "sha256": "e7a7cc84bcae03f853bb7b41566428e90bd3066b52f1bfbcf46253a03dd61887",
+      "blob": "072245bfe414c25dcfb73592887636b8eaf725fc"
+    },
+    {
+      "path": "Platform/02-installer/data/space.layers.tsv",
+      "size": 872,
+      "sha256": "5fd953df3becb4884bbf97d46fd3e6522f77ad1307253c30b3cb6e38beb1273c",
+      "blob": "4cf2180cbde7f774d5f813b48c6e8b14b700da49"
+    },
+    {
+      "path": "Platform/02-installer/data/space.outcomes.tsv",
+      "size": 605,
+      "sha256": "6b81cae4e33fd8b6366e96298f1fdd5cf3e55b350bf9a640708d4849aa958c63",
+      "blob": "4d642933be6cd08c8b12fe2ede00edd2bd769422"
+    },
+    {
+      "path": "Platform/02-installer/forms/README.cases.md",
+      "size": 2127,
+      "sha256": "dc55b9f30438878bfd831eccc894c3fa8d4a75df2c15be3cde09dbd3bbcffe62",
+      "blob": "7cc6561084bcb3d71a5c2c26f59ce1094d563dcc"
+    },
+    {
+      "path": "Platform/02-installer/forms/README.md",
+      "size": 12273,
+      "sha256": "f7a9d5d5deada6ddd41f2f1e80bba4d3d087e465c66d9305c93f0029048a8f73",
+      "blob": "effe9ac4f5ff115d920e242815d31997925a8a5e"
+    },
+    {
+      "path": "Platform/02-installer/forms/code-rules.tsv",
+      "size": 4268,
+      "sha256": "a087bcadbeb08edecaa717158aacaef56cfc9f7077de397c53b818532553cae0",
+      "blob": "433a04b14d96b215fe9fe3238de11d93a23f9bef"
+    },
+    {
+      "path": "Platform/02-installer/forms/daemon-flags.tsv",
+      "size": 1699,
+      "sha256": "e7c703b585ae646fad47922579fca45111ca7f77a1dca2b6723e0ce2e13da022",
+      "blob": "2e88023afa48b036ca3a694466dc30cfe312dba3"
+    },
+    {
+      "path": "Platform/02-installer/forms/operator-commands.tsv",
+      "size": 4387,
+      "sha256": "f310f82f2362ebd9ed5b4ca6394243c230b5605d14c7192262c2693a1ba5416a",
+      "blob": "5c2ac1d8deb92df36ee3ccf62c4a162a3f141ff9"
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "size": 20729,
+      "sha256": "a51acb77073c7c833b359c0606db4da4d3ff6d301a5050eafc82d664d1d8cdd2",
+      "blob": "8b88b3e326fc4686485957621d70cb544c4c15dd"
+    },
+    {
+      "path": "Platform/02-installer/forms/rollout-poll.traces.tsv",
+      "size": 42898,
+      "sha256": "6e424896cf8a557f849500c3bacf4a92d7059661b65a088920cb11ca4841e646",
+      "blob": "c4f5aab7c845ec0064d94fab44aaa367afc127d8"
+    },
+    {
+      "path": "Platform/02-installer/forms/stages.kit.tsv",
+      "size": 4640,
+      "sha256": "3449abc0bcdbcd6e5c15042e3be30ab2c8c8dca0adbb9de54789b04d5e5a3f74",
+      "blob": "3cad5a9a5a2808052e2e09d31f28923e32bdbce0"
+    },
+    {
+      "path": "Platform/02-installer/forms/stages.tsv",
+      "size": 4703,
+      "sha256": "85e2ac29689739576343f342ea08794c7207e6b731e8bccf20a17afa169c11dc",
+      "blob": "df95abafe59cc84bb079443a889f20037522c9b1"
+    },
+    {
+      "path": "Platform/02-installer/vectors/canonical/README.md",
+      "size": 4705,
+      "sha256": "d48de7fcd243960686dc15d2c5494b3b3a79bda50479153223079118edfa2217",
+      "blob": "61318c9de8e3207144c906f57533a07616613b47"
+    },
+    {
+      "path": "Platform/02-installer/vectors/canonical/cases.tsv",
+      "size": 41001,
+      "sha256": "95e9c93c6ae0d8a8cb6d9fcdee8e92a333e3b88095d61f4f74a0aa022fe4eefb",
+      "blob": "704fd7f9690125df7810200c1ff061fdaa95e160"
+    },
+    {
+      "path": "Platform/02-installer/vectors/exec/README.md",
+      "size": 1882,
+      "sha256": "370883fe26211d1566c26f9c32c2cfe7ea872c79d021542790efbe50bc306238",
+      "blob": "fe09e30140e763bb0a1e63869cef222baf492f0c"
+    },
+    {
+      "path": "Platform/02-installer/vectors/exec/cases.tsv",
+      "size": 1537,
+      "sha256": "ee83e0adcbee7e6607aa9c5b4490fd20d043e8ce02c1dcefe82e2d1e8d07569a",
+      "blob": "fae0712204ee659a6211b61e25169e5948ce48af"
+    },
+    {
+      "path": "Platform/02-installer/vectors/install-order/README.md",
+      "size": 3501,
+      "sha256": "65284d01a38c07fbd1071359036718f74787864a59ceabbbb8b98335de744dbd",
+      "blob": "838a3415e29e93e1a435aec26a0f90efaf7f9dae"
+    },
+    {
+      "path": "Platform/02-installer/vectors/install-order/cases.tsv",
+      "size": 2420,
+      "sha256": "7385e8374492f05bd63e922083b32fae398c543b85f703c367d369e8f026766a",
+      "blob": "ee43da2125c1d70599b457b2df9a8abd8d7c5ed2"
+    },
+    {
+      "path": "Platform/02-installer/vectors/platform-lists/README.md",
+      "size": 3926,
+      "sha256": "ebddceb2565cf4c56d7afe6232c289186745b27f1113776b1df06fa82b232911",
+      "blob": "89f4184a1da8d9ea7c28246f2931ddee8cec60d2"
+    },
+    {
+      "path": "Platform/02-installer/vectors/platform-lists/cases.tsv",
+      "size": 2461,
+      "sha256": "2043a8ed8fddd89119968cb876447bc1682fc1f8c92c9828efbdc4eab83ef784",
+      "blob": "a2d7adf0a061cd073391753a6b545de022919829"
+    },
+    {
+      "path": "Platform/02-installer/vectors/workers-script/README.md",
+      "size": 4176,
+      "sha256": "a44164296859b339db864e6b5eff05f021d381e19fd8c98a1066867526ab3e20",
+      "blob": "88dc22540ffa102dfa8d1842f1a48437f6ae7ddb"
+    },
+    {
+      "path": "Platform/02-installer/vectors/workers-script/cases.tsv",
+      "size": 5109,
+      "sha256": "e260ee8514f18db95b900a9b80f7597b491282680b467096e3bfefc79a26cce9",
+      "blob": "87397000b4653d496a61bec2329e38a86e5896dd"
+    },
+    {
+      "path": "Platform/common/acceptance/PROFILE.md",
+      "size": 31023,
+      "sha256": "95432de912c3a7a4fa41d500d70b245f660fbb182bbe74fea9b64a7dcfce8599",
+      "blob": "5ac819baf2f2972cfe2e49e5abb41c5358da7646"
+    },
+    {
+      "path": "Platform/common/acceptance/README.md",
+      "size": 147821,
+      "sha256": "3c575768e93c4a50da3a9e4a52454db7ebb3b029670efb57c2cce864425251b8",
+      "blob": "e86fddd24b847c871513297e22d1ddd2c90592b6"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv",
+      "size": 6233,
+      "sha256": "5b9c08d475a08adc3de47a59ad40031746157cf2a71bd755beb2b4972082e4df",
+      "blob": "06f59ae164c6df7e2b290879170214b8e493b49e"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/extra.scenarios.tsv",
+      "size": 9413,
+      "sha256": "ff6800fec953ca56b23c6aea31835566a334472703a5040e3fc6071f1d868b94",
+      "blob": "5c36ef143ed828bddba897c742eb40817e3a33f9"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/extra.tsv",
+      "size": 5693,
+      "sha256": "7bc2349d7fdd4e07ee767f2e01684a77ef219e1be20fb09a9b53d2cc6e5c81f8",
+      "blob": "cffe209df11d5493d7c5c84db2089a6a18489863"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/process-1.1.scenarios.tsv",
+      "size": 13218,
+      "sha256": "6ff4af797034641fbbe3cc48b91ed855260973461e58d3375e00816a25a091bc",
+      "blob": "887ac6fc1067acc2727345274ce699db54f1828c"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/process-1.3.scenarios.tsv",
+      "size": 1143,
+      "sha256": "03ce9cecd110763dd644fc66c55abf172d16473d238339f28ea0523953bbf757",
+      "blob": "b85265823f4044267b883fe55d9c133535210b7b"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/production.tsv",
+      "size": 4713,
+      "sha256": "3c26a2db217bbf8abc2dcdebc3be15b09578f3755bb1900739d57317a7c794d0",
+      "blob": "7fc0a3a288670a05f85a841eb1ffbd80c9da05ff"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-keys.tsv",
+      "size": 1123,
+      "sha256": "c5a6d9f94956306ab22dc268debaddfc66424a12c593a878d7e6df7906a694c8",
+      "blob": "7cf42a6a34af78fb2c042f6dcf891046fe6327c9"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+      "size": 7435,
+      "sha256": "36321f1c731e2512685c10b51c1772ace17d0368203e86544b025a61f8f13f05",
+      "blob": "faf4b3211530c5906c34a4025dd8e61dab5d1146"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/targets.README.md",
+      "size": 2547,
+      "sha256": "e4c4a548289c7413a93642f691b000e2a26b30f7ca5240c1a04724e7c12109fe",
+      "blob": "1c5afccee0c083b24eb7a04549b63c523df5863e"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/targets.routing.tsv",
+      "size": 7372,
+      "sha256": "c16e23e50c2f2d1b627d521429ba63b9d66d8ff9e0a01a8c221093f39c48105b",
+      "blob": "e48132f51c6848fbc7939ddaf13ae92a8006aac4"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/targets.tsv",
+      "size": 16645,
+      "sha256": "118cfb6500346c7b36332ce702c88b311234597ffd215465de06acc8c7bcbf9f",
+      "blob": "979dc1929ad59574c8087aaa99a7df3dde6e6bb3"
+    },
+    {
+      "path": "Platform/common/acceptance/ops/README.cases.md",
+      "size": 7174,
+      "sha256": "c8b39862a40672659b978fa5b545378fc11c8154595a12904ab48c848a94b3cc",
+      "blob": "8fb0031d725d987711a3bed7b87057fb5f83201f"
+    },
+    {
+      "path": "Platform/common/acceptance/ops/README.md",
+      "size": 5737,
+      "sha256": "490d1607faa1a0b8616c04e1eba528212cec491b0bbf6fb66fe0171165d43e76",
+      "blob": "e16171cf4133ab3a31b34cdba85e3366aa962091"
+    },
+    {
+      "path": "Platform/common/acceptance/ops/scenarios.tsv",
+      "size": 22451,
+      "sha256": "ed218ec68c529718e5a0d8cd9da8858469fd72e2596b6bd25e306af491640db8",
+      "blob": "b1b1a1fbe46ee546b7d118214894f3b5db13fe0f"
+    },
+    {
+      "path": "Platform/common/acceptance/pass/README.cases.md",
+      "size": 4481,
+      "sha256": "2cfcc71ac395be069833e85b8593da2a4e890efef82276459ddcb5056b04764a",
+      "blob": "09a06e8fae5968786f48d0b1cd87b91434a36fb0"
+    },
+    {
+      "path": "Platform/common/acceptance/pass/README.md",
+      "size": 4247,
+      "sha256": "dd9e898b01afa82762e5e916ea2949a44fd9feec9f98f5b951c06f70cfa3ee91",
+      "blob": "563524d3953fef5f3ed109d7a4db022b5acccdfa"
+    },
+    {
+      "path": "Platform/common/acceptance/pass/scenarios.tsv",
+      "size": 26230,
+      "sha256": "132817646a884218d4817dd25612d9b69238d8e15f7f0b9e324768391c1babee",
+      "blob": "2310d893c87ace345f3c5323e9b3c293e2d02f45"
+    },
+    {
+      "path": "Platform/common/acceptance/production/README.md",
+      "size": 2664,
+      "sha256": "b724ed8bf3bd64c09da1e501cc6f09a0ae9582c557de245d08165b9d22366070",
+      "blob": "b17d1be69be2f8dc85e3253b0f132f32f8bc97ae"
+    },
+    {
+      "path": "Platform/common/acceptance/production/bindings.tsv",
+      "size": 7959,
+      "sha256": "f9879d0cadd86831a03a815369ee06802bb8c630fed40ccb3a0a77a6c53bf5b8",
+      "blob": "791766136390bd1c7b1da45dab51fa50024cacce"
+    },
+    {
+      "path": "Platform/common/acceptance/runner-targets.README.md",
+      "size": 5150,
+      "sha256": "ba0c03fbe551ae9edde9f5546e19d54b07c3a907a9838f8d110222678e1cefb9",
+      "blob": "9b29f2cd828dbabe41a21a5232ce42e87ea26f7d"
+    },
+    {
+      "path": "Platform/common/acceptance/runner-targets.tsv",
+      "size": 106316,
+      "sha256": "60b6628fcf4d2d99858cfde4069e629cee3deb34a6aac4de1fcf7f5786d5c7df",
+      "blob": "255dba78194da4f50e83d6698c2b04f4e9020020"
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.README.md",
+      "size": 2963,
+      "sha256": "b04308e94abfd107fe3c8ac2beab7c763980b167e639861d7acea870eca7c566",
+      "blob": "f91e16ce27a9f209add4c683a6d6cbe151216c0e"
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "size": 34205,
+      "sha256": "f827a02293e3f9cad54235021356539bfef23297f2b1010e00afe01861fcea79",
+      "blob": "65b46964ebe5dbbfbb00a58549e9efe99e0ecede"
+    },
+    {
+      "path": "Platform/common/acceptance/system/README.cases.md",
+      "size": 8912,
+      "sha256": "174e6ff416e6a5c93693c94ac0a1dfad8f586ad8aa4df748bd44ea010be6af3c",
+      "blob": "f787ce2c8dacd14fe4cdcddce660ae23b9dba481"
+    },
+    {
+      "path": "Platform/common/acceptance/system/README.md",
+      "size": 5277,
+      "sha256": "674046bfeb06388f80f815ed489e7d8fd742cd0d39cc90463b508732917029f8",
+      "blob": "81c6489798d9a178c3e2f790434c395ebba92a00"
+    },
+    {
+      "path": "Platform/common/acceptance/system/scenarios.tsv",
+      "size": 12114,
+      "sha256": "1c9018723544a9500ad05ba541f43dd0205e7513c48985e9b83cb48b4c6a2f80",
+      "blob": "0e1d3acd0de2e82d02f27d5aac658e0f0e237be0"
+    },
+    {
+      "path": "Platform/common/acceptance/tls/README.cases.md",
+      "size": 20656,
+      "sha256": "c4303c429418629b68837e5b4571b67c3cdbab0503f887a2ce6403d6b6900df0",
+      "blob": "281111bdab01f4f2a9a4653f4b782f507b290ff6"
+    },
+    {
+      "path": "Platform/common/acceptance/tls/README.md",
+      "size": 24549,
+      "sha256": "e4d054669e7632c9702c43f718ab7a25d815a78e0f44fb711a6164fe17c7c344",
+      "blob": "f24dd49ffecb62d89c5c0570927f997424f38857"
+    }
+  ],
+  "materialized_does_not_mean_all_semantically_reviewed": true,
+  "CLI_contract_commit": "4d2847d7fc7ea7741ef7bc84ef3452a8425d6905",
+  "CLI_contract_file": "/home/pilot/p01243-loop/judge_line.py",
+  "CLI_contract_sha256": "933cedc5a28bcebeb629e83f53aba29f8c0e884d1510dbfcd1776c96efb5be8e",
+  "task_definition_sha256": "46567c497347bd4bebb82489d2f00175c435ee654068226acb12f2daca9fd954",
+  "task_handoff_files": [
+    {
+      "path": "/home/pilot/cammeta-sessions/tasks/handed/P01.243.json",
+      "sha256": "2ac501449f8d7f4ca0f49e8523de6695685a23659a35693ba8464f7b180d7bb8"
+    },
+    {
+      "path": "/home/pilot/cammeta-sessions/tasks/handed/P01.245.json",
+      "sha256": "dad92dc8a85eb199db1f6bbaa654ad806b599312b986dfd56782aecca9b69f38"
+    }
+  ],
+  "executions": {
+    "engine": 0,
+    "author_tests": 0,
+    "candidate": 0,
+    "probe": 0,
+    "generation": 0,
+    "new_court": 0
+  },
+  "gate_words": 51,
+  "matrix_rows": 125,
+  "go_source_counts": {
+    "production_files": 33,
+    "production_lines": 13315,
+    "test_files": 12,
+    "test_lines": 2231,
+    "top_level_test_methods": 66
+  },
+  "literal_navigation": [
+    {
+      "path": "engine/cmd/judge/main_test.go",
+      "line": 22,
+      "test": true,
+      "text": "if b, err := exec.Command(bin, \"dry\", \"--spec\", spec, \"--out\", out, \"--target\", \"P/01.1/extra\", \"--target\", \"P/01/vectors-jcs\").CombinedOutput(); err != nil {"
+    },
+    {
+      "path": "engine/internal/core/cel.go",
+      "line": 8,
+      "test": false,
+      "text": "\"github.com/google/cel-go/common/types\""
+    },
+    {
+      "path": "engine/internal/core/cel.go",
+      "line": 9,
+      "test": false,
+      "text": "\"github.com/google/cel-go/common/types/ref\""
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 31,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"01-store\": storeProfile(\"\", rec)})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 82,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"01-store\": storeProfile(\" -term-exit 3\", rec)})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 136,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"01-store\": storeProfile(\" -exit 1\", t.TempDir())})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 147,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"02-installer\": \"stand: {}\\nkeys: {}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 153,
+      "test": true,
+      "text": "r = testRunner(t, \"P/01/vectors-rights-evaluator\", map[string]string{\"01-store\": \"stand: {}\\nkeys: {}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 156,
+      "test": true,
+      "text": "if r.Rep.Result != NOTEX || r.Rep.Reason != \"01-store/rights-evaluator\" {"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 167,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01/vectors-crl\", map[string]string{\"01-store\": \"stand: {}\\nkeys: {}\\nvectors:\\n  common/crl: \" + helperCmd(\"vec\") + \" echo:\\\"zz\\\" {input}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 178,
+      "test": true,
+      "text": "r = testRunner(t, \"P/01/vectors-crl\", map[string]string{\"01-store\": \"stand: {}\\nkeys: {}\\nvectors:\\n  common/crl: \" + helperCmd(\"vec\") + \" bad {input}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 187,
+      "test": true,
+      "text": "r := testRunner(t, \"P/02.1/inproc\", map[string]string{\"02-installer\": \"stand: {}\\nkeys: {}\\nadapters:\\n  load: \" + helperCmd(\"load\") + \" no-such-word\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 208,
+      "test": true,
+      "text": "os.WriteFile(filepath.Join(dir, \"s\", \"acceptance.yaml\"), []byte(\"format: 2\\nimplementation: i\\nmodule: 01-store\\nspec_version: 49e622795ca96b2e73904f1da5d203f2d103b2d5\\nbuild: b\\nstand: {}\\nkeys:\\n  request_line_limit: \\\"10\\\"\\nartifacts:\\n  a: a\\n\"), 0o644)"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 209,
+      "test": true,
+      "text": "os.WriteFile(filepath.Join(dir, \"assembly.yaml\"), []byte(\"format: 1\\nmodules:\\n  01-store: s/acceptance.yaml\\n\"), 0o644)"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 210,
+      "test": true,
+      "text": "rep, err := Run(loadSpec(t), filepath.Join(dir, \"assembly.yaml\"), \"\", \"P/01.1/door\")"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 264,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"01-store\": store + keys})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 271,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.3/group\", map[string]string{\"01-store\": \"stand:\\n  store: \" + helperCmd(\"store\") + \" -dir {data}/configstore -sockets {rundir} -rights {rights} -max-body {body_limit} -max-value {row_ceiling}\\n  store-op: x {args}\\nkeys:\\n  role_header"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 277,
+      "test": true,
+      "text": "r = testRunner(t, \"P/02.2/put\", map[string]string{\"02-installer\": \"stand:\\n  manifest-put: x {socket} {file}\\nkeys: {}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 287,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01/vectors-crl\", map[string]string{\"01-store\": \"stand: {}\\nkeys: {}\\nvectors:\\n  common/crl: \" + helperCmd(\"vec\") + \" echo:1 {input}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 289,
+      "test": true,
+      "text": "os.WriteFile(filepath.Join(r.Asm.Modules[\"01-store\"].Dir, \"new\"), []byte(\"x\"), 0o644)"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 291,
+      "test": true,
+      "text": "if before[\"01-store\"] == after[\"01-store\"] || before[\"spec\"] != after[\"spec\"] {"
+    },
+    {
+      "path": "engine/internal/core/e2e_test.go",
+      "line": 298,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.1/door\", map[string]string{\"01-store\": storeProfile(\"\", t.TempDir())})"
+    },
+    {
+      "path": "engine/internal/core/expect_test.go",
+      "line": 223,
+      "test": true,
+      "text": "r := vecRunner(t, \"P/01.1/door\")"
+    },
+    {
+      "path": "engine/internal/core/expect_test.go",
+      "line": 241,
+      "test": true,
+      "text": "if vecRunner(t, \"P/01.2/rights\").rootSize()[\"size\"] {"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 15,
+      "test": true,
+      "text": "r := testRunner(t, \"P/02.2/put\", map[string]string{"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 16,
+      "test": true,
+      "text": "\"01-store\":     \"stand:\\n  store1: \" + helperCmd(\"store\") + \" -dir {data}/configstore -sockets {rundir}\\nkeys: {}\\n\","
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 17,
+      "test": true,
+      "text": "\"02-installer\": \"stand:\\n  manifest-put: \" + helperCmd(\"cmd\") + \" 0 {socket} {file}\\nkeys: {}\\n\","
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 41,
+      "test": true,
+      "text": "r := testRunner(t, \"P/02.5/variants\", map[string]string{"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 42,
+      "test": true,
+      "text": "\"01-store\":     \"stand:\\n  store: \" + helperCmd(\"store\") + \" -dir {data}/configstore -sockets {rundir} -rights {rights} -max-body {body_limit} -max-value {row_ceiling}\\nkeys:\\n  role_header: X-Role\\n\","
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 43,
+      "test": true,
+      "text": "\"02-installer\": \"stand:\\n  rights: \" + helperCmd(\"rights\") + \" {manifests} {deployment} {file}\\nkeys: {}\\n\","
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 74,
+      "test": true,
+      "text": "r := testRunner(t, \"P/02.1/seams\", map[string]string{\"02-installer\": \"stand: {}\\nkeys: {}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 85,
+      "test": true,
+      "text": "desc := map[string]any{\"format\": 1, \"source_pin\": r.S.Source, \"scope\": \"P/02.1/seams\", \"bridge\": map[string]any{"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 122,
+      "test": true,
+      "text": "return map[string]string{\"01-store\": \"stand:\\n  store: \" + helperCmd(\"store\") + \" -dir {data}/configstore -sockets {rundir} -rights {rights} -max-body {body_limit} -max-value {row_ceiling}\\n  store-op: \" + helperCmd(\"cmd\") + \" 0 {socket} {args}\\n  backup: \" + "
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 125,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01/production\", prof(build))"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 153,
+      "test": true,
+      "text": "r := testRunner(t, \"P/02.1/seams\", map[string]string{\"02-installer\": \"stand: {}\\nkeys: {}\\n\"})"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 156,
+      "test": true,
+      "text": "desc := map[string]any{\"format\": 1, \"source_pin\": r.S.Source, \"scope\": \"P/02.1/seams\", \"bridge\": map[string]any{"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 190,
+      "test": true,
+      "text": "os.WriteFile(filepath.Join(dir, \"m\", \"acceptance.yaml\"), []byte(\"format: 2\\nimplementation: t\\nmodule: 01-store\\nspec_version: 49e622795ca96b2e73904f1da5d203f2d103b2d5\\nbuild: \\\"true\\\"\\nstand: {}\\nkeys: {}\\nvectors:\\n  common/crl: \"+helperCmd(\"vec\")+\" echo:1 {"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 191,
+      "test": true,
+      "text": "os.WriteFile(filepath.Join(dir, \"a.yaml\"), []byte(\"format: 1\\nmodules:\\n  01-store: m/acceptance.yaml\\n\"), 0o644)"
+    },
+    {
+      "path": "engine/internal/core/families_test.go",
+      "line": 192,
+      "test": true,
+      "text": "r := newRunnerFor(t, s, filepath.Join(dir, \"a.yaml\"), \"P/01/vectors-crl\")"
+    },
+    {
+      "path": "engine/internal/core/group_test.go",
+      "line": 24,
+      "test": true,
+      "text": "return map[string]string{\"01-store\": \"stand:\\n  store: \" + helperCmd(\"store\") + \" -dir {data}/configstore -sockets {rundir} -rights {rights} -max-body {body_limit} -max-value {row_ceiling} -record \" + rec + \"\\n  store-op: \" + helperCmd(\"cmd\") + \" 0 {socket} {d"
+    },
+    {
+      "path": "engine/internal/core/group_test.go",
+      "line": 30,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.3/group\", groupProfile(rec, \"raft\"))"
+    },
+    {
+      "path": "engine/internal/core/group_test.go",
+      "line": 68,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.3/group\", groupProfile(t.TempDir(), build))"
+    },
+    {
+      "path": "engine/internal/core/group_test.go",
+      "line": 78,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.3/group\", groupProfile(t.TempDir(), \"raft\"))"
+    },
+    {
+      "path": "engine/internal/core/group_test.go",
+      "line": 111,
+      "test": true,
+      "text": "r := testRunner(t, \"P/01.3/group\", groupProfile(t.TempDir(), \"raft\"))"
+    },
+    {
+      "path": "engine/internal/core/helper_test.go",
+      "line": 105,
+      "test": true,
+      "text": "buf.WriteString(\"HTTP/1.1 200 OK\\r\\nContent-Type: application/json\\r\\nContent-Length: 2\\r\\n\\r\\n{}\")"
+    },
+    {
+      "path": "engine/internal/core/helper_test.go",
+      "line": 108,
+      "test": true,
+      "text": "buf.WriteString(\"HTTP/1.1 200 OK\\r\\nContent-Type: application/json\\r\\nContent-Length: 2\\r\\n\\r\\n{}\")"
+    },
+    {
+      "path": "engine/internal/core/http.go",
+      "line": 254,
+      "test": false,
+      "text": "fmt.Fprintf(&b, \"%s %s HTTP/1.1\\r\\nHost: localhost\\r\\n\", method, target)"
+    },
+    {
+      "path": "engine/internal/core/prodrun.go",
+      "line": 126,
+      "test": false,
+      "text": "r.Rep.Notes = append(r.Rep.Notes, \"open: the verification of a TLS peer by the daemon (P/01.3-09) is checked by reading\")"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 80,
+      "test": true,
+      "text": "tg := s.Target(\"P/01.3/group\")"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 81,
+      "test": true,
+      "text": "if tg.Body != \"subset\" || tg.Selection != \"first-step:@group-setup\" || !reflect.DeepEqual(tg.Keys, []OwnedKey{{\"01-store\", \"store_build\"}, {\"01-store\", \"role_header\"}}) {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 84,
+      "test": true,
+      "text": "if !s.Target(\"P/01.1/inproc\").Optional() || s.Target(\"P/01.1/door\").Optional() {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 113,
+      "test": true,
+      "text": "rel := \"Platform/01-store/acceptance/1/scenarios.tsv\""
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 118,
+      "test": true,
+      "text": "p := s.BuildPlan(s.Target(\"P/01.1/door\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 128,
+      "test": true,
+      "text": "if q := s.BuildPlan(s.Target(\"P/01.2/rights\")); len(q.LineErrs)+len(q.DataErrs) != 0 {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 137,
+      "test": true,
+      "text": "text := strings.Replace(string(b), \"P/01/vectors-crl\\tvector\\t\", \"P/01/vectors-crl\\tvectorz\\t\", 1)"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 139,
+      "test": true,
+      "text": "if s.Target(\"P/01/vectors-crl\").DataErr == \"\" {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 142,
+      "test": true,
+      "text": "if s.Target(\"P/01/vectors-jcs\").DataErr != \"\" {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 157,
+      "test": true,
+      "text": "group := s.BuildPlan(s.Target(\"P/01.3/group\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 158,
+      "test": true,
+      "text": "daemon := s.BuildPlan(s.Target(\"P/01.3/daemon\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 180,
+      "test": true,
+      "text": "door := s.BuildPlan(s.Target(\"P/01.1/door\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 189,
+      "test": true,
+      "text": "seams := s.BuildPlan(s.Target(\"P/02.1/seams\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 197,
+      "test": true,
+      "text": "p := s.BuildPlan(s.Target(\"P/01.1/extra\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 217,
+      "test": true,
+      "text": "p := s.BuildPlan(s.Target(\"P/01/production\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 245,
+      "test": true,
+      "text": "fr := s.BuildPlan(s.Target(\"P/01/vectors-family-read\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 247,
+      "test": true,
+      "text": "t.Errorf(\"family-read for 01-store: %v\", ct)"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 249,
+      "test": true,
+      "text": "lm := s.BuildPlan(s.Target(\"P/02/vectors-log-mask\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 251,
+      "test": true,
+      "text": "t.Errorf(\"log-mask for 02-installer (mask_in only for 06-console): %v\", ct)"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 254,
+      "test": true,
+      "text": "tg := *s.Target(\"P/02/vectors-platform-lists\")"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 255,
+      "test": true,
+      "text": "tg.Commands = append(append([]Callable{}, tg.Commands...), Callable{\"02-installer\", \"vectors\", \"02-installer/platform-lists\"})"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 279,
+      "test": true,
+      "text": "se := s.BuildPlan(s.Target(\"P/02/vectors-sealing\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 290,
+      "test": true,
+      "text": "t.Error(\"the rotate rows are selected for 02-installer\")"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 293,
+      "test": true,
+      "text": "ex := s.BuildPlan(s.Target(\"P/02/vectors-exec\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 301,
+      "test": true,
+      "text": "v := s.BuildPlan(s.Target(\"P/02.1/load\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 305,
+      "test": true,
+      "text": "p := s.BuildPlan(s.Target(\"P/02.2/put\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 309,
+      "test": true,
+      "text": "q := s.BuildPlan(s.Target(\"P/02.3/put\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 313,
+      "test": true,
+      "text": "va := s.BuildPlan(s.Target(\"P/02.5/variants\"))"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 368,
+      "test": true,
+      "text": "{\"duplicate callable\", pTargets, \"P/01/vectors-crl\\t\", func(l string) string {"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 369,
+      "test": true,
+      "text": "return strings.Replace(l, `[{\"owner\":\"01-store\",\"section\":\"vectors\",\"key\":\"common/crl\"}]`, `[{\"owner\":\"01-store\",\"section\":\"vectors\",\"key\":\"common/crl\"},{\"owner\":\"01-store\",\"section\":\"vectors\",\"key\":\"common/crl\"}]`, 1)"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 370,
+      "test": true,
+      "text": "}, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 371,
+      "test": true,
+      "text": "{\"owner outside the modules\", pTargets, \"P/01/vectors-crl\\t\", func(l string) string { return strings.Replace(l, \"\\t01-store\\t\", \"\\t99-none\\t\", 1) }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 372,
+      "test": true,
+      "text": "{\"unknown flag\", pTargets, \"P/01/vectors-crl\\t\", func(l string) string { return strings.Replace(l, \"\\t[]\\n\", \"\", 1)[:len(l)-2] + `[\"often\"]` }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 373,
+      "test": true,
+      "text": "{\"selection outside its form\", pRouting, \"P/01.2/rights\\t\", func(l string) string { return strings.Replace(l, \"\\tall\\t\", \"\\tsome\\t\", 1) }, \"P/01.2/rights\", \"P/01.1/door\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 374,
+      "test": true,
+      "text": "{\"body of a vector target\", pRouting, \"P/01/vectors-crl\\t\", func(l string) string { return strings.TrimSuffix(l, \"-\") + \"whole\" }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 375,
+      "test": true,
+      "text": "{\"wire inputs field outside the form\", pWire, \"common/crl\\t\", func(l string) string { return strings.Replace(l, `\"when\":\"true\"`, `\"when\":\"true\",\"colour\":\"x\"`, 1) }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 376,
+      "test": true,
+      "text": "{\"wire code outside 0..255\", pWire, \"common/crl\\t\", func(l string) string { return strings.Replace(l, `\"code\":0`, `\"code\":256`, 1) }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 377,
+      "test": true,
+      "text": "{\"wire column outside the header\", pWire, \"common/crl\\t\", func(l string) string { return strings.Replace(l, `{\"column\":\"input\"}`, `{\"column\":\"inptu\"}`, 1) }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 378,
+      "test": true,
+      "text": "{\"wire frame\", pWire, \"common/crl\\t\", func(l string) string { return strings.Replace(l, `\"frame\":\"json\"`, `\"frame\":\"yaml\"`, 1) }, \"P/01/vectors-crl\", \"P/01/vectors-jcs\"},"
+    },
+    {
+      "path": "engine/internal/core/spec_test.go",
+      "line": 379,
+      "test": true,
+      "text": "{\"consumers unknown lesson\", pConsumers, \"common/crl\\t\", func(l string) string { return strings.Replace(l, \"\\t01-store\\t\", \"\\t99-none\\t\", 1) }, \"P/01/vectors-jcs\", \"P/01.1/door\"},"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 94,
+      "test": true,
+      "text": "r := vecRunner(t, \"P/02/vectors-exec\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 113,
+      "test": true,
+      "text": "rv := vecRunner(t, \"P/01/vectors-revoked\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 127,
+      "test": true,
+      "text": "ef := vecRunner(t, \"P/02/vectors-env-files\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 140,
+      "test": true,
+      "text": "pl := vecRunner(t, \"P/02/vectors-platform-lists\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 155,
+      "test": true,
+      "text": "fr := vecRunner(t, \"P/01/vectors-family-read\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 170,
+      "test": true,
+      "text": "r := vecRunner(t, \"P/01/vectors-rights-evaluator\")"
+    },
+    {
+      "path": "engine/internal/core/vector_test.go",
+      "line": 196,
+      "test": true,
+      "text": "r := vecRunner(t, \"P/02/vectors-exec\")"
+    },
+    {
+      "path": "engine/internal/core/wirecheck.go",
+      "line": 561,
+      "test": false,
+      "text": "if cm == \"turn\" && !(w.Package == \"common/turn\" && w.Table == \"cases.tsv\" && w.Surface == \"vectors\") {"
+    },
+    {
+      "path": "engine/internal/core/wirecheck.go",
+      "line": 562,
+      "test": false,
+      "text": "return fmt.Errorf(\"compare turn only for (common/turn, cases.tsv, vectors)\")"
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 31,
+      "test": true,
+      "text": "for _, m := range strings.Fields(\"01-store 02-installer 03-worker 04-controller 05-resource 06-console 07-console-module 08-domain 09-agent 10-domain-console\") {"
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 63,
+      "test": true,
+      "text": "p, err := load(t, f, base+\"unit: 'make test'  # regressions\\nadapters: {}\\nvectors:\\n  01-store/jcs: bin/jcs {input}\\ncode: {}\\n\")"
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 70,
+      "test": true,
+      "text": "if p.Unit != \"make test\" || p.Vectors[\"01-store/jcs\"] == \"\" {"
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 100,
+      "test": true,
+      "text": "\"vectors without {input}\":     base + \"vectors:\\n  common/crl: bin/crl\\n\","
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 123,
+      "test": true,
+      "text": "w := \"format: 2\\nimplementation: i\\nmodule: 03-worker\\nspec_version: 49e622795ca96b2e73904f1da5d203f2d103b2d5\\nbuild: b\\nstand:\\n  worker: %s\\nkeys: {}\\nartifacts:\\n  a: a\\n\""
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 130,
+      "test": true,
+      "text": "a := \"format: 2\\nimplementation: i\\nmodule: 09-agent\\nspec_version: 49e622795ca96b2e73904f1da5d203f2d103b2d5\\nbuild: b\\nstand:\\n  token-door: %s\\nkeys: {}\\nartifacts:\\n  a: a\\n\""
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 184,
+      "test": true,
+      "text": "if _, err := LoadAssembly(write(\"format: 1\\nmodules:\\n  01-store: s/acceptance.yaml\\n\"), f); err != nil {"
+    },
+    {
+      "path": "engine/internal/prof/profile_test.go",
+      "line": 187,
+      "test": true,
+      "text": "if _, err := LoadAssembly(write(\"format: 1\\nmodules:\\n  02-installer: s/acceptance.yaml\\n\"), f); err == nil {"
+    }
+  ],
+  "ADR0135_changed_at_final_fetch": false,
+  "task_changed_at_final_read": false,
+  "origin_main_at_handoff": "f957583fb9750a75a52a38915cbf78da824a1807",
+  "check_spec": {
+    "command": [
+      "/home/pilot/venv-spec/bin/python",
+      "skills/lesson-spec/scripts/check_spec.py",
+      "--scope",
+      "platform"
+    ],
+    "exit_code": 0,
+    "log": "check-spec.log",
+    "checked_course_base": "fed0334d1fbc382fa4fef7860c1890c1f3e9d70b"
+  }
+}
