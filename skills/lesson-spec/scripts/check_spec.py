@@ -608,6 +608,10 @@ REGISTERED_SHARED_LESSONS = {
         "instructions": Path("Platform/common/acceptance/spec/acceptance.README.md"),
     },
 }
+# The system checklist (ADR-0130 Addendum (19) п. 6): items of a lesson that need several lessons, the OS or a host; an
+# optional h2 after the readiness checklist, in both languages. Its ids are checklist ids (id-map, ru↔en), they carry no
+# stage of stages.tsv and may not be placed on one.
+SYSTEM_EN, SYSTEM_RU = "System checklist", "Перечень урока системы"
 STAGE_NORM_REQUIRED = {"P/01"}   # ADR-0133 (43): explicit adoption; absence of item elements cannot opt out.
 INVENTORY_BEGIN = "<!-- checklist-inventory:begin -->"   # опись чеклистов в instruction (решение 2026-11-06)
 INVENTORY_END = "<!-- checklist-inventory:end -->"
@@ -759,7 +763,9 @@ def composition_members(node):
 
 def outline(text, id_pattern=NORM_ID, checklist_title="Чеклист готовности"):
     """Norms text → (h2 headings, checklist ids): an id is the strong text that opens a list item of «Чеклист
-    готовности» after `[ ]`/`[x]`."""
+    готовности» after `[ ]`/`[x]`. `checklist_title` is one h2 title or a tuple of them (the readiness checklist and
+    the system checklist, ADR-0130 Addendum (19) п. 6)."""
+    titles = (checklist_title,) if isinstance(checklist_title, str) else tuple(checklist_title)
     tokens = MarkdownIt("commonmark").parse(text)
     headings, ids, stack = [], [], []
     section = None
@@ -771,7 +777,7 @@ def outline(text, id_pattern=NORM_ID, checklist_title="Чеклист готов
             section = "".join(child.content for child in inline.children or []
                               if child.type in {"text", "code_inline"}).strip()
             headings.append(section)
-        if (token.type == "inline" and section == checklist_title and
+        if (token.type == "inline" and section in titles and
                 len(stack) == 3 and stack[0] in {"bullet_list_open", "ordered_list_open"} and
                 stack[1:] == ["list_item_open", "paragraph_open"]):
             children = [child for child in token.children or []
@@ -820,6 +826,7 @@ class Check:
         self.root = root.resolve()
         self.strict_coverage = strict_coverage
         self.errors = []
+        self.system_ids = set()   # ids of system checklists (SYSTEM_RU/SYSTEM_EN): checklist ids without a stage
         self.stats = Counter()
         self.excepted = []
         self.registry = {}
@@ -1273,7 +1280,7 @@ class Check:
             if re.fullmatch(r"[0-9]{2}(?:\." + CHAPTER + r")?-[^.]+\.norms\.md", path.name):
                 text = self.read(path)
                 if text is not None:
-                    ids |= set(outline(text)[1])
+                    ids |= set(outline(text, NORM_ID, ("Чеклист готовности", SYSTEM_RU))[1])
         return ids
 
     def norm_moved(self, norm):
@@ -1648,7 +1655,12 @@ class Check:
             return path
 
     def norms(self, path, text, prefix, allow_empty=False):
-        headings, ids = outline(text)
+        headings, ids = outline(text, NORM_ID, ("Чеклист готовности", SYSTEM_RU))
+        for readiness, system in (("Чеклист готовности", SYSTEM_RU),):
+            if system in headings and (headings.count(system) != 1 or readiness not in headings
+                                       or headings.index(system) < headings.index(readiness)):
+                self.error(path, f"the section {system} comes once, after {readiness}")
+        self.system_ids |= set(outline(text, NORM_ID, SYSTEM_RU)[1])
         headers = [match.group(1) for heading in headings
                    if (match := re.match(r"[НN]([0-5])(?:\s|$)", heading))]   # N0–N5 латиницей (ADR-0121 доп. (5) п. 1)
         if headers != [str(i) for i in range(6)]:
@@ -1690,10 +1702,10 @@ class Check:
             source_text, russian_text = texts[source], texts[russian]
             # Reuse the norms parser; its ordinary numeric lesson defaults remain unchanged.
             normalized = source_text.replace("## Implementation decides", "## Решает реализация").replace(
-                "## Readiness checklist", "## Чеклист готовности")
+                "## Readiness checklist", "## Чеклист готовности").replace(f"## {SYSTEM_EN}", f"## {SYSTEM_RU}")
             self.norms(source, normalized, prefix)
-            en_headings, en_ids = outline(source_text, None, "Readiness checklist")
-            ru_headings, ru_ids = outline(russian_text, None)
+            en_headings, en_ids = outline(source_text, None, ("Readiness checklist", SYSTEM_EN))
+            ru_headings, ru_ids = outline(russian_text, None, ("Чеклист готовности", SYSTEM_RU))
             for path, headings, ids, decides, readiness in (
                     (source, en_headings, en_ids, "Implementation decides", "Readiness checklist"),
                     (russian, ru_headings, ru_ids, "Решает реализация", "Чеклист готовности")):
@@ -1702,7 +1714,10 @@ class Check:
                 n6 = ("N6 Production qualification of P/01" if path == source
                       else "N6 Боевая квалификация P/01")
                 n6_positions = [i for i, title in enumerate(structural) if title == n6]
+                system = SYSTEM_EN if path == source else SYSTEM_RU
                 required = [title for title in structural if title != n6]
+                if required[-1:] == [system]:
+                    required = required[:-1]     # the optional system checklist closes the outline
                 if (required != [*(f"N{i}" for i in range(6)), decides, readiness]
                         or len(n6_positions) > 1
                         or any(i <= structural.index("N5") for i in n6_positions
@@ -1934,7 +1949,7 @@ class Check:
                     stages.setdefault(value, []).append(row["stage"])
         if not required and not counts:
             return
-        wanted = []
+        wanted, system_items = [], set()
         sources = sorted((home / "spec").glob("*.norms.md"))
         if not sources:
             self.error(home / "spec", "stage norms: no canonical norms files")
@@ -1950,6 +1965,7 @@ class Check:
                     self.error(path, f"stage norms: malformed or foreign checklist item {value!r}")
                 else:
                     wanted.append(value)
+            system_items.update(outline(body, None, SYSTEM_EN)[1])
         expected = set(wanted)
         if required and not expected:
             self.error(home / "spec", "stage norms: no canonical checklist items")
@@ -1961,7 +1977,9 @@ class Check:
                 self.error(table, f"stage norms: checklist item {value} is at no stage")
             elif counts[value] > 1:
                 self.error(table, f"stage norms: checklist item {value} repeats at stages {stages[value]}")
-        for value in sorted(counts.keys() - expected):
+        for value in sorted(counts.keys() & system_items):
+            self.error(table, f"stage norms: {value} is a system checklist item and has no stage (ADR-0130 Addendum (19) п. 6)")
+        for value in sorted(counts.keys() - expected - system_items):
             self.error(table, f"stage norms: {value} is no checklist item of this lesson")
         self.stats["stage_norm_items"] += len(expected)
         self.stats["stage_norm_placements"] += sum(counts.values())
@@ -3460,7 +3478,7 @@ class Check:
             # A chapter's own texts count the chapter.
             for path, body in chapter_texts.items():
                 self.counts(path, body, prefix, ids, scenarios, False, verdict_counts, choices or None)
-            all_ids += ids
+            all_ids += [value for value in ids if value not in self.system_ids]   # the inventory lists readiness items
             total_choices += choices or 0
             for name, value in (("scenarios", scenarios), ("verdicts", verdict_counts)):
                 if value is not None:
