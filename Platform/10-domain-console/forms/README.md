@@ -1,6 +1,6 @@
 # P/10 input and refusal forms
 
-This English text is the source; ru/forms/README.md is its Russian translation for people, not in the export (ADR-0121). These forms express the existing norms under ADR-0125 addendum (5).
+This English text is the source; ru/forms/README.md is its Russian translation for people, not in the export. These forms express the existing norms.
 
 ## Inputs and constants
 
@@ -20,7 +20,7 @@ The word cell is a source catalogue index, never a free choice of error for a co
 
 ## Seams and stages
 
-[stages.tsv](stages.tsv) declares 9 stages. Every stage is kit=-: no whole stage or ordinary process algorithm is claimed generated. The flags, refusals, door, vectors and stagetests parts assist only their declared material; no new KIT_PARTS or core part is introduced. Chapter 10 uses acceptance/ directly. The 82 CALL steps of 44 scenarios in [acceptance/seams.tsv](../acceptance/seams.tsv) are kit assistance for the properties that the ordinary stand does not reach: the start, the role door without the TLS stand, door.pass without a worker on the domain, deadlines, breaks and the store reads that admin.sock cannot produce. All 16 ordinary scenarios / 163 steps, the vector alarms (the [current corpus](../vectors/alarms/README.md)), the common packages assigned by consumers.tsv, the neighbours on the P/08 stands, the TLS stand when it is ready and the items checked by reading remain mandatory. Build or these seams alone never give P/10 GREEN.
+[stages.tsv](stages.tsv) declares 9 stages. Every stage is kit=-: no whole stage or ordinary process algorithm is claimed generated. The flags, refusals, door, vectors and stagetests parts assist only their declared material; no new KIT_PARTS or core part is introduced. Chapter 10 uses acceptance/ directly. The 82 CALL steps of 44 scenarios in [acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: acceptance cases for P/10-R016) are kit assistance for the properties that the ordinary stand does not reach: the start, the role door without the TLS stand, door.pass without a worker on the domain, deadlines, breaks and the store reads that admin.sock cannot produce. All 16 ordinary scenarios / 163 steps, the vector alarms (the [current corpus](../vectors/alarms/README.md)), the common packages assigned by consumers.tsv, the neighbours on the P/08 stands, the TLS stand when it is ready and the items checked by reading remain mandatory. Build or these seams alone never give P/10 GREEN.
 
 CALL/JSON uses [P/02 Non-HTTP seams](../../02-installer/forms/README.md): one strict JSON input and one result, recursive object subset, exact arrays and exact empty objects. The port table below is the machine-readable port declaration. The JSON fixture word selects the intervention described here, never a prepared expected answer. No public native command or application HTTP route is introduced.
 
@@ -40,7 +40,7 @@ Each scenario has its own temporary root, a valid neutral catalogue with the sub
 
 The seams follow existing norm sentences, cited by requirement in the stage norms column: the start — P/10-R003 (P/02.3 N3 «Process start» step 4); age, the absent counter and not in the directory — P/10-R004; the shut gate — P/10-R008 and the gate-and-pass contract; the alarm input — P/10-R011, P/10-R014; the passing, its wait and the answer — P/10-R005, P/10-R013 and the forwarding contract; the role door and accept by a console — P/10-R007, P/10-R006 and the role certificate contract; door.pass, its scope and the second kind — P/10-R009, P/10-R008 and the gate-and-pass contract.
 
-## Review effect fixtures
+## Effect fixtures
 
 All CALL steps are selected by stages. The credential port's full contract is [the forwarding credential seams](../acceptance/README.md#forwarding-credential-seams), including actual first-hop P/06 paths; it remains mandatory. No whole stage is kit-generated. P/10 owns no data family, so the imported read schemas are checked by the read doors and fixtures, not advertised as a nonexistent own `families` output.
 
