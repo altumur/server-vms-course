@@ -1,0 +1,8 @@
+# P/02.5 N1.3, N1.4, N3 step 4: the secret prefix va/vault/ closes only the rows under the slash: its reader vaworker reads them, the others get
+# the negation; the exact key va/vault and the neighbour va/vault2 keep the ordinary rights. role, action, key, allow | deny.
+role	action	key	expect
+vaworker	read	va/vault/x	allow
+console	read	va/vault/x	deny
+vacontroller	read	va/vault/x	deny
+console	read	va/vault	allow
+console	read	va/vault2	allow

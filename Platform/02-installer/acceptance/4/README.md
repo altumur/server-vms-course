@@ -2,13 +2,13 @@
 
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` is derived from it by translation and is not edited by hand (ADR-0121).
 
-This directory supplies [`seams.tsv`](seams.tsv) to generated stagetests (ADR-0125 addendum (4) item 7 and addendum (5)). It adds no HTTP stand or public runner target for P/02.4. Its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
+This directory supplies [`seams.tsv`](seams.tsv) to generated stagetests (ADR-0125 addendum (4) item 7 and addendum (5)). It adds no HTTP stand. The engine word `run` executes the table through the seam adapter protocol of the common acceptance README; its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
 
 The obligations of these scenarios are P/02.3 N3 step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» with P/02.4-14, and P/02.4 N1.9 poll with P/02.4-22; the scenario subjects are in [judge-only case data](README.cases.md).
 
 Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes 0 versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
 
-The source traces exercise the complete machine; these seven sampled poll scenarios are a smaller implementation regression. They do not prove the real rollout, get/install, store and console barriers, OS/service-manager effects, TLS, revocation, operator windows or remote-client behavior. Those retain the named checks of the norms and readiness checklist. The 947 loader cases, existing puts tables and rights acceptance remain separate. No implementation was run when preparing these seams.
+The source traces exercise the complete machine; these seven sampled poll scenarios are a smaller implementation regression. They do not prove the real rollout, get/install, store and console barriers, OS/service-manager effects, TLS, revocation, operator windows or remote-client behavior. Those retain the named checks of the norms and readiness checklist. The 951 loader cases, existing puts tables and rights acceptance remain separate. No implementation was run when preparing these seams.
 
 ## Profile interface
 
@@ -33,5 +33,5 @@ temporary daemon under `$data/configstore`), installs the owned manifest [`tests
 ordinary `manifest put`, writes exactly the given rows by `cas ""`, sets no ring (`SECRETS_KEY` is unset) and invokes the command
 function with argv against this store. It returns `{exit_code:<integer>, unknown:[…], untouched:<bool>}`: `unknown` — the keys of
 the log lines «`<key>` unknown-row-form» of the call, sorted, each once; `untouched` — every given row has the same bytes and version
-after the call. By P/02.4 N1.9 «Walk» a row that matches no row family is listed, code 1; a kept row of a manifest (`domain.kept`) is not listed and does not affect the code. Both seams are outside a stage gate of
-[`stages.tsv`](../../forms/stages.tsv): the generated kit has no adapter function for this CALL yet, and the seams are not claimed as run.
+after the call. By P/02.4 N1.9 «Walk» a row that matches no row family is listed, code 1; a kept row of a manifest (`domain.kept`) is not listed and does not affect the code. Both seams are excluded from the judgement: they stand on no gate of
+[`stages.tsv`](../../forms/stages.tsv), they do not count for P/02.4-14 (stage 8 closes it by `s2`–`s4`), and a target that runs this table does not select them. The reason: the CALL `secrets-walk` needs an adapter that prepares a store of P/01 and installs a manifest, and the seam adapter protocol has no such function yet.

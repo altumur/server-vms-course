@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Acceptance P/02.5: store door under the deployment roles of testsub (scenarios 01–04, 09, 11, 12 from M10/06, stage B; 05–08, 10 from Platform/01-store/acceptance/2). Format: README.
+# Acceptance P/02.5: store door under the deployment roles of testsub. This file holds scenarios 01–04, 09, 11, 12 (from M10/06, stage B) and 13 (ADR-0091); scenarios 05–08 and 10 moved to Platform/01-store/acceptance/2. Format: the dictionary of directives and doors of the common acceptance README; roles and isolation: README.
 01-worker	1	@as testsubworker POST /v1/write {"id":"a1","op":"put","key":"testsub/epoch/c1","items":{"epoch":"1"},"cas":""}	200
 01-worker	2	POST /v1/write {"id":"a2","op":"put","key":"testsub/slots/w-1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 01-worker	3	POST /v1/write {"id":"a3","op":"put","key":"testsub/holds/p1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"1","by":"w-1"},"cas":""}	200

@@ -697,6 +697,11 @@ t34_flow_leading_comma	refused
 t34b_flow_map_double_comma	refused
 secrets_readers_overlap	refused
 secrets_readers_exact_prefix_ok	ok
+# Run 32: a key of secrets.readers by the pattern of P/02.1 N1.2 — no «*», no leading «!», no «delete:» (P/02.5 N1.3); refusal by form.
+r32_secrets_readers_star	refused
+r32_secrets_readers_inner_star	refused
+r32_secrets_readers_negation	refused
+r32_secrets_readers_delete	refused
 worker_writes_declared_ok	ok
 worker_writes_declared_list_ok	ok
 worker_writes_unit_rows	refused

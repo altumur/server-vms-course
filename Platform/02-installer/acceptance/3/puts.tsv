@@ -1,6 +1,8 @@
 # Acceptance P/02.3: sequential manifest put installations (N3 «Manifest change»). Row: case<TAB>puts<TAB>expect.
 # puts lists space-separated `puts/<name>.subsystem.yaml` files installed in order into one fresh store; expect is the return code
-# of the final installation and the resulting rev of platform/manifest/<name> for the final file («-» means no row). Rules: README.
+# of the final installation and the resulting rev of platform/manifest/<name> for the final file («-» means no row).
+# Form and execution: «Installation sequences» of the common acceptance README (engine word puts); the subjects: README.
+# beside: Platform/06-console/acceptance/5/inputs/testsub2
 case	puts	expect
 same_twice	probe probe	0 1
 changed	probe probe-changed	0 2
@@ -37,13 +39,26 @@ near_no_target	near-client	0 1
 near_target_after	near-client near-target	0 1
 near_bad_field	near-target near-client-bad	2 -
 near_target_after_mismatch	near-client-bad near-target	2 -
-toolarge_row	toolarge-base toolarge-big	2 1
+toolarge_row	toolarge-base toolarge-big	2 1 @stderr ~platform/manifest/probe
+# P/02.3 N1.5 rules, data/manifest-row.outcomes.tsv (reader admin): an unreadable manifest row — manifest put refuses and writes nothing.
+row_spoiled_yaml	probe @row-spoil yaml probe	2 1
+row_spoiled_sha256	probe @row-spoil sha256 probe	2 1
 self_table_list	list-self	2 -
 other_table_list	list-other-a list-other-b	2 -
 list_tables_ok	list-ok	0 1
+# P/02.1 N3 «load_catalogue», P/02.1-20: the pairwise intersection with the two manifests swapped — the same refusal, at the installation of the second one.
+other_rows_swap	other-rows probe	2 -
+other_table_swap	ledger with-table	2 -
+other_table_list_swap	list-other-b list-other-a	2 -
+# P/02.1 N3 «load_catalogue», P/02.1-20: positive controls — the conflicting family renamed, the manifest names kept; the catalogue passes.
+self_rows_renamed	self-rows-ok	0 1
+self_table_renamed	self-table-ok	0 1
+other_rows_renamed	probe-rows-ledger other-rows	0 1
+other_table_renamed	with-table-notes ledger	0 1
+other_table_list_renamed	list-other-a-notes list-other-b	0 1
 rev_max_same	revmax-a @rev-max revmax-a	0 9007199254740991
-rev_max_changed	revmax-a @rev-max revmax-b	2 9007199254740991
-shell_onclick	paged @shell-put paged paged	2 1
+rev_max_changed	revmax-a @rev-max revmax-b	2 9007199254740991 @stderr ~platform/manifest/revmax
+shell_onclick	paged @shell-put paged paged	2 1 @stderr ~onmouseover
 shell_same_twice	pagedok @shell-put pagedok pagedok pagedok	0 2
 shell_changed	pagedok @shell-put pagedok pagedok @shell-put pagedok-alt pagedok	0 3
 shell_script_text	pagedok @shell-put pagedtext pagedok	0 2
@@ -67,13 +82,13 @@ os_name_part_share_bound_ok	os-part-share-ok	0 1
 # ADR-0094 B7: console.files beside the manifest and the declared shell (P/02.3 N3, N4).
 files_ok	filed	0 1
 files_same_twice	filed filed	0 1
-files_missing	filed-missing	2 -
-files_missing_second	filed filed-missing	2 1
+files_missing	filed-missing	2 - @stderr ~nosuch.js
+files_missing_second	filed filed-missing	2 1 @stderr ~nosuch.js
 files_dropped	filed filed-none	0 2
 files_added	filed-none filed	0 2
 shell_declared_missing	pagedecl	2 -
 shell_declared_ok	pagedecl-bare @shell-put pagedok pagedecl	0 2
-files_file_over	filed-none @file-fill big.js 8388609 filed-big	2 1
+files_file_over	filed-none @file-fill big.js 8388609 filed-big	2 1 @stderr ~big.js
 files_file_max	filed-none @file-fill big.js 8388608 filed-big	0 2
 files_total_over	filed-none @file-fill sum1.js 8388608 @file-fill sum2.js 8388608 @file-fill sum3.js 8388608 @file-fill sum4.js 8388608 @file-fill sum5.js 1 filed-sum	2 1
 # ADR-0094 B1: door.pass.calls names a catalogue subsystem: door exists — ok; subsystem absent — defer; door absent — catalogue refusal.

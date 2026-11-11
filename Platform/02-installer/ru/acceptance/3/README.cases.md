@@ -6,7 +6,7 @@
 
 ### Исходный отрывок 1
 
-[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) N5. В `puts.tsv` 87 установок (9 после `near_*` — аудит покрытия P/02 2026-10-30, следующие 16 — его второй проход, ниже; 11 следующих — ADR-0094 B7; 3 `calls_*` — перечень обратного вызова у подсистемы каталога, ADR-0094 B1; 3 `calls_requests_*` — запись `<s>/requests` чужой подсистемы (она в каталоге без `requests` — принята; её нет — отсрочка) и своей, P/06.3 N1.9 (ревью урока P/02, S5); 3 `calls_first_*`, `calls_second_kind` — ADR-0112 доп. (3) п. 2; две последних `calls_pulse_ok`, `calls_pulse_bad` — объявленная дверь пульса); файлы установок — `puts/`.
+[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) N5. В `puts.tsv` 97 установок (2 `row_spoiled_*` после `toolarge_row` — нечитаемая строка манифеста директивой `@row-spoil`, правила P/02.3 N1.5 и `manifest-row.outcomes.tsv`, читатель `admin`; 8 `*_swap` и `*_renamed` после `list_tables_ok` — пересечение каталога главы 2.1 с обратным порядком и его положительные контроли, P/02.1-20; 9 после `near_*` — аудит покрытия P/02 2026-10-30, следующие 16 — его второй проход, ниже; 11 следующих — ADR-0094 B7; 3 `calls_*` — перечень обратного вызова у подсистемы каталога, ADR-0094 B1; 3 `calls_requests_*` — запись `<s>/requests` чужой подсистемы (она в каталоге без `requests` — принята; её нет — отсрочка) и своей, P/06.3 N1.9 (ревью урока P/02, S5); 3 `calls_first_*`, `calls_second_kind` — ADR-0112 доп. (3) п. 2; две последних `calls_pulse_ok`, `calls_pulse_bad` — объявленная дверь пульса); файлы установок — `puts/`.
 
 ### Исходный отрывок 2
 
@@ -35,11 +35,11 @@
 - `self_table_list`, `other_table_list`, `list_tables_ok` (B04): проверки каталога со списковой формой `tables`, парные
   `self_table`, `other_table` (глава 2.1 N3, P/02.1-20).
 - `rev_max_same`, `rev_max_changed` (B02): граница `rev` = 2^53 − 1 директивой `@rev-max`: тот же файл — «unchanged»,
-  код 0; изменённый — отказ до любой записи, код 2, rev прежний (N3, N4). Ключ строки и `rev` в stderr — чтением по N4.
+  код 0; изменённый — отказ до любой записи, код 2, rev прежний (N3, N4). Ключ строки в stderr — `@stderr ~platform/manifest/revmax`, значение `rev` — чтением по N4.
 - `shell_script_text` (C02-SHELL-TAG-01): `onclick=` в тексте скрипта, `onload=` в стиле, `onclick=` в комментарии и `data-on=` — не атрибут `on…=`, оболочка принята, rev 2; реализацией ещё не прогнан.
 - `shell_onclick`, `shell_same_twice`, `shell_changed` (B03): после установки без оболочки (rev 1) оболочка `paged.shell.html`
   с `onmouseover=` — код 2 до чтения каталога, rev прежний 1; появилась оболочка — новая ревизия (отсутствие равно пустому),
-  те же yaml и оболочка снова — «unchanged» (rev 2); оболочка иная по байтам (`@shell-put pagedok-alt`) — rev 3 (N1.5, N3). Имя атрибута в stderr — чтением по N4. Форма проверки — check_spec 0021baa83 («Архитектор»).
+  те же yaml и оболочка снова — «unchanged» (rev 2); оболочка иная по байтам (`@shell-put pagedok-alt`) — rev 3 (N1.5, N3). Имя атрибута в stderr — `@stderr ~onmouseover`. Форма проверки — check_spec 0021baa83 («Архитектор»).
 
 ### Исходный отрывок 4
 

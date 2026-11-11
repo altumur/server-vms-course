@@ -19,13 +19,9 @@ All three lines are in `puts-ceiling.tsv`. The third one, `ceiling_rev_10`, is t
 each `@view-delete` and `probe` is a new revision (case 03 `view_deleted`), so the view of rev 9 weighs exactly 977 and is written, and the
 view of rev 10 weighs 978 (one more digit of `rev`). The installer checks the weight with the final new rev before any write (chapter 2.3 N3
 step 14a), so the last installation refuses before the parts, the row and the mark. The same boundary reached through a `cas` conflict of two
-installers (the full catalogue read with rev 8, another installer writes rev 9 first) is checked by reading: the table installs sequentially.
+installers (the full catalogue read with rev 8, another installer writes rev 9 first) is not judged in this lesson: it needs the store of another lesson (the stage of the system); the table installs sequentially.
 
 ### Original passage 2
-
-2. with code `2` — stderr names the file of the last installation and the key of the refused row: for the case `rev_spoiled` (the last directive before the installation is `@rev-spoil`) — the key of the mark `platform/manifest/<name>/rev`, otherwise — the key of the view `platform/manifest/<name>/canonical/1` (both are part of the
-
-### Original passage 3
 
 | № | Case | What it checks | Norm |
 |---|---|---|---|
@@ -40,6 +36,6 @@ installers (the full catalogue read with rev 8, another installer writes rev 9 f
 | 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
 
 
-### Original passage 4
+### Original passage 3
 
 `manifest` — `87 +` the length of the view. The files 05 and 06 differ by one byte of the field `display.unit` (after `worker.exec` the field is shortened by 49 bytes: the view of 06 is again 524201); their manifest rows are under the ceiling.

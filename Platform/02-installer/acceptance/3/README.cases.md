@@ -6,7 +6,7 @@ Generic rules remain in [README.md](README.md). The following original passages 
 
 ### Original passage 1
 
-[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) N5. `puts.tsv` has 87 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; 3 `calls_requests_*` — the entry `<s>/requests` of another subsystem (it is in the catalogue without `requests` — accepted; it is absent — a deferral) and of the own one, P/06.3 N1.9 (review of lesson P/02, S5); 3 `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2; the last two `calls_pulse_ok`, `calls_pulse_bad` — the declared heartbeat callback); the installation files are in `puts/`.
+[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) N5. `puts.tsv` has 97 installations (2 `row_spoiled_*` after `toolarge_row` — an unreadable manifest row by `@row-spoil`, P/02.3 N1.5 rules and `manifest-row.outcomes.tsv`, the reader `admin`; 8 `*_swap` and `*_renamed` after `list_tables_ok` — the catalogue intersection of chapter 2.1 with the order swapped and its positive controls, P/02.1-20; 9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; 3 `calls_requests_*` — the entry `<s>/requests` of another subsystem (it is in the catalogue without `requests` — accepted; it is absent — a deferral) and of the own one, P/06.3 N1.9 (review of lesson P/02, S5); 3 `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2; the last two `calls_pulse_ok`, `calls_pulse_bad` — the declared heartbeat callback); the installation files are in `puts/`.
 
 ### Original passage 2
 
@@ -35,11 +35,11 @@ waits; the target after an incompatible client — a refusal at the installation
 - `self_table_list`, `other_table_list`, `list_tables_ok` (B04): catalogue checks with the list form of `tables`, paired with
   `self_table`, `other_table` (chapter 2.1 N3, P/02.1-20).
 - `rev_max_same`, `rev_max_changed` (B02): the boundary `rev` = 2^53 − 1 by the directive `@rev-max`: the same file — «unchanged»,
-  code 0; a changed one — a refusal before any write, code 2, rev is the former one (N3, N4). The row key and `rev` in stderr — by reading per N4.
+  code 0; a changed one — a refusal before any write, code 2, rev is the former one (N3, N4). The row key in stderr — `@stderr ~platform/manifest/revmax`, the value of `rev` — by reading per N4.
 - `shell_script_text` (C02-SHELL-TAG-01): `onclick=` in the text of a script, `onload=` in a style, `onclick=` in a comment and `data-on=` are not an attribute `on…=`, the shell is accepted, rev 2; not yet run by an implementation.
 - `shell_onclick`, `shell_same_twice`, `shell_changed` (B03): after an installation without a shell (rev 1), the shell `paged.shell.html`
   with `onmouseover=` — code 2 before reading the catalogue, rev is the former 1; a shell appeared — a new revision (absence equals empty),
-  the same yaml and shell again — «unchanged» (rev 2); a shell different by bytes (`@shell-put pagedok-alt`) — rev 3 (N1.5, N3). The attribute name in stderr — by reading per N4. The form of the check — check_spec 0021baa83 (the Architect).
+  the same yaml and shell again — «unchanged» (rev 2); a shell different by bytes (`@shell-put pagedok-alt`) — rev 3 (N1.5, N3). The attribute name in stderr — `@stderr ~onmouseover`. The form of the check — check_spec 0021baa83 (the Architect).
 
 ### Original passage 4
 

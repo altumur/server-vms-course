@@ -239,6 +239,10 @@ t30_block_leading	text
 t34_flow_leading_comma	text
 t34b_flow_map_double_comma	text
 secrets_readers_overlap	relations
+r32_secrets_readers_star	form
+r32_secrets_readers_inner_star	form
+r32_secrets_readers_negation	form
+r32_secrets_readers_delete	form
 worker_writes_unit_rows	relations
 worker_writes_undeclared	relations
 a94_files_dotdot	form
