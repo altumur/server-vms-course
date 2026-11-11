@@ -1,6 +1,6 @@
 # P/03 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/03-worker.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/03-worker.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/03-worker.md` (for people, not in the export).
 
@@ -26,10 +26,10 @@ the holding of a place and the stop — by the seven chapters of the lesson; pas
 
 The canon is the norms of the chapters, including N0, the deadlines of N1.2 of chapters [3.2](03.2-worker.norms.md), [3.3](03.3-worker.norms.md),
 [3.4](03.4-worker.norms.md) and the order of N3. The lesson has no HTTP door and no OpenAPI of its own ([chapter 3.1](03.1-worker.norms.md)
-N2; ADR-0082 addendum 13): the forms of the requests and answers of the store are set by [P/01.1](../../01-store/spec/01-store.api.openapi.yaml),
+N2): the forms of the requests and answers of the store are set by [P/01.1](../../01-store/spec/01-store.api.openapi.yaml),
 the doors of units — by [lesson P/06](../../06-console/spec/06-console.api.openapi.yaml) (chapter 6.1), the publication of objects — by
 [lesson P/05](../../05-resource/spec/05-resource.norms.md#n2-doors). The forms of the rows and objects of the lesson are
-the family schemas `../data/*.schema.json` (the sections «Data families» of chapters 3.2 and 3.4; ADR-0088).
+the family schemas `../data/*.schema.json` (the sections «Data families» of chapters 3.2 and 3.4).
 
 ## What to create
 
@@ -68,7 +68,7 @@ the family schemas `../data/*.schema.json` (the sections «Data families» of ch
    Check the return of the loop after FOR, the race of heartbeats, the release of the slot and the prohibition of the watchdog from the stand-in.
 7. Work out the capture and the cleanup: first the new guard and `released: taking` (chapter 3.2 N3 «capture»), then the deletions under
    this guard, then `released: false`. Check a change of owner between any two actions; a foreign contribution is not
-   deleted. The table of N3 sets the transitions, the pseudo-code — the order of reads and writes; there is one kind of worker (ADR-0084): check each
+   deleted. The table of N3 sets the transitions, the pseudo-code — the order of reads and writes; there is one kind of worker: check each
    branch with a given name, without a name and through names_given. The slot order and «by name» differ per N1.4;
    also checked are non-numeric suffixes, equal numbers of different names and the next number after a long digit
    suffix. After 412 re-read the ownership: one's own renewal keeps the name, a foreign holder/gen fences off. Taking away on
@@ -90,11 +90,11 @@ the family schemas `../data/*.schema.json` (the sections «Data families» of ch
    The right to the data of a unit and the right to the place are checked jointly; neither replaces the other.
 10. Implement SIGTERM in the order of [chapter 3.4](03.4-worker.norms.md) N3 and distinguish it from SIGKILL. Describe the choices of the implementation
     («Implementation decides» of the chapters), including TimeoutStopSec and the presence of the process at the resource.
-11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../common/vectors/sealing/README.md))
+11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../common/vectors/sealing/README.md); judge-only: the common sealing vectors)
     with one's own opening function; the opening by the worker and `why` on an error — by reading [chapter 3.5](03.5-worker.norms.md) N3 «open»
     (there is no worker with secrets on the stand).
 12. Write an event under the epoch per the [event journal contract](../../common/contracts/event-journal.md) (lesson P/05); suppression — [chapter 3.6](03.6-worker.norms.md) N1.2. Separate
-    ordinary requests, the append of ADR-0054, elsewhere and free_ask per N3 of chapter 3.6. The append does not create a mark: fetched, the removal
+    ordinary requests, the append profile (`requests.outcome: fetched`), elsewhere and free_ask per N3 of chapter 3.6. The append does not create a mark: fetched, the removal
     of the row and the release of asked; a repeat decides by the data. For the ordinary profile carry out the table: admission and deadline,
     a confirmed begun, a single call. Check a conflict and an unknown outcome of each read/change. The presence of
     begun does not yet prove the call of the external action. The mark is deleted only by the holder after the disappearance of the row and kept.
@@ -102,7 +102,7 @@ the family schemas `../data/*.schema.json` (the sections «Data families» of ch
 13. The late layer (3.7): the contribution under the slot and the cleanup on capturing a foreign slot (the training writer of contributions `testsub2` — P/08.5
     N5); the check at the recipient `wrong_kind`, `wrong_audience` (`token` of the domain token contract «The check» with `expect`).
 14. Run the acceptance scenarios separately, each with a new state and new processes: in total the lesson has 48 scenarios / 497
-    steps — chapter 3.2 (`acceptance/2/`: 01, 04, 05, 08, 09, 10, 11, 14–24, 26–34, 44), chapter 3.3 (`acceptance/3/`: 02, 06, 12, 25, 35),
+    steps (judge-only: the process acceptance of the chapters) — chapter 3.2 (`acceptance/2/`: 01, 04, 05, 08, 09, 10, 11, 14–24, 26–34, 44), chapter 3.3 (`acceptance/3/`: 02, 06, 12, 25, 35),
     chapter 3.4 (`acceptance/4/`: 03, 13, 36, 37), chapter 3.6 (`acceptance/6/`: 05, 07, 08, 09, 10, 38–43). Fill in the checklists of the chapters with evidence from N5 of the chapters.
     Compare the full HTTP answers of reads with lessons P/01 and P/06 (chapter 6.1). The heartbeat, the state of the process and the stop of the writer cannot
     be confirmed by the mere presence of an epoch row.
