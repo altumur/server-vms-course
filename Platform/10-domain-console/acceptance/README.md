@@ -65,4 +65,4 @@ The returned JSON normalizes actual observations: `refused` means a non-success 
 
 [seams.tsv](seams.tsv) (judge-only: acceptance cases for P/10-R016) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
 
-The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.
+The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

@@ -72,7 +72,7 @@ P/10-R007	spec/10-domain-console.norms.md#N1.4	C10-ROLE-NOKIT-01	2026-11-11	(the
 P/10-R007	spec/10-domain-console.norms.md#N1.4	Architect's decision of 2026-10-28, on the proposal; M11/8-08	2026-10-28	refusal, a journal line (V7 item 3, the Architect's decision of 2026-10-28, on the proposal; line 36 of the list). The domain console part of the item M11/8-08 (P/10-11).
 P/10-R008	spec/10-domain-console.norms.md#N1.5	M11/9	2026-11-11	(M11/9 N1.5 `body_unit`, `session`; P/08.4 N1.5 `domain`)
 P/10-R008	spec/10-domain-console.norms.md#N1.5	Architect's decision on the plans of 8–10	2026-11-11	(the move plan of lesson 10, V12; the Architect's decision on the plans of 8–10)
-P/10-R008	spec/10-domain-console.norms.md#N1.5	Architect's decision of 2026-10-20, ADR-0083 addendum (14	2026-10-20	(the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7)
+P/10-R008	spec/10-domain-console.norms.md#N1.5	Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7	2026-10-20	(the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7)
 P/10-R008	spec/10-domain-console.norms.md#N1.5	Architect's decision of 2026-10-28 on the reconciliation ddc9bee1e	2026-10-28	(503 `{error: "unavailable"}`; the Architect's decision of 2026-10-28 on the reconciliation ddc9bee1e)
 P/10-R008	spec/10-domain-console.norms.md#N1.5	ADR-0110 addendum (5)	2026-11-11	(ADR-0110 addendum (5))
 P/10-R008	spec/10-domain-console.norms.md#N1.5	Architect's decision of 2026-10-28 on the reconciliation ddc9bee1e	2026-10-28	(exists but does not read — the rule «Unreadable row» of the gate-and-pass contract, 503 `unavailable`; the Architect's decision of 2026-10-28 on the reconciliation ddc9bee1e)
@@ -102,7 +102,7 @@ P/10-R011	spec/10-domain-console.norms.md#N1.8	reconciliation of M11, A12	2026-1
 P/10-R011	spec/10-domain-console.norms.md#N1.8	reconciliation of M11, A2	2026-11-11	(added by the reconciliation of M11, A2; the agent's side — P/09.1 N1.10)
 P/10-R011	spec/10-domain-console.norms.md#N1.8	reconciliation of M11, A17	2026-11-11	(added by the reconciliation of M11, A17)
 P/10-R011	spec/10-domain-console.norms.md#N1.8	Architect's decision of 2026-10-25, A-13	2026-10-25	(moved there without a change; the layout audit, the Architect's decision of 2026-10-25, A-13)
-P/10-R012	spec/10-domain-console.norms.md#N2	Architect's decision of 2026-10-20, ADR-0083 addendum (14	2026-10-20	(owner P/06, participants 8.0 and this lesson; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5)
+P/10-R012	spec/10-domain-console.norms.md#N2	Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5	2026-10-20	(owner P/06, participants 8.0 and this lesson; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5)
 P/10-R014	spec/10-domain-console.norms.md#N3	M11/11	2026-11-11	(M11/11 N3)
 P/10-R014	spec/10-domain-console.norms.md#N3	H14	2026-11-11	(H14)
 P/10-R014	spec/10-domain-console.norms.md#N3	reconciliation of M11, cammeta-python M11-11 № 20	2026-11-11	(added by the reconciliation of M11, cammeta-python M11-11 № 20)
@@ -132,36 +132,36 @@ P/10-R016	spec/10-domain-console.norms.md#N5	A2	2026-11-11	(A2)
 P/10-R016	spec/10-domain-console.norms.md#N5	C10-PLACEMENT-ABSENT-01	2026-11-11	(C10-PLACEMENT-ABSENT-01)
 P/10-R016	spec/10-domain-console.norms.md#N5	C10-ALARMS-INPUT-01	2026-11-11	(C10-ALARMS-INPUT-01)
 P/10-R016	spec/10-domain-console.norms.md#N5	ADR-0083 addendum (9)	2026-11-11	(ADR-0083 addendum (9))
-P/10-R017	spec/10-domain-console.norms.md#N5	M11/11	2026-11-11	(the vector `alarms`; M11/11 «Implementation decides» item 1 in the part of `alarms`; the command `resolve` — the cluster console, chapter P/06.7)
-P/10-R017	spec/10-domain-console.norms.md#N5	ADR-0080 addendum 6; M11/1-08; M11/3-12; M11/8-10; M11/8-11; M11/9-13; M11/11-08	2026-11-11	findings and window records refer to (ADR-0080 addendum 6). The items of the lesson are M11/1-08, M11/3-12, M11/8-10, M11/8-11, M11/9-13, M11/11-08 and
-P/10-R017	spec/10-domain-console.norms.md#N5	the parts of the current owning chapters and acceptance named below; former M11 numbers record provenance only.	2026-11-11	the parts of the current owning chapters and acceptance named below; former M11 numbers record provenance only.
-P/10-R017	spec/10-domain-console.norms.md#N5	ADR-0110	2026-11-11	(acceptance — step 11 of the analysis of ADR-0110)
-P/10-R017	spec/10-domain-console.norms.md#N5	A12	2026-11-11	(A12)
-P/10-R017	spec/10-domain-console.norms.md#N5	A2	2026-11-11	(A2)
-P/10-R017	spec/10-domain-console.norms.md#N5	T1	2026-11-11	(N1.2c; T1)
-P/10-R017	spec/10-domain-console.norms.md#N5	review analysis of stage B 8–10, № 22: M-1	2026-11-11	(sc. 01 step 7; review analysis of stage B 8–10, № 22: M-1)
-P/10-R017	spec/10-domain-console.norms.md#N5	ADR-0083 addendum (9)	2026-11-11	(ADR-0083 addendum (9))
-P/10-R017	spec/10-domain-console.norms.md#N5	M11/12-08	2026-11-11	(the domain console part of the line M11/12-08; the text is P/02.4 N1.12)
-P/10-R017	spec/10-domain-console.norms.md#N5	the move plan of lesson 10, V9	2026-11-11	(the move plan of lesson 10, V9)
-P/10-R017	spec/10-domain-console.norms.md#N5	ADR-0094 B4	2026-11-11	(ADR-0094 B4)
+P/10-R017	spec/10-domain-console.norms.md#implementation-decides	M11/11	2026-11-11	(the vector `alarms`; M11/11 «Implementation decides» item 1 in the part of `alarms`; the command `resolve` — the cluster console, chapter P/06.7)
+-	spec/10-domain-console.norms.md#readiness-checklist	ADR-0080 addendum 6; M11/1-08; M11/3-12; M11/8-10; M11/8-11; M11/9-13; M11/11-08	2026-11-11	findings and window records refer to (ADR-0080 addendum 6). The items of the lesson are M11/1-08, M11/3-12, M11/8-10, M11/8-11, M11/9-13, M11/11-08 and
+-	spec/10-domain-console.norms.md#readiness-checklist	M11/1-08; M11/3-12; M11/8-10; M11/8-11; M11/9-13; M11/11-08	2026-11-11	the parts of the current owning chapters and acceptance named below; former M11 numbers record provenance only.
+-	spec/10-domain-console.norms.md#readiness-checklist	ADR-0110	2026-11-11	(acceptance — step 11 of the analysis of ADR-0110)
+-	spec/10-domain-console.norms.md#readiness-checklist	A12	2026-11-11	(A12)
+-	spec/10-domain-console.norms.md#readiness-checklist	A2	2026-11-11	(A2)
+-	spec/10-domain-console.norms.md#readiness-checklist	T1	2026-11-11	(N1.2c; T1)
+-	spec/10-domain-console.norms.md#readiness-checklist	review analysis of stage B 8–10, № 22: M-1	2026-11-11	(sc. 01 step 7; review analysis of stage B 8–10, № 22: M-1)
+-	spec/10-domain-console.norms.md#readiness-checklist	ADR-0083 addendum (9)	2026-11-11	(ADR-0083 addendum (9))
+-	spec/10-domain-console.norms.md#readiness-checklist	M11/12-08	2026-11-11	(the domain console part of the line M11/12-08; the text is P/02.4 N1.12)
+-	spec/10-domain-console.norms.md#readiness-checklist	the move plan of lesson 10, V9	2026-11-11	(the move plan of lesson 10, V9)
+-	spec/10-domain-console.norms.md#readiness-checklist	ADR-0094 B4	2026-11-11	(ADR-0094 B4)
 -	forms/README.md#intro	ADR-0121; ADR-0125 addendum (5).	2026-11-11	This English text is the source; ru/forms/README.md is its Russian translation for people, not in the export (ADR-0121). These forms express the existing norms under ADR-0125 addendum (5).
--	forms/README.md#seams-and-stages	## Review effect fixtures	2026-11-11	## Review effect fixtures
+-	forms/README.md#effect-fixtures	P/10 review: effect fixtures	2026-11-11	## Review effect fixtures
 -	acceptance/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
 -	acceptance/README.md#intro	the door `holder` — the domain console on `hold`, the doors `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10	2026-11-11	(the door `holder` — the domain console on `hold`, the doors `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10)
 -	acceptance/README.md#stand	M11/03	2026-11-11	(«Preparation of each scenario», from M11/03: the clusters `hold`, `m1`, `m2`, the catalogue `testsub`)
--	acceptance/README.md#kit-assistance-seams	The review added eight alarms neighbours and 34 effect CALL steps. The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.	2026-11-11	The review added eight alarms neighbours and 34 effect CALL steps. The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact. The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.
+-	acceptance/README.md#kit-assistance-seams	P/10 review: alarms neighbours and effect CALL steps	2026-11-11	The review added eight alarms neighbours and 34 effect CALL steps. The current [alarms corpus](../vectors/alarms/README.md) preserves all earlier expectations, case IDs and notes; only the declared mandatory-field input additions and missing-field cases change it. All earlier CALL steps remain byte-exact.
 -	vectors/alarms/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
 -	vectors/alarms/README.md#intro	Architect's decision on the review analysis of stage A 8–10, № 8: the function `alarms` and its vector are at the domain console	2026-11-11	([norms](../../spec/10-domain-console.norms.md) N1.8, N3 `alarms`, N5 `alarms`; the Architect's decision on the review analysis of stage A 8–10, № 8: the function `alarms` and its vector are at the domain console)
 -	vectors/alarms/README.md#intro	ADR-0083	2026-11-11	(ADR-0083)
 -	vectors/alarms/README.md#intro	ADR-0080 addendum 16	2026-11-11	(ADR-0080 addendum 16)
 -	vectors/alarms/README.md#intro	M11/11	2026-11-11	The rows 01–15 were transferred from the inputs of the command `alarms` of the acceptance of M11/11 (`inputs/alarms-*.json`, sc. 04) without a change of the bytes
--	vectors/alarms/README.md#intro	Architect's decision on the plans 8–10, ADR-0083 addendum (14; M11/11	2026-11-11	(the plan of the move of lesson 10, § 3, V7; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 04 of the acceptance of M11/11 and its inputs `alarms-*` are removed by the move of lesson 10: the table is
+-	vectors/alarms/README.md#intro	Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17; M11/11 acceptance, scenario 04	2026-11-11	(the plan of the move of lesson 10, § 3, V7; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 04 of the acceptance of M11/11 and its inputs `alarms-*` are removed by the move of lesson 10: the table is
 -	vectors/alarms/README.md#run	ACC-VECTORS-CONNECT-03; Architect's decision 2026-10-27	2026-10-27	(ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27)
 -	vectors/alarms/README.md#input	H14	2026-11-11	(at the vectors — `page.to`; with `page` not an object — a number, as `received_at`: `null` at a member with a report — code 2, H14, row 19)
 -	vectors/alarms/README.md#input	C10-REPORTED-OUTCOME-1D6	2026-11-11	(C10-REPORTED-OUTCOME-1D6)
--	vectors/alarms/README.md#files	of the acceptance of M11, at the rows 16–27 — the checked case and its norm (an item of P/10 or a case `C10-…`).	2026-11-11	of the acceptance of M11, at the rows 16–27 — the checked case and its norm (an item of P/10 or a case `C10-…`).
+-	vectors/alarms/README.md#files	M11 acceptance; P/10 coverage cases	2026-11-11	of the acceptance of M11, at the rows 16–27 — the checked case and its norm (an item of P/10 or a case `C10-…`).
 -	vectors/alarms/README.md#files	M11/11; reconciliation of M11 09–12	2026-11-11	The vectors were checked by the runs of the implementations of the acceptance of M11/11 (run 41, the reconciliation of M11 09–12) and by the text of the norms; on a discrepancy
--	vectors/alarms/README.md#files	## P/10 review neighbours	2026-11-11	## P/10 review neighbours
+-	vectors/alarms/README.md#p10-neighbours	P/10 review: alarms neighbours	2026-11-11	## P/10 review neighbours
 -	spec/10-domain-console.api.openapi.yaml#/info/description	transfer plan of lesson 10, § 4	2026-11-11	(transfer plan of lesson 10, § 4)
 -	spec/10-domain-console.api.openapi.yaml#/info/description	M11/1; M11/3; M11/4; M11/6; M11/8; M11/9; M11/11	2026-11-11	# the contracts M11/1, M11/3, M11/4, M11/6, M11/8, M11/9, M11/11 (paths of the domain console; M11/4, M11/6 — from history, removed # by commit 9) — stage B, without a change of behaviour. Codes — only of transition 2 of the forwarding contract
 -	spec/10-domain-console.api.openapi.yaml#/info/description	analysis of review of stage A 8–10, decision 3	2026-11-11	(analysis of review of stage A 8–10, decision 3)
@@ -226,3 +226,5 @@ P/10-R017	spec/10-domain-console.norms.md#N5	ADR-0094 B4	2026-11-11	(ADR-0094 B4
 -	spec/10-domain-console.api.openapi.yaml#/components/schemas/Refusal/description	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
 -	spec/10-domain-console.api.openapi.yaml#/components/schemas/RoleRefusal/description	C10-ROLE-NOKIT-01	2026-11-11	(C10-ROLE-NOKIT-01)
 -	spec/10-domain-console.api.openapi.yaml#/components/schemas/SharedView/properties/delivery/description	C10-SHARED-OPAQUE-COPY-01	2026-11-11	(N1.2f, C10-SHARED-OPAQUE-COPY-01)
+-	acceptance/README.md#store-rows-on-the-stand	P/10 coverage audit, second pass (Gemini)	2026-11-11	## Coverage audit of P/10, the second pass (Gemini)
+-	vectors/alarms/README.md#intro	M11/11 acceptance, scenario 04, inputs/alarms-*.json	2026-11-11	`case` is the name of the input file

@@ -9,7 +9,7 @@ N5 `alarms`).
 The history that the function reads is written by the process `domain` ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md) N1.9);
 the alarm page of a member — by the agent ([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) N1.10). The bytes are written by «Specification»; the conformance of the product is by its acceptance against this table.
 
-In rows 01–15, `case` is the input file name. JSON text in `input` and `expect` has no whitespace outside strings; `@exit 2` is a string. The table is the source of these cases.
+`case` identifies a vector case. JSON text in `input` and `expect` has no whitespace outside strings; `@exit 2` is a string. The table is the source of these cases.
 
 ## Run
 
