@@ -1,0 +1,424 @@
+candidate	target	kind	table	line	scenario	step	variant	original_class	detail	reason	result
+claude	P/01.1/extra	entries			extra-full-key-declared				no scenario of the files of tables names this probe	no_machine_form	not_executed
+claude	P/01.1/extra	entries			extra-forwarded-list				no scenario of the files of tables names this probe	no_machine_form	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	7	07-group-size	3				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	8	07-group-size	4				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	9	07-group-size	5				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	10	07-group-size	6				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	11	07-group-size	7				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	12	07-group-size	8				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	13	07-group-size	9				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	14	07-group-size	10				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	15	07-group-size	11				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	16	07-group-size	12				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	17	07-group-size	13				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	18	07-group-size	14				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	19	07-group-size	15				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	20	07-group-size	16				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	21	07-group-size	17				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	22	07-group-size	18				07-group-size#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	98	17-group-members	3				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	99	17-group-members	4				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	100	17-group-members	5				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	101	17-group-members	6				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	102	17-group-members	7				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	103	17-group-members	8				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	104	17-group-members	9				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	105	17-group-members	10				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	106	17-group-members	11				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	107	17-group-members	12				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	108	17-group-members	13				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	109	17-group-members	14				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	110	17-group-members	15				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	111	17-group-members	16				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	112	17-group-members	17				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	113	17-group-members	18				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	114	17-group-members	19				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	115	17-group-members	20				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	116	17-group-members	21				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	117	17-group-members	22				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	118	17-group-members	23				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	119	17-group-members	24				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	120	17-group-members	25				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	121	17-group-members	26				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	122	17-group-members	27				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	123	17-group-members	28				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	124	17-group-members	29				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	125	17-group-members	30				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	126	17-group-members	31				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	127	17-group-members	32				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	128	17-group-members	33				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	129	17-group-members	34				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	130	17-group-members	35				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	131	17-group-members	36				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	132	17-group-members	37				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	133	17-group-members	38				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	134	17-group-members	39				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	135	17-group-members	40				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	136	17-group-members	41				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	137	17-group-members	42				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	138	17-group-members	43				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	139	17-group-members	44				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	140	17-group-members	45				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	141	17-group-members	46				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	142	17-group-members	47				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	143	17-group-members	48				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	144	17-group-members	49				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	145	17-group-members	50				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	146	17-group-members	51				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	147	17-group-members	52				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	148	17-group-members	53				17-group-members#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	151	18-group-recover	3				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	152	18-group-recover	4				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	153	18-group-recover	5				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	154	18-group-recover	6				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	155	18-group-recover	7				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	156	18-group-recover	8				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	157	18-group-recover	9				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	158	18-group-recover	10				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	159	18-group-recover	11				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	160	18-group-recover	12				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	161	18-group-recover	13				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	162	18-group-recover	14				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	163	18-group-recover	15				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	164	18-group-recover	16				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	165	18-group-recover	17				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	166	18-group-recover	18				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	167	18-group-recover	19				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	168	18-group-recover	20				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	169	18-group-recover	21				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	170	18-group-recover	22				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	171	18-group-recover	23				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	172	18-group-recover	24				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	173	18-group-recover	25				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	174	18-group-recover	26				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	175	18-group-recover	27				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	176	18-group-recover	28				18-group-recover#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	215	25-group-door-status	3				25-group-door-status#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	216	25-group-door-status	4				25-group-door-status#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	217	25-group-door-status	5				25-group-door-status#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	218	25-group-door-status	6				25-group-door-status#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	219	25-group-door-status	7				25-group-door-status#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	222	26-group-door-role	3				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	223	26-group-door-role	4				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	224	26-group-door-role	5				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	225	26-group-door-role	6				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	226	26-group-door-role	7				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	227	26-group-door-role	8				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	228	26-group-door-role	9				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	229	26-group-door-role	10				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	230	26-group-door-role	11				26-group-door-role#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	233	27-group-import-door-row	3				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	234	27-group-import-door-row	4				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	235	27-group-import-door-row	5				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	236	27-group-import-door-row	6				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	237	27-group-import-door-row	7				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	238	27-group-import-door-row	8				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	239	27-group-import-door-row	9				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	240	27-group-import-door-row	10				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	241	27-group-import-door-row	11				27-group-import-door-row#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	244	28-group-recover-peers	3				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	245	28-group-recover-peers	4				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	246	28-group-recover-peers	5				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	247	28-group-recover-peers	6				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	248	28-group-recover-peers	7				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	249	28-group-recover-peers	8				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	250	28-group-recover-peers	9				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	251	28-group-recover-peers	10				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	252	28-group-recover-peers	11				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	253	28-group-recover-peers	12				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	254	28-group-recover-peers	13				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	255	28-group-recover-peers	14				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	256	28-group-recover-peers	15				28-group-recover-peers#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	259	29-group-import-clock	3				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	260	29-group-import-clock	4				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	261	29-group-import-clock	5				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	262	29-group-import-clock	6				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	263	29-group-import-clock	7				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	264	29-group-import-clock	8				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	265	29-group-import-clock	9				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	266	29-group-import-clock	10				29-group-import-clock#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	279	31-group-batch	3				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	280	31-group-batch	4				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	281	31-group-batch	5				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	282	31-group-batch	6				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	283	31-group-batch	7				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	284	31-group-batch	8				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	285	31-group-batch	9				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	286	31-group-batch	10				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	287	31-group-batch	11				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	288	31-group-batch	12				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	289	31-group-batch	13				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	290	31-group-batch	14				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	291	31-group-batch	15				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	292	31-group-batch	16				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	293	31-group-batch	17				31-group-batch#2	not_executed
+claude	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	294	31-group-batch	18				31-group-batch#2	not_executed
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	3	ok				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	4	next-ca				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	5	two-centers				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	6	same-serial				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	7	ec-sha256				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	8	foreign-issuer				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	9	next-without-file				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	10	bad-signature				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	11	sig-not-in-list				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	12	same-center-twice				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	13	expired				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	14	not-yet				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	15	this-ahead-60				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	16	this-ahead-61				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	17	no-next-update				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	18	expired-next				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	19	delta				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	20	indirect				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	21	scoped				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	22	unknown-critical				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	23	unknown-noncritical				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-crl	rows	Platform/common/vectors/crl/cases.tsv	24	not-pem				the profile 01-store does not declare vectors.common/crl	common/crl	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	14	line-14				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	15	line-15				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	16	line-16				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	17	line-17				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	18	line-18				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	19	line-19				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	20	line-20				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	21	line-21				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	22	line-22				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	23	line-23				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	24	line-24				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	25	line-25				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	26	line-26				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	27	line-27				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	28	line-28				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	29	line-29				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	30	line-30				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	31	line-31				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	32	line-32				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	33	line-33				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	34	line-34				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	35	line-35				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	36	line-36				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	37	line-37				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	39	line-39				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	40	line-40				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	41	line-41				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	42	line-42				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	43	line-43				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	44	line-44				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	45	line-45				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	50	line-50				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	51	line-51				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	52	line-52				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	53	line-53				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	54	line-54				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	55	line-55				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	56	line-56				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-log-mask	rows	Platform/common/vectors/log-mask/cases.tsv	57	line-57				the profile 01-store does not declare vectors.common/log-mask	common/log-mask	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	3	ok				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	4	no-final-lf				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	5	empty				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	6	leading-zeros				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	7	upper				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	8	same-value				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	9	zero				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	10	decimal-looking				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	11	skip				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	12	bad-0x				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	13	bad-space				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	14	bad-leading-space-comment				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	15	bad-colon				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	16	bad-crlf				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	17	bad-nonhex				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	18	bad-sign				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	19	absent				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	20	both-union				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	21	crl-only				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	22	both-revoked-bad				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-revoked	rows	Platform/common/vectors/revoked/cases.tsv	23	both-crl-bad				the profile 01-store does not declare vectors.common/revoked	common/revoked	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	4	get-row				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	5	get-absent				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	6	get-unreadable				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	7	get-no-index				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	8	get-none				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	9	list-truncated				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	10	list-ok				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	11	list-bad-version				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	12	write-ok				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	13	write-again				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	14	write-bad-index				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	15	write-none				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	16	write-refused-connection				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	17	write-truncated				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	18	write-conflict				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	19	write-conflict-batch				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	20	write-guard				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	21	write-ambiguous				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	22	write-toolarge				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	23	get-forbidden				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+claude	P/01/vectors-store-client	rows	Platform/common/vectors/store-client/cases.tsv	24	get-unavailable				the profile 01-store does not declare vectors.common/store-client	common/store-client	blocked
+attempt6	P/01.1/extra	entries			extra-full-key-declared				no scenario of the files of tables names this probe	no_machine_form	not_executed
+attempt6	P/01.1/extra	entries			extra-forwarded-list				no scenario of the files of tables names this probe	no_machine_form	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	39	11-copy	2				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	40	11-copy	3				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	41	11-copy	4				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	42	11-copy	5				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	43	11-copy	6				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	44	11-copy	7				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	45	11-copy	8				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	46	11-copy	9				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	47	11-copy	10				11-copy#1	not_executed
+attempt6	P/01.3/daemon	steps	Platform/01-store/acceptance/3/scenarios.tsv	48	11-copy	11				11-copy#1	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	7	07-group-size	3				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	8	07-group-size	4				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	9	07-group-size	5				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	10	07-group-size	6				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	11	07-group-size	7				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	12	07-group-size	8				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	13	07-group-size	9				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	14	07-group-size	10				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	15	07-group-size	11				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	16	07-group-size	12				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	17	07-group-size	13				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	18	07-group-size	14				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	19	07-group-size	15				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	20	07-group-size	16				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	21	07-group-size	17				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	22	07-group-size	18				07-group-size#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	98	17-group-members	3				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	99	17-group-members	4				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	100	17-group-members	5				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	101	17-group-members	6				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	102	17-group-members	7				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	103	17-group-members	8				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	104	17-group-members	9				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	105	17-group-members	10				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	106	17-group-members	11				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	107	17-group-members	12				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	108	17-group-members	13				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	109	17-group-members	14				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	110	17-group-members	15				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	111	17-group-members	16				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	112	17-group-members	17				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	113	17-group-members	18				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	114	17-group-members	19				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	115	17-group-members	20				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	116	17-group-members	21				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	117	17-group-members	22				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	118	17-group-members	23				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	119	17-group-members	24				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	120	17-group-members	25				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	121	17-group-members	26				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	122	17-group-members	27				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	123	17-group-members	28				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	124	17-group-members	29				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	125	17-group-members	30				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	126	17-group-members	31				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	127	17-group-members	32				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	128	17-group-members	33				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	129	17-group-members	34				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	130	17-group-members	35				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	131	17-group-members	36				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	132	17-group-members	37				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	133	17-group-members	38				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	134	17-group-members	39				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	135	17-group-members	40				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	136	17-group-members	41				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	137	17-group-members	42				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	138	17-group-members	43				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	139	17-group-members	44				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	140	17-group-members	45				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	141	17-group-members	46				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	142	17-group-members	47				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	143	17-group-members	48				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	144	17-group-members	49				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	145	17-group-members	50				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	146	17-group-members	51				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	147	17-group-members	52				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	148	17-group-members	53				17-group-members#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	151	18-group-recover	3				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	152	18-group-recover	4				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	153	18-group-recover	5				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	154	18-group-recover	6				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	155	18-group-recover	7				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	156	18-group-recover	8				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	157	18-group-recover	9				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	158	18-group-recover	10				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	159	18-group-recover	11				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	160	18-group-recover	12				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	161	18-group-recover	13				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	162	18-group-recover	14				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	163	18-group-recover	15				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	164	18-group-recover	16				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	165	18-group-recover	17				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	166	18-group-recover	18				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	167	18-group-recover	19				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	168	18-group-recover	20				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	169	18-group-recover	21				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	170	18-group-recover	22				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	171	18-group-recover	23				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	172	18-group-recover	24				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	173	18-group-recover	25				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	174	18-group-recover	26				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	175	18-group-recover	27				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	176	18-group-recover	28				18-group-recover#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	215	25-group-door-status	3				25-group-door-status#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	216	25-group-door-status	4				25-group-door-status#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	217	25-group-door-status	5				25-group-door-status#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	218	25-group-door-status	6				25-group-door-status#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	219	25-group-door-status	7				25-group-door-status#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	222	26-group-door-role	3				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	223	26-group-door-role	4				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	224	26-group-door-role	5				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	225	26-group-door-role	6				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	226	26-group-door-role	7				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	227	26-group-door-role	8				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	228	26-group-door-role	9				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	229	26-group-door-role	10				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	230	26-group-door-role	11				26-group-door-role#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	233	27-group-import-door-row	3				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	234	27-group-import-door-row	4				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	235	27-group-import-door-row	5				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	236	27-group-import-door-row	6				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	237	27-group-import-door-row	7				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	238	27-group-import-door-row	8				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	239	27-group-import-door-row	9				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	240	27-group-import-door-row	10				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	241	27-group-import-door-row	11				27-group-import-door-row#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	244	28-group-recover-peers	3				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	245	28-group-recover-peers	4				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	246	28-group-recover-peers	5				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	247	28-group-recover-peers	6				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	248	28-group-recover-peers	7				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	249	28-group-recover-peers	8				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	250	28-group-recover-peers	9				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	251	28-group-recover-peers	10				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	252	28-group-recover-peers	11				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	253	28-group-recover-peers	12				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	254	28-group-recover-peers	13				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	255	28-group-recover-peers	14				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	256	28-group-recover-peers	15				28-group-recover-peers#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	259	29-group-import-clock	3				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	260	29-group-import-clock	4				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	261	29-group-import-clock	5				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	262	29-group-import-clock	6				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	263	29-group-import-clock	7				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	264	29-group-import-clock	8				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	265	29-group-import-clock	9				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	266	29-group-import-clock	10				29-group-import-clock#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	279	31-group-batch	3				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	280	31-group-batch	4				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	281	31-group-batch	5				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	282	31-group-batch	6				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	283	31-group-batch	7				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	284	31-group-batch	8				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	285	31-group-batch	9				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	286	31-group-batch	10				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	287	31-group-batch	11				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	288	31-group-batch	12				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	289	31-group-batch	13				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	290	31-group-batch	14				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	291	31-group-batch	15				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	292	31-group-batch	16				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	293	31-group-batch	17				31-group-batch#2	not_executed
+attempt6	P/01.3/group	steps	Platform/01-store/acceptance/3/scenarios.tsv	294	31-group-batch	18				31-group-batch#2	not_executed
