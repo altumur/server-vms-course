@@ -885,3 +885,7 @@ M11/11 sc. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows o
 - (new)	P/03.4-18	3.4	the stop term of the worker process: worker.stop_timeout and the budget of closing the places	raised from «Implementation decides» item 3 of 3.4; ADR-0133 addendum (51), the Architect's answer on P03.21, question 4
 - (new)	P/03.7-05	3.7	the contribution on the domain stand	split off P/03.7-01; ADR-0130 addendum (19) item 6
 - (new)	P/03.7-06	3.7	wrong_audience and wrong_kind at the recipient on the domain stand	split off P/03.7-03; ADR-0130 addendum (19) item 6
+- (new)	P/04-29	4	the decommission of a server by the controller: the resumable plan, release chunks, the guarded cleanup, the final mark last; the reserved family name decommission-pending	raised from N3 «decommission_server(s)» (P/04-R054), which had no item; ADR-0133, step 30 of the plan; the Architect's answer on P04.21, question 5 (a)
+- (new)	P/04-30	4	leaving silent with a live worker and a silent resource of its server; the term of the fate on drill 05	split off P/04-13; ADR-0130 addendum (19) item 6
+- (new)	P/04-31	4	the order on the host: systemd does not raise the instance, a number above want stopped by the script (R28)	split off P/04-14; ADR-0130 addendum (19) item 6
+- (new)	P/04-32	4	the lifecycle of the controller process: READY, WATCHDOG at decision boundaries, SIGTERM, Restart by the P/02.4 unit	raised from lifecycle.md «Signals and readiness»; ADR-0130 addendum (19) item 6; the Architect's answer on P04.21, question 5 (b)
