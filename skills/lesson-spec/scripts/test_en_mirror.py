@@ -10,6 +10,9 @@ import en_mirror
 ROOT = Path(__file__).resolve().parents[3]
 RU = ROOT / "Platform/01-store/ru/spec/01.1-store.norms.md"
 EN = ROOT / "Platform/01-store/spec/01.1-store.norms.md"
+# N5 case tables moved from the norms to the judge-only cases file (dcd531bbf); the table checks read that pair.
+RUC = ROOT / "Platform/01-store/ru/spec/01.1-store.n5.cases.md"
+ENC = ROOT / "Platform/01-store/spec/01.1-store.n5.cases.md"
 RU3 = ROOT / "Platform/01-store/ru/spec/01.3-store.norms.md"
 EN3 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
 
@@ -62,15 +65,21 @@ class Mirror(unittest.TestCase):
     def compare(self, ru=None, en=None):
         return en_mirror.compare(self.ru if ru is None else ru, self.en if en is None else en, RU, EN, ROOT)
 
-    def mutated(self, old, new, which="en", *, owned=False):
+    def mutated(self, old, new, which="en", *, owned=False, cases=False):
         ru, en = (OWNED_RU, OWNED_EN) if owned else (self.ru, self.en)
+        if cases:
+            ru, en = RUC.read_text(encoding="utf-8"), ENC.read_text(encoding="utf-8")
+            self.assertEqual(en_mirror.compare(ru, en, RUC, ENC, ROOT), [])
         if owned:
             self.assertEqual(self.compare(ru=ru, en=en), [])
         text = en if which == "en" else ru
         self.assertEqual(text.count(old), 1, old)
         self.assertNotEqual(old, new)
         changed = text.replace(old, new)
-        errors = self.compare(ru=changed if which == "ru" else ru, en=changed if which == "en" else en)
+        if cases:
+            errors = en_mirror.compare(changed if which == "ru" else ru, changed if which == "en" else en, RUC, ENC, ROOT)
+        else:
+            errors = self.compare(ru=changed if which == "ru" else ru, en=changed if which == "en" else en)
         self.assertTrue(errors, f"no refusal for {old!r} → {new!r}")
         return errors
 
@@ -105,7 +114,7 @@ class Mirror(unittest.TestCase):
         self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128", owned=True)
 
     def test_table_row(self):
-        self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:")
+        self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:", cases=True)
 
     def test_checklist(self):
         self.mutated("- [ ] **P/01.1-31** batch", "- [ ] **P/01.1-32** batch")
@@ -160,8 +169,8 @@ class Mirror(unittest.TestCase):
         self.assertTrue(self.compare(ru=ru, en=en.replace("limit: 8 ", "limit: 9 ")))
 
     def test_table_cell_value(self):
-        self.mutated("| 22 | a body over 1048576 bytes", "| 22 | a body over 1048577 bytes")
-        self.mutated("| 02 | a creation with", "| 03 | a creation with")
+        self.mutated("| 22 | a body over 1048576 bytes", "| 22 | a body over 1048577 bytes", cases=True)
+        self.mutated("| 02 | a creation with", "| 03 | a creation with", cases=True)
 
     def test_prose_number(self):
         self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested", owned=True)

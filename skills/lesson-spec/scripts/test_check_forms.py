@@ -187,7 +187,11 @@ class Forms(unittest.TestCase):
         self.assertNotIn("outcome", head.split("\t"))
         errors, stats = check_forms.check_refusals(path)
         self.assertEqual(errors, [])
-        self.assertEqual(stats, {"refusal_rows": 59, "refusal_chapters": 3, "refusal_cause_names": 59})
+        rows = [line.split("\t") for line in path.read_text().splitlines() if line and not line.startswith("#")][1:]
+        # Counted from the form itself: the catalogue grows with the norms (59 rows in 2026-11, more later).
+        self.assertEqual(stats, {"refusal_rows": len(rows), "refusal_chapters": len({r[0] for r in rows}),
+                                 "refusal_cause_names": len(rows)})
+        self.assertEqual(stats["refusal_chapters"], 3)
 
     def test_typed_causes_missing_unknown_repeated_or_hidden(self):
         path = self.lesson / "spec/01.1-store.norms.md"
@@ -1447,8 +1451,13 @@ class CyrillicJudge(unittest.TestCase):
 
     def test_export_only_v11_is_deferred_and_canonical_console_bytes_are_checked(self):
         self.markers()
-        self.put("VMS/11-backend/spec/norms.md", "Ж")
+        # 3e4bcdbc8 removed the V11 deferral: only the 31 exact carriers are exempt, any other V11 file is checked.
+        # A VMS/11-backend tree must hold every exact carrier (a deleted one fails); put them.
+        self.exact_carrier()
         self.assertEqual(self.judge()[0], [])
+        extra = self.put("VMS/11-backend/spec/norms.md", "Ж")
+        self.assertTrue(any("VMS/11-backend/spec/norms.md" in e and "new/increased" in e for e in self.judge()[0]))
+        extra.unlink()
         for name in ("VMS/01-cam/spec/norms.md", "VMS/new-house/.hidden/model.data", "VMS/11-backend-extra/source.txt",
                      "Platform/07-console-module/module/console.js", "Platform/07-console-module/module/console.css",
                      "Platform/07-console-module/module/console.html", "Source/w2cplatform/console.js", "elsewhere/console.js"):
@@ -1763,9 +1772,13 @@ class CyrillicJudge(unittest.TestCase):
         name = "VMS/11-backend/consolem.openapi.json"
         from vms_platform_pin import _git
         source = "c8eafc05626112db4c2003b416f762055deaef65"
+        # Two carriers re-approved by the VMS Source owner on 2026-11-08 (4e01dde0d); their bytes are in e42018797.
+        reapproved = {"VMS/11-backend/README.md": "e42018797", "VMS/11-backend/spec/11.7-backend.norms.md": "e42018797"}
         root = Path(__file__).resolve().parents[3]
-        for carrier in check_cyrillic.EXACT_SOURCE_FILES:
-            self.put(carrier, _git(root, "show", source + ":" + carrier))
+        for carrier, sha in check_cyrillic.EXACT_SOURCE_FILES.items():
+            blob = _git(root, "show", reapproved.get(carrier, source) + ":" + carrier)
+            self.assertEqual(hashlib.sha256(blob if isinstance(blob, bytes) else blob.encode()).hexdigest(), sha, carrier)
+            self.put(carrier, blob)
         data = (self.root / name).read_bytes()
         self.assertEqual(hashlib.sha256(data).hexdigest(),
                          "200d203d4197776892e66a32126998bc8cf0b79a9986ef7ac144c6af230f7124")

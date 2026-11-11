@@ -112,35 +112,36 @@ class StageNormCoverageControls(unittest.TestCase):
         self.assertTrue(any("no canonical checklist items" in error for error in self.check().errors))
 
     def optional(self, cells):
-        home = self.root / "Platform/02-installer"
+        # A lesson outside STAGE_NORM_REQUIRED (P/02 joined it after part 2a, P02.23); P/05 has not.
+        home = self.root / "Platform/05-resource"
         (home / "forms").mkdir(parents=True)
         (home / "spec").mkdir()
-        (home / "spec/02.1-installer.norms.md").write_text(
-            "## Readiness checklist\n\n- [ ] **P/02.1-01** First.\n"
-            "- [ ] **P/02.1-02** Second.\n", encoding="utf-8")
+        (home / "spec/05.1-resource.norms.md").write_text(
+            "## Readiness checklist\n\n- [ ] **P/05.1-01** First.\n"
+            "- [ ] **P/05.1-02** Second.\n", encoding="utf-8")
         (home / "forms/stages.tsv").write_text(
             "stage\tnorms\n" + "".join(f"s{i}\t{cell}\n" for i, cell in enumerate(cells, 1)),
             encoding="utf-8")
         result = Check(self.root, scope="platform")
-        result.stage_norms(home, "P/02")
+        result.stage_norms(home, "P/05")
         return result
 
     def test_nonadopted_lesson_without_item_elements_keeps_old_prose(self):
-        result = self.optional(["P/02.1 N1; forms/example.tsv"])
+        result = self.optional(["P/05.1 N1; forms/example.tsv"])
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["stage_norm_items"], 0)
 
     def test_nonadopted_lesson_valid_partial_items_do_not_require_full_coverage(self):
-        result = self.optional(["P/02.1-01"])
+        result = self.optional(["P/05.1-01"])
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["stage_norm_items"], 2)
         self.assertEqual(result.stats["stage_norm_placements"], 1)
 
     def test_nonadopted_lesson_unknown_or_repeated_elements_still_refuse(self):
-        result = self.optional(["P/02.1-01; P/02.1-01; P/02.9-99"])
-        self.assertTrue(any("P/02.1-01 repeats" in error for error in result.errors), result.errors)
-        self.assertTrue(any("P/02.9-99 is no checklist item" in error for error in result.errors), result.errors)
-        self.assertFalse(any("P/02.1-02 is at no stage" in error for error in result.errors), result.errors)
+        result = self.optional(["P/05.1-01; P/05.1-01; P/05.9-99"])
+        self.assertTrue(any("P/05.1-01 repeats" in error for error in result.errors), result.errors)
+        self.assertTrue(any("P/05.9-99 is no checklist item" in error for error in result.errors), result.errors)
+        self.assertFalse(any("P/05.1-02 is at no stage" in error for error in result.errors), result.errors)
 
     def test_actual_published_p01_source_items_are_all_placed_once(self):
         home = ROOT / "Platform/01-store"
