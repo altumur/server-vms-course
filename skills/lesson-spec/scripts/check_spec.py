@@ -2136,6 +2136,17 @@ class Check:
         self.vms_request_forms = (directives, doors)
         return self.vms_request_forms
 
+    def platform_doors(self):
+        """Names of the doors of the common acceptance: the table «**Doors**» of Platform/common/acceptance/README.md (the prefix of `request`)."""
+        cached = getattr(self, "_platform_doors", None)
+        if cached is not None:
+            return cached
+        readme = self.root / "Platform/common/acceptance/README.md"
+        text = self.read(readme) if readme.exists() else ""
+        section = re.search(r"^\*\*Doors\*\*.*?(?=^\*\*Request\.\*\*)", text or "", re.S | re.M)
+        self._platform_doors = set(re.findall(r"^\|\s*`([a-z][a-z0-9]*)`\s*\|", section.group(0), re.M)) if section else set()
+        return self._platform_doors
+
     def scenario_form(self, path, line, request, expect, forms=None):
         # `@manual <причина>` — шаг, который стенд не исполняет (ADR-0102 доп. (4) п. 8); ожидание — слово `manual`.
         if request.startswith("@manual "):
@@ -2163,6 +2174,13 @@ class Check:
                     return
             if any(pattern.fullmatch(request) for pattern in doors):
                 request = "GET /"                   # a VMS door form; the expectation is checked as for the console
+        # A named door of the common acceptance before the method (README «Doors»): the request after it is checked as usual.
+        head, separator, rest = request.partition(" ")
+        if separator and re.fullmatch(r"[a-z][a-z0-9]*", head) and re.match(r"^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) /", rest):
+            if head not in self.platform_doors():
+                self.error(path, f"line {line}: unknown door {head}; the doors are the table «Doors» of the common acceptance")
+                return
+            request = rest
         if request.startswith("ASSERT "):
             if expect or not re.fullmatch(r"ASSERT \$\w+ != \$\w+(?: \$\w+)*", request):
                 self.error(path, f"line {line}: invalid ASSERT or nonempty expectation")
