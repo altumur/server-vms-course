@@ -1,6 +1,7 @@
 req_id	file	source	date	removed
 -	lifecycle.md#store--lifecycle-lesson-p01	stage A of the move from M10	2026-10-18	Stage A — on top of the current norms of M10.
 -	lifecycle.md#stand	analysis of review of stage B 3–5, № 33	2026-10-20	(analysis of the review of stage B 3–5, № 33)
+-	lifecycle.md#stand	move of the acceptances from M10/4–11 (English source of P/01)	2026-11-06	moved from M10/4–11
 -	lifecycle.md#open	Architect's decision 2026-10-18, the second pilot	2026-10-18	; Decided by the Architect 2026-10-18 (the second pilot)
 -	spec/01-store.README.md#inputs-and-their-priority	status of open questions as of 2026-10-15	2026-10-15	The lesson has no open questions as of 2026-10-15: all known ones are closed in the norms.
 -	spec/01-store.README.md#when-the-code-and-the-norms-diverge	run 33	2026-10-19	after run 33

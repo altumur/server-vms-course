@@ -79,7 +79,7 @@ SERVER_NAME для умолчания имени вне группы, когда
 - команда хранилища получает `{data}` (`PLATFORM_DIR`, хранилище — `{data}/configstore`), `{socket}` (`admin.sock`,
   сокеты ролей рядом), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; манифестов не кладёт;
 - команда хранилища держит `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}` по одному разу и не содержит флагов члена стенда группы, их дописывает сам стенд ([подстановки](../../common/ru/acceptance/PROFILE.md#подстановки));
-- `{rights}`: в P/01.1 — файл роли `acc`, в приёмках, перенесённых из M10/4–11, — вывод прав из манифестов стенда командой вывода прав;
+- `{rights}`: в P/01.1 — файл роли `acc`, в приёмках других уроков — вывод прав из манифестов стенда командой вывода прав;
 - директивы `@restart store`, `@foreign store`, `@backup store`, `@import store`, дверь `restored`;
 - хранилище работает с барьерами долговечности: команда не несёт флага, который их выключает (`durability` выше).
 
