@@ -1,0 +1,71 @@
+req_id	file	source	date	removed
+-	README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	README.md#intro	ADR-0124	2026-11-04	ADR-0124: 
+-	README.md#intro	move of lesson 2 to M10/9 and of lesson 6 to chapter 6.5 of the console	2026-10-20	moved with the move of lesson 2 temporarily to M10/9, and with the move of lesson 6 to
+-	README.md#intro	review of stage A 2, P10	2026-10-19	 (review of stage A 2, P10)
+-	README.md#intro	ADR-0092	2026-10-27	; ADR-0092
+-	README.md#intro	ADR-0126	2026-11-04	 (ADR-0126)
+-	README.md#intro	ADR-0120	2026-11-04	 of ADR-0120
+-	README.md#intro	ADR-0092; ADR-0088	2026-10-27	, ADR-0092; ADR-0088
+-	lifecycle.md#intro	ADR-0121; ADR-0124 addendum (1) item 2	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 2)
+-	lifecycle.md#intro	ADR-0083 addendum (2) item 1	2026-10-18	 (ADR-0083 addendum (2) item 1)
+-	lifecycle.md#intro	stage A of the move from M10 and M11	2026-10-18	Stage A — on top of the current norms of M10 and M11.
+-	lifecycle.md#intro	move of lesson 8, stage B	2026-10-20	 (the move of lesson 8, stage B)
+-	lifecycle.md#start	ADR-0084	2026-10-19	 (ADR-0084)
+-	lifecycle.md#environment	analysis of review of stage A 6–7, № 19	2026-10-20	, analysis of the review of stage A 6–7, № 19
+-	lifecycle.md#stand	analysis of review of stage B 3–5, № 33	2026-10-20	 (analysis of the review of stage B 3–5, № 33)
+-	lifecycle.md#stand	move of the acceptances from M10/4–11	2026-10-20	moved from M10/4–11
+-	lifecycle.md#stand	analysis of review of stage B 3–5, № 34	2026-10-20	 (analysis of the review of stage B 3–5, № 34)
+-	lifecycle.md#late-chapters-domain	analysis of review of stage A 8–10, decision 1	2026-10-20	 (analysis of the review of stage A 8–10, decision 1)
+-	lifecycle.md#open	decision on the data catalogue, item 8	2026-10-18	 (the decision on the data catalogue, item 8)
+-	spec/02-installer.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02-installer.README.md#task	window 2.2, item 8	2026-10-20	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02-installer.README.md#inputs-and-their-priority	ADR-0092	2026-10-27	 (ADR-0092)
+-	spec/02-installer.README.md#order-of-work	ADR-0126	2026-11-04	 (ADR-0126)
+-	spec/02-installer.README.md#chapters-21-and-23--the-manifest	ADR-0092 item 5	2026-10-27	 (ADR-0092 item 5)
+-	spec/02-installer.README.md#chapter-24--the-installer	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/02-installer.README.md#chapter-24--the-installer	ADR-0075 addendum 2026-10-26 (6) item 2	2026-10-26	, ADR-0075 addendum 2026-10-26 (6) item 2
+-	spec/02-installer.README.md#chapter-24--the-installer	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 4
+-	spec/02-installer.README.md#on-a-divergence-of-the-code-and-the-norms	ADR-0080	2026-10-13	 per ADR-0080
+-	vectors/canonical/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/canonical/README.md#intro	ADR-0089 addendum (1) R13	2026-10-19	 (ADR-0089 addendum (1) R13)
+-	vectors/canonical/README.md#intro	chapter 2.2 canonical-view window of 2026-10-20, section 5; Architect's decision, item 8	2026-10-20	 The window of chapter 2.2 is the chapter 2.2 canonical-view window of 2026-10-20 (section 5, the Architect's decision — item 8).
+-	vectors/canonical/README.md#composition	canonical-view defaults note of 2026-10-19, section 5	2026-10-19	 (the canonical-view defaults note of 2026-10-19, section 5)
+-	vectors/canonical/README.md#composition	ADR-0089 Confirmation	2026-10-19	 (ADR-0089 Confirmation)
+-	vectors/canonical/README.md#casestsv	ADR-0072	2026-10-11	 (ADR-0072, for the human)
+-	vectors/canonical/README.md#run	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
+-	vectors/canonical/README.md#run	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	vectors/exec/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/exec/README.md#intro	ADR-0091 addendum (4)–(6)	2026-10-23	; ADR-0091 addendum (4)–(6)
+-	vectors/install-order/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/install-order/README.md#intro	guess of stage C I02-INSTALL-ORDER, Architect's decision 2026-10-23	2026-10-23	; guess of stage C I02-INSTALL-ORDER, the Architect's decision of 2026-10-23
+-	vectors/install-order/README.md#casestsv	guess of stage C I02-G05, Architect's decision 2026-10-23	2026-10-23	 (guess of stage C I02-G05, the Architect's decision of 2026-10-23)
+-	vectors/install-order/README.md#run	finding C02-KIND-ORDER-33	2026-10-23	, C02-KIND-ORDER-33
+-	vectors/install-order/README.md#run	ADR-0091 addendum (26) item 1, addendum (27) item 4	2026-10-25	 (ADR-0091 addendum (26) item 1, addendum (27) item 4)
+-	vectors/install-order/README.md#run	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
+-	vectors/install-order/README.md#run	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	vectors/platform-lists/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/platform-lists/README.md#intro	analysis of review of stage A 6–7, № 5	2026-10-20	; review analysis of stage A 6–7, № 5
+-	vectors/platform-lists/README.md#intro	ADR-0080 addendum 16, ADR-0083	2026-10-17	 (ADR-0080 addendum 16, ADR-0083)
+-	vectors/platform-lists/README.md#intro	move from Source/tests/testdata, stage B, the move of lesson 6; Architect's decision on V8 of the plan of lesson 6 with correction № 5	2026-10-20	 Moved from `Source/tests/testdata/platform_lists.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision on V8 of the plan of lesson 6 with correction № 5).
+-	vectors/platform-lists/README.md#run	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
+-	vectors/platform-lists/README.md#run	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	vectors/workers-script/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/workers-script/README.md#intro	ADR-0084 addendum (1) R1, R4	2026-10-19	; ADR-0084 addendum (1) R1, R4
+-	vectors/workers-script/README.md#intro	move from M10/11, stage B	2026-10-19	; moved from M10/11, stage B
+-	vectors/workers-script/README.md#intro	ADR-0083, stage A, A6; review of stage A 2	2026-10-19	 (ADR-0083, stage A, A6; review of stage A 2)
+-	vectors/workers-script/README.md#casestsv	finding C02-RECONCILE-AGE-FORM-01	2026-10-29	 (C02-RECONCILE-AGE-FORM-01)
+-	vectors/workers-script/README.md#casestsv	ADR-0084 addendum (4) R26	2026-10-20	ADR-0084 addendum (4) R26: 
+-	vectors/workers-script/README.md#casestsv	former address M10/9 in the explanations of cases.tsv	2026-10-20	in the explanations of `cases.tsv` — the former address M10/9; 
+-	vectors/workers-script/README.md#casestsv	analysis of review of stage B 3–5, № 33	2026-10-20	; review analysis of stage B 3–5, № 33
+-	vectors/workers-script/README.md#who-executes	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
+-	vectors/workers-script/README.md#who-executes	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	forms/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	forms/README.md#intro	ADR-0125 addendum (5)	2026-11-05	 (ADR-0125 addendum (5))
+-	forms/README.md#stage-gates	ADR-0126	2026-11-04	 (ADR-0126)
+-	forms/README.md#stage-gates	ADR-0130 addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)
+-	forms/rollout-poll.machine.yaml#/machine	ADR-0115 addenda (28)–(37); ADR-0120 item 2 (b)	2026-11-04	 (ADR-0115 addenda (28)–(37); form — ADR-0120 item 2 (b),
+-	forms/rollout-poll.machine.yaml#/machine	ADR-0120 addendum (5) items 4, 5, addendum (6)	2026-11-04	addenda (5) items 4, 5 and (6))
+-	forms/rollout-poll.machine.yaml#/transitions	ADR-0122 addendum (1) item 4	2026-11-04	 (ADR-0122 addendum (1) item 4)
+-	forms/rollout-poll.machine.yaml#/transitions/0	ADR-0120 addendum (6) item 3	2026-11-04	; ADR-0120 addendum (6) item 3
+-	forms/rollout-poll.machine.yaml#/transitions/0	review of P/02, S1	2026-11-06	 (review of P/02, S1)

@@ -1,0 +1,118 @@
+req_id	file	source	date	removed
+-	spec/02.5-installer.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.5-installer.norms.md#intro	move from M10/6 (N1.4, N2, N3, N4, N5) and M10/7 N1.3, stage B (ADR-0083 addendum (1))	2026-10-18	The chapter is moved from M10/6 (N1.4, N2 — the generation tool, N3 «generate_rights» and «install», the rows of N4 on `--check` and generation, N5) and from M10/7 N1.3 «Secret rows and readers» (stage B, ADR-0083 addendum (1): without a change of behaviour).
+-	spec/02.5-installer.norms.md#intro	numbering of M10/6, M10/7	2026-10-19	The numbers of the subsections are the former ones: N1.3 — P/02.5 N1.3, N1.4 — P/02.5 N1.4; N1.4a — the rows of the domain roles of the table P/02.5 N1.4 (a chapter of the late layer).
+-	spec/02.5-installer.norms.md#intro	map of former ids, decisions/history/platform/id-map.tsv	2026-10-19	; the map to former ids is `id-map.tsv` (historical record)
+-	spec/02.5-installer.norms.md#N1.3	move from M10/7 N1.3, stage B (ADR-0083 addendum (1))	2026-10-18	Moved from M10/7 N1.3 (stage B).
+-	spec/02.5-installer.norms.md#N1.3	added by M10/9	2026-10-19	added by M10/9 
+-	spec/02.5-installer.norms.md#N1.3	analysis of review of stage B 6–7, № 36	2026-10-20	 (analysis of review of stage B 6–7, № 36)
+-	spec/02.5-installer.norms.md#N1.3	C02-EMPTY-SECRET-READERS-01	2026-10-29	; C02-EMPTY-SECRET-READERS-01
+-	spec/02.5-installer.norms.md#N1.4	C02-NEVER-LIST-01	2026-10-29	; C02-NEVER-LIST-01
+-	spec/02.5-installer.norms.md#N1.4	analysis of review of stage B 6–7, № 24	2026-10-20	; analysis of review of stage B 6–7, № 24
+-	spec/02.5-installer.norms.md#N1.4	ADR-0068	2026-10-07	 (ADR-0068)
+-	spec/02.5-installer.norms.md#N1.4	C02-IDEM-ASKED-EXPLICIT-READ-01	2026-10-29	 (C02-IDEM-ASKED-EXPLICIT-READ-01)
+-	spec/02.5-installer.norms.md#N1.4	analysis of review of stage B 6–7, № 24	2026-10-20	; analysis of review of stage B 6–7, № 24
+-	spec/02.5-installer.norms.md#N1.4	log of cammeta-go, lesson 8 № 4	2026-10-18	 (log of cammeta-go, lesson 8 № 4)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	 (added by M10/10)
+-	spec/02.5-installer.norms.md#N1.4	comparison of python and go M10/6–11, R8	2026-10-18	; comparison of python and go M10/6–11, R8
+-	spec/02.5-installer.norms.md#N1.4	added by M10/8	2026-10-17	; added by M10/8
+-	spec/02.5-installer.norms.md#N1.4	the Architect's decision 2026-10-23 on the VMS request «commands and the device row»	2026-10-23	; the VMS request «commands and the device row», the Architect's decision of 2026-10-23
+-	spec/02.5-installer.norms.md#N1.4	ADR-0094 step 3b	2026-10-29	; ADR-0094 step `3b`
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	 (added by M10/10)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	 (added by M10/10)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/7, M10/9	2026-10-17	added by M10/7, M10/9; now 
+-	spec/02.5-installer.norms.md#N1.4	added by M10/8	2026-10-17	 (added by M10/8)
+-	spec/02.5-installer.norms.md#N1.4	ADR-0054	2026-10-06	, ADR-0054
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	 (added by M10/10)
+-	spec/02.5-installer.norms.md#N1.4	the Architect's decision 2026-10-20; ADR-0083 addendum (14) item 10; the move plan of lesson 8 V7; analysis of review of stage A 8–10	2026-10-20	 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 10, the move plan of lesson 8 V7; analysis of review of stage A 8–10; a change of behaviour)
+-	spec/02.5-installer.norms.md#N1.4	ADR-0074	2026-10-11	, ADR-0074
+-	spec/02.5-installer.norms.md#N1.4	ADR-0084	2026-10-19	; ADR-0084
+-	spec/02.5-installer.norms.md#N1.4	ADR-0067; ADR-0091 items 1, 2	2026-10-22	 (ADR-0067; ADR-0091 items 1, 2)
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 item 3	2026-10-22	; ADR-0091 item 3
+-	spec/02.5-installer.norms.md#N1.4	ADR-0113 addendum (39)	2026-11-02	; ADR-0113 addendum (39)
+-	spec/02.5-installer.norms.md#N1.4	ADR-0060	2026-10-06	, ADR-0060
+-	spec/02.5-installer.norms.md#N1.4	the Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 item 3	2026-10-22	; ADR-0091 item 3
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 item 1	2026-10-22	; ADR-0091 item 1
+-	spec/02.5-installer.norms.md#N1.4	ADR-0067 addendum 2026-10-17	2026-10-17	 (ADR-0067 addendum 2026-10-17)
+-	spec/02.5-installer.norms.md#N1.4	comparison of python and go M10/6–11, R10	2026-10-18	 (comparison of python and go M10/6–11, R10)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	 (added by M10/10)
+-	spec/02.5-installer.norms.md#N1.4	added by P/01.3 N1.3 floor	2026-10-19	added by 
+-	spec/02.5-installer.norms.md#N1.4	ADR-0060	2026-10-06	, ADR-0060
+-	spec/02.5-installer.norms.md#N1.4	ADR-0074	2026-10-11	, ADR-0074
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 addendum (13) item 5, addendum (15) item 6	2026-10-23	, ADR-0091 addendum (13) item 5, addendum (15) item 6,
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 addendum (18) item 2	2026-10-23	, ADR-0091 addendum (18) item 2
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 addendum (13) item 5	2026-10-23	, addendum (13) item 5
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 addendum (21) item 1	2026-10-23	, ADR-0091 addendum (21) item 1
+-	spec/02.5-installer.norms.md#N1.4	comparison of python and go M10/6–11, R7	2026-10-18	 (comparison of python and go M10/6–11, R7)
+-	spec/02.5-installer.norms.md#N1.4	change class dfaf5460	2026-10-18	; the change class dfaf5460
+-	spec/02.5-installer.norms.md#N1.4	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/10	2026-10-17	; added by M10/10
+-	spec/02.5-installer.norms.md#N1.4	added by M10/8 N1.4	2026-10-17	 (added by M10/8 N1.4)
+-	spec/02.5-installer.norms.md#N1.4	C02-RESOURCE-HOLDS-TABLE-01; the Architect's decision 2026-10-30, norm questions of the Gemini audit, P/02 item 1	2026-10-30	 (C02-RESOURCE-HOLDS-TABLE-01; the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/02 item 1)
+-	spec/02.5-installer.norms.md#N1.4	added by M10/8	2026-10-17	added by M10/8; 
+-	spec/02.5-installer.norms.md#N1.4	the store pilot, A5	2026-10-18	 — the store pilot, A5
+-	spec/02.5-installer.norms.md#N1.4	C02-NONREADER-DENY-AFTER-01	2026-10-30	; C02-NONREADER-DENY-AFTER-01
+-	spec/02.5-installer.norms.md#N1.4a	the rows of the domain roles were in the table N1.4 (move of the chapter, stage B)	2026-10-19	The rows of the table below stood in the table of P/02.5 N1.4; the general derivation rules of N1.4 act on them too.
+-	spec/02.5-installer.norms.md#N1.4a	logs of cammeta-python, cammeta-go M11-03 № 1	2026-10-18	; logs of cammeta-python, cammeta-go M11-03 № 1
+-	spec/02.5-installer.norms.md#N1.4a	C02-LOCAL-BINDING240-ROOT, the Architect's decision 2026-10-26	2026-10-26	 (C02-LOCAL-BINDING240-ROOT, the Architect's decision of 2026-10-26)
+-	spec/02.5-installer.norms.md#N1.4a	ADR-0098 §9	2026-10-30	; ADR-0098 §9
+-	spec/02.5-installer.norms.md#N1.4a	analysis of review of stage A 8–10, № 28	2026-10-20	 (analysis of review of stage A 8–10, № 28)
+-	spec/02.5-installer.norms.md#N1.4a	comparison of python and go M10/6–11, R4	2026-10-18	; comparison of python and go M10/6–11, R4
+-	spec/02.5-installer.norms.md#N1.4a	guess 06 № 15 of the clean room; comparison of python and go M10/6–11, R3	2026-10-18	, guess 06 № 15 of the clean room; comparison of python and go M10/6–11, R3
+-	spec/02.5-installer.norms.md#N1.5	ADR-0094 addendum (6) item 4	2026-10-29	; ADR-0094 addendum (6) item 4
+-	spec/02.5-installer.norms.md#N2	C02-CLUSTER-EMPTY-01	2026-10-29	 (C02-CLUSTER-EMPTY-01)
+-	spec/02.5-installer.norms.md#N3	ADR-0074 C7 item 2; ADR-0074 addendum 5	2026-10-13	; ADR-0074 C7 item 2, addendum 5
+-	spec/02.5-installer.norms.md#N3	C02-OWN-BOOK-HOLDER-01; the Architect's decision 2026-10-29, analysis of V/03 question 8	2026-10-29	 (C02-OWN-BOOK-HOLDER-01, the Architect's decision of 2026-10-29, analysis of V/03 question 8)
+-	spec/02.5-installer.norms.md#N3	C02-SECRETS-READS-INTERSECTION-01	2026-10-29	; C02-SECRETS-READS-INTERSECTION-01
+-	spec/02.5-installer.norms.md#N3	C02-NONREADER-DENY-AFTER-01; the Architect's decision 2026-10-30, norm questions of the Gemini audit, P/02 item 2	2026-10-30	 (C02-NONREADER-DENY-AFTER-01; the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/02 item 2)
+-	spec/02.5-installer.norms.md#N3	review P/02 S8	2026-11-05	; review P/02 S8
+-	spec/02.5-installer.norms.md#N3	the store pilot, A5	2026-10-18	 (the store pilot, A5)
+-	spec/02.5-installer.norms.md#N3	ADR-0115 addendum (21)–(24)	2026-11-03	; ADR-0115 addendum (21)–(24)
+-	spec/02.5-installer.norms.md#N4	ADR-0125 addendum (1) item 5	2026-11-04	 (ADR-0125 addendum (1) item 5)
+-	spec/02.5-installer.norms.md#N4	move from M10/7 N4	2026-10-19	The row on the declarations `secrets.readers`/`reads` is from M10/7 N4. 
+-	spec/02.5-installer.norms.md#N4	move of the chapter, stage B	2026-10-19	 (stage B)
+-	spec/02.5-installer.norms.md#N5	move of the scenarios to P/01.2, stage B	2026-10-19	 (stage B); the numbers of the remaining ones did not change
+-	spec/02.5-installer.norms.md#N5	C02-RIGHTS-CHECK-STAND-01	2026-10-30	; C02-RIGHTS-CHECK-STAND-01
+-	spec/02.5-installer.norms.md#implementation-decides	the store pilot, A4	2026-10-18	; the store pilot, A4
+-	spec/02.5-installer.norms.md#readiness-checklist	C02-RESOURCE-HOLDS-TABLE-01	2026-10-30	 — C02-RESOURCE-HOLDS-TABLE-01
+-	spec/02.5-installer.norms.md#readiness-checklist	C02-NONREADER-DENY-AFTER-01	2026-10-30	, C02-NONREADER-DENY-AFTER-01
+-	spec/02.5-installer.norms.md#readiness-checklist	comparison of python and go M10/6–11	2026-10-18	 (comparison of python and go M10/6–11)
+-	spec/02.5-installer.norms.md#readiness-checklist	analysis of review of stage B 6–7, № 36	2026-10-20	 (analysis of review of stage B 6–7, № 36)
+-	spec/02.5-installer.norms.md#readiness-checklist	coverage audit of P/02, B05	2026-10-30	 (coverage audit of P/02, B05)
+-	spec/02.5-installer.norms.md#readiness-checklist	ADR-0091 items 1, 3	2026-10-22	 (ADR-0091 items 1, 3)
+-	spec/02.5-installer.norms.md#readiness-checklist	coverage audit of P/02, B07	2026-10-30	 (coverage audit of P/02, B07)
+-	acceptance/5/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/5/README.md#intro	move from the acceptance of M10/6, stage B	2026-10-19	The scenarios and the manifest variants were moved from the acceptance of M10/6 (stage B) with the former numbers, steps and texts. 
+-	acceptance/5/README.md#intro	move of sc. 05–08 and 10 to P/01.2, stage B	2026-10-19	 (stage B); the numbers of the remaining ones did not change
+-	acceptance/5/README.md#scenariostsv	reconciliation of python and go M10/6–11, R1–R5, R7	2026-10-18	The reconciliation of python and go M10/6–11 (R1–R5, R7) is part of these scenarios.
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11: R2–R8, R10, R12; registry line e31e5c28	2026-10-18	 (the reconciliation of python and go M10/6–11: R2–R8, R10, R12; registry line e31e5c28)
+-	acceptance/5/README.md#manifest-variants-variants	the Architect's decision on the form of refused and check.tsv; the Gemini audit P/02, properties 24, 25	2026-10-30	The forms of `refused` and `check.tsv` are the Architect's decision on the question of the form (the Gemini audit P/02, properties 24, 25). 
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11, R2, R5, R7, R8, R12	2026-10-18	R2, R5, R7, R8, R12; 
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11, R8, R9 (the norm named by words)	2026-10-18	R8, R9
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11, R10 (the norm named by words)	2026-10-18	R10
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11, R4, R3 (the norm named by words)	2026-10-18	R4, R3
+-	acceptance/5/README.md#manifest-variants-variants	the Architect's decision 2026-10-27 (the norm named by words)	2026-10-27	the Architect's decision of 2026-10-27
+-	acceptance/5/README.md#manifest-variants-variants	C02-RESOURCE-HOLDS-TABLE-01	2026-10-30	 (C02-RESOURCE-HOLDS-TABLE-01)
+-	acceptance/5/README.md#manifest-variants-variants	C02-OWN-BOOK-HOLDER-01	2026-10-30	 (C02-OWN-BOOK-HOLDER-01)
+-	acceptance/5/README.md#manifest-variants-variants	the Architect's decision 2026-10-27	2026-10-27	 (the Architect's decision of 2026-10-27)
+-	acceptance/5/README.md#manifest-variants-variants	C02-IDEM-ASKED-EXPLICIT-READ-01	2026-10-30	 (C02-IDEM-ASKED-EXPLICIT-READ-01)
+-	acceptance/5/README.md#manifest-variants-variants	C02-SECRETS-READS-INTERSECTION-01	2026-10-30	 (C02-SECRETS-READS-INTERSECTION-01)
+-	acceptance/5/README.md#manifest-variants-variants	reconciliation of python and go M10/6–11, R6 (the norm named by words)	2026-10-18	R6
+-	acceptance/5/README.md#manifest-variants-variants	origin of the variants: reconciliation of python and go M10/6–11; the Architect's decision 2026-10-27; coverage audit P/02 (audit-kimi, 82f4da9fc); its second pass (Gemini, c698f3291); readiness audit of P/02 (P02.20)	2026-10-27	The manifests of the variants `v1`–`v5` come from the reconciliation of python and go M10/6–11; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below). `v15-name18-roles`, `v16-secret-prefix` and the admission probes of `v1-base` — the readiness audit of P/02 (P02.20).
+-	acceptance/5/README.md#not-judged-in-this-lesson	move to P/01.2, stage B	2026-10-19	 (stage B)
+-	acceptance/5/README.md#not-judged-in-this-lesson	C02-NAME32-ROLES-01	2026-10-29	 (C02-NAME32-ROLES-01)
+-	acceptance/5/README.md#not-judged-in-this-lesson	run 32	2026-10-16	 of run 32
+-	acceptance/5/README.md#not-judged-in-this-lesson	ADR-0075 addendum 3	2026-10-12	 (ADR-0075 addendum 3)
+-	acceptance/5/README.md#not-judged-in-this-lesson	review of the Specification 36, R36-05; the coverage audit P/02, B06	2026-10-30	The check R36-05 (since 2026-10-30 — cases of the acceptance of chapter 2.1; the coverage audit P/02, B06):
+-	acceptance/5/README.md#not-judged-in-this-lesson	log of cammeta-go, lesson 8 № 4	2026-10-18	; the log of cammeta-go, lesson 8 № 4
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit P/02, second pass (Gemini), c698f3291 (heading)	2026-10-30	The coverage audit P/02, second pass (Gemini)
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit Gemini P02 report (branch gemini/audit-coverage, c698f3291)	2026-10-30	The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): the derivation of rights that was formerly checked by reading —
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit Gemini P02, G04	2026-10-30	 (G04)
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit Gemini P02, G05	2026-10-30	 (G05)
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit Gemini P02, G06	2026-10-30	 (G06)
+-	acceptance/5/README.md#properties-of-variants-v8v11	coverage audit Gemini P02, G07	2026-10-30	G07; 
+-	acceptance/5/README.md#properties-of-variants-v8v11	the Architect's forms check.tsv and refused	2026-10-30	the Architect's 
+-	acceptance/5/README.md#properties-of-variants-v8v11	the Architect's decisions 2026-10-30, the norm questions of the Gemini audit, P/02	2026-10-30	 after the Architect's decisions of 2026-10-30 (the norm questions of the Gemini audit, P/02)
+-	acceptance/5/README.md#properties-of-variants-v8v11	the Architect's decision 2026-10-30, item 1; C02-RESOURCE-HOLDS-TABLE-01	2026-10-30	 (item 1, C02-RESOURCE-HOLDS-TABLE-01)
+-	acceptance/5/README.md#properties-of-variants-v8v11	the Architect's decision 2026-10-30, item 2; C02-NONREADER-DENY-AFTER-01	2026-10-30	 (item 2, C02-NONREADER-DENY-AFTER-01)
