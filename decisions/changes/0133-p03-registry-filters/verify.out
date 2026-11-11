@@ -1,0 +1,21 @@
+ok   registry assembles without errors (tree 80, base 42 targets)
+ok   targets.tsv: the 42 rows of the base are unchanged
+ok   targets.tsv: 38 rows of P/03
+ok   targets.routing.tsv: the 42 rows of the base are unchanged
+ok   targets.routing.tsv: 38 rows of P/03
+ok   vector targets: 27, public cells equal to runner-targets.tsv: 26; differs: ['P/03/vectors-creates-key']
+     other P/03 targets: ['P/03.1/seams', 'P/03.2/seams', 'P/03.2/stand', 'P/03.3/seams', 'P/03.3/stand', 'P/03.4/seams', 'P/03.4/stand', 'P/03.5/seams', 'P/03.6/seams', 'P/03.6/stand', 'P/03.7/seams']
+     engines: {'P/03.1/seams': 'run', 'P/03.2/seams': 'seams', 'P/03.2/stand': 'run', 'P/03.3/seams': 'seams', 'P/03.3/stand': 'run', 'P/03.4/seams': 'seams', 'P/03.4/stand': 'run', 'P/03.5/seams': 'run', 'P/03.6/seams': 'seams', 'P/03.6/stand': 'run', 'P/03.7/seams': 'run'}
+ok   filters assemble without errors: {'export_lessons_with_lists': 3, 'export_unlisted': 1, 'export_model_records': 3527, 'export_judge_records': 3527}
+     base: errors 0, {'export_lessons_with_lists': 2, 'export_unlisted': 2, 'export_model_records': 3523, 'export_judge_records': 3523}
+ok   model: no path of the base is lost (3523 → 3527)
+ok   model: new paths [('Platform/03-worker/forms/code-rules.tsv', 'model_and_judge'), ('Platform/03-worker/forms/export.json', 'judge_only'), ('Platform/03-worker/forms/targets.routing.tsv', 'judge_only'), ('Platform/03-worker/forms/targets.tsv', 'model_and_judge')]
+ok   model: no disposition changes (0 records changed in basis only: [])
+ok   judge: no path of the base is lost (3523 → 3527)
+ok   judge: new paths [('Platform/03-worker/forms/code-rules.tsv', 'include'), ('Platform/03-worker/forms/export.json', 'exclude'), ('Platform/03-worker/forms/targets.routing.tsv', 'include'), ('Platform/03-worker/forms/targets.tsv', 'include')]
+ok   judge: 57 files of P/03 and 52 files of routed packages exclude → include
+     packages: ['Platform/06-console/vectors/request-digest', 'Platform/06-console/vectors/requests-body', 'Platform/06-console/vectors/rid', 'Platform/common/vectors/domain-token', 'Platform/common/vectors/door-token', 'Platform/common/vectors/events-merge', 'Platform/common/vectors/group-of', 'Platform/common/vectors/instance', 'Platform/common/vectors/journal', 'Platform/common/vectors/labels', 'Platform/common/vectors/object-client', 'Platform/common/vectors/row-check', 'Platform/common/vectors/said-id', 'Platform/common/vectors/schema', 'Platform/common/vectors/slot', 'Platform/common/vectors/slot-name', 'Platform/common/vectors/values-by-type']
+     basis-only changes: 0
+ok   wire.tsv: rows of the base kept; new triples [('03-worker/creates-key', 'cases.tsv', 'stand:creates-key'), ('common/door-token', 'place.tsv', 'stand:door-token-verify'), ('common/door-token', 'verify.tsv', 'stand:door-token-verify'), ('common/slot', 'cases.tsv', 'vectors')]
+ok   wire.cases.tsv: rows of the base kept; new triples []
+ok   consumers.tsv unchanged
