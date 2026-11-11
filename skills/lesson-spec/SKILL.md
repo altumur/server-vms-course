@@ -26,6 +26,8 @@ Platform/NN-<процесс>/lifecycle.md                         порядок
 Platform/NN-<процесс>/forms/                               формы ADR-0120: таблицы проверок (+probes), автоматы (+traces)
 Platform/NN-<процесс>/data/                                только семьи данных: *.schema.json, *.layers.tsv, *.outcomes.tsv
 Platform/NN-<процесс>/acceptance/K/                        приёмка главы K: README.md (en), scenarios.tsv, inputs/ — проверяет канон
+Platform/NN-<процесс>/acceptance/<стенд>/                  каталог стенда урока (имя с буквы, не номер главы): только если его
+                                                           называет столбец acceptance строки forms/targets.routing.tsv
 Platform/NN-<процесс>/vectors/<пакет>/                     README.md (en), данные пакета
 decisions/journal/platform/NN-<процесс>/                  журналы урока (ADR-0121 доп. (9)): правки приёмки corrections-K.tsv,
                                                            история текста history-K.tsv и history.tsv — не вход, вне M и J

@@ -11,15 +11,24 @@ Checked here, by data only:
 - a row in a lesson's file has the `owner` of that lesson (its directory name);
 - every target has exactly one routing row and the other way round, both in the same place (common, or the same lesson).
 
+`stands(root)` reads the stand directories of the lessons from the column `acceptance` of the routing (OBSH.43): a lesson with
+chapters keeps beside `acceptance/K/` only the stand directories `acceptance/<name>/` (a name that begins with a letter) that a
+routing row names; check_spec judges both directions against the disk.
+
 `assemble(root)` → (targets, routing, errors, stats): targets and routing are lists of (path, line, row) in source order
 (common first, then lessons by directory), errors are (path, message).
 """
+import json
 import re
 from pathlib import Path
 
 COMMON = Path("Platform/common/acceptance/forms")
 TARGETS, ROUTING = "targets.tsv", "targets.routing.tsv"
 LESSON_DIR = re.compile(r"^\d\d-[a-z0-9-]+$")
+# A stand directory of a lesson: `Platform/NN-<process>/acceptance/<name>`, <name> not a chapter number; the element of the
+# column `acceptance` may name the directory itself or a path in it.
+STAND = r"[a-z][a-z0-9-]*"
+STAND_PATH = re.compile(r"^Platform/(\d\d-[a-z0-9-]+)/acceptance/(" + STAND + r")(?:/.*)?$")
 
 
 def read_table(path):
@@ -118,3 +127,30 @@ def assemble(root):
     stats = {"registry_targets": len(t_ids), "registry_routing": len(r_ids),
              "registry_lessons_with_rows": len(places - {"common"})}
     return ([(p, n, r) for p, n, r, _ in targets], [(p, n, r) for p, n, r, _ in routing], errors, stats)
+
+
+def stands(root):
+    """{(lesson, name): [(path, line, id)]} — the stand directories `Platform/<lesson>/acceptance/<name>` named in the column
+    `acceptance` of any routing source (common or a lesson), in source order. Rows that do not parse are skipped: their form
+    is judged by assemble() and by the checks of the routing."""
+    out = {}
+    for path, _lesson in sources(Path(root), ROUTING):
+        try:
+            header, body = read_table(path)
+        except (OSError, UnicodeError):
+            continue
+        if not header or "acceptance" not in header or "id" not in header:
+            continue
+        for line, cells in body:
+            if len(cells) != len(header):
+                continue
+            row = dict(zip(header, cells))
+            try:
+                dirs = json.loads(row["acceptance"])
+            except ValueError:
+                continue
+            for value in dirs if isinstance(dirs, list) else []:
+                match = STAND_PATH.match(value) if isinstance(value, str) else None
+                if match:
+                    out.setdefault(match.groups(), []).append((path, line, row["id"]))
+    return out

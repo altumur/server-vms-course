@@ -1219,6 +1219,50 @@ paths:
         (self.dir / "acceptance/3").mkdir()
         self.assertTrue(any("only chapter directories" in e for e in self.check().errors))
 
+    ROUTING = "id\tengine\tacceptance\tscenarios\ttables\tparts\tbody\n"
+
+    def stand(self, *rows, directory=True):
+        """OBSH.43: a stand directory acceptance/pass/ of the lesson and routing rows naming directories."""
+        if directory:
+            (self.dir / "acceptance/pass").mkdir()
+            (self.dir / "acceptance/pass/README.md").write_text("# Stand\n")
+        forms = self.dir / "forms"
+        forms.mkdir(exist_ok=True)
+        (forms / "targets.routing.tsv").write_text(self.ROUTING + "".join(
+            f'{target}\trun\t["{where}"]\tall\t[]\t[]\twhole\n' for target, where in rows))
+        return [e for e in self.check().errors if "stand" in e]
+
+    def test_stand_directory_named_in_the_routing(self):
+        import target_registry
+        import check_spec
+        self.assertEqual(target_registry.STAND, check_spec.STAND_NAME)
+        self.assertEqual(self.stand(("P/01/pass", "Platform/01-store/acceptance/pass")), [])
+        self.assertEqual([e for e in self.check().errors if "acceptance" in e], [])
+        self.assertEqual(self.check().stats["acceptance_stands"], 1)
+        # A path inside the stand names it too.
+        self.assertEqual(self.stand(("P/01/pass", "Platform/01-store/acceptance/pass/scenarios.tsv"), directory=False), [])
+
+    def test_stand_directory_without_a_routing_row(self):
+        errors = self.stand(("P/01/other", "Platform/02-installer/acceptance/pass"))
+        self.assertTrue(any("acceptance/pass: stand directory acceptance/pass/ is named by no row" in e for e in errors), errors)
+        (self.dir / "forms/targets.routing.tsv").unlink()
+        self.assertTrue(any("is named by no row" in e for e in self.check().errors))
+
+    def test_routing_row_without_the_stand_directory(self):
+        errors = self.stand(("P/01/ops", "Platform/01-store/acceptance/ops"), directory=False)
+        self.assertTrue(any("targets.routing.tsv: line 2: routing row P/01/ops names the stand directory "
+                            "Platform/01-store/acceptance/ops, which does not exist" in e for e in errors), errors)
+
+    def test_stand_names_are_not_chapters_or_files(self):
+        self.stand(("P/01/x", "Platform/01-store/acceptance/9"), directory=False)
+        (self.dir / "acceptance/9").mkdir()                           # a number is a chapter, not a stand
+        (self.dir / "acceptance/notes.md").write_text("x\n")          # a file is no stand
+        errors = self.check().errors
+        self.assertTrue(any("acceptance/9: acceptance of a lesson with chapters holds only chapter directories" in e
+                            for e in errors), errors)
+        self.assertTrue(any("notes.md: acceptance of a lesson with chapters holds only chapter directories" in e
+                            for e in errors), errors)
+
     def test_lesson_scenario_count_is_the_sum_of_chapters(self):
         self.readme.write_text("# Instructions\n3 сценария / 2 шага.\n")
         self.assertTrue(any("says 3 scenarios, the tables have 2" in e for e in self.check().errors))

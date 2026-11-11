@@ -600,6 +600,7 @@ def chapter_key(path):
 
 # Номер главы — 0, 1–99 (главы 8.0 и 8.10 урока 8).
 CHAPTER = r"(?:0|[1-9][0-9]?)"
+STAND_NAME = r"[a-z][a-z0-9-]*"     # a stand directory acceptance/<name>/ of a lesson; the same as target_registry.STAND
 NORM_ID = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]+|[PV]/[0-9]{2}(?:\." + CHAPTER + r")?|P/AC)-[0-9]+"
 REGISTERED_SHARED_LESSONS = {
     "P/AC": {
@@ -2792,6 +2793,13 @@ class Check:
                 self.error(path, message)
             self.stats.update(stats)
 
+    def lesson_stands(self):
+        """{(lesson, name): [(path, line, id)]} of target_registry.stands, read once per run."""
+        if getattr(self, "_stands", None) is None:
+            import target_registry
+            self._stands = target_registry.stands(self.root)
+        return self._stands
+
     def target_registry(self):
         """ADR-0135 addendum (14): the acceptance target registry assembled from the common header and the rows of the lessons
         (`target_registry`): common header in every source, unique ids, a lesson's rows owned by it, one routing row per
@@ -3480,9 +3488,28 @@ class Check:
                 self.error(acceptance, str(exc))
                 entries = []
         names = {chapter for chapter, _ in parts}
+        # OBSH.43: beside the chapters, stand directories acceptance/<name>/ (a name that begins with a letter), each named
+        # in the column `acceptance` of forms/targets.routing.tsv (target_registry.stands); both directions are judged.
+        stands = {} if vms else {name: refs for (lesson_dir, name), refs in self.lesson_stands().items()
+                                 if lesson_dir == home.name}
         for entry in entries:
-            if not (entry.is_dir() and entry.name in names):
-                self.error(entry, "acceptance of a lesson with chapters holds only chapter directories acceptance/K/")
+            if entry.is_dir() and entry.name in names:
+                continue
+            if not vms and re.fullmatch(STAND_NAME, entry.name) and entry.is_dir() and not entry.is_symlink():
+                if entry.name in stands:
+                    self.stats["acceptance_stands"] = self.stats.get("acceptance_stands", 0) + 1
+                else:
+                    self.error(entry, f"stand directory acceptance/{entry.name}/ is named by no row of the column "
+                                      f"acceptance of forms/targets.routing.tsv ({self.name(acceptance / entry.name)})")
+                continue
+            self.error(entry, "acceptance of a lesson with chapters holds only chapter directories acceptance/K/" +
+                       ("" if vms else " and stand directories acceptance/<name>/ named in forms/targets.routing.tsv"))
+        for name, refs in sorted(stands.items()):
+            if not (chapters and (acceptance / name).is_dir() and not (acceptance / name).is_symlink()):
+                for path, line, target in refs:
+                    self.error(path, f"line {line}: routing row {target} names the stand directory "
+                                     f"{self.name(acceptance / name)}, " +
+                                     ("which does not exist" if chapters else "but only a lesson with chapters keeps stands"))
         for chapter, norms in parts:
             prefix = f"{key}.{chapter}" if chapter else key
             text = self.read(norms)
