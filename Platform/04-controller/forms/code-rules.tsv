@@ -1,0 +1,44 @@
+# The code checks of lesson P/04 (ADR-0133 addenda (28), (39) items 2, 5; audit P04.20, appendix B, and the answers of the Architect to its questions
+# 6, 7): rows of the kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the
+# checks; no expected answer. name: the name that the profile field code (of the profile of 04-controller) maps to a symbol of the candidate; the
+# names are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later
+# stage that holds code:*. norm: the norms of the subject. Cores: fate_core (the slot fate and its release), admission_core (the admission of a
+# decision and the plan of its intent), choose_core (the choice of a worker and the neighbour lookup), cleanup_core (the count of delete_after),
+# decommission_core (the plan of the decommission chunks of a server), snapshot_core (the assembly of a snapshot and its size against the ceiling),
+# growth_core (shortage, order and shrink); their machines in the form Step(State, Event) -> (State, []Effect) are fate_step and release_step. The
+# age of the observed version, the clock of the controller and the answers of the store are inputs that the ordinary core supplies (forms/README.md),
+# so time in forbid does not bar them. The CEL cells of forms/slot-fate.tsv, forms/slot-release.tsv and of daemon-flags.tsv run in the adapter and
+# the kit, not in the core: no cel row and no table_driven row of slot-fate.tsv; the fate machine is held by its step_form, property_tests,
+# exhaustive and complexity rows. The pinned JSON Schema validator of the data families is a requires_module row of stage model. The refusals of
+# N4 are one form: one table_driven row, exhaustive over its column surface.
+id	kind	name	args	stage	norm
+C01	table_driven	daemon_flags	{"form": "Platform/04-controller/forms/daemon-flags.tsv", "min_cell": 9}	model	P/04 lifecycle Environment; P/04 lifecycle Flags; common/contracts/env-file.md; forms/daemon-flags.tsv
+C02	table_driven	runtime_constants	{"form": "Platform/04-controller/forms/runtime-constants.tsv", "min_cell": 9}	model	P/04-R030; P/04-R014; P/04-R013; P/04-R006; forms/runtime-constants.tsv
+C03	table_driven	refusals	{"form": "Platform/04-controller/forms/refusals.tsv", "min_cell": 9}	model	P/04 N4; P/04-R068; forms/refusals.tsv
+C04	exhaustive	refusal_surface	{"form": "Platform/04-controller/forms/refusals.tsv", "column": "surface"}	model	P/04 N4; P/04-R068; forms/refusals.tsv
+C05	requires_module	json_schema	{"module": "github.com/santhosh-tekuri/jsonschema/v6", "from": "Platform/common/versions/go.mod"}	model	P/04 «Data families»; Platform/common/versions/README.md
+C06	pure_core	fate_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	slot_fates	P/04 N1.4; P/04 N3 fate
+C07	step_form	fate_step	{"core": "fate_core"}	slot_fates	P/04 N3 fate; forms/slot-fate.tsv
+C08	step_form	release_step	{"core": "fate_core"}	slot_fates	P/04 N3 fate «Transitions of release»; forms/slot-release.tsv
+C09	property_tests	fate_step	{}	slot_fates	P/04 N3 fate
+C10	property_tests	release_step	{}	slot_fates	P/04 N3 fate «write release»; forms/slot-release.tsv
+C11	exhaustive	fate	{"form": "Platform/04-controller/forms/slot-fate.tsv", "column": "next"}	slot_fates	P/04 N3 fate; P/04 N1.2 fates; forms/slot-fate.tsv
+C12	complexity	fate_core	{"max_branches": 15, "max_lines": 80}	slot_fates	P/04 N3 fate
+C13	pure_core	admission_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	placement_admission	P/04 N1.5; P/04 N3 accept and complete a decision
+C14	property_tests	intent_plan	{}	placement_admission	P/04 N3 accept and complete a decision — the removals before the additions
+C15	complexity	admission_core	{"max_branches": 15, "max_lines": 80}	placement_admission	P/04 N1.5
+C16	pure_core	choose_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	choice	P/04 N1.3; P/04 N3 choose
+C17	property_tests	choose	{}	choice	P/04 N3 choose
+C18	property_tests	near_of	{}	choice	P/04 N1.3 near; vectors/near-of
+C19	complexity	choose_core	{"max_branches": 15, "max_lines": 80}	choice	P/04 N3 choose
+C20	pure_core	cleanup_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	cleanup	P/04 N3 pass step 8; P/04 N3 pass step 8a
+C21	property_tests	delete_after_count	{}	cleanup	P/04 N3 pass step 8; P/04 N1.3 retire_when; C04-RETIRE-TIMER-CLEAR-01
+C22	pure_core	decommission_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	cleanup	P/04 N3 decommission_server(s)
+C23	property_tests	decommission_batches	{}	cleanup	P/04 N3 decommission_server(s)
+C24	pure_core	snapshot_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	snapshots	P/04 N1.3a; P/04 N1.3b; P/04 N3 snapshot; P/04 N3 table snapshot
+C25	complexity	snapshot_core	{"max_branches": 15, "max_lines": 80}	snapshots	P/04 N1.3a
+C26	pure_core	growth_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	growth_shrink	P/04 N3 «shortage(), order(), withdraw the order, shrink()»; ADR-0084
+C27	property_tests	order_plan	{}	growth_shrink	P/04 N3 shortage(), order(); vectors/order
+C28	property_tests	shrink_victim	{}	growth_shrink	P/04 N3 shrink(); vectors/shrink-victim
+C29	property_tests	shrink_allowed	{}	growth_shrink	P/04 N3 shrink() — step 9a; vectors/shrink-allowed
+C30	complexity	growth_core	{"max_branches": 15, "max_lines": 80}	growth_shrink	P/04 N3 «shortage(), order(), withdraw the order, shrink()»
