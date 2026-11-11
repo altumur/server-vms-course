@@ -202,6 +202,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/04-controller/forms/code-rules.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
       "path": "Platform/04-controller/forms/daemon-flags.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."

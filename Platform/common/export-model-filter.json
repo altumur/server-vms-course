@@ -202,6 +202,11 @@
       "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
+      "path": "Platform/04-controller/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P02.57: the code checks of P/04, rows of the kinds of the public dictionary without expected answers (ADR-0133 addendum (39) items 2, 5, 6); public as code-rules.tsv of P/01, P/02 and P/03."
+    },
+    {
       "path": "Platform/04-controller/forms/daemon-flags.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
