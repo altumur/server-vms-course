@@ -1,7 +1,7 @@
 # P/03 forms and SDK seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121).
-These forms express the existing worker norms (ADR-0125 addendum (5)). The SDK has no new binary or HTTP API.
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export.
+These forms express the existing worker norms. The SDK has no new binary or HTTP API.
 
 ## Process inputs
 
@@ -23,10 +23,9 @@ type substitutes for the instance grammar. The launcher reads environment files;
 ## Refusals
 
 [`refusals.tsv`](refusals.tsv) columns are `chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller`.
-It is literal TAB, without CSV quoting. The first ten columns are P/01's. `row` is consecutive within a chapter; the two former 3.2 tables
-are concatenated in source order. The final five columns retain the original cells: four-cell tables use cause/outcome/diagnostic/caller;
-3.7 uses word/outcome/cause. The first 3.2 table's Code and Body are retained as outcome and diagnostic, including an em dash. No refusal is
-removed because its Code cell has no numeric code. `-` means no cell or no extra machine projection.
+It is literal TAB, without CSV quoting. The first ten columns are P/01's. `row` is consecutive within a chapter, in file order. The final five columns are the normative cells: rows of four cells use
+cause/outcome/diagnostic/caller; 3.7 uses word/outcome/cause. Chapter 3.2 rows 1–11 carry the code cell as outcome (an em dash: no code)
+and the body cell as diagnostic. A row whose code cell has no numeric code is still a refusal. `-` means no cell or no extra machine projection.
 
 `start` is a start refusal, `process` a running process, `call` a library result, `peer` an imported door contract. `code` is a fixed HTTP
 code, `exit N`, `exit !0` or `-`; a conditional code stays in its normative outcome cell. `kind` is `-`: the imported peer's `error` is not a
@@ -43,8 +42,8 @@ for this candidate's confirmed read; spending it must not erase the very excepti
 
 ## Seams
 
-`acceptance/K/seams.tsv` uses the four columns of scenarios, with a final header comment `# scenario TAB step TAB request TAB expect`.
-They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter; the judge runs them by the [seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
+`acceptance/K/seams.tsv` (judge-only: the SDK seam tests) uses the four columns of scenarios, with a final header comment `# scenario TAB step TAB request TAB expect`.
+They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter (judge-only: the process acceptance); the judge runs them by the [seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
 store/object clients, monotonic and wall clocks, and a recording subsystem. The adapter invokes the implementation, translates its result and
 records its effects. It may not answer a case from its expected output. These port names and JSON are test normalization, not mandatory SDK APIs.
 
@@ -89,9 +88,9 @@ These seams supplement reading witnesses. They do not remove the checklist or cl
 place writer, or OS presence-lock race that they do not execute. The stage plan lists them as kit tests; the process scenarios of the lesson remain the judge's work.
 
 
-## Lesson-review boundaries
+## Additional seam boundaries
 
-The Architect's accepted P/03 review under ADR-0127 supplements the same ports and [seams](../acceptance/2/seams.tsv); no process command or HTTP API is introduced. All original seams and process scenarios remain required.
+The boundaries below supplement the same ports and [seams](../acceptance/2/seams.tsv) (judge-only: the SDK seam tests of chapter 3.2); no process command or HTTP API is introduced. All other seams and process scenarios remain required.
 
 The capture adapter obtains gen_readable from the current generation field codec/range independently of the other slot fields, before narrowing. row_readable separately checks the whole slot. Confirmed absence is separate, with operand 0. An existing gen in 1..9007199254740991 is readable; gen_incrementable holds only below the maximum. Outside that range is the existing unreadable gen, retaining its original bytes. When false, machine gen=0 is an unused placeholder. generation_exhausted remains for a readable maximum at an otherwise eligible candidate; NameOnAnotherBox/torn-young admission is not bypassed. An unreadable generation introduces no programmatic unreadable word where the refusal catalogue specifies none.
 
@@ -101,19 +100,19 @@ worker-base-heartbeat invokes the ordinary base heartbeat builder with no subsys
 
 worker-contribution-cleanup loads two real valid manifests with distinct subsystem names and the same slot name. own_from names every declared book source of the own manifest (two actual rows); foreign_from names a live foreign contribution. It invokes ordinary taking/guarded cleanup/final-live code. The result counts contribution reads/deletes of each subsystem from recorded IO and verifies the foreign row directly after the run. Manifest catalogue reads are not foreign contribution reads. A prepared answer or a model of cleanup is not this seam.
 
-worker-holder-takeover runs two holder process epochs and a real blocked action callback. Record the real in-flight trace and holder/epoch changes as the fields old_call_unfinished_after_wait, cross_holder_exclusion_proven_by_wait and witness. The adapter derives these observations from the controlled IO/callback trace, not by returning constants. The seam does not require B to dispatch at the earliest permitted instant: a stronger barrier/fence may defer or reject it. It records why fixed wait alone is not cross-holder exclusion; the original single-holder s4 still requires maximum one unfinished call. No new alarm/event kind is introduced.
+worker-holder-takeover runs two holder process epochs and a real blocked action callback. Record the real in-flight trace and holder/epoch changes as the fields old_call_unfinished_after_wait, cross_holder_exclusion_proven_by_wait and witness. The adapter derives these observations from the controlled IO/callback trace, not by returning constants. The seam does not require B to dispatch at the earliest permitted instant: a stronger barrier/fence may defer or reject it. It records why fixed wait alone is not cross-holder exclusion; the single-holder s4 still requires maximum one unfinished call. No new alarm/event kind is introduced.
 
-worker-token-cache now distinguishes local now from verification.now at the receiver. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
+worker-token-cache distinguishes local now from verification.now at the receiver. It counts actual new-token requests and cache replacements and checks that current remains. Signature verification is retained; a local clock is not substituted for the receiver's outcome.
 
 ## Row-write bindings
 
-[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029 under ADR-0127; IO/CAS/retry remain with the procedure.
+[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029; IO/CAS/retry remain with the procedure.
 
 ## Worker policy machines
 
 The existing machine class is used by [`contender-writer.machine.yaml`](contender-writer.machine.yaml) with
-[`contender-writer.traces.tsv`](contender-writer.traces.tsv), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
-with [`token-cache.traces.tsv`](token-cache.traces.tsv). Their norm fields name P/03.2-R012, P/03.2-R047 and
+[`contender-writer.traces.tsv`](contender-writer.traces.tsv) (judge-only: reference traces), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
+with [`token-cache.traces.tsv`](token-cache.traces.tsv) (judge-only: reference traces). Their norm fields name P/03.2-R012, P/03.2-R047 and
 P/03.7-R009, P/03.7-R018. One ordered transition is one row of transitions; from/to refer only to states, initial is
 one state, terminal is an explicit subset with no outgoing transitions. There is no additional KIT_PART.
 

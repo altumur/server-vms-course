@@ -1,0 +1,101 @@
+req_id	file	source	date	removed
+-	spec/03.2-worker.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+P/03.2-R069	spec/03.2-worker.norms.md#N0	ADR-0130 Addendum (10)	2026-11-08	 (ADR-0130 Addendum (10))
+P/03.2-R006	spec/03.2-worker.norms.md#N1.3	ADR-0029	2026-10-05	 (ADR-0029)
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	ADR-0043	2026-10-04	; ADR-0043
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	ADR-0084	2026-10-19	; ADR-0084
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	layout audit A-06; Architect's decision 2026-10-25	2026-10-25	; layout audit «A-06», the Architect's decision 2026-10-25
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	Quint pilot, F2	2026-10-19	; added by the Quint pilot, F2
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	moved to the slot contract; layout audit A-04; Architect's decision 2026-10-25	2026-10-25	 (moved there without change; layout audit «A-04», the Architect's decision 2026-10-25)
+P/03.2-R007	spec/03.2-worker.norms.md#N1.4	moved to the slot contract; layout audit A-04; Architect's decision 2026-10-25	2026-10-25	; moved there without change; layout audit «A-04», the Architect's decision 2026-10-25
+P/03.2-R008	spec/03.2-worker.norms.md#N1.4	moved to the slot name contract; POOL-ORDER-51-01	2026-10-25	moved there without a change of behaviour, POOL-ORDER-51-01; 
+P/03.2-R009	spec/03.2-worker.norms.md#N1.4	ADR-0049	2026-10-04	 (ADR-0049)
+P/03.2-R012	spec/03.2-worker.norms.md#N1.4a	C06-CONTENDER-FRESH-33-01; Architect's decision 2026-10-25	2026-10-25	; C06-CONTENDER-FRESH-33-01, the Architect's decision 2026-10-25
+P/03.2-R012	spec/03.2-worker.norms.md#N1.4a	analysis of review of stage B 3–5, № 5	2026-10-20	 (review of stage B 3–5, № 5)
+P/03.2-R012	spec/03.2-worker.norms.md#N1.4a	C03-CONTENDER-UNREADABLE-01	2026-10-29	; C03-CONTENDER-UNREADABLE-01
+P/03.2-R013	spec/03.2-worker.norms.md#N1.5	analysis of review of stage B 3–5, № 8	2026-10-20	; review of stage B 3–5, № 8
+P/03.2-R013	spec/03.2-worker.norms.md#N1.5	Architect's decision 2026-10-18	2026-10-18	 (the Architect's decision 2026-10-18)
+P/03.2-R014	spec/03.2-worker.norms.md#N1.6	Quint pilot, F3	2026-10-19	 — added by the Quint pilot (F3)
+P/03.2-R016	spec/03.2-worker.norms.md#N2	analysis of review of stage B 3–5, № 33	2026-10-20	 (review of stage B 3–5, № 33)
+P/03.2-R017	spec/03.2-worker.norms.md#N3	moved from M10/3	2026-10-20	 (moved from M10/3)
+P/03.2-R017	spec/03.2-worker.norms.md#N3	analysis of review of stage A 3–5, № 11	2026-10-20	 (review of stage A 3–5, № 11)
+P/03.2-R021	spec/03.2-worker.norms.md#N3	Quint pilot	2026-10-19	 (added by the Quint pilot)
+P/03.2-R022	spec/03.2-worker.norms.md#N3	ADR-0084	2026-10-19	 (ADR-0084)
+P/03.2-R024	spec/03.2-worker.norms.md#N3	ADR-0043	2026-10-04	 (ADR-0043)
+P/03.2-R024	spec/03.2-worker.norms.md#N3	Quint pilot, F2	2026-10-19	; added by the Quint pilot, F2
+P/03.2-R024	spec/03.2-worker.norms.md#N3	ADR-0074 C2	2026-10-11	ADR-0074 C2: 
+P/03.2-R029	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 4	2026-10-20	 (review of stage B 3–5, № 4)
+P/03.2-R031	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 4	2026-10-20	; review of stage B 3–5, № 4
+P/03.2-R032	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 8	2026-10-20	; review of stage B 3–5, № 8
+P/03.2-R032	spec/03.2-worker.norms.md#N3	Quint pilot, F1	2026-10-19	 (the floor — added by the Quint pilot, F1)
+P/03.2-R032	spec/03.2-worker.norms.md#N3	C03-POST-GRANT-SAME-TICK-01	2026-10-30	; C03-POST-GRANT-SAME-TICK-01
+P/03.2-R032	spec/03.2-worker.norms.md#N3	Quint pilot, F1	2026-10-19	 (added by the Quint pilot, F1)
+P/03.2-R033	spec/03.2-worker.norms.md#N3	Quint pilot, F1	2026-10-19	 (added by the Quint pilot, F1)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	added by M10/10	2026-10-20	; added by M10/10
+P/03.2-R038	spec/03.2-worker.norms.md#N3	ADR-0091 addendum (4)–(6)	2026-10-23	; ADR-0091 addendum (4)–(6)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	C03-MANIFEST-REV-UNSET-01; Architect's decision 2026-10-30, norm questions of the Gemini audit, P/03 item 4	2026-10-30	C03-MANIFEST-REV-UNSET-01, the Architect's decision 2026-10-30, norm questions of the Gemini audit, P/03 item 4; 
+P/03.2-R038	spec/03.2-worker.norms.md#N3	moved to the instance contract; layout audit A-06; Architect's decision 2026-10-25	2026-10-25	; moved there without change; layout audit «A-06», the Architect's decision 2026-10-25
+P/03.2-R038	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 7	2026-10-20	 (review of stage B 3–5, № 7)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	VMS request «heartbeat and a garbled row»; Architect's decision 2026-10-23	2026-10-23	 (the VMS request «heartbeat and a garbled row», the Architect's decision 2026-10-23)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 19	2026-10-20	, review of stage B 3–5, № 19
+P/03.2-R038	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 23	2026-10-20	 (review of stage B 3–5, № 23)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	second pilot, N-1; ADR-0083 addendum (10)	2026-10-20	 (the second pilot, «N-1»; ADR-0083 addendum (10))
+P/03.2-R038	spec/03.2-worker.norms.md#N3	ADR-0084	2026-10-19	 (ADR-0084)
+P/03.2-R038	spec/03.2-worker.norms.md#N3	V7 item 3, Architect's decision 2026-10-28, P1, row 6 of the list	2026-10-28	 (V7 item 3, the Architect's decision 2026-10-28, P1; row 6 of the list)
+P/03.2-R040	spec/03.2-worker.norms.md#N3	added by M10/10	2026-10-20	, added by M10/10
+P/03.2-R040	spec/03.2-worker.norms.md#N3	Architect's decision 2026-10-27	2026-10-27	the Architect's decision 2026-10-27; 
+P/03.2-R042	spec/03.2-worker.norms.md#N3	C03-EPOCH-OWN-TERM-01	2026-10-30	 (C03-EPOCH-OWN-TERM-01)
+P/03.2-R042	spec/03.2-worker.norms.md#N3	Quint pilot, F1	2026-10-19	 (added by the Quint pilot, F1)
+P/03.2-R046	spec/03.2-worker.norms.md#N3	ADR-0091 item 6; M10B/03:259, M10B/04:615	2026-10-22	 (ADR-0091 item 6; M10B/03:259, M10B/04:615)
+P/03.2-R047	spec/03.2-worker.norms.md#N3	Architect's decision 2026-10-20 on the analysis of review of stage B 3–5, № 23	2026-10-20	; the Architect's decision 2026-10-20 on the review of stage B 3–5, № 23
+P/03.2-R051	spec/03.2-worker.norms.md#N3	V7 item 3, Architect's decision 2026-10-28, P1, row 23 of the list	2026-10-28	 (V7 item 3, the Architect's decision 2026-10-28, P1; row 23 of the list)
+P/03.2-R051	spec/03.2-worker.norms.md#N3	C03-PLACE-PULSE-LIVE-ROW-01 to C06-UNHELD-PULSE-UNREAD-01; Architect's decision 2026-10-30, norm questions of the Gemini audit, P/03 item 1	2026-10-30	 (C03-PLACE-PULSE-LIVE-ROW-01 to C06-UNHELD-PULSE-UNREAD-01, the Architect's decision 2026-10-30, norm questions of the Gemini audit, P/03 item 1)
+P/03.2-R051	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 4	2026-10-20	 (review of stage B 3–5, № 4)
+P/03.2-R051	spec/03.2-worker.norms.md#N3	ADR-0091 addendum (9) items 5–6, addendum (10); Architect's decisions on the repeated review of addendum (10)	2026-10-23	 (ADR-0091 addendum (9) items 5–6, addendum (10); the Architect's decisions on the repeated review of addendum (10), 2026-10-23)
+P/03.2-R051	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 5	2026-10-20	 (review of stage B 3–5, № 5)
+P/03.2-R051	spec/03.2-worker.norms.md#N3	log of cammeta-go, lesson 5 № 3	2026-10-18	; the cammeta-go log, lesson 5 № 3
+P/03.2-R051	spec/03.2-worker.norms.md#N3	analysis of review of stage B 3–5, № 4	2026-10-20	 (review of stage B 3–5, № 4)
+P/03.2-R053	spec/03.2-worker.norms.md#N3	ADR-0091 item 9 (request refused with a bypass)	2026-10-22	 (ADR-0091 item 9, a request refusal with a bypass)
+P/03.2-R055	spec/03.2-worker.norms.md#N3	M10/10-01 (part)	2026-10-20	 (part of M10/10-01)
+P/03.2-R056	spec/03.2-worker.norms.md#N3	moved to the schema contract; layout audit A-02; Architect's decision 2026-10-25	2026-10-25	 (moved there without change; layout audit «A-02», the Architect's decision 2026-10-25)
+P/03.2-R056	spec/03.2-worker.norms.md#N3	reconciliation of python and go M10/6–11, T5	2026-10-20	 (reconciliation of python and go M10/6–11, T5)
+P/03.2-R057	spec/03.2-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.
+P/03.2-R058	spec/03.2-worker.norms.md#N4	rows of M10/3 N4	2026-10-20	 (the rows of M10/3 N4)
+P/03.2-R060	spec/03.2-worker.norms.md#N4	rows of M10/5 N4	2026-10-20	the rows of M10/5 N4; 
+P/03.2-R062	spec/03.2-worker.norms.md#N5	reconciliation of python and go M10/3–5, item 24	2026-10-18	; reconciliation of python and go M10/3–5, item 24
+P/03.2-R062	spec/03.2-worker.norms.md#N5	ADR-0084 addendum (2) R17	2026-10-19	 (ADR-0084 addendum (2) R17)
+P/03.2-R062	spec/03.2-worker.norms.md#N5	plan of moving lesson 3, V2	2026-10-20	 (the plan of moving lesson 3, V2)
+P/03.2-R062	spec/03.2-worker.norms.md#N5	numbering of the acceptance of M10/5	2026-10-20	 The scenario numbers are the former numbers of the acceptance of M10/5.
+P/03.2-R064	spec/03.2-worker.norms.md#N5	rows of M10/5 N5	2026-10-20	 (the rows of M10/5 N5)
+P/03.2-R065	spec/03.2-worker.norms.md#N5	rows of M10/3 N5	2026-10-20	 (the rows of M10/3 N5)
+P/03.2-R066	spec/03.2-worker.norms.md#N5	M10/3-19	2026-10-20	 (M10/3-19)
+P/03.2-R066	spec/03.2-worker.norms.md#N5	analysis of review of stage A 3–5, № 11	2026-10-20	 (review of stage A 3–5, № 11)
+P/03.2-R066	spec/03.2-worker.norms.md#N5	acceptance of M11 (contributions)	2026-10-15	; contributions — the acceptance of M11
+P/03.2-R068	spec/03.2-worker.norms.md#N5	analysis of review of stage B 3–5, № 19	2026-10-20	 (review of stage B 3–5, № 19)
+P/03.2-R068	spec/03.2-worker.norms.md#N5	analysis of review of stage B 3–5, № 5	2026-10-20	 (review of stage B 3–5, № 5)
+-	spec/03.2-worker.norms.md#implementation-decides	Architect's decision 2026-10-18 (item 1)	2026-10-18	 (the Architect's decision 2026-10-18)
+-	spec/03.2-worker.norms.md#implementation-decides	M10/5 «Implementation decides» item 4, part (item 2)	2026-10-20	 (M10/5 «Implementation decides» item 4, part)
+-	spec/03.2-worker.norms.md#implementation-decides	M10/5 «Implementation decides» item 7, part (item 3)	2026-10-20	M10/5 «Implementation decides» item 7, part; 
+-	spec/03.2-worker.norms.md#implementation-decides	analysis of review of stage B 3–5, № 11 (item 3)	2026-10-20	 — review of stage B 3–5, № 11
+-	spec/03.2-worker.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 6 (P/03.2-01)	2026-10-20	 (review of stage B 3–5, № 6)
+-	spec/03.2-worker.norms.md#readiness-checklist	ADR-0084 (P/03.2-02)	2026-10-19	, ADR-0084
+-	spec/03.2-worker.norms.md#readiness-checklist	acceptance of M11 of books (P/03.2-03)	2026-10-15	 (the acceptance of M11 of books)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 8 (P/03.2-06)	2026-10-20	review of stage B 3–5, № 8; 
+-	spec/03.2-worker.norms.md#readiness-checklist	Quint pilot (P/03.2-07)	2026-10-19	, added by the Quint pilot
+-	spec/03.2-worker.norms.md#readiness-checklist	Quint pilot, F3 (P/03.2-08)	2026-10-19	, added by the Quint pilot, F3
+-	spec/03.2-worker.norms.md#readiness-checklist	Quint pilot (P/03.2-10)	2026-10-19	; added by the Quint pilot
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 5 (P/03.2-11)	2026-10-29	review of stage B 3–5, № 5; 
+-	spec/03.2-worker.norms.md#readiness-checklist	C03-CONTENDER-UNREADABLE-01 (P/03.2-11)	2026-10-29	, C03-CONTENDER-UNREADABLE-01
+-	spec/03.2-worker.norms.md#readiness-checklist	ADR-0029 (P/03.2-12)	2026-10-05	 (ADR-0029)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 5 (P/03.2-12)	2026-10-20	 (review of stage B 3–5, № 5)
+-	spec/03.2-worker.norms.md#readiness-checklist	C06-UNHELD-PULSE-UNREAD-01 (P/03.2-12)	2026-10-30	 (C06-UNHELD-PULSE-UNREAD-01)
+-	spec/03.2-worker.norms.md#readiness-checklist	ADR-0084 (P/03.2-13)	2026-10-19	 (ADR-0084)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 7 (P/03.2-13)	2026-10-20	 (review of stage B 3–5, № 7)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 19 (P/03.2-13)	2026-10-20	 (review of stage B 3–5, № 19)
+-	spec/03.2-worker.norms.md#readiness-checklist	analysis of review of stage B 3–5, № 23 (P/03.2-13)	2026-10-20	 (review of stage B 3–5, № 23)
+-	spec/03.2-worker.norms.md#readiness-checklist	M10/11; analysis of review of stage B 3–5, № 34 (P/03.2-14)	2026-10-20	 (from M10/11); review of stage B 3–5, № 34
+-	spec/03.2-worker.norms.md#readiness-checklist	Architect's decision 2026-11-04 (P/03.2-15)	2026-11-04	the Architect's decision of 2026-11-04, 
+-	spec/03.2-worker.norms.md#readiness-checklist	VMS request «heartbeat and a garbled row» (P/03.2-16)	2026-10-23	 (the VMS request «heartbeat and a garbled row»)
+-	spec/03.2-worker.norms.md#readiness-checklist	ADR-0091 addendum (9)–(10) (P/03.2-17)	2026-10-23	 (ADR-0091 addendum (9)–(10))
+-	spec/03.2-worker.norms.md#system-checklist	ADR-0130 Addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)

@@ -1,7 +1,7 @@
 # P/02 forms and seams for the generated kit
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121).
-The forms express the existing norms of P/02 (ADR-0125 addendum (5)); they introduce no HTTP door for the installer.
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export.
+The forms express the existing norms of P/02; they introduce no HTTP door for the installer.
 
 ## Command options
 
@@ -43,18 +43,18 @@ Examples (TABs in the actual TSV): ``2.1 / 1 / load_text / call / - / word `refu
 
 `finite-profile.schema.json` is the exact approved1f00 internal typed record, not manifest keys, flags or acceptance.yaml. P02.3 N3 checks it after installation step6 before step7/all writes (including unchanged), and at Process start before doors. Missing/unreadable limits retain the existing refusal; an insufficient profile is `refused:form`.
 
-`finite-profile.cases.json` binds witnesses to those existing entries. Its owned_context is an independent finite synthetic universe of packet shapes and metadata skeleton proofs; it does not attest completeness of production procedures. The source judge must reject missing/duplicate packets, short H/multiplicities, unknown provenance and wrong effective limits. Schema acceptance and free strings do not prove this. Actual descriptors must additionally cover every emitted packet, mixed batches and other auxiliary families. Expected answers/bounds never enter the implementation input. The Architect authors the shared judge by exact source hash; source/form/codec checks are not installer/native/SUT execution or a pin update. The witness count, the bound of the universe and the codec boundaries are in [judge-only case data](README.cases.md).
+`finite-profile.cases.json` (judge-only: the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile», «Process start» step 3a and «Manifest change» step 6a) binds witnesses to those existing entries. Its owned_context is an independent finite synthetic universe of packet shapes and metadata skeleton proofs; it does not attest completeness of production procedures. The source judge must reject missing/duplicate packets, short H/multiplicities, unknown provenance and wrong effective limits. Schema acceptance and free strings do not prove this. Actual descriptors must additionally cover every emitted packet, mixed batches and other auxiliary families. Expected answers/bounds never enter the implementation input. The Architect authors the shared judge by exact source hash; source/form/codec checks are not installer/native/SUT execution or a pin update. The witness count, the bound of the universe and the codec boundaries are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile»).
 
-The metadata encoding, the byte proofs and the skeleton sizes of the judge's owned context are in [judge-only case data](README.cases.md).
+The metadata encoding, the byte proofs and the skeleton sizes of the judge's owned context are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile»).
 
 ## Stage gates
 
-[`stages.tsv`](stages.tsv) is a plan, not a behavior norm (ADR-0126). `verdicts:2.1:*` selects the first column of `verdicts.tsv`;
-`puts:2.2:*` and `puts:2.3:*` select `puts.tsv`; `accept` selects only `scenarios.tsv`. Comma-separated names select exact rows;
+[`stages.tsv`](stages.tsv) is a plan, not a behavior norm. `verdicts:2.1:*` selects the first column of `verdicts.tsv`;
+`puts:2.2:*` and `puts:2.3:*` select `puts.tsv`; `accept` selects only `scenarios.tsv` (judge-only: the corpus and acceptance tables of the chapters; they check the checklist items that name their cases). Comma-separated names select exact rows;
 `*` selects the full target, including its other published variants. A generated projection does not claim execution of excluded steps.
 `seams:2.K:<scenario,...>` selects the seams below ([`stages.kit.tsv`](stages.kit.tsv) writes the same selection
-`tests:2.K:<scenario,...>:seams`). The `norms` column places each item of the readiness checklists of `spec/*.norms.md` at exactly one
-stage; the items of the system checklists stand at no stage (ADR-0130 Addendum (19) item 6). A `build` gate confirms a build; the checklist still judges installation,
+`tests:2.K:<scenario,...>:seams`; judge-only: the kit projection of the stage plan, not a norm). The `norms` column places each item of the readiness checklists of `spec/*.norms.md` at exactly one
+stage; the items of the system checklists stand at no stage. A `build` gate confirms a build; the checklist still judges installation,
 units, TLS, external clients and operator windows by their named methods. It does not convert those checks to passed execution.
 
 ## Non-HTTP seams: exact request and expectation grammar
@@ -62,7 +62,7 @@ units, TLS, external clients and operator windows by their named methods. It doe
 The file is `acceptance/K/seams.tsv`. Its last comment header is `# scenario<TAB>step<TAB>request<TAB>expect`; each scenario has consecutive
 steps starting at 1 and a fresh adapter and temporary roots. Runner execution uses the [common seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol); kit stagetests remain auxiliary, not process acceptance. A stand path starts with
 `$data/`, `$run/` or `$manifest/` and is below that scenario’s data, run or manifest root, without `..`. `inputs/…` is a fixture path relative
-to the acceptance directory. No shell is evaluated. These lexical rules match the course checker on `f6cffb3ea`.
+to the acceptance directory. No shell is evaluated.
 
 * `RUN <process> <word>… [<<inputs/<file> | <<$<name>]`: words are separated by one ASCII space. A word is either an unquoted word without
   whitespace or a double quote, or a JSON string decoded to one argv element. A final stdin suffix supplies exactly those fixture bytes or
@@ -108,7 +108,7 @@ same scenario. An absent directory of the path is a refusal of the command (`ref
   `{verdict:"refused", class:<text|form|relations|catalogue>}`, without names or a partial catalogue. No implicit stand manifest is added.
 * `rollout-poll`: input `{input:<machine input>, events:[{t:<seconds>,event:<trace event string>},…]}`. The names, event syntax, timer
   ordering and optional `input.const` overrides are those of [`rollout-poll.machine.yaml`](rollout-poll.machine.yaml) and its
-  [`rollout-poll.traces.tsv`](rollout-poll.traces.tsv). A fresh poll starts at t=0. Advance the virtual clock through each event (timers
+  [`rollout-poll.traces.tsv`](rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine; they check P/02.4-22). A fresh poll starts at t=0. Advance the virtual clock through each event (timers
   first at equality), then deliver that event; `advance` only advances timers. Observe the final state and refusal:
   `{state:<polling|passed|refused>, result:null|{code:<integer>,word:<string>}}`. Extra observations may be returned. The adapter calls the
   implementation’s poll, not the course interpreter as a substitute. Events contain no expected state, verdict, assertion or output.

@@ -1,0 +1,97 @@
+req_id	file	source	date	removed
+-	spec/02.2-installer.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.2-installer.norms.md#intro	ADR-0080	2026-10-13	ADR-0080; 
+-	spec/02.2-installer.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+-	spec/02.2-installer.norms.md#intro	ADR-0083 addendum (1); ADR-0089 addenda (1)–(2) (the view write is a change of behaviour after the transfer of lesson 2); chapter 2.2 canonical-view window of 2026-10-20, Architect's decision item 8 (the following «the» became «The»)	2026-10-20	The chapter is a change of behaviour after the transfer of lesson 2 (ADR-0083 addendum (1); ADR-0089 with addenda (1)–(2); the window is the chapter 2.2 canonical-view window of 2026-10-20, the Architect's decision is its item 8): 
+-	spec/02.2-installer.norms.md#intro	ADR-0092	2026-10-27	, ADR-0092
+-	spec/02.2-installer.norms.md#intro	ADR-0086 (rename to manifest; rewritten: «Key names are `platform/manifest/…`»)	2026-10-19	as before the transition of ADR-0086 (`platform/manifest/…`)
+-	spec/02.2-installer.norms.md#intro	chapter 2.2 canonical-view window of 2026-10-20	2026-10-20	 (new norms of the window)
+-	spec/02.2-installer.norms.md#N1.1	ADR-0072	2026-10-11	 (ADR-0072, for the human)
+-	spec/02.2-installer.norms.md#N1.1	ADR-0089 addendum (1) R10	2026-10-19	 (ADR-0089 addendum (1) R10)
+-	spec/02.2-installer.norms.md#N1.1	ADR-0091 item 3	2026-10-22	 (ADR-0091 item 3)
+-	spec/02.2-installer.norms.md#N1.1	ADR-0089 addendum (2)	2026-10-19	; ADR-0089 addendum (2)
+-	spec/02.2-installer.norms.md#N1.1	finding A13 of the store pilot (ADR-0088, ADR-0089 review)	2026-10-19	, A13
+-	spec/02.2-installer.norms.md#N1.1	ADR-0089 addendum (2)	2026-10-19	 (ADR-0089 addendum (2))
+-	spec/02.2-installer.norms.md#N1.1	the canonical-view defaults note of 2026-10-19 (decisions/inbox, for people), section 4	2026-10-19	 (the defaults note, section 4)
+-	spec/02.2-installer.norms.md#N1.1	ADR-0089 addendum (1) R14	2026-10-19	 (ADR-0089 addendum (1) R14)
+-	spec/02.2-installer.norms.md#N1.2	ADR-0089 addendum (1) R11	2026-10-19	 (ADR-0089 addendum (1) R11)
+-	spec/02.2-installer.norms.md#N1.2	Architect's decision on the Go question P/02 № 4	2026-10-21	 (the Architect's decision on the Go question P/02 № 4)
+-	spec/02.2-installer.norms.md#N1.2	ADR-0083 item 3	2026-10-18	 (ADR-0083 item 3)
+-	spec/02.2-installer.norms.md#N1.2	ADR-0092 item 12	2026-10-27	 (ADR-0092 item 12)
+-	spec/02.2-installer.norms.md#N3	chapter 2.2 canonical-view window of 2026-10-20, Architect's decision item 8 (heading)	2026-10-20	 (the Architect's decision on window 2.2, item 8)
+-	spec/02.2-installer.norms.md#N3	Architect's decision on the Go question P/02 № 4	2026-10-21	; the Architect's decision on the Go question P/02 № 4
+-	spec/02.2-installer.norms.md#N3	finding C02-VIEW-CAS-RESTART-01	2026-10-29	 (C02-VIEW-CAS-RESTART-01)
+-	spec/02.2-installer.norms.md#N3	ADR-0089 addendum (1) R15	2026-10-19	; ADR-0089 addendum (1) R15
+-	spec/02.2-installer.norms.md#N3	ADR-0089 item 7	2026-10-19	, ADR-0089 item 7
+-	spec/02.2-installer.norms.md#N4	ADR-0125 addendum (1) item 5	2026-11-04	 (ADR-0125 addendum (1) item 5)
+-	spec/02.2-installer.norms.md#N5	coverage audit Gemini P/02	2026-10-30	 (Gemini audit P/02)
+-	spec/02.2-installer.norms.md#N5	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.2-installer.norms.md#N5	ADR-0089 addendum (1) R15	2026-10-19	, R15
+-	spec/02.2-installer.norms.md#readiness-checklist	ADR-0080 addendum (6)	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/02.2-installer.norms.md#readiness-checklist	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance (P/02.2-01)	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.2-installer.norms.md#readiness-checklist	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance (P/02.2-02)	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.2-installer.norms.md#readiness-checklist	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance (P/02.2-03)	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.2-installer.norms.md#readiness-checklist	coverage audit P/02, B00 (P/02.2-04)	2026-10-30	 (coverage audit P/02, B00)
+-	spec/02.2-installer.norms.md#readiness-checklist	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance (P/02.2-04)	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.2-installer.norms.md#readiness-checklist	window 2.2 (chapter 2.2 canonical-view window of 2026-10-20), Architect's decision item 8: vectors and acceptance (P/02.2-07)	2026-10-21	 (window 2.2, item 8: vectors and acceptance)
+-	acceptance/2/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/2/README.md#intro	chapter 2.2 canonical-view window of 2026-10-20, section 4, Architect's decision item 8 (the following «the» became «The»)	2026-10-20	The window of chapter 2.2 is the chapter 2.2 canonical-view window of 2026-10-20, section 4 and the Architect's decision (item 8): 
+-	acceptance/2/README.md#putstsv-and-puts-ceilingtsv	Architect's decision on the Go question P/02 № 4	2026-10-21	 (the Architect's decision on the Go question P/02 № 4)
+-	acceptance/2/README.md#cases	ADR-0089 addendum (1) R12; window 2.2	2026-10-19	; window 2.2, R12
+-	acceptance/2/README.md#cases	chapter 2.2 canonical-view window of 2026-10-20, Architect's decision item 8	2026-10-20	 (window 2.2, item 8)
+-	acceptance/2/README.md#cases	ADR-0089 addendum (1) R11	2026-10-19	 (ADR-0089 addendum (1) R11)
+-	acceptance/2/README.md#cases	coverage audit Gemini P/02, property 13	2026-10-30	 (the Gemini audit P/02, property 13)
+-	acceptance/2/README.md#cases	coverage audit Gemini P/02, property 14	2026-10-30	 (property 14)
+-	acceptance/2/README.md#not-judged-in-this-lesson	ADR-0130 addendum (19) item 7	2026-11-10	 (ADR-0130 Addendum (19) item 7)
+-	acceptance/2/README.md#not-judged-in-this-lesson	ADR-0089 addendum (1) R15	2026-10-19	, R15
+-	acceptance/2/README.md#the-mark-rev	coverage audit Gemini P/02 (heading)	2026-10-30	The Gemini coverage audit P/02: 
+-	acceptance/2/README.md#the-mark-rev	Architect's decision on the form of the directives @rev-delete, @rev-spoil (heading)	2026-10-30	 (the Architect's forms)
+-	acceptance/2/README.md#the-mark-rev	coverage audit Gemini P/02, properties 13 and 14, branch gemini/audit-coverage, c698f3291 (rewritten: «The mark is checked by the directives …»)	2026-10-30	Properties 13 and 14 of the report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291) — 
+-	acceptance/2/README.md#the-mark-rev	Architect's decision on the question of the form; check_spec dad80a80b	2026-10-30	 (the Architect's decision on the question of the form; check_spec dad80a80b)
+-	spec/02.2-installer.view.schema.json#/properties/unit/properties/state/description	ADR-0091 item 3	2026-10-22	 (ADR-0091 item 3)
+-	spec/02.2-installer.view.schema.json#/properties/unit/properties/writes_via/description	ADR-0119 addendum (10), (11)	2026-11-03	, ADR-0119 addendum (10), (11)
+-	spec/02.2-installer.view.schema.json#/properties/events/properties/kinds/description	ADR-0115 addendum (3) item 6	2026-11-03	 (ADR-0115 addendum (3) item 6)
+-	spec/02.2-installer.view.schema.json#/properties/worker/properties/exec/description	ADR-0091 addendum (4), (5)	2026-10-23	 (ADR-0091 addendum (4), (5))
+-	spec/02.2-installer.view.schema.json#/properties/worker/properties/deletes/description	ADR-0067 addendum 2026-10-17	2026-10-17	 (ADR-0067 addendum 2026-10-17)
+-	spec/02.2-installer.view.schema.json#/properties/worker/properties/creates/description	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.2-installer.view.schema.json#/properties/worker/properties/stop_timeout/description	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	 (ADR-0091 addendum (2) item 1, addendum (3) item 4)
+-	spec/02.2-installer.view.schema.json#/properties/shares/description	ADR-0091 item 5	2026-10-22	 (ADR-0091 item 5)
+-	spec/02.2-installer.view.schema.json#/properties/shares/additionalProperties/properties/part/description	ADR-0091 addendum (2) item 4	2026-10-23	 (ADR-0091 addendum (2) item 4)
+-	spec/02.2-installer.view.schema.json#/properties/parts/description	ADR-0091 item 5	2026-10-22	 (ADR-0091 item 5)
+-	spec/02.2-installer.view.schema.json#/properties/parts/additionalProperties/properties/exec/description	ADR-0091 addendum (5) item 2	2026-10-23	 (ADR-0091 addendum (5) item 2)
+-	spec/02.2-installer.view.schema.json#/properties/parts/additionalProperties/properties/volumes/description	ADR-0091 item 4	2026-10-22	 (ADR-0091 item 4)
+-	spec/02.2-installer.view.schema.json#/properties/parts/additionalProperties/properties/stop_timeout/description	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	; ADR-0091 addendum (2) item 1, addendum (3) item 4
+-	spec/02.2-installer.view.schema.json#/properties/door/properties/routes/description	Architect's decision 2026-10-20	2026-10-20	; the Architect's decision of 2026-10-20
+-	spec/02.2-installer.view.schema.json#/properties/door/properties/routes/description	ADR-0091 addendum (7), (8), (14)	2026-10-23	; ADR-0091 addendum (7), (8), (14)
+-	spec/02.2-installer.view.schema.json#/properties/door/properties/routes/items/allOf/1/then/properties/domain/description	ADR-0091 addendum (14) item 1	2026-10-23	; ADR-0091 addendum (14) item 1
+-	spec/02.2-installer.view.schema.json#/properties/door/properties/routes/items/allOf/1/then/properties/rank/description	ADR-0115 addendum (19) item 1	2026-11-03	 (ADR-0115 addendum (19) item 1)
+-	spec/02.2-installer.view.schema.json#/properties/console/properties/files/items/description	ADR-0094 addendum (4) item 2, addendum (8) item 2	2026-10-29	 (ADR-0094 addendum (4) item 2, addendum (8) item 2)
+-	spec/02.2-installer.view.schema.json#/$defs/book/properties/key/description	review of stage A 8–10, № 42; Architect's decision 2026-10-20	2026-10-20	 (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)
+-	spec/02.2-installer.view.schema.json#/$defs/book/properties/to/description	review of stage A 8–10, № 42; Architect's decision 2026-10-20	2026-10-20	 (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)
+-	spec/02.2-installer.view.schema.json#/$defs/book/properties/stale/description	ADR-0113 addendum (31)–(33)	2026-11-02	; ADR-0113 addendum (31)–(33)
+-	spec/02.2-installer.view.schema.json#/$defs/display/properties/tables/description	ADR-0115 addendum (11)	2026-11-03	 (ADR-0115 addendum (11))
+-	spec/02.2-installer.view.schema.json#/$defs/execLine/description	ADR-0091 addendum (5) item 2	2026-10-23	 (ADR-0091 addendum (5) item 2)
+-	spec/02.2-installer.view.schema.json#/$defs/jsonSchemaLite/description	review of stage A 6–7, № 11	2026-10-20	 (review of stage A 6–7, № 11)
+-	spec/02.2-installer.view.schema.json#/$defs/label/description	ADR-0115 addendum (2) item 3	2026-11-03	 (ADR-0115 addendum (2) item 3)
+-	spec/02.2-installer.view.schema.json#/$defs/langs/description	ADR-0115 addendum (2) item 3	2026-11-03	 (ADR-0115 addendum (2) item 3)
+-	spec/02.2-installer.view.schema.json#/$defs/passCall/description	ADR-0116 addendum (6)	2026-11-03	 (ADR-0116 addendum (6))
+-	spec/02.2-installer.view.schema.json#/$defs/passCall/description	ADR-0119	2026-11-03	 (ADR-0119)
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/affinity/properties/exclusive/description	ADR-0091 addendum (9) item 6, addendum (10) items 1–2	2026-10-23	; ADR-0091 addendum (9) item 6, addendum (10) items 1–2
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/grows/description	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/retire_when/properties/state/description	ADR-0091 item 3	2026-10-22	 (ADR-0091 item 3)
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/retire_when/properties/delete_after/description	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/ends/description	ADR-0091 item 2	2026-10-22	 (ADR-0091 item 2)
+-	spec/02.2-installer.view.schema.json#/$defs/placement/properties/unplaced/properties/delete_after/description	ADR-0091 item 1	2026-10-22	 since ADR-0091 item 1
+-	spec/02.2-installer.view.schema.json#/$defs/requests/properties/outcome/description	ADR-0054 addendum 2026-10-17	2026-10-17	, ADR-0054 addendum 2026-10-17
+-	spec/02.2-installer.view.schema.json#/$defs/requests/properties/elsewhere/description	Architect's decision; review of stage B 6–7, № 17	2026-10-20	 (the Architect's decision, review of stage B 6–7, № 17)
+-	spec/02.2-installer.view.schema.json#/$defs/rights/properties/reach/properties/requests/description	Architect's decision; review of stage B 6–7, № 17	2026-10-20	 (the Architect's decision, review of stage B 6–7, № 17)
+-	spec/02.2-installer.view.schema.json#/$defs/subName/description	ADR-0091 addendum (24) item 5	2026-10-23	; ADR-0091 addendum (24) item 5
+-	spec/02.2-installer.view.schema.json#/$defs/table/properties/fields/items/properties/hidden/description	ADR-0115 item 2.2	2026-11-03	 (ADR-0115 item 2.2)
+-	spec/02.2-installer.view.schema.json#/$defs/table/properties/fields/items/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
+-	spec/02.2-installer.view.schema.json#/$defs/table/properties/fields/items/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
+-	spec/02.2-installer.view.schema.json#/$defs/table/properties/writes_via/description	ADR-0119 addendum (10), (11)	2026-11-03	, ADR-0119 addendum (10), (11)
+-	spec/02.2-installer.view.schema.json#/$defs/token/properties/keep/description	ADR-0110 addendum (9)	2026-11-01	; ADR-0110 addendum (9)
+-	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/hidden/description	ADR-0115 item 2.2	2026-11-03	 (ADR-0115 item 2.2)
+-	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
+-	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
+-	spec/02.2-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table

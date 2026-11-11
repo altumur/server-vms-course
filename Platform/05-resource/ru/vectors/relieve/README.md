@@ -1,13 +1,14 @@
 # Векторы: просьба освободить место (`relieve`)
 
-Текст производный от `vectors/relieve/README.md`, руками не правится: источник — английский [`vectors/relieve/README.md`](../../../vectors/relieve/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/relieve/README.md`, руками не правится: источник — английский [`vectors/relieve/README.md`](../../../vectors/relieve/README.md), правка идёт в него, русский пересобирается переводом.
 
-Владелец — урок [P/05](../../spec/05-resource.norms.md) (N1.4 `free_ask`, N3 «resource pass» `relieve`; запрос VMS freeing,
-решение «Архитектора» 2026-10-23). Участники — ресурс (пишет и снимает `<sub>/requests/free-<server>-<volume>`) и воркеры
+Владелец — урок [P/05](../../spec/05-resource.norms.md) (N1.4 `free_ask`, N3 «resource pass» `relieve`; запрос VMS freeing). Участники — ресурс (пишет и снимает `<sub>/requests/free-<server>-<volume>`) и воркеры
 подсистемы с `requests.free` (отвечают полем пульса `freeing`, [P/03.4](../../../../03-worker/ru/spec/03.4-worker.norms.md) N1.1).
 Байты пишет «Спецификация».
 
 ## `cases.tsv`
+
+Таблица только для судьи (judge-only: проверки P/05-R025 и P/05-R053).
 
 UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются, первая непропущенная — заголовок `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, volume, sub, server, heartbeats}`: строка `platform/space` (`enabled`, `high`, `low`), том ресурса (`name`,
@@ -17,9 +18,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## `short.tsv`
 
-Поле пульса ресурса `short` (P/05 N1.4; догадка стадии C R05-G03, решение «Архитектора» 2026-10-23). Те же правила файла; заголовок `case<TAB>input<TAB>expect<TAB>note`.
+Таблица только для судьи (judge-only: проверки P/05-R025 и P/05-R053).
+
+Поле пульса ресурса `short` (P/05 N1.4). Те же правила файла; заголовок `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, server, volumes, subs, heartbeats}`: строка `platform/space`, сервер ресурса, тома (`name`, `used`, `total`),
-подсистемы с `requests.free`, пульсы воркеров (как в `cases.tsv`); `expect` — `{short: <целое>}`: Σ по томам наибольшей `need`
+подсистемы с `requests.free`, пульсы воркеров (как в `cases.tsv`; judge-only: P/05-R025, P/05-R053); `expect` — `{short: <целое>}`: Σ по томам наибольшей `need`
 (> 0) среди подсистем — у каждой подсистемы `need` тома по N3 `relieve` (`used − total·low − Σ freeing`, вверх до байта), только
 у тома выше `high`. 6 случаев: два тома и две подсистемы, том ниже `high`, всё освобождается, `space` выключен, нет подсистем,
 округление вверх.
@@ -27,4 +30,4 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 ## Прогон
 
 Сторона считает шаг `relieve` своим кодом ресурса по входу, без хранилища, и сравнивает действие с `expect` (JSON по значению).
-Кто исполняет — ресурс (`05-resource`: шаг `relieve` и поле `short`, P/05 N3 «resource pass», N1.4 `free_ask`) — обе таблицы. Только читают готовое: воркеры подсистемы (`03-worker`, отвечают `freeing` на строку `free-*`, P/03.4 N1.1) и консоль (`06-console`, ряд `w2c_resource_short_bytes` как есть, P/06.5 N3 «/metrics — текст») (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
+Кто исполняет — ресурс (`05-resource`: шаг `relieve` и поле `short`, P/05 N3 «resource pass», N1.4 `free_ask`) — обе таблицы. Только читают готовое: воркеры подсистемы (`03-worker`, отвечают `freeing` на строку `free-*`, P/03.4 N1.1) и консоль (`06-console`, ряд `w2c_resource_short_bytes` как есть, P/06.5 N3 «/metrics — текст») (строку исполняет роль, чья норма вызывает её функцию).

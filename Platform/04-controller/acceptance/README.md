@@ -1,28 +1,19 @@
 # Acceptance P/04 — the controller
 
-This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the lesson is [`04-controller.norms.md`](../spec/04-controller.norms.md) N5. The scenarios were moved from the acceptance of
-M10/05, sc. 03 and 08 (the snapshot) — from the acceptance of M10/10
-(stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of scenarios and steps are the former ones, except the steps of sc. 11 (the former
-4–9 are 7–12, the preparation of the shelf, `corrections.tsv`), the first step `@start resource` of sc. 07, 11, 13 (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), the new sc. 17 (analysis of the review of stage B 3–5, № 17), steps 15–19 of sc. 18 and the new sc. 20–27 (the coverage audit of P/04,
-2026-10-30, the drafts D01, D03, D04, D06, D07, D08, D10) and sc. 28–42 (the second pass of the coverage audit of P/04, Gemini, the drafts
-G01–G07 — the section below). The steps `/metrics` of the console of
-sc. 03 (step 5) and 08 (steps 7–9) are the side of the reader of the snapshot, chapter 6.5: they are separated into [the acceptance of
-P/06.5](../../06-console/acceptance/5/README.md) (analysis of the review of stage A 6–7, № 32). The doors of the console without workers (sc.
-01–07 of the acceptance of M10/04) — [the acceptance of P/06.6](../../06-console/acceptance/6/README.md).
+The norm of the lesson is [`04-controller.norms.md`](../spec/04-controller.norms.md) N5. Scenarios and steps are in `scenarios.tsv`; scenario 11 steps 7–12 prepare the shelf, and scenarios 07, 11 and 13 begin with `@start resource`. The `/metrics` checks for scenario 03 step 5 and scenario 08 steps 7–9 belong to [the acceptance of P/06.5](../../06-console/acceptance/5/README.md). The console doors without workers are checked by [the acceptance of P/06.6](../../06-console/acceptance/6/README.md).
 
 ## Stand
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub`
-(the training worker of counters), which the runner controls; sc. 11, 14–17, 34–39, 43, 44 — the controller and the workers `testsub2` (analysis of the review of stage B 3–5, № 17). The catalogue of the stand is two
-manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24): the worker
+(the training worker of counters), which the runner controls; sc. 11, 14–17, 34–39, 43, 44 — the controller and the workers `testsub2`. The catalogue of the stand is two
+manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README: the worker
 of one manifest does not touch the rows of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element
-`status` with `phase: running` (P/03.4 N1.1 `phase`) and one word of the subsystem `n` — the value of the counter (P/03.4 N1.1 `status`;
-the second pilot, N-7). Observation — rows through the store door P/01.1, units and placement through the console door (`/where`,
+`status` with `phase: running` (P/03.4 N1.1 `phase`) and one word of the subsystem `n` — the value of the counter (P/03.4 N1.1 `status`). Observation — rows through the store door P/01.1, units and placement through the console door (`/where`,
 `/unplaceable`, `/servers`, `/metrics`), the pass report `<sub>/controller/pass` — through the objects door of the resource (sc. 12, 15);
-the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «unknown» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27).
+the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «unknown» ([the object store client contract](../../common/contracts/object-client.md) `door`).
 
 ## scenarios.tsv
 
@@ -42,88 +33,84 @@ The stand begins with an empty store and without workers; the runner stops every
 a scenario. One scenario takes no longer than 3 minutes.
 
 **Scenarios:**
-- sc. 03 — the snapshot (from M10/10): after a pass of the controller the object `testsub/snapshot/unplaced` with the unit `s1`,
-  `worker: null`, without secrets (the norms N1.3a; the time `ts` — `@time`, the Architect's decision of 2026-10-18 «Time in a row»);
+- sc. 03 — the snapshot: after a pass of the controller the object `testsub/snapshot/unplaced` with the unit `s1`,
+  `worker: null`, without secrets (the norms N1.3a; the time `ts` — `@time`);
   the object is read through the objects door of the resource (`@start resource`);
 - sc. 07 — two workers of equal free capacity, `w-2` is started, then `w-1`: a new unit goes to `w-1` (the norms N3 «first by name»;
   the mutation check 7cecaf2 № 23);
-- sc. 08 — the snapshot with spoiled records (from M10/10; T7): the row `testsub/counters/s7` with `start: "notint"` is written by the runner
+- sc. 08 — the snapshot with spoiled records: the row `testsub/counters/s7` with `start: "notint"` is written by the runner
   by the role `console` (`@as console store …`); it does not enter the shard, the shard `unplaced` is published with `s8`, the pass report —
   `snapshot_rows_garbled: 1` (the norms N1.3a garbled, N1.2);
 - sc. 11 — `group_by` of `testsub2` (`feed`, the norms N1.3): two `tallies` without a value and one written bypassing the door with
   an unreadable `feed` are not a group; each is placed on `t-1` by itself and does not wait for a common group. `testsub2` has `spread_by: zone`:
   the three `tallies` have no `zone`, and an empty value does not separate — all three are on one worker (the norms N1.3). `testsub2` has
-  `servers: distinct` and the place from the heartbeat (`place_by: shelf`): units are given only to the keeper of a non-empty place (R15),
-  therefore steps 4–5 put the shelf `s-1` on the server of `t-1` (`srv-a`) and wait for the hold row `testsub2/holds/s-1` (analysis
-  of the review of stage A 3–5, № 7);
+  `servers: distinct` and the place from the heartbeat (`place_by: shelf`): units are given only to the keeper of a non-empty place,
+  therefore steps 4–5 put the shelf `s-1` on the server of `t-1` (`srv-a`) and wait for the hold row `testsub2/holds/s-1`;
 - sc. 12 — `@sigkill` of a worker with a live resource P/05 and a second worker `w-2`: the resource sees the lock free, the fate of
-  `w-1` is `move` (`why` — a word about `gone`, as a substring), `c12` moves to `w-2` within 60 s, then the slot `w-1` is released (`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move, C04-FATES-WINDOW-01) ([the presence lock contract](../../common/contracts/presence-lock.md),
-  the norms N3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new
-  target); as sc. 10 of the acceptance of P/03.2 — after P/05;
-- sc. 13 — an abandoned capture (the Quint pilot, F2): step 7 waits for epoch 1 — `w-1` has started `c13` (the placement row does not
+  `w-1` is `move` (`why` — a word about `gone`, as a substring), `c12` moves to `w-2` within 60 s, then the slot `w-1` is released (`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move) ([the presence lock contract](../../common/contracts/presence-lock.md), the norms N3 «fate»; the norms do not tell to remove the placement before a new target); as sc. 10 of the acceptance of P/03.2 — after P/05;
+- sc. 13 — an abandoned capture: step 7 waits for epoch 1 — `w-1` has started `c13` (the placement row does not
   mean this: the worker reads the assignment once per LEASE_EVERY, P/03.3 N3 «loop()»); `@sigkill w-1`, then the first write of the capture
   `released: "taking"` bypassing the writer (the role `testsubworker`, a foreign box, `gen` 2); `c13` stays on `w-1` in the nearest
   passes (step 12 after 10 s — two passes of the controller, less than SLOT_TERM) and goes to `w-2` after SLOT_TERM of an unchanged
   version with a reason about an unfinished capture (the norms N3 «leaving»); `"true"` would take it away at once (sc. 03 of the acceptance of P/03.4).
   A completed capture (the second write) does not take the unit away — by reading;
-- sc. 14, 15 — the order of workers (ADR-0084): `testsub2` with `grows: true` without `placement.weight` — each unit weighs 1
+- sc. 14, 15 — the order of workers: `testsub2` with `grows: true` without `placement.weight` — each unit weighs 1
   (the norms N1.3), the default capacity is 8: the ninth `tally` on one base (sc. 14, 16) and the seventeenth on two (sc. 15) —
   a shortage of one process; `@grow <server>` executes the series `testsub2_workers_wanted{server}` instead of the script (the dictionary
-  of the common acceptance README; analysis of the review of stage B 3–5, № 33). Sc. 15 — two resources (after P/05; the door `resource` of the steps is the resource `srv-a` on the server of the controller, `{rport}` of the first
+  of the common acceptance README). Sc. 15 — two resources (after P/05; the door `resource` of the steps is the resource `srv-a` on the server of the controller, `{rport}` of the first
   `@start resource`; the second — `@start resource on srv-b`): «failed to raise» is observed — the order on `srv-a` without `@grow`, after
   `WANT_GRACE` `want` goes back, `raise_failed`, the order on `srv-b`. The shrinking (`SHRINK_AFTER` 300 s) does not fit into the ceiling of 3 min of the scenario
   — it is checked by sc. 16 with `shrink_after=20` (`W2C_SHRINK_AFTER`). A refusal to start a process by the order
   (systemd did not raise the instance of the unit, code 2 of the process) and a number above want (the process came up after the withdrawal by the deadline — outside the pool,
-  the script stops it, want is not raised, ADR-0084 addendum (4) R28) — by reading: `@grow` raises the process at once or does not raise it at all
-  (a debt of the stand; analysis of the review of stage A 3–5, № 18);
+  the script stops it, want is not raised) — by reading: `@grow` raises the process at once or does not raise it at all
+  (a debt of the stand);
 - sc. 16 — the shrinking: all nine `tallies` are deleted (the hysteresis `per` 8 requires 8 free at the remaining one), the assignment of
   `t-srv-a-2` is empty — `retiring` and `want − 1` in one write, `@grow` stops `-2`. The transfer of the units of the victim the stand does not
   observe: with capacity 8 and `per` 8 the hysteresis requires 8 free at the remaining ones — by reading;
-- sc. 17 — `distinct`, one shelf (ADR-0084 addendum (3) R16′; analysis of the review of stage A 3–5, № 1): `testsub2` has the place from the heartbeat,
+- sc. 17 — `distinct`, one shelf: `testsub2` has the place from the heartbeat,
   there is one shelf (`s-a1` on `srv-a`), the base `t-srv-a-1` holds it and carries eight `tallies`; the ninth — a shortage, the growth — one
   trial process (`want` 2), `@grow` raises `t-srv-a-2` without a place; it carries no units, `t9` is in `/unplaceable` with
   the words `no free shelf`; within 25 s (the deadline `shrink_after=20` and the pass step 5 s) `want` does not grow and `t-srv-a-2` is not shrunk
-  (after P/05: the resource writes `room.testsub2`). The branch «live workers without a place are not shrunk while units wait» (R16′) the stand does not distinguish
+  (after P/05: the resource writes `room.testsub2`). The branch «live workers without a place are not shrunk while units wait»  the stand does not distinguish
   from the hysteresis: the remaining `t-srv-a-1` has free 8 − 8 = 0 < `per` 8, and the shrinking is forbidden with any definition of
   «no shortage»; a preparation where the hysteresis would allow shrinking with waiting ones the stand with one shelf and capacity 8 does not give —
   the branch is checked by the vector [`shrink-allowed`](../vectors/shrink-allowed/README.md) — the rows `placeless-with-waiting`
-  (the hysteresis would pass) and `placeless-no-waiting` (N5; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5);
+  (the hysteresis would pass) and `placeless-no-waiting` (N5);
 - sc. 18, steps 15–19 — the protection of a replay on deletion (N3 step 8; the row check contract «The customer's row: `made`» `delete`):
   the order row `testsub-c3` with `ends` in 2001 and `made.keep` 9999999999 (2286) — the clock of the controller is not later than `keep`, the row
   is not deleted, and its state (born matched) is not removed by the cleanup; within 12 s (two passes) the deletion would have been tried
-  (the coverage audit of P/04, D06);
-- sc. 20 — a restart of the controller (N3 «Races», ADR-0049): after `@sigterm controller` and a new `@start controller` the placement row
+;
+- sc. 20 — a restart of the controller (N3 «Races»): after `@sigterm controller` and a new `@start controller` the placement row
   of `c20` is the same (the version `index` and `rev` did not change: the decision is read, not revised), epoch 1; the new instance
-  works — it places `c21` (within 90 s: the turn of the former holder may wait TURN_TERM 45 s) (the coverage audit of P/04, D01);
-- sc. 21 — the write `release` (N3 «fate», «write release»; the table R28 below, the last row): three workers without units
+  works — it places `c21` (within 90 s: the turn of the former holder may wait TURN_TERM 45 s);
+- sc. 21 — the write `release` (N3 «fate», «write release»; the table below, the last row): three workers without units
   are killed by `@sigkill`, the resource is alive; the slot `w-1` (readable) is released with the former `holder`, `until`, `gen`, `server`, the name `w-1` is in
   `names_given` (the fate `release`, not `move`: there are no assigned units); `w-2` — a row bypassing the writer with a torn `until` and
   a readable `gen` 2: released wholly and nobody's (`holder` "", `until` — zero Time in the writer form, `gen` 2, `server` as read);
   `w-3` — a row with an unreadable `gen`: it does not change (the version `index` is the same), the name `w-3` is not in `names_given`; the released `w-1` is taken
-  by a new process with `gen` 2 (the coverage audit of P/04, D04). The window of `names_given` is the pass of the release: the step of the report goes before the steps of the rows
-  (as C04-FATES-WINDOW-01);
+  by a new process with `gen` 2. The window of `names_given` is the pass of the release: the step of the report goes before the steps of the rows
+;
 - sc. 22 — a group as a whole (N1.3 `group_by`, N3 «choose»: free ≥ Σ of the weights): nine `tallies` with one host `feed` — one
   group of weight 9 with capacity 8 — none is placed (`unplaced` 9, `/where` 404), `g10` without `feed` is placed; after
   the deletion of `g9` and `g10` the group of eight with 8 free — wholly on `t-1`. The units and the shelf are set up before the worker: the first
-  pass with the keeper of the shelf sees the group as a whole, not in parts (the coverage audit of P/04, D03);
+  pass with the keeper of the shelf sees the group as a whole, not in parts;
 - sc. 23 — the schema check at the start of the controller ([the schema contract](../../common/contracts/schema.md) «Check at start»):
   `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not a number) — `@start controller` exits with code 2, there is no pass report;
   with `version` 1 — the controller starts and writes the report. The resource is raised before the write of the row: it checks the schema at its own
-  start. The branch «read error — wait» — sc. 25, «before reading the manifest» — by reading (the coverage audit of P/04, D07);
+  start. The branch «read error — wait» — sc. 25, «before reading the manifest» — by reading;
 - sc. 24 — the labels of a server (N1.1 `platform/servers/<host>`, N1.3 `constraint`, N3 «pass()» step 5): the labels of the node of `w-1` —
   `{zz}`; the row `{qq}` beats the node — `c1` with the label `qq` is placed; an empty row reaches nothing: the forecast
   `will_move` names `testsub/c1`, `c1` is removed with a reason of reachability, `c2` with the label `zz` is not placed within 12 s (the labels
   of the node would accept it); the row is removed — the labels of the node again: `c2` is placed; the row `{qq, zz}` — `c1` is again on `w-1`; a row
   bypassing the writer with an unreadable label `qq!` — the last read labels and without a judgment of reachability: within 12 s neither `c1`
-  (the labels of the node do not accept it) nor `c2` is removed (the outcomes of the family `server-labels`, the reader `<s>controller`) (the coverage audit of
-  P/04, D10);
+  (the labels of the node do not accept it) nor `c2` is removed (the outcomes of the family `server-labels`, the reader `<s>controller`);
 - sc. 25 — a read error of the schema row at the start of the controller ([the schema contract](../../common/contracts/schema.md) «Check at start»:
   «read error → wait for availability without starting work»): `@cut role testsubcontroller store` before the start —
   the store is silent to the role of the controller (P/02.5 N1.4), the read of `platform/schema` hangs without an answer; within 10 s there is no pass report
   (the work is not begun); after `@mend` the controller without a new `@start` writes the report — it waited and did not exit (a refusal of the start is
   repeated only by a restart of the unit). The deadline `@until` 90 s — the repeat of the read after a non-answer is decided by the implementation, as with the resource
-  (sc. 18 of the acceptance of P/05) (the coverage audit of P/04, D07 sc. 03);
-- sc. 26, 27 — a silent live worker (N3 «fate»: the order of the rules and the margin; the coverage audit of P/04, D08): `@freeze w-1`
+  (sc. 18 of the acceptance of P/05);
+- sc. 26, 27 — a silent live worker (N3 «fate»: the order of the rules and the margin): `@freeze w-1`
   stops the whole process with all the threads — the loop and the stand-in (the slot is not renewed, the heartbeat is not written), the process is alive and
   holds the flock of the presence lock ([the presence lock contract](../../common/contracts/presence-lock.md)): the resource says
   `runs` (`running` of the heartbeat of the resource — both before and during the freeze). The last version of the slot was written no earlier than a lease
@@ -136,9 +123,8 @@ a scenario. One scenario takes no longer than 3 minutes.
   renews the slot — `alive` again. The freeze is no longer than the limit of the directive 120 s: sc. 26 — 75 + up to 35 s, sc. 27 — up to 110 s.
   `hung_moved` (the effective HUNG_MOVE_AFTER) and the `why` of the word `hung` — by reading (beyond the ceiling of the scenario; the norm does not fix the word of the reason).
 
-## Coverage audit of P/04, second pass (sc. 28–42)
+## Scenarios 28–42
 
-The session of the coverage audit, the second pass (Gemini, 2026-10-30, commit 82da537d5, the Gemini P04 coverage audit, G01–G07).
 The scenarios are in the forms of sc. 13, 18–27 (rows bypassing the writer `@as <role> store`, the pass report through the door of the resource, `@sleep` with
 a reason in the table of sleeps); the rows of the controller before its start are written by the role `testsubcontroller` (as sc. 07 of the acceptance of P/06.5).
 The revision of the manifest of the stand is 1 (the first installation, P/02.3 N1.5).
@@ -149,13 +135,13 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
   not deleted. The witness does not know intent — reconciled with the norm.
 - Sc. 29 — `sync` (N3 «pass()» step 4, «Materialization and sync»; N1.2 `diverged`): the assignment of `w-1` is rewritten without `c1`
   (cas of the read version); the next pass returns `c1` (`rev` 3 — one write of the addition, there is nothing to remove), the report
-  of this pass is `diverged: 1`; the step of the report goes before the step of the row (the window of one pass, as C04-FATES-WINDOW-01).
+  of this pass is `diverged: 1`; the step of the report goes before the step of the row (the window of one pass).
   The discrepancy is made by one change: two writes (removing from `w-1`, adding to `w-2`) a pass could split — the count and `rev` would be
   ambiguous.
 - Sc. 30 — an unreadable intent row (N1.5 «An intent row out of form is unreadable», N4): `state: broken` — the pass report
   `ok: false`, `c1` is not placed within two passes with a live `w-1`, the intent row is the same (the version); restored
   (idle by cas) — `c1` is placed. 503 of `/where` for such a row — sc. 07 of the acceptance of P/06.5.
-- Sc. 31 — manifest_rev (N3 pass step1, manifest_rev guard; N1.2 manifest_behind): c1 lacks its required revision, is intentionally unreadable and is not repaired; index/rev/items remain unchanged. c2 has revision 2 but no unit row: the guard forbids deletion, the row stays and manifest_behind: 1 counts it once per pass (C04-MANIFEST-BEHIND-COUNT-01). The w-1 assignment with c1,c2 is not rewritten.
+- Sc. 31 — manifest_rev (N3 pass step1, manifest_rev guard; N1.2 manifest_behind): c1 lacks its required revision, is intentionally unreadable and is not repaired; index/rev/items remain unchanged. c2 has revision 2 but no unit row: the guard forbids deletion, the row stays and manifest_behind: 1 counts it once per pass. The w-1 assignment with c1,c2 is not rewritten.
 - Sc. 32 — a turn with a newer revision ([the turn contract](../../common/contracts/turn.md) step 1): the row
   `placement_turn` with `manifest_rev` 10 — the controller does not take it and does not rewrite it (the version is the same), `c2` is not
   placed within two passes; `c1` is placed before the write (the controller worked).
@@ -182,8 +168,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
   `t-srv-b-1` with the reason `t-srv-a-1's shelf s-a1 admits no unit`.
 - Sc. 40 — the shard of a worker (N1.3a; N3 «snapshot — after the pass»): `testsub/snapshot/w-1` with `c1` (the fields `snapshot`
   of the manifest, `worker`, `server`), the shard `unplaced` is empty (`worker: null`, `counters: []`); `@sigterm w-1` — `c1` in the shard
-  of `w-2`, the shard `w-1` is published empty in the same form: `worker: null`, `counters: []` (N1.3a — one form of an empty shard,
-  as the witness; C04-SNAPSHOT-GONE-WORKER-01).
+  of `w-2`, the shard `w-1` is published empty in the same form: `worker: null`, `counters: []` (N1.3a — one form of an empty shard).
 - Sc. 41 — an unreadable assignment (N4 «heartbeat/slot/assignment is unreadable»; the outcomes of the family `workers`): the row `workers/w-1`
   with `rev: x` — `w-1` is not in the pool: `c1` is at `w-2` (with equal capacity the first by name is `w-1`, sc. 07), `garbled: 0`, the controller
   does not rewrite the row. The witness reads such a row by `units` and keeps the worker in the pool — the norm is right.
@@ -191,11 +176,11 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
   the worker (`unlisted`); before the margin SLOT_TERM + LOST_AFTER — `alive`, then `wait`: `names_given` is empty
   (the effective HUNG_MOVE_AFTER), the slot row is the same. `wait` beyond HUNG_MOVE_AFTER — by reading (beyond the ceiling of the scenario).
 
-### Home at the place holder (sc. 43, 44; C04-HOME-PLACE-HOLDER-01)
+### Home at the place holder (sc. 43, 44)
 
-Sc. 43, 44 are not the second pass of the audit but cases of the clarification C04-HOME-PLACE-HOLDER-01 (the Architect's decision of 2026-11-04).
+Scenarios 43 and 44 check the home at the holder of a place.
 
-- Sc. 43 — the home at the holder of a place (N1.3 `home`; N3 «choose», step 7; C04-HOME-PLACE-HOLDER-01): two shelves on `srv-a`. Which
+- Sc. 43 — the home at the holder of a place (N1.3 `home`; N3 «choose», step 7): two shelves on `srv-a`. Which
   shelf is at which worker is set by the order of the steps: `s-a2` is set up after `t-1` has taken `s-a1`, and `t-2` is left with one
   free shelf (P/03.2 N3 «place: take»: the order of the subsystem has nothing to choose from). The names `t-1`, `t-2` are not processes of the role
   (the slot name contract: there is no server in the name), `want` does not apply to them, and the second worker needs no order. The zones of the shelves
@@ -204,16 +189,13 @@ Sc. 43, 44 are not the second pass of the audit but cases of the clarification C
   (step 7, the deadline `@until` 90 s, as sc. 38); a comparison with the server would have left it on `t-1`. The load is now `t-1` 2 and `t-2` 1:
   `t-2` is freer, but `h2` with the home `s-a1` goes to `t-1` — the rank of the home is senior to the capacity; a comparison with the server would have given it to `t-2`.
   `u1` without a home does not move. Sc. 38 is not changed by this: there is one shelf per server there, the holder of `s-b1` is the only worker of `srv-b`.
-- Sc. 44 — the home on a place without a server (N1.3 `home`, a volume without a server; step 7; C04-HOME-PLACE-HOLDER-01): the form of sc. 38, but the shelf
+- Sc. 44 — the home on a place without a server (N1.3 `home`, a volume without a server; step 7): the form of sc. 38, but the shelf
   `s-n` has no `server`. There is no holder, there is no server field — there is no home, `h1` is on `t-srv-a-1`. `s-n` is set up after `t-srv-a-1`
   has taken `s-a1`, therefore `t-srv-b-1` gets it (a shelf without a server is not excluded by N3 «place: take»: the condition on the server
   there is only for a place which «follows the name»). The holder has appeared — `h1` moves to it (step 7, the deadline `@until` 90 s, as
   sc. 38); without a home on an empty server field the unit would have stayed on `t-srv-a-1`.
 
-Not included (the report of the analysis): G03 sc. 02 (the decommission of a server by a request row bypassing the console with a responding resource — the execution
-by the controller the norm binds to a request that the console writes only for a silent server, P/06.6 N3; the witness holds such
-a request «standing»; the answer of `DELETE /servers/{server}/decommission` is `{}`); G06 sc. 02 (`@put object` of a heartbeat —
-the stand of this acceptance has no such directive); G04 steps 16–17 (the reason `deleted` — sc. 06 of the acceptance of P/03.3).
+The controller executes a server decommission request that the console writes only for a silent server (P/06.6 N3); the witness holds that request standing, and `DELETE /servers/{server}/decommission` returns `{}`. This acceptance stand has no `@put object` directive for a heartbeat. The reason `deleted` is checked by scenario 06 of the acceptance of P/03.3.
 
 ## Scenario boundaries
 
@@ -228,8 +210,8 @@ Before the start the catalogue `testsub` and `testsub2` from the common testdata
 There are no foreign controllers, resources, spare processes or start timers. The console door is open from the loopback;
 the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
 
-All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33);
-each copy gets a new instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33).
+All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README);
+each copy gets a new instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»).
 A decreasing memory budget is not provoked: the chosen CAPACITY/WORKER_MEMORY_MB must satisfy P/03.4 (the budget).
 The ordinary configuration of testsub uses safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
 
@@ -257,7 +239,7 @@ The scenarios observe rows and HTTP answers, not the contents of the heartbeat o
 of a unit. A change of the epoch/assignment by itself does not prove that the old process has stopped working.
 The other evidence is N5 of the norms of the lesson («Evidence outside TSV»).
 
-## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
+## Sleeps (`@sleep`)
 
 The generic meanings of `@sleep` and `@until` are defined in the [common stand protocol](../../common/acceptance/README.md#dictionary-of-directives-and-doors). Scenario-specific wait steps, durations and reasons are kept in the [judge-only case instructions](sleeps.cases.md).
 
@@ -266,24 +248,23 @@ The generic meanings of `@sleep` and `@until` are defined in the [common stand p
 In total 37 scenarios / 533 steps: 03 — 4, 07 — 9, 08 — 6, 11 — 12, 12 — 12, 13 — 15, 14 — 28, 15 — 38, 16 — 32, 17 — 23, 18 — 19, 19 — 6,
 20 — 13, 21 — 20, 22 — 23, 23 — 9, 24 — 21, 25 — 7, 26 — 17, 27 — 11, 28 — 13, 29 — 11, 30 — 12, 31 — 12, 32 — 11, 33 — 13,
 34 — 14, 35 — 7, 36 — 15, 37 — 15, 38 — 12, 39 — 13, 40 — 12, 41 — 12, 42 — 6, 43 — 18, 44 — 12.
-Sc. 18, 19 (ADR-0091) — with the resource P/05: the rows of the units and of the states of `testsub2` are put by the runner bypassing the writer (`@as console store`,
+Sc. 18, 19 — with the resource P/05: the rows of the units and of the states of `testsub2` are put by the runner bypassing the writer (`@as console store`,
 `@as testsub2worker store`); the time `1000000000` (2001) — a past deadline of `ends` and `made.keep` with any clock of the stand;
 there are no workers — the units are in the shard `unplaced`. After
 P/05 (the resource) — all the scenarios (above, «Observation»).
 
-## Snapshot outside TSV (from the README of the acceptance of M10/10)
+## Snapshot outside TSV
 
 The publication of a shard: max_bytes=0, less than, equal to and greater than the resource door limit L; the full size exactly L/+1; on a refusal the former
 object and time are kept. Scenario 03 does not prove these boundaries. Outside TSV reconcile the whole list of service families and the size of the full
 snapshot shard against the resource door limit L (before the write); max_bytes of the store is held by the store itself on put — its `TooLarge`
-gives the same outcome (C04-SNAPSHOT-CEILING-MAXBYTES-01). max_bytes=0 does not remove the ceiling of the door; a refusal keeps the former shard and its
+gives the same outcome. max_bytes=0 does not remove the ceiling of the door; a refusal keeps the former shard and its
 time. The `@until` of the snapshot reads the local resource; an error of publication does not become an empty snapshot.
 
-## Checks by reading from the acceptance of M10/04
+## Checks by reading
 
-The doors of the console of M10/04 were moved to [the acceptance of P/06.6](../../06-console/acceptance/6/README.md); the checks of the controller from its
-README are here. The TSV on an empty pool does not prove the properties below. For each one state the place of the implementation, an observation of
-a controlled stand or an abstract model on the operations of P/01.1 (run 25).
+The console doors are checked by [the acceptance of P/06.6](../../06-console/acceptance/6/README.md). The controller checks follow. The TSV on an empty pool does not prove the properties below. For each one state the place of the implementation, an observation of
+a controlled stand or an abstract model on the operations of P/01.1.
 
 - Two controllers, different units of weight 1, one worker capacity 1: the second decision sees the reserve
   of the first; the total admitted load does not become 2.
@@ -299,11 +280,11 @@ a controlled stand or an abstract model on the operations of P/01.1 (run 25).
   «Reading the decision»). Idle is not deleted. A group over the ceiling of intent/assignment is refused wholly before the change of placements.
 - With the same history of the versions of the slot, shifts of the writer's clock -30/0/+300 do not change the fate.
   The first look begins 45 s, then the margin up to 90 s; the different histories of judges are not obliged to coincide.
-- Grows (ADR-0084): an empty pool and capacity.default=4 give per=4; workers capacity=0 and default=4 also
+- Grows: an empty pool and capacity.default=4 give per=4; workers capacity=0 and default=4 also
   use 4; no positive capacities and default=0 — withheld «no positive capacity estimate»,
   without an order and a division by zero. The shortage of the weight and of the groups stays visible.
 
-Operations on names (R28-01/02): the checks P/04-09, 10, 11 are performed separately from the HTTP steps of the TSV — the reading of
+Operations on names: the checks P/04-09, 10, 11 are performed separately from the HTTP steps of the TSV — the reading of
 the implementation by the owner or a controlled pool is needed; the last row of the table (the release of the slot by the controller) is on the stand of sc. 21, except
 the exact value `until` 0 of the torn row (the writer is entitled to write `0.0`, N0 P/01.1 «Time in a row»; the scenario sees
 the time by the form of the writer — `@time`). All the other placement filters pass the candidates, the needed resources are alive,
@@ -314,9 +295,9 @@ the capacity is sufficient. Each case has its own initial state, the order of tr
 | distinct, one place, live w-a/w-b, equal loads 0 and capacities 1; place a unit of weight 1 | The keeper w-a by the slot order of P/03.2 N1.4 |
 | Repeat with w-2/w-10; with w-01/w-1; with w-2/w-a; with w-srv-a-10/w-srv-a-2 | The keepers are respectively w-2, w-01, w-2, w-srv-a-10. The last number of a composite name is not extracted |
 | The load of w-b is higher than of w-a, both positive; separately shared and an equal free capacity w-2/w-10 | distinct leaves w-b: the load has priority. With shared the equal capacity is resolved by the comparison by the full name, w-10 first |
-| The slot is released by the controller: readable; separately until is torn, gen is readable; separately gen is not readable | readable — holder/until/gen/server are kept; torn with a readable gen — released "true", holder "", until 0, gen as read, server — if it is readable, otherwise ""; gen is not readable — the row does not change, the name is not given (N3 «write release»; C04-TORN-01) |
+| The slot is released by the controller: readable; separately until is torn, gen is readable; separately gen is not readable | readable — holder/until/gen/server are kept; torn with a readable gen — released "true", holder "", until 0, gen as read, server — if it is readable, otherwise ""; gen is not readable — the row does not change, the name is not given (N3 «write release») |
 
-An additional check by reading R36-04: A under turn v1 sends a deletion by delete_after with CAS U; the request is delayed. B
+An additional check by reading: A under turn v1 sends a deletion by delete_after with CAS U; the request is delayed. B
 gets v2 and places the same version U. At A the guard v1 gives 412 and keeps the unit. Check also a conflict of the version
 of the unit, an unconfirmed read of intent/placement, the barrier after a non-answer and a repeat without substituting a new guard into the old
 plan. Operations in flight are not modelled by the current HTTP-TSV.
@@ -332,4 +313,4 @@ of the author are not a performed stand test.
 
 [seams.tsv](seams.tsv) adds kit witnesses at controller function seams; [forms/README.md](../forms/README.md) defines their normalization. They do not change the process scenario/step counts above and do not close a witness they do not execute.
 
-ADR0129(15): 21/17 checks zero Time using four existing full @oneof 200 branches (0/0.0/0.00/0.000); all other fields remain. 31/5 binds the damaged row index and 31/10 checks no repair; requests and other neighbors stay. s51-s63 and their real fixture/observation contracts are declared in forms/README; none is a SUT execution claim.
+21/17 checks zero Time using four existing full @oneof 200 branches (0/0.0/0.00/0.000); all other fields remain. 31/5 binds the damaged row index and 31/10 checks no repair; requests and other neighbors stay. s51-s63 and their real fixture/observation contracts are declared in forms/README; none is a SUT execution claim.

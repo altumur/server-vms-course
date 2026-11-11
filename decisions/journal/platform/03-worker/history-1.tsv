@@ -1,0 +1,8 @@
+req_id	file	source	date	removed
+-	spec/03.1-worker.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+P/03.1-R004	spec/03.1-worker.norms.md#N2	ADR-0082 addendum 13	2026-10-15	 (ADR-0082 addendum 13)
+P/03.1-R006	spec/03.1-worker.norms.md#N2	C03-STALLED-WORD-01; Architect's decision 2026-11-01; analysis of the VMS pass	2026-11-01	 (C03-STALLED-WORD-01, the Architect's decision of 2026-11-01, analysis of the VMS pass)
+P/03.1-R007	spec/03.1-worker.norms.md#N2	C03-RESTART-WORD-01; Architect's decision 2026-11-01; analysis of the VMS pass	2026-11-01	 (C03-RESTART-WORD-01, the Architect's decision of 2026-11-01, analysis of the VMS pass)
+P/03.1-R008	spec/03.1-worker.norms.md#N2	ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md §1.1 (course note, for people)	2026-10-17	 (the boundary §1.1)
+-	spec/03.1-worker.norms.md#implementation-decides	ADR-0033 (item 1; the helper named in words)	2026-10-05	and the reconciliation helper (ADR-0033).
+-	spec/03.1-worker.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
