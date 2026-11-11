@@ -50,8 +50,8 @@ class MandatoryFormControls(unittest.TestCase):
         tables = {}
         errors, stats = frictionless_forms.check(ROOT, tables=tables)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["standard_form_tables"], 9)
-        self.assertEqual(len(tables), 9)
+        self.assertEqual(stats["standard_form_tables"], len(frictionless_forms.RESOURCES))
+        self.assertEqual(len(tables), len(frictionless_forms.RESOURCES))
         self.assertTrue(all(isinstance(value, str) for table in tables.values()
                             for row in table["rows"] for value in row))
         forms = ROOT / "Platform/01-store/forms"
@@ -186,7 +186,7 @@ class MandatoryFormControls(unittest.TestCase):
             semantic.assert_not_called()
         tables, selected = platform.standard_forms()
         self.assertEqual(tables, {})
-        self.assertEqual(len(selected), 9)
+        self.assertEqual(len(selected), len(frictionless_forms.RESOURCES))
         self.assertTrue(any("constraint-error" in error for error in platform.errors), platform.errors)
 
     def test_missing_new_resource_refuses(self):
@@ -194,7 +194,7 @@ class MandatoryFormControls(unittest.TestCase):
         descriptor["resources"] = [resource for resource in descriptor["resources"]
                                    if resource["name"] != "runtime_constants_p01"]
         self.save(descriptor)
-        self.assertTrue(any("selected nine-form group" in error for error in self.check()[0]))
+        self.assertTrue(any("selected form group" in error for error in self.check()[0]))
 
     def test_unknown_or_duplicate_declared_resource_refuses(self):
         for kind in ("unknown", "duplicate"):
@@ -205,7 +205,7 @@ class MandatoryFormControls(unittest.TestCase):
                     extra["name"] = "unregistered_form"
                 descriptor["resources"].append(extra)
                 self.save(descriptor)
-                self.assertTrue(any("selected nine-form group" in error for error in self.check()[0]))
+                self.assertTrue(any("selected form group" in error for error in self.check()[0]))
 
     def test_declared_missing_sidecar_or_data_refuses(self):
         descriptor = self.package()

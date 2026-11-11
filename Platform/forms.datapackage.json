@@ -1,6 +1,6 @@
 {
   "name": "platform-forms",
-  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
+  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3) and the judge engine code-check form (P02.49). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
   "resources": [
     {
       "name": "stages_p01",
@@ -145,6 +145,22 @@
         }
       },
       "schema": "01-store/forms/write-checks.probes.tsv.schema.json"
+    },
+    {
+      "name": "engine_code_rules",
+      "path": "common/acceptance/forms/engine-code-rules.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          18
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "common/acceptance/forms/engine-code-rules.tsv.schema.json"
     }
   ]
 }

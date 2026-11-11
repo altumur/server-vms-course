@@ -22,6 +22,7 @@ RESOURCES = {
     "runtime_constants_p01": "01-store/forms/runtime-constants.tsv",
     "write_checks_p01": "01-store/forms/write-checks.tsv",
     "write_checks_probes_p01": "01-store/forms/write-checks.probes.tsv",
+    "engine_code_rules": "common/acceptance/forms/engine-code-rules.tsv",
 }
 
 
@@ -77,7 +78,7 @@ def prepare(root):
     names = [item.get("name") for item in source["resources"] if isinstance(item, dict)]
     if len(names) != len(source["resources"]) or any(not isinstance(name, str) for name in names) or \
             len(names) != len(set(names)) or set(names) != set(RESOURCES):
-        raise FormInputError(f"{descriptor_path}: resources differ from the selected nine-form group")
+        raise FormInputError(f"{descriptor_path}: resources differ from the selected form group")
     prepared = copy.deepcopy(source)
     physical = {}
     for resource in prepared["resources"]:
