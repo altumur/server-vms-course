@@ -20,7 +20,7 @@ new-sha256: f208fe0280491d098cc439f88d5ec62f55ba3a56657bc48941f6eb62b308450f
 
 old-sha256: 770c722c5700c071dc6687946ab218fc7c29f252776cc358255eeb00ecf09261
 
-new-sha256: 6b0a9dcb9a90fd0c25e250a20b2ab51a49eddb76de8caf739092bfef8026f205
+new-sha256: ee81293ef4bb261423a0c8f82e99a8a7fe6a74d7700b86d1d13ede33c901d858
 
 ## MODIFIED artifact `Platform/common/acceptance/spec/acceptance.norms.md`
 

@@ -9,7 +9,7 @@ Left to other parts. 2в2: the rows of P/02 in `targets.tsv` and `targets.routin
 | Artifact | Operation | Before blob | After blob | After SHA256 |
 |---|---|---|---|---|
 | `Platform/common/acceptance/README.md` | MODIFIED | cceaf591dbf5fa8bf7aa1e09f79650d150ce572a | 9f9e8bb2722917d5ebb24e9be583e453f812ed33 | f208fe0280491d098cc439f88d5ec62f55ba3a56657bc48941f6eb62b308450f |
-| `Platform/common/acceptance/forms/targets.routing.tsv` | MODIFIED | 3fbdb88186a0963f92712c519c04299e96ace42a | df0b506cc7f9a2a3caa1108bf1f9ff4cb111e7b3 | 6b0a9dcb9a90fd0c25e250a20b2ab51a49eddb76de8caf739092bfef8026f205 |
+| `Platform/common/acceptance/forms/targets.routing.tsv` | MODIFIED | 3fbdb88186a0963f92712c519c04299e96ace42a | f4775c1de8ad331fc8238b563ceda082d38347f3 | ee81293ef4bb261423a0c8f82e99a8a7fe6a74d7700b86d1d13ede33c901d858 |
 | `Platform/common/acceptance/spec/acceptance.norms.md` | MODIFIED | cb1984eb06ae72a7e4216dd9d22915c113e40d72 | c3d6c0cd46b71a26af8bee5431b83bc1c40015b7 | 367bb086f4d7f9c3f0997d4e36f37edc28e9c27cfb6b699561963917e8ee3357 |
 | `Platform/common/ru/acceptance/README.md` | MODIFIED | 0f6fadcb24898cbb2328f926f5f31a1f0cac681a | cc770193a0653afc3efdabc9099f78bd8d4c508a | 60c6d506263a98a078c3f49823651b87e0350bbd901d2b090a58b0264f4a5340 |
 | `Platform/common/ru/acceptance/spec/acceptance.norms.md` | MODIFIED | 61cbbff5b649bc79421ce100acbae680a57c768f | 9f4bd07bc3026840d8e360da8f7b8c151277082e | 955352431ba94aeced1507bffeb09b2bea7dc30efe1d546c531bd4b892d68f9a |
