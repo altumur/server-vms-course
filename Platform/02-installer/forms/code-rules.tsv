@@ -2,10 +2,10 @@
 # kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the checks; no expected
 # answer. name: the name that the profile field code (of the profile of 02-installer) maps to a symbol of the candidate; the names are not code paths.
 # stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later stage that holds code:*. norm:
-# the norms of the subject. Cores: canonical (the projection), rights_core (the derivation of rights), order_core (the installation order), rollout_core
-# (the voter poll); the machine of the poll in the form Step(State, Event) -> (State, []Effect) is rollout_step. The loader manifest_load has no
-# pure_core row: the pinned libraries of its layers import standard packages that the forbid of a core names; the purity of loading is judged by the
-# seams s1–s4 of acceptance/1/seams.tsv. The pinned libraries of the loader are requires_module rows of stage manifest-load.
+# the norms of the subject. Cores: manifest_load (the loader by text, form and relations), canonical (the projection), rights_core (the derivation of
+# rights), order_core (the installation order), rollout_core (the voter poll); the machine of the poll in the form Step(State, Event) -> (State,
+# []Effect) is rollout_step. The pinned libraries of the loader are requires_module rows of stage manifest-load; as packages of pinned modules they are
+# leaves of the walk of its pure_core row (P02.36, task P02.38). The seams s1–s4 of acceptance/1/seams.tsv judge the loading by its behavior.
 id	kind	name	args	stage	norm
 C01	complexity	manifest_load	{"max_branches": 15, "max_lines": 80}	manifest-load	P/02.1 N3 load
 C02	requires_module	yaml	{"module": "go.yaml.in/yaml/v3", "from": "Platform/common/versions/go.mod"}	manifest-load	P/02.1 N1.1; P/02.1 N3 load; P/02.1 «Implementation decides»; Platform/common/versions/README.md
@@ -28,3 +28,4 @@ C18	pure_core	rollout_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "sy
 C19	step_form	rollout_step	{"core": "rollout_core"}	rollout-poll	P/02.4 N1.9 poll; forms/rollout-poll.machine.yaml
 C20	property_tests	rollout_step	{}	rollout-poll	P/02.4 N1.9 poll; forms/rollout-poll.machine.yaml
 C21	complexity	rollout_core	{"max_branches": 15, "max_lines": 80}	rollout-poll	P/02.4 N1.9 poll
+C22	pure_core	manifest_load	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	manifest-load	P/02.1 N3 load

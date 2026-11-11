@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 
 This directory supplies [`seams.tsv`](seams.tsv) to generated stagetests (ADR-0125 addendum (4) item 7 and addendum (5)). It adds no HTTP stand. The engine word `run` executes the table through the seam adapter protocol of the common acceptance README; its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
 
-The obligations of these scenarios are P/02.3 N3 step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» with P/02.4-14, and P/02.4 N1.9 poll with P/02.4-22; the scenario subjects are in [judge-only case data](README.cases.md).
+The obligations of these scenarios are P/02.3 N3 «Manifest change» step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» with P/02.4-14, and P/02.4 N1.9 poll with P/02.4-22; the scenario subjects are in [judge-only case data](README.cases.md).
 
 Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes 0 versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
 
