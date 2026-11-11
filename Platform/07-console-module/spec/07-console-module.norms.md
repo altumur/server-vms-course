@@ -38,8 +38,8 @@ of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and
 ### N1.4 What the module calls — a closed list
 
 ```yaml
-reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (only from servers.show),
-         /where/<id>, /<sub>/where/<id>, /servers, /<sub>/servers (only loaded subsystem profiles), /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema,
+reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (only from servers.show; added by M10/10),
+         /where/<id>, /<sub>/where/<id>, /servers, /<sub>/servers (only loaded subsystem profiles), /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by M10/10),
          /events, /metrics (only running_gauge and workers_gauge), /domain/* (forwarding contract «Domain doors»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (only with display.tree.folders)
 writes:  POST/PUT/DELETE /<rows>[/<id>] and /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (only with display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (forwarding contract «Domain doors»), POST/DELETE /session, /session/break-glass, login_url
@@ -252,7 +252,7 @@ takes from the holder by `door` from `where()`, past the console.
 The description of the public surface of the module (the dictionary `W`, the card markup, the calls of the shell, the look) —
 [`CONSOLE-MODULE.md`](../CONSOLE-MODULE.md) (not a norm). Where the description or
 the published bytes differ from N1.4, N1.5, the lesson is right; the discrepancies «Implementation decides»
-items 1 and 2 are removed by changes of behaviour.
+items 1 and 2 are closed.
 
 ---
 
@@ -330,22 +330,18 @@ The related P/06 form `FieldView.hidden`: an optional boolean with no default; t
 The module is one code in all implementations: an implementation does not write it and chooses nothing in it, but serves the published bytes
 (P/06.5 N1.1 `module`). The items below are debts of the published module; the owner of the specification closes them; items 1–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
 
-1. **closed: the bytes of `console.js`, `console.html` and the description `CONSOLE-MODULE.md` are brought to N1.4, N1.5**
-   by a change of behaviour after the commit of lesson 7. Before: a key by method, path and body and
-   an automatic replay of `PUT` and of any `POST`, the body field `retry_after` instead of the header `Retry-After`, `may` without grants —
-   `true` with any `open` and for an unknown session, no event `logout`, the reference `worker:<w>` without a subsystem,
-   `poll_s` from the memory of the browser, `/<table>` at the root, an error without `status` and `body`, the read of `server_unsaid`, a shell without
-   comparing `version`. The evidence — the jsdom tests `Source/tests/console` by the table of N5. The debt
+1. **closed: the bytes of `console.js`, `console.html` and the description `CONSOLE-MODULE.md` are brought to N1.4, N1.5**.
+   The evidence — the jsdom tests `Source/tests/console` by the table of N5. The debt
    of the product — to «Build»: its copy of the module is brought to these bytes.
-2. **closed: the form of the shared document by `schema`** (N1.6 `schema`) — by a change of behaviour of the owner of the specification:
-   before — the document `{name, type: json}` as a JSON text without a form (the description § 10a). The evidence —
+2. **closed: the form of the shared document by `schema`** (N1.6 `schema`).
+   The evidence —
    jsdom test `module-shared-schema` (N5). The debt of the product — to «Build».
-3. **closed: `<h2>` → `.card`** (N1.5 `cards`) — by a change of behaviour of the owner of the specification: before —
-   a section `<h2>` among other content and `<h2>` first in the host of the page gave a card without its own section. The evidence —
+3. **closed: `<h2>` → `.card`** (N1.5 `cards`).
+   The evidence —
    jsdom test `module-card-markup` (N5). The debt of the product — to «Build».
-4. **closed: a refusal at the field by `field`** (N1.5 `forms`) — by a change of behaviour of the owner of the specification: before —
-   the text of the refusal only in the common `.pc-err`. The evidence — jsdom test `module-refusal-field` (N5). The debt of the product — to «Build».
-5. **closed: rows by the feed** (N1.4 `changes`) — by a change of behaviour of the owner of the specification: before — only polling by `poll_s`. The evidence — jsdom test `module-changes` (N5). The debt of the product — to «Build».
+4. **closed: a refusal at the field by `field`** (N1.5 `forms`).
+   The evidence — jsdom test `module-refusal-field` (N5). The debt of the product — to «Build».
+5. **closed: rows by the feed** (N1.4 `changes`). The evidence — jsdom test `module-changes` (N5). The debt of the product — to «Build».
 6. **not closed: the unplaced units of all subsystems and `subsystems: []`** (N1.4) — the published canonical module [console.js](../module/console.js) reads `/<sub>/unplaceable` only for the subsystems of `opts.subsystems`; this is an open debt of the owner of the published common module bytes; the generation line keeps the published bytes unchanged; tests — N5 `module-unplaceable-all`, `module-subsystems-none`.
 7. **not closed: forms without a write for `writes_via`** (N1.5 `writes_via`) — the published canonical module [console.js](../module/console.js) does not know the word and draws the forms; this is an open debt of the owner of the published common module bytes; the generation line keeps the published bytes unchanged; test — N5 `module-writes-via`.
 
