@@ -17,7 +17,7 @@ the cluster; show the loaded rights file only to admin.
 |---|---|---|
 | [`01.1-store.norms.md`](01.1-store.norms.md), [`01.2-store.norms.md`](01.2-store.norms.md), [`01.3-store.norms.md`](01.3-store.norms.md) | the norms of the chapters: what MUST be | 1 — the canon |
 | [`01-store.api.openapi.yaml`](01-store.api.openapi.yaml) | the form of the HTTP requests and answers of all doors, the full bodies of `/v1/rights` and `/v1/list` | 2 — on a divergence from the norms, the norms are right |
-| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`scenarios.tsv`, `README.md`); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
+| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`README.md`; judge-only: `scenarios.tsv` of each chapter, which checks the items of the readiness checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 that name its scenarios); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
 | `ru/01-store.md` (for people, not in the export) | context, motivation | not a norm; do not derive requirements from it |
 | [`../lifecycle.md`](../lifecycle.md) | flags, environment, exit codes, units | a pointer to the norms of chapter 1.3 |
 
@@ -25,8 +25,21 @@ Rules:
 
 - Read the norms of the chapters in full before the first stage; write draft answers to «Implementation decides» into the implementation description.
 - Do not add behaviour that is not in the norms of the chapters. Do not «improve» the semantics: normalization of keys, comparison of versions by greater/less, a blind repeat of an earlier command with an old guard (`guard`), new codes and kinds of refusals are forbidden. A new attempt after re-reading the condition and checking the right to it is allowed (N3 «write»: «The caller re-reads the condition and decides anew whether it has the right to repeat»; [P/03.2-05](../../03-worker/spec/03.2-worker.norms.md)).
-- If the norms of the chapters are silent or contradict themselves, do not guess. Write a question into the implementation's `QUESTIONS.md` with a reference to the section and choose the most conservative behaviour (a refusal, not an assumption). The lesson has no open questions as of 2026-10-15: all known ones are closed in the norms.
+- If the norms of the chapters are silent or contradict themselves, do not guess. Write a question into the implementation's `QUESTIONS.md` with a reference to the section and choose the most conservative behaviour (a refusal, not an assumption).
 - For ease of checking, comments may refer to the norms: `// P/01.1 N3 write, step 7` or `// P/01.1-10` at the place that carries out the norm.
+
+## Glossary
+
+Some words of the norms have more than one meaning; the place of the word tells them apart. This table adds no rule and renames nothing: each meaning is the one the named place already gives.
+
+| Word | Meanings | How to tell them apart |
+|---|---|---|
+| `configstore` | (1) the store daemon of chapter 1.3 and its command line: `configstore admit <id>` (chapter 1.3 N4 `join_left`), the commands of N1.3 `admin_ops`; (2) the certificate role of a voter: CN `configstore.<server>`, `urn:w2c:role:configstore` (N1.3 `group.identity`, P/01.3-R011 `roles`), next to the role `configstore-door` of a door without a vote; (3) the names of the unit, the user and the paths: `configstore.service`, `User=configstore`, `configstore.env`, `<PLATFORM_DIR>/configstore`, `/run/configstore` ([lifecycle](../lifecycle.md)); (4) a prefix of the series `configstore_raft_*`, `configstore_doors`, `configstore_door_*` (N1.3 `metrics`) and of the rows `platform/configstore-doors/<id>` | a certificate, SAN or forwarding — the role; a unit, a user or a file path — the unit and its paths; a command line — the daemon CLI; `/metrics` — a series name; a key — a row |
+| floor | (1) the row `platform/epoch_floor` `{floor, generation_at}` that chapter 1.3 owns (P/01.3-R004; «Data families» `platform/epoch_floor`); (2) its field `floor`, the lower bound of epochs: `floor = generation << 32` (N1.3 `floor`, P/01.3-R006); (3) the service operation `{op: floor, floor, id}` of `POST /v1/write` on `admin.sock` of the leader (P/01.3-R016; OpenAPI `FloorCmd`); when `restore`, `import` and `recover` raise the floor is N1.3 `floor`; (4) the refusals named after it: `floor_not_higher` (chapter 1.1 N4), `floor_not_integer`, `floor_socket`, `floor_not_higher_id`, `floor_row_write` (chapter 1.3 N4, P/01.3-R029) | `platform/epoch_floor` or «the floor row» — the row; `floor` in `items` or in the body of `op: floor` — the field; `op: floor` — the operation; a name `floor_*` of [`forms/refusals.tsv`](../forms/refusals.tsv) — a refusal |
+| «the store» | (1) the process of the lesson: «the store process» (this README, «Task»), «the store daemon» of chapter 1.3, «the stand store» of the acceptance; (2) the state that the operations of chapter 1.1 N3 read and change: rows, versions and the `id` memory («the row, the version and the `id` memory do not change», P/01.1-R036); (3) a kind of that state: in memory, on files or with a replicated log («What to create» item 2), «the store of a box» (N1.3 `box`), «the store `file://`» in the process (N1.3 `import`; P/02.4 N1.2 `PLATFORM_STORE`) | process words — start, flag, socket, door, exit code, restart; state words — row, version, operation, write, read; a kind is named by its qualifier (box, `file://`, group) |
+| `Leader`, `Follower` and `leader`, `follower` | (1) the values of `state` of `GET /v1/status`, capitalized: `Leader`, `Follower`, `Candidate`, `Shutdown`, `Door` (P/01.3-R016; OpenAPI `Status`); (2) the label of the gauge `configstore_raft_state`, lowercase: `leader`, `follower`, `candidate`, `shutdown`; a box emits `state="leader"` (P/01.3-R032); (3) the fields `leader` (the `-api` address of the leader) and `leader_id` (its id) of `/v1/status` (P/01.3-R016); (4) in prose, the leader and a follower are the roles of the voters of a raft group (N1.3 `group`, `metrics`) | capitalized — a value of `Status.state`; lowercase inside the series — a metric label; `leader` or `leader_id` as a JSON field — an address or an id; plain prose — the role of a member |
+| door, door without a vote, `role: door` | (1) a door is an HTTP entry of the store on a unix socket: the doors of chapter 1.1 N2 (`/v1/get`, `/v1/list`, `/v1/write`) and the service doors of the daemon of chapter 1.3 N2 (for example `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics`); (2) a door without a vote is a daemon started with `-door` and `-voters`: not a raft member, without a replica of the rows, it forwards to the leader or a voter under the role `configstore-door` and writes only its own row `platform/configstore-doors/<id>` (N1.3 `door`, P/01.3-R006, P/01.3-R007); (3) the status of such a daemon: `state` `Door`, `role` `door` and `term`, `commit`, `applied` equal to 0 (P/01.3-R016; OpenAPI `Status`) | «door» with a route or a socket — an HTTP entry; «door without a vote», `-door`, `configstore-door` — the non-voting daemon; `Door` or `door` as a value of `state` or `role` — its status |
+| `limit`, «the body limit», «the effective `-max-body`» | (1) the field `limit` of a `413 toolarge` refusal: the body limit in a body refusal (`BodyTooLargeFault`), the row ceiling in a row-weight refusal (`RowTooLargeFault`) (P/01.1-R037); (2) «the body limit» is the read limit of the HTTP body of `POST /v1/write`, in bytes before JSON parsing (P/01.1-R034, P/01.1-R036); for the daemon it is set by the flag `-max-body` (P/01.3-R007), and «the effective `-max-body`» is the value this instance runs with: the limit of `POST /v1/write` and of the service POSTs (P/01.3-R007, P/01.3-R017), given as `max_body` in `/v1/status` (P/01.3-R016); (3) «the row ceiling» is a different quantity: the weight ceiling of `items`, the flag `-max-value`, `max_value` in `/v1/status` (P/01.1-R034, P/01.3-R016) | in a `413` answer the field `key` tells them apart: with `key` — the row ceiling, without `key` — the body limit (P/01.1-R038); «the body limit» and «the effective `-max-body`» are one quantity, named by the norm of chapter 1.1 and by the daemon flag of chapter 1.3 |
 
 ## What to create
 
@@ -57,6 +70,8 @@ Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evalua
 | `common/store-client` | `P/01/vectors-store-client` | `cases.tsv` | the parsing of a store answer by the CLI of the daemon (`admin_ops` through `admin.sock`, chapter 1.3 N1.3) | [README](../../common/vectors/store-client/README.md) |
 | `common/family-read` | `P/01/vectors-family-read` | `01.tsv` | the reading of the data families owned by this lesson (the catalogue column `owner`) by the common library of the implementation | [README](../../common/vectors/family-read/README.md) |
 | `common/crl` | `P/01/vectors-crl` | `cases.tsv` | the reading of the file `crl.pem` by the door that checks a TLS peer (chapter 1.3 N1.6) | [README](../../common/vectors/crl/README.md) |
+
+The tables of the column «Table» are outside the model input (judge-only: `cases.tsv` and `01.tsv` of these packages). They check the functions of the column «What runs in this lesson»: `revoked` and `crl.pem` — P/01.3-R009, P/01.3-R010, P/01.3-R011; the store answer to the CLI — `admin_ops` of P/01.3-R006; the families owned by this lesson — P/01.3-R003, P/01.3-R004; the log mask — P/06.2 N1.4 `never.log` and the log mask contract, which the README of the package names (the norms of P/01 have no requirement of their own for it).
 
 ## Order of work
 
@@ -101,7 +116,7 @@ References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
 2. On a separate model check all phases of restore/import/recover: isolation, a reliable upper, the uint64 bounds, one raise of the floor, a partial transfer and continuation of the same attempt. Force does not allow a lowering or two operators (N3).
 
-3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable).
+3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input (judge-only: the scenarios of this item, chapter 1.3); they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.
 
 ## Language-dependent pitfalls
 
@@ -112,7 +127,7 @@ Places where idiomatic code in many languages breaks a norm:
 | the order of list keys is by bytes (N3) | Java, C#, JS, Kotlin sort strings by UTF-16; `localeCompare` by locale | compare the UTF-8 bytes |
 | the weight and the key length are in UTF-8 bytes (N1) | `len()` / `.length` count characters or UTF-16 units | the length of the UTF-8 encoding |
 | the version is opaque (N1) | parsing into a number and comparing with `>` | store and compare as a string; inside the store the counter MAY be a number |
-| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03 does not observe shared memory |
+| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03 (judge-only: sc. 03 of chapter 1.1) does not observe shared memory |
 | indivisibility (N3) | the check and the write under different locks; async breaks between steps | the steps after «the remaining steps run as one operation» in one critical section |
 | the guard before CAS (N3) | checking in the order of the request fields | strictly: the guard, then CAS |
 | the whole batch (N3 «write batch») | writing the rows one at a time under a lock: power is lost between files, and half of the batch remains | the way of item 3 of «Implementation decides»: an intent log with a barrier before the rows are published; one raft log record |
@@ -150,7 +165,7 @@ Chapter 1.3:
 
 ## Done when
 
-- [ ] all 75 scenarios / 705 steps of the three chapters (1.1 — 40, 1.2 — 11, 1.3 — 24; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
+- [ ] all 75 scenarios / 705 steps of the three chapters (judge-only: `scenarios.tsv` of the three chapters; they check the checklist items named below) (1.1 — 40, 1.2 — 11, 1.3 — 24; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
   per the acceptance README of chapter 1.1; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand (for the box build — not_applicable);
 - [ ] (SHOULD) the same scenarios are green through the in-process API for each data store;
 - [ ] the implementation description answers all items of the section «Implementation decides»;
@@ -168,7 +183,7 @@ Chapter 1.3:
 | a scenario contradicts the norms of the chapters | an acceptance defect; a question to the author; the code follows the norms of the chapters |
 | an AI made a mistake and was corrected by a person | a row in `corrections-<K>.tsv` (historical correction record) of the chapter (ADR-0080 addendum 1) |
 
-An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; one byte above the effective `-max-body` — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.
+An additional check: service POSTs: unknown field/not an object/extra JSON/framing — 400; one byte above the effective `-max-body` — 413; no path/method — 404/405. Check each reason against N2, N4 and the full Fault, not only the code number.
 
 ## Production qualification
 

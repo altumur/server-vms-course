@@ -6,17 +6,17 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [`01.2-store.norms.md`](../../spec/01.2-store.norms.md) N5, the full bodies of the two routes are in
 [OpenAPI](../../spec/01-store.api.openapi.yaml).
 The rights
-file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (the form of P/01.2 N1.2).
+file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (judge-only: the rights fixture of the stand; the form of P/01.2 N1.2 — P/01.2-R007 and P/01.2-R008).
 The runner puts it
 into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
 
 ## Profile interface
 
-Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the ready rights fixture below; it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.
+Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the ready rights fixture below (judge-only: `inputs/rights.json`; its form is P/01.2-R007 and P/01.2-R008); it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.
 
 ## scenarios.tsv
 
-The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
+The scenario file (judge-only: `scenarios.tsv` of this catalogue, sc. 05–08, 10–16) checks P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R015, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021, P/01.2-R022, P/01.2-R023, P/01.2-R024, P/01.2-R030 and P/01.1-R020. The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
 the method, `$name`, `ASSERT`; the expectation is a subset of fields, `index` may be omitted. Specific to the chapter:
 
 - `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key; in a batch the pair is any action and key of its writes or guards; for an operation with a guard the refusal may instead name `read` and the key of the guard. At `/v1/rights` error names the role and also a reason or the route: the role alone is not enough. For an identity refusal — the socket role and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role does not replace the socket role.
@@ -39,7 +39,7 @@ memory. The runner variables are reset, the role is set by the first `@as`; the 
 in all scenarios. Parallel runs do not share an instance.
 
 Background consoles, controllers, workers and the resource do not write into these rows. The permission data
-is prepared by the runner with the file `inputs/rights.json` and the instance setup, and each step is performed only by
+is prepared by the runner with the file `inputs/rights.json` (judge-only: the rights fixture of the stand; its form is P/01.2-R007 and P/01.2-R008) and the instance setup, and each step is performed only by
 the named role.
 
 ## Checks outside the scenario file
@@ -63,29 +63,29 @@ the named role.
 These are subjects of a separate reading/structural test, not additional performed
 scenarios. Socket modes, forwarding and the certificate require the corresponding stand.
 
-The name X-Configstore-Role in the scenarios is a designation of the header of trusted role forwarding.
+The name X-Configstore-Role in the scenarios (judge-only: `scenarios.tsv`, sc. 08 and 12; they check P/01.2-R017 and P/01.2-R019) is a designation of the header of trusted role forwarding.
 Before the run substitute the name from the implementation description (N3/«Implementation decides», item 3);
 do not change the header value and the socket role. This is not a normative header name. Without
 such a setting the preparation of the run is not complete. Count the forbidden identity spoofing,
 not the subsequent refusal of the key write.
 
-## Coverage audit of P/01 (sc. 11–13)
+## Properties of sc. 11–13
 
-The session audit-kimi (2026-10-30, commit 399e4783b, `coverage audit P01 (for people)`): properties that were formerly checked by reading.
+Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`; they check P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021 and P/01.2-R030):
 - `never` (N1.3): for the console a 403 is indistinguishable from a refusal by rights, so the distinguishing role is admin: its rights are
   «everything except never», and without `never` these writes would pass. Reading the floor by admin — 200: the refusal concerns the action.
-- The role forwarding header at `GET /v1/list` (N3 «check», R38-06): the header name is a designation.
+- The role forwarding header at `GET /v1/list` (N3 «check»): the header name is a designation.
 - The rights file (N1.2, N4) by the directive `@rights store` (common README): without a file — `GET /v1/rights` 404; an unknown role field, an internal role
   and a wrong role name — a start refusal, code 2.
-- Not accepted: rows of the vector `rights-evaluator` for a role outside the file (A09): the store does not open a socket of a role that is not in the file,
-  and the door does not see the evaluator's refusal; it stays by reading (P/01.2-04).
+- Not accepted: rows of the vector `rights-evaluator` (judge-only: `expect.tsv` of the package) for a role outside the file: the store does not open a socket of a role that is not in the file,
+  and the door does not see the evaluator's refusal; it stays by reading (P/01.2-04; P/01.2-R010).
 
-## Coverage audit of P/01, second pass (sc. 14–15)
+## Properties of sc. 14–15
 
-The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
+Properties checked by sc. 14–15 (judge-only: sc. 14–15 of `scenarios.tsv`; they check P/01.2-R007, P/01.2-R010 and P/01.2-R014):
 - The edges of `never` (N1.3) for admin (rights «everything except `never`»): `platform/epoch/<y>`, two segments after `epoch/`
   and `<x>/epoch` without `/` after `epoch` are not epoch rows, their
   deletion — 200; an implementation whose `never` is wider than the norm refuses here. For the domain roles `domain`, `domainagent` and `<sub>domain` (its own family
-  `domain/<sub>/`) `never` does not itself forbid a delete under `domain/`; the ordinary `allowed` patterns of the role still decide (N1.3, N3; C01-NEVER-DOMAIN-ROLE-01); for admin the prohibition stands.
+  `domain/<sub>/`) `never` does not itself forbid a delete under `domain/`; the ordinary `allowed` patterns of the role still decide (N1.3, N3); for admin the prohibition stands.
 - `comment` of the rights file (N1.2): a number instead of a string — a start refusal, code 2;
   `GET /v1/rights` by admin returns a string `comment` (N2).

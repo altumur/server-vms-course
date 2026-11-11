@@ -346,7 +346,7 @@ paths:
       summary: Daemon metrics
       responses:
         '200':
-          description: Prometheus text exposition UTF-8; series — N1.3 metrics; a voter has configstore_raft_* and configstore_doors, a door without a vote — only configstore_door_forwards_total{outcome} and configstore_door_voters_reachable (C01-DOOR-METRICS-01)
+          description: Prometheus text exposition UTF-8; series — N1.3 metrics; a voter has configstore_raft_* and configstore_doors, a door without a vote — only configstore_door_forwards_total{outcome} and configstore_door_voters_reachable
           content:
             text/plain:
               schema:
@@ -443,11 +443,11 @@ components:
       description: The order of the names in keys is by UTF-8 bytes; JSON Schema does not check the order of an object.
     Cmd:
       type: object
-      description: "Extra top-level fields of a command are accepted and not read regardless of their JSON type (N2, P/01.1-12, sc. 23); only guard is closed (added by the review of stage A 2)"
+      description: "Extra top-level fields of a command are accepted and not read regardless of their JSON type (N2, P/01.1-12; judge-only: sc. 23 of chapter 1.1); only guard is closed"
       unevaluatedProperties: true
       required: [op, key]
       properties:
-        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on the admin socket of the leader (added by P/01.3 N2)"}
+        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on the admin socket of the leader (P/01.3 N2)"}
         key: {$ref: "#/components/schemas/Key"}
         cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # N1: null, empty or a version; strictly to the end of the string
         guard:
@@ -679,7 +679,7 @@ components:
           type: array
           items:
             type: string
-      description: 'delete absent — an empty list, deleting is not allowed (P/01.2 N1.2, decision b60d983e); the generator writes delete explicitly for every role. Patterns and negations — N1.2/N1.3.'
+      description: 'delete absent — an empty list, deleting is not allowed (P/01.2 N1.2); the generator writes delete explicitly for every role. Patterns and negations — N1.2/N1.3.'
     Empty:
       type: object
       required: []
@@ -794,7 +794,7 @@ components:
             $ref: '#/components/schemas/MemberId'
         members:
           type: object
-          description: A map id → -api address; a member without -api is not in the map, the map may be empty (C01-STATUS-MEMBERS-NOAPI).
+          description: A map id → -api address; a member without -api is not in the map, the map may be empty.
           additionalProperties:
             type: string
             minLength: 1

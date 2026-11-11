@@ -11,7 +11,9 @@ The profile is `01-store` in the [generic profile and assembly contract](../../.
 
 ## `scenarios.tsv`
 
-The format is the dictionary of directives and doors of the common acceptance README. Specific to chapter 1.1:
+The table `scenarios.tsv` of the chapter (judge-only: `acceptance/1/scenarios.tsv`) checks the requirements that the
+readiness checklist of the chapter norms names next to each scenario. The format is the dictionary of directives and
+doors of the common acceptance README. Specific to chapter 1.1:
 
 - `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch.
 - For a `200` answer to `GET /v1/list` the **order of names inside `keys`** is also checked: the sequence of names decoded from the JSON in the order received MUST equal the sequence in `expect`, which is given by UTF-8 bytes. The runner keeps this order when parsing the answer and does not sort what it received before the comparison. For an empty `keys` the sequence is empty. Spaces and the way of JSON escaping are insignificant; the order of other objects, `items` included, is still not checked.
@@ -24,7 +26,7 @@ The format is the dictionary of directives and doors of the common acceptance RE
 
 ## The instance of the chapter
 
-An additional check of the full key (R29-01, P/01.1-16,22) runs beyond the scenario TSV on a separate instance
+An additional check of the full key (P/01.1-16,22) runs beyond the scenario TSV on a separate instance
 with rights on acc/: the keys of this prefix at the boundary lengths in UTF-8 bytes, including Cyrillic and four-byte
 characters, and the same set in a non-empty guard.key. For an existing guard use its actual version, for an absent one —
 index="", so as not to fall into the version comparison refusal. For a file implementation separately check its
@@ -51,17 +53,19 @@ The runner passes the bytes of the body from `request` after the substitutions, 
 
 ## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
 
-[`seams.tsv`](seams.tsv) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`
+[`seams.tsv`](seams.tsv) (judge-only: `acceptance/1/seams.tsv`) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`
 memory does not forget by time alone (P/01.1-11), equality and both sides of fractional admission-time bounds for put, delete and batch
 (P/01.1-25), the admission time retains its fraction when clocks go back and after a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
 restart (P/01.1-31). The runner executes them through the seam adapter, by the [normalization of the common acceptance README](../../../common/acceptance/README.md#p01-seam-normalization) (the directives `@clock`, `@reopen`, `@parallel` are defined there and in the header of the file). The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `seams:1.1:<scenarios>` in their `gate`.
 
-## Additional check of the class of errors of run 36 (Kimi)
+## Additional check of the class of errors
 
-A replay of delete with the same id and different items (none/null/number/object/array) must match by op/key/cas/guard. A change of key/cas/guard is a different fingerprint. Compare versions only for equality: uniqueness does not mean a numeric order. Sc.17 also sends arbitrary bytes or no body by the common grammar of POST.
+A replay of delete with the same id and different items (none/null/number/object/array) must match by op/key/cas/guard. A change of key/cas/guard is a different fingerprint. Compare versions only for equality: uniqueness does not mean a numeric order. (judge-only: sc. 17) also sends arbitrary bytes or no body by the common grammar of POST — it checks P/01.1-R048 and
+P/01.1-R144 (`body_form`).
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-A change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `delete` is now scenario 30.
+A change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `delete` is now scenario 30 (judge-only:
+sc. 30) — it checks P/01.1-R105.
 
 ## Batch
 
@@ -71,26 +75,28 @@ The weight of `@big`: the field name plus the value.
 
 The role `console` does not know the limit on the number of rows — chapter 1.2. Restart and the group — chapter 1.3. The refusal of a body over the limit is a common refusal before JSON parsing.
 
-## Extra fields of a command (K37-05)
+## Extra fields of a command
 
-Scenario 23 checks put/delete and their replays with different unknown top-level
-fields: they change neither the data nor the fingerprint. The nested object zzz does not become a guard
-or a new command. The closedness of a real guard is checked separately by sc. 20; a wrong
-items of put — sc. 16, ignoring items of delete — sc. 06 and 23. The limit of the full body
-holds, ignored fields included (sc. 22 and reading of the size check before parsing).
+Scenario 23 (judge-only: sc. 23) checks put/delete and their replays with different unknown top-level
+fields: they change neither the data nor the fingerprint — P/01.1-R040, P/01.1-R090. The nested object zzz does not become a guard
+or a new command. The closedness of a real guard is checked separately by (judge-only: sc. 20) — P/01.1-R032; a wrong
+items of put — (judge-only: sc. 16) — P/01.1-R019 (`items`); ignoring items of delete — (judge-only: sc. 06 and 23) —
+P/01.1-R099. The limit of the full body holds, ignored fields included ((judge-only: sc. 22) and reading of the size
+check before parsing) — P/01.1-R034, P/01.1-R040.
 A prepared scenario does not mean a performed HTTP run of an implementation.
 
-The check R38-06 outside the TSV: on a role socket the request GET /v1/list with a role forwarding header gets 403 forbidden before listing; an untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without the read right gets 200 with names/versions without values. Scenario 21 checks the latter, not all identity refusals; the former require a sockets/trust profile from acceptance 06 (sc. 08 — a header with a foreign role on a role socket).
+The check outside the TSV: on a role socket the request GET /v1/list with a role forwarding header gets 403 forbidden before listing; an untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without the read right gets 200 with names/versions without values. Scenario 21 (judge-only: sc. 21) checks the latter — P/01.1-R066 — not all identity refusals; the former require a sockets/trust profile from acceptance 06 ((judge-only: sc. 08 of acceptance 06) — a header with a foreign role on a role socket; it checks P/01.1-R066 and P/01.1-R144 (`identity`)).
 
-## A key that is absent or not a string (G39-07)
+## A key that is absent or not a string
 
-Scenario 24 separates the form from the rules of the key: an absent or non-string `key` of a command,
+Scenario 24 (judge-only: sc. 24) separates the form from the rules of the key (P/01.1-R030, P/01.1-R031): an absent or non-string `key` of a command,
 `guard.key` and the read parameter `key` — `400 badrequest`; a string that breaks the rules of N1 — `badkey`
-(sc. 13 and 20). The last step reads the row and sees that nothing is written.
+((judge-only: sc. 13 and 20) — P/01.1-R031, P/01.1-R032). The last step reads the row and sees that nothing is written.
 
 ## Admission time conditions (P/01.1-25; ADR-0091 item 1)
 
-Scenario 28 takes only the edges of the admission time: a `not_after` that has already passed, `not_after` and `not_before` that
+Scenario 28 (judge-only: sc. 28) takes only the edges of the admission time (P/01.1-R079, P/01.1-R080, P/01.1-R088,
+P/01.1-R090): a `not_after` that has already passed, `not_after` and `not_before` that
 have not yet come under any clock of the stand. `expired` and `early` write nothing; the order is
 «time conditions → guard → CAS»; `not_after` is in the replay fingerprint (a numerically equal spelling is the same value, a different number and absence — `400`);
 the refusal `expired` does not occupy the `id`; forms
@@ -118,7 +124,7 @@ decoded and not normalized, N2.1); a body with `Content-Length` and `Transfer-En
 as chunked (§6.3), closing the connection after the response (RFC 9112 §6.1). For a valid HTTP/1.1 request this is not an automatic `400`: its own operation determines the response. An HTTP/1.0 request with `Transfer-Encoding` has faulty framing: `400 badrequest` and close (R054; RFC 9112 §6.1). Early refusal (N2.1): `POST /v1/write` with `Content-Length` larger than the body limit and a body
 that is still coming — the client gets `413 toolarge` with `Connection: close`, not a reset of the connection.
 
-Probes of the framing and of the request line (N2.1, reconciliation of python and go 2026-10-18), each on raw bytes:
+Probes of the framing and of the request line (N2.1), each on raw bytes:
 - a lone LF and a lone CR at the end of a header line — `400`; an empty line before the request line — `400`;
 - raw `\x00`, `\x01`, TAB, `\x7f` and `#` in the request target — `400` (`%00` is three admissible bytes, N2.1);
 - headers whose field lines without CRLF sum to exactly 65536 bytes are parsed (an answer by the route), 65537 — `400`; 2000
@@ -133,25 +139,25 @@ Probes of the framing and of the request line (N2.1, reconciliation of python an
 
 ## ADR-0129 core clarification witnesses
 
-The original six seam scenarios and all 73 steps remain byte-exact. Added six scenarios use only the existing HTTP, @clock and @reopen grammar. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
+Six seam scenarios (judge-only: `s7-admitted-single-refusals` to `s12-zero-version-not-absence` of `seams.tsv`) use only the existing HTTP, @clock and @reopen grammar; they check P/01.1-R088, P/01.1-R132, P/01.1-R070 and P/01.1-R090. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
 
 The admission bounds compare as binary64 values: for a bound that equals the clock in binary64 not_after admits equality and not_before refuses it, for put/delete/batch. On applied put/delete/batch replays bound spellings that round to the same binary64 value are the same fingerprint, and values that differ in binary64 give different fingerprints and badrequest. The request bytes must not be normalized before the actual store parses them. The CALL engine's exact-number comparison is not a replacement store fingerprint. A nonempty string version differs from the absent marker "" in single/batch CAS and guards.
 
-Already covered and unchanged: scenario 35 steps 8–9 choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS; scenario 36 step 3 reorders guards on a successful replay without changing its fingerprint. R116 and scenario 31 steps 1–4 already prove that a successful absent delete leaves read index "" and admits a later create-once; scenario 34 steps 7–8 covers batch deletion of an absent row. No duplicate witnesses are added for these obligations.
+Already covered and unchanged: scenario 35 steps 8–9 (judge-only: sc. 35) choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS — P/01.1-R125, P/01.1-R126; scenario 36 step 3 (judge-only: sc. 36) reorders guards on a successful replay without changing its fingerprint — P/01.1-R134. R116 and scenario 31 steps 1–4 (judge-only: sc. 31) already prove that a successful absent delete leaves read index "" and admits a later create-once; scenario 34 steps 7–8 (judge-only: sc. 34) covers batch deletion of an absent row — P/01.1-R128, P/01.1-R133. No duplicate witnesses are added for these obligations.
 
 Opaque versions do not expose the allocator's count. The new HTTP probes observe unchanged rows/list and a reusable refused id; they do not infer zero version issuance by subtracting or ordering index strings. R089/R132's no-issued-version obligation remains subject to the existing reading check. No snapshot/effects form, new port, native command, implementation or handwritten core is supplied. These are source witnesses awaiting the ordinary implementation adapter, not executed SUT results.
 
 ## Replay and last admission metadata
 
-A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases are gated by durable because they include @reopen; former steps and store_core gates are unchanged. These are source witnesses, not executed SUT acceptance.
+A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases (judge-only: seams `s13-replay-put-admission`, `s14-replay-delete-admission`, `s15-replay-batch-admission`) check P/01.1-R070, P/01.1-R078, P/01.1-R105 and P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.
 
 ## Admitted mismatches and admission-number domain (ADR-0129 addendum (10), item 3)
 
-The complete previous 15 seam scenarios / 239 steps remain byte-exact. A put/delete/batch with an already-applied identifier and different content is an admitted mismatch: badrequest, with durable last admission metadata. The original rows/visible absence and first id answer remain; an original-command replay still returns that answer with again. The mismatch does not replace or free the original applied-id entry. These are admitted refusals, distinct from form/rights/framing refusals before admission; not every badrequest is admitted.
+A put/delete/batch with an already-applied identifier and different content is an admitted mismatch: badrequest, with durable last admission metadata. The original rows/visible absence and first id answer remain; an original-command replay still returns that answer with again. The mismatch does not replace or free the original applied-id entry. These are admitted refusals, distinct from form/rights/framing refusals before admission; not every badrequest is admitted.
 
 The assigned fractional binary64 admission value survives an ordinary reopen. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.
 
-All four cases use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
+All four cases (judge-only: seams `s16-mismatched-put-admission` to `s19-admission-binary64-fraction`) check P/01.1-R078, P/01.1-R105, P/01.1-R122 and P/01.1-R070; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
 
 ## Production qualification coverage
 

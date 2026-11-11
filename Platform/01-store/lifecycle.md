@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the store process `configstore` (ADR-0083 addendum (2) item 1): start, configuration, files on disk, exit codes,
-signals. Stage A — on top of the current norms of M10. The norms are not retold here: each line leads to its norm.
+signals. The norms are not retold here: each line leads to its norm.
 
 Norms: [P/02.4](../02-installer/spec/02.4-installer.norms.md) (N1.1 units, N1.2 environment,
 N3 «server start»), [P/01.3](spec/01.3-store.norms.md) (N1.3 daemon, N4), [P/04](../04-controller/spec/04-controller.norms.md) (N1.4a server refusal), [P/01.1](spec/01.1-store.norms.md) (door,
@@ -75,7 +75,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 
 ## Stand
 
-«Stand» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
+«Stand» — the [common acceptance README](../common/acceptance/README.md):
 - the store command gets `{data}` (`PLATFORM_DIR`, the store — `{data}/configstore`), `{socket}` (`admin.sock`,
   the role sockets next to it), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; it puts no manifests;
 - the store command holds `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}` once each and none of the member flags of the group stand, which the stand appends itself ([substitutions](../common/acceptance/PROFILE.md#substitutions));
@@ -87,4 +87,4 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 
 - The path of `member.json` inside `-dir` and the format of the data directory — the implementation decides (P/01.1 «Implementation decides» item 3); between
   implementations only the copy `copy` transfers.
-- The daemon's readiness is the socket: it does not send `sd_notify`, `Type=notify` — only at the controller and the worker ([P/02.4 N1.1](../02-installer/spec/02.4-installer.norms.md) `notify`; Decided by the Architect 2026-10-18 (the second pilot)).
+- The daemon's readiness is the socket: it does not send `sd_notify`, `Type=notify` — only at the controller and the worker ([P/02.4 N1.1](../02-installer/spec/02.4-installer.norms.md) `notify`).

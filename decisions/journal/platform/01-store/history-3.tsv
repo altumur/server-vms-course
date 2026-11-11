@@ -1,0 +1,121 @@
+req_id	file	source	date	removed
+-	spec/01.3-store.norms.md#intro	move of lesson 1 from M10/11, stage B, ADR-0083 addendum (1)	2026-10-19	The chapter is moved from M10/11 (stage B, ADR-0083 addendum (1): without a change of behaviour):
+-	spec/01.3-store.norms.md#intro	numbering of M10/11	2026-10-19	The numbers of the subsections are the former numbers of M10/11.
+-	spec/01.3-store.norms.md#intro	move to P/02.4, stage B	2026-10-19	moved to … (stage B)
+-	spec/01.3-store.norms.md#intro	move of lesson 6	2026-10-20	(the move of lesson 6)
+-	spec/01.3-store.norms.md#intro	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	the map to former ids is `id-map.tsv` (historical record)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A3	2026-10-18	(the store pilot, A3)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-DOOR-ID-CN-01	2026-10-29	C01-DOOR-ID-CN-01
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-UNFINISHED-IMPORT-WRITERS-01	2026-10-30	C01-UNFINISHED-IMPORT-WRITERS-01
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	review of stage B 1–2, item 9	2026-10-19	review of stage B 1–2, item 9
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A3	2026-11-09	(the store pilot, A3)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A10	2026-10-18	(the store pilot, A10)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-DOOR-ID-CN-01	2026-10-29	(C01-DOOR-ID-CN-01)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	log of cammeta-go, lesson 11 № 3	2026-10-18	(log of cammeta-go, lesson 11 № 3)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	Architect's decision 2026-10-30, C01-DOORS-COUNT-FRESH-01	2026-10-30	C01-DOORS-COUNT-FRESH-01, the Architect's decision of 2026-10-30;
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	V7 item 3, Architect's decision 2026-10-28, P1, row 5 of the list	2026-10-28	(V7 item 3, the Architect's decision of 2026-10-28, P1; row 5 of the list)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A1	2026-10-18	(the store pilot, A1)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A2	2026-10-18	(the store pilot, A2)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	store pilot A10	2026-10-19	(the store pilot, A10)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	reconciliation of python and go M10/6–11, B8	2026-10-18	(reconciliation of python and go M10/6–11, B8)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	reconciliation of python and go M10/6–11, B12	2026-10-18	(reconciliation of python and go M10/6–11, B12)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	reconciliation of python and go M10/6–11, B5	2026-10-18	(reconciliation of python and go M10/6–11, B5)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	pilot of data family schemas, D6	2026-10-19	(added by the pilot of data family schemas, D6)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	Quint pilot, F1	2026-10-19	added by the Quint pilot, F1
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-IMPORT-DOOR-ROWS-01	2026-10-30	C01-IMPORT-DOOR-ROWS-01
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-IMPORT-VERSIONS-01	2026-10-30	(C01-IMPORT-VERSIONS-01)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-VERSION-ISSUED-01	2026-10-30	(C01-VERSION-ISSUED-01)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	V7 item 3, Architect's decision 2026-10-28, row 13 of the list	2026-10-28	(V7 item 3, the Architect's decision of 2026-10-28, row 13 of the list)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	log of cammeta-go, lesson 11 № 10	2026-10-18	(log of cammeta-go, lesson 11 № 10)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	Architect's decision 2026-11-08	2026-11-08	the Architect's decision of 2026-11-08,
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	Architect's decision 2026-11-08	2026-11-08	the Architect's decision of 2026-11-08,
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-UNFINISHED-IMPORT-WRITERS-01	2026-10-30	(C01-UNFINISHED-IMPORT-WRITERS-01)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-DOORS-COUNT-PLACE-01, as the witness	2026-10-30	(C01-DOORS-COUNT-PLACE-01, as the witness)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-DOOR-METRICS-01, Architect's decision 2026-10-30, meaning and type as the witness	2026-10-30	(C01-DOOR-METRICS-01, the Architect's decision of 2026-10-30, the meaning and the type — as the witness)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-STATUS-MEMBERS-NOAPI	2026-10-26	C01-STATUS-MEMBERS-NOAPI
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	reconciliation of python and go M10/6–11, B15	2026-10-18	(reconciliation of python and go M10/6–11, B15)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	C01-BOX-DOOR-01	2026-10-30	C01-BOX-DOOR-01
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	guess of stage C CL-03, Architect's decision 2026-10-23	2026-10-23	(guess of stage C CL-03, the Architect's decision of 2026-10-23)
+P/01.3-R032	spec/01.3-store.norms.md#N1.3	C01-BOX-OBSERVATIONS-01	2026-11-05	(C01-BOX-OBSERVATIONS-01)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	C01-STATUS-MEMBERS-NOAPI, Architect's decision 2026-10-26	2026-10-26	C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	guess of stage C S02, Architect's decision 2026-10-23	2026-10-23	(guess of stage C S02, the Architect's decision of 2026-10-23)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	guess of stage C S02, Architect's decision 2026-10-23	2026-10-23	(guess of stage C S02, the Architect's decision of 2026-10-23)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	guess of stage C S03, Architect's decision 2026-10-23	2026-10-23	(guess of stage C S03, the Architect's decision of 2026-10-23)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	log of cammeta-python, lesson 11 № 24	2026-10-18	(log of cammeta-python, lesson 11 № 24)
+P/01.3-R008	spec/01.3-store.norms.md#N1.3	Architect's decision 2026-11-08	2026-11-08	the Architect's decision of 2026-11-08,
+P/01.3-R009	spec/01.3-store.norms.md#N1.6	division M10/11-11, id-map.tsv	2026-10-19	division M10/11-11, `id-map.tsv`:
+P/01.3-R009	spec/01.3-store.norms.md#N1.6	former rows of M10/11 N1.6	2026-10-19	the former rows of M10/11 N1.6 in
+P/01.3-R009	spec/01.3-store.norms.md#N1.6	move to P/02.4, stage B	2026-10-19	(stage B)
+P/01.3-R010	spec/01.3-store.norms.md#N1.6	review of stage B 1–2, item 4	2026-10-19	review of stage B 1–2, item 4
+P/01.3-R011	spec/01.3-store.norms.md#N1.6	C01-RAFT-DOOR-LEAF-01, Architect's decision 2026-10-30	2026-10-30	(C01-RAFT-DOOR-LEAF-01, the Architect's decision of 2026-10-30)
+P/01.3-R011	spec/01.3-store.norms.md#N1.6	C01-TLS-COUNT-PLACE-01	2026-10-30	C01-TLS-COUNT-PLACE-01
+P/01.3-R016	spec/01.3-store.norms.md#N2	C01-STATUS-MEMBERS-NOAPI, Architect's decision 2026-10-26	2026-10-26	C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26
+P/01.3-R016	spec/01.3-store.norms.md#N2	store pilot A7	2026-10-18	(the store pilot, A7)
+P/01.3-R016	spec/01.3-store.norms.md#N2	reconciliation of python and go M10/6–11, B1	2026-10-18	(reconciliation of python and go M10/6–11, B1)
+P/01.3-R016	spec/01.3-store.norms.md#N2	reconciliation of python and go M10/6–11, B4	2026-10-18	(B4)
+P/01.3-R016	spec/01.3-store.norms.md#N2	reconciliation of python and go M10/6–11, B1	2026-10-18	(B1)
+P/01.3-R017	spec/01.3-store.norms.md#N2	reconciliation of python and go M10/6–11, B3	2026-10-18	(reconciliation of python and go M10/6–11, B3)
+P/01.3-R017	spec/01.3-store.norms.md#N2	agreement of both implementations without a norm	2026-10-18	(both implementations, agreed without a norm)
+P/01.3-R018	spec/01.3-store.norms.md#N2	Architect's decision 2026-11-08	2026-11-08	; the Architect's decision of 2026-11-08
+P/01.3-R020	spec/01.3-store.norms.md#N3	guess of stage C S02, Architect's decision 2026-10-23	2026-10-23	(guess of stage C S02, the Architect's decision of 2026-10-23)
+P/01.3-R026	spec/01.3-store.norms.md#N3	guess of stage C S04, Architect's decision 2026-10-23	2026-10-23	(guess of stage C S04, the Architect's decision of 2026-10-23)
+P/01.3-R029	spec/01.3-store.norms.md#N4	C01-BOX-DOOR-01	2026-10-30	(C01-BOX-DOOR-01)
+P/01.3-R029	spec/01.3-store.norms.md#N4	reconciliation of python and go M10/6–11, B1	2026-10-18	(B1)
+P/01.3-R029	spec/01.3-store.norms.md#N4	reconciliation of python and go M10/6–11, B8	2026-10-18	(B8)
+P/01.3-R029	spec/01.3-store.norms.md#N4	reconciliation of python and go M10/6–11, B12	2026-11-06	(B12)
+P/01.3-R029	spec/01.3-store.norms.md#N4	reconciliation of python and go M10/6–11, B15	2026-10-18	(B15)
+P/01.3-R029	spec/01.3-store.norms.md#N4	reconciliation of python and go M10/6–11, B5	2026-11-06	(B5)
+P/01.3-R029	spec/01.3-store.norms.md#N4	V7 item 3, Architect's decision 2026-10-28, row 13 of the list	2026-10-28	; V7 item 3, the Architect's decision of 2026-10-28, row 13 of the list
+P/01.3-R029	spec/01.3-store.norms.md#N4	guess of stage C S02, Architect's decision 2026-10-23	2026-10-23	; guess of stage C S02, the Architect's decision of 2026-10-23
+P/01.3-R029	spec/01.3-store.norms.md#N4	guess of stage C S03	2026-10-23	; guess of stage C S03
+-	spec/01.3-store.norms.md#N5	drill @manual turned into a scenario by work rules (for people) § 4	2026-10-30	; formerly sc. 07 was a drill `@manual`; work rules (for people) § 4
+-	spec/01.3-store.norms.md#N5	numbering of the acceptance of M10/11	2026-10-19	The scenario numbers are the former numbers of the acceptance of M10/11.
+-	spec/01.3-store.norms.md#N5	drill sc. 06 of the system acceptance moved to sc. 18	2026-10-30	; formerly the drill sc. 06 of the [system acceptance](../../common/acceptance/system/README.md)
+-	spec/01.3-store.norms.md#N5	former step 9 of sc. 15 of M10/11 moved to P/06.5	2026-10-19	step 9 of sc. 15
+-	spec/01.3-store.norms.md#implementation-decides	guess of stage C CL-01	2026-10-28	guess of stage C CL-01,
+-	spec/01.3-store.norms.md#implementation-decides	store pilot A1, A2, A9	2026-10-18	(the store pilot, A1, A2, A9)
+-	spec/01.3-store.norms.md#implementation-decides	guess of stage C S02	2026-10-23	(guess of stage C S02)
+-	spec/01.3-store.norms.md#implementation-decides	guesses of stage C W03-E01a, W03-SDK-FILE-COMMAND-01	2026-10-28	guesses of stage C W03-E01a, W03-SDK-FILE-COMMAND-01,
+-	spec/01.3-store.norms.md#readiness-checklist	drill 06 of the system acceptance moved to sc. 18	2026-10-30	; formerly drill 06 of the [system acceptance](../../common/acceptance/system/README.md)
+-	spec/01.3-store.norms.md#readiness-checklist	guess of stage C S02	2026-10-23	(guess of stage C S02)
+-	spec/01.3-store.norms.md#readiness-checklist	C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01	2026-10-30	(C01-DOORS-COUNT-FRESH-01, C01-DOORS-COUNT-PLACE-01)
+-	spec/01.3-store.norms.md#readiness-checklist	Architect's decision on the tails of the move of lesson 1	2026-10-19	(the Architect's decision on the tails of the move of lesson 1)
+-	spec/01.3-store.norms.md#readiness-checklist	store pilot	2026-10-18	(the store pilot)
+-	spec/01.3-store.norms.md#readiness-checklist	reconciliation of python and go M10/6–11	2026-10-18	(reconciliation of python and go M10/6–11)
+-	spec/01.3-store.norms.md#readiness-checklist	review of stage B 1–2, item 8	2026-10-19	(review of stage B 1–2, item 8)
+-	spec/01.3-store.norms.md#readiness-checklist	reconciliation of python and go M10/6–11	2026-10-18	(reconciliation of python and go M10/6–11)
+-	spec/01.3-store.norms.md#readiness-checklist	Z21 (data-directory ownership task), probe numbering	2026-11-08	Z21 probe 5
+-	acceptance/3/README.md#intro	move of the acceptance of M10/11, stage B, ADR-0083 addendum (1)	2026-10-19	The scenarios were moved from the acceptance of M10/11 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of scenarios and steps are the former ones.
+-	acceptance/3/README.md#stand	stand of the acceptance of M10/11	2026-10-19	is as in the acceptance of M10/11
+-	acceptance/3/README.md#a-foreign-directory-sc-10	store pilot A1	2026-10-18	; the store pilot, A1
+-	acceptance/3/README.md#a-foreign-directory-sc-10	Z21 (data-directory ownership task), probe numbering	2026-11-08	Z21 probe 5
+-	acceptance/3/README.md#the-copy-sc-11-12	store pilot A2	2026-10-18	; the store pilot, A2
+-	acceptance/3/README.md#the-copy-sc-11-12	log of cammeta-go, lesson 11 № 10	2026-10-18	; the log of cammeta-go, lesson 11 № 10
+-	acceptance/3/README.md#a-member-without--api-sc-16	C01-STATUS-MEMBERS-NOAPI, Architect's decision 2026-10-26	2026-10-26	C01-STATUS-MEMBERS-NOAPI (the Architect's decision of 2026-10-26):
+-	acceptance/3/README.md#a-member-without--api-sc-16	ACC-EMPTY-OBJECT-01	2026-10-26	; ACC-EMPTY-OBJECT-01
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	work rules (for people) § 4; automatic group scenarios plan accepted by the Architect 2026-10-30; P01 comparison review by Claude, P-1…P-6	2026-10-30	Formerly sc. 07 was a `@manual` drill on a real cluster; by work rules (for people) § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan `automatic group scenarios plan (2026-10-30, for people)`, accepted by the Architect on 2026-10-30; steps for the defect classes of the pilot comparison — `P01 comparison review by Claude (for people)`, `P-1`…`P-6`, where they are visible from outside). The norms do not change.
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	C01-GROUP-BOOTSTRAP-EVEN-01	2026-10-30	(C01-GROUP-BOOTSTRAP-EVEN-01)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	C01-DOOR-ID-CN-01	2026-11-09	(C01-DOOR-ID-CN-01)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-4	2026-11-06	`P-4`;
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-1	2026-11-09	`P-1`:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-2	2026-11-09	`P-2`:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-3	2026-11-09	`P-3`:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	reconciliation of python and go M10/6–11, B12	2026-11-06	, B12
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-5	2026-11-06	`P-5`:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	C01-IMPORT-VERSIONS-01	2026-10-30	; C01-IMPORT-VERSIONS-01
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-6	2026-11-06	`P-6`:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-3; C01-RAFT-DOOR-LEAF-01, Architect's decision 2026-10-30	2026-10-30	`P-3`, … (C01-RAFT-DOOR-LEAF-01, the Architect's decision of 2026-10-30)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	coverage audit of P/01, audit-kimi, commit 399e4783b	2026-10-30	Coverage audit of P/01 (audit-kimi 2026-10-30, commit 399e4783b)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	coverage audit of P/01, audit-kimi, A08	2026-10-30	, A08
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	coverage audit of P/01, audit-kimi, A10	2026-10-30	; A10
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-2	2026-11-09	(`P-2`)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	coverage audit of P/01, draft NEW-DIRECTIVES § 3	2026-10-30	NEW-DIRECTIVES § 3;
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	coverage audit of P/01, second pass, Gemini, commit 6a5817f88, G06	2026-10-30	Coverage audit of P/01, second pass (Gemini 2026-10-30, commit 6a5817f88, G06)
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	C01-IMPORT-DOOR-ROWS-01	2026-10-30	C01-IMPORT-DOOR-ROWS-01:
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01 comparison review by Claude, P-3	2026-11-06	`P-3`
+-	acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924	V7 item 3	2026-11-06	, V7 item 3
+-	acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924	C01-ROW-INDEX-LOST-01	2026-10-30	, C01-ROW-INDEX-LOST-01
+-	acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924	coverage audit of P/01, second pass, Gemini, G05, G06	2026-10-30	The second pass of the coverage audit (Gemini, G05, G06):
+-	acceptance/3/README.md#full-form-and-reproducibility	rule of full form and reproducibility of 2026-10-16	2026-10-16	(2026-10-16)
+-	acceptance/3/README.md#full-form-and-reproducibility	ACC-EMPTY-OBJECT-01	2026-10-26	, ACC-EMPTY-OBJECT-01
+-	acceptance/3/README.md#additional-check-by-reading	class of errors of run 36 (Kimi)	2026-10-16	of the class of errors of run 36 (Kimi)
