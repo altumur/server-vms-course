@@ -12,7 +12,6 @@ n	case	sock	body
 0	pass	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/\u0000"]}, "size": 16}
 0	pass	reader	{"method": "GET", "path": "/v1/list", "query": {}, "size": 0}
 0	pass	reader	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["zzz/\udc80/../"]}, "size": 3}
-0	pass	reader	{"method": "POST", "path": "/v1/write", "query": {"key": ["a", "b"]}, "size": 5, "role_header": "admin"}
 1	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 17}
 1	only	reader	{"method": "POST", "path": "/v1/write", "query": {}, "size": 17}
 1	pair	reader	{"method": "PATCH", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 17}
@@ -26,9 +25,4 @@ n	case	sock	body
 4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": [""]}, "size": 0}
 4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["a/../b"]}, "size": 0}
 4	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/\udcff"]}, "size": 0}
-4	pair	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["/a"]}, "size": 0, "role_header": "console"}
-5	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "admin"}
-5	only	reader	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "reader"}
-5	pair	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": "admin"}
-6	only	reader	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0}
-6	nopair	reader	the last row; a listing has no rights row
+4	nopair	admin	the last row of the table: the identity and the rights are forms/rights-checks.tsv

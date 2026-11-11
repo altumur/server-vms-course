@@ -1,11 +1,9 @@
 # The data of the store group (P/01.3 N1.3 group, N1.6, N5): the keys from which a reader derives the mode «group» of the lesson. The norm refers to this table.
-# key — a closed name; value — its value by the grammar below; norm — the place of the norm.
+# key — a closed name; value — its value by the grammar below; norm — the place of the norm. The admissible sizes of a group are -group-size of forms/daemon-flags.tsv.
 #key transport — the transport of the group traffic between daemons: mtls — mutual TLS by the role certificates of the CA (P/01.3 N1.6); every -join, every -raft and -api off the loopback requires -tls
 #key plain — where a daemon MAY run without -tls: loopback — -api and -raft on the loopback (the local box); a joining member never (-join requires -tls)
-#key sizes — the admissible values of -group-size, | between them; the same on all servers
 #key stand_size — the number of voters of the store group of the acceptance stand (the assembly 1 → 2 → 3, acceptance/3/README.md «The store group»)
 key	value	norm
 transport	mtls	P/01.3-R059; P/01.3-R061; P/01.3-R207
 plain	loopback	P/01.3-R060; P/01.3-R207
-sizes	1|3|5	P/01.3-R053; P/01.3-R041
-stand_size	3	P/01.3 N5
+stand_size	3	P/01.3 N5; acceptance/3/README.md «The store group»

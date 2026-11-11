@@ -57,3 +57,5 @@ P/01.3-R035	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (15) item
 -	forms/refusals.tsv.schema.json#/fields/9	finding C01-BOX-DOOR-01 (row box_no_raft)	2026-11-04	; C01-BOX-DOOR-01
 -	acceptance/1/README.md#directives-of-chapters-11-and-12	Codex review of series A (row @rights store, moved from the dictionary of the common acceptance README)	2026-10-30	, Codex review of series A
 -	acceptance/1/README.md#seam-normalization	the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4 (moved from the common acceptance README «P/01 seam normalization»)	2026-11-08	 (the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4)
+-	forms/code-rules.tsv.schema.json#/description	ADR-0133 addendum (39) item 6 (comment line 6 of forms/code-rules.tsv)	2026-11-09	 (addendum (39) item 6)
+-	forms/code-rules.tsv.schema.json#/description	task P02.36 (comment line 6 of forms/code-rules.tsv)	2026-11-09	 (P02.36)

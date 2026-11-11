@@ -1,5 +1,5 @@
 # The machine form of the probes of the target P/01.1/extra (task P01.142; review P01.138 B1): one scenario per probe of forms/extra.tsv, named by its id.
-# A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words of its dictionary (@wire, @halfclose, @rep, @profile, @close, @noreply included); no cell-json.
+# A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words of its dictionary and of the acceptance READMEs of P/01 chapters 1.1 and 1.3 (@wire, @halfclose, @rep, @profile, @close, @noreply included); no cell-json.
 # The target runs these rows through the column tables of forms/targets.routing.tsv; every scenario runs on its own instance as Platform/01-store/acceptance/1/README.md says.
 # The numbers are the stand parameters of P/01.1 N5 (body limit 1048576, row ceiling 524288) and the constants of Platform/01-store/forms/runtime-constants.tsv.
 # scenario	step	request	expect

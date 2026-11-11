@@ -4,7 +4,7 @@
 # only when the expression is true, otherwise it is absent. type — the JSON form of the value; value_rule — what the value is, by the mode and the role.
 # required_when and allowed_when are CEL. Variables:
 #var mode string — box (the store of a box, one voter without raft), group (a voter of a raft group, a group of one included), door (a door without a vote)
-#var role string — the Raft state of the instance: leader, follower, candidate, shutdown; a box is leader; a door has none, ""
+#var raft string — the Raft state of the instance (not the field role of the answer): leader, follower, candidate, shutdown; a box is leader; a door has none, ""
 #var ahead double — by how many seconds the admission time of the last record is ahead of the clock of this instance
 #var lim map<string,int> — the parameters of the lesson, only the names of #lim
 #lim CLOCK_SKEW — P/01.1 N0 «Cluster clocks»; the value — forms/runtime-constants.tsv
@@ -27,4 +27,4 @@ again	uint64	false	true	-	P/01.3-R211
 role	string	mode == "door"	true	door: door	P/01.3-R211
 last_snapshot	uint64	false	true	-	P/01.3-R211
 out	array of MemberId	false	true	-	P/01.3-R211
-admission_ahead	number > CLOCK_SKEW	(mode == "box" || role == "leader") && ahead > double(lim.CLOCK_SKEW)	(mode == "box" || role == "leader") && ahead > double(lim.CLOCK_SKEW)	by how many seconds the admission time of the last record is ahead of the clock; a follower and a door without a vote have no field	P/01.3-R109; P/01.3-R211
+admission_ahead	number > CLOCK_SKEW	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	by how many seconds the admission time of the last record is ahead of the clock; a follower and a door without a vote have no field	P/01.3-R109; P/01.3-R211

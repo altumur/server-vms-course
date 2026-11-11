@@ -124,7 +124,7 @@ fields: they change neither the data nor the fingerprint — P/01.1-R040, P/01.1
 or a new command. The closedness of a real guard is checked separately by (judge-only: sc. 20) — P/01.1-R032; a wrong
 items of put — (judge-only: sc. 16) — P/01.1-R019 (`items`); ignoring items of delete — (judge-only: sc. 06 and 23) —
 P/01.1-R099. The limit of the full body holds, ignored fields included ((judge-only: sc. 22) and reading of the size
-check before parsing) — P/01.1-R034, P/01.1-R040.
+check before parsing) — P/01.1-R034, P/01.1-R040, P/01.1-R217, P/01.1-R220.
 A prepared scenario does not mean a performed HTTP run of an implementation.
 
 The check outside the TSV: on a role socket the request GET /v1/list with a role forwarding header gets 403 forbidden before listing; an untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without the read right gets 200 with names/versions without values. Scenario 21 (judge-only: sc. 21) checks the latter — P/01.1-R066 — not all identity refusals; the former require a sockets/trust profile from acceptance 06 ((judge-only: sc. 08 of acceptance 06) — a header with a foreign role on a role socket; it checks P/01.1-R066 and P/01.1-R144 (`identity`)).

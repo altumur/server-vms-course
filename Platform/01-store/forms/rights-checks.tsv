@@ -1,24 +1,23 @@
 # The order of the identity and rights checks of a request at a door of the store (P/01.2 N3 «check»). The norm refers to this table and does not repeat it in prose.
-# The input is one request of a store door of chapter 1.1 at a daemon of a group (a voter or the door without a vote); body is the request object below, not the JSON body of the request.
+# The input is one request of a store door of chapters 1.1 and 1.2 (a daemon of a group or a box); body is the request object below, not the JSON body of the request.
 # Rows in the order of n: the first row whose when is true gives the refusal code, kind and the fields fault; none — the request goes on to its operation. The table does not read the store state.
-# Row 1 is the body limit of the frame (P/01.1 N2); the rest of the frame — the request line, the headers and the body framing of P/01.1 N2.1 — is not a row of this table.
-# Outside the table, in this order: the route and the method of the door (404 — P/01.1 N2.1) between rows 1 and 2; the ban on a forwarded admin while a rights file is loaded
-# (P/01.2 N3 «check») between rows 2 and 3; the form and the key rules of the query of GET /v1/get (400 — P/01.1 N2.1) between rows 3 and 4.
-# POST /v1/write goes on after row 3 to the form of its body and to the table write-checks.tsv: its rows wc-rights, wc-guard_rights, wc-write_rights and wc-guard_elem_rights
-# (n 14, 15, 33, 34) are the write, delete and guard rights of this check; they are not repeated here.
+# Before the table: the frame and the body limit (P/01.1 N2.1, R217 of P/01.1), the route and the method of the door (404 — P/01.1 N2.1); for GET /v1/get and GET /v1/list
+# the rows 1–4 of forms/read-checks.tsv (the form of the query and the key rules: N3 «read» of P/01.1 step 1 before step 2 «check»); POST /v1/write comes to the table
+# before its body is parsed and goes on after row 3 to the form of its body and to forms/write-checks.tsv, whose rows wc-rights, wc-guard_rights, wc-write_rights
+# and wc-guard_elem_rights (n 14, 15, 33, 34) are the write, delete and guard rights of this check; they are not repeated here.
+# Outside the table, between rows 2 and 3: the ban on a forwarded admin while a rights file is loaded (forwarding_untrusted, P/01.2 N3 «check»).
 # GET /v1/list has no row of the read right: after the identity the names and versions are given without it. GET /v1/rights while no rights file is loaded — 404 (P/01.2 N2), not a row of this table.
-# On a box there are no trusted forwarding senders (P/01.2 N1.1): there a role header on any socket is the refusal of row 2, whatever sock is.
+# On a box there are no trusted forwarding senders and no peers (P/01.2 N1.1): there a role header on any socket is the refusal of row 1.
 # op — * in every row: the request object has no field op. when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
 #var body dyn — the request object {method, path, query, size, role_header}: method — the HTTP method; path — the target before ?, byte for byte; query — the pairs of the query by P/01.1 N2.1, a map from a name to the list of its values in order; size — the number of bytes of the HTTP body (of chunked — the decoded bytes); role_header — the value of the role forwarding header, null without the header
-#var sock string — the role of the socket or of the transport: <role> of <role>.sock, admin of admin.sock, on a box — the writer's name; for a connection of the group — the role in the SAN of the verified certificate of the peer: configstore (a voter) or configstore-door (the door without a vote)
+#var sock string — the role of the socket or of the transport: <role> of <role>.sock, admin of admin.sock, on a box — the writer's name; for a connection over -api — peer: and the role in the SAN of the verified certificate of the peer (peer:configstore — a voter, peer:configstore-door — the door without a vote)
 #var lone list<string> — not read by this table: the request object carries no strings of a JSON body
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim
-#lim BODY_LIMIT — P/01.1 N2: the body read limit of a request (-max-body), named by the implementation
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; this table has none
 #fn allowed(string, string, string) -> bool — full permission for the effective role, operation read | write | delete and key by P/01.2 N3 «check», including never and admin/internal-role exceptions; not only the ordinary-role file evaluator
-# The effective role of rows 3 and 4: role_header, when the header is present and sock is configstore or configstore-door; otherwise sock.
+# The effective role of rows 3 and 4: role_header, when the header is present and sock is peer:configstore or peer:configstore-door; otherwise sock.
 # id — the stable address of the row: rc-<check>, apart from the order n; not renumbered
 n	id	op	group	each	check	when	code	kind	fault	norm
-1	rc-body_limit	*			body_limit	body.size > lim.BODY_LIMIT	413	toolarge	{"limit": lim.BODY_LIMIT}	P/01.1 N2
-2	rc-role_header	*			role_header	body.role_header != null && !(sock in ["configstore", "configstore-door"])	403	forbidden		P/01.2 N3 «check»
-3	rc-rights_not_admin	*			rights_not_admin	body.path == "/v1/rights" && (body.role_header != null && sock in ["configstore", "configstore-door"] ? body.role_header : sock) != "admin"	403	forbidden		P/01.2 N2
-4	rc-read_forbidden	*			read_forbidden	body.path == "/v1/get" && !allowed((body.role_header != null && sock in ["configstore", "configstore-door"] ? body.role_header : sock), "read", body.query.key[0])	403	forbidden		P/01.2 N3 «check»
+1	rc-role_header	*			role_header	body.role_header != null && !sock.startsWith("peer:")	403	forbidden		P/01.2 N1.1; P/01.2 N3 «check»
+2	rc-forwarding_untrusted	*			forwarding_untrusted	sock.startsWith("peer:") && !(sock in ["peer:configstore", "peer:configstore-door"])	403	forbidden		P/01.2 N3 «check»
+3	rc-rights_not_admin	*			rights_not_admin	body.path == "/v1/rights" && (body.role_header != null && sock in ["peer:configstore", "peer:configstore-door"] ? body.role_header : sock) != "admin"	403	forbidden		P/01.2 N2
+4	rc-read_forbidden	*			read_forbidden	body.path == "/v1/get" && !allowed((body.role_header != null && sock in ["peer:configstore", "peer:configstore-door"] ? body.role_header : sock), "read", body.query.key[0])	403	forbidden		P/01.2 N3 «check»

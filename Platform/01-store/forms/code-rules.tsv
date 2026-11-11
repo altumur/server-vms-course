@@ -3,7 +3,7 @@
 # of the candidate; the names are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of
 # every later stage that holds code:*. norm: the norms of the subject. Cores: write_model (the checks of the write command), jcs, store_core (admission,
 # cas, guard, id memory, journal), rights_core, copy_core; their machines in the form Step(State, Event) -> (State, []Effect) are admission_step,
-# journal_step and copy_step. The Raft library is a requires_module row of stage group (addendum (39) item 6) and in the forbid of every core (P02.36).
+# journal_step and copy_step. The Raft library is a requires_module row of stage group and in the forbid of every core.
 id	kind	name	args	stage	norm
 C01	pure_core	write_model	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	model	P/01.1 N1; P/01.1 N2.1
 C02	table_driven	write_model	{"form": "Platform/01-store/forms/write-checks.tsv", "min_cell": 9}	model	P/01.1 N2.1; forms/write-checks.tsv
