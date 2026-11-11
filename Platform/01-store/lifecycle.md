@@ -79,7 +79,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 - the store command gets `{data}` (`PLATFORM_DIR`, the store — `{data}/configstore`), `{socket}` (`admin.sock`,
   the role sockets next to it), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; it puts no manifests;
 - the store command holds `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}` once each and none of the member flags of the group stand, which the stand appends itself ([substitutions](../common/acceptance/PROFILE.md#substitutions));
-- `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from M10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
+- `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances of the other lessons — the rights derived from the stand's manifests by the rights derivation command;
 - the directives `@restart store`, `@foreign store`, `@backup store`, `@import store`, the door `restored`;
 - the store runs with the durability barriers: the command carries no flag that switches them off (`durability` above).
 

@@ -1,0 +1,255 @@
+{
+  "engine": "ef7dcf9b3138b6c8259633252db288be91f77621",
+  "pins": {
+    "J": "49e622795ca96b2e73904f1da5d203f2d103b2d5",
+    "M": "bf8462085c08c5cd5f6b4cce3ca3580ebd74ffae"
+  },
+  "targets": {
+    "P/01.1/door": {
+      "own_red_lines": [
+        3,
+        266,
+        267,
+        268,
+        269,
+        270,
+        281,
+        282
+      ],
+      "common_red_lines": [
+        111
+      ],
+      "other_candidates_steps_equal": true,
+      "Kfinal_red": 9
+    },
+    "P/01.2/rights": {
+      "own_red_lines": [
+        3,
+        7,
+        9
+      ],
+      "common_red_lines": [
+        21,
+        33,
+        35,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "other_candidates_steps_equal": true,
+      "Kfinal_red": 13
+    },
+    "P/01.3/daemon": {
+      "own_red_lines": [
+        23,
+        25,
+        26,
+        27,
+        28,
+        29,
+        34,
+        35
+      ],
+      "common_red_lines": [
+        24,
+        36,
+        37,
+        82,
+        178,
+        194,
+        268,
+        273
+      ],
+      "other_candidates_steps_equal": true,
+      "Kfinal_red": 16
+    }
+  },
+  "own_red_total": 19,
+  "class_counts": {
+    "K1": 4,
+    "K2": 7,
+    "K3": 6,
+    "K4": 2
+  },
+  "HTTP_observations_saved": false,
+  "model_reads": {
+    "Platform/01-store/spec/01.1-store.norms.md": {
+      "request_line": 11,
+      "response_line": 12,
+      "tool_call_id": "call-61952eae-88c2-4e73-abc6-b4ce62c4f4a7",
+      "entire_pinned_file_in_response": true,
+      "response_sha256": "f39dbe051c625d04e81c5c06cce4bc0a923acc7647494cc14f7aca9cdeb8c8f8"
+    },
+    "Platform/01-store/spec/01.2-store.norms.md": {
+      "request_line": 13,
+      "response_line": 14,
+      "tool_call_id": "call-6e996288-5846-4699-a3e3-353b3b23fcd5",
+      "entire_pinned_file_in_response": true,
+      "response_sha256": "cab5fa1f4a548abfc65e0b6930a15424d9a6f80c7724555c97936c4381234102"
+    },
+    "Platform/01-store/spec/01.3-store.norms.md": {
+      "request_line": 15,
+      "response_line": 16,
+      "tool_call_id": "call-a5d6256c-d12f-4b1b-8f2a-ebe37402f3ae",
+      "entire_pinned_file_in_response": true,
+      "response_sha256": "d895673a713cdff221d6fc70d714da8d2cb75e4325ff6e6893e47e30d4cca48f"
+    },
+    "Platform/common/acceptance/PROFILE.md": {
+      "request_line": 34,
+      "response_line": 35,
+      "tool_call_id": "call-dcb391ab-ba3d-4885-94e3-05b5bc6ff6ca",
+      "entire_pinned_file_in_response": true,
+      "response_sha256": "740905f8625ed8383c8bc38f56a256d37c6a0be9b09e821e3ba548e08936cb2a"
+    }
+  },
+  "journal_records": 4488,
+  "profile_writes": [
+    {
+      "line": 3788,
+      "tool_call_id": "call_01a1cb176b06735dbde8508a"
+    }
+  ],
+  "K150_profile_exists": false,
+  "K150_assembly_exists": false,
+  "Kfinal_assembly_exists": false,
+  "K150_official_no_report": 12,
+  "source_comparison": {
+    "internal/storecore/fingerprint.go": {
+      "K150_exists": true,
+      "same_bytes": true
+    },
+    "internal/storecore/apply.go": {
+      "K150_exists": true,
+      "same_bytes": true
+    },
+    "internal/storecore/storecore_test.go": {
+      "K150_exists": true,
+      "same_bytes": true
+    },
+    "internal/jcs/jcs.go": {
+      "K150_exists": true,
+      "same_bytes": true
+    },
+    "internal/door/write.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/door/answers.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/door/door.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/door/door_test.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/group/group.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/group/group_test.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/daemon/backend.go": {
+      "K150_exists": true,
+      "same_bytes": true
+    },
+    "internal/daemon/daemon.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    },
+    "internal/daemon/daemon_test.go": {
+      "K150_exists": true,
+      "same_bytes": false
+    }
+  },
+  "input_sha256": {
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out-diag/Kfinal/P_01_1_door/engine.json": "c775f12d4daa6619364aaf15a77f97500e1e5f2d2bb36daf0087ffb486fc81f9",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_1_door/engine.json": "85376fa6d20c8d0519417c1ed2a65080535f930e52355aa2843320f174717030",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_1_door/engine.json": "85376fa6d20c8d0519417c1ed2a65080535f930e52355aa2843320f174717030",
+    "J:Platform/01-store/acceptance/1/scenarios.tsv": "4a7431e62c6e5484d906f58a9a6b990d74181e27fa4a37979ba4b114eefc0dfe",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out-diag/Kfinal/P_01_2_rights/engine.json": "cc22830906258fb5091144203f82ad6dacb853eeda5b70b0f76cbc71034db905",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_2_rights/engine.json": "b9f4bc0b75e2b214a387df934c2388d46c675bc5a8904d5f4a1ecc8660634504",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_2_rights/engine.json": "b9f4bc0b75e2b214a387df934c2388d46c675bc5a8904d5f4a1ecc8660634504",
+    "J:Platform/01-store/acceptance/2/scenarios.tsv": "722911eadc7e98cb7b7664f7c272afcf00ae42a0086eeff866bc32705997464b",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out-diag/Kfinal/P_01_3_daemon/engine.json": "282b816ce81984a623f68a33d4978f3923e6ee38fc05114fb0e851fe62c97afc",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_3_daemon/engine.json": "b024515a7e7f6175d0e215404d85f1e840e0ec4f432cae103a8d0e886e99b681",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_3_daemon/engine.json": "b024515a7e7f6175d0e215404d85f1e840e0ec4f432cae103a8d0e886e99b681",
+    "J:Platform/01-store/acceptance/3/scenarios.tsv": "43ff33618fa58178ae20ed9322a1082733ef64606fc7a685244d76cce18cdf9d",
+    "M:Platform/common/acceptance/PROFILE.md": "95432de912c3a7a4fa41d500d70b245f660fbb182bbe74fea9b64a7dcfce8599",
+    "M:Platform/common/acceptance/README.md": "3c575768e93c4a50da3a9e4a52454db7ebb3b029670efb57c2cce864425251b8",
+    "M:Platform/01-store/spec/01.1-store.norms.md": "5c04eec7c275a9241814f153403a910530ce74323e6910a0044761d57c500a0b",
+    "M:Platform/01-store/spec/01.2-store.norms.md": "261b33ec505eec89b2207a187b39f96456371c256f6ff434099b6f69c00a6250",
+    "M:Platform/01-store/spec/01.3-store.norms.md": "52dd9710e2cd28b99622939481f099dfeaba2b93922fac40e303d76323ddd9db",
+    "J:Platform/common/acceptance/PROFILE.md": "95432de912c3a7a4fa41d500d70b245f660fbb182bbe74fea9b64a7dcfce8599",
+    "J:Platform/common/acceptance/README.md": "3c575768e93c4a50da3a9e4a52454db7ebb3b029670efb57c2cce864425251b8",
+    "J:Platform/common/acceptance/forms/targets.routing.tsv": "c16e23e50c2f2d1b627d521429ba63b9d66d8ff9e0a01a8c221093f39c48105b",
+    "J:Platform/01-store/acceptance/2/inputs/rights.json": "4e33d3c7eadbf2dfd0a334f42590ffd68d068a349623fc163caa222516e8e90e",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/kimi-run.jsonl": "c4fab3961ac029cced6bd8cb92db50f77949964f85378ab331fe958d567c9fc9",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/acceptance.yaml": "1dcf29cc63f97b6839aa38fee8e2d52f08e8779244f5f8b688ef3bb4c0e129fe",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/TASK.md": "9290f9b533695212a945d13f85d7df0dab06b00663f91ee8d80995a2e7711615",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/SHA256SUMS": "42e25dda99c2df79602fccfccc42311df28b419dff73a3bba0b9c7795c6dc09a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/storecore/fingerprint.go": "5e8b908a0474f94928704a38f4d285035d75d998fe2d9526e369b9e14df59264",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/storecore/fingerprint.go": "5e8b908a0474f94928704a38f4d285035d75d998fe2d9526e369b9e14df59264",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/storecore/apply.go": "ad831275fbc1a5d7929478e8ab5aad6878c67eb2edad8ef2ff33a69b69920475",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/storecore/apply.go": "ad831275fbc1a5d7929478e8ab5aad6878c67eb2edad8ef2ff33a69b69920475",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/storecore/storecore_test.go": "7c23d868f51e8be217c27b25b61a52cd34b21984c431715fe43c9e3cc4f5af21",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/storecore/storecore_test.go": "7c23d868f51e8be217c27b25b61a52cd34b21984c431715fe43c9e3cc4f5af21",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/jcs/jcs.go": "6b4cb42c0b40a2c9384ff127a55ae98af67f7265d7243b25be58a1d06e04b588",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/jcs/jcs.go": "6b4cb42c0b40a2c9384ff127a55ae98af67f7265d7243b25be58a1d06e04b588",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/door/write.go": "648a53f2bf793ef2b19d7f9f689e7aa3b750001587b13834b9f58875ed8e0c97",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/door/write.go": "d95e43f893ef3c059053e04cbb4e19c2195656b6e9c84d15fced311ff43c85a5",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/door/answers.go": "f916fadf3a0d95986f743854b9e59f838ffbbdfc04da4d7f371ef91f699b0611",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/door/answers.go": "3a4f9c7f42e939c503d0b3f6ef0df25972b752d8bfd7a4e65526de117da7d36a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/door/door.go": "604c0152949350e55b6e34b87163b1bff613594a1f24a34ded8432806b5e0f5a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/door/door.go": "01236581acc2a9cae47c10a16341bd9def94967c963ec4e8787d1954c8afa348",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/door/door_test.go": "53b0ed52d0d27ea9f092fc1d3dd934553dc9fc66b5cc6a498d2ebbc2bbd3fc04",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/door/door_test.go": "1e350c7b209f881cec0bb16a1a916525810b4d526349aace1153528955531131",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/group/group.go": "319da2510875566ab8dafe1a80d64a6e4c6fd5f5dc2e788652486f88d4bf8c70",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/group/group.go": "1536eb906382f22496ac9d9a45e0b4d0032c6c4126f1c226a89c787ff0123486",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/group/group_test.go": "f1aaee6d2a800976829a9089deca3397a7cf97c96b27e29bf9c8280aa5b70629",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/group/group_test.go": "10fbce355ff6472ccd2883965c5283bc338858489119ad64adf973a14e70c838",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/daemon/backend.go": "628e01a904ee03bd400bd1060d01ae9ffb565f065be3d8fee07da4844c1c9f0a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/daemon/backend.go": "628e01a904ee03bd400bd1060d01ae9ffb565f065be3d8fee07da4844c1c9f0a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/daemon/daemon.go": "7d9f650953465e9c0b20888a4c84573e4f8666819fbe6db2958fabaa38e29710",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/daemon/daemon.go": "7eb2043e3bf68168b8ac863f3ad606e6c019dc4e1a73d4ec6d6aa203dda217f9",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/01-store/internal/daemon/daemon_test.go": "0957f1e8cca4cd4538777e06064aa4dc7ae9218e339a2b6876cf42dc75608d23",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/01-store/internal/daemon/daemon_test.go": "0dd47881b7ad4d3121d2c0badc4b0dd70e9ea155d752f3c605aaff2c8d7d2dc8",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/NOTES.md": "08d076e5cd6aeef5e1327e47e626b473acd7e3368df1c5d6d695f17cd71fca14",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/PLAN.md": "e626dabf1ecde92b0edaf1b61ee274cdf37a22ea192a01c1ef80406631c42c5a",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/GUESSES.md": "61033fe9e709c8fff2b500976e1aad72fc24b76d38847075613b8947b862b2b3",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/K150/SPEC_VERSION": "c40732cf9ad077a6ccfcbe462f018d8b7436b9aa72bb8d3f83a11400090ce839",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/NOTES.md": "f75ec273c182705cff8a2f46ed983d16d16f9e0048e557909c4a10c0a66ac407",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/PLAN.md": "392d5eb04d20b024cf34b8e1f5108d604c7db3e2949e2e3e780af0e0b3782182",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/GUESSES.md": "02f2adc659ea15244db1be01a828a67331f4e127201b5c07ad277a3cc418b905",
+    "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/SPEC_VERSION": "c40732cf9ad077a6ccfcbe462f018d8b7436b9aa72bb8d3f83a11400090ce839",
+    "/srv/minimax-loop/runs/p01-engine-8719b2141670/work/engine/internal/engine/scenario_verdict.go": "02a2b130be152f7737905f52f0c11182a7a38eedb63fb049a0b68d4c4d2ca564",
+    "/srv/minimax-loop/runs/p01-engine-8719b2141670/work/engine/internal/engine/run_stand.go": "6455f958981ddf0e7687fe09520033487c68894917a81d742a3aac2a3adc4ef4",
+    "/srv/minimax-loop/runs/p01-engine-8719b2141670/work/engine/internal/engine/run_directives.go": "9e9268d0307d1445b98ff7462ece4560f04462b33dd2dfd817b6d424f9270737",
+    "/srv/minimax-loop/runs/p01-engine-8719b2141670/work/engine/cmd/judge/main.go": "71a04bed2d2d23f1a875e963329ab25d3b373e5c3e49117458d19f509e2f0129",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/PRE.md": "56d02254522d7ac15632053a4f23df3b35cdb4ff55d282ff70d4fde3a633ac77",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/RESULT.md": "edd900cb3988d0d9ceaa1b1ed6c6cf7c9c810085622aef8b2d1f3ef98fa8ce65",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/all163-diag.sh": "ae6b7df068f50ebfffb3ca935f0792b56cf0f4215cb3e174f98fb897f0ffaa40",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/summary-official.json": "73aa064f474d46b4cfaf19946325bdd7b2714aa6bdca5427f0e4dcd710788ff2",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_1_door/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_1_extra/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_1_inproc/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_2_rights/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_3_daemon/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_3_group/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-crl/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-jcs/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-log-mask/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-revoked/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-rights-evaluator/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0",
+    "/home/pilot/owner-receipts/P01.163-court-kimi-20261111/out/K150/P_01_vectors-store-client/engine.log": "46c2513cbc74d3ee1c6264b14eb5526b66a7ee3a34a42ee1dfb3da0b50ffdde0"
+  }
+}
