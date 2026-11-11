@@ -1,6 +1,6 @@
 # Change 0133-p03-acceptance-prose-data
 
-change: 0133-p03-acceptance-prose-data rev 1 · lesson P/03 · author run P03.27 (Claude) · state review
+change: 0133-p03-acceptance-prose-data rev 2 · lesson P/03 · author run P03.27 (Claude) · state review
 
 Publication parent `6a224c315becee31ff10066ee2b93166b1d830f3`. Task P03.27, part 3г of the readiness audit P03.20 (`decisions/inbox/2026-11-11-P03-аудит-готовности.md`, appendices Г and Д), with the Architect's answer to its question 4 (P03.21: candidates 1–3 of appendix Д through the seam adapter, candidate 4 not taken), over the merged parts 3а (P03.21) and 3в1 (P03.25), ADR-0133 addendum (29). The prose of the acceptance of P/03 becomes data or an explicit «Not judged in this lesson» with its reason (the form of P02.35, `0c9ee948a`); no norm of a product changes and no new requirement is added.
 
@@ -46,6 +46,8 @@ Publication parent `6a224c315becee31ff10066ee2b93166b1d830f3`. Task P03.27, part
 - The norms P/03.2-R017…R020 (full keys and store refusal) have no item of the readiness checklist; the seams `s31`–`s36`, `s38`, `s43` therefore name no item.
 - 3в2 (P03.26): the new seams change no file list of the filters (no new file); defect 15.
 
+Rev 2 (the rejection of the judge, attempt 1, finding С1). `replay_same_id` was a universal predicate over the requests after an `unavailable` or `ambiguous` reply, so a write that was never repeated satisfied it. It now requires at least one repeat after each such reply and is false without a repeat, with another id or first-send moment, or without such a reply (`forms/README.md` and `ru/`). `worker-state-write` also observes `confirmed_writes`, and `s8-state-write-ambiguous-replay` expects `confirmed_writes` 1, as `s16` and `s17` of `worker-slot-write` already do. The existing uses (`s11-capture-replay`, `s16`, `s17`, `s8`) all script a repeat after the reply, so their expectations keep their meaning.
+
 | Artifact | Operation | Before blob | After blob | After SHA256 |
 |---|---|---|---|---|
 | `Platform/03-worker/acceptance/1/README.md` | MODIFIED | 96b8fd0651d8a7d6885be15b84323888c52cb9ee | 0ccfebbb79a6556f640858025450e534a21e65d0 | 1e9b524ebe1dcda9796da257413a22ed5ccd66f4e07268f7cd5ead5f452a6cbd |
@@ -63,10 +65,10 @@ Publication parent `6a224c315becee31ff10066ee2b93166b1d830f3`. Task P03.27, part
 | `Platform/03-worker/acceptance/5/seams.tsv` | MODIFIED | c60200f0f71a86f778a84e0579d82800193a2db7 | 9f4dad20483e57104f23c653671dda36c52b156f | 395f09c83315bebb13904a8f4166285a799292dc9adc7f57628cd1543a4fdfca |
 | `Platform/03-worker/acceptance/6/README.md` | MODIFIED | 58512697f1c4d4e6da30685cce012e162639a6dd | 1f93f3b052d4a99a6b317075d5e947eea3884839 | 6b88c06f00b62a58d321b436dbf8119b771f186558b6e1e55626b18208254a46 |
 | `Platform/03-worker/acceptance/6/scenarios.tsv` | MODIFIED | d60345b2fe4580f44f086b1e0d56120fe1bf25a7 | c2f40c3bbfb7a798d69034df9edeb70f30fc21b7 | 14daadebfba530724aaf53b459bd8098d837689c23eb9d3263e6fde634f1fac8 |
-| `Platform/03-worker/acceptance/6/seams.tsv` | MODIFIED | 3857dbe81d6e1094eb7a213d9849b878b4eb1038 | 84a707fe69a16587e9a0f46df3af3f55065148f0 | 972cb3a6400e5fbcd4eee335696d69206d04d1bff3bfa3ccc0e9a964c055fcee |
+| `Platform/03-worker/acceptance/6/seams.tsv` | MODIFIED | 3857dbe81d6e1094eb7a213d9849b878b4eb1038 | 51e89d32e83e30ff73f16ee68b798b2d26e7db99 | c6e751b7641fe8fc8a5bc77e4a084283b783df41269f4ac0427c257bdfc9a0a5 |
 | `Platform/03-worker/acceptance/7/README.md` | MODIFIED | 07e37f9604f0fa1520aea073f794a5e8a1e4c126 | d6bba1b38a2ecb2d5c234a88398c665a6a73cc8e | cf5f5305ee2005c6e08dcf5a06eac71f642467b8d10fef78220f6af1068de168 |
 | `Platform/03-worker/acceptance/7/seams.tsv` | MODIFIED | e88f11d9cc5892378fff9a1d95cde0431c410eea | 903987d55c7bc4c7f81aa66ac0b48fcc42b28699 | ad8114736f141522be6b4f37a4620022f90f7de688f06d660630b83f7472091e |
-| `Platform/03-worker/forms/README.md` | MODIFIED | 7a465c50e31a94e098a02b1473faafdac06921b4 | b9f8cd2a248afcc4c2e0ff0ec16c39d39aec8c3d | fa42cd0dd713953b033130cdfe159f0dc2195181dac5e87bfb20605554177b58 |
+| `Platform/03-worker/forms/README.md` | MODIFIED | 7a465c50e31a94e098a02b1473faafdac06921b4 | 56239a2d73f9e7ddd559696a9abc79c452489d6f | d5bb235667f8b6c9228290c4ed61579eee4061f99a7b2272f93c70a558e8409d |
 | `Platform/03-worker/ru/03-worker.md` | MODIFIED | fdba89bc3271d74f5625f4efc75a2f47d53722cb | b44e759b2b8e920959eb7961d1ea71da234ea78a | c3eca20d2984f5690c534fa5aba870fb16ed21eb186ec3c31a155bd269f2e7ea |
 | `Platform/03-worker/ru/acceptance/1/README.md` | MODIFIED | 1ac9a985f88890ddda7366c08dc2cb26acdc1d0f | e5686927a50ff956fd9c683cf03a2d5abb919557 | ac628b22b05dc379e93bd7c695c2ed90bf68aae45438c9a0c20a3ffab5eb0849 |
 | `Platform/03-worker/ru/acceptance/2/README.md` | MODIFIED | 76504450aee005dfe4d53426830dc676b620fc83 | df12ab84f329a8cb19a2106cc26aeb58bd0dbc03 | c28efc12a08ebae7382a0a5147f277e654eac8464b56b125b91449debe99ece6 |
@@ -75,7 +77,7 @@ Publication parent `6a224c315becee31ff10066ee2b93166b1d830f3`. Task P03.27, part
 | `Platform/03-worker/ru/acceptance/5/README.md` | MODIFIED | 1b27fe15cbe13fe7a43f7b81dc526332f1bb3d4c | e5d60b78947feff19069d031499b2a772bc91971 | dd0bc7f930a92400d4e3c22ad78145745706b4a2826bc921774d9f4e205db23a |
 | `Platform/03-worker/ru/acceptance/6/README.md` | MODIFIED | 6fe5ee3509ba659ad8225431b7eaadcd6372c64d | 333a23a8f30efcac9966af6d537ecff9458d7e07 | 66aa3883851f80daf488761114555f7abc73f987939e23a68f3368dc9e7a473d |
 | `Platform/03-worker/ru/acceptance/7/README.md` | MODIFIED | 38bde5a3b27c3c033ebfd50813931669588c8af7 | 8c7c3bd06b624db5802838a3be81cb078b942097 | 6586aead0bb92b2f0a91f33ff4c09f42aee202c837601a12375de09d7e91f6e5 |
-| `Platform/03-worker/ru/forms/README.md` | MODIFIED | 10b3460e03de4c62d735c3d4e169930359a1a1b5 | 38b7ae24f10d1776c40e5234b02987e9226b6654 | 7bcde8cd0dbf382897277c0e3d346a8d4d686bcebf8c6c73f3069a74fd5c5e4e |
+| `Platform/03-worker/ru/forms/README.md` | MODIFIED | 10b3460e03de4c62d735c3d4e169930359a1a1b5 | 601a696869bf2a145a77660564aea86adf288bd3 | 44cb443289870402c7f8e515b422f3be95139656deb8ffc4fbdde5f0a3ccab5e |
 | `Platform/03-worker/ru/spec/03-worker.README.md` | MODIFIED | 92b2484a12bf938d2b39a75636b30652184627e5 | 00560cb689f4a5743db1e73dedd6e3ce123b922a | 71fd6bfb5a874a854ea16933f0e25816371f6ba0a626e14d36162502a79fbd4f |
 | `Platform/03-worker/ru/spec/03.2-worker.norms.md` | MODIFIED | 675a705dd99fd6330f5855aeced62c0a8a120512 | 2cff9f82b964405eb408fc71fca51c6f9424299f | 69a0d9535fafae1950a6c08b2052c1ef3550c8211fb76af96efc66cc81148904 |
 | `Platform/03-worker/ru/spec/03.3-worker.norms.md` | MODIFIED | 3eac7297dff7ea50f1a355c113ca668335010411 | cdc74831391824055cdc4340b0b380fc74a2dcd9 | 611e6ea7a2d9e02217a1a41773e945eb9cbc124fd46677404b83cb418694bf65 |

@@ -1,6 +1,6 @@
 # Delta 0133-p03-acceptance-prose-data
 
-change: 0133-p03-acceptance-prose-data rev 1 · state review · author run P03.27 (Claude)
+change: 0133-p03-acceptance-prose-data rev 2 · state review · author run P03.27 (Claude)
 
 0 ADDED, 40 MODIFIED artifacts. One requirement unit changes: P/03.4-R034 (the table «Evidence outside TSV» of chapter 3.4 gets the row of P/03.4-18, EN/RU); the other edits of `spec/*.norms.md` are readiness checklist items that name seams and the words «the judge» of N5.
 
@@ -98,7 +98,7 @@ new-sha256: 14daadebfba530724aaf53b459bd8098d837689c23eb9d3263e6fde634f1fac8
 
 old-sha256: 10ebe3a29c88a99c0b9c026e75f8dd2c2d2bd411b4a6cf53203f08f5eecc5922
 
-new-sha256: 972cb3a6400e5fbcd4eee335696d69206d04d1bff3bfa3ccc0e9a964c055fcee
+new-sha256: c6e751b7641fe8fc8a5bc77e4a084283b783df41269f4ac0427c257bdfc9a0a5
 
 ## MODIFIED artifact `Platform/03-worker/acceptance/7/README.md`
 
@@ -116,7 +116,7 @@ new-sha256: ad8114736f141522be6b4f37a4620022f90f7de688f06d660630b83f7472091e
 
 old-sha256: cc2b5694182e6b7ad437184bd58dcc63a1fbe4165b7f9e3860ddc50cc836d96a
 
-new-sha256: fa42cd0dd713953b033130cdfe159f0dc2195181dac5e87bfb20605554177b58
+new-sha256: d5bb235667f8b6c9228290c4ed61579eee4061f99a7b2272f93c70a558e8409d
 
 ## MODIFIED artifact `Platform/03-worker/ru/03-worker.md`
 
@@ -170,7 +170,7 @@ new-sha256: 6586aead0bb92b2f0a91f33ff4c09f42aee202c837601a12375de09d7e91f6e5
 
 old-sha256: 037ccfa6c86fdf6dace203f1e90cf8fa84e02f9a2ea767e0666ae794fc22ae50
 
-new-sha256: 7bcde8cd0dbf382897277c0e3d346a8d4d686bcebf8c6c73f3069a74fd5c5e4e
+new-sha256: 44cb443289870402c7f8e515b422f3be95139656deb8ffc4fbdde5f0a3ccab5e
 
 ## MODIFIED artifact `Platform/03-worker/ru/spec/03-worker.README.md`
 
