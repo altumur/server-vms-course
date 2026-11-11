@@ -1,10 +1,9 @@
 # Acceptance P/08.1 — the domain view and the shadow report (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the M11 dictionary of the acceptance README of
-M11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) N5. In total 6 scenarios / 39 steps.
 
 The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (the canonical package README lists the cases).
@@ -13,8 +12,8 @@ console (lesson P/10, [N1.2a](../../../10-domain-console/spec/10-domain-console.
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»;
-formerly — the acceptance README of M11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
+As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Preparation of each scenario»):
+the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
 its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue — only `testsub`
 (`domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
 There are no units. There is no domain: the directive `@domain` of the first step of each scenario sets it up. The domain name is `acme`; the recovery
@@ -31,4 +30,4 @@ Selected scenarios use real reports of agents in `domain/members/<member>/report
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: the seam table; it checks P/08.1-03 and P/08.1-05) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

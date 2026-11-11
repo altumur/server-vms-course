@@ -1,17 +1,16 @@
 # Acceptance P/08.3 — admission of reports
 
-This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
-(the dictionary of directives and doors of the stand of several clusters; before its move — the «Dictionary of directives and doors M11» of the README
-of the acceptance of M11/01). The norm of the chapter is
+(the dictionary of directives and doors of the stand of several clusters). The norm of the chapter is
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) N5. In total 21 scenarios / 218 steps.
 
-The commands `agent-sig`, `seal-member`, `seal-member-round`, `accept` are the vectors of the common contracts [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md) and [`accept`](../../../common/vectors/accept/README.md).
+The commands `agent-sig`, `seal-member`, `seal-member-round`, `accept` are the vectors of the common contracts [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md) and [`accept`](../../../common/vectors/accept/README.md) (judge-only: the test vectors of these contracts).
 
 ## Stand
 
-**Preparation of each scenario** (from the acceptance README of M11/03, «Setup of each scenario 01–09»). The runner brings up on
+**Preparation of each scenario**. The runner brings up on
 one machine three clusters — `hold`, `m1`, `m2`: each has its own empty store, its own `{data}`, its own role sockets and
 ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue — only `testsub`; the console, the controller and the worker `w-1`
 of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`). There are no units. There is no domain: it is set up by the steps of the scenario
@@ -28,7 +27,7 @@ relay`, `@stop agent`. The topology is empty until the step that writes it.
 
 The doors of the stand do not speak TLS: the agent only publishes the fingerprints and the certificates of the centres (N1.6 `tls_ca`, `tls_ca_certs`). How the runner passes the environment and restarts the console and the agent of the cluster with the variable
 (`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md), `@env` and
-«Forwarding environment» (the review analysis of stage B 8–10, № 22: `M-16`).
+«Forwarding environment».
 
 ## scenarios.tsv
 
@@ -46,4 +45,4 @@ of the holder on a relay packet — [the acceptance of chapter 9.2](../../../09-
 
 ## Kit seams
 
-[CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) (judge-only: the seams of chapter 8.3 N1.3 and N3) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

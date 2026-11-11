@@ -1,0 +1,82 @@
+req_id	file	source	date	removed
+-	spec/08.2-domain.norms.md#intro	ADR-0121	2026-11-11	is not edited by hand (ADR-0121).
+-	spec/08.2-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(the process domain; ADR-0080; module «Platform» — ADR-0083)
+P/08.2-R002	spec/08.2-domain.norms.md#N1	I4	2026-11-11	N3 «change after theft» step 3, I4)
+P/08.2-R002	spec/08.2-domain.norms.md#N1	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 8	2026-10-20	(the form — N1.1 `pin`; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 8)
+P/08.2-R002	spec/08.2-domain.norms.md#N1	the Architect's decision of 2026-10-23; I02-FOUND	2026-10-23	(the owner of the text is this chapter; the Architect's decision of 2026-10-23 on the finding of the Specification I02-FOUND)
+P/08.2-R003	spec/08.2-domain.norms.md#N1.1	ADR-0075	2026-11-11	by the delivery centre (ADR-0075, P/02.4 N1.6)
+P/08.2-R004	spec/08.2-domain.norms.md#N1.2	review analysis of stage A 8–10, № 13 / decision 2	2026-11-11	(the owner is this chapter; review analysis of stage A 8–10,
+P/08.2-R004	spec/08.2-domain.norms.md#N1.2	review analysis of stage A 8–10, № 13 / decision 2	2026-11-11	№ 13 / decision 2). Here
+P/08.2-R004	spec/08.2-domain.norms.md#N1.2	C08-MOVE-UNCONFIRMED-KEYS-02	2026-11-11	(chapter 8.8 N1.8 step 5; C08-MOVE-UNCONFIRMED-KEYS-02)
+P/08.2-R004	spec/08.2-domain.norms.md#N1.2	ADR-0074 addendum 7	2026-11-11	(ADR-0074 addendum 7)
+P/08.2-R004	spec/08.2-domain.norms.md#N1.2	review analysis of stage A 8–10, № 21	2026-11-11	(P/08.1-11; moved there from this subsection, review analysis of stage A 8–10, № 21)
+P/08.2-R005	spec/08.2-domain.norms.md#N1.3	ADR-0032	2026-11-11	domain (the signer, ADR-0032)
+P/08.2-R005	spec/08.2-domain.norms.md#N1.3	C08-KEY-CHANGE-WHO-01	2026-11-11	decides» item 2 (C08-KEY-CHANGE-WHO-01);
+P/08.2-R005	spec/08.2-domain.norms.md#N1.3	the pilot of the data family schemas, D4	2026-11-11	domain/book-seal; added by the pilot of the data family schemas, D4)
+P/08.2-R007	spec/08.2-domain.norms.md#N1.5	the move of lesson 8	2026-11-11	Moved into the [domain envelope contract]
+P/08.2-R007	spec/08.2-domain.norms.md#N1.5	review analysis of stage A 8–10, № 12	2026-11-11	guessing the AAD (review analysis of stage A 8–10, № 12). Vectors — [`common/vectors/domain-envelopes`](../../common/vectors/domain-envelopes/README.md).
+P/08.2-R008	spec/08.2-domain.norms.md#N1.6	review analysis of stage B 3–5, V1	2026-11-11	(the chapter is the owner of the contract; moved there from this subsection so that the moved chapters P/03.7 and P/06.3 do not stand
+P/08.2-R008	spec/08.2-domain.norms.md#N1.6	review analysis of stage B 3–5, V1	2026-11-11	on the norms of M11; review analysis of stage B 3–5, V1). Here
+P/08.2-R008	spec/08.2-domain.norms.md#N1.6	review analysis of stage A 8–10, № 13 / decision 2	2026-11-11	«Revocations `domain/revoked`» (review analysis of stage A 8–10, № 13 / decision 2). Here
+P/08.2-R008	spec/08.2-domain.norms.md#N1.6	V1	2026-11-11	(moved there; V1). Vectors of the function `token` — [`common/vectors/domain-token`](../../common/vectors/domain-token/README.md).
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (10) item 4, addendum (11) item 1	2026-11-11	the row is rewritten (ADR-0110 addendum (10) item 4, addendum (11) item 1). A request
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (13) item 2; delta review B5	2026-11-11	out from under the revocation (ADR-0110 addendum (13) item 2, delta review B5). REVOKED_WORDS
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (15)	2026-11-11	would use up the ceiling (ADR-0110 addendum (15)). A limit:
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (16) item 2	2026-11-11	the word is not needed (ADR-0110 addendum (16) item 2). Nobody
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (13) item 3	2026-11-11	would not have reached it (ADR-0110 addendum (13) item 3); e = now
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	V7	2026-11-11	always not older than the row (V7); the signature
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (12) item 4	2026-11-11	a possibly revoked jti is not taken (ADR-0110 addendum (12) item 4); the exp
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (19) item 1	2026-11-11	the token is not revoked (ADR-0110 addendum (19) item 1). A revocation
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (11) item 4	2026-11-11	only the change after theft closes it. A limit (ADR-0110 addendum (11) item 4); an unreadable row
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (13) item 1	2026-11-11	up to lifetime (ADR-0110 addendum (13) item 1)
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	V4	2026-11-11	16 min after the end; V4: a planned change
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	V4	2026-11-11	DELETE does not reach it, the window of 3600 s became 10 years;
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	V5; Quint M12 N10; ADR-0110 addendum (13) items 5, 6	2026-11-11	not rights. V5: the limit of Quint M12 N10 (P/08.8 N1.8) for the kinds keep grew to KEEP_OLD (ADR-0110 addendum (13) items 5, 6)
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0113	2026-11-11	from 80 %: a limit until the layout of ADR-0113. The path
+P/08.2-R010	spec/08.2-domain.norms.md#N1.6a	ADR-0110 addendum (20) item 2, addendum (21)	2026-11-11	waits for expiry — a limit (ADR-0110 addendum (20) item 2, addendum (21))
+P/08.2-R013	spec/08.2-domain.norms.md#N3	review analysis of stage A 8–10, № 13 / decision 2	2026-11-11	(moved there without a change; the step numbers are the former ones; review analysis of stage A 8–10, № 13 / decision 2). Vectors —
+P/08.2-R014	spec/08.2-domain.norms.md#N3	review analysis of stage B 3–5, V1	2026-11-11	«The check» (moved there without a change; the step numbers
+P/08.2-R014	spec/08.2-domain.norms.md#N3	review analysis of stage B 3–5, V1	2026-11-11	are the former ones; review analysis of stage B 3–5, V1). Vectors — [`common/vectors/domain-token`](../../common/vectors/domain-token/README.md).
+P/08.2-R015	spec/08.2-domain.norms.md#N3	review analysis of stage A 8–10, № 12	2026-11-11	«Envelope `x25519:v1`» (review analysis of stage A 8–10, № 12).
+P/08.2-R016	spec/08.2-domain.norms.md#N3	the move of lesson 8	2026-11-11	Moved into the chapter of the late layer [P/02.4]
+P/08.2-R016	spec/08.2-domain.norms.md#N3	review analysis of stage A 8–10, № 17	2026-11-11	the interrupted installation (review analysis of stage A 8–10, № 17). The side
+P/08.2-R018	spec/08.2-domain.norms.md#N3	C08-COLDSTART-READ-01	2026-11-11	opened by its own ring (C08-COLDSTART-READ-01).
+P/08.2-R018	spec/08.2-domain.norms.md#N3	V7 item 3; the Architect's decision of 2026-10-28; P1; row 32 of the list	2026-10-28	(the outcome of the family `keys`; V7 item 3, the Architect's decision of 2026-10-28, P1; row 32 of the list)
+P/08.2-R019	spec/08.2-domain.norms.md#N3	the Architect's decision of 2026-11-01; C08-ROTATE-BATCH-01	2026-11-01	the guard domain/signer-turn; the Architect's decision of 2026-11-01, C08-ROTATE-BATCH-01)
+P/08.2-R020	spec/08.2-domain.norms.md#N3	the Architect's decision of 2026-11-01; C08-ROTATE-BATCH-01	2026-11-01	the guard domain/signer-turn; the Architect's decision of 2026-11-01, C08-ROTATE-BATCH-01)
+P/08.2-R019	spec/08.2-domain.norms.md#N3	C08-ROTATE-BATCH-01	2026-11-11	one more new key (C08-ROTATE-BATCH-01).
+P/08.2-R020	spec/08.2-domain.norms.md#N3	C08-BOOK-SEAL-BREAK-01; C08-ROTATE-BATCH-01	2026-11-11	one more new seed (C08-BOOK-SEAL-BREAK-01, C08-ROTATE-BATCH-01).
+P/08.2-R020	spec/08.2-domain.norms.md#N3	C08-REVOKED-MEMBERS-WRITER-01	2026-11-11	([chapter 8.3](08.3-domain.norms.md)) (C08-REVOKED-MEMBERS-WRITER-01).
+P/08.2-R021	spec/08.2-domain.norms.md#N3	Quint M13 N13; C08-SIGNER-BATCH-01	2026-11-11	in the memory of the operation (Quint M13 N13, C08-SIGNER-BATCH-01)
+P/08.2-R021	spec/08.2-domain.norms.md#N3	ADR-0113 addendum (17)	2026-11-11	would serve the thief as a source (ADR-0113 addendum (17));
+P/08.2-R021	spec/08.2-domain.norms.md#N3	C08-GUARD-THEFTS-01	2026-11-11	the domain key set contract «The follow set»; C08-GUARD-THEFTS-01);
+P/08.2-R021	spec/08.2-domain.norms.md#N3	the reconciliation of M11, I4	2026-11-11	a refusal, nothing changes (added by the reconciliation of M11, I4)}
+P/08.2-R021	spec/08.2-domain.norms.md#N3	C08-STOLEN-KEY-ENTRY-01	2026-11-11	the Entry is written by chapter 8.8 N1.2 (C08-STOLEN-KEY-ENTRY-01)
+P/08.2-R021	spec/08.2-domain.norms.md#N3	ADR-0110 addendum (21)	2026-11-11	would hold the 409 of revocation for years (ADR-0110 addendum (21));
+P/08.2-R021	spec/08.2-domain.norms.md#N3	ADR-0110 addendum (22), (24)	2026-11-11	«Revocations» merge; ADR-0110 addendum (22), (24))
+P/08.2-R021	spec/08.2-domain.norms.md#N3	C08-KEYS-CLAIM-BATCH-01; C08-SIGNER-BATCH-01	2026-11-11	(chapter 8.8 N1.8 step 8; C08-KEYS-CLAIM-BATCH-01, C08-SIGNER-BATCH-01)
+P/08.2-R021	spec/08.2-domain.norms.md#N3	C08-BOOK-SEAL-BREAK-01; C08-KEYS-CLAIM-BATCH-01; C08-SIGNER-BATCH-01	2026-11-11	neither they nor the set are written (C08-BOOK-SEAL-BREAK-01, C08-KEYS-CLAIM-BATCH-01, C08-SIGNER-BATCH-01).
+P/08.2-R022	spec/08.2-domain.norms.md#N4	the move of lesson 8	2026-11-11	N4 (moved with the installation).
+-	spec/08.2-domain.norms.md#N5	C08-CMD-OUTPUT-OK-01	2026-11-11	the command does not print it (C08-CMD-OUTPUT-OK-01).
+-	spec/08.2-domain.norms.md#N5	ADR-0091 addendum (18) item 1, addendum (19) item 1	2026-11-11	# ADR-0091 addendum (18) item 1, addendum (19) item 1)
+-	spec/08.2-domain.norms.md#N5	the reconciliation of M11, T4	2026-11-11	the input is not in the form, code 2 (added by the reconciliation of M11, T4)
+-	spec/08.2-domain.norms.md#N5	review analysis of stage B 8–10, № 22: M-2	2026-11-11	«The check» expect; review analysis of stage B 8–10, № 22: M-2)
+-	spec/08.2-domain.norms.md#implementation-decides	C08-ROTATE-CALL-01	2026-11-11	acceptance does not call them (N5; C08-ROTATE-CALL-01);
+-	spec/08.2-domain.norms.md#implementation-decides	the move of lesson 8	2026-11-11	«Implementation decides» (moved with the installation; the stand of chapter 8.3
+-	spec/08.2-domain.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-11-11	findings and window records refer to (ADR-0080 addendum 6):
+-	spec/08.2-domain.norms.md#readiness-checklist	the reconciliation of M11, I3	2026-11-11	(N1.1 `mode`, the reconciliation of M11, I3)
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/2-10; review analysis of stage A 8–10, № 17	2026-11-11	— by reading (from item M11/2-10, review analysis of stage A 8–10, № 17); the stand
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 02, 03	2026-11-11	(../../common/vectors/keys/README.md) (M11/02 sc. 02, 03); the field
+-	spec/08.2-domain.norms.md#readiness-checklist	review analysis of stage A 8–10, № 21	2026-11-11	(P/08.1-11; review analysis of stage A 8–10, № 21)
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 02	2026-11-11	— vectors `keys` (M11/02 sc. 02); admission
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 01	2026-11-11	— vectors `keys` (M11/02 sc. 01); the rule
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 04–07	2026-11-11	(../../common/vectors/domain-token/README.md) (M11/02 sc. 04–07)
+-	spec/08.2-domain.norms.md#readiness-checklist	ADR-0074 addendum 7	2026-11-11	(strictly, ADR-0074 addendum 7)
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 07	2026-11-11	— vectors `domain-token` (M11/02 sc. 07); the writer
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 04	2026-11-11	(`token-15`, M11/02 sc. 04)
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 08–10	2026-11-11	`x25519-open` (M11/02 sc. 08–10)
+-	spec/08.2-domain.norms.md#readiness-checklist	M11/02 sc. 11	2026-11-11	`x25519-round` (M11/02 sc. 11)
+-	spec/08.2-domain.norms.md#readiness-checklist	the reconciliation of M11, I4; M11/2-10; review analysis of stage A 8–10, № 17	2026-11-11	none — a refusal without a change — the reconciliation of M11, I4, from item M11/2-10, review analysis of stage A 8–10, № 17);
+-	spec/08.2-domain.norms.md#readiness-checklist	ADR-0110 addendum (10)–(16)	2026-11-11	tokens `keep` N1.6a (ADR-0110 addendum (10)–(16)):
+-	acceptance/2/README.md#intro	ADR-0121	2026-11-11	for people, not in the export (ADR-0121).
+-	spec/08.2-domain.norms.md#readiness-checklist	Quint property RV	2026-11-11	, RV

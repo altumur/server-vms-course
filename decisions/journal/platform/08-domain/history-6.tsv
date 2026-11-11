@@ -1,0 +1,75 @@
+req_id	file	source	date	removed
+-	spec/08.6-domain.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121).
+-	spec/08.6-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	ADR-0080; module «Platform» — ADR-0083)
+P/08.6-R002	spec/08.6-domain.norms.md#N1	the Architect's decision on the move plans of 8–10, item 3	2026-11-11	(the Architect's decision on the move plans
+P/08.6-R002	spec/08.6-domain.norms.md#N1	the Architect's decision on the move plans of 8–10, item 3	2026-11-11	of 8–10, item 3).
+P/08.6-R002	spec/08.6-domain.norms.md#N1	the answer to the note of M11 item 3	2026-11-11	(the answer to the note of M11 item 3).
+P/08.6-R003	spec/08.6-domain.norms.md#N1.1	ADR-0091 addendum (12) item 1, addendum (13) item 2, addendum (15) item 1	2026-11-11	(ADR-0091 addendum (12) item 1, addendum (13) item 2,
+P/08.6-R003	spec/08.6-domain.norms.md#N1.1	ADR-0091 addendum (12) item 1, addendum (13) item 2, addendum (15) item 1	2026-11-11	addendum (15) item 1)
+P/08.6-R003	spec/08.6-domain.norms.md#N1.1	reconciliation of M11, A7	2026-11-11	(added by the reconciliation of M11, A7)
+P/08.6-R003	spec/08.6-domain.norms.md#N1.1	reconciliation of M11, A6	2026-11-11	(added by the reconciliation of M11, A6)
+P/08.6-R004	spec/08.6-domain.norms.md#N1.2	C08-PLACEMENT-BUMP-TURN-01	2026-11-11	assignment»; C08-PLACEMENT-BUMP-TURN-01).
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	reconciliation of M11, A1	2026-11-11	(added by the
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	reconciliation of M11, A1	2026-11-11	reconciliation of M11, A1)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-KEPT-EDIT-BOUNDS-01	2026-11-11	(C08-KEPT-EDIT-BOUNDS-01);
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	ADR-0110	2026-11-11	(ADR-0110)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	reconciliation of M11, A5	2026-11-11	(added by the reconciliation of M11, A5);
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-EDIT-DOOR-ORDER-01	2026-11-11	(C08-EDIT-DOOR-ORDER-01)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	reconciliation of M11, A4	2026-11-11	(added by the reconciliation of M11, A4);
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-POST-NO-FIND-01	2026-11-11	(C08-POST-NO-FIND-01)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	reconciliation of M11	2026-11-11	(added by the reconciliation of M11)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-KEPT-EDIT-BOUNDS-01	2026-11-11	(C08-KEPT-EDIT-BOUNDS-01):
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-SECRET-REFUSAL-FORM-01	2026-11-11	(C08-SECRET-REFUSAL-FORM-01)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	ADR-0091 addendum (13) item 3, addendum (17) item 1	2026-11-11	(ADR-0091 addendum (13) item 3, addendum (17) item 1);
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	M11/1 N4	2026-11-11	(M11/1 N4):
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	ADR-0091 addendum (13) item 3, addendum (15) item 4	2026-11-11	(ADR-0091 addendum (13) item 3, addendum (15) item 4)
+P/08.6-R005	spec/08.6-domain.norms.md#N1.3	C08-KEPT-EDIT-BOUNDS-01	2026-11-11	(C08-KEPT-EDIT-BOUNDS-01)
+-	spec/08.6-domain.norms.md#N1.3a	ADR-0111 item 16	2026-11-11	(ADR-0111 item 16)
+-	spec/08.6-domain.norms.md#N1.3b	ADR-0111 item 16	2026-11-11	(ADR-0111 item 16)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	the Architect's decision on R41-09 of run 41	2026-11-11	(the Architect's decision on R41-09 of run 41)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	reconciliation of M11, A3	2026-11-11	(added by the reconciliation of M11, A3)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C08-KEPT-EDIT-BOUNDS-01	2026-11-11	domain/outcomes; C08-KEPT-EDIT-BOUNDS-01)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C08-KEPT-AT-EVICTED-01	2026-11-11	(C08-KEPT-AT-EVICTED-01);
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C09-KEPT-AT-PRECISION-01	2026-11-11	(C09-KEPT-AT-PRECISION-01)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C08-KEPT-AT-BOUND-01	2026-11-11	(C08-KEPT-AT-BOUND-01)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	ADR-0111 item 16	2026-11-11	(ADR-0111 item 16)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C08-PENDING-ROW-01	2026-11-11	(C08-PENDING-ROW-01)
+P/08.6-R008	spec/08.6-domain.norms.md#N1.4	C09-PENDING-ABSENT-01	2026-11-11	(C09-PENDING-ABSENT-01)
+P/08.6-R009	spec/08.6-domain.norms.md#N1.6	C09-KEPT-AT-PRECISION-01	2026-11-11	kept_at; C09-KEPT-AT-PRECISION-01),
+P/08.6-R009	spec/08.6-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11 05–08	2026-11-11	(the Architect's decision
+P/08.6-R009	spec/08.6-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11 05–08	2026-11-11	on the reconciliation of M11 05–08)
+P/08.6-R009	spec/08.6-domain.norms.md#N1.6	the Architect's answer of 2026-10-25 to the questions of stage 3, G-33	2026-10-25	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-33);
+P/08.6-R009	spec/08.6-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11, A8	2026-11-11	(the Architect's decision on the reconciliation of M11, A8)
+P/08.6-R010	spec/08.6-domain.norms.md#N2	C08-BODY-DENIED-01	2026-11-11	`BodyRefused`; C08-BODY-DENIED-01)
+P/08.6-R010	spec/08.6-domain.norms.md#N2	C08-PLACEMENT-NAME-409-01	2026-11-11	(C08-PLACEMENT-NAME-409-01),
+P/08.6-R010	spec/08.6-domain.norms.md#N2	C08-PLACEMENT-ORDER-01	2026-11-11	`domain/member-rows/<part>`, C08-PLACEMENT-ORDER-01)
+P/08.6-R010	spec/08.6-domain.norms.md#N2	C08-PLACEMENT-ORDER-01	2026-11-11	(C08-PLACEMENT-ORDER-01)
+P/08.6-R010	spec/08.6-domain.norms.md#N2	ADR-0091 addendum (15) item 4	2026-11-11	2a; ADR-0091 addendum (15) item 4)
+P/08.6-R012	spec/08.6-domain.norms.md#N3	C08-PLACEMENT-BUMP-TURN-01	2026-11-11	(C08-PLACEMENT-BUMP-TURN-01).
+P/08.6-R012	spec/08.6-domain.norms.md#N3	C08-PLACEMENT-AFTER-MOVE-01	2026-11-11	(C08-PLACEMENT-AFTER-MOVE-01).
+P/08.6-R012	spec/08.6-domain.norms.md#N3	C08-PLACEMENT-BUMP-FAIL-01	2026-11-11	(C08-PLACEMENT-BUMP-FAIL-01).
+P/08.6-R012	spec/08.6-domain.norms.md#N3	C08-PLACEMENT-EDIT-RETRY-01	2026-11-11	(C08-PLACEMENT-EDIT-RETRY-01).
+P/08.6-R013	spec/08.6-domain.norms.md#N3	ADR-0091 addendum (15) item 4, addendum (17) item 1	2026-11-11	repeat, ADR-0091 addendum (15) item 4, addendum (17)
+P/08.6-R013	spec/08.6-domain.norms.md#N3	ADR-0091 addendum (15) item 4, addendum (17) item 1	2026-11-11	item 1):
+P/08.6-R014	spec/08.6-domain.norms.md#N3	ADR-0094 B3; ADR-0094 addendum (14)	2026-11-11	memory»; ADR-0094 B3). A new edit takes a new key (at — N1.4; ADR-0094 addendum (14)):
+P/08.6-R014	spec/08.6-domain.norms.md#N3	reconciliation of M11	2026-11-11	(it agreed at the implementations, recorded by the reconciliation of M11).
+P/08.6-R015	spec/08.6-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5).
+-	spec/08.6-domain.norms.md#N5	the move plan of lesson 8, V5; M11/06; the Architect's decision of 2026-10-21 on the data finding of cammeta-python ac3509b	2026-10-21	(the move plan of lesson 8, V5).
+-	spec/08.6-domain.norms.md#N5	the move plan of lesson 8, V5; M11/06; the Architect's decision of 2026-10-21 on the data finding of cammeta-python ac3509b	2026-10-21	The numbers of scenarios and steps are the former numbers of the acceptance of M11/06, except sc. 03 steps 14–17 (the Architect's decision of 2026-10-21 on the data finding of cammeta-python ac3509b). The other scenarios of M11/06: 04 (`conflict`), 07
+-	spec/08.6-domain.norms.md#N5	the move plan of lesson 8, V5; M11/06; the Architect's decision of 2026-10-21 on the data finding of cammeta-python ac3509b	2026-10-21	(`outcome-refused`), 08 (`unit-door-window`) — the [acceptance of chapter 9.1](../../09-agent/acceptance/1/README.md) (the numbers are the former ones), 06
+-	spec/08.6-domain.norms.md#N5	the move plan of lesson 8, V5; M11/06; the Architect's decision of 2026-10-21 on the data finding of cammeta-python ac3509b	2026-10-21	(`shadow-and-executors`) —
+-	spec/08.6-domain.norms.md#N5	ADR-0083 addendum (13)	2026-11-11	(ADR-0083 addendum (13)).
+-	spec/08.6-domain.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6):
+-	spec/08.6-domain.norms.md#readiness-checklist	coverage audit of P/08, the second pass of Gemini	2026-11-11	(coverage audit of P/08, the second pass of Gemini);
+-	spec/08.6-domain.norms.md#readiness-checklist	M11/6-02; id-map; analysis of review of stage A 8–10, № 20	2026-11-11	(part of M11/6-02 by the `note` of the id-map, analysis of review of stage A 8–10, № 20;
+-	spec/08.6-domain.norms.md#readiness-checklist	reconciliation of M11	2026-11-11	(reconciliation of M11);
+-	spec/08.6-domain.norms.md#readiness-checklist	ADR-0091 addendum (12)–(19)	2026-11-11	(ADR-0091 addendum (12)–(19))
+-	spec/08.6-domain.norms.md#readiness-checklist	coverage audit of P/08, the second pass of Gemini	2026-11-11	(coverage audit of P/08, the second pass of Gemini)
+-	spec/08.6-domain.norms.md#readiness-checklist	step 11 of the analysis of ADR-0110	2026-11-11	until step 11 of the analysis of ADR-0110
+-	acceptance/6/README.md#intro	ADR-0121	2026-11-11	(ADR-0121).
+-	acceptance/6/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	clusters; formerly the dictionary of the M11 README of the acceptance
+-	acceptance/6/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	M11/01; the plan of the move of lesson 8, V5).
+-	acceptance/6/README.md#preparation	M11/03	2026-11-11	scenario»;
+-	acceptance/6/README.md#preparation	M11/03	2026-11-11	formerly the acceptance README of M11/03):
+-	acceptance/6/README.md#scenariostsv	ADR-0083 addendum (13)	2026-11-11	(ADR-0083 addendum (13)).
+-	acceptance/6/README.md#placement-counter-after-the-start	C08-PLACEMENT-BUMP-TURN-01	2026-11-11	N3, C08-PLACEMENT-BUMP-TURN-01)

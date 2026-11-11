@@ -1,6 +1,6 @@
 # P/08 forms and process seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). Forms express the existing norms under ADR-0125 addendum (5).
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export. Forms express the existing norms.
 
 ## Shared holder HTTP forms
 
@@ -24,13 +24,13 @@ In the password hash format, `<PBKDF2_ITERATIONS>` is a closed metavariable boun
 
 ## Refusal catalogue
 
-[refusals.tsv](refusals.tsv) preserves all 154 original N4 rows, plus two explicit first-admin operator failures from N1.9, as 178 original projections plus six explicit review refusal projections (184 total). Four-cell source rows retain cause/outcome/diagnostic/caller exactly; the third cell of 8.1 was Body. Three-cell tables in 8.4, 8.7, 8.8 and 8.9 retain word/outcome/cause, with diagnostic/caller `-`. Word is the original normative cell: its indexed tokens are not an arbitrary choice of error or reason. A projection applies under the original condition and operation.
+[refusals.tsv](refusals.tsv) preserves all 154 original N4 rows, plus two explicit first-admin operator failures from N1.9, as 178 original projections plus six explicit additional refusal projections (184 total). Four-cell source rows retain cause/outcome/diagnostic/caller exactly; the third cell of 8.1 was Body. Three-cell tables in 8.4, 8.7, 8.8 and 8.9 retain word/outcome/cause, with diagnostic/caller `-`. Word is the original normative cell: its indexed tokens are not an arbitrary choice of error or reason. A projection applies under the original condition and operation.
 
 HTTP schemas name existing lesson components. Fields list directly declared required properties; inherited/composed and conditional requirements remain the full OpenAPI and original source cells. Native form refusals and operator exits keep their original exit rules. A per-member relay refusal or a later kept-edit outcome is not a new HTTP error. The older-road success has the direct Carry and relay RelayAnswer envelopes selected by the actual operation. Dynamic Retry-After and conditional detail/reason/field remain their complete owning norms, not invented fixed header values. The existing closed error vocabulary remains data/refusal-words.tsv.
 
 ## Versioned doors
 
-[versioned-doors.tsv](versioned-doors.tsv) is the source of the former P/08.0 N1.9 table: 24 operation projections, including role lines, folders and membership. Its closed header is `method path row revision etag if_match absent_revision norm`, literal TAB. A pair method/path is unique and is an existing operation of the lesson OpenAPI. Every OpenAPI operation declaring ETag or If-Match has a row. The batch row is retained even though it declares neither header. Norm is a comma-separated nonempty list of existing req anchors of this lesson.
+[versioned-doors.tsv](versioned-doors.tsv) is the source of the P/08.0 N1.9 version table: 24 operation projections, including role lines, folders and membership. Its closed header is `method path row revision etag if_match absent_revision norm`, literal TAB. A pair method/path is unique and is an existing operation of the lesson OpenAPI. Every OpenAPI operation declaring ETag or If-Match has a row. The batch row is retained even though it declares neither header. Norm is a comma-separated nonempty list of existing req anchors of this lesson.
 
 Row has three kinds. A literal or template selects the existing version row by its family; a `<name>` placeholder is a capture of this operation's OpenAPI path. The sole exception `<part>` is the member-list shard computed by the ordinary core, not a new door parameter. `-` means no pre-existing version row at creation. `writes[]` means each individual row of a batch, never a store key. Revision is closed to doc.rev, revision, rev or `-`. The value `-` means there is no revision counter, never an implicit zero. The other values name the logical version field of the norm's decoded family, not an arbitrary expression language. Row resolution, missing/unreadable fields and all reference guards remain the ordinary family/core procedure.
 
@@ -42,7 +42,7 @@ Optional-index accepts an absent header or a double-quoted store index only; `""
 
 Absent_revision is the closed value 0 or `-`. Zero supplies revision 0 only for a confirmed absent selected row, including the first topology/shared write and the other creating/version-counter paths declared by their rows. `-` supplies no absent-row counter: the operation's own creation or missing-row rule applies. A transport error or an unconfirmed read never becomes revision 0. For writes[] this policy is per write. Row=- and writes[] are distinct even when If-Match is ignored.
 
-The metadata belongs to core; there is no new KIT_PARTS value. The old four English source cells were checked once, without loss, during the move; they are not a second normative source column.
+The metadata belongs to core; there is no new KIT_PARTS value.
 
 ## Seams and stages
 
@@ -71,7 +71,7 @@ Each case has a new temporary root and valid neutral background: catalogue, doma
 | `domain-turn-write` | Inject an unknown outcome at a real turn-guarded row batch. Observe entry to the process barrier and absence of an unexamined repeated write; recovery still follows the existing turn/store read procedure. |
 | `domain-turn-release` | Run the actual SIGTERM release path. Replace the owned turn with a real different owner/version before its release CAS. The new owner is preserved; the test does not use an unconditional clear. |
 
-The review neighbours use the same actual implementation paths. `domain-versioned-edit` also runs role-lines and folder/membership HTTP operations, reads actual store indexes, and retries the same saved request after a committed lost answer; it never synthesizes revision for membership. Folder deletion is verified against the actual tombstone and its ETag.
+The seams `domain-role-http` and `domain-person-login` below and the additional operations of `domain-versioned-edit` use the same actual implementation paths. `domain-versioned-edit` also runs role-lines and folder/membership HTTP operations, reads actual store indexes, and retries the same saved request after a committed lost answer; it never synthesizes revision for membership. Folder deletion is verified against the actual tombstone and its ETag.
 
 `domain-role-http` invokes ordinary authenticated role POST/PUT/GET/DELETE and batch handlers, the real spread pass, the real member copy receiver and its local `may`. Fixtures seed valid neutral users/groups/roles, live folders and confirmed member rows. No fixture bypasses the tested door. Read back actual supervision after each write. Counters observe actual target writes, not only response codes.
 

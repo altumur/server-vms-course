@@ -1,14 +1,13 @@
 # Acceptance P/08.8 — term, backup, move and handover
 
-This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The stand and the dictionary of directives and doors are the section «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md#domain-stand)
-(before the merge, the dictionary of the M11 README of the acceptance M11/01).
+The stand and the dictionary of directives and doors are the section «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md#domain-stand).
 The norm of the chapter is [`08.8-domain.norms.md`](../../spec/08.8-domain.norms.md) N5.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario»; from the acceptance README of M11/03).
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Preparation of each scenario»).
 The doors `holder`, `holder@<cluster>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
 the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
@@ -28,4 +27,4 @@ In total 13 scenarios / 122 steps.
 
 ## Kit seams
 
-[CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) (judge-only: the seams of chapter 8.8; they check N1.5 `raw`, N1.6 `stranded`, N1.7 `order` steps 2 and 6 and the target restore exclusion of N1.7) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

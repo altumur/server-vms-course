@@ -1,15 +1,14 @@
 # Acceptance P/08.10 — the queue and the price
 
-This English text is the source; the Russian translation `ru/acceptance/10/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/10/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
-(a stand of several clusters; formerly the dictionary of the M11 README of the acceptance M11/01). The norm of the chapter is
+(a stand of several clusters). The norm of the chapter is
 [`08.10-domain.norms.md`](../../spec/08.10-domain.norms.md) N5. There are no vectors: the chapter introduces no new functions.
 
 ## Stand
 
-The preparation is as the «Preparation of each scenario» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of M11/03,
-«Setup of each scenario 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
+The preparation is as the «Preparation of each scenario» of the acceptance of [chapter 8.3](../3/README.md), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
 the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@start domain second`, `@on`, `@freeze`, `@thaw` are the dictionary of the
 «Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
 `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `TURN_TERM` 45 s.
@@ -25,4 +24,4 @@ In total 6 scenarios / 56 steps.
 
 ## Kit seams
 
-[5 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[5 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.10 N1.7 and N3) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

@@ -1,10 +1,10 @@
 # The process domain — lesson P/08
 
-This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-A micromodule: the process domain of the holder. What it norms and from where — the module design note `Platform/module-design.md` (for people, not in the export), the table «Lessons».
+A micromodule: the process domain of the holder. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people, not in the export), the table «Lessons».
 
-The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`). The lesson is assembled from the holder sides of lessons M11/1–12; the sides of the agent and
+The layout of the catalogue (the English source on the canonical path, the Russian text for people in `ru/`). The lesson covers the holder side; the sides of the agent and
 of the relay — lesson P/09, of the domain console — lesson P/10, the late layer of the cluster console — [chapter 6.7](../06-console/spec/06.7-console.norms.md).
 The lesson has no library contract — it is a process with an HTTP door (`SIGNER_URL`). The common algorithms of the lesson are the contracts
 `common/contracts/` (`keys`, `domain-token`, `domain-envelopes`, `accept`, `may`, `record`, `ask-sig`) and their vectors
@@ -27,7 +27,7 @@ spec/08-domain.api.openapi.yaml       doors (one contract of the lesson)
 spec/08-domain.README.md              implementation instructions
 lifecycle.md                          flags, environment, exit codes, units
 data/<family>.schema.json, .layers.tsv, .outcomes.tsv
-                                      data families the lesson owns (JSON Schema 2020-12, ADR-0092; ADR-0088): idem (8.0); view, shadow,
+                                      data families the lesson owns (JSON Schema 2020-12): idem (8.0); view, shadow,
                                       view-rows, member-tables, ref-claims (8.1); keys, root, signer, signer-pending, book-seal, revoked,
                                       issued (8.2); members, member-report, member-report-delta, member-reported, member-ca-certs, topology,
                                       batches, knocks, member-count, relay-members (8.3); users, deleting, disabled, grants, break-glass,
@@ -36,7 +36,7 @@ data/<family>.schema.json, .layers.tsv, .outcomes.tsv
                                       placement, placement-record, pending, outcomes (8.6); holder, keepers, backups, stranded,
                                       backup-parts, from-nothing, move-ask, partial (8.8); shared, shared-docs, alarm-history (8.9);
                                       signer-turn (8.10)
-data/refusal-words.tsv                the closed list of error words by the doors of the process (ADR-0094 B5)
+data/refusal-words.tsv                the closed list of error words by the doors of the process
 vectors/<algorithm>/                  vectors: view (8.1), assemble (8.5), issue (8.7)
 acceptance/<K>/                       acceptance of chapter K: 1, 3 … 10 — chapters 8.1, 8.3–8.10 (README.md, scenarios.tsv; 3/inputs/);
                                       0/ and 2/ add only kit seams; the ordinary catalogue is unchanged (8.2 — common vectors, N5)

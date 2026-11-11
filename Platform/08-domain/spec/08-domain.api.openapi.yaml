@@ -1,5 +1,5 @@
-# P/08 — doors of the domain process (SIGNER_URL): HTTP contract (one process door — one lesson contract; the move plan
-# of lesson 8 § 4). Chapters refer to their paths (the description of each path names its chapter): 8.3 — /api/member/{member},
+# P/08 — doors of the domain process (SIGNER_URL): HTTP contract (one process door — one lesson contract).
+# Chapters refer to their paths (the description of each path names its chapter): 8.3 — /api/member/{member},
 # /api/carry/{member}, /api/relay/{relay}, /domain/members, /domain/members/{name}, /domain/members/{member}/ca,
 # /domain/topology; 8.4 — /api/login, /domain/users, /domain/users/{name}, /domain/groups, /domain/groups/{name}, /domain/roles,
 # /domain/roles/{name}, /domain/roles/{role}/lines, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
@@ -10,21 +10,20 @@
 # lesson P/10 refers by $ref), the input and output of the view command; 8.10 — 409 and 413 of the ceilings at the paths of 8.3, 503 standby at every door.
 # The process's own doors (class signed: /api/member, /api/carry, /api/relay, /api/tokens) — 4 operations; the doors that are passed
 # to the process — listed by paths below, including HEAD (the domain console — the paths below and HEAD at GET /domain/users, /domain/groups, /domain/roles, /domain/break-glass; the cluster console — 3:
-# /api/prepare, /api/take, POST /domain/move; chapter 8.0 N2; analysis of review of stage B 8–10, № 22: M-6); every operation has an operationId: the OpenAPI of lesson 10 refers to the answers of these operations (decision
-# of the Architect of 2026-10-20 on plans 8–10, item 9). The contract carries only the codes of the process (transition 3 of the forwarding contract
-# Platform/common/contracts/forwarding.md «Refusals by transition»; analysis of review of stage A 8–10, decision 3): the codes of the N3 doors,
+# /api/prepare, /api/take, POST /domain/move; chapter 8.0 N2); every operation has an operationId: the OpenAPI of lesson 10 refers to the answers of these operations.
+# The contract carries only the codes of the process (transition 3 of the forwarding contract
+# Platform/common/contracts/forwarding.md «Refusals by transition»): the codes of the N3 doors,
 # 401/403 of its own check of identity and grant (chapter 8.4 N1.5), 409 deposed (chapter 8.8), 503 frozen (chapter 8.8) and standby
 # (chapter 8.10); the codes of transitions 1 and 2 (forwarding by the cluster console, acceptance and passing by the domain console: 404, 502, 400/408/413
 # of reading the body, the gate of the console) — OpenAPI 06 (chapter 6.7) and 10, not listed here; there is no Forwarded answer.
-# Merged from the contracts M11/1, M11/3, M11/4, M11/6, M11/7, M11/8, M11/9, M11/10, M11/11 (the domain process side) — stage B,
-# without a change of behaviour; the contract is brought to the norms of the chapters (check of the contract against the norms of P/08, move of lesson 8): Publication —
+# The contract is the side of the domain process and follows the norms of the chapters: Publication —
 # fields outside the delta no stricter than 8.3 N1.2 out_of_delta; MembersDoc — with term (8.3 N1.1; the form of the row, not a door answer),
-# MembersAnswer {rev, members} — the 200 answer of the member doors 8.3 N2 (addition of the Architect to № 8 of the analysis of review of stage B 8–10),
-# MembersView — without a required term (P/10 N2; analysis of review of stage B 8–10, № 8); at the people doors (8.4 N2) 413 and 503
+# MembersAnswer {rev, members} — the 200 answer of the member doors 8.3 N2,
+# MembersView — without a required term (P/10 N2); at the people doors (8.4 N2) 413 and 503
 # standby/unavailable are process codes; at the edit doors — 503 frozen (8.8 N1.7), at the GET people doors — 503 standby (8.0 N2);
 # TopologyEdit.centre — "" and null remove the centre (8.3 N1.2); Entry.how — the three forms of 8.3 N1.1; HolderRecord — url non-empty,
 # ca without repeats (the term record contract, function record step 1); PersonName — whitespace per Unicode White_Space, not \s
-# of ECMA-262. Generation and Mark are not moved: they are store objects, their forms — the families member-report, member-reported (ADR-0088).
+# of ECMA-262. Generation and Mark are not in the contract: they are store objects, their forms — the families member-report, member-reported.
 # PeerInput and PeerOutput — the peer contract (P/09); the paths of the view, the list, the topology, the placements, the grants and the shared document for
 # reading are answered by the domain console itself — lesson P/10 (the schemas of their answers are here, P/10 refers by $ref).
 openapi: 3.1.0
@@ -79,9 +78,9 @@ paths:
           $ref: '#/components/responses/RefusedPlain'
         '409':
           description: 'rebase, same_sent_at or not_ready (the report intake contract); deposed of a displaced holder with the record of the new one
-            (P/08.8 N1.6; added in M11/10); the record of the first key of the holder (P/08.3 N3 «the holder in the list» step 2) would break
+            (P/08.8 N1.6); the record of the first key of the holder (P/08.3 N3 «the holder in the list» step 2) would break
             every_entry — {error: refused, detail: "the entry of <member> would exceed 1240 bytes"} without reason, no mark
-            (P/08.10 N1.5; C08-MEMBER-409-ENTRY-01)'
+            (P/08.10 N1.5)'
           content:
             application/json:
               schema:
@@ -103,7 +102,7 @@ paths:
                         not: {required: [reason]}
                   - $ref: '#/components/schemas/Deposed'
         '413':
-          description: 'Body larger than BODY_LIMIT — {error: denied} before parsing (C08-BODY-DENIED-01); a whole generation larger than BODY_LIMIT — {error: "whole too large"} (P/08.10 N1.5; added in M11/12)'
+          description: 'Body larger than BODY_LIMIT — {error: denied} before parsing; a whole generation larger than BODY_LIMIT — {error: "whole too large"} (P/08.10 N1.5)'
           content:
             application/json:
               schema:
@@ -151,8 +150,8 @@ paths:
     post:
       operationId: relayBatch
       summary: Relay batch — the reports of the members behind it and knocks
-      description: 'Order of refusals (N2; C08-G06): 413 body larger than BATCH_LIMIT — before parsing (the report intake contract
-        «The relay batch: limits»; C08-G05); 400 not a batch; 404 the relay is not a member — without a signature check and without a knock; 403
+      description: 'Order of refusals (N2): 413 body larger than BATCH_LIMIT — before parsing (the report intake contract
+        «The relay batch: limits»); 400 not a batch; 404 the relay is not a member — without a signature check and without a knock; 403
         a member without key in Entry («the key is not in the entry»); 403 the key is wrong or revoked; 401 the signature by the key of the entry; 409 deposed;
         503 standby.'
       parameters:
@@ -212,7 +211,7 @@ paths:
         '403': {$ref: '#/components/responses/TokenRefused'}
         '404': {$ref: '#/components/responses/TokenRefused'}
         '409':
-          description: 'no_centre (N3 «issue») or deposed of a displaced holder (P/08.8 N1.6; added in M11/10)'
+          description: 'no_centre (N3 «issue») or deposed of a displaced holder (P/08.8 N1.6)'
           content:
             application/json:
               schema:
@@ -222,7 +221,7 @@ paths:
         '413': {$ref: '#/components/responses/TokenRefused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/verify:
-    description: 'Chapter 8.4 (08.4-domain.norms.md) N1.2a, N1.10 verify, N2 (ADR-0119); passed by the domain console — POST /domain/verify
+    description: 'Chapter 8.4 (08.4-domain.norms.md) N1.2a, N1.10 verify, N2; passed by the domain console — POST /domain/verify
       of the list of domain doors, only by ticket (the forwarding contract «Ticket on forwarding»). There is no token, cookie or session.'
     post:
       operationId: verify
@@ -265,7 +264,7 @@ paths:
     post:
       operationId: login
       summary: Login of a person (N1.2)
-      description: 'iat is the confirmed credential read time before unlocked PBKDF2; exp=iat+TOKEN_LIFETIME. A too-long issuance refuses with 401 refused and asks for a new request, never a refreshed iat (P08 review C5).'
+      description: 'iat is the confirmed credential read time before unlocked PBKDF2; exp=iat+TOKEN_LIFETIME. A too-long issuance refuses with 401 refused and asks for a new request, never a refreshed iat.'
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
       requestBody:
@@ -342,7 +341,7 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          description: 'N3 «admit a member» steps 1–6, detail — the words of the steps (P/08.3 N3): step 5a — «this name''s row is full: pick another name», «too many servers», «this name''s section is near the book ceiling: pick another name»; step 5b — «a domain of this size needs <n> backup holders: add a server first», relay full; step 6 — «the entry of <name> would exceed 1240 bytes» (ENTRY_MAX, P/08.10 N1.5), «the list of members kept changing; look again»; deposed (P/08.8 N1.6); ADR-0113 addendum (47) item 5'
+          description: 'N3 «admit a member» steps 1–6, detail — the words of the steps (P/08.3 N3): step 5a — «this name''s row is full: pick another name», «too many servers», «this name''s section is near the book ceiling: pick another name»; step 5b — «a domain of this size needs <n> backup holders: add a server first», relay full; step 6 — «the entry of <name> would exceed 1240 bytes» (ENTRY_MAX, P/08.10 N1.5), «the list of members kept changing; look again»; deposed (P/08.8 N1.6)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -433,7 +432,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/topology:
-    description: 'Chapter 8.3 N1.2 put_order, N2. GET and HEAD are answered by the domain console itself (lesson P/10; schema — Topology). At PUT 503 unavailable — also when the row domain/topology cannot be read, nothing is written (C08-TOPOLOGY-PUT-UNREADABLE-01).'
+    description: 'Chapter 8.3 N1.2 put_order, N2. GET and HEAD are answered by the domain console itself (lesson P/10; schema — Topology). At PUT 503 unavailable — also when the row domain/topology cannot be read, nothing is written.'
     put:
       operationId: topologyPut
       summary: Topology edit against the read revision
@@ -526,7 +525,7 @@ paths:
                 properties:
                   deleted: {type: string}
         '400':
-          description: 'ref not by the name grammar of P/06.1 N1.3 named, including with «/» (chapter 8.6 N1.1 ref; analysis of review of stage B 8–10, № 7).'
+          description: 'ref not by the name grammar of P/06.1 N1.3 named, including with «/» (chapter 8.6 N1.1 ref).'
           $ref: '#/components/responses/Refused'
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -769,7 +768,7 @@ paths:
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: memberRow
-      summary: Row of a part at the request of a member (the report intake contract; ADR-0113)
+      summary: Row of a part at the request of a member (the report intake contract)
       responses:
         '200': {$ref: '#/components/responses/HolderMembersResponse'}
         '429': {$ref: '#/components/responses/Busy'}
@@ -792,7 +791,7 @@ paths:
       - {name: part, in: path, required: true, schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}}
     get:
       operationId: bookAllPartPerson
-      summary: Part of the book to "*" for a person (chapter 8.5 N2; ADR-0113 addendum (26) item 2)
+      summary: Part of the book to "*" for a person (chapter 8.5 N2)
       responses:
         '200': {description: '{items}'}
         '401': {$ref: '#/components/responses/Refused'}
@@ -812,7 +811,7 @@ paths:
       responses:
         '200': {$ref: '#/components/responses/HolderBookPartResponse'}
         '404':
-          description: 'reason: empty_part — there is no row of the part, the head of the current term is written, the copy is removed; the head is not written — 503 unavailable, the copy is kept (ADR-0113 addendum (47) item 1); not_a_book — the book is not to "*"; without reason — not a member (P/08.3 N2).'
+          description: 'reason: empty_part — there is no row of the part, the head of the current term is written, the copy is removed; the head is not written — 503 unavailable, the copy is kept; not_a_book — the book is not to "*"; without reason — not a member (P/08.3 N2).'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -847,7 +846,7 @@ paths:
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: topologyBody
-      summary: Body of the member topology {doc, via} at a new sha256 of the topology field of the answer (chapter 8.3 N1.2 carry; ADR-0113 addendum (47) item 3)
+      summary: Body of the member topology {doc, via} at a new sha256 of the topology field of the answer (chapter 8.3 N1.2 carry)
       responses:
         '200': {$ref: '#/components/responses/HolderTopologyResponse'}
         '429': {$ref: '#/components/responses/Busy'}
@@ -923,7 +922,7 @@ paths:
         '200': {description: '{revoked}'}
         '404': {$ref: '#/components/responses/Refused'}
         '409':
-          description: 'too many revocations — the row domain/revoked is full, nothing is written, the row domain/issued stays (chapter 8.2 N1.6a; ADR-0110 addendum (19) item 1)'
+          description: 'too many revocations — the row domain/revoked is full, nothing is written, the row domain/issued stays (chapter 8.2 N1.6a)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -1083,7 +1082,7 @@ paths:
         - $ref: '#/components/parameters/XW2CClient'
       requestBody:
         required: false
-        description: 'The body is empty or {}; anything else — 400 (N1.3; added by the M11 check, A1)'
+        description: 'The body is empty or {}; anything else — 400 (N1.3)'
         content:
           application/json:
             schema: {type: object, maxProperties: 0, additionalProperties: false}
@@ -1259,7 +1258,7 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '503':
-          description: 'unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9; analysis of review of stage A 8–10, № 38); frozen (P/08.8 N1.7); standby (P/08.10 N1.7)'
+          description: 'unavailable — three CAS conflicts of the grant row, the mark stays (N3 «people door» step 9); frozen (P/08.8 N1.7); standby (P/08.10 N1.7)'
           content:
             application/json:
               schema:
@@ -1588,7 +1587,7 @@ paths:
         '412': {$ref: '#/components/responses/RevisionMoved'}
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/batch:
-    description: 'Chapter 8.4 N1.9 pass, N2 «Batch door», N1.3c batch_diff (ADR-0098 §6).'
+    description: 'Chapter 8.4 N1.9 pass, N2 «Batch door», N1.3c batch_diff.'
     post:
       operationId: domainBatch
       summary: People, groups, roles and grants of one snapshot — one write (N2)
@@ -1730,7 +1729,7 @@ paths:
                     type: object
                     additionalProperties:
                       type: object
-                      description: 'the row of the cluster is unreadable — the key stays, no set_at: {} (N1.6, G-23, C08-BREAK-GLASS-UNREAD-KEY-01)'
+                      description: 'the row of the cluster is unreadable — the key stays, no set_at: {} (N1.6)'
                       additionalProperties: false
                       properties:
                         set_at: {type: number}
@@ -1837,7 +1836,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
         '409':
-          description: 'too many revocations — the row domain/revoked is full, nothing is written (N1.2 revoke; chapter 8.2 N1.6a; ADR-0110 addendum (19) item 1); deposed'
+          description: 'too many revocations — the row domain/revoked is full, nothing is written (N1.2 revoke; chapter 8.2 N1.6a); deposed'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -1908,7 +1907,7 @@ paths:
   /domain/move:
     description: 'Chapter 8.8 N1.8, N2; passed to the process of the target by the cluster console (forwarding to the signer) — the process does not read X-W2C-Client
       here; identity and the admin grant of the target cluster are checked by the cluster console (OpenAPI of lesson 6 POST /domain/move;
-      chapter P/06.7), which passes the proven name in the header X-W2C-User (the by of the journal domain.moved; C08-MOVED-BY-01); the door accepts only a connection of the console of its own cluster, otherwise 403 (P/08.8 N1.8 order step 0); signature by the root — by_file, step 4a.'
+      chapter P/06.7), which passes the proven name in the header X-W2C-User (the by of the journal domain.moved); the door accepts only a connection of the console of its own cluster, otherwise 403 (P/08.8 N1.8 order step 0); signature by the root — by_file, step 4a.'
     post:
       operationId: move
       parameters:
@@ -1928,7 +1927,7 @@ paths:
                 recovery: {type: string, description: Text of the recovery file of chapter 8.2 N1.1.}
                 stolen: {type: boolean}
                 copy: {$ref: '#/components/schemas/Pair'}
-                why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D    -     　﻿][\\s\\S]*)$", description: 'At least one non-whitespace character (N1.8 copy; added by the M11 check, H18). Without copy — permission to move «from nothing», when no backup has been received (N1.8 step 6; added by the Quint model of M11, ER).'}
+                why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D    -     　﻿][\\s\\S]*)$", description: 'At least one non-whitespace character (N1.8 copy). Without copy — permission to move «from nothing», when no backup has been received (N1.8 step 6).'}
       responses:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
@@ -1958,7 +1957,7 @@ paths:
                   sealed:
                     type: array
                     minItems: 1
-                    description: 'N1.8 step 7: the state items whose secret did not open — not restored; by (key, item). None such — no field (added by the M11 check, H15).'
+                    description: 'N1.8 step 7: the state items whose secret did not open — not restored; by (key, item). None such — no field.'
                     items:
                       type: object
                       required: [key, item, why]
@@ -2004,7 +2003,7 @@ paths:
                   rev: {type: integer, minimum: 1}
                   to: {$ref: '#/components/schemas/MemberName'}
                   stranded:
-                    description: 'N1.6 stranded; no field — the collection failed, the divergences are unknown; [] — there are no divergences (C08-HANDOVER-STRANDED-UNKNOWN-01).'
+                    description: 'N1.6 stranded; no field — the collection failed, the divergences are unknown; [] — there are no divergences.'
                     type: array
                     items: {$ref: '#/components/schemas/StrandedItem'}
         '400': {$ref: '#/components/responses/Refused'}
@@ -2055,7 +2054,7 @@ paths:
               schema: {$ref: '#/components/schemas/Refusal'}
         '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /domain/shared:
-    description: 'Chapter 8.9 (08.9-domain.norms.md) N1.3, N2; the domain console passes it to the process (ADR-0032; chapter 8.0 N1.8). GET and
+    description: 'Chapter 8.9 (08.9-domain.norms.md) N1.3, N2; the domain console passes it to the process (chapter 8.0 N1.8). GET and
       HEAD are answered by the domain console itself (lesson P/10; schemas — SharedDoc, Delivery).'
     put:
       operationId: sharedPut
@@ -2101,7 +2100,7 @@ components:
       description: >-
         TCP peer address of the client: set by the domain console when passing an edit to the process domain; the process reads it only on a
         connection of the role domainconsole, on the others it does not read it (P/08.0 N1.8; Platform/common/contracts/forwarding.md
-        «Client address»; review analysis of stage A 8–10, № 23).
+        «Client address»).
       schema: {type: string, minLength: 1}
     XW2CUser:
       name: X-W2C-User
@@ -2111,7 +2110,7 @@ components:
         Name proven to the gate of the cluster console (at the break-glass entry — the session name): set by the cluster console when
         forwarding POST /domain/move to the signer (P/06.7 N1.8); the process reads it only on a connection of the console of its own
         cluster (client certificate of the role console), on the others it does not read it; the console strips one that came from outside. by of the journal entry
-        domain.moved (P/08.8 N1.8; C08-MOVED-BY-01).
+        domain.moved (P/08.8 N1.8).
       schema: {type: string, minLength: 1}
     Member:
       name: member
@@ -2153,7 +2152,7 @@ components:
       name: Idempotency-Key
       in: header
       required: false
-      description: 'Optional at this door: absent — the pass is unchanged, a repeat is a new write; present — the repeat memory (P/08.0 N1.9; ADR-0094 B3).'
+      description: 'Optional at this door: absent — the pass is unchanged, a repeat is a new write; present — the repeat memory (P/08.0 N1.9).'
       schema: {type: string, minLength: 1, maxLength: 200}
     IfMatch:
       name: If-Match
@@ -2204,7 +2203,7 @@ components:
   responses:
     BodyRefused:
       description: 'Error reading the request body (parsing of P/01.1 N2.1 with the deviations of P/06.5 N2, N4 «body»): chunked or
-        short — 400, over the limit — 413, not read in full within BODY_WAIT — 408; body {detail, error: denied} (GP-L03; C08-BODY-DENIED-01); at the edit doors 413 also {detail, error: "too large"}: an edit larger than the row ceiling (P/08.6 N1.4 row_full).
+        short — 400, over the limit — 413, not read in full within BODY_WAIT — 408; body {detail, error: denied}; at the edit doors 413 also {detail, error: "too large"}: an edit larger than the row ceiling (P/08.6 N1.4 row_full).
         A parsed body not in the form of the door — 400 of its own row of N4 (Refused).'
       content:
         application/json:
@@ -2222,12 +2221,12 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/RevisionMoved'}
     KeyReused:
-      description: 'Another body under the same Idempotency-Key: error — key reused (P/08.0 N1.9 «Repeat memory»; ADR-0094 addendum (14)).'
+      description: 'Another body under the same Idempotency-Key: error — key reused (P/08.0 N1.9 «Repeat memory»).'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Refusal'}
     RefusedEdit409:
-      description: 'Refusal 409 of the edit door by ref (P/08.6 N4): Refusal — kept_full, «unit is being deleted», «the pending edits kept changing; ask again»; Executors — ref at two executors or more without ?cluster= (P/08.6 N3 «accept an edit» step 2a; ADR-0091 addendum (13) item 3, addendum (15) item 4); siblings — ref at several units of one member without ?id= (P/08.6 N1.3 find)'
+      description: 'Refusal 409 of the edit door by ref (P/08.6 N4): Refusal — kept_full, «unit is being deleted», «the pending edits kept changing; ask again»; Executors — ref at two executors or more without ?cluster= (P/08.6 N3 «accept an edit» step 2a); siblings — ref at several units of one member without ?id= (P/08.6 N1.3 find)'
       content:
         application/json:
           schema:
@@ -2252,7 +2251,7 @@ components:
                   items:
                     type: string
     RefusedWord:
-      description: 'Refusal of the agent doors with a word (P/08.3 N4): {error: refused, reason, detail} — at 400 not_a_publication, at 401 a word of the agent signature contract (added by the M11 reconciliation)'
+      description: 'Refusal of the agent doors with a word (P/08.3 N4): {error: refused, reason, detail} — at 400 not_a_publication, at 401 a word of the agent signature contract'
       content:
         application/json:
           schema:
@@ -2264,7 +2263,7 @@ components:
                   reason: {type: string, minLength: 1}
                 required: [reason, detail]
     RefusedPlain:
-      description: 'Refusal of the agent doors without a word (P/08.3 N4): {error: refused, detail} (added by the M11 reconciliation)'
+      description: 'Refusal of the agent doors without a word (P/08.3 N4): {error: refused, detail}'
       content:
         application/json:
           schema:
@@ -2275,7 +2274,7 @@ components:
                   error: {const: refused}
                 required: [detail]
     DeposedAgent:
-      description: 'Deposed holder on a request of an agent or a relay — {error: deposed, holder} (P/08.8 N1.6; added by M11/10)'
+      description: 'Deposed holder on a request of an agent or a relay — {error: deposed, holder} (P/08.8 N1.6)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/Deposed'}
@@ -2292,7 +2291,7 @@ components:
         application/json:
           schema: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'}
     Standby:
-      description: 'Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby; added by M11/12)'
+      description: 'Process domain without the turn domain/signer-turn — a standby one: {error: standby, detail} (P/08.10 N1.7 standby)'
       content:
         application/json:
           schema: {$ref: '#/components/schemas/StandbyBody'}
@@ -2340,7 +2339,7 @@ components:
               - {$ref: '#/components/schemas/StandbyBody'}
               - {$ref: '#/components/schemas/NotStandby'}
     StandbyOrExhausted:
-      description: 'standby (P/08.10 N1.7), the generation number is exhausted — {error: refused, reason: rev_exhausted, detail} (report intake contract, step 7; added by the M11 reconciliation, A18) — or unavailable: the mark is not readable, the read of the mark or of the generation is incomplete, the write did not pass before the mark (P/08.3 N3 «accept»; G-29, C08-ACCEPT-PARTIAL-READ-01)'
+      description: 'standby (P/08.10 N1.7), the generation number is exhausted — {error: refused, reason: rev_exhausted, detail} (report intake contract, step 7) — or unavailable: the mark is not readable, the read of the mark or of the generation is incomplete, the write did not pass before the mark (P/08.3 N3 «accept»)'
       content:
         application/json:
           schema:
@@ -2355,7 +2354,7 @@ components:
                     required: [reason, detail]
               - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
     Busy:
-      description: 'Busy: report intake contract «Busy» (ADR-0113): only class camera, after the signature, nothing is written'
+      description: 'Busy: report intake contract «Busy»: only class camera, after the signature, nothing is written'
       content:
         application/json:
           schema:
@@ -2412,7 +2411,7 @@ components:
               - {$ref: '#/components/schemas/RevisionMoved'}
               - {$ref: '#/components/schemas/DomainFolderError'}
     RestoreTarget503:
-      description: 'Existing standby/unavailable failures or occupied target restore exclusion, with no pending/restore/claim writes (P/08.8 N1.7; P08 review C1).'
+      description: 'Existing standby/unavailable failures or occupied target restore exclusion, with no pending/restore/claim writes (P/08.8 N1.7).'
       content:
         application/json:
           schema:
@@ -2470,7 +2469,7 @@ components:
       required: [error]
       additionalProperties: false
       description: 'Refusal body of a door of the process (P/08.0 N4, N4 of the door chapters): error — a word (refused, the words of chapters 8.4, 8.6 and 8.8, deposed,
-        frozen, standby, whole too large, the words of the repeat memory P/08.0 N1.9); the closed list by doors — data/refusal-words.tsv (P/08.0 N4, ADR-0094 B5); detail — at refusals where the chapter names it (at the agent doors — always); reason — a word
+        frozen, standby, whole too large, the words of the repeat memory P/08.0 N1.9); the closed list by doors — data/refusal-words.tsv (P/08.0 N4); detail — at refusals where the chapter names it (at the agent doors — always); reason — a word
         at the agent doors (P/08.3 N4, P/08.7 N4); field — JSON Pointer of the field at 400 and 409 (P/06.1 N2), at 412 — its own schema RevisionMoved; holder — only at 409 deposed'
       properties:
         error:
@@ -2532,7 +2531,7 @@ components:
         field: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'}
         holder:
           $ref: '#/components/schemas/HolderRecord'
-          description: 'at 409 deposed — the term record document of the new holder as an object (P/08.8 N1.6; added by M11/10)'
+          description: 'at 409 deposed — the term record document of the new holder as an object (P/08.8 N1.6)'
     RevisionMoved:
       type: object
       required: [detail, error, field, revision]
@@ -2566,9 +2565,9 @@ components:
       type: object
       required: [error, holder]
       additionalProperties: false
-      description: 'Refusal of a deposed holder (P/08.8 N1.6 refusal; added by M11/10): to an agent report — without detail, to an edit and
+      description: 'Refusal of a deposed holder (P/08.8 N1.6 refusal): to an agent report — without detail, to an edit and
         to a login of people — with detail «<n> held the domain at term N; <h> holds it at term M — edits go there», when its own
-        term is unknown — «<n> held the domain at an earlier term; <h> holds it at term M — edits go there» (P/08.8 N1.6; C08-DEPOSED-DETAIL-N-01)'
+        term is unknown — «<n> held the domain at an earlier term; <h> holds it at term M — edits go there» (P/08.8 N1.6)'
       properties:
         error: {const: deposed}
         detail: {type: string}
@@ -2600,7 +2599,7 @@ components:
         - properties:
             error: {const: refused}
             reason:
-              description: 'the words of P/08.7 N3 «issue»; at 401 — the words of the agent signature contract «Refusal words» (no_signature, not_a_signature, out_of_window, bad_signature; added by run 41)'
+              description: 'the words of P/08.7 N3 «issue»; at 401 — the words of the agent signature contract «Refusal words» (no_signature, not_a_signature, out_of_window, bad_signature)'
               enum: [bad_request, by_misplaced, not_granted, assignment_unreadable, no_assignment, outside_scope,
                      unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience,
                      no_centre, no_signature, not_a_signature, out_of_window, bad_signature]
@@ -2774,7 +2773,7 @@ components:
               type: array
               items:
                 $ref: '#/components/parameters/Part/schema'
-            age: {type: number, minimum: 0, description: 'field of the door of lesson P/10: seconds since as_of by the wall clock of the domain console, one digit after the point (P/10 N1.2a; review analysis of stage B 8–10, № 22: M-7)'}
+            age: {type: number, minimum: 0, description: 'field of the door of lesson P/10: seconds since as_of by the wall clock of the domain console, one digit after the point (P/10 N1.2a)'}
             trust: {description: 'P/08.1 N1.2a: {rev, root, book_seal}; fingerprint — chapter 8.2 N1.1'}
             knocking_count: {type: integer, minimum: 0, description: 'P/08.1 N1.4b.'}
             backup_short:
@@ -2797,7 +2796,7 @@ components:
                   - {type: integer, minimum: 0}
                   - {type: 'null'}
               description: 'P/08.6 N1.6: {<member>: <number of pending edits>} — every member of the list, 0 — no pending ones; null — the row
-                of pending edits of the member is not readable (common output rule, answer of the Architect 2026-10-25 to the questions of stage 3, G-33)'
+                of pending edits of the member is not readable (common output rule)'
             outcomes:
               type: object
               additionalProperties:
@@ -2885,7 +2884,7 @@ components:
                       type: ['integer', 'null']
                       minimum: 1
                       maximum: 9007199254740991
-                      description: rev of the mark reported (chapter 8.3 N1.3) or null — no mark; greater than 2^53 − 1 — input not in form (code 2; added by the M11 reconciliation, V7).
+                      description: rev of the mark reported (chapter 8.3 N1.3) or null — no mark; greater than 2^53 − 1 — input not in form (code 2).
                     objects:
                       type: object
                       additionalProperties: true
@@ -2893,7 +2892,7 @@ components:
                     silent_after:
                       type: number
                       minimum: 0
-                      description: 'Native view camera selector and silence period (P/08.1 N2, G08-VIEW-CAMERA-INPUT-01): an explicit field models a camera, with receipt time seeded by at of its first existing-mark look; age up to this threshold is ok, above it silent. Absent — a server, LOST_AFTER and unseen until an observed mark change. This native abstraction does not replace runtime Entry.class and reported.received_at; heartbeat timestamps are not receipt times.'
+                      description: 'Native view camera selector and silence period (P/08.1 N2): an explicit field models a camera, with receipt time seeded by at of its first existing-mark look; age up to this threshold is ok, above it silent. Absent — a server, LOST_AFTER and unseen until an observed mark change. This native abstraction does not replace runtime Entry.class and reported.received_at; heartbeat timestamps are not receipt times.'
                     stale:
                       type: array
                       items: {type: string}
@@ -2902,7 +2901,7 @@ components:
                 type: ['object', 'null']
                 description: '{<sub>: {<ref>: <member> | {cluster, copies?, origin?}}} — assignments of chapter 8.6 N1.1; a name — the same as {cluster: name, copies: []};
                   null — the assignments of this pass are not read (P/08.1 N3 step 3a: no exception executors, the shadow report of the pass is not
-                  built; ADR-0091 addendum (13) item 1, addendum (15) item 3).'
+                  built).'
                 additionalProperties:
                   type: object
                   additionalProperties:
@@ -2911,7 +2910,7 @@ components:
                       - $ref: '#/components/schemas/MemberName'
                       - type: object
                         required: [cluster]
-                        description: 'copies absent — empty (N5; run 41)'
+                        description: 'copies absent — empty (N5)'
                         additionalProperties: false
                         properties:
                           cluster: {$ref: '#/components/schemas/MemberName'}
@@ -2920,7 +2919,7 @@ components:
                             items: {$ref: '#/components/schemas/MemberName'}
                           origin:
                             $ref: '#/components/schemas/MemberName'
-                            description: 'the member owning the source (chapter 8.6 N1.1); absent — none; does not change the executors (ADR-0091 addendum (15) item 1)'
+                            description: 'the member owning the source (chapter 8.6 N1.1); absent — none; does not change the executors'
     ViewOutput:
       type: object
       description: 'Not HTTP: output of the command view (P/08.1 N5) — the view and the shadow report of the last pass of the input.'
@@ -2958,7 +2957,7 @@ components:
       description: 'Body of POST /api/member — publication P/09.1 N1.2 (the original of the body form; the agent — chapter 9.1). base 0 or absent — the body
         is whole; deleted — only at base > 0. Fields outside the delta (stale, tls_ca, tls_ca_certs, sign_failures, members_rev, class, batch) — any
         value: not in the form of its norm — the field is not taken, the holder journal, the report is accepted (P/08.3 N1.2 out_of_delta, family
-        member-report-delta; reconciliation of the contract with the norms of P/08, transfer of lesson 8).'
+        member-report-delta).'
       required: [sent_at, objects, key]
       additionalProperties: false
       properties:
@@ -2981,9 +2980,9 @@ components:
           description: 'P/08.6 N1.5: elements of the row domain/outcomes of the member — {<id>: <outcome>}, the outcome as a JSON object.'
           additionalProperties: {$ref: '#/components/schemas/Outcome'}
         tls_ca:
-          description: 'Outside the delta (out_of_delta): form — a list of strings, fingerprints of ca.pem and ca.next.pem of the cluster ascending (P/08.3 N1.6); not a list of strings — the field is not taken; length, repetition and fingerprint form are checked by the holder (on_accept), a mismatch — journal domain.member.ca.refused, the report is accepted (the decision of the Architect on the M11 reconciliation, D10).'
+          description: 'Outside the delta (out_of_delta): form — a list of strings, fingerprints of ca.pem and ca.next.pem of the cluster ascending (P/08.3 N1.6); not a list of strings — the field is not taken; length, repetition and fingerprint form are checked by the holder (on_accept), a mismatch — journal domain.member.ca.refused, the report is accepted.'
         tls_ca_certs:
-          description: 'Outside the delta (out_of_delta): form — a list of strings, PEM of the certificates of the centres of tls_ca in the same order, sha256(DER) — the fingerprint at the same place; only together with tls_ca (P/08.3 N1.6); not a list of strings — the field is not taken, the rest — on_accept (M11 reconciliation, D10).'
+          description: 'Outside the delta (out_of_delta): form — a list of strings, PEM of the certificates of the centres of tls_ca in the same order, sha256(DER) — the fingerprint at the same place; only together with tls_ca (P/08.3 N1.6); not a list of strings — the field is not taken, the rest — on_accept.'
         sign_failures:
           description: 'Outside the delta (out_of_delta): form — {domain?: integer ≥ 1, console?: integer ≥ 1}, not empty — requests that the agent has not sent since start because it could not sign them (P/08.3 N1.6a; the agent side — P/09.1 N1.12); not in it — the field is not taken.'
         members_rev:
@@ -3062,7 +3061,7 @@ components:
           type: object
           required: [doc]
           additionalProperties: false
-          description: 'Row domain/member-rows/<part> (MembersDoc as text) — only to a lagging one: members_rev of the publication is absent or not equal to (term, rev) of the holder (P/08.3 N1.4a; added by M11/12); at GET /api/carry — always; no field — no changes.'
+          description: 'Row domain/member-rows/<part> (MembersDoc as text) — only to a lagging one: members_rev of the publication is absent or not equal to (term, rev) of the holder (P/08.3 N1.4a); at GET /api/carry — always; no field — no changes.'
           properties:
             doc: {type: string}
         holder:
@@ -3102,7 +3101,7 @@ components:
         placement: {$ref: '#/components/schemas/CarryPlacement'}
         pending:
           type: array
-          description: 'P/08.6 N1.4 — pending edits of this member by seq; [] — no pending ones; no field — the row was not read (C09-PENDING-ABSENT-01).'
+          description: 'P/08.6 N1.4 — pending edits of this member by seq; [] — no pending ones; no field — the row was not read.'
           items: {$ref: '#/components/schemas/KeptEdit'}
         shared: {$ref: '#/components/schemas/CarryShared'}
         backup: {$ref: '#/components/schemas/CarryBackup'}
@@ -3116,8 +3115,8 @@ components:
         relayed:
           type: object
           description: 'Names — by MemberName at the writer (relay P/09.2); the holder refuses a name not by the grammar in
-            refused[<name as received>], the batch lives on (P/08.3 N3 «the holder on POST /api/relay» step 2, H1) — so the schema
-            of the batch does not judge names (C08-RELAY-BATCH-FORM-01)'
+            refused[<name as received>], the batch lives on (P/08.3 N3 «the holder on POST /api/relay» step 2) — so the schema
+            of the batch does not judge names'
           additionalProperties:
             type: object
             additionalProperties: true
@@ -3126,7 +3125,7 @@ components:
           type: object
           description: 'The writer (relay P/09.2 N1.4 knocks) writes a knock like this: the name — MemberName, the value — {publication:
             string ≤ 256 KiB, signature: string}, without other fields; the holder skips a knock not in this form without a write,
-            the batch lives on (P/08.3 N3 step 3, H2) — so the schema of the batch does not judge knocks (C08-RELAY-BATCH-FORM-01)'
+            the batch lives on (P/08.3 N3 step 3) — so the schema of the batch does not judge knocks'
           additionalProperties: true
     RelayAnswer:
       type: object
@@ -3304,7 +3303,7 @@ components:
       - rev
       - members
       additionalProperties: false
-      description: 'Answer 200 of the doors POST, DELETE /domain/members and POST /domain/members/{member}/ca — {part, rev, members}, a closed form (P/08.3 N2); not MembersDoc: MembersDoc — the form of the row domain/member-rows/<part>, does not serve as a door answer (addition of the Architect to № 8 of the review analysis of stage B 8–10).'
+      description: 'Answer 200 of the doors POST, DELETE /domain/members and POST /domain/members/{member}/ca — {part, rev, members}, a closed form (P/08.3 N2); not MembersDoc: MembersDoc — the form of the row domain/member-rows/<part>, does not serve as a door answer.'
       properties:
         rev:
           type: integer
@@ -3393,7 +3392,7 @@ components:
       properties:
         base_rev: {type: integer, minimum: 0}
         centre:
-          description: 'centre; "" or null removes the centre (P/08.3 N1.2 centre; added by the M11 reconciliation, T2)'
+          description: 'centre; "" or null removes the centre (P/08.3 N1.2 centre)'
           anyOf:
             - {$ref: '#/components/schemas/MemberName'}
             - {const: ''}
@@ -3596,7 +3595,7 @@ components:
         index: {type: string}
     MayInput:
       type: object
-      description: 'Not HTTP: input of the function may (may contract Platform/common/contracts/may.md; P/08.4 N1.4; vectors common/vectors/may). Extra top-level fields are not read, not refused; known and nested forms are validated in full before glass/disabled. HTTP request forms are separate (G08-MAY-EXTRA-01).'
+      description: 'Not HTTP: input of the function may (may contract Platform/common/contracts/may.md; P/08.4 N1.4; vectors common/vectors/may). Extra top-level fields are not read, not refused; known and nested forms are validated in full before glass/disabled. HTTP request forms are separate.'
       required: [grants, as_of, disabled, user, glass, cap, unit, now]
       additionalProperties: true
       properties:
@@ -3621,7 +3620,7 @@ components:
                         properties:
                           scope:
                             not: {pattern: '^(?:labels:[\s\S]*)$'}
-                    description: 'Trusted native input: a role line cannot use a labels scope, also for unit any; complete form before evaluation (G08-MAY-ANY-ROLE-LABELS-01).'
+                    description: 'Trusted native input: a role line cannot use a labels scope, also for unit any; complete form before evaluation.'
         anywhere:
           type: object
           additionalProperties: {type: number, minimum: 0}
@@ -3738,12 +3737,12 @@ components:
       required: [cluster]
       additionalProperties: false
       description: 'Body of PUT /domain/placement/{sub}/{ref} (P/08.6 N1.1, N2). The schema judges the outer form (400); a name of a non-member,
-        including one not by the grammar of MemberName, — 409 by N2 (C08-PLACEMENT-NAME-409-01).'
+        including one not by the grammar of MemberName, — 409 by N2.'
       properties:
         cluster: {type: string, minLength: 1, description: 'member (MemberName); not a member — 409'}
         origin:
           type: string
-          description: 'the member owning the source; "" — remove the source (N1.1; run 41 R41-10); non-empty and not a member — 409'
+          description: 'the member owning the source; "" — remove the source (N1.1); non-empty and not a member — 409'
         copies:
           type: array
           uniqueItems: true
@@ -3767,7 +3766,7 @@ components:
       description: Pending edit (P/08.6 N1.4) — element of the field pending of the holder answer.
       properties:
         id: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
-        seq: {type: integer, minimum: 1, description: 'order of acceptance (P/08.6 N1.4; run 41 R41-09)'}
+        seq: {type: integer, minimum: 1, description: 'order of acceptance (P/08.6 N1.4)'}
         what: {type: string}
         method: {enum: [POST, PUT, DELETE]}
         path: {type: string, minLength: 1}
@@ -3872,7 +3871,7 @@ components:
         key: {type: string}
         value:
           type: ['string', 'null']
-          description: 'The value of the element as stored; a secret changed — "<secret: differs>"; null — the element is absent in the state of the deposed one (deletion, and for a secret); "" — an empty value (P/08.8 N1.6 stranded; the decision of the Architect on cammeta-go M11-10 № 16).'
+          description: 'The value of the element as stored; a secret changed — "<secret: differs>"; null — the element is absent in the state of the deposed one (deletion, and for a secret); "" — an empty value (P/08.8 N1.6 stranded).'
     # --- chapter 8.9: shared document ---
     SharedDoc:
       type: object
