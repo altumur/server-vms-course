@@ -1,9 +1,8 @@
 # Vectors: the command line `exec`
 
-This English text is the source; the Russian translation `ru/vectors/exec/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/exec/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The owner is chapter [P/02.1](../../spec/02.1-installer.norms.md) of the loader (N1.3 `worker.exec`, the definition `execLine`; ADR-0091
-addendum (4)–(6)). The participants are the loader (a refusal of the manifest with the key path) and the runner `w2c-run.sh` ([P/02.4](../../spec/02.4-installer.norms.md)
+The owner is chapter [P/02.1](../../spec/02.1-installer.norms.md) of the loader (N1.3 `worker.exec`, the definition `execLine`). The participants are the loader (a refusal of the manifest with the key path) and the runner `w2c-run.sh` ([P/02.4](../../spec/02.4-installer.norms.md)
 N1.9: `worker`, `domainworker`, `part` execute argv themselves, without a shell). The bytes are written by the Specification.
 
 ## `cases.tsv`
@@ -20,4 +19,4 @@ The side parses `exec` with its own code of the loader or of the runner and comp
 
 ## Vector wire
 
-The wire of `cases.tsv` is set by the `02-installer/exec` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.1-34) is set by the `02-installer/exec` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

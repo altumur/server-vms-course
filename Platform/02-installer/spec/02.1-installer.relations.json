@@ -498,7 +498,7 @@
    "path": "placement.unplaced.delete_after",
    "relation": "@unit.id != numeric",
    "class": "value",
-   "norm": "ADR-0067; P/02.1 N1.2a unplaced",
+   "norm": "P/02.1 N1.2a unplaced",
    "cel": "((type(doc) == map && \"placement\" in doc) ? ((type(doc[\"placement\"]) == map && \"unplaced\" in doc[\"placement\"]) ? ((type(doc[\"placement\"][\"unplaced\"]) == map && \"delete_after\" in doc[\"placement\"][\"unplaced\"]) ? ((doc[\"placement\"][\"unplaced\"][\"delete_after\"] != null && !(!(((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"id\" in doc[\"unit\"] && doc[\"unit\"][\"id\"] != null) && doc[\"unit\"][\"id\"] == \"numeric\")))) ? [{\"p\": [\"placement\", \"unplaced\", \"delete_after\"]}] : []) : []) : []) : [])",
    "own": []
   },
@@ -660,7 +660,7 @@
    "path": "display.fields.{}",
    "relation": ". in keys(unit.fields) | keys(tables.*.fields) | <t>.<field> tables.$t.fields | values(display.form[].status[].field) | {worker, server, revision, observed_revision, phase, id}",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0115 addendum (4) item 1",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"fields\" in doc[\"display\"]) ? (type(doc[\"display\"][\"fields\"]) == map ? dyn(doc[\"display\"][\"fields\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(((type(doc) == map && \"unit\" in doc && (type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && ((type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k2, k2 == k1)) || (type(doc[\"unit\"][\"fields\"]) == list && dyn(doc[\"unit\"][\"fields\"]).exists(e3, (type(e3) == string && e3 == k1)))))) || (type(doc) == map && \"tables\" in doc && (type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k4, (type(doc[\"tables\"][k4]) == map && \"fields\" in doc[\"tables\"][k4] && ((type(doc[\"tables\"][k4][\"fields\"]) == map && dyn(doc[\"tables\"][k4][\"fields\"]).exists(k5, k5 == k1)) || (type(doc[\"tables\"][k4][\"fields\"]) == list && dyn(doc[\"tables\"][k4][\"fields\"]).exists(e6, (type(e6) == string && e6 == k1)))))))) || (type(doc) == map && \"display\" in doc && (type(doc[\"display\"]) == map && \"form\" in doc[\"display\"] && (type(doc[\"display\"][\"form\"]) == list && dyn(doc[\"display\"][\"form\"]).exists(e7, (type(e7) == map && \"status\" in e7 && (type(e7[\"status\"]) == list && dyn(e7[\"status\"]).exists(e8, (type(e8) == map && \"field\" in e8 && ((e8[\"field\"] != null && type(e8[\"field\"]) != map && type(e8[\"field\"]) != list) && e8[\"field\"] == k1))))))))) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && ((type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1))) || (type(doc[\"tables\"][t9][\"fields\"]) == list && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1))))))) || (\"worker\" == k1 || \"server\" == k1 || \"revision\" == k1 || \"observed_revision\" == k1 || \"phase\" == k1 || \"id\" == k1)))) ? [{\"p\": [\"display\", \"fields\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -669,7 +669,7 @@
    "path": "display.field_help.{}",
    "relation": ". in keys(unit.fields) | keys(tables.*.fields) | <t>.<field> tables.$t.fields | values(display.form[].status[].field) | {worker, server, revision, observed_revision, phase, id}",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0115 addendum (4) item 1",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"field_help\" in doc[\"display\"]) ? (type(doc[\"display\"][\"field_help\"]) == map ? dyn(doc[\"display\"][\"field_help\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(((type(doc) == map && \"unit\" in doc && (type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && ((type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k2, k2 == k1)) || (type(doc[\"unit\"][\"fields\"]) == list && dyn(doc[\"unit\"][\"fields\"]).exists(e3, (type(e3) == string && e3 == k1)))))) || (type(doc) == map && \"tables\" in doc && (type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k4, (type(doc[\"tables\"][k4]) == map && \"fields\" in doc[\"tables\"][k4] && ((type(doc[\"tables\"][k4][\"fields\"]) == map && dyn(doc[\"tables\"][k4][\"fields\"]).exists(k5, k5 == k1)) || (type(doc[\"tables\"][k4][\"fields\"]) == list && dyn(doc[\"tables\"][k4][\"fields\"]).exists(e6, (type(e6) == string && e6 == k1)))))))) || (type(doc) == map && \"display\" in doc && (type(doc[\"display\"]) == map && \"form\" in doc[\"display\"] && (type(doc[\"display\"][\"form\"]) == list && dyn(doc[\"display\"][\"form\"]).exists(e7, (type(e7) == map && \"status\" in e7 && (type(e7[\"status\"]) == list && dyn(e7[\"status\"]).exists(e8, (type(e8) == map && \"field\" in e8 && ((e8[\"field\"] != null && type(e8[\"field\"]) != map && type(e8[\"field\"]) != list) && e8[\"field\"] == k1))))))))) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && ((type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1))) || (type(doc[\"tables\"][t9][\"fields\"]) == list && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1))))))) || (\"worker\" == k1 || \"server\" == k1 || \"revision\" == k1 || \"observed_revision\" == k1 || \"phase\" == k1 || \"id\" == k1)))) ? [{\"p\": [\"display\", \"field_help\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -678,7 +678,7 @@
    "path": "display.options.{}",
    "relation": ". in values(display.form[].status[].field) | keys(unit.fields ? has enum | has schema.enum) | <t>.<field> tables.$t.fields ? has enum | has schema.enum",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0115 addendum (4) item 1",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"options\" in doc[\"display\"]) ? (type(doc[\"display\"][\"options\"]) == map ? dyn(doc[\"display\"][\"options\"]).map(k1, (((k1 != null && type(k1) != map && type(k1) != list) && !((type(doc) == map && \"display\" in doc && (type(doc[\"display\"]) == map && \"form\" in doc[\"display\"] && (type(doc[\"display\"][\"form\"]) == list && dyn(doc[\"display\"][\"form\"]).exists(e2, (type(e2) == map && \"status\" in e2 && (type(e2[\"status\"]) == list && dyn(e2[\"status\"]).exists(e3, (type(e3) == map && \"field\" in e3 && ((e3[\"field\"] != null && type(e3[\"field\"]) != map && type(e3[\"field\"]) != list) && e3[\"field\"] == k1))))))))) || (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k4, (k4 == k1 && (type(doc[\"unit\"][\"fields\"][k4]) == map && (\"enum\" in doc[\"unit\"][\"fields\"][k4] || (\"schema\" in doc[\"unit\"][\"fields\"][k4] && type(doc[\"unit\"][\"fields\"][k4][\"schema\"]) == map && \"enum\" in doc[\"unit\"][\"fields\"][k4][\"schema\"])))))) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1 && (type(doc[\"tables\"][t9][\"fields\"][f9]) == map && (\"enum\" in doc[\"tables\"][t9][\"fields\"][f9] || (\"schema\" in doc[\"tables\"][t9][\"fields\"][f9] && type(doc[\"tables\"][t9][\"fields\"][f9][\"schema\"]) == map && \"enum\" in doc[\"tables\"][t9][\"fields\"][f9][\"schema\"])))))))))) ? [{\"p\": [\"display\", \"options\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -687,7 +687,7 @@
    "path": "display.options.$o.{}",
    "relation": "when $o in keys(unit.fields) | <t>.<field> tables.$t.fields & $o not in values(display.form[].status[].field) : . in text($o.enum[] | $o.schema.enum[])",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0115 addendum (4) item 1",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"options\" in doc[\"display\"]) ? (type(doc[\"display\"][\"options\"]) == map ? dyn(doc[\"display\"][\"options\"]).map(k1, (type(doc[\"display\"][\"options\"][k1]) == map ? dyn(doc[\"display\"][\"options\"][k1]).map(k2, (((k2 != null && type(k2) != map && type(k2) != list) && !(type(doc) == map && \"display\" in doc && (type(doc[\"display\"]) == map && \"form\" in doc[\"display\"] && (type(doc[\"display\"][\"form\"]) == list && dyn(doc[\"display\"][\"form\"]).exists(e2, (type(e2) == map && \"status\" in e2 && (type(e2[\"status\"]) == list && dyn(e2[\"status\"]).exists(e3, (type(e3) == map && \"field\" in e3 && ((e3[\"field\"] != null && type(e3[\"field\"]) != map && type(e3[\"field\"]) != list) && e3[\"field\"] == k1))))))))) && (((type(doc) == map && \"unit\" in doc && (type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && ((type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k3, k3 == k1)) || (type(doc[\"unit\"][\"fields\"]) == list && dyn(doc[\"unit\"][\"fields\"]).exists(e4, (type(e4) == string && e4 == k1)))))) && !(((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && type(doc[\"unit\"][\"fields\"]) == map && k1 in doc[\"unit\"][\"fields\"]) ? text(((type(doc[\"unit\"][\"fields\"][k1]) == map && \"enum\" in doc[\"unit\"][\"fields\"][k1] && type(doc[\"unit\"][\"fields\"][k1][\"enum\"]) == list) ? dyn(doc[\"unit\"][\"fields\"][k1][\"enum\"]).filter(v9, (v9 != null && type(v9) != map && type(v9) != list)) : []) + ((type(doc[\"unit\"][\"fields\"][k1]) == map && \"schema\" in doc[\"unit\"][\"fields\"][k1] && type(doc[\"unit\"][\"fields\"][k1][\"schema\"]) == map && \"enum\" in doc[\"unit\"][\"fields\"][k1][\"schema\"] && type(doc[\"unit\"][\"fields\"][k1][\"schema\"][\"enum\"]) == list) ? dyn(doc[\"unit\"][\"fields\"][k1][\"schema\"][\"enum\"]).filter(v9, (v9 != null && type(v9) != map && type(v9) != list)) : [])) : []).exists(t7, t7 == k2))) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == k1 && !(text(((type(doc[\"tables\"][t9][\"fields\"][f9]) == map && \"enum\" in doc[\"tables\"][t9][\"fields\"][f9] && type(doc[\"tables\"][t9][\"fields\"][f9][\"enum\"]) == list) ? dyn(doc[\"tables\"][t9][\"fields\"][f9][\"enum\"]).filter(v9, (v9 != null && type(v9) != map && type(v9) != list)) : []) + ((type(doc[\"tables\"][t9][\"fields\"][f9]) == map && \"schema\" in doc[\"tables\"][t9][\"fields\"][f9] && type(doc[\"tables\"][t9][\"fields\"][f9][\"schema\"]) == map && \"enum\" in doc[\"tables\"][t9][\"fields\"][f9][\"schema\"] && type(doc[\"tables\"][t9][\"fields\"][f9][\"schema\"][\"enum\"]) == list) ? dyn(doc[\"tables\"][t9][\"fields\"][f9][\"schema\"][\"enum\"]).filter(v9, (v9 != null && type(v9) != map && type(v9) != list)) : [])).exists(t7, t7 == k2))))))))) ? [{\"p\": [\"display\", \"options\", k1, k2]}] : [])) : [])) : []) : []) : [])",
    "own": [
     "text"
@@ -745,7 +745,7 @@
    "path": "requests.outcome",
    "relation": "when . = fetched : exists @requests.key",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0054",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"requests\" in doc) ? ((type(doc[\"requests\"]) == map && \"outcome\" in doc[\"requests\"]) ? ((doc[\"requests\"][\"outcome\"] != null && doc[\"requests\"][\"outcome\"] == \"fetched\" && !((type(doc) == map && \"requests\" in doc && type(doc[\"requests\"]) == map && \"key\" in doc[\"requests\"] && doc[\"requests\"][\"key\"] != null))) ? [{\"p\": [\"requests\", \"outcome\"]}] : []) : []) : [])",
    "own": []
   },
@@ -846,7 +846,7 @@
    "path": "worker.deletes[]",
    "relation": ". = @unit.rows",
    "class": "reference",
-   "norm": "P/02.1 N1.4; ADR-0067",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"worker\" in doc) ? ((type(doc[\"worker\"]) == map && \"deletes\" in doc[\"worker\"]) ? (type(doc[\"worker\"][\"deletes\"]) == list ? dyn(doc[\"worker\"][\"deletes\"]).transformList(i1, e2, ((e2 != null && type(e2) != map && type(e2) != list && !(((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] != null) && e2 == doc[\"unit\"][\"rows\"]))) ? [{\"p\": [\"worker\", \"deletes\", i1]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -1192,7 +1192,7 @@
    "path": "holds.table",
    "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
    "class": "value",
-   "norm": "ADR-0094 step 3b; the Architect's decision of 2026-10-31",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"holds\" in doc) ? ((type(doc[\"holds\"]) == map && \"table\" in doc[\"holds\"]) ? ((doc[\"holds\"][\"table\"] != null && type(doc[\"holds\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"holds\"][\"table\"]) && type(doc[\"tables\"][doc[\"holds\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"holds\"][\"table\"]])) ? [{\"p\": [\"holds\", \"table\"]}] : []) : []) : [])",
    "own": []
   },
@@ -1201,7 +1201,7 @@
    "path": "placement.places.table",
    "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
    "class": "value",
-   "norm": "ADR-0094 step 3b; the Architect's decision of 2026-10-31",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"placement\" in doc) ? ((type(doc[\"placement\"]) == map && \"places\" in doc[\"placement\"]) ? ((type(doc[\"placement\"][\"places\"]) == map && \"table\" in doc[\"placement\"][\"places\"]) ? ((doc[\"placement\"][\"places\"][\"table\"] != null && type(doc[\"placement\"][\"places\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"placement\"][\"places\"][\"table\"]) && type(doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]])) ? [{\"p\": [\"placement\", \"places\", \"table\"]}] : []) : []) : []) : [])",
    "own": []
   },
@@ -1210,7 +1210,7 @@
    "path": "door.pass.routes[]",
    "relation": "split(. \"/\" 0) not in values(door.routes[]) | values(door.routes[].name) | {@unit.rows, where}",
    "class": "reference",
-   "norm": "ADR-0094 B1; P/02.1 N1.4; P/06.5 N1.8",
+   "norm": "P/02.1 N1.4; P/06.5 N1.8",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"routes\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"routes\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"routes\"]).transformList(i1, e2, ((type(e2) == string && ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list && dyn(doc[\"door\"][\"routes\"]).exists(e3, (type(e3) == string && e3 == e2.split(\"/\")[0]) || (type(e3) == map && \"name\" in e3 && e3[\"name\"] == e2.split(\"/\")[0]))) || (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == e2.split(\"/\")[0]) || \"where\" == e2.split(\"/\")[0])) ? [{\"p\": [\"door\", \"pass\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1219,7 +1219,7 @@
    "path": "door.pass.stream[]",
    "relation": ". under door.pass.routes[]",
    "class": "reference",
-   "norm": "ADR-0094 B1; P/02.1 N1.4; P/06.5 N1.8",
+   "norm": "P/02.1 N1.4; P/06.5 N1.8",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"stream\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"stream\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"stream\"]).transformList(i1, e2, ((type(e2) == string && !(type(doc[\"door\"][\"pass\"][\"routes\"]) == list && dyn(doc[\"door\"][\"pass\"][\"routes\"]).exists(e3, type(e3) == string && (e3 == e2 || e2.startsWith(e3 + \"/\"))))) ? [{\"p\": [\"door\", \"pass\", \"stream\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1228,7 +1228,7 @@
    "path": "door.pass.wait",
    "relation": "keys(.) under door.pass.routes[]",
    "class": "reference",
-   "norm": "ADR-0094 B1; P/02.1 N1.4; P/06.5 N1.8",
+   "norm": "P/02.1 N1.4; P/06.5 N1.8",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"wait\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"wait\"]) == map ? dyn(doc[\"door\"][\"pass\"][\"wait\"]).map(k1, (!(type(doc[\"door\"][\"pass\"][\"routes\"]) == list && dyn(doc[\"door\"][\"pass\"][\"routes\"]).exists(e3, type(e3) == string && (e3 == k1 || k1.startsWith(e3 + \"/\")))) ? [{\"p\": [\"door\", \"pass\", \"wait\", k1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1237,7 +1237,7 @@
    "path": "door.pass.calls[]",
    "relation": "when split(. \"/\" 0) = console : . = console/batch",
    "class": "value",
-   "norm": "ADR-0094 B1; P/02.1 N1.4; P/06.5 N1.8",
+   "norm": "P/02.1 N1.4; P/06.5 N1.8",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == \"console\" && e2 != \"console/batch\") ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1246,7 +1246,7 @@
    "path": "door.pass.calls[]",
    "relation": "when split(. \"/\" 0) = @name : split(. \"/\" 1) in {@unit.rows, policy, next_id, operations, requests} | keys(tables)",
    "class": "reference",
-   "norm": "ADR-0094 B1; P/02.1 N1.4; P/06.5 N1.8",
+   "norm": "P/02.1 N1.4; P/06.5 N1.8",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && type(doc) == map && \"name\" in doc && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == doc[\"name\"] && !(\"operations\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"requests\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"policy\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"next_id\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || (\"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1]) || (\"tables\" in doc && type(doc[\"tables\"]) == map && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] in doc[\"tables\"]))) ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1255,7 +1255,7 @@
    "path": "door.pass.operations.step",
    "relation": "split(. \"/\" 0) not in values(door.routes[]) | values(door.routes[].name) | {@unit.rows, where, operations} | first(door.pass.routes[])",
    "class": "reference",
-   "norm": "ADR-0095 §8; P/02.1 N1.4; P/06.9 N1.1",
+   "norm": "P/02.1 N1.4; P/06.9 N1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"]) == map && \"step\" in doc[\"door\"][\"pass\"][\"operations\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]) == string && ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list && dyn(doc[\"door\"][\"routes\"]).exists(e3, (type(e3) == string && e3 == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || (type(e3) == map && \"name\" in e3 && e3[\"name\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]))) || (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || \"where\" == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0] || \"operations\" == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0] || (type(doc[\"door\"][\"pass\"][\"routes\"]) == list && dyn(doc[\"door\"][\"pass\"][\"routes\"]).exists(e4, type(e4) == string && e4.split(\"/\")[0] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0])))) ? [{\"p\": [\"door\", \"pass\", \"operations\", \"step\"]}] : []) : []) : []) : []) : [])",
    "own": []
   },
@@ -1264,7 +1264,7 @@
    "path": "door.pass.calls[]",
    "relation": "when split(. \"/\" 1) = operations : split(. \"/\" 0) = @name, door.pass.operations",
    "class": "reference",
-   "norm": "ADR-0095 §8; P/02.1 N1.4; P/06.9 N1.1",
+   "norm": "P/02.1 N1.4; P/06.9 N1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] == \"operations\" && !(\"name\" in doc && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == doc[\"name\"] && \"operations\" in doc[\"door\"][\"pass\"])) ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1273,7 +1273,7 @@
    "path": "door.pass.routes[]",
    "relation": "when door.pass.operations : split(. \"/\" 0) != operations",
    "class": "reference",
-   "norm": "ADR-0095 §8; P/02.1 N1.4; P/06.9 N1.1",
+   "norm": "P/02.1 N1.4; P/06.9 N1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"routes\" in doc[\"door\"][\"pass\"] && type(doc[\"door\"][\"pass\"][\"routes\"]) == list) ? dyn(doc[\"door\"][\"pass\"][\"routes\"]).transformList(i1, e2, ((type(e2) == string && e2.split(\"/\")[0] == \"operations\") ? [{\"p\": [\"door\", \"pass\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1282,7 +1282,7 @@
    "path": "door.routes[]",
    "relation": "when door.pass.operations : . != operations, .name != operations",
    "class": "reference",
-   "norm": "ADR-0095 §8; P/02.1 N1.4; P/06.9 N1.1",
+   "norm": "P/02.1 N1.4; P/06.9 N1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list) ? dyn(doc[\"door\"][\"routes\"]).transformList(i1, e2, (((type(e2) == string && e2 == \"operations\") || (type(e2) == map && \"name\" in e2 && e2[\"name\"] == \"operations\")) ? [{\"p\": [\"door\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   },
@@ -1471,7 +1471,7 @@
    "path": "domain.tokens.$k.lifetime",
    "relation": "when @domain.tokens.$k.keep != true : . <= 86400",
    "class": "value",
-   "norm": "ADR-0110 addendum (16) item 3",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && !(\"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true) && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(dyn(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"])) > 86400.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -1480,7 +1480,7 @@
    "path": "domain.books.$b.stale",
    "relation": "when . = true : @domain.books.$b.to = \"*\"",
    "class": "value",
-   "norm": "ADR-0113 addenda (31)–(33); P/08.5 N1.3 to_all",
+   "norm": "P/08.5 N1.3 to_all",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"books\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"books\"]) == map ? dyn(doc[\"domain\"][\"books\"]).map(k1, ((type(doc[\"domain\"][\"books\"][k1]) == map && \"stale\" in doc[\"domain\"][\"books\"][k1] && doc[\"domain\"][\"books\"][k1][\"stale\"] == true && !(\"to\" in doc[\"domain\"][\"books\"][k1] && doc[\"domain\"][\"books\"][k1][\"to\"] == \"*\")) ? [{\"p\": [\"domain\", \"books\", k1, \"stale\"]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -1489,7 +1489,7 @@
    "path": "display.form[].status[].field",
    "relation": ". not in <t>.<field> tables.$t.fields",
    "class": "reference",
-   "norm": "ADR-0115 addendum (6) item 3; P/02.1 N1.4",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"form\" in doc[\"display\"]) ? (type(doc[\"display\"][\"form\"]) == list ? dyn(doc[\"display\"][\"form\"]).transformList(i1, e2, ((type(e2) == map && \"status\" in e2) ? (type(e2[\"status\"]) == list ? dyn(e2[\"status\"]).transformList(i3, e4, ((type(e4) == map && \"field\" in e4 && type(e4[\"field\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && ((type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == e4[\"field\"]))) || (type(doc[\"tables\"][t9][\"fields\"]) == list && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == e4[\"field\"])))))))) ? [{\"p\": [\"display\", \"form\", i1, \"status\", i3, \"field\"]}] : [])) : []) : [])) : []) : []) : [])",
    "own": []
   },
@@ -1498,7 +1498,7 @@
    "path": "display.tables.{}",
    "relation": ". in keys(tables) | values(tables[])",
    "class": "reference",
-   "norm": "ADR-0115 addendum (11); P/02.1 N1.4",
+   "norm": "P/02.1 N1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"tables\" in doc[\"display\"]) ? (type(doc[\"display\"][\"tables\"]) == map ? dyn(doc[\"display\"][\"tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, t9 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e9, (type(e9) == string && e9 == k1)))))) ? [{\"p\": [\"display\", \"tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
@@ -1507,7 +1507,7 @@
    "path": "placement.retire_when.delete_after",
    "relation": "when @unit.id = numeric & !protected_manual : absent placement.retire_when.delete_after",
    "class": "value",
-   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "norm": "P/02.1 N1.4",
    "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && !(((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))) && (\"placement\" in doc && type(doc.placement) == map && \"retire_when\" in doc.placement && type(doc.placement.retire_when) == map && \"delete_after\" in doc.placement.retire_when)) ? [{\"p\":[\"placement\",\"retire_when\",\"delete_after\"]}] : []",
    "own": []
   },
@@ -1516,7 +1516,7 @@
    "path": "worker.deletes[]",
    "relation": "@unit.id != numeric",
    "class": "value",
-   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "norm": "P/02.1 N1.4",
    "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && (\"worker\" in doc && type(doc.worker) == map && \"deletes\" in doc.worker && type(doc.worker.deletes) == list)) ? dyn(doc.worker.deletes).transformList(i, e, [{\"p\":[\"worker\",\"deletes\",i]}]) : []",
    "own": []
   },
@@ -1525,7 +1525,7 @@
    "path": "placement.ends",
    "relation": "when @unit.id = numeric & !protected_manual : absent placement.ends",
    "class": "value",
-   "norm": "ADR-0127 P/06 C3; P/02.1 N1.4",
+   "norm": "P/02.1 N1.4",
    "cel": "((\"unit\" in doc && type(doc.unit) == map && \"id\" in doc.unit && doc.unit.id == \"numeric\") && !(((\"fields\" in doc.unit && type(doc.unit.fields) == map && doc.unit.fields.exists(f, type(doc.unit.fields[f]) == map && \"fixed\" in doc.unit.fields[f] && doc.unit.fields[f].fixed == true)) || (\"about\" in doc && type(doc.about) == map && \"field\" in doc.about && doc.about.field != \"id\"))) && (\"placement\" in doc && type(doc.placement) == map && \"ends\" in doc.placement)) ? [{\"p\":[\"placement\",\"ends\"]}] : []",
    "own": []
   }

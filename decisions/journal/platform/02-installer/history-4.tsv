@@ -1,0 +1,286 @@
+req_id	file	source	date	removed
+-	spec/02.4-installer.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.4-installer.norms.md#intro	move of lesson 2 from M10/11, stage B, ADR-0083 addendum (1)	2026-10-18	The chapter is moved from M10/11 (stage B, ADR-0083 addendum (1): without a change of behaviour):
+-	spec/02.4-installer.norms.md#intro	move from M11/12 N1.1, N1.2, stage B	2026-11-04	from M11/12 — N1.1 and `hot`, `durable` of N1.2 (here N1.10, N1.11)
+-	spec/02.4-installer.norms.md#intro	move from M10/7 N2, stage B	2026-11-06	from M10/7 — 
+-	spec/02.4-installer.norms.md#intro	numbering of M10/7	2026-11-06	2 there, here N
+-	spec/02.4-installer.norms.md#intro	move from M10/6, stage B	2026-11-06	from M10/6 — 
+-	spec/02.4-installer.norms.md#intro	numbering of M10/11	2026-11-06	 The numbers of the subsections N1.1–N1.9 are the former numbers of M10/11.
+-	spec/02.4-installer.norms.md#intro	move from M11/12 N1.8, move of lesson 8, stage B	2026-11-04	, from M11/12 N1.8
+-	spec/02.4-installer.norms.md#intro	move from M11/2 N3, move of lesson 8, stage B	2026-11-04	, from M11/2 N3
+-	spec/02.4-installer.norms.md#intro	move of lesson 8, stage B	2026-11-04	 (the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#intro	map of former ids, id-map.tsv	2026-11-04	; the map to former ids is `id-map.tsv` (historical record)
+-	spec/02.4-installer.norms.md#N0	ADR-0130 Addendum (10)	2026-11-08	 (ADR-0130 Addendum (10))
+-	spec/02.4-installer.norms.md#N1	review analysis of stage A 6–7, № 5	2026-11-04	 (review analysis of stage A 6–7, № 5)
+-	spec/02.4-installer.norms.md#N1	review analysis of stage A 8–10, № 29; move of lesson 8, stage B	2026-11-04	 (review analysis of stage A 8–10, № 29; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#N1	review analysis of stage B 3–5, № 10	2026-11-04	; review analysis of stage B 3–5, № 10
+-	spec/02.4-installer.norms.md#N1	C06-RESEAL-33-01	2026-11-04	, C06-RESEAL-33-01
+-	spec/02.4-installer.norms.md#N1	review analysis of stage B 3–5, № 10	2026-11-04	 (review analysis of stage B 3–5, № 10)
+-	spec/02.4-installer.norms.md#N1	review analysis of stage A 8–10, № 29; move of lesson 8, stage B	2026-11-04	 (review analysis of stage A 8–10, № 29; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0023	2026-10-03	 (ADR-0023)
+-	spec/02.4-installer.norms.md#N1.1	C02-CONFIGSTORE-ROLE-01	2026-10-29	; C02-CONFIGSTORE-ROLE-01
+-	spec/02.4-installer.norms.md#N1.1	store pilot A4, A10	2026-11-06	 (the store pilot, A4, A10)
+-	spec/02.4-installer.norms.md#N1.1	review analysis of stage B 3–5, № 29	2026-11-04	 (review analysis of stage B 3–5, № 29)
+-	spec/02.4-installer.norms.md#N1.1	norms review of ADR-0075, Claude fd85ea8cc, «S-3»	2026-10-12	; norms review of ADR-0075, Claude fd85ea8cc, «S-3»
+-	spec/02.4-installer.norms.md#N1.1	review analysis of stage B 3–5, № 29	2026-11-04	 (review analysis of stage B 3–5, № 29)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0075 addendum 2026-10-26 (5) item 2	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 2
+-	spec/02.4-installer.norms.md#N1.1	ADR-0084	2026-10-19	; ADR-0084
+-	spec/02.4-installer.norms.md#N1.1	ADR-0084 addendum (1) R11	2026-10-19	 (ADR-0084 addendum (1) R11)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (4), (5); Architect's decisions on the repeated review 2026-10-23	2026-10-23	(ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.1	review analysis of stage B 3–5, № 33	2026-10-19	; review analysis of stage B 3–5, № 33
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (2) item 4	2026-10-23	; ADR-0091 addendum (2) item 4
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 items 4, 5, addendum (3) item 3	2026-10-23	 (ADR-0091 items 4, 5, addendum (3) item 3)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (2) items 2, 3	2026-10-23	 (ADR-0091 addendum (2) items 2, 3)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	; ADR-0091 addendum (2) item 1, addendum (3) item 4
+-	spec/02.4-installer.norms.md#N1.1	Architect's decision, review of stage A	2026-11-04	 (the Architect's decision, review of stage A: notify below)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 item 5	2026-10-22	; ADR-0091 item 5
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (3) item 2	2026-10-23	 (ADR-0091 addendum (3) item 2)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (3) item 1	2026-10-23	; ADR-0091 addendum (3) item 1
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (3) item 3	2026-10-23	; addendum (3) item 3
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 item 4	2026-10-22	; ADR-0091 item 4
+-	spec/02.4-installer.norms.md#N1.1	log of cammeta-go, lesson 11 № 1	2026-11-04	; log of cammeta-go, lesson 11 № 1
+-	spec/02.4-installer.norms.md#N1.1	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/02.4-installer.norms.md#N1.1	review analysis of stage A 8–10, № 1 / decision 1	2026-11-04	; review analysis of stage A 8–10, № 1 / decision 1
+-	spec/02.4-installer.norms.md#N1.1	layout audit, Architect's decision 2026-10-25, «A-16»	2026-10-25	 (the layout audit, the Architect's decision 2026-10-25, «A-16»)
+-	spec/02.4-installer.norms.md#N1.1	Architect's decision, the second pilot	2026-11-04	 (the Architect's decision, the second pilot)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 item 5	2026-10-22	; ADR-0091 item 5
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (2) item 5, addendum (3) item 5; guess of stage C I02-OS-STEM, Architect's decision 2026-10-23	2026-10-23	 (ADR-0091 addendum (2) item 5, addendum (3) item 5; guess of stage C I02-OS-STEM, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0030	2026-10-05	 (ADR-0030)
+-	spec/02.4-installer.norms.md#N1.1	store pilot A4	2026-11-06	; the store pilot, A4
+-	spec/02.4-installer.norms.md#N1.1	STAND-ROOTS-CLEAR-01, Architect's decision 2026-10-27	2026-10-27	; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27
+-	spec/02.4-installer.norms.md#N1.1	norms review of ADR-0075, Claude fd85ea8cc, «M-1»	2026-10-12	; norms review of ADR-0075, Claude fd85ea8cc, «M-1»
+-	spec/02.4-installer.norms.md#N1.1	C02-TLS-KEY-GROUP-01	2026-10-29	; C02-TLS-KEY-GROUP-01
+-	spec/02.4-installer.norms.md#N1.1	guess of stage C EJ-G12, Architect's decision 2026-10-23	2026-10-23	 (guess of stage C EJ-G12, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.1	PL-G03	2026-10-23	; PL-G03
+-	spec/02.4-installer.norms.md#N1.1	review analysis of stage A 8–10, decision 1	2026-11-04	; review analysis of stage A 8–10, decision 1
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 items 4, 5	2026-10-22	 (ADR-0091 items 4, 5)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0023	2026-10-03	 (ADR-0023)
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (2) item 3, addendum (3) item 5	2026-10-23	; ADR-0091 addendum (2) item 3, addendum (3) item 5
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (3) item 5	2026-10-23	; ADR-0091 addendum (3) item 5
+-	spec/02.4-installer.norms.md#N1.1	ADR-0091 addendum (3)	2026-10-23	; ADR-0091 addendum (3)
+-	spec/02.4-installer.norms.md#N1.1	move of lesson 8, stage B	2026-11-04	; the move of lesson 8, stage B: the rows of N1.1 are gathered into N1.12 without repetition
+-	spec/02.4-installer.norms.md#N1.2	layout audit, Architect's decision 2026-10-25, `B-26`	2026-10-25	 (moved there without change; the layout audit, the Architect's decision 2026-10-25, `B-26`)
+-	spec/02.4-installer.norms.md#N1.2	reconciliation of python and go M10/6–11, B19; guess of stage C C04-ENV-01, Architect's decision 2026-10-23	2026-10-23	 B19 are moved there without a change of behaviour; guess of stage C C04-ENV-01, the Architect's decision 2026-10-23
+-	spec/02.4-installer.norms.md#N1.2	guess of stage C W03-G07	2026-11-04	; W03-G07
+-	spec/02.4-installer.norms.md#N1.2	layout audit, Architect's decision 2026-10-25, `A-07`, `A-09`	2026-10-25	 (the table is moved there without change; the layout audit, the Architect's decision 2026-10-25, `A-07`, `A-09`)
+-	spec/02.4-installer.norms.md#N1.2	Architect's decision, the second pilot, `N-4`	2026-11-06	 (the Architect's decision, the second pilot, `N-4`)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084	2026-10-19	; ADR-0084
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 addendum (1) R11	2026-10-19	 (ADR-0084 addendum (1) R11)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2	2026-10-26	; ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2
+-	spec/02.4-installer.norms.md#N1.5	stage A, A6	2026-11-04	, stage A, A6
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 R1	2026-10-19	 (R1)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 R4	2026-10-19	 (R4)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 addendum (4) R26	2026-10-20	 (ADR-0084 addendum (4) R26: numbers, not a count)
+-	spec/02.4-installer.norms.md#N1.5	review of stage A 2	2026-11-06	; added by review of stage A 2
+-	spec/02.4-installer.norms.md#N1.5	review of stage A 2	2026-11-04	 (added by review of stage A 2)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 R12	2026-10-19	 (R12)
+-	spec/02.4-installer.norms.md#N1.5	review analysis of stage B 3–5, № 33	2026-11-04	; review analysis of stage B 3–5, № 33
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 item 7	2026-10-19	 (ADR-0084 item 7)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0084 addendum (4) R27	2026-10-20	, ADR-0084 addendum (4) R27
+-	spec/02.4-installer.norms.md#N1.5	review analysis of stage B 6–7, № 43	2026-11-04	 (review analysis of stage B 6–7, № 43)
+-	spec/02.4-installer.norms.md#N1.5	ADR-0070	2026-10-10	 (ADR-0070)
+-	spec/02.4-installer.norms.md#N1.6	review of stage B 1–2, item 4	2026-11-04	 (review of stage B 1–2, item 4)
+-	spec/02.4-installer.norms.md#N1.6	division M10/11-11	2026-11-06	(division M10/11-11)
+-	spec/02.4-installer.norms.md#N1.6	guess of stage C RC-03, Architect's decision 2026-10-23	2026-10-23	; guess of stage C RC-03, the Architect's decision 2026-10-23
+-	spec/02.4-installer.norms.md#N1.6	guess of stage C RC-02	2026-10-23	 (RC-02)
+-	spec/02.4-installer.norms.md#N1.6	reconciliation of M11, D14, cammeta-python M11-08 № 21	2026-11-06	; added by the reconciliation of M11, D14, cammeta-python M11-08 № 21
+-	spec/02.4-installer.norms.md#N1.6	reconciliation of M11, cammeta-python M11-09 № 22; ADR-0083 addendum (20), addendum (21)	2026-10-22	 (added by the reconciliation of M11, cammeta-python M11-09 № 22; ADR-0083 addendum (20), addendum (21))
+-	spec/02.4-installer.norms.md#N1.6	log of cammeta-go, lesson 11 № 2	2026-11-04	; log of cammeta-go, lesson 11 № 2
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum (3)	2026-10-12	 (ADR-0075 add.3)
+-	spec/02.4-installer.norms.md#N1.6	log of cammeta-go, lesson 11 № 5	2026-11-04	 (log of cammeta-go, lesson 11 № 5)
+-	spec/02.4-installer.norms.md#N1.6	move from M10/6 N1.1, N1.6, stage B	2026-11-06	Moved from M10/6 N1.1 `identity.doors` and N1.6 (stage B).
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075	2026-10-12	 (ADR-0075)
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 item 2; ADR-0075 addendum 2026-10-26 (2) item 4, (4) item 4	2026-10-26	(ADR-0075 item 2; ADR-0075 addendum 2026-10-26 (2) item 4, (4) item 4)
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum 2026-10-12 (2)	2026-10-12	 ADR-0075 addendum 2026-10-12 (2);
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum 2026-10-26 (6) item 2	2026-10-26	, ADR-0075 addendum 2026-10-26 (6) item 2
+-	spec/02.4-installer.norms.md#N1.6	reconciliation of python and go M10/6–11, R14	2026-11-06	 (reconciliation of python and go M10/6–11, R14)
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum 2026-10-26 (4) item 4, (5) item 4	2026-10-26	; the two implementations have one outcome — the variant «a refusal also conforms» is removed (ADR-0075 addendum 2026-10-26 (4) item 4, (5) item 4)
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3, 5, (4) item 4	2026-10-26	 (ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3, 5, (4) item 4)
+-	spec/02.4-installer.norms.md#N1.6	ADR-0094 addendum (16)	2026-10-31	 (ADR-0094 addendum (16))
+-	spec/02.4-installer.norms.md#N1.6	ADR-0075 addendum (3)	2026-10-12	 (ADR-0075 addendum 3)
+-	spec/02.4-installer.norms.md#N1.7	C02-UPGRADE-STRAND-01	2026-11-01	 (C02-UPGRADE-STRAND-01)
+-	spec/02.4-installer.norms.md#N1.7	C02-UPGRADE-MANIFEST-01	2026-11-01	 (C02-UPGRADE-MANIFEST-01)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (21)–(24)	2026-11-03	 (ADR-0115 addendum (21)–(24))
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (23) item 3	2026-11-03	 (ADR-0115 addendum (23) item 3)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (25) item 4 (a)	2026-11-03	; ADR-0115 addendum (25) item 4 (a)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (27) item 4 (b), (28) item 2	2026-11-04	; addendum (27) item 4 (b), (28) item 2
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (23) item 2	2026-11-03	(ADR-0115 addendum (23) item 2)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (21) item 2, (22) item 2, (23) item 4 (a), (25) item 4 (b)	2026-11-03	 (ADR-0115 addendum (21) item 2, (22) item 2, (23) item 4 (a), (25) item 4 (b))
+-	spec/02.4-installer.norms.md#N1.7	guess of stage C I02-G03, Architect's decision 2026-10-23	2026-10-23	 (guess of stage C I02-G03, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0075 addendum 2026-10-26 (5) item 2	2026-10-26	 (ADR-0075 addendum 2026-10-26 (5) item 2)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0094 B6	2026-10-29	; ADR-0094 B6
+-	spec/02.4-installer.norms.md#N1.7	C02-DEPLOYMENT-LINE-01	2026-11-01	 (C02-DEPLOYMENT-LINE-01)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0115 addendum (27) item 3	2026-11-04	; ADR-0115 addendum (27) item 3
+-	spec/02.4-installer.norms.md#N1.7	Specification's decision, adopted by ADR-0115 addendum (23) item 2	2026-11-03	; the Specification's decision, adopted by ADR-0115 addendum (23) item 2
+-	spec/02.4-installer.norms.md#N1.7	C02-DOMAIN-SERVER-01, Architect's decision 2026-11-01, ADR-0103 addendum (2)	2026-11-01	 (C02-DOMAIN-SERVER-01, the Architect's decision 2026-11-01, ADR-0103 addendum (2))
+-	spec/02.4-installer.norms.md#N1.7	Architect's decision on review P/02 S9	2026-11-06	; the Architect's decision on review P/02 S9
+-	spec/02.4-installer.norms.md#N1.7	C02-CONSOLE-ROOT-INPUT-01	2026-11-01	 (C02-CONSOLE-ROOT-INPUT-01)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0075 addendum 2026-10-26 (4) item 6, (6) item 2	2026-10-26	 (ADR-0075 addendum 2026-10-26 (4) item 6, (6) item 2)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0091 addendum (7), (8)	2026-10-23	 (ADR-0091 addendum (7), (8))
+-	spec/02.4-installer.norms.md#N1.7	guess of stage C I02-G04, Architect's decision 2026-10-23	2026-10-23	 (guess of stage C I02-G04, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.7	review P/02 S9	2026-11-06	; review P/02 S9
+-	spec/02.4-installer.norms.md#N1.7	ADR-0091 addendum (27) item 6	2026-10-25	; ADR-0091 addendum (27) item 6
+-	spec/02.4-installer.norms.md#N1.7	ADR-0094 B6	2026-10-29	(ADR-0094 B6)
+-	spec/02.4-installer.norms.md#N1.7	C02-STORE-BEFORE-PUT-01	2026-11-04	; C02-STORE-BEFORE-PUT-01
+-	spec/02.4-installer.norms.md#N1.7	ADR-0091 addendum (3) item 1	2026-10-23	; ADR-0091 addendum (3) item 1
+-	spec/02.4-installer.norms.md#N1.7	guess of stage C C02-KIND-ORDER-33, Architect's decision 2026-10-23	2026-10-23	; guess of stage C C02-KIND-ORDER-33, the Architect's decision 2026-10-23
+-	spec/02.4-installer.norms.md#N1.7	C02-KIND-SELF-01	2026-11-01	 (C02-KIND-SELF-01)
+-	spec/02.4-installer.norms.md#N1.7	ADR-0091 addendum (26) item 1, addendum (27) item 4	2026-10-25	; near — ADR-0091 addendum (26) item 1, addendum (27) item 4
+-	spec/02.4-installer.norms.md#N1.7	guess of stage C I02-INSTALL-ORDER, Architect's decision 2026-10-23	2026-10-23	; guess of stage C I02-INSTALL-ORDER, the Architect's decision 2026-10-23
+-	spec/02.4-installer.norms.md#N1.7	ADR-0094 B7	2026-10-29	 (ADR-0094 B7)
+-	spec/02.4-installer.norms.md#N1.7	C02-PACKAGE-FILES-01	2026-11-01	 (C02-PACKAGE-FILES-01)
+-	spec/02.4-installer.norms.md#N1.7	C02-PACKAGE-VENDOR-FILES-01	2026-11-01	 (C02-PACKAGE-VENDOR-FILES-01)
+-	spec/02.4-installer.norms.md#N1.7	C02-STORE-BEFORE-PUT-01	2026-11-04	 (C02-STORE-BEFORE-PUT-01)
+-	spec/02.4-installer.norms.md#N1.9	move from M10/8 N1.3, N1.4, stage B	2026-11-06	; moved from M10/8 N1.3, N1.4, stage B
+-	spec/02.4-installer.norms.md#N1.9	Architect's decision on the plan of lesson 5, item 8	2026-11-04	, the Architect's decision on the plan of lesson 5, item 8
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (21) item 1, (22) item 3, (26)	2026-11-04	ADR-0115 addendum (21) item 1, (22) item 3, (26): carrying
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (26) item 1	2026-11-04	 (ADR-0115 addendum (26) item 1)
+-	spec/02.4-installer.norms.md#N1.9	Architect's decision on review P/02 S13	2026-11-06	; the Architect's decision on review P/02 S13
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (26) item 1; M1 of review (26) review-claude	2026-11-04	 (addendum (26) item 1; M1 of review (26) review-claude)
+-	spec/02.4-installer.norms.md#N1.9	M2 of review (26) review-claude	2026-11-06	 (M2 of review (26) review-claude)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (22)–(25)	2026-11-03	ADR-0115 addendum (22)–(25): the rollout step
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 1	2026-11-03	 (ADR-0115 addendum (25) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (24) item 1, (27) item 1; «M» of review (25) review-claude	2026-11-04	(ADR-0115 addendum (24) item 1, (27) item 1; «M» of review (25) review-claude)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (22) item 1	2026-11-03	 (ADR-0115 addendum (22) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (23) item 1; ADR-0120 addendum (6) item 3	2026-11-04	; addendum (23) item 1; ADR-0120 addendum (6) item 3
+-	spec/02.4-installer.norms.md#N1.9	review of P/02 S1	2026-11-06	 (review of P/02 S1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 1	2026-11-03	(addendum (25) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0120 addendum (6) item 2	2026-11-04	; ADR-0120 addendum (6) item 2
+-	spec/02.4-installer.norms.md#N1.9	Specification's decision, ADR-0120 item 2 (b); «M» of review (25) Codex; ADR-0115 addendum (25) item 4 (c), (32) item 2	2026-11-04	 (the word — the Specification's decision, ADR-0120 item 2 (b); «M» of review (25) Codex; addendum (25) item 4 (c), (32) item 2)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (34) item 2	2026-11-04	 (addendum (34) item 2)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0120 item 2 (b), addendum (5) item 5	2026-11-04	 (ADR-0120 item 2 (b), addendum (5) item 5)
+-	spec/02.4-installer.norms.md#N1.9	review of P/02 M6	2026-11-05	, review of P/02 M6
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (37) item 1	2026-11-04	; ADR-0115 addendum (37) item 1
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (30) item 1	2026-11-04	 (ADR-0115 addendum (30) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (28) item 1, (29)	2026-11-04	 (addendum (28) item 1, (29))
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (32) item 4; mutant mpSnap of poll.qnt	2026-11-04	 (addendum (32) item 4; the mutant mpSnap poll.qnt)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (31) item 1	2026-11-04	 (addendum (31) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (33), (35)	2026-11-04	 (addendum (33), (35))
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (32) item 1	2026-11-04	 (addendum (32) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (37) item 1; ADR-0120 addendum (5) item 4 (c)	2026-11-04	 (addendum (37) item 1; ADR-0120 addendum (5) item 4 (c))
+-	spec/02.4-installer.norms.md#N1.9	ADR-0120 addendum (6) item 1	2026-11-04	 (ADR-0120 addendum (6) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (32) item 4	2026-11-04	; addendum (32) item 4
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (30) item 2; draft review (28)–(37) S2	2026-11-04	 (addendum (30) item 2; draft review (28)–(37) S2)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (32) item 5, (35) item 2	2026-11-04	 (addendum (32) item 5, (35) item 2)
+-	spec/02.4-installer.norms.md#N1.9	draft review (28)–(37) M3	2026-11-06	 (draft M3)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (37) item 2; ADR-0120 addendum (6) item 1	2026-11-04	 (addendum (37) item 2; ADR-0120 addendum (6) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (27) item 3	2026-11-04	; ADR-0115 addendum (27) item 3
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 3, (27) item 1	2026-11-04	 (addendum (25) item 3, (27) item 1)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 3	2026-11-03	 (addendum (25) item 3)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (24) item 1	2026-11-03	; addendum (24) item 1
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 1; the row — Specification's decision	2026-11-03	 (addendum (25) item 1; the row — the Specification's decision)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (25) item 2; M2 of review (27) review-claude	2026-11-03	; addendum (25) item 2; M2 of review (27) review-claude: (27) item 4 (c) is removed
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (27) item 4 (b)	2026-11-04	 (addendum (27) item 4 (b))
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (27) item 4 (a)	2026-11-04	 (addendum (27) item 4 (a))
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (37) item 2	2026-11-04	; addendum (37) item 2
+-	spec/02.4-installer.norms.md#N1.9	Specification's decision	2026-11-04	 (the Specification's decision)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (22) item 4	2026-11-03	 (ADR-0115 addendum (22) item 4)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0115 addendum (28) item 4, (30) item 3, (31) item 3, (33) item 4	2026-11-04	ADR-0115 addendum (28) item 4, (30) item 3, (31) item 3, (33) item 4;
+-	spec/02.4-installer.norms.md#N1.9	draft review (28)–(37), M2	2026-11-06	 (draft review (28)–(37), M2)
+-	spec/02.4-installer.norms.md#N1.9	ADR-0120 addendum (5) item 2 (c)	2026-11-04	 (ADR-0120 addendum (5) item 2 (c))
+-	spec/02.4-installer.norms.md#N1.9	move from M10/7 N2, stage B	2026-11-06	Moved from M10/7 N2 (maintenance commands, stage B); the envelope
+-	spec/02.4-installer.norms.md#N1.9	C06-RESEAL-33-01	2026-11-04	, C06-RESEAL-33-01
+-	spec/02.4-installer.norms.md#N1.9	reconciliation of python and go M10/6–11, S7	2026-11-06	 (reconciliation of python and go M10/6–11, S7)
+-	spec/02.4-installer.norms.md#N1.9	reconciliation of python and go M10/6–11, S6	2026-11-06	 (reconciliation of python and go M10/6–11, S6)
+-	spec/02.4-installer.norms.md#N1.9	guess of stage C I02-G02, Architect's decision 2026-10-23	2026-10-23	 (guess of stage C I02-G02, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.9	review of lesson P/02, S10	2026-11-06	 (review of lesson P/02, S10)
+-	spec/02.4-installer.norms.md#N1.9	Architect's decision on review P/02 S10	2026-11-06	 (the Architect's decision on review P/02 S10)
+-	spec/02.4-installer.norms.md#N1.9	C02-RESEAL-UNKNOWN-FORM-93, Architect's decision 2026-10-25	2026-10-25	 (C02-RESEAL-UNKNOWN-FORM-93, the Architect's decision 2026-10-25)
+-	spec/02.4-installer.norms.md#N1.9	V7 item 3, Architect's decision 2026-10-28, P4	2026-10-28	 (V7 item 3, the Architect's decision 2026-10-28, P4)
+-	spec/02.4-installer.norms.md#N1.9	C02-SECRET-KEPT-FORM-93, Architect's decision 2026-10-25	2026-10-25	by C02-SECRET-KEPT-FORM-93 (the Architect's decision 2026-10-25).
+-	spec/02.4-installer.norms.md#N1.9	Architect's decision on ADR-0075, item 6 «Operations», Confirmation	2026-10-12	The Architect's decision on ADR-0075 (item 6 «Operations», Confirmation: the nightly run, the stand «non-loopback/open» at the doors between servers):
+-	spec/02.4-installer.norms.md#N1.9	ADR-0075	2026-10-12	by ADR-0075
+-	spec/02.4-installer.norms.md#N1.9	review analysis of stage B 3–5, № 28	2026-11-06	; review analysis of stage B 3–5, № 28
+-	spec/02.4-installer.norms.md#N1.9	Architect's decision on the guess of Go, 2026-10-20	2026-10-20	 (the Architect's decision on the guess of Go, 2026-10-20)
+-	spec/02.4-installer.norms.md#N1.9	review analysis of stage B 3–5, № 28	2026-11-04	 (review analysis of stage B 3–5, № 28)
+-	spec/02.4-installer.norms.md#N1.10	move from M11/12 N1.1, stage B	2026-11-06	Moved from M11/12 N1.1 (stage B).
+-	spec/02.4-installer.norms.md#N1.10	ADR-0089 addendum (1) R15; window 2.2	2026-10-19	; ADR-0089 addendum (1) R15; window 2.2
+-	spec/02.4-installer.norms.md#N1.10	ADR-0094 B7	2026-10-29	; ADR-0094 B7
+-	spec/02.4-installer.norms.md#N1.10	M11/3–11	2026-11-06	 (M11/3–11)
+-	spec/02.4-installer.norms.md#N1.10	ADR-0110 addendum (9), addendum (4) item 3	2026-11-01	; ADR-0110 addendum (9), addendum (4) item 3
+-	spec/02.4-installer.norms.md#N1.10	«D-9», «V-19»	2026-11-06	, «D-9», «V-19»
+-	spec/02.4-installer.norms.md#N1.10	ADR-0110 addendum (10) item 7	2026-11-02	 (ADR-0110 addendum (10) item 7)
+-	spec/02.4-installer.norms.md#N1.10	VMS request № 19, Architect's decision 2026-10-23	2026-10-23	 (VMS request № 19, the Architect's decision 2026-10-23)
+-	spec/02.4-installer.norms.md#N1.11	move from M11/12 N1.2, stage B	2026-11-06	Moved from M11/12 N1.2 (`hot`, `durable`; stage B); writing
+-	spec/02.4-installer.norms.md#N1.11	VMS request № 19, Architect's decision 2026-10-23	2026-10-23	; VMS request № 19, the Architect's decision 2026-10-23
+-	spec/02.4-installer.norms.md#N1.12	move from M11/12 N1.8, move of lesson 8, stage B	2026-11-06	Moved from M11/12 N1.8 (the late layer of the chapter, introduced by chapter [8.10](../../08-domain/spec/08.10-domain.norms.md); the move of lesson 8, stage B).
+-	spec/02.4-installer.norms.md#N1.12	M11/12; move of lesson 8	2026-11-06	, added by M11/12; the move of lesson 8: gathered from N1.1 without repetition
+-	spec/02.4-installer.norms.md#N1.12	Architect's decision, the second pilot	2026-11-06	; the Architect's decision, the second pilot
+-	spec/02.4-installer.norms.md#N1.12	review analysis of stage A 8–10, № 33	2026-11-04	 (review analysis of stage A 8–10, № 33)
+-	spec/02.4-installer.norms.md#N1.12	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 4
+-	spec/02.4-installer.norms.md#N1.12	review analysis of stage A 8–10, № 33	2026-11-04	 (review analysis of stage A 8–10, № 33)
+-	spec/02.4-installer.norms.md#N1.12	ADR-0075 addendum 2026-10-26 (2) item 4, (4) item 4; norms review of ADR-0075, Claude fd85ea8cc, «S-3»	2026-10-26	; ADR-0075 addendum 2026-10-26 (2) item 4, (4) item 4; norms review of ADR-0075, Claude fd85ea8cc, «S-3»
+-	spec/02.4-installer.norms.md#N1.12	DOM-AGENT-TURN-01, owner's consent 2026-10-26	2026-10-26	; DOM-AGENT-TURN-01, the owner's consent 2026-10-26
+-	spec/02.4-installer.norms.md#N1.12	review analysis of stage A 8–10, № 33	2026-11-04	 (review analysis of stage A 8–10, № 33)
+-	spec/02.4-installer.norms.md#N1.12	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 4
+-	spec/02.4-installer.norms.md#N1.12	ADR-0091 addendum (4) item 3, addendum (5) item 1	2026-10-23	; ADR-0091 addendum (4) item 3, addendum (5) item 1
+-	spec/02.4-installer.norms.md#N1.12	ADR-0091 addendum (2), (3)	2026-10-23	; ADR-0091 addendum (2), (3)
+-	spec/02.4-installer.norms.md#N1.12	VMS request «worker unit on the domain», Architect's decision 2026-10-23; ADR-0090 addendum (6) item 2, addendum (7) item 2	2026-10-23	 (VMS request «worker unit on the domain», the Architect's decision 2026-10-23; ADR-0090 addendum (6) item 2, addendum (7) item 2)
+-	spec/02.4-installer.norms.md#N1.12	review analysis of stage A 8–10, № 1 / decision 1	2026-11-04	 (review analysis of stage A 8–10, № 1 / decision 1)
+-	spec/02.4-installer.norms.md#N1.12	review analysis of stage A 8–10, № 33	2026-11-06	; review analysis of stage A 8–10, № 33
+-	spec/02.4-installer.norms.md#N3	ADR-0091 addendum (3) items 1, 4	2026-10-23	 (ADR-0091 addendum (3) items 1, 4)
+-	spec/02.4-installer.norms.md#N3	move from M11/2 N3, move of lesson 8, stage B	2026-11-06	Moved from M11/2 N3 «domain installation» (the late layer
+-	spec/02.4-installer.norms.md#N3	review analysis of stage A 8–10, № 17; move of lesson 8, stage B	2026-11-04	; review analysis of stage A 8–10, № 17; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#N3	Architect's decision 2026-10-23 on the finding of the Specification I02-FOUND	2026-10-23	 (the Architect's decision 2026-10-23 on the finding of the Specification I02-FOUND)
+-	spec/02.4-installer.norms.md#N4	ADR-0125 addendum (1) item 5	2026-11-04	 (ADR-0125 addendum (1) item 5)
+-	spec/02.4-installer.norms.md#N5	ADR-0091 addendum (2), (3)	2026-10-23	by ADR-0091 addendum (2), (3) —
+-	spec/02.4-installer.norms.md#N5	ADR-0091 addendum (4)–(6)	2026-10-23	 (ADR-0091 addendum (4)–(6))
+-	spec/02.4-installer.norms.md#N5	guess of stage C I02-INSTALL-ORDER	2026-10-23	 (I02-INSTALL-ORDER)
+-	spec/02.4-installer.norms.md#N5	numbering of the acceptance of M10/11, sc. 03	2026-11-06	 (from M10/11 sc. 03)
+-	spec/02.4-installer.norms.md#N5	reconciliation of python and go M10/6–11, S6, S7	2026-11-04	(S6, S7)
+-	spec/02.4-installer.norms.md#N5	ADR-0075 Confirmation	2026-10-12	 by ADR-0075 Confirmation
+-	spec/02.4-installer.norms.md#N5	move of lesson 8, stage B	2026-11-04	 (the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#implementation-decides	store pilot A4	2026-11-06	; the store pilot, A4
+-	spec/02.4-installer.norms.md#implementation-decides	move from M11/2 «Implementation decides» item 2, move of lesson 8, stage B	2026-11-06	 (from M11/2 «Implementation decides» item 2; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/02.4-installer.norms.md#readiness-checklist	former ids M11/2-10, M11/12-08	2026-11-06	M11/2-10, M11/12-08; 
+-	spec/02.4-installer.norms.md#readiness-checklist	move of lesson 8, stage B	2026-11-04	; the move of lesson 8, stage B
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0030	2026-10-05	 (ADR-0030)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/02.4-installer.norms.md#readiness-checklist	reconciliation of python and go M10/6–11; part 2.4 of M10/11-18 by `note` of id-map	2026-11-06	reconciliation of python and go M10/6–11; the part 2.4 of M10/11-18 by `note` of id-map, 
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0091 items 4, 5	2026-10-22	 (ADR-0091 items 4, 5)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0091 addendum (2), (3)	2026-10-23	 by ADR-0091 addendum (2), (3)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0091 addendum (26), (27) item 4	2026-10-25	; ADR-0091 addendum (26), (27) item 4
+-	spec/02.4-installer.norms.md#readiness-checklist	guess of stage C I02-INSTALL-ORDER	2026-10-23	 (I02-INSTALL-ORDER)
+-	spec/02.4-installer.norms.md#readiness-checklist	guess of stage C C02-KIND-ORDER-33	2026-10-23	 (C02-KIND-ORDER-33)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0120 addendum (6) item 3	2026-11-04	 (ADR-0120 addendum (6) item 3)
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0115 addendum (28)–(37)	2026-11-04	 (ADR-0115 addendum (28)–(37))
+-	spec/02.4-installer.norms.md#readiness-checklist	ADR-0120 item 2 (b)	2026-11-04	 (ADR-0120 item 2 (b))
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0130 Addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0075 addendum 2026-10-26 (6) item 2	2026-10-26	 (ADR-0075 addendum 2026-10-26 (6) item 2)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	 (ADR-0075 addendum 2026-10-26 (5) item 4)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0075 addendum 2026-10-26 (4) item 7	2026-10-26	 of ADR-0075 addendum 2026-10-26 (4) item 7
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0075	2026-10-12	 (ADR-0075)
+-	spec/02.4-installer.norms.md#system-checklist	move from M10/11, stage B	2026-11-04	 (stage B)
+-	spec/02.4-installer.norms.md#system-checklist	reconciliation of M11, I1, I2	2026-11-06	 (reconciliation of M11, I1, I2)
+-	spec/02.4-installer.norms.md#system-checklist	reconciliation of M11, I3	2026-10-20	 (I3)
+-	spec/02.4-installer.norms.md#system-checklist	reconciliation of M11, I4	2026-10-20	 (I4)
+-	spec/02.4-installer.norms.md#system-checklist	item M11/2-10 by `note` of id-map; review analysis of stage A 8–10, № 17; move of lesson 8, stage B	2026-11-06	 (from the item M11/2-10 by `note` of id-map; review analysis of stage A 8–10, № 17; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0089 addendum (1) R15	2026-10-19	; ADR-0089 addendum (1) R15
+-	spec/02.4-installer.norms.md#system-checklist	item M11/12-08; move of lesson 8, stage B	2026-11-06	 (from the item M11/12-08; the move of lesson 8, stage B)
+-	spec/02.4-installer.norms.md#system-checklist	review analysis of stage B 3–5, № 28	2026-11-04	 (review analysis of stage B 3–5, № 28)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0075 Confirmation	2026-10-12	 by ADR-0075 Confirmation
+-	spec/02.4-installer.norms.md#system-checklist	VMS request «worker unit on the domain»	2026-11-06	 (VMS request «worker unit on the domain»)
+-	spec/02.4-installer.norms.md#system-checklist	review P/02 S9	2026-11-06	, review P/02 S9
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0094 B6, addendum (16)	2026-10-31	 (ADR-0094 B6, addendum (16))
+-	spec/02.4-installer.norms.md#system-checklist	review P/02 S8	2026-11-06	 (review P/02 S8)
+-	spec/02.4-installer.norms.md#system-checklist	numbering of the acceptance of M10/11, sc. 03	2026-11-11	 (from M10/11 sc. 03)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0091 addendum (2), (3)	2026-10-23	 by ADR-0091 addendum (2), (3)
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0115 addendum (21)–(24)	2026-11-03	 (ADR-0115 addendum (21)–(24))
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0115 addendum (26)	2026-11-04	 (ADR-0115 addendum (26))
+-	spec/02.4-installer.norms.md#system-checklist	ADR-0115 addendum (27)	2026-11-04	 (ADR-0115 addendum (27))
+-	acceptance/4/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/4/README.md#intro	ADR-0125 addendum (4) item 7, addendum (5)	2026-11-05	 (ADR-0125 addendum (4) item 7 and addendum (5))
+-	spec/02.4-installer.norms.md#N1.9	model cammeta-quint v115r2 of the rollout	2026-11-04	cammeta-quint v115r2
+-	spec/02.4-installer.norms.md#N1.9	model cammeta-quint v115r2, REPORT.md «Not checked»	2026-11-04	the list — v115r2 REPORT.md, «Not checked»
+-	spec/02.4-installer.norms.md#N1.9	runs of the model v115r2: simulator c3P 20000 × 80; Apalache c3P × invDone, 16 steps in 40 min	2026-11-04	 (c3P, 20000 × 80), Apalache c3P × invDone does not get through 16 steps in 40 min
+-	spec/02.4-installer.norms.md#N1.9	run of the model v115r2: Apalache c3CX × invWritesSeen, 15 steps	2026-11-04	 at Apalache — one configuration and one judge (c3CX × invWritesSeen, 15 steps)
+-	spec/02.4-installer.norms.md#N1.9	run of the model v115r2: mutant mNoLastChk on four bases, up to 60000 traces	2026-11-04	 (the mutant mNoLastChk is not caught on any of the four bases, up to 60000 traces)
+-	spec/02.4-installer.norms.md#N1.9	model v115r2: the judge invWritesSeen	2026-11-04	the judge invWritesSeen
+-	spec/02.4-installer.norms.md#N1.9	model v115p	2026-11-04	By the model v115p
+-	spec/02.4-installer.norms.md#N1.9	model v115p: Apalache s5 — a3p × invSafeX, a3c and a3p × invOrder, mutants 1 and 6 (rule in words: the safety and the order of the poll in every configuration, two mutants not caught)	2026-11-04	Apalache s5 — a3p × invSafeX, a3c and a3p × invOrder, mutants 1 and 6
+-	spec/02.4-installer.norms.md#N1.9	model v120 of the machine, report of review-claude	2026-11-04	; the model v120 of the machine — the report of review-claude
+-	spec/02.4-installer.norms.md#N5	lesson M11/12 (now P/02.4 N1.10–N1.12, P/08.10)	2026-11-06	 and of M11/12
+-	spec/02.4-installer.norms.md#N5	stand of lesson M11/3 (now P/08.3)	2026-11-06	the stand M11/3
+-	spec/02.4-installer.norms.md#system-checklist	stand of lesson M11/3 (now P/08.3) (P/02.4-11)	2026-11-06	the stand M11/3
+-	spec/02.4-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
