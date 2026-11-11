@@ -60,7 +60,7 @@ STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data
 # on main 2026-11-11 the common inputs carry history (Platform/common/acceptance/: 107 phrases and 148 ADR numbers in
 # the sources and translations; the whole Platform/common: 1715 and 1454). They enter by the word of the Architect
 # after the common acceptance is cleaned; a prefix, e.g. "Platform/common/acceptance/".
-M_FORM_COMMON = ()
+M_FORM_COMMON = ("Platform/common/acceptance/",)  # P01.230: общая приёмка в форме M после P01.229
 
 # Closed list of history phrases (ADR-0133 addendum (56) item 1). A paraphrase passes — the review by the checklist.
 HISTORY_PHRASES = re.compile("|".join([

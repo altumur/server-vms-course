@@ -614,3 +614,10 @@ class HistoryRows(AcceptedForm):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CommonAcceptanceInScope(unittest.TestCase):
+    """P01.230: the common acceptance is judged by the checks of form M since P01.229 put it into the form."""
+
+    def test_common_acceptance_is_in_scope(self):
+        self.assertIn("Platform/common/acceptance/", m_form.M_FORM_COMMON)
