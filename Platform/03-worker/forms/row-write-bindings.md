@@ -1,6 +1,6 @@
 # State row-write bindings
 
-This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export (ADR-0121). The class is the Architect's decision under ADR-0127 addendum (1) item 3. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018/R029.
+This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018/R029.
 
 ## Grammar
 

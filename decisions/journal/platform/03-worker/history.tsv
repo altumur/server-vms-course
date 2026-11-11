@@ -1,0 +1,35 @@
+req_id	file	source	date	removed
+-	README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	README.md#intro	ADR-0124	2026-11-04	ADR-0124: 
+-	README.md#intro	ADR-0092	2026-10-27	, ADR-0092
+-	README.md#intro	ADR-0088	2026-10-19	; ADR-0088
+-	lifecycle.md#intro	ADR-0121; ADR-0124 addendum (1) item 2	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 2)
+-	lifecycle.md#intro	ADR-0083 addendum (2) item 1	2026-10-18	 (ADR-0083 addendum (2) item 1)
+-	lifecycle.md#environment	ADR-0091 addenda (4)–(6)	2026-10-23	 (ADR-0091 addendum (4)–(6))
+-	lifecycle.md#directories-and-files	analysis of review of stage B 3–5, № 20	2026-10-20	; analysis of the review of stage B 3–5, № 20
+-	lifecycle.md#exit-codes	analysis of review of stage A 6–7, B2	2026-10-20	; analysis of the review of stage A 6–7, B2
+-	lifecycle.md#exit-codes	analysis of review of stage B 6–7, № 45	2026-10-20	 — analysis of the review of stage B 6–7, № 45
+-	lifecycle.md#signals-and-readiness	analysis of review of stage B 3–5, № 4	2026-10-20	 (analysis of the review of stage B 3–5, № 4)
+-	lifecycle.md#stand	finding STAND-ROOTS-CLEAR-01, Architect's decision 2026-10-27	2026-10-27	; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27
+-	spec/03-worker.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/03-worker.README.md#inputs-and-their-priority	ADR-0082 addendum 13	2026-10-15	; ADR-0082 addendum 13
+-	spec/03-worker.README.md#inputs-and-their-priority	ADR-0088	2026-10-19	; ADR-0088
+-	spec/03-worker.README.md#order-of-work	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/03-worker.README.md#order-of-work	ADR-0054	2026-10-06	the append of ADR-0054
+-	acceptance/1/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/7/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/creates-key/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/creates-key/README.md#intro	ADR-0091 item 1	2026-10-22	; ADR-0091 item 1
+-	vectors/creates-key/README.md#run	finding ACC-VECTORS-CONNECT-03	2026-10-27	ACC-VECTORS-CONNECT-03: 
+-	vectors/creates-key/README.md#run	Architect's decision 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	forms/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	forms/README.md#intro	ADR-0125 addendum (5)	2026-11-05	 (ADR-0125 addendum (5))
+-	forms/README.md#refusals	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	`row` is consecutive within a chapter; the two former 3.2 tables are concatenated in source order. The final five columns retain the original cells: four-cell tables use cause/outcome/diagnostic/caller; 3.7 uses word/outcome/cause. The first 3.2 table's Code and Body are retained as outcome and diagnostic, including an em dash. No refusal is removed because its Code cell has no numeric code.
+-	forms/README.md#additional-seam-boundaries	Architect's accepted review of P/03, ADR-0127	2026-11-05	The Architect's accepted P/03 review under ADR-0127 supplements the same ports and [seams](../acceptance/2/seams.tsv); no process command or HTTP API is introduced.
+-	forms/README.md#additional-seam-boundaries	review of the P/03 seams (ae187e3f9 «P03: исправить границы держателя, поколений, heartbeat и копий по ревью»)	2026-11-05	Lesson-review boundaries
+-	forms/README.md#additional-seam-boundaries	review of the P/03 seams (ae187e3f9 «P03: исправить границы держателя, поколений, heartbeat и копий по ревью»)	2026-11-05	All original seams and process scenarios remain required.
+-	forms/README.md#additional-seam-boundaries	review of the P/03 seams (ae187e3f9 «P03: исправить границы держателя, поколений, heartbeat и копий по ревью»)	2026-11-05	the original single-holder s4
+-	forms/README.md#additional-seam-boundaries	review of the P/03 seams (ae187e3f9 «P03: исправить границы держателя, поколений, heartbeat и копий по ревью»)	2026-11-05	worker-token-cache now distinguishes
+-	forms/README.md#row-write-bindings	ADR-0127	2026-11-05	 under ADR-0127
+-	forms/row-write-bindings.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	forms/row-write-bindings.md#intro	Architect's decision, ADR-0127 addendum (1) item 3	2026-11-05	 The class is the Architect's decision under ADR-0127 addendum (1) item 3.
