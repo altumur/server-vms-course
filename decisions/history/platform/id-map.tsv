@@ -878,3 +878,10 @@ M11/11 sc. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows o
 - (new)	P/02.4-23	2.4	the upgrade with a new role: the rights file replaced, GET /v1/rights after the restart	split off P/02.4-08; ADR-0130 addendum (19) item 6
 - (new)	P/02.4-24	2.4	the worker and part units at work: a cold start, the share and its consumer	split off P/02.4-18; ADR-0130 addendum (19) item 6
 - (new)	P/02.4-25	2.4	the order add, manifest get and the steps of the rollout on the servers	split off P/02.4-22; ADR-0130 addendum (19) item 6
+- (new)	P/03.2-18	3.2	the floor of the epochs on recovery	split off P/03.2-06, P/03.2-07; ADR-0130 addendum (19) item 6
+- (new)	P/03.2-19	3.2	the terms against the move on unknown, P/04 N3 fate	split off P/03.2-08; ADR-0130 addendum (19) item 6
+- (new)	P/03.4-16	3.4	the process door with a kit: the TLS address, the admission by a leaf, the chain, a foreign cluster, DNS, RC-NOKIT	split off P/03.4-12, P/03.4-14; ADR-0130 addendum (19) item 6
+- (new)	P/03.4-17	3.4	freeing in the answer to a resource request of P/05	split off P/03.4-13; ADR-0130 addendum (19) item 6
+- (new)	P/03.4-18	3.4	the stop term of the worker process: worker.stop_timeout and the budget of closing the places	raised from «Implementation decides» item 3 of 3.4; ADR-0133 addendum (51), the Architect's answer on P03.21, question 4
+- (new)	P/03.7-05	3.7	the contribution on the domain stand	split off P/03.7-01; ADR-0130 addendum (19) item 6
+- (new)	P/03.7-06	3.7	wrong_audience and wrong_kind at the recipient on the domain stand	split off P/03.7-03; ADR-0130 addendum (19) item 6
