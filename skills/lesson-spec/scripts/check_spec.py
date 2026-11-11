@@ -1938,7 +1938,13 @@ class Check:
             self.error(table, "stage norms: expected unique stage and norms columns")
             return
         rows = self.tsv(table, len(head), head)
-        item = re.compile(r"P/[0-9]{2}\." + CHAPTER + r"-[0-9]{2}")
+        # A lesson with chapters (spec/NN.K-<process>.norms.md) names items P/NN.K-MM; a lesson without chapters (one
+        # spec/NN-<process>.norms.md, as P/04) names them P/NN-MM (audit P/04, defect 1). The other form is an error.
+        chaptered = any(re.fullmatch(r"[0-9]{2}\." + CHAPTER + r"-[^.]+\.norms\.md", f.name)
+                        for f in (home / "spec").glob("*.norms.md"))
+        item = re.compile(r"P/[0-9]{2}\." + CHAPTER + r"-[0-9]{2}" if chaptered else r"P/[0-9]{2}-[0-9]{2}")
+        any_item = re.compile(r"P/[0-9]{2}(?:\." + CHAPTER + r")?-[0-9]{2}")
+        prefix = key + ("." if chaptered else "-")
         counts, stages = Counter(), {}
         for line, cells in rows:
             row = dict(zip(head, cells))
@@ -1947,6 +1953,9 @@ class Check:
                 if item.fullmatch(value):
                     counts[value] += 1
                     stages.setdefault(value, []).append(row["stage"])
+                elif any_item.fullmatch(value):
+                    self.error(table, f"stage norms: {value} has the item form of a lesson "
+                                      f"{'without' if chaptered else 'with'} chapters")
         if not required and not counts:
             return
         wanted, system_items = [], set()
@@ -1961,7 +1970,7 @@ class Check:
             if body is None:
                 continue
             for value in outline(body, None, "Readiness checklist")[1]:
-                if not item.fullmatch(value) or not value.startswith(key + "."):
+                if not item.fullmatch(value) or not value.startswith(prefix):
                     self.error(path, f"stage norms: malformed or foreign checklist item {value!r}")
                 else:
                     wanted.append(value)

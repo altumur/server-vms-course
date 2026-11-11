@@ -158,3 +158,38 @@ class StageNormCoverageControls(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ItemFormByChapters(unittest.TestCase):
+    """Audit P/04, defect 1: a lesson without chapters names items P/NN-MM, a lesson with chapters P/NN.K-MM."""
+
+    def lesson(self, source_name, items, cell):
+        temp = tempfile.TemporaryDirectory(prefix="stage-norm-form-")
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name).resolve()
+        home = root / "Platform/04-controller"
+        (home / "spec").mkdir(parents=True)
+        (home / "forms").mkdir()
+        (home / "spec" / source_name).write_text(
+            "## Readiness checklist\n\n" + "".join(f"- [ ] **{i}** Item.\n" for i in items), encoding="utf-8")
+        (home / "forms/stages.tsv").write_text(f"n\tstage\tnorms\tgate\n1\ts1\t{cell}\tbuild\n", encoding="utf-8")
+        result = Check(root, scope="platform")
+        result.stage_norms(home, "P/04")
+        return result
+
+    def test_lesson_without_chapters_accepts_plain_items(self):
+        result = self.lesson("04-controller.norms.md", ["P/04-01"], "P/04-01")
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["stage_norm_placements"], 1)
+
+    def test_lesson_without_chapters_refuses_chapter_item(self):
+        result = self.lesson("04-controller.norms.md", ["P/04-01"], "P/04.1-01")
+        self.assertTrue(any("item form of a lesson with chapters" in e for e in result.errors), result.errors)
+
+    def test_lesson_with_chapters_refuses_plain_item(self):
+        result = self.lesson("04.1-controller.norms.md", ["P/04.1-01"], "P/04-01")
+        self.assertTrue(any("item form of a lesson without chapters" in e for e in result.errors), result.errors)
+
+    def test_lesson_without_chapters_refuses_chapter_item_in_source(self):
+        result = self.lesson("04-controller.norms.md", ["P/04.1-01"], "P/04-01")
+        self.assertTrue(any("malformed or foreign checklist item" in e for e in result.errors), result.errors)
