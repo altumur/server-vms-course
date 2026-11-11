@@ -3,27 +3,27 @@
 # of the candidate; the names are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of
 # every later stage that holds code:*. norm: the norms of the subject. Cores: write_model (the checks of the write command), jcs, store_core (admission,
 # cas, guard, id memory, journal), rights_core, copy_core; their machines in the form Step(State, Event) -> (State, []Effect) are admission_step,
-# journal_step and copy_step. The Raft library is a requires_module row of stage group (addendum (39) item 6).
+# journal_step and copy_step. The Raft library is a requires_module row of stage group (addendum (39) item 6) and in the forbid of every core (P02.36).
 id	kind	name	args	stage	norm
-C01	pure_core	write_model	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	model	P/01.1 N1; P/01.1 N2.1
+C01	pure_core	write_model	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	model	P/01.1 N1; P/01.1 N2.1
 C02	table_driven	write_model	{"form": "Platform/01-store/forms/write-checks.tsv", "min_cell": 9}	model	P/01.1 N2.1; forms/write-checks.tsv
 C03	property_tests	write_check	{}	model	P/01.1 N2.1
 C04	complexity	write_model	{"max_branches": 15, "max_lines": 80}	model	P/01.1 N2.1
 C05	table_driven	daemon_flags	{"form": "Platform/01-store/forms/daemon-flags.tsv", "min_cell": 9}	launch	P/01.3 N1.3; forms/daemon-flags.tsv
-C06	pure_core	jcs	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	jcs	P/01.1 N1 id
+C06	pure_core	jcs	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	jcs	P/01.1 N1 id
 C07	property_tests	jcs_canonical	{}	jcs	P/01.1 N1 id
 C08	complexity	jcs	{"max_branches": 15, "max_lines": 80}	jcs	P/01.1 N1 id
-C09	pure_core	store_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	store_core	P/01.1 N3
+C09	pure_core	store_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	store_core	P/01.1 N3
 C10	step_form	admission_step	{"core": "store_core"}	store_core	P/01.1 N3
 C11	property_tests	admission_step	{}	store_core	P/01.1 N3
 C12	complexity	store_core	{"max_branches": 15, "max_lines": 80}	store_core	P/01.1 N3
 C13	table_driven	refusals	{"form": "Platform/01-store/forms/refusals.tsv", "min_cell": 9}	http	P/01.1 N4; forms/refusals.tsv
 C14	exhaustive	refusal_kind	{"form": "Platform/01-store/forms/refusals.tsv", "column": "kind"}	http	P/01.1 N4; forms/refusals.tsv
 C15	table_driven	runtime_constants	{"form": "Platform/01-store/forms/runtime-constants.tsv", "min_cell": 9}	http	P/01.1 N2; forms/runtime-constants.tsv
-C16	pure_core	rights_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	rights_eval	P/01.2 N1.2; P/01.2 N1.3
+C16	pure_core	rights_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	rights_eval	P/01.2 N1.2; P/01.2 N1.3
 C17	property_tests	rights_decide	{}	rights_eval	P/01.2 N1.3
 C18	complexity	rights_core	{"max_branches": 15, "max_lines": 80}	rights_eval	P/01.2 N1.2; P/01.2 N1.3
-C19	pure_core	copy_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	daemon_copy	P/01.3 N3
+C19	pure_core	copy_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec", "github.com/hashicorp/raft"]}	daemon_copy	P/01.3 N3
 C20	step_form	copy_step	{"core": "copy_core"}	daemon_copy	P/01.3 N3
 C21	complexity	copy_core	{"max_branches": 15, "max_lines": 80}	daemon_copy	P/01.3 N3
 C22	step_form	journal_step	{"core": "store_core"}	durable	P/01.1 N1; P/01.3 N1.3
