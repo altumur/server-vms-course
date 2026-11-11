@@ -2,31 +2,40 @@
 # case: only — row n is violated first and no later evaluable row is violated; pair — row n is violated first and the nearest later evaluable row too;
 # nopair — row n has no pair, body says why; pass — no row is violated (n is 0). Evaluable — whose when evaluates on this input without a CEL error.
 # Only a row after which no row of this input is evaluable, or the last row of its route, has no pair.
-# body — the request object of the table (the query of GET /v1/get already in form). Parameter values and rights are the probes' own, small ones (the norm has only the #lim names of the table):
+# body — the request object of the table (the query of GET /v1/get already in form; rights — a rights file is loaded). Parameter values and rights are the probes' own, small ones (the norm has only the #lim names of the table):
 #allow writer read acc/
 #allow writer write acc/
 #allow admin *
 n	case	sock	body
-0	pass	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null}
-0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": null}
-0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["zzz/"]}, "size": 0, "role_header": null}
-0	pass	admin	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null}
-0	pass	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": null}
-0	pass	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "writer"}
-0	pass	peer:configstore-door	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "writer"}
-0	pass	writer	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": null}
-1	only	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "admin"}
-1	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "writer"}
-1	only	writer	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": "writer"}
+0	pass	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null, "rights": true}
+0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": null, "rights": true}
+0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["zzz/"]}, "size": 0, "role_header": null, "rights": true}
+0	pass	admin	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null, "rights": true}
+0	pass	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": null, "rights": true}
+0	pass	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "writer", "rights": true}
+0	pass	peer:configstore-door	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "writer", "rights": true}
+0	pass	writer	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": null, "rights": true}
+0	pass	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null, "rights": false}
+0	pass	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "admin", "rights": false}
+1	only	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "admin", "rights": true}
+1	only	admin	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "writer", "rights": true}
+1	only	writer	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": "writer", "rights": true}
 1	nopair	writer	row 2 needs a peer of -api, row 1 a socket or a writer: they never hold together, and the later rows read the effective role, which row 1 already refused
-2	only	peer:console	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "writer"}
-2	only	peer:console	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": "writer"}
-2	pair	peer:console	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": "writer"}
-3	only	writer	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null}
-3	only	peer:configstore	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": "writer"}
-3	only	peer:configstore-door	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null}
-3	nopair	writer	the last row of GET /v1/rights: row 4 applies only to GET /v1/get
-4	only	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": null}
-4	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": "writer"}
-4	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null}
-4	nopair	writer	the last row of the table
+2	only	peer:console	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": "writer", "rights": true}
+2	only	peer:console	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": "writer", "rights": true}
+2	nopair	peer:console	row 3 needs a trusted peer of the group, row 2 an untrusted one: they never hold together
+3	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": "admin", "rights": true}
+3	only	peer:configstore-door	{"method": "POST", "path": "/v1/write", "query": {}, "size": 12, "role_header": "admin", "rights": true}
+3	only	peer:configstore	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": "admin", "rights": true}
+3	nopair	peer:configstore	row 3 needs the forwarded role admin, row 4 an effective role that is not admin: they never hold together
+4	only	writer	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null, "rights": true}
+4	only	peer:configstore	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": "writer", "rights": true}
+4	only	peer:configstore-door	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null, "rights": true}
+4	pair	writer	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null, "rights": false}
+5	only	admin	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": null, "rights": false}
+5	only	peer:configstore	{"method": "GET", "path": "/v1/rights", "query": {}, "size": 0, "role_header": "admin", "rights": false}
+5	nopair	admin	the last row of GET /v1/rights: row 6 applies only to GET /v1/get
+6	only	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": null, "rights": true}
+6	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": "writer", "rights": true}
+6	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null, "rights": true}
+6	nopair	writer	the last row of the table
