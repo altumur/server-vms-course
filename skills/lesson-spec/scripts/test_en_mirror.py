@@ -102,9 +102,8 @@ class Mirror(unittest.TestCase):
         self.assertTrue(any("early" in e for e in errors), errors)
 
     def test_reference(self):
-        self.mutated("(C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29).\n",
-                     "(the Architect's decision of 2026-10-29).\n")
-        self.mutated("it names names and versions, not content (ADR-0021).", "it names names and versions, not content.")
+        self.mutated("`FOLDERS_DEPTH_MAX + 1` (P/06.8 N1.3).", "`FOLDERS_DEPTH_MAX + 1`.")
+        self.mutated("«the whole box is one implementation» (P/02.4 N1.2)", "«the whole box is one implementation»")
         self.mutated("UTF-8 is not required (N3 «list»).", "UTF-8 is not required (N5 «list»).")
 
     def test_link(self):
@@ -117,7 +116,7 @@ class Mirror(unittest.TestCase):
         self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:", cases=True)
 
     def test_checklist(self):
-        self.mutated("- [ ] **P/01.1-31** batch", "- [ ] **P/01.1-32** batch")
+        self.mutated("- [ ] **P/01.1-31** [test, reading] batch", "- [ ] **P/01.1-32** [test, reading] batch")
 
     def test_section(self):
         self.mutated("## Implementation decides", "### Implementation decides")
@@ -128,7 +127,7 @@ class Mirror(unittest.TestCase):
     def test_cyrillic(self):
         errors = self.mutated("The read MUST be linearizable", "The read ДОЛЖЕН be linearizable")
         self.assertTrue(any("Cyrillic" in e for e in errors), errors)
-        self.mutated("# A store row. The store", "# Строка хранилища. The store")
+        self.mutated("```yaml\n# A store row.\n", "```yaml\n# Строка хранилища.\n")
 
     def test_code_block_value(self):                    # ADR-0120 доп. (5) п. 7: значение без смены размеров
         # Owned historical syntax: current source uses the ROW_CEILING reference.
@@ -146,7 +145,7 @@ class Mirror(unittest.TestCase):
         self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit", owned=True)
 
     def test_code_block_untranslated_part(self):        # вне комментария — только перевод русской прозы
-        self.mutated("      - does not start with \"/\"", "      - does not start with \"\\\\\"")
+        self.mutated('cas: [absent, "", <version>]', 'cas: [missing, "", <version>]')
         self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit", owned=True)
 
     def test_code_block_comment_free(self):             # комментарий переводится свободно
