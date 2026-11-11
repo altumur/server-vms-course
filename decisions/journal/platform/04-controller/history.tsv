@@ -1,0 +1,383 @@
+req_id	file	source	date	removed
+-	README.md#intro	ADR-0092; ADR-0088	2026-11-11	(JSON Schema 2020-12, ADR-0092; ADR-0088)
+-	README.md#intro	ADR-0124	2026-11-11	(ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`)
+-	README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	acceptance/README.md#checks-by-reading	C04-TORN-01	2026-11-11	(N3 «write release»; C04-TORN-01)
+-	acceptance/README.md#checks-by-reading	ADR-0084	2026-11-11	(ADR-0084)
+-	acceptance/README.md#snapshot-outside-tsv	C04-SNAPSHOT-CEILING-MAXBYTES-01	2026-11-11	(C04-SNAPSHOT-CEILING-MAXBYTES-01)
+-	acceptance/README.md#snapshot-outside-tsv	from the README of the acceptance of M10/10	2026-11-11	(from the README of the acceptance of M10/10)
+-	acceptance/README.md#count	ADR-0091	2026-11-11	(ADR-0091)
+-	acceptance/README.md#sleeps-sleep	ADR-0080	2026-11-11	(`@sleep`, ADR-0080 addendum (17) item 4)
+-	acceptance/README.md#exact-preparation-and-completion	the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33	2026-11-11	(the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33)
+-	acceptance/README.md#exact-preparation-and-completion	the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33	2026-11-11	(the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33)
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	C04-HOME-PLACE-HOLDER-01	2026-11-11	(N1.3 `home`, a volume without a server; step 7; C04-HOME-PLACE-HOLDER-01)
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	C04-HOME-PLACE-HOLDER-01	2026-11-11	(N1.3 `home`; N3 «choose», step 7; C04-HOME-PLACE-HOLDER-01)
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	the Architect's decision of 2026-11-04	2026-11-04	(the Architect's decision of 2026-11-04)
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	C04-HOME-PLACE-HOLDER-01	2026-11-11	(sc. 43, 44; C04-HOME-PLACE-HOLDER-01)
+-	acceptance/README.md#scenarios-2842	C04-SNAPSHOT-GONE-WORKER-01	2026-11-11	(N1.3a — one form of an empty shard,
+-	acceptance/README.md#scenarios-2842	C04-SNAPSHOT-GONE-WORKER-01	2026-11-11	  as the witness; C04-SNAPSHOT-GONE-WORKER-01)
+-	acceptance/README.md#scenarios-2842	C04-MANIFEST-BEHIND-COUNT-01	2026-11-11	(C04-MANIFEST-BEHIND-COUNT-01)
+-	acceptance/README.md#scenarios-2842	C04-FATES-WINDOW-01	2026-11-11	(the window of one pass, as C04-FATES-WINDOW-01)
+-	acceptance/README.md#scenarios-2842	Gemini, 2026-10-30, commit 82da537d5, the Gemini P04 coverage audit, G01–G07	2026-10-30	(Gemini, 2026-10-30, commit 82da537d5, the Gemini P04 coverage audit, G01–G07)
+-	acceptance/README.md#scenariostsv	C04-FATES-WINDOW-01	2026-11-11	(as C04-FATES-WINDOW-01)
+-	acceptance/README.md#scenariostsv	ADR-0049	2026-11-11	(N3 «Races», ADR-0049)
+-	acceptance/README.md#scenariostsv	N5; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5	2026-10-20	(N5; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5)
+-	acceptance/README.md#scenariostsv	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R16′; analysis of the review of stage A 3–5, № 1)
+-	acceptance/README.md#scenariostsv	a debt of the stand; analysis of the review of stage A 3–5, № 18	2026-11-11	(a debt of the stand; analysis of the review of stage A 3–5, № 18)
+-	acceptance/README.md#scenariostsv	ADR-0084	2026-11-11	(the process came up after the withdrawal by the deadline — outside the pool,
+-	acceptance/README.md#scenariostsv	ADR-0084	2026-11-11	  the script stops it, want is not raised, ADR-0084 addendum (4) R28)
+-	acceptance/README.md#scenariostsv	the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33	2026-11-11	(the dictionary
+-	acceptance/README.md#scenariostsv	the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33	2026-11-11	  of the common acceptance README; analysis of the review of stage B 3–5, № 33)
+-	acceptance/README.md#scenariostsv	ADR-0084	2026-11-11	(ADR-0084)
+-	acceptance/README.md#scenariostsv	the Quint pilot, F2	2026-11-11	(the Quint pilot, F2)
+-	acceptance/README.md#scenariostsv	[the presence lock contract](../../common/contracts/presence-lock.md), the norms N3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new target	2026-11-11	([the presence lock contract](../../common/contracts/presence-lock.md),
+-	acceptance/README.md#scenariostsv	[the presence lock contract](../../common/contracts/presence-lock.md), the norms N3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new target	2026-11-11	  the norms N3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new
+-	acceptance/README.md#scenariostsv	[the presence lock contract](../../common/contracts/presence-lock.md), the norms N3 «fate»; the second pilot, N-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new target	2026-11-11	  target)
+-	acceptance/README.md#scenariostsv	C04-FATES-WINDOW-01	2026-11-11	(`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move, C04-FATES-WINDOW-01)
+-	acceptance/README.md#scenariostsv	analysis of the review of stage A 3–5, № 7	2026-11-11	(analysis
+-	acceptance/README.md#scenariostsv	analysis of the review of stage A 3–5, № 7	2026-11-11	  of the review of stage A 3–5, № 7)
+-	acceptance/README.md#scenariostsv	from M10/10; T7	2026-11-11	(from M10/10; T7)
+-	acceptance/README.md#scenariostsv	the norms N1.3a; the time `ts` — `@time`, the Architect's decision of 2026-10-18 «Time in a row»	2026-10-18	(the norms N1.3a; the time `ts` — `@time`, the Architect's decision of 2026-10-18 «Time in a row»)
+-	acceptance/README.md#scenariostsv	from M10/10	2026-11-11	(from M10/10)
+-	acceptance/README.md#stand	P03-OBJECTS-DEFAULT-1FD	2026-10-27	([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27)
+-	acceptance/README.md#stand	the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17	2026-11-11	(the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17)
+-	acceptance/README.md#stand	P/03.4 N1.1 `status`; the second pilot, N-7	2026-11-11	(P/03.4 N1.1 `status`;
+-	acceptance/README.md#stand	P/03.4 N1.1 `status`; the second pilot, N-7	2026-11-11	the second pilot, N-7)
+-	acceptance/README.md#stand	reconciliation of python and go M10/3–5, item 24	2026-11-11	(reconciliation of python and go M10/3–5, item 24)
+-	acceptance/README.md#stand	analysis of the review of stage B 3–5, № 17	2026-11-11	(analysis of the review of stage B 3–5, № 17)
+-	acceptance/README.md#intro	sc. 01–07 of the acceptance of M10/04	2026-11-11	(sc.
+-	acceptance/README.md#intro	sc. 01–07 of the acceptance of M10/04	2026-11-11	01–07 of the acceptance of M10/04)
+-	acceptance/README.md#intro	analysis of the review of stage A 6–7, № 32	2026-11-11	(analysis of the review of stage A 6–7, № 32)
+-	acceptance/README.md#intro	the coverage audit of P/04, 2026-10-30, the drafts D01, D03, D04, D06, D07, D08, D10	2026-10-30	(the coverage audit of P/04,
+-	acceptance/README.md#intro	the coverage audit of P/04, 2026-10-30, the drafts D01, D03, D04, D06, D07, D08, D10	2026-10-30	2026-10-30, the drafts D01, D03, D04, D06, D07, D08, D10)
+-	acceptance/README.md#intro	analysis of the review of stage B 3–5, № 17	2026-11-11	(analysis of the review of stage B 3–5, № 17)
+-	acceptance/README.md#intro	P03-OBJECTS-DEFAULT-1FD	2026-10-27	(P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27)
+-	acceptance/README.md#intro	ADR-0083	2026-11-11	(stage B, ADR-0083 addendum (1): without a change of behaviour)
+-	acceptance/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	forms/README.md#intro	ADR-0125	2026-11-11	(ADR-0125 addendum (5))
+-	forms/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	lifecycle.md#stand	review of stage B 3–5, № 34	2026-11-11	(review of stage B 3–5, № 34)
+-	lifecycle.md#stand	STAND-ROOTS-CLEAR-01	2026-10-27	([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27)
+-	lifecycle.md#exit-codes	review of stage A 6–7, B2	2026-11-11	(review of stage A 6–7, B2)
+-	lifecycle.md#directories-and-files	ADR-0084	2026-11-11	([P/04] N3 «pass()» step 0; ADR-0084 addendum (2) R17; review of stage A
+-	lifecycle.md#directories-and-files	ADR-0084	2026-11-11	  3–5, № 22)
+-	lifecycle.md#directories-and-files	P03-OBJECTS-DEFAULT-1FD	2026-10-27	([the object store client contract](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27)
+-	lifecycle.md#environment	review of stage B 3–5, № 18	2026-11-11	(review of stage B 3–5, № 18)
+-	lifecycle.md#intro	stage B	2026-11-11	(stage B)
+-	lifecycle.md#intro	ADR-0083	2026-11-11	(ADR-0083 addendum (2) item 1)
+-	lifecycle.md#intro	ADR-0121; ADR-0124	2026-11-11	(ADR-0121; ADR-0124 addendum (1) item 2)
+-	spec/04-controller.README.md#order-of-work	P03-OBJECTS-DEFAULT-1FD	2026-11-11	(all — with the resource P/05 on
+-	spec/04-controller.README.md#order-of-work	P03-OBJECTS-DEFAULT-1FD	2026-11-11	   the server of the controller: the controller reads the objects of the cluster through the resource of its server, R17; without the resource — «unknown»,
+-	spec/04-controller.README.md#order-of-work	P03-OBJECTS-DEFAULT-1FD	2026-11-11	   P03-OBJECTS-DEFAULT-1FD)
+-	spec/04-controller.README.md#order-of-work	C04-SNAPSHOT-CEILING-MAXBYTES-01	2026-11-11	(C04-SNAPSHOT-CEILING-MAXBYTES-01)
+-	spec/04-controller.README.md#order-of-work	C04-TORN-01	2026-10-23	(N3 «write release»; the guess of stage C C04-TORN-01, the Architect's decision of 2026-10-23)
+-	spec/04-controller.README.md#order-of-work	ADR-0084	2026-11-11	(ADR-0084 addendum (2)–(5) R13′–R28,
+-	spec/04-controller.README.md#order-of-work	ADR-0084	2026-11-11	   R16‴; analysis of the review of stage B 6–7, № 45)
+-	spec/04-controller.README.md#order-of-work	the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5	2026-10-20	(the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5)
+-	spec/04-controller.README.md#order-of-work	ADR-0084	2026-11-11	(ADR-0084)
+-	spec/04-controller.README.md#what-to-create	ADR-0084	2026-11-11	(ADR-0084)
+-	spec/04-controller.README.md#inputs-and-their-priority	ADR-0088	2026-11-11	(the data catalogue, ADR-0088)
+-	spec/04-controller.README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/04-controller.norms.md#N5	ADR-0084	2026-11-11	(P/04-14; ADR-0084 addendum (4) R28)
+-	spec/04-controller.norms.md#N5	ADR-0130	2026-11-11	(ADR-0130 Addendum (19) item 6)
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(ADR-0091 addendum (9)–(10))
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(ADR-0091 addendum (26) item 2, addendum (27) items 5–6)
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(N1.3; ADR-0091 item 10)
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(N1.3a; ADR-0091 item 3)
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(ADR-0091 item 1)
+-	spec/04-controller.norms.md#N5	C04-RETIRE-TIMER-CLEAR-01	2026-11-11	(C04-RETIRE-TIMER-CLEAR-01)
+-	spec/04-controller.norms.md#N5	ADR-0091	2026-11-11	(ADR-0091 items 1–3)
+-	spec/04-controller.norms.md#N5	from M10/10, steps 1–4	2026-11-11	(from M10/10, steps 1–4)
+-	spec/04-controller.norms.md#N5	ADR-0067	2026-11-11	(ADR-0067)
+-	spec/04-controller.norms.md#N5	the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting, R16′; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5	2026-10-20	(the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting, R16′; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
+-	spec/04-controller.norms.md#N5	ADR-0084	2026-11-11	(ADR-0084 addendum (2)–(4) R13′–R28)
+-	spec/04-controller.norms.md#N5	in flight(s) = 0; review of stage B 3–5, № 40	2026-11-11	(in flight(s) = 0; review of stage B 3–5, № 40)
+-	spec/04-controller.norms.md#N5	a number above want is not a victim; review of stage B 6–7, № 42	2026-11-11	(a number above want is not a victim; review of stage B 6–7, № 42)
+-	spec/04-controller.norms.md#N5	ADR-0084	2026-11-11	(ADR-0084)
+-	spec/04-controller.norms.md#N5	«Checks by reading from M10/04 acceptance»	2026-11-11	(«Checks by reading from M10/04 acceptance»)
+-	spec/04-controller.norms.md#N5	ADR-0011	2026-11-11	(ADR-0011)
+-	spec/04-controller.norms.md#N5	ADR-0078	2026-11-11	(ADR-0078)
+-	spec/04-controller.norms.md#N5	review of stage B 6–7, № 20	2026-11-11	(review of stage B 6–7, № 20)
+-	spec/04-controller.norms.md#N5	ADR-0080	2026-11-11	(ADR-0080 addendum 6)
+-	spec/04-controller.norms.md#N5	from M10/04	2026-11-11	(from M10/04)
+-	spec/04-controller.norms.md#N5	the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5	2026-10-20	(the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
+-	spec/04-controller.norms.md#N5	whether shrinking is allowed and the order of the refusal reasons; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5	2026-10-20	(whether shrinking is allowed and the order of the refusal reasons; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
+-	spec/04-controller.norms.md#N5	from M10/11 sc. 02	2026-11-11	(from M10/11 sc. 02)
+-	spec/04-controller.norms.md#N5	from M10/11 sc. 01	2026-11-11	(from M10/11 sc. 01)
+-	spec/04-controller.norms.md#N5	ADR-0091; C04-HOME-PLACE-HOLDER-01	2026-11-11	(sc. 18, 19 — ADR-0091; sc. 20–27 — the coverage audit of P/04; sc. 28–42 — its second pass; sc. 43, 44 — C04-HOME-PLACE-HOLDER-01)
+-	spec/04-controller.norms.md#N5	the reader side of the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); review of stage A 6–7, № 32	2026-11-11	(the reader side of
+-	spec/04-controller.norms.md#N5	the reader side of the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); review of stage A 6–7, № 32	2026-11-11	the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); review of stage A 6–7, № 32)
+-	spec/04-controller.norms.md#N5	coverage audit of P/04, 2026-10-30; sc. 25 — `@cut role`/`@mend role`, sc. 26, 27 — `@freeze`/`@thaw`	2026-10-30	(coverage audit of P/04, 2026-10-30; sc. 25 — `@cut role`/`@mend role`, sc. 26, 27 — `@freeze`/`@thaw`)
+-	spec/04-controller.norms.md#N5	review of stage B 3–5, № 17	2026-11-11	(review
+-	spec/04-controller.norms.md#N5	review of stage B 3–5, № 17	2026-11-11	of stage B 3–5, № 17)
+-	spec/04-controller.norms.md#N5	P03-OBJECTS-DEFAULT-1FD	2026-10-27	(P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27)
+-	spec/04-controller.norms.md#N5	review of stage B 3–5, № 17	2026-11-11	(review of stage B 3–5, № 17)
+P/04-R066	spec/04-controller.norms.md#N3	from M10/11 N3, the move of lesson 6	2026-11-11	(from M10/11 N3, the move of lesson 6)
+P/04-R063	spec/04-controller.norms.md#N3	C04-SNAPSHOT-GONE-WORKER-01	2026-11-11	(N1.3a; C04-SNAPSHOT-GONE-WORKER-01)
+P/04-R063	spec/04-controller.norms.md#N3	N1.2; N1.3a garbled; reconciliation of python and go M10/6–11, T7	2026-11-11	(N1.2; N1.3a garbled; reconciliation of python and go M10/6–11, T7)
+P/04-R061	spec/04-controller.norms.md#N3	[the schema contract](../../common/contracts/schema.md); moved there without a change; layout audit A-02, the Architect's decision of 2026-10-25	2026-10-25	([the schema contract](../../common/contracts/schema.md); moved there without a change; layout audit A-02, the Architect's decision of 2026-10-25)
+P/04-R057	spec/04-controller.norms.md#N3	C04-MANIFEST-BEHIND-COUNT-01	2026-11-11	(C04-MANIFEST-BEHIND-COUNT-01)
+P/04-R055	spec/04-controller.norms.md#N3	review of stage A 6–7, № 2	2026-11-11	(review of stage A 6–7, № 2)
+P/04-R053	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R16′, addendum (5) R16‴; review of stage A 3–5, № 13)
+P/04-R052	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R14′)
+P/04-R052	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(P/03.4 N3 «stop by SIGTERM»; ADR-0084 item 7)
+P/04-R052	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (1) R2)
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (6))
+P/04-R051	spec/04-controller.norms.md#N3	cammeta-go M10-04 № 6	2026-11-11	(cammeta-go M10-04 № 6)
+P/04-R051	spec/04-controller.norms.md#N3	C04-PLACE-WANTED-01; ADR-0127	2026-11-11	(C04-PLACE-WANTED-01; the Architect decision on ADR-0127, review P/04 C1)
+P/04-R051	spec/04-controller.norms.md#N3	stage A, A6	2026-11-11	(stage A, A6)
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (6); review
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	             of stage B 6–7, № 42)
+P/04-R051	spec/04-controller.norms.md#N3	the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5	2026-10-20	(the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5)
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R16′, addendum (5) R16‴)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (4) R28 instead of R25)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 item 7; ADR-0084 addendum (4) R27)
+P/04-R050	spec/04-controller.norms.md#N3	stage A, A6	2026-11-11	(stage A,
+P/04-R050	spec/04-controller.norms.md#N3	stage A, A6	2026-11-11	                 A6)
+P/04-R050	spec/04-controller.norms.md#N3	review of stage B 3–5, № 16	2026-11-11	(review
+P/04-R050	spec/04-controller.norms.md#N3	review of stage B 3–5, № 16	2026-11-11	                 of stage B 3–5, № 16)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (5) R16‴)
+P/04-R050	spec/04-controller.norms.md#N3	no probe: ordered and not raised; review of stage B 3–5, № 40	2026-11-11	(no probe: ordered and not raised;
+P/04-R050	spec/04-controller.norms.md#N3	no probe: ordered and not raised; review of stage B 3–5, № 40	2026-11-11	                 review of stage B 3–5, № 40)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084; C04-PLACE-WANTED-01	2026-11-01	(ADR-0084 R15; C04-PLACE-WANTED-01, the Architect's decision of 2026-11-01, analysis of the VMS invariants)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0091	2026-11-11	(ADR-0091 addendum (9) item 6, addendum (10) items 1–3; repeated review of addendum (10))
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 R2; cammeta-go M10-04 № 5)
+P/04-R050	spec/04-controller.norms.md#N3	review of stage B 3–5, № 15	2026-11-11	(review of stage B 3–5, № 15)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R20)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R19, addendum (3) R19′)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084; cammeta-go M10-04 № 7; stage A, A6)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(unique labels ascending, comma-separated, a repeat collapses — a label set is a set;
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	                 the empty set first; ADR-0084 addendum (2) R21)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R14′)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R13)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R13, addendum (3) R13′)
+P/04-R050	spec/04-controller.norms.md#N3	review of stage B 3–5, № 16	2026-11-11	(review of stage B 3–5, № 16)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(ADR-0084; cammeta-go M10-04 № 6)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0127	2026-11-11	(the Architect decision on ADR-0127, review P/04 C3)
+P/04-R049	spec/04-controller.norms.md#N3	ADR-0021; ADR-0084	2026-11-11	(ADR-0021, ADR-0084 and addendum (1))
+P/04-R047	spec/04-controller.norms.md#N3	N3 «fate», [P/03.2-08](../../03-worker/spec/03.2-worker.norms.md); the Architect's decision of 2026-10-31, stage 2 of the plan of the group scenarios	2026-10-31	(N3 «fate», [P/03.2-08](../../03-worker/spec/03.2-worker.norms.md); the Architect's decision of 2026-10-31, stage 2 of the plan of the group scenarios)
+P/04-R047	spec/04-controller.norms.md#N3	released = taking, the version unchanged for SLOT_TERM on the clock of the controller — the capturer died between the writes; earlier — not leaving, the capture will finish; added by the Quint pilot, F2	2026-11-11	(released = taking, the version unchanged for SLOT_TERM on the clock of the controller — the capturer died between the writes; earlier — not leaving, the capture will finish; added by the Quint pilot, F2)
+P/04-R046	spec/04-controller.norms.md#N3	ADR-0049	2026-11-11	(ADR-0049)
+P/04-R045	spec/04-controller.norms.md#N3	ADR-0113	2026-11-11	(above; ADR-0113 addendum (50))
+P/04-R043	spec/04-controller.norms.md#N3	review P/04 M1	2026-11-11	(review P/04 M1)
+P/04-R043	spec/04-controller.norms.md#N3	ADR-0080	2026-11-11	(ADR-0080 addendum 12)
+P/04-R041	spec/04-controller.norms.md#N3	ADR-0113	2026-11-11	(ADR-0113 addendum (49), (50))
+P/04-R035	spec/04-controller.norms.md#N3	C04-LEAVING-PLACE-WORD-01	2026-11-11	(`<place_by>` is the name of the field `placement.place_by`, `<place>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`; C04-LEAVING-PLACE-WORD-01)
+P/04-R034	spec/04-controller.norms.md#N3	V7 item 3, the Architect's decision of 2026-10-28, on a proposal; line 7 of the list	2026-10-28	(V7 item 3, the Architect's decision of 2026-10-28, on a proposal; line 7 of the list)
+P/04-R033	spec/04-controller.norms.md#N3	common/contracts/pool.md; moved there without a change of behaviour, C06-SERVER-POLICY-33-01	2026-11-11	(common/contracts/pool.md; moved there without a change
+P/04-R033	spec/04-controller.norms.md#N3	common/contracts/pool.md; moved there without a change of behaviour, C06-SERVER-POLICY-33-01	2026-11-11	      of behaviour, C06-SERVER-POLICY-33-01)
+P/04-R030	spec/04-controller.norms.md#N3	ADR-0091	2026-11-11	(unit.state declared; ADR-0091 item 3)
+P/04-R030	spec/04-controller.norms.md#N3	ADR-0091	2026-11-11	(ADR-0091 items 1, 2)
+P/04-R030	spec/04-controller.norms.md#N3	C04-RETIRE-TIMER-CLEAR-01	2026-11-01	(the Architect's decision of
+P/04-R030	spec/04-controller.norms.md#N3	C04-RETIRE-TIMER-CLEAR-01	2026-11-01	   2026-11-01, Quint V/05.1 V1, C04-RETIRE-TIMER-CLEAR-01)
+P/04-R030	spec/04-controller.norms.md#N3	C04-HOME-PLACE-HOLDER-01	2026-11-11	(C04-HOME-PLACE-HOLDER-01)
+P/04-R030	spec/04-controller.norms.md#N3	added by the reconciliation of M11, cammeta-python 05 № 25	2026-11-11	(added by the reconciliation of M11, cammeta-python 05 № 25)
+P/04-R030	spec/04-controller.norms.md#N3	ADR-0091	2026-11-11	(ADR-0091 addendum (27) item 5)
+P/04-R030	spec/04-controller.norms.md#N3	P03-OBJECTS-DEFAULT-1FD	2026-10-27	([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27)
+P/04-R030	spec/04-controller.norms.md#N3	ADR-0084	2026-11-11	(the objects door of P/05, `scope`; ADR-0084 addendum (2) R17)
+P/04-R026	spec/04-controller.norms.md#N3	moved there without a change of behaviour; layout audit A-03, the Architect's decision of 2026-10-25	2026-10-25	(moved there without a change of behaviour; layout audit A-03, the Architect's decision of 2026-10-25)
+P/04-R021	spec/04-controller.norms.md#N1.5	review of stage A 6–7, № 2	2026-11-11	(review
+P/04-R021	spec/04-controller.norms.md#N1.5	review of stage A 6–7, № 2	2026-11-11	of stage A 6–7, № 2)
+P/04-R020	spec/04-controller.norms.md#N1.5	reconciliation of python and go 2026-10-18	2026-10-18	(reconciliation of python and go 2026-10-18)
+P/04-R019	spec/04-controller.norms.md#N1.5	moved there without a change; layout audit A-03, the decision of the Architect 2026-10-25	2026-10-25	(moved there without a change; layout audit A-03, the decision of the Architect 2026-10-25)
+P/04-R017	spec/04-controller.norms.md#N1.4a	stage B; the plan of the move of lesson 6, item 5: no norms remain in M10/11	2026-11-11	(stage B; the plan of the move of lesson 6, item 5: no norms remain in M10/11)
+P/04-R015	spec/04-controller.norms.md#N1.4	review of stage A 6–7, № 1, № 2	2026-11-11	(review of stage A 6–7, № 1, № 2)
+P/04-R014	spec/04-controller.norms.md#N1.4	C04-PRESENCE-PARTIAL-01	2026-11-11	(a partial set: running without workers — runs, workers without running — gone;
+P/04-R014	spec/04-controller.norms.md#N1.4	C04-PRESENCE-PARTIAL-01	2026-11-11	                    # C04-PRESENCE-PARTIAL-01)
+P/04-R014	spec/04-controller.norms.md#N1.4	reconciliation of python and go 2026-10-18	2026-10-18	(reconciliation of python and go 2026-10-18)
+P/04-R014	spec/04-controller.norms.md#N1.4	common/contracts/observation.md «Resource state»; review of stage A 6–7, № 2	2026-11-11	(common/contracts/observation.md «Resource state»; review of stage A 6–7, № 2)
+P/04-R014	spec/04-controller.norms.md#N1.4	C04-WANT-GRACE-REPATH-01	2026-11-11	(C04-WANT-GRACE-REPATH-01)
+P/04-R014	spec/04-controller.norms.md#N1.4	ADR-0049; ADR-0084	2026-11-11	(ADR-0049; ADR-0084 addendum (1) R5)
+P/04-R014	spec/04-controller.norms.md#N1.4	ADR-0084	2026-11-11	(ADR-0084)
+P/04-R014	spec/04-controller.norms.md#N1.4	the value is there; layout audit, the decision of the Architect 2026-10-25, A-10	2026-10-25	(the value is there; layout audit, the decision of the Architect 2026-10-25, A-10)
+P/04-R014	spec/04-controller.norms.md#N1.4	the value is there; layout audit, the decision of the Architect 2026-10-25, A-17	2026-10-25	(the value is there; layout audit, the decision of the Architect 2026-10-25, A-17)
+P/04-R014	spec/04-controller.norms.md#N1.4	«within the last LOST_AFTER»; # review of stage A 6–7, № 1, № 2	2026-11-11	(«within the last LOST_AFTER»;
+P/04-R014	spec/04-controller.norms.md#N1.4	«within the last LOST_AFTER»; # review of stage A 6–7, № 1, № 2	2026-11-11	                          # review of stage A 6–7, № 1, № 2)
+P/04-R014	spec/04-controller.norms.md#N1.4	the value is there; layout audit, the decision of the Architect 2026-10-25, A-01	2026-10-25	(the value is there; layout audit, the decision of the Architect 2026-10-25, A-01)
+P/04-R013	spec/04-controller.norms.md#N1.3b	ADR-0110	2026-11-11	(ADR-0110)
+P/04-R012	spec/04-controller.norms.md#N1.3b	ADR-0110	2026-11-11	(ADR-0110, step 2 of the analysis)
+P/04-R011	spec/04-controller.norms.md#N1.3a	reconciliation of python and go M10/6–11, matched without a norm	2026-11-11	(reconciliation of python and go M10/6–11, matched without a norm)
+P/04-R011	spec/04-controller.norms.md#N1.3a	C04-SNAPSHOT-CEILING-MAXBYTES-01	2026-10-28	(C04-SNAPSHOT-CEILING-MAXBYTES-01, the decision of the Architect 2026-10-28)
+P/04-R011	spec/04-controller.norms.md#N1.3a	reconciliation of python and go M10/6–11, T7	2026-11-11	(reconciliation of python and go M10/6–11, T7)
+P/04-R011	spec/04-controller.norms.md#N1.3a	C04-SNAPSHOT-GONE-WORKER-01	2026-11-11	(as the witness; C04-SNAPSHOT-GONE-WORKER-01)
+P/04-R011	spec/04-controller.norms.md#N1.3a	ADR-0091	2026-11-11	(ADR-0091 item 3)
+P/04-R011	spec/04-controller.norms.md#N1.3a	C04-SNAPSHOT-GONE-WORKER-01	2026-11-11	(C04-SNAPSHOT-GONE-WORKER-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0067	2026-10-17	(ADR-0067 addendum 2026-10-17; there is no training consumer yet — a debt in «the specification progress note (for people)»)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0067; ADR-0091	2026-10-10	(amendment of ADR-0067 addendum 2026-10-10, ADR-0091 item 1)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0067	2026-11-11	(ADR-0067)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0091	2026-11-11	(ADR-0091 item 2)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0091	2026-11-11	(ADR-0091 items 1, 3; replaces `forget_finished` of the subsystems)
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-RETIRE-TIMER-CLEAR-01	2026-11-11	(C04-RETIRE-TIMER-CLEAR-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0084	2026-11-11	(N3 «shortage(), order()…»; ADR-0084)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0091	2026-11-11	(ADR-0091 addendum (9) item 6, addendum (10) items 1–3; repeated review of addendum (10))
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-AFFINITY-BOUND-HOLDER-01	2026-11-11	(both conditions; another worker of the same server with another place does not fit; C04-AFFINITY-BOUND-HOLDER-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-AFFINITY-EMPTY-STRICT-01	2026-11-11	(C04-AFFINITY-EMPTY-STRICT-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-HOME-REF-OTHER-01	2026-11-11	(C04-HOME-REF-OTHER-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0091	2026-11-11	(N3 «pass()» step 1; ADR-0091 addendum (26) item 2, addendum (27) items 5–6)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0091	2026-11-11	(ADR-0091 item 10; vectors [`near-of`](../vectors/near-of/README.md))
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-NEAR-PREFER-SCALAR-01	2026-11-11	(as `affinity.strict`; C04-NEAR-PREFER-SCALAR-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0053	2026-10-23	(moved without a change of behaviour; stage C guess W03-GROUP-01, the Architect's decision of 2026-10-23; ADR-0053; vector [`group-of`](../../common/vectors/group-of/README.md); review of stage A, SA1-20; reconciliation of python and go 2026-10-18)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0011	2026-11-11	(ADR-0011)
+P/04-R010	spec/04-controller.norms.md#N1.3	a pair to `group_by`: empty is not a group; reconciliation of python and go M10/3–5, the Architect's decision	2026-11-11	(a pair to `group_by`: empty is not a group; reconciliation of python and go M10/3–5, the Architect's decision)
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-PLACE-WANTED-01	2026-11-11	(N3 «shortage()»; C04-PLACE-WANTED-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R15)
+P/04-R010	spec/04-controller.norms.md#N1.3	layout audit, the Architect's decision of 2026-10-25, B-07	2026-10-25	(layout audit, the Architect's decision of 2026-10-25, B-07)
+P/04-R010	spec/04-controller.norms.md#N1.3	ADR-0078	2026-11-11	(ADR-0078)
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-HEADROOM-UNREADABLE-01	2026-11-11	(C04-HEADROOM-UNREADABLE-01)
+P/04-R010	spec/04-controller.norms.md#N1.3	moved there without a change; layout audit, the Architect's decision of 2026-10-25, A-12	2026-10-25	(moved there without a change; layout audit, the Architect's decision of 2026-10-25, A-12)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0091	2026-11-11	(N1.3 near; ADR-0091 addendum (27) item 6)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R23)
+P/04-R008	spec/04-controller.norms.md#N1.2	required in the form — review of stage B 3–5, № 13	2026-11-11	(required in the form — review of stage B 3–5, № 13)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0091	2026-11-11	(N1.3a; P/03.6 N1.7 unreadable; ADR-0091 item 3)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0091	2026-11-11	(N3 «pass()» step 8; ADR-0091 item 1)
+P/04-R008	spec/04-controller.norms.md#N1.2	reconciliation of python and go 2026-10-18	2026-10-18	(reconciliation of python and go 2026-10-18)
+P/04-R008	spec/04-controller.norms.md#N1.2	C04-MANIFEST-BEHIND-COUNT-01	2026-11-11	(C04-MANIFEST-BEHIND-COUNT-01)
+P/04-R008	spec/04-controller.norms.md#N1.2	C04-PASS-OK-01	2026-11-11	(C04-PASS-OK-01)
+P/04-R006	spec/04-controller.norms.md#N1.1	reconciliation of python and go 2026-10-18	2026-10-18	(reconciliation of python and go 2026-10-18)
+P/04-R006	spec/04-controller.norms.md#N1.1	added by the pilot of the data family schemas, D7	2026-11-11	(added by the pilot of the data family schemas, D7)
+P/04-R006	spec/04-controller.norms.md#N1.1	ADR-0084	2026-11-11	(ADR-0084 addendum (3) R14′)
+P/04-R006	spec/04-controller.norms.md#N1.1	ADR-0045	2026-11-11	(ADR-0045)
+P/04-R006	spec/04-controller.norms.md#N1.1	ADR-0026	2026-11-11	(ADR-0026)
+P/04-R004	spec/04-controller.norms.md#N1	review of stage B 3–5, № 10	2026-11-11	(review of stage B 3–5, № 10)
+P/04-R069	spec/04-controller.norms.md#N0	ADR-0130	2026-11-11	(ADR-0130 Addendum (10))
+-	spec/04-controller.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	vectors/near-of/README.md#run	ACC-VECTORS-CONNECT-03	2026-10-27	(ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27)
+-	vectors/near-of/README.md#casestsv	C04-NEAR-PREFER-SCALAR-01	2026-11-11	(C04-NEAR-PREFER-SCALAR-01)
+-	vectors/near-of/README.md#intro	ADR-0091	2026-11-11	([norms](../../spec/04-controller.norms.md) N1.3 `near`; ADR-0091 item 10)
+-	vectors/near-of/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	vectors/order/README.md#what-the-vector-does-not-cover	sc. 14–17; analysis of the review of stage B 3–5, № 17	2026-11-11	(sc. 14–17; analysis of the review of stage B 3–5, № 17)
+-	vectors/order/README.md#who-executes	ACC-VECTORS-CONNECT-03	2026-10-27	(ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27)
+-	vectors/order/README.md#input-not-by-form	C04-VECTOR-INT-VALUE-01	2026-11-11	(C04-VECTOR-INT-VALUE-01)
+-	vectors/order/README.md#casestsv	N3 «set order», cammeta-go M10-04 № 7	2026-11-11	(N3
+-	vectors/order/README.md#casestsv	N3 «set order», cammeta-go M10-04 № 7	2026-11-11	«set order», cammeta-go M10-04 № 7)
+-	vectors/order/README.md#casestsv	analysis of the review of stage B 3–5, № 14	2026-11-11	(analysis of the review of stage B 3–5, № 14)
+-	vectors/order/README.md#casestsv	ADR-0084	2026-11-11	(R16′, ADR-0084 addendum (5) R16‴)
+-	vectors/order/README.md#casestsv	ADR-0084	2026-11-11	(R13′, ADR-0084 addendum (4) R26; analysis of the review of stage A 3–5, № 6)
+-	vectors/order/README.md#intro	ADR-0083	2026-11-11	(ADR-0083, stage A, A6)
+-	vectors/order/README.md#intro	ADR-0084	2026-11-11	([norms](../../spec/04-controller.norms.md) N3 «shortage(), order(), withdraw the order, shrink()»: `in_flight`, `per`, `need`, `candidate`,
+-	vectors/order/README.md#intro	ADR-0084	2026-11-11	`order`, `order_row`; ADR-0084 and addendum (1) R2, R6, R9, addendum (2)–(3) R13′–R22; cammeta-go M10-04 № 5)
+-	vectors/order/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	vectors/shrink-allowed/README.md#not-covered	the Architect's decision of 2026-10-20	2026-10-20	(the Architect's decision of 2026-10-20)
+-	vectors/shrink-allowed/README.md#who-executes	ACC-VECTORS-CONNECT-03	2026-10-27	(ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27)
+-	vectors/shrink-allowed/README.md#input-not-by-form	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R22)
+-	vectors/shrink-allowed/README.md#input-not-by-form	C04-VECTOR-INT-VALUE-01	2026-11-11	(C04-VECTOR-INT-VALUE-01)
+-	vectors/shrink-allowed/README.md#input-not-by-form	the field is mandatory, the Architect's decision of 2026-10-20	2026-10-20	(the field is mandatory, the Architect's decision of 2026-10-20)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	review of stage B 6–7, no. 42; reading of cammeta-acceptance commits, 2026-10-20	2026-10-20	(review of stage B 6–7, no. 42; reading of cammeta-acceptance commits, 2026-10-20)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	R16′; the Architect's decision of 2026-10-20	2026-10-20	(R16′; the Architect's decision of 2026-10-20)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	the Architect's decision of 2026-10-20	2026-10-20	(the Architect's decision of 2026-10-20)
+-	vectors/shrink-allowed/README.md#casestsv	the Architect's decision of 2026-10-20	2026-10-20	(the Architect's decision of 2026-10-20)
+-	vectors/shrink-allowed/README.md#intro	ADR-0083	2026-10-20	(ADR-0083;
+-	vectors/shrink-allowed/README.md#intro	ADR-0083	2026-10-20	the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5)
+-	vectors/shrink-allowed/README.md#intro	ADR-0084	2026-11-11	([norms](../../spec/04-controller.norms.md) N3 «shortage(), order(), withdraw the order, shrink()»:
+-	vectors/shrink-allowed/README.md#intro	ADR-0084	2026-11-11	`shrink (step 9a)` — `condition`, `victim`; `in_flight(s)`, `number above want`; N1.4 `SHRINK_AFTER`; ADR-0084 addendum (1) R3,
+-	vectors/shrink-allowed/README.md#intro	ADR-0084	2026-11-11	addendum (3) R13′, R16′, addendum (4) R28, addendum (5) R16‴)
+-	vectors/shrink-allowed/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	vectors/shrink-victim/README.md#who-executes	ACC-VECTORS-CONNECT-03	2026-10-27	(ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27)
+-	vectors/shrink-victim/README.md#input-not-by-form	ADR-0084	2026-11-11	(ADR-0084 addendum (2) R22)
+-	vectors/shrink-victim/README.md#input-not-by-form	C04-VECTOR-INT-VALUE-01	2026-11-11	(C04-VECTOR-INT-VALUE-01)
+-	vectors/shrink-victim/README.md#casestsv	ADR-0084	2026-11-11	(ADR-0084 addendum (6); analysis of the review of stage B 6–7, № 42)
+-	vectors/shrink-victim/README.md#intro	ADR-0083	2026-11-11	(ADR-0083, stage A, A6)
+-	vectors/shrink-victim/README.md#intro	ADR-0084	2026-11-11	([norms](../../spec/04-controller.norms.md) N3 «shrink()», `victim`; ADR-0084 addendum (1) R4, addendum (6); P/03.2 N1.4 the grammar of the name)
+-	vectors/shrink-victim/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	lifecycle.md#stand	P04.29: provenance removed	2026-11-11	The rights of the stand of the acceptances moved from M10/4–11
+-	lifecycle.md#open	P04.29: provenance removed	2026-11-11	the second pilot confirmed the replaceability of the controller on the common state — it has no open lifecycle rows.
+-	forms/README.md#seams	ADR-0127 review P/04 C1, C3	2026-11-11	### Review ADR-0127 composed pass witnesses
+-	forms/README.md#owned-scalar-settings	ADR-0129 addendum (15)	2026-11-11	## Current reports and ADR0129(15) witnesses
+-	vectors/shrink-victim/README.md#who-executes	ADR-0127 review P/04 C1	2026-11-11	Review ADR-0127 P/04 C1 also requires the composed seams s36/s37:
+-	vectors/shrink-allowed/README.md#not-covered	ADR-0127 review P/04 C1	2026-11-11	ADR-0127 P/04 C1:
+P/04-R006	spec/04-controller.norms.md#N1.1	ADR-0084 addendum (1)	2026-11-11	; ADR-0084 and addendum (1)
+P/04-R008	spec/04-controller.norms.md#N1.2	reconciliation of python and go M10/6–11, T7	2026-11-11	; the decision of the Architect,
+P/04-R008	spec/04-controller.norms.md#N1.2	reconciliation of python and go M10/6–11, T7	2026-11-11	                        #   reconciliation of python and go M10/6–11, T7
+P/04-R010	spec/04-controller.norms.md#N1.3	C04-HOME-PLACE-HOLDER-01; C04-HOME-PLACE-OR-SERVER-01	2026-10-30	 C04-HOME-PLACE-HOLDER-01, the Architect's decision of 2026-10-30, replaces the comparison with the server C04-HOME-PLACE-OR-SERVER-01
+P/04-R017	spec/04-controller.norms.md#N1.4a	M10/11 N1.4, N3; lesson 6 move	2026-11-11	`stays`, `lost`, `store`, `return` and the procedure «pull the power» (N3) are the remainder of M10/11 N1.4, N3, moved here with lesson 6
+P/04-R017	spec/04-controller.norms.md#N1.4a	M10/11 N1.4, N3; lesson 6 move	2026-11-11	.
+-	spec/04-controller.norms.md#N5	ADR-0127 review P/04	2026-11-11	**ADR-0127 review obligations.** The 50 CALL seams retain the former 33 and add 17 review witnesses.
+-	spec/04-controller.norms.md#N5	ADR-0110 analysis step 11	2026-11-11	by reading until step 11 of the analysis of ADR-0110
+-	spec/04-controller.norms.md#N5	P04.29: provenance removed	2026-11-11	The numbers of the scenarios and steps are
+-	spec/04-controller.norms.md#N5	P04.29: provenance removed	2026-11-11	the former numbers of the acceptance of M10/05, except the steps of sc. 11 (the former 4–9 are 7–12, the preparation of the shelf), the first step `@start resource` of sc. 07, 11, 13 (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), the new sc. 17 (review
+-	spec/04-controller.norms.md#N5	P04.29: provenance removed	2026-11-11	the snapshot is [chapter 6.5](../../06-console/spec/06.5-console.norms.md); review of stage A 6–7, № 32). In total 37 scenarios /
+-	spec/04-controller.norms.md#N5	P04.29: provenance removed	2026-11-11	533 steps (sc. 18, 19 — ADR-0091; sc. 20–27 — the coverage audit of P/04; sc. 28–42 — its second pass; sc. 43, 44 — C04-HOME-PLACE-HOLDER-01).
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	The norm of the lesson is [`04-controller.norms.md`](../spec/04-controller.norms.md) N5. The scenarios were moved from the acceptance of
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	M10/05, sc. 03 and 08 (the snapshot) — from the acceptance of M10/10
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	; the numbers of scenarios and steps are the former ones, except the steps of sc. 11 (the former
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	4–9 are 7–12, the preparation of the shelf, `corrections.tsv`), the first step `@start resource` of sc. 07, 11, 13 (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), the new sc. 17 (analysis of the review of stage B 3–5, № 17), steps 15–19 of sc. 18 and the new sc. 20–27 (the coverage audit of P/04,
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	G01–G07 — the section below). The steps `/metrics` of the console of
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	sc. 03 (step 5) and 08 (steps 7–9) are the side of the reader of the snapshot, chapter 6.5: they are separated into [the acceptance of
+-	acceptance/README.md#intro	P04.29: provenance removed	2026-11-11	P/06.5](../../06-console/acceptance/5/README.md) (analysis of the review of stage A 6–7, № 32). The doors of the console without workers (sc.
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D07 sc. 03)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	  P/04, D10)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D07)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D03)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D04)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D01)
+-	acceptance/README.md#scenariostsv	coverage audit P/04	2026-11-11	 (the coverage audit of P/04, D06)
+-	acceptance/README.md#scenariostsv	coverage audit P/04 D08	2026-11-11	(N3 «fate»: the order of the rules and the margin; the coverage audit of P/04, D08)
+-	acceptance/README.md#scenariostsv	coverage audit P/04 second pass	2026-11-11	## Coverage audit of P/04, second pass (sc. 28–42)
+-	acceptance/README.md#scenarios-2842	coverage audit P/04 second pass	2026-11-11	The session of the coverage audit, the second pass (Gemini, 2026-10-30, commit 82da537d5, the Gemini P04 coverage audit, G01–G07).
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	C04-HOME-PLACE-HOLDER-01	2026-11-11	Sc. 43, 44 are not the second pass of the audit but cases of the clarification C04-HOME-PLACE-HOLDER-01 (the Architect's decision of 2026-11-04).
+-	acceptance/README.md#snapshot-outside-tsv	M10/04 acceptance	2026-11-11	## Checks by reading from the acceptance of M10/04
+-	acceptance/README.md#checks-by-reading	M10/04 acceptance	2026-11-11	The doors of the console of M10/04 were moved to [the acceptance of P/06.6](../../06-console/acceptance/6/README.md); the checks of the controller from its
+-	acceptance/README.md#checks-by-reading	M10/04 acceptance	2026-11-11	README are here.
+-	acceptance/README.md#checks-by-reading	run 25	2026-11-11	 (run 25)
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	P04.29: provenance removed	2026-11-11	Not included (the report of the analysis): G03 sc. 02 (the decommission of a server by a request row bypassing the console with a responding resource — the execution
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	P04.29: provenance removed	2026-11-11	by the controller the norm binds to a request that the console writes only for a silent server, P/06.6 N3; the witness holds such
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	P04.29: provenance removed	2026-11-11	a request «standing»; the answer of `DELETE /servers/{server}/decommission` is `{}`); G06 sc. 02 (`@put object` of a heartbeat —
+-	acceptance/README.md#home-at-the-place-holder-sc-43-44	P04.29: provenance removed	2026-11-11	the stand of this acceptance has no such directive); G04 steps 16–17 (the reason `deleted` — sc. 06 of the acceptance of P/03.3).
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0084 requirement reference	2026-11-11	(R20)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0084 requirement reference	2026-11-11	(R21)
+P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0084 requirement reference	2026-11-11	, R13′
+-	spec/04-controller.norms.md#N5	ADR-0084 requirement reference	2026-11-11	(R16‴)
+-	spec/04-controller.norms.md#N5	ADR-0084 requirement reference	2026-11-11	(R27)
+-	spec/04-controller.norms.md#N5	ADR-0084 requirement reference	2026-11-11	(R16′)
+P/04-R053	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R8 does not change)
+P/04-R053	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R16‴)
+P/04-R052	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R28)
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R7)
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R28)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R6)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R12)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R14′)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R8)
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	(R18)
+-	spec/04-controller.norms.md#N5	ADR-0084 requirement reference	2026-11-11	R28;
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	R13′;
+-	spec/04-controller.norms.md#N5	ADR-0084 requirement reference	2026-11-11	, R16′
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	, R28
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	,
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	             R3
+P/04-R051	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	, R13′
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	, R23
+P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-11	, R6
+-	spec/04-controller.README.md#pitfalls-of-the-language-and-the-library	ADR-0084 requirement reference	2026-11-11	(R14′)
+-	spec/04-controller.README.md#pitfalls-of-the-language-and-the-library	ADR-0084 requirement reference	2026-11-11	(R19′)
+-	vectors/shrink-allowed/README.md#input-not-by-form	ADR-0084 requirement reference	2026-11-11	(R22)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	(R3)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	(R13′)
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	(R16′, R16‴)
+-	vectors/shrink-allowed/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R16′, R16‴)
+-	vectors/shrink-allowed/README.md#not-covered	ADR-0084 requirement reference	2026-11-11	, R7
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	, R28
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	,
+-	vectors/shrink-allowed/README.md#order-of-the-reasons	ADR-0084 requirement reference	2026-11-11	   R28
+-	vectors/order/README.md#what-the-vector-does-not-cover	ADR-0084 requirement reference	2026-11-11	(R28)
+-	vectors/order/README.md#what-the-vector-does-not-cover	ADR-0084 requirement reference	2026-11-11	(R27)
+-	vectors/order/README.md#input-not-by-form	ADR-0084 requirement reference	2026-11-11	(R22)
+-	vectors/order/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R21)
+-	vectors/order/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R19′)
+-	vectors/order/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R18)
+-	vectors/order/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R14′)
+-	vectors/order/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	R20;
+-	vectors/shrink-victim/README.md#input-not-by-form	ADR-0084 requirement reference	2026-11-11	(R22)
+-	vectors/shrink-victim/README.md#casestsv	ADR-0084 requirement reference	2026-11-11	(R28)
+-	acceptance/README.md#checks-by-reading	ADR-0129 addendum (15)	2026-11-11	ADR0129(15):
+-	acceptance/README.md#scenariostsv	ADR-0084 requirement reference	2026-11-11	(R16′)
+-	acceptance/README.md#scenariostsv	ADR-0084 requirement reference	2026-11-11	(R15)
+-	acceptance/README.md#checks-by-reading	ADR-0084 requirement reference	2026-11-11	 R36
+-	acceptance/README.md#checks-by-reading	ADR-0084 requirement reference	2026-11-11	R28
+-	acceptance/README.md#scenariostsv	ADR-0084 requirement reference	2026-11-11	 R28
+-	acceptance/README.md#checks-by-reading	(R28-01/02)	2026-11-11	(R28-01/02)
+-	acceptance/README.md#checks-by-reading	R36-04	2026-11-11	R36-04
+P/04-R014	spec/04-controller.norms.md#N1.4	layout audit A-17; REACH_BUDGET	2026-10-25	; A-17
+P/04-R014	spec/04-controller.norms.md#N1.4	layout audit A-17; SHRINK_AFTER	2026-10-25	; A-17
+P/04-R030	spec/04-controller.norms.md#N3	layout audit A-11; P04.29 removal	2026-11-11	layout audit A-11
