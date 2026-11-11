@@ -69,3 +69,4 @@ req_id	file	source	date	removed
 -	forms/rollout-poll.machine.yaml#/transitions	ADR-0122 addendum (1) item 4	2026-11-04	 (ADR-0122 addendum (1) item 4)
 -	forms/rollout-poll.machine.yaml#/transitions/0	ADR-0120 addendum (6) item 3	2026-11-04	; ADR-0120 addendum (6) item 3
 -	forms/rollout-poll.machine.yaml#/transitions/0	review of P/02, S1	2026-11-06	 (review of P/02, S1)
+-	forms/README.md#non-http-seams-exact-request-and-expectation-grammar	course checker at commit f6cffb3ea	2026-11-05	 These lexical rules match the course checker on `f6cffb3ea`.

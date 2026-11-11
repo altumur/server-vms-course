@@ -94,3 +94,4 @@ req_id	file	source	date	removed
 -	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/hidden/description	ADR-0115 item 2.2	2026-11-03	 (ADR-0115 item 2.2)
 -	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
 -	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
+-	spec/02.2-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table

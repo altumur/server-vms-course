@@ -233,3 +233,12 @@ req_id	file	source	date	removed
 -	spec/02.1-installer.relations.json#/rows/156/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
 -	spec/02.1-installer.relations.json#/rows/157/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
 -	spec/02.1-installer.relations.json#/rows/158/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
+-	spec/02.1-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
+-	acceptance/1/README.md#no-installation-sample	the former SHOULD sample of the corpus	2026-11-11	former 
+-	acceptance/1/README.md#additional-inputs	fix of the lease background of the corpus	2026-10-16	is fixed: the string off is written
+-	acceptance/1/README.md#additional-inputs	history of the corpus: kept mutations and verdicts, the former refusal	2026-10-19	The target mutations and 9/39 verdicts are kept, but the former refusal
+-	acceptance/1/README.md#additional-inputs	history of the corpus: new cases	2026-10-19	new 
+-	acceptance/1/README.md#additional-inputs	history of the corpus: the key moved from profile_unit_key_quoted_ok	2026-11-03	 — the former key `'1.5'` of the case `profile_unit_key_quoted_ok`, there it is replaced with `'1e5'`
+-	acceptance/1/README.md#additional-inputs	history of the corpus: worker.exec appended to the manifests	2026-10-23	the key is appended mechanically to all other manifests of the corpus, the verdicts and classes are the former ones, the line numbers of the diagnostics are shifted at blob_default and status_worker
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	history of the corpus: the former 251 inputs	2026-10-19	; all the former 251 inputs are unchanged
+-	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	history of the corpus: the former scalar case	2026-10-17	The former scalar is kept as

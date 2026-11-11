@@ -271,3 +271,16 @@ req_id	file	source	date	removed
 -	spec/02.4-installer.norms.md#system-checklist	ADR-0115 addendum (27)	2026-11-04	 (ADR-0115 addendum (27))
 -	acceptance/4/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
 -	acceptance/4/README.md#intro	ADR-0125 addendum (4) item 7, addendum (5)	2026-11-05	 (ADR-0125 addendum (4) item 7 and addendum (5))
+-	spec/02.4-installer.norms.md#N1.9	model cammeta-quint v115r2 of the rollout	2026-11-04	cammeta-quint v115r2
+-	spec/02.4-installer.norms.md#N1.9	model cammeta-quint v115r2, REPORT.md «Not checked»	2026-11-04	the list — v115r2 REPORT.md, «Not checked»
+-	spec/02.4-installer.norms.md#N1.9	runs of the model v115r2: simulator c3P 20000 × 80; Apalache c3P × invDone, 16 steps in 40 min	2026-11-04	 (c3P, 20000 × 80), Apalache c3P × invDone does not get through 16 steps in 40 min
+-	spec/02.4-installer.norms.md#N1.9	run of the model v115r2: Apalache c3CX × invWritesSeen, 15 steps	2026-11-04	 at Apalache — one configuration and one judge (c3CX × invWritesSeen, 15 steps)
+-	spec/02.4-installer.norms.md#N1.9	run of the model v115r2: mutant mNoLastChk on four bases, up to 60000 traces	2026-11-04	 (the mutant mNoLastChk is not caught on any of the four bases, up to 60000 traces)
+-	spec/02.4-installer.norms.md#N1.9	model v115r2: the judge invWritesSeen	2026-11-04	the judge invWritesSeen
+-	spec/02.4-installer.norms.md#N1.9	model v115p	2026-11-04	By the model v115p
+-	spec/02.4-installer.norms.md#N1.9	model v115p: Apalache s5 — a3p × invSafeX, a3c and a3p × invOrder, mutants 1 and 6 (rule in words: the safety and the order of the poll in every configuration, two mutants not caught)	2026-11-04	Apalache s5 — a3p × invSafeX, a3c and a3p × invOrder, mutants 1 and 6
+-	spec/02.4-installer.norms.md#N1.9	model v120 of the machine, report of review-claude	2026-11-04	; the model v120 of the machine — the report of review-claude
+-	spec/02.4-installer.norms.md#N5	lesson M11/12 (now P/02.4 N1.10–N1.12, P/08.10)	2026-11-06	 and of M11/12
+-	spec/02.4-installer.norms.md#N5	stand of lesson M11/3 (now P/08.3)	2026-11-06	the stand M11/3
+-	spec/02.4-installer.norms.md#system-checklist	stand of lesson M11/3 (now P/08.3) (P/02.4-11)	2026-11-06	the stand M11/3
+-	spec/02.4-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table

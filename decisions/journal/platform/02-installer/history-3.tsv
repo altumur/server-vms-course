@@ -71,3 +71,4 @@ req_id	file	source	date	removed
 -	acceptance/3/README.md#catalogue-properties	coverage audit P/02, second pass (Gemini), c698f3291 (heading)	2026-10-30	The coverage audit P/02, second pass (Gemini)
 -	acceptance/3/README.md#catalogue-properties	coverage audit P/02, second pass (Gemini), branch gemini/audit-coverage, c698f3291	2026-10-30	The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): catalogue checks that were formerly done by reading.
 -	acceptance/3/README.md#catalogue-properties	Architect's decision (directives of chapter 2.2)	2026-10-30	the Architect's decision, 
+-	spec/02.3-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
