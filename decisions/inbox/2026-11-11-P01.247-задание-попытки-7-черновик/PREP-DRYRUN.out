@@ -1,0 +1,18 @@
+loop_head local integration 970892c924e1a8bb76842448d3746a6359a8e994 = en-p01-240 06c25fa + en-p01-216 9361abe + en-p01-225 7e0b123
+prep_bool_keys []
+stages 11 ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'rights', 'daemon_doors', 'daemon_copy', 'durable', 'group']
+code_at ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'daemon_copy', 'durable', 'group']
+when_unevaluated ['group'] excluded []
+norm_trace 55 {'model': 1, 'store_core': 11, 'http': 8, 'rights_eval': 1, 'rights': 8, 'daemon_doors': 1, 'daemon_copy': 3, 'durable': 6, 'group': 16}
+norm_trace_mutation True stage_tests True norm_trace_mode True
+mode_stages {'group': {'when': "keys.store_build != 'box'", 'modules': ['github.com/hashicorp/raft']}}
+profile_probe_on True
+context_window 200000 share 0.9 budget {'rule': 'ADR-0133 addendum (2)', 'max_input_tokens': 150000000, 'max_active_hours': 24, 'stall_rounds': 3, 'rounds_max': 3, 'judge_defect_stop': 2} ceilings (150000000, 200000000)
+round_caps {'miniswe_steps': 60, 'miniswe_round_max_input_tokens': 6000000, 'miniswe_plan_round': True, 'miniswe_plan_steps': 30, 'miniswe_plan_round_max_input_tokens': 6000000, 'miniswe_stable_prefix': True, 'miniswe_head': 'stage'}
+prep_violations 0 []
+m_passport_violations []
+control norm_trace_mutation =1: ['stages.norm_trace_mutation is true or false (P01.179)']
+control norm_trace_mode =1: ['stages.norm_trace_mode is true or false (P01.216)']
+control stage_tests =1: ['stages.stage_tests is true or false (P01.179)']
+control norm_trace=false: ['stages.norm_trace_mutation needs stages.norm_trace true (P01.179)', 'stages.norm_trace_mode needs stages.norm_trace true (P01.216)']
+mode_stages_main {'group': {'when': "keys.store_build != 'box'", 'modules': ['github.com/hashicorp/raft']}}
