@@ -13,7 +13,7 @@
 # Paths: the engine opens a file of the J input only by a path that a cell of a form of the J input gives, joined to the root that the engine command
 # receives (--spec); no string literal of module begins with Platform/ (the prefix of the rows of no_literals). The words of the forms are data of the J
 # input: no case clause and no composite literal of module lists them, and no literal of module is the id or the owner of a target.
-# stage: the stage of the generation cycle of the engine from which the row holds (tables, plan, protocol, verdicts); another word is a data error.
+# stage: the stage of the generation cycle of the engine from which the row holds (tables, plan, own_tests, run_form); another word is a data error.
 # norm: the norms of the subject.
 id	kind	name	args	stage	norm
 E01	pure_core	core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	tables	ADR-0135 addendum (13) item 4

@@ -1,5 +1,5 @@
 {
-  "description": "Frictionless Table Schema of Platform/common/acceptance/forms/engine-code-rules.tsv (ADR-0125 addenda (12), (13); ADR-0135 addendum (13) item 4; task P02.49). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the map, the sets of packages and the args stay with the generation cycle of the engine. Not yet a resource of Platform/forms.datapackage.json: the Architect registers it after P02.49.",
+  "description": "Frictionless Table Schema of Platform/common/acceptance/forms/engine-code-rules.tsv (ADR-0125 addenda (12), (13); ADR-0135 addendum (13) item 4, addendum (17) item 1; tasks P02.49, P01.243). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the map, the sets of packages and the args stay with the generation cycle of the engine. Not yet a resource of Platform/forms.datapackage.json: the Architect registers it after P02.49.",
   "fields": [
     {
       "name": "id",
@@ -42,8 +42,8 @@
         "enum": [
           "tables",
           "plan",
-          "protocol",
-          "verdicts"
+          "own_tests",
+          "run_form"
         ]
       }
     },
