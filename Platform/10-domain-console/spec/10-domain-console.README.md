@@ -29,7 +29,7 @@ of the cluster console is chapter P/06.7.
   certificate](../../common/contracts/role-certificate.md), [`peer`](../../common/contracts/peer.md), [event
   journal](../../common/contracts/event-journal.md).
 - [Acceptance](../acceptance/README.md) — the stand of several clusters ([the common README of
-  acceptance](../../common/acceptance/README.md#domain-stand), the section «Domain stand») and the vector
+  acceptance](../../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand») and the vector
   [`alarms`](../vectors/alarms/README.md). Flags, environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
 - The lecture (`ru/10-domain-console.md`, for people, not in the export) explains the reasons.
 

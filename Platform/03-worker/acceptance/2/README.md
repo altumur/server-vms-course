@@ -27,7 +27,7 @@ the body of an answer is compared by the mode `body` of the routing row of the t
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
-Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README:
+Each scenario runs on the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand) of the common acceptance README:
 a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter
 is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
 
@@ -152,7 +152,7 @@ P/02.3 N3 step 4 — the system acceptance, sc. 08 `@manual`).
 
 ## Stand and steps of the chapter
 
-The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand). Own to the chapter:
+The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand). Own to the chapter:
 
 - the read role of the store has full rights on `testsub/` and `testsub2/` (above); the door `admin` prepares the rows bypassing their writers;
 - every worker has the box and the server of the stand, except `@start worker … on <server>` and the environment `<NAME>=<value>` of sc. 11, 22, 28, 29

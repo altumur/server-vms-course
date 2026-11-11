@@ -43,7 +43,7 @@ for this candidate's confirmed read; spending it must not erase the very excepti
 ## Seams
 
 `acceptance/K/seams.tsv` (judge-only: the SDK seam tests) uses the four columns of scenarios, with a final header comment `# scenario TAB step TAB request TAB expect`.
-They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter (judge-only: the process acceptance); the judge runs them by the [seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
+They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter (judge-only: the process acceptance); the judge runs them by the [seam adapter protocol](../../common/acceptance/seams.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
 store/object clients, monotonic and wall clocks, and a recording subsystem. The adapter invokes the implementation, translates its result and
 records its effects. It may not answer a case from its expected output. These port names and JSON are test normalization, not mandatory SDK APIs.
 

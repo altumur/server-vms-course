@@ -1,4 +1,4 @@
-# The substitution names of the profile commands (PROFILE.md «Command ownership and build results», «Substitutions»; the Architect's answer on P01.86). PROFILE.md refers to this form and does not repeat it.
+# The substitution names of the profile commands (PROFILE.md «Command ownership and build results», «Substitutions»). PROFILE.md refers to this form and does not repeat it.
 # One row per (section, key). section: stand, adapters or vectors. key: the command name of stand, the adapter name, or * for every entry of vectors.
 # owners: JSON array of the Platform modules whose profile may declare the key; a shared algorithm name is admitted to every module except 07-console-module, and admission assigns no package.
 # names: JSON array of the substitution names available to the template, nothing else. required: JSON array of the names the template must contain;

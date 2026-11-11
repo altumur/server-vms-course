@@ -3,7 +3,7 @@
 Текст производный от `acceptance/README.md`, руками не правится: источник — английский [`acceptance/README.md`](../../acceptance/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Стенд, словарь директив и дверей — [общий README приёмки](../../../common/ru/acceptance/README.md#словарь-директив-и-дверей) и его
-раздел [«Стенд домена»](../../../common/ru/acceptance/README.md#стенд-домена) (дверь `holder` — консоль домена на `hold`, двери
+раздел [«Стенд домена»](../../../common/ru/acceptance/domain-stand.md#стенд-домена) (дверь `holder` — консоль домена на `hold`, двери
 `member`, директивы `@domain`, `@person`, `@stop agent`, `@start agent`; план урока 10 V10). Норма урока —
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. Команда `alarms` — вектор [`vectors/alarms`](../vectors/alarms/README.md) (нынешний корпус). Формы чужих дверей — их владельцы.
 

@@ -9,6 +9,8 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 
 The profile is `01-store` in the [generic profile and assembly contract](../../../common/acceptance/PROFILE.md). `stand.store1` starts a fresh store instance for this chapter: it consumes the assigned data directory, administrative socket, prepared rights file and the body/row test parameters through the common stand substitutions. Its ordinary side serves the published `acc` role. `keys.request_line_limit` names the implementation's request-line boundary; `keys.role_header` names its role-forwarding header where a probe needs one. The optional `adapters.door` exposes the same ordinary/admin operations through the persistent transport of the common contract; it does not replace raw HTTP checks. The JCS package uses the `vectors` entry assigned by its [wire form](../../../common/vectors/wire.tsv), not a guessed `stand.jcs` invocation. The implementation chooses its own executable names and flags and binds these responsibilities in its profile.
 
+- **Durability.** The store command keeps the durability barriers on: the row `durability` of [lifecycle](../../lifecycle.md#signals-and-readiness) and its section [Stand](../../lifecycle.md#stand).
+
 ## `scenarios.tsv`
 
 The table `scenarios.tsv` of the chapter (judge-only: `acceptance/1/scenarios.tsv`) checks the requirements that the
@@ -18,11 +20,7 @@ doors of the common acceptance README. Specific to chapter 1.1:
 - `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch.
 - For a `200` answer to `GET /v1/list` the **order of names inside `keys`** is also checked: the sequence of names decoded from the JSON in the order received MUST equal the sequence in `expect`, which is given by UTF-8 bytes. The runner keeps this order when parsing the answer and does not sort what it received before the comparison. For an empty `keys` the sequence is empty. Spaces and the way of JSON escaping are insignificant; the order of other objects, `items` included, is still not checked.
 - `$name` binds only a JSON string (N1: a version is a string on the wire); a number or another type is a mismatch of the step.
-- Only for a body refusal the optional field `size` is admitted: if it is present, it is the integer
-  JSON number of the full size of the sent body, not a string and not a boolean. After it is checked it
-  is excluded from the comparison with `expect`. The absence of `size` is admissible by N2; other additional fields,
-  `key` included, are not admitted (the common rule of `error` is kept). For a weight refusal the fields `key` and `size`
-  are mandatory and are compared as before.
+- An unnamed `size` is admitted only in the root of the body of a body refusal (the row `body_limit` of `forms/refusals.tsv`: `413` with the kind `toolarge` and the body limit as `limit`): it is checked to be an integer JSON number equal to the full size in bytes of the sent body, not a string and not a boolean, and is then excluded from the comparison with `expect`. The absence of `size` is admissible by N2; other unnamed fields, `key` included, are not admitted (the rule of `error` above). A weight refusal names `key` and `size` in `expect`, and they are compared as named fields.
 
 ## Directives of chapters 1.1 and 1.2
 
@@ -90,7 +88,7 @@ restart (P/01.1-31). The runner executes them through the seam adapter, by the [
 
 ### Seam normalization
 
-P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/README.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.
+P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/seams.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.
 
 | `name` | Step | `input` | Observation |
 |---|---|---|---|

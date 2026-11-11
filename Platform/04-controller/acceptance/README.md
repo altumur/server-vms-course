@@ -15,6 +15,10 @@ of one manifest does not touch the rows of the other on capture and cleanup. The
 `/unplaceable`, `/servers`, `/metrics`), the pass report `<sub>/controller/pass` — through the objects door of the resource (sc. 12, 15);
 the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «unknown» ([the object store client contract](../../common/contracts/object-client.md) `door`).
 
+- **Pass report print command** of the controller `<sub>/controller/pass` ([P/04](../spec/04-controller.norms.md)) — a template with `{data}` and `{sub}`;
+  prints the current report object or nothing if there is none; by it the runner waits for the report to change (the norms of P/04,
+  «Implementation decides» item 9).
+
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors):

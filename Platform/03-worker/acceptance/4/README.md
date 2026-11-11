@@ -17,7 +17,7 @@ The format is [the dictionary of directives and doors of the «Stand» of the co
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
-Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README: a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
+Each scenario runs on the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand) of the common acceptance README: a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
 
 **Coverage audit of P/03, second pass (Gemini)** (2026-10-30, the report `gemini/audit-coverage` `fad5fa2ba`, the drafts G03, G05;
 analysis by the Specification):
@@ -34,7 +34,7 @@ analysis by the Specification):
 
 ## Stand and steps of the chapter
 
-The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand), including the
+The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand), including the
 stop of `@sigterm` and `@sigkill`: the step matches only after the whole process group has exited. Own to the chapter:
 
 - the read role of the store has full rights on `testsub/` and `testsub2/` (above); the door `admin` puts the shelf of sc. 37;

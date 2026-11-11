@@ -59,3 +59,10 @@ P/01.3-R035	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (15) item
 -	acceptance/1/README.md#seam-normalization	the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4 (moved from the common acceptance README «P/01 seam normalization»)	2026-11-08	 (the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4)
 -	forms/code-rules.tsv.schema.json#/description	ADR-0133 addendum (39) item 6 (comment line 6 of forms/code-rules.tsv)	2026-11-09	 (addendum (39) item 6)
 -	forms/code-rules.tsv.schema.json#/description	task P02.36 (comment line 6 of forms/code-rules.tsv)	2026-11-09	 (P02.36)
+-	forms/production/README.md#intro	task P01.136, the condition of P01.132	2026-11-10	 (task P01.136, the condition of P01.132)
+-	forms/production/README.md#bindings	P01.132	2026-11-10	 (P01.132)
+-	forms/production/README.md#bindings	P01.135, decision 3	2026-11-10	 (P01.135, decision 3)
+-	forms/production/README.md#bindings	P01.135, decision 5	2026-11-10	 (P01.135, decision 5)
+-	forms/production/README.md#input-of-n62	P01.134	2026-11-10	 (P01.134)
+-	forms/production/README.md#input-of-n62	P01.135, decision 4	2026-11-10	, P01.135, decision 4
+-	forms/production/README.md#input-of-n62	P01.135, decision 5	2026-11-10	 (P01.135, decision 5)

@@ -10,7 +10,7 @@ Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). 
 
 ## verdicts.tsv, classes.tsv, diagnostics.tsv
 
-The three tables are run by the engine word `verdicts` in the form «[Loader verdicts](../../../common/acceptance/README.md#loader-verdicts)» of the common acceptance README: the call, what counts as a manifest and as a refusal that names the file, the strict verdict, the class `refused:<class>` and the hint of the diagnostics are defined there. The interface of the call is `stand.load` or `adapters.load` above. This README keeps only the data of the chapter.
+The three tables are run by the engine word `verdicts` in the form «[Loader verdicts](../../../common/acceptance/command-tables.md#loader-verdicts)» of the common acceptance README: the call, what counts as a manifest and as a refusal that names the file, the strict verdict, the class `refused:<class>` and the hint of the diagnostics are defined there. The interface of the call is `stand.load` or `adapters.load` above. This README keeps only the data of the chapter.
 
 The rules by which the verdicts are set are the norms of the chapter N1 (text, document, field, references) and N4; they are not here, so that there are not two versions of one norm.
 

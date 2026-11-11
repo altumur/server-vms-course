@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "SEAM_BRIDGE.json: the descriptor of the explicit test-side seam bridge",
-  "description": "Machine form of README.md «Explicit test-side seam bridge» (the Architect's answer on P01.86). The identity and invoke forms are those of d7.schema.json. scope is the id of a target of the registry, optionally followed by # and the name of one of its scenarios or cases. Integer fields are JSON integer tokens, never booleans, fractions or exponents; duplicate fields, a BOM and non-JSON numbers are refused; argv[0] equals identity.executable.path. The judge checks these by the prose; the schema does not express them.",
+  "description": "Machine form of seams.md «Explicit test-side seam bridge». The identity and invoke forms are those of d7.schema.json. scope is the id of a target of the registry, optionally followed by # and the name of one of its scenarios or cases. Integer fields are JSON integer tokens, never booleans, fractions or exponents; duplicate fields, a BOM and non-JSON numbers are refused; argv[0] equals identity.executable.path. The judge checks these by the prose; the schema does not express them.",
   "type": "object",
   "additionalProperties": false,
   "required": [

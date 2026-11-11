@@ -46,7 +46,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
 - The acceptance of the chapters checks the norms: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). The stand of several
-  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#domain-stand), the section «Domain stand».
+  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand».
   The vectors of the lesson — [`follow`](../vectors/follow/README.md) (9.1); the common ones — [`agent-sig`](../../common/vectors/agent-sig/README.md),
   [`peer`](../../common/vectors/peer/README.md) (9.1), [`accept`](../../common/vectors/accept/README.md) (9.2). Flags,
   environment, exit codes — [`../lifecycle.md`](../lifecycle.md).

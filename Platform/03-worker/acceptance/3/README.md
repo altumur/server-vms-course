@@ -20,7 +20,7 @@ The format is [the dictionary of directives and doors of the «Stand» of the co
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
-Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README: a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
+Each scenario runs on the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand) of the common acceptance README: a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
 
 **Scenarios of 2026-10-18** (reconciliation of python and go M10/3–5):
 - sc. 02 step 8 — `rows` of the units door (P/06.1 N2): an element of a live heartbeat with `phase: running`, `worker`,
@@ -28,7 +28,7 @@ Each scenario runs on the [testsub process stand](../../../common/acceptance/REA
 
 ## Stand and steps of the chapter
 
-The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand). Own to the chapter:
+The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand). Own to the chapter:
 
 - the read role of the store has full rights on `testsub/` and `testsub2/` (above); the door `admin` prepares the rows of sc. 25 and 35 bypassing their writers;
 - every worker has the box and the server of the stand; the name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33);

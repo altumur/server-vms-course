@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "The descriptor of the D7 test-side evidence bindings",
-  "description": "Machine form of README.md «D7 test-side evidence bindings» (the Architect's answer on P01.86). Only the capabilities that the selected case requires have entries; a required absent entry leaves the dependent check MissingBinding/NOTEXEC. scope is the id of a target of the registry, optionally followed by # and the name of one of its scenarios or cases. Integer fields are JSON integer tokens, never booleans, fractions or exponents; duplicate fields, a BOM and non-JSON numbers are refused; argv[0] equals identity.executable.path. The judge checks these by the prose; the schema does not express them.",
+  "description": "Machine form of seams.md «D7 test-side evidence bindings». Only the capabilities that the selected case requires have entries; a required absent entry leaves the dependent check MissingBinding/NOTEXEC. scope is the id of a target of the registry, optionally followed by # and the name of one of its scenarios or cases. Integer fields are JSON integer tokens, never booleans, fractions or exponents; duplicate fields, a BOM and non-JSON numbers are refused; argv[0] equals identity.executable.path. The judge checks these by the prose; the schema does not express them.",
   "type": "object",
   "additionalProperties": false,
   "required": [

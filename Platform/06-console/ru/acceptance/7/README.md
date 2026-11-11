@@ -3,7 +3,7 @@
 Текст производный от `acceptance/7/README.md`, руками не правится: источник — английский [`acceptance/7/README.md`](../../../acceptance/7/README.md), правка идёт в него, русский пересобирается переводом.
 
 Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/ru/acceptance/README.md#словарь-директив-и-дверей),
-раздел [«Стенд домена»](../../../../common/ru/acceptance/README.md#стенд-домена) (стенд нескольких кластеров). Норма главы —
+раздел [«Стенд домена»](../../../../common/ru/acceptance/domain-stand.md#стенд-домена) (стенд нескольких кластеров). Норма главы —
 [`06.7-console.norms.md`](../../spec/06.7-console.norms.md) N5. Всего 10 сценариев / 106 шагов.
 
 Функцию `resolve` без стенда проверяет вектор [`resolve`](../../vectors/resolve/README.md); `families` двери `/domain/keys` (N1.11) — вектор [`key-families`](../../vectors/key-families/README.md) (на стенде один манифест с `domain.keys`).

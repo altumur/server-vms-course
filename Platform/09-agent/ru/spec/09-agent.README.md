@@ -46,7 +46,7 @@ ADR-0083 доп. (1), (14)). Сторона держателя — урок [P/0
   строки держателя и её копии у агента, — общие определения (`common/data/common.schema.json` справочно; каждая схема
   семьи самодостаточна, ADR-0092).
 - Приёмка глав проверяет нормы: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). Стенд нескольких
-  кластеров, директивы и двери — [общий README приёмки](../../../common/ru/acceptance/README.md#стенд-домена), раздел «Стенд
+  кластеров, директивы и двери — [общий README приёмки](../../../common/ru/acceptance/domain-stand.md#стенд-домена), раздел «Стенд
   домена». Векторы урока — [`follow`](../vectors/follow/README.md) (9.1); общие — [`agent-sig`](../../../common/ru/vectors/agent-sig/README.md),
   [`peer`](../../../common/ru/vectors/peer/README.md) (9.1), [`accept`](../../../common/ru/vectors/accept/README.md) (9.2). Флаги,
   окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).

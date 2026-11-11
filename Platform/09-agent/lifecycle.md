@@ -102,7 +102,7 @@ None: the setting channel is the environment only (P/02.4 N1.2).
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
-The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#domain-stand), the section «Domain stand»): `@start agent <cluster>` — `CLUSTER`, `DOMAIN_URL` —
+The stand of several clusters ([the common acceptance README](../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand»): `@start agent <cluster>` — `CLUSTER`, `DOMAIN_URL` —
 the runner's proxy; `@start agent <cluster> via <relay>` — `RELAY_URL` instead of `DOMAIN_URL`; `@join <cluster>
 [<file>]` — the command `join` with the recovery file; `@clock` — `W2C_WALL_OFFSET`. `{data}` — `PLATFORM_DIR` of the cluster
 ([the common acceptance README](../common/acceptance/README.md) «Stand»; review analysis of stage B 3–5, № 33). The fourth cluster

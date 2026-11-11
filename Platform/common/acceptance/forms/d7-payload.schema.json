@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "The payloads of the D7 test-side evidence bindings",
-  "description": "Machine form of README.md «D7 test-side evidence bindings», paragraph «Payloads» (task P01.136). The payload of a request with the operation activate is this schema: one object of the capability of the request. The payloads of describe, sample and deactivate are the empty object. The payload of the record identity is the identity object of the descriptor; of activation and deactivation — $defs/transition; of observation — $defs/<capability>_observation of the capability of the process. The judge sets targets and the offset_seconds of a controlled clock domain at each activation; the other fields are the case binding. Integer fields are JSON integer tokens. The schema sets no numeric value of a norm.",
+  "description": "Machine form of seams.md «D7 test-side evidence bindings», paragraph «Payloads». The payload of a request with the operation activate is this schema: one object of the capability of the request. The payloads of describe, sample and deactivate are the empty object. The payload of the record identity is the identity object of the descriptor; of activation and deactivation — $defs/transition; of observation — $defs/<capability>_observation of the capability of the process. The judge sets targets and the offset_seconds of a controlled clock domain at each activation; the other fields are the case binding. Integer fields are JSON integer tokens. The schema sets no numeric value of a norm.",
   "oneOf": [
     {
       "$ref": "#/$defs/clock_activate"

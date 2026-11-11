@@ -11,7 +11,7 @@ these scenarios; the forms of foreign doors belong to their owners ([P/05](../..
 
 ## Preparation of each scenario
 
-Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README:
+Each scenario runs on the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand) of the common acceptance README:
 a fresh stand per scenario (with it no asked accounting, commands marks, event tree, mirrors, index cache, bound names or replay keys of the
 judge remain), no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. Own to the chapter:
 
