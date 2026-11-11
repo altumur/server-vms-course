@@ -1,6 +1,6 @@
 # Привязки записи строки состояния
 
-Текст производный от `forms/row-write-bindings.md`, руками не правится: источник — английский [forms/row-write-bindings.md](../../forms/row-write-bindings.md); русский пересобирается переводом (ADR-0121), для людей, в выгрузку не входит. Класс принят Архитектором по ADR-0127 доп. (1) п. 3. [row-write-bindings.tsv](../../forms/row-write-bindings.tsv) — нормативная таблица конструктора P/03.6-R018/R029.
+Текст производный от `forms/row-write-bindings.md`, руками не правится: источник — английский [forms/row-write-bindings.md](../../forms/row-write-bindings.md); русский пересобирается переводом, для людей, в выгрузку не входит. [row-write-bindings.tsv](../../forms/row-write-bindings.tsv) — нормативная таблица конструктора P/03.6-R018/R029.
 
 ## Грамматика
 

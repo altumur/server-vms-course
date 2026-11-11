@@ -1,7 +1,7 @@
 # P/03 forms and SDK seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121).
-These forms express the existing worker norms (ADR-0125 addendum (5)). The SDK has no new binary or HTTP API.
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export.
+These forms express the existing worker norms. The SDK has no new binary or HTTP API.
 
 ## Process inputs
 
@@ -43,8 +43,8 @@ for this candidate's confirmed read; spending it must not erase the very excepti
 
 ## Seams
 
-`acceptance/K/seams.tsv` uses the four columns of scenarios, with a final header comment `# scenario TAB step TAB request TAB expect`.
-They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter; the judge runs them by the [seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
+`acceptance/K/seams.tsv` (judge-only: the SDK seam tests) uses the four columns of scenarios, with a final header comment `# scenario TAB step TAB request TAB expect`.
+They are kit stagetests at SDK seams, separate from the process scenarios `scenarios.tsv` of the chapter (judge-only: the process acceptance); the judge runs them by the [seam adapter protocol](../../common/acceptance/README.md#seam-adapter-protocol). Each scenario starts a fresh real SDK, deterministic
 store/object clients, monotonic and wall clocks, and a recording subsystem. The adapter invokes the implementation, translates its result and
 records its effects. It may not answer a case from its expected output. These port names and JSON are test normalization, not mandatory SDK APIs.
 
@@ -91,7 +91,7 @@ place writer, or OS presence-lock race that they do not execute. The stage plan 
 
 ## Lesson-review boundaries
 
-The Architect's accepted P/03 review under ADR-0127 supplements the same ports and [seams](../acceptance/2/seams.tsv); no process command or HTTP API is introduced. All original seams and process scenarios remain required.
+The boundaries below supplement the same ports and [seams](../acceptance/2/seams.tsv) (judge-only: the SDK seam tests of chapter 3.2); no process command or HTTP API is introduced. All original seams and process scenarios remain required.
 
 The capture adapter obtains gen_readable from the current generation field codec/range independently of the other slot fields, before narrowing. row_readable separately checks the whole slot. Confirmed absence is separate, with operand 0. An existing gen in 1..9007199254740991 is readable; gen_incrementable holds only below the maximum. Outside that range is the existing unreadable gen, retaining its original bytes. When false, machine gen=0 is an unused placeholder. generation_exhausted remains for a readable maximum at an otherwise eligible candidate; NameOnAnotherBox/torn-young admission is not bypassed. An unreadable generation introduces no programmatic unreadable word where the refusal catalogue specifies none.
 
@@ -107,13 +107,13 @@ worker-token-cache now distinguishes local now from verification.now at the rece
 
 ## Row-write bindings
 
-[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029 under ADR-0127; IO/CAS/retry remain with the procedure.
+[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029; IO/CAS/retry remain with the procedure.
 
 ## Worker policy machines
 
 The existing machine class is used by [`contender-writer.machine.yaml`](contender-writer.machine.yaml) with
-[`contender-writer.traces.tsv`](contender-writer.traces.tsv), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
-with [`token-cache.traces.tsv`](token-cache.traces.tsv). Their norm fields name P/03.2-R012, P/03.2-R047 and
+[`contender-writer.traces.tsv`](contender-writer.traces.tsv) (judge-only: reference traces), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
+with [`token-cache.traces.tsv`](token-cache.traces.tsv) (judge-only: reference traces). Their norm fields name P/03.2-R012, P/03.2-R047 and
 P/03.7-R009, P/03.7-R018. One ordered transition is one row of transitions; from/to refer only to states, initial is
 one state, terminal is an explicit subset with no outgoing transitions. There is no additional KIT_PART.
 

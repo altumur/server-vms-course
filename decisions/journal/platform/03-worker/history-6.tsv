@@ -1,0 +1,77 @@
+req_id	file	source	date	removed
+-	spec/03.6-worker.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+P/03.6-R004	spec/03.6-worker.norms.md#N1	analysis of review of stage B 3–5, № 10	2026-10-20	 (review of stage B 3–5, № 10)
+P/03.6-R006	spec/03.6-worker.norms.md#N1	analysis of review of stage B 3–5, V1	2026-10-20	 (review of stage B 3–5, V1)
+P/03.6-R006	spec/03.6-worker.norms.md#N1	ADR-0091 item 3	2026-10-22	; ADR-0091 item 3
+P/03.6-R007	spec/03.6-worker.norms.md#N1.2	moved from P/05 N3 «write an event»; analysis of review of stage B 3–5, V1	2026-10-20	 (moved there from P/05 N3 «write an event»; review of stage B 3–5, V1)
+P/03.6-R008	spec/03.6-worker.norms.md#N1.2	ADR-0115 addendum (3) item 6	2026-11-03	; ADR-0115 addendum (3) item 6
+P/03.6-R008	spec/03.6-worker.norms.md#N1.2	C03-SUPPRESS-SUMMARY-01; Architect's decision 2026-11-01; review of the VMS pass	2026-11-01	 (C03-SUPPRESS-SUMMARY-01, the Architect's decision of 2026-11-01, review of the VMS pass)
+P/03.6-R008	spec/03.6-worker.norms.md#N1.2	C03-SUPPRESS-STOP-01; Architect's decision 2026-10-29; review of V/04, finding 15	2026-10-29	 (C03-SUPPRESS-STOP-01, the Architect's decision of 2026-10-29, review of V/04 finding 15)
+P/03.6-R011	spec/03.6-worker.norms.md#N1.5	analysis of review of stage B 3–5, V1	2026-10-20	 (review of stage B 3–5, V1)
+P/03.6-R011	spec/03.6-worker.norms.md#N1.5	ADR-0091 addendum (20) item 2, addendum (21) item 2, addendum (23) item 2	2026-10-23	; ADR-0091 addendum (20) item 2, addendum (21) item 2, addendum (23) item 2
+P/03.6-R011	spec/03.6-worker.norms.md#N1.5	C03-FILE-FETCHED-NO-MARK-01	2026-11-01	, C03-FILE-FETCHED-NO-MARK-01
+P/03.6-R011	spec/03.6-worker.norms.md#N1.5	ADR-0091 addendum (21) item 2, addendum (23) item 1	2026-10-23	 (ADR-0091 addendum (21) item 2, addendum (23) item 1)
+P/03.6-R013	spec/03.6-worker.norms.md#N1.5	ADR-0091 item 7	2026-10-22	 (ADR-0091 item 7)
+P/03.6-R013	spec/03.6-worker.norms.md#N1.5	C03-REQ-MAXLENGTH-WRITTEN-G19; Architect's decision 2026-10-27	2026-10-27	 (C03-REQ-MAXLENGTH-WRITTEN-G19, the Architect's decision of 2026-10-27)
+P/03.6-R013	spec/03.6-worker.norms.md#N1.5	C03-FILE-JOURNAL-01; Architect's decision 2026-11-01; review of the VMS pass	2026-11-01	 (C03-FILE-JOURNAL-01, the Architect's decision of 2026-11-01, review of the VMS pass)
+P/03.6-R013	spec/03.6-worker.norms.md#N1.5	V7 item 3; Architect's decision 2026-10-28, P1; row 3 of the list; C03-FILE-RID-REFUSED-01	2026-10-28	 (V7 item 3, the Architect's decision of 2026-10-28, P1; row 3 of the list; C03-FILE-RID-REFUSED-01)
+P/03.6-R013	spec/03.6-worker.norms.md#N1.5	C03-FILE-RID-REFUSED-01; Architect's decision 2026-11-01; review of the VMS pass	2026-11-01	 (C03-FILE-RID-REFUSED-01, the Architect's decision of 2026-11-01, review of the VMS pass)
+P/03.6-R014	spec/03.6-worker.norms.md#N1.6	owner's decision, ADR-0091 item 1, variant «G»	2026-10-22	The owner's decision ADR-0091 item 1, variant «G»: the customer
+P/03.6-R015	spec/03.6-worker.norms.md#N1.6	ADR-0067	2026-10-07	 (ADR-0067)
+P/03.6-R015	spec/03.6-worker.norms.md#N1.6	moved to the row check contract; layout audit «A-11»; Architect's decision 2026-10-25	2026-10-25	 (moved there without a change; layout audit «A-11», the Architect's decision of 2026-10-25)
+P/03.6-R015	spec/03.6-worker.norms.md#N1.6	«G-8»; Architect's clarification 2026-10-22	2026-10-22	 («G-8», the Architect's clarification of 2026-10-22)
+P/03.6-R015	spec/03.6-worker.norms.md#N1.6	layout audit «A-11»; Architect's decision 2026-10-25	2026-10-25	 (layout audit «A-11», the Architect's decision of 2026-10-25)
+P/03.6-R015	spec/03.6-worker.norms.md#N1.6	finding «S-4»	2026-10-22	«S-4»: 
+P/03.6-R017	spec/03.6-worker.norms.md#N1.7	ADR-0091 item 3	2026-10-22	The decision ADR-0091 item 3: the summary
+P/03.6-R018	spec/03.6-worker.norms.md#N1.7	finding «S-4»	2026-10-22	; «S-4»
+P/03.6-R018	spec/03.6-worker.norms.md#N1.7	moved to the row check contract; layout audit «A-05»; Architect's decision 2026-10-25	2026-10-25	 (moved there without a change; layout audit «A-05», the Architect's decision of 2026-10-25)
+P/03.6-R018	spec/03.6-worker.norms.md#N1.7	layout audit «A-05»; Architect's decision 2026-10-25	2026-10-25	 (layout audit «A-05», the Architect's decision of 2026-10-25)
+P/03.6-R020	spec/03.6-worker.norms.md#N3	Architect's decision 2026-10-20; review of stage B 6–7	2026-10-20	 (the Architect's decision of 2026-10-20, review of stage B 6–7)
+P/03.6-R021	spec/03.6-worker.norms.md#N3	C03-REQUEST-GROUP-ORDER-01; Architect's decision 2026-11-01; a VMS request	2026-11-01	 (C03-REQUEST-GROUP-ORDER-01, the Architect's decision of 2026-11-01, a VMS request)
+P/03.6-R022	spec/03.6-worker.norms.md#N3	ADR-0060	2026-10-06	, ADR-0060
+P/03.6-R022	spec/03.6-worker.norms.md#N3	V7 item 3; Architect's decision 2026-10-28; row 10 of the list	2026-10-28	 — V7 item 3, the Architect's decision of 2026-10-28, row 10 of the list
+P/03.6-R023	spec/03.6-worker.norms.md#N3	stage C guess RM-G01; Architect's decision 2026-10-23	2026-10-23	 (stage C guess RM-G01, the Architect's decision of 2026-10-23)
+P/03.6-R023	spec/03.6-worker.norms.md#N3	ADR-0054	2026-10-06	ADR-0054: 
+P/03.6-R023	spec/03.6-worker.norms.md#N3	C03-REQUEST-CHECK-ORDER-01; Architect's decision 2026-10-30; norm questions of the Gemini audit, P/03 item 2; the witness	2026-10-30	The order of the checks is as in the witness: a mark with an outcome, `most_valid`, a foreign `begun`, then the deadline (C03-REQUEST-CHECK-ORDER-01, the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/03 item 2).
+P/03.6-R023	spec/03.6-worker.norms.md#N3	C03-GROUP-MOVED-01; Architect's decision 2026-11-01; review of the VMS pass; the witness	2026-11-01	 (C03-GROUP-MOVED-01, the Architect's decision of 2026-11-01, review of the VMS pass: as the witness)
+P/03.6-R023	spec/03.6-worker.norms.md#N3	C03-REFUSED-BEFORE-CALL-EVENT-01; Architect's decision 2026-10-30; norm questions of the Gemini audit, P/03 item 3; the witness	2026-10-30	 (C03-REFUSED-BEFORE-CALL-EVENT-01, the Architect's decision of 2026-10-30, norm questions of the Gemini audit, P/03 item 3: as the witness)
+P/03.6-R023	spec/03.6-worker.norms.md#N3	ADR-0054	2026-10-06	, ADR-0054
+P/03.6-R023	spec/03.6-worker.norms.md#N3	stage C guess W03-E06; Architect's decision 2026-10-23	2026-10-23	; stage C guess W03-E06, the Architect's decision of 2026-10-23
+P/03.6-R023	spec/03.6-worker.norms.md#N3	C06-MARK-REPLY-01	2026-10-31	, C06-MARK-REPLY-01
+P/03.6-R023	spec/03.6-worker.norms.md#N3	analysis of review of stage B 6–7, № 16	2026-10-20	; review of stage B 6–7, № 16
+P/03.6-R023	spec/03.6-worker.norms.md#N3	VMS request «commands and the device row»; Architect's decision 2026-10-23	2026-10-23	 (VMS request «commands and the device row», the Architect's decision of 2026-10-23)
+P/03.6-R024	spec/03.6-worker.norms.md#N3	stage C guess W03-E06; analysis of review of stage B 3–5, V1	2026-10-23	; W03-E06; review of stage B 3–5, V1
+P/03.6-R025	spec/03.6-worker.norms.md#N3	ADR-0091 item 6; M10B/04:223	2026-10-22	 (ADR-0091 item 6; a new norm from M10B/04:223)
+P/03.6-R025	spec/03.6-worker.norms.md#N3	ADR-0011	2026-10-05	, ADR-0011
+P/03.6-R025	spec/03.6-worker.norms.md#N3	C03-GROUP-TAKEOVER-WAIT-01; Architect's decision 2026-11-01; review of the VMS invariants	2026-11-01	 (C03-GROUP-TAKEOVER-WAIT-01, the Architect's decision of 2026-11-01, review of the VMS invariants)
+P/03.6-R025	spec/03.6-worker.norms.md#N3	ADR-0037	2026-10-02	 (ADR-0037)
+P/03.6-R025	spec/03.6-worker.norms.md#N3	M10B/04:257	2026-10-22	, M10B/04:257
+P/03.6-R030	spec/03.6-worker.norms.md#N3	analysis of review of stage B 3–5, V1	2026-10-20	 (review of stage B 3–5, V1)
+P/03.6-R031	spec/03.6-worker.norms.md#N3	analysis of review of stage B 6–7, № 31	2026-10-20	; review of stage B 6–7, № 31
+P/03.6-R031	spec/03.6-worker.norms.md#N3	ADR-0054	2026-10-06	 (ADR-0054)
+-	spec/03.6-worker.norms.md#N3	ADR-0054 (heading)	2026-10-06	ADR-0054 
+P/03.6-R032	spec/03.6-worker.norms.md#N3	M10/8 N3 «States of an executed request and its mark»	2026-10-20	From M10/8 N3 «States of an executed request and its mark» (the removal of the row after `fetched` and `settle` and the release of `asked` — the console, P/06.4 N3 «reaper» `clear`): the append is idempotent
+P/03.6-R032	spec/03.6-worker.norms.md#N3	Architect's decision 2026-10-20; review of stage B 6–7	2026-10-20	; (the Architect's decision of 2026-10-20, review of stage B 6–7)
+P/03.6-R032	spec/03.6-worker.norms.md#N3	ADR-0054 addendum 2026-10-11	2026-10-11	 (ADR-0054 addendum 2026-10-11)
+P/03.6-R032	spec/03.6-worker.norms.md#N3	ADR-0054 addendum 2026-10-17	2026-10-17	 (ADR-0054 addendum 2026-10-17)
+P/03.6-R036	spec/03.6-worker.norms.md#N5	numbering of the acceptance of M10/08	2026-10-20	The scenario numbers are the former acceptance numbers of M10/08.
+P/03.6-R038	spec/03.6-worker.norms.md#N5	ADR-0091	2026-10-22	ADR-0091; 
+P/03.6-R042	spec/03.6-worker.norms.md#N5	moved from P/08.5 N5; stage C guess W03-G04; Architect's decision 2026-10-23	2026-10-23	 (moved from P/08.5 N5 without a change of bytes; stage C guess W03-G04, the Architect's decision of 2026-10-23)
+P/03.6-R042	spec/03.6-worker.norms.md#N5	reconciliation of M11, B7	2026-10-23	added by the reconciliation of M11, B7: 
+P/03.6-R042	spec/03.6-worker.norms.md#N5	stage C guess W03-OBJECT-GUARD-01; Architect's decision 2026-10-23	2026-10-23	 (stage C guess W03-OBJECT-GUARD-01, the Architect's decision of 2026-10-23)
+-	spec/03.6-worker.norms.md#implementation-decides	item 4 of «Implementation decides» of M10/8	2026-10-20	 — part of item 4 of «Implementation decides» of M10/8
+-	spec/03.6-worker.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/03.6-worker.norms.md#readiness-checklist	M10/8-13; review of stage A-1	2026-10-20	The number P/03.6-02 is free: M10/8-13 is moved from chapter 3.6 to 6.4 (review of stage A-1); its part
+-	spec/03.6-worker.norms.md#readiness-checklist	M10/8-03 (P/03.6-01)	2026-10-20	(part of M10/8-03 → P/05-03)
+-	spec/03.6-worker.norms.md#readiness-checklist	ADR-0054; stage C guess W03-E06 (P/03.6-03)	2026-10-06	 (ADR-0054, W03-E06)
+-	spec/03.6-worker.norms.md#readiness-checklist	C03-REFUSED-BEFORE-CALL-EVENT-01 (P/03.6-03)	2026-10-30	 (C03-REFUSED-BEFORE-CALL-EVENT-01)
+-	spec/03.6-worker.norms.md#readiness-checklist	stage C guess RM-G01 (P/03.6-03)	2026-10-23	 (RM-G01)
+-	spec/03.6-worker.norms.md#readiness-checklist	C03-REQUEST-CHECK-ORDER-01 (P/03.6-03)	2026-10-30	; C03-REQUEST-CHECK-ORDER-01
+-	spec/03.6-worker.norms.md#readiness-checklist	analysis of review of stage B 6–7, № 16 (P/03.6-03)	2026-10-20	 (review of stage B 6–7, № 16)
+-	spec/03.6-worker.norms.md#readiness-checklist	M10/8-15 (P/03.6-03)	2026-10-20	(part of M10/8-15 → P/06.4-03)
+-	spec/03.6-worker.norms.md#readiness-checklist	M10/8-13 (P/03.6-03)	2026-10-20	(part of M10/8-13 → P/06.4-06)
+-	spec/03.6-worker.norms.md#readiness-checklist	ADR-0054 (P/03.6-04)	2026-10-06	ADR-0054 
+-	spec/03.6-worker.norms.md#readiness-checklist	Architect's decision 2026-10-20; review of stage B 6–7 (P/03.6-04)	2026-10-20	 (the Architect's decision of 2026-10-20, review of stage B 6–7)
+-	spec/03.6-worker.norms.md#readiness-checklist	Architect's decision 2026-11-04 (P/03.6-06)	2026-11-04	 (the Architect's decision of 2026-11-04, as N5)
+-	spec/03.6-worker.norms.md#readiness-checklist	ADR-0091 item 7, addendum (21) item 3, addendum (23), addendum (24) item 3 (P/03.6-07)	2026-10-23	 (ADR-0091 item 7, addendum (21) item 3, addendum (23), addendum (24) item 3)
+-	spec/03.6-worker.norms.md#readiness-checklist	ADR-0091 item 6 (P/03.6-08)	2026-10-22	 (ADR-0091 item 6)
