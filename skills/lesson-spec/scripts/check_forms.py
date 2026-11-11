@@ -812,6 +812,8 @@ KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests",
 CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
 GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
                   rf"|(verdicts|puts):({CH}):([^:;\s]+)|seams:({CH}):([^:;\s]+)|code:\*")
+VECTORS_OWNED = re.compile(r"vectors:(common|[0-9]{2}-[a-z0-9-]+)/([a-z0-9-]+)")   # пакет другого владельца: только при строке
+# consumers.tsv с потребителем — этим уроком (решение Архитектора по вопросу 5 аудита P/03, 2026-11-11)
 CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
 
 
@@ -945,14 +947,27 @@ def check_req_anchors(lesson):
 def gate_errors(lesson, stage, check):
     """ADR-0126 доп. (1) п. 8, доп. (7) пп. 2, 3: одна проверка списка `gate` — закрытый вид без пробелов; глава —
     каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
-    `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
+    `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `vectors:<владелец>/<пакет>` — пакет другого
+    владельца, только при строке `consumers.tsv` с потребителем — этим уроком; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
     главы (ADR-0125 доп. (5)). seams:<chapter>:<names|*> selects that chapter's seams.tsv;
     accept selects scenarios.tsv. Both scopes are local to the declared lesson.
     code:* is the closed code-rules gate kind (ADR-0133 addendum (39))."""
+    owned = VECTORS_OWNED.fullmatch(check)
+    if owned:
+        platform = lesson.parent
+        package = f"{owned[1]}/{owned[2]}"
+        if not (platform / owned[1] / "vectors" / owned[2]).is_dir():
+            return [f"stages.tsv: {stage}: no vector package {package}"]
+        consumers = platform / "common" / "vectors" / "consumers.tsv"
+        rows = [ln.split("\t") for ln in consumers.read_text(encoding="utf-8").splitlines()
+                if ln and not ln.startswith("#")] if consumers.is_file() else []
+        if not any(len(r) >= 3 and r[0] == package and r[2] == lesson.name for r in rows):
+            return [f"stages.tsv: {stage}: {package} has no consumers.tsv row with consumer {lesson.name}"]
+        return []
     m = GATE.fullmatch(check)
     if not m:
         return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, seams:…, "
-                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:…, code:* or build"]
+                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:<package>, vectors:<owner>/<package>, code:* or build"]
     if m[6]:
         if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
             return [f"stages.tsv: {stage}: no vector package {m[6]}"]
