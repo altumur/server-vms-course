@@ -600,12 +600,12 @@ def build_form_section(schema_doc, relations_doc, scalars, lang="ru"):
     t = sec.t
     out = [t("### Форма (построена из стандартных файлов)", "### Form (built from the standard files)"), "",
            t("Форма — JSON Schema 2020-12 `02.1-installer.schema.json`, связи — CEL `02.1-installer.relations.json`, "
-             "слова слоёв — `02.1-installer.layers.tsv` (ADR-0092). Класс отказа — слой, где отказ: `text` (текст, "
+             "слова слоёв — `02.1-installer.layers.tsv`. Класс отказа — слой, где отказ: `text` (текст, "
              "N1.1), `form` (форма), `relations` (связи — только при чистой форме). Выражение — целиком, как в схеме "
              "(ECMA-262 `u` ∩ RE2, `.` — любой знак). Целое место: границы ±(2^53 − 1), значение с целым значением — "
              "целое.",
              "The form is the JSON Schema 2020-12 `02.1-installer.schema.json`, the relations are the CEL "
-             "`02.1-installer.relations.json`, the words of the layers are `02.1-installer.layers.tsv` (ADR-0092). The "
+             "`02.1-installer.relations.json`, the words of the layers are `02.1-installer.layers.tsv`. The "
              "class of a refusal is the layer where it is refused: `text` (the text, N1.1), `form` (the form), "
              "`relations` (the relations — only on a clean form). An expression matches in full, as in the schema "
              "(ECMA-262 `u` ∩ RE2, `.` is any character). An integer place: bounds ±(2^53 − 1), a value with an "
@@ -657,14 +657,14 @@ def build_families_section(norms, root, families, lang="ru"):
     files = any(row["kind"] == "file" for row, *_ in families)
     out = [t("### Семьи данных (построены из стандартных файлов)", "### Data families (built from the standard files)"),
            "",
-           t("Форма строк и объектов%s, которыми глава владеет по [каталогу](%s), — JSON Schema 2020-12 семьи "
-             "(ADR-0092). Экземпляр строки — `{key, row}`, объекта — `{key, object}`%s; ключ — грамматика колонки `key` "
+           t("Форма строк и объектов%s, которыми глава владеет по [каталогу](%s), — JSON Schema 2020-12 семьи. "
+             "Экземпляр строки — `{key, row}`, объекта — `{key, object}`%s; ключ — грамматика колонки `key` "
              "каталога. Поля `row` — значения `items` после [кодека](%s): писатель проверяет схему и её "
              "`$defs.writer`, читатель — схему (слой 3 — слова `x-*` схемы). Нечитаемо — строка не раскодировалась или "
              "не прошла схему в режиме читателя; исход — по таблице исходов семьи: путь — префикс пути отказа (пустой "
              "— строка целиком), при нескольких путях отказа действует исход с наименьшим приоритетом.",
              "The form of the rows and objects%s that the chapter owns by the [catalog](%s) is the JSON Schema 2020-12 "
-             "of the family (ADR-0092). An instance of a row is `{key, row}`, of an object `{key, object}`%s; the key "
+             "of the family. An instance of a row is `{key, row}`, of an object `{key, object}`%s; the key "
              "is the grammar of the column `key` of the catalog. The fields of `row` are the values of `items` after "
              "the [codec](%s): the writer checks the schema and its `$defs.writer`, the reader the schema (layer 3 — "
              "the words `x-*` of the schema). Unreadable — the row did not decode or did not pass the schema in the "

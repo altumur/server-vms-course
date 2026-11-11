@@ -24,7 +24,7 @@ STEPS = [
     ("in", "sugar", "P/02.2-02", "`in` элемента `secret_in` одним словом", "список из одного слова"),
     ("P1", "computed", "P/02.2-03", "нет `snapshot`",
      "имена `unit.fields` в порядке автора без `*_secret`, полей `type: blob` и `server`, затем `state.<имя>` каждого "
-     "`unit.state` в порядке автора, кроме `cursor` (ADR-0091 п. 3); явный `[]` остаётся"),
+     "`unit.state` в порядке автора, кроме `cursor`; явный `[]` остаётся"),
     ("P2", "computed", "P/02.2-03", "нет `tables.<т>.journal` или одного из его ключей",
      "`written` — `\"<т>.written\"`, `deleted` — `\"<т>.deleted\"`; сказанный ключ остаётся"),
     ("P3", "computed", "P/02.2-03", "нет `display.form`", "`[{\"fields\": [<имена unit.fields в порядке автора>]}]`"),
@@ -40,7 +40,7 @@ STEPS_EN = [
     ("in", "sugar", "P/02.2-02", "`in` of an element of `secret_in` as one word", "a list of one word"),
     ("P1", "computed", "P/02.2-03", "no `snapshot`",
      "the names of `unit.fields` in the author's order without `*_secret`, fields of `type: blob` and `server`, then "
-     "`state.<name>` of each `unit.state` in the author's order, except `cursor` (ADR-0091 item 3); an explicit `[]` "
+     "`state.<name>` of each `unit.state` in the author's order, except `cursor`; an explicit `[]` "
      "stays"),
     ("P2", "computed", "P/02.2-03", "no `tables.<t>.journal` or one of its keys",
      "`written` — `\"<t>.written\"`, `deleted` — `\"<t>.deleted\"`; a stated key stays"),
@@ -165,14 +165,14 @@ def build_view_section(view_doc, lang="ru"):
     t = sec.t
     out = [t("### Форма канонического вида (построена из стандартных файлов)",
              "### Form of the canonical view (built from the standard files)"), "",
-           t("Значение `manifest` строки `platform/manifest/<sub>/canonical/%d` — JSON (JCS, ADR-0072) этой формы: JSON "
-             "Schema 2020-12 `02.2-installer.view.schema.json` (ADR-0089 п. 3, ADR-0092 слой 6). Отображение без имён "
+           t("Значение `manifest` строки `platform/manifest/<sub>/canonical/%d` — JSON (JCS, RFC 8785) этой формы: JSON "
+             "Schema 2020-12 `02.2-installer.view.schema.json`. Отображение без имён "
              "автора закрыто: ключа вне таблицы нет. «Есть всегда» — ключ с умолчанием формы манифеста (`default` "
              "`02.1-installer.schema.json`) или шагом проекции; «есть, если сказан в манифесте» — ключ без умолчания, "
              "его отсутствие и есть значение. Отображение `x-ordered` формы манифеста — список объектов `{name, …}` в "
              "порядке автора. Правил и связей формы манифеста здесь нет: принятый манифест проверил установщик.",
-             "The value `manifest` of the row `platform/manifest/<sub>/canonical/%d` is a JSON (JCS, ADR-0072) of this "
-             "form: the JSON Schema 2020-12 `02.2-installer.view.schema.json` (ADR-0089 item 3, ADR-0092 layer 6). A map "
+             "The value `manifest` of the row `platform/manifest/<sub>/canonical/%d` is a JSON (JCS, RFC 8785) of this "
+             "form: the JSON Schema 2020-12 `02.2-installer.view.schema.json`. A map "
              "without author names is closed: there is no key outside the table. «Always present» — a key with a "
              "default of the form of the manifest (`default` of `02.1-installer.schema.json`) or by a step of the "
              "projection; «present if stated in the manifest» — a key without a default, its absence is the value. A "
