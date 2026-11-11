@@ -1,0 +1,93 @@
+{
+  "targets": {
+    "P/01.1/door": {
+      "reports_equal": true,
+      "red": 1,
+      "classes": {
+        "E1": 1
+      },
+      "steps": 641,
+      "rows": 97,
+      "entries": 0,
+      "unexecuted_steps": {
+        "MissingBinding": 295
+      }
+    },
+    "P/01.1/extra": {
+      "reports_equal": true,
+      "red": 0,
+      "classes": {},
+      "steps": 0,
+      "rows": 60,
+      "entries": 16,
+      "unexecuted_steps": {}
+    },
+    "P/01.2/rights": {
+      "reports_equal": true,
+      "red": 10,
+      "classes": {
+        "E2": 2,
+        "E3": 8
+      },
+      "steps": 67,
+      "rows": 37,
+      "entries": 0,
+      "unexecuted_steps": {
+        "store_rights_template": 8
+      }
+    },
+    "P/01.3/daemon": {
+      "reports_equal": true,
+      "red": 9,
+      "classes": {
+        "E4": 8,
+        "E5": 1
+      },
+      "steps": 125,
+      "rows": 8,
+      "entries": 0,
+      "unexecuted_steps": {
+        "14-copy-ids:82": 4,
+        "MissingBinding": 4,
+        "stage_package_not_exported": 43,
+        "store_spoil_row_missing": 14
+      }
+    },
+    "P/01.3/group": {
+      "reports_equal": true,
+      "red": 125,
+      "classes": {
+        "E4": 49,
+        "E6": 7,
+        "E7": 69
+      },
+      "steps": 171,
+      "rows": 0,
+      "entries": 0,
+      "unexecuted_steps": {}
+    }
+  },
+  "extra_without_machine_form": [
+    "extra-forwarded-list",
+    "extra-full-key-declared"
+  ],
+  "red_total": 145,
+  "input_sha256": {
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_1_door/engine.json": "85376fa6d20c8d0519417c1ed2a65080535f930e52355aa2843320f174717030",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_1_door/engine.json": "85376fa6d20c8d0519417c1ed2a65080535f930e52355aa2843320f174717030",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/replay188/trace/P_01_1_door.jsonl": "3d266d5aaee6e6d2380cbd1ebc3a42ba46cb26cf8c2759f5bf7eb4ff27336563",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_1_extra/engine.json": "1d3443ecf749e705c76303a5ffbe828e21f526ba9a6de30101e5365d7dae5b4f",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_1_extra/engine.json": "1d3443ecf749e705c76303a5ffbe828e21f526ba9a6de30101e5365d7dae5b4f",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_2_rights/engine.json": "b9f4bc0b75e2b214a387df934c2388d46c675bc5a8904d5f4a1ecc8660634504",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_2_rights/engine.json": "b9f4bc0b75e2b214a387df934c2388d46c675bc5a8904d5f4a1ecc8660634504",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/replay188/trace/P_01_2_rights.jsonl": "0919e213c13a890d093445da5a4c788f9c0a1457c14a7b7efda42e3162acf566",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_3_daemon/engine.json": "b024515a7e7f6175d0e215404d85f1e840e0ec4f432cae103a8d0e886e99b681",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_3_daemon/engine.json": "b024515a7e7f6175d0e215404d85f1e840e0ec4f432cae103a8d0e886e99b681",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/replay188/trace/P_01_3_daemon.jsonl": "d00644c0805d606270e060526395e44f0d394a9fea4044b0afb38ba8e6794067",
+    "/home/pilot/owner-receipts/P01.159-court-attempt6-20261111/out-diag/attempt6/P_01_3_group/engine.json": "2b8f72bad5d98fa6684a14157526aaa9d266c6a64fa78c4846b9dd2e80130866",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/out-diag/claude/P_01_3_group/engine.json": "2b8f72bad5d98fa6684a14157526aaa9d266c6a64fa78c4846b9dd2e80130866",
+    "/home/pilot/owner-receipts/P01.188-court-claude-20261111/replay188/trace/P_01_3_group.jsonl": "736d4e4abe2a48e8c6b118761c021412da7925fa9773f6fc06fda33bf48fcc77",
+    "J:Platform/common/acceptance/forms/extra.tsv": "7bc2349d7fdd4e07ee767f2e01684a77ef219e1be20fb09a9b53d2cc6e5c81f8",
+    "J:Platform/common/acceptance/forms/extra.scenarios.tsv": "ff6800fec953ca56b23c6aea31835566a334472703a5040e3fc6071f1d868b94"
+  }
+}
