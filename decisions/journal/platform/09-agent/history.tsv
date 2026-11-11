@@ -1,6 +1,6 @@
 req_id	file	source	date	removed
 -	README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
--	README.md#intro	ADR-0124	2026-11-04	ADR-0124: 
+-	README.md#intro	ADR-0124	2026-11-04	ADR-0124:
 -	README.md#intro	ADR-0092	2026-10-27	, ADR-0092
 -	README.md#intro	ADR-0088	2026-10-19	; ADR-0088
 -	lifecycle.md#intro	ADR-0083 addendum (2) item 1	2026-10-18	 (ADR-0083 addendum (2) item 1)
@@ -25,9 +25,9 @@ req_id	file	source	date	removed
 -	lifecycle.md#implementation-decides	Architect's decision 2026-10-18, the second pilot	2026-10-18	 (decided by the Architect 2026-10-18 (the second pilot))
 -	spec/09-agent.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
 -	spec/09-agent.README.md#task	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	; the correspondence to the former ids
--	spec/09-agent.README.md#task	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	— `id-map.tsv` (historical record). 
+-	spec/09-agent.README.md#task	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	— `id-map.tsv` (historical record).
 -	spec/09-agent.README.md#task	ADR-0083 addendum (1), (14): stage B of the move of lessons 8–10	2026-10-20	The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
--	spec/09-agent.README.md#task	ADR-0083 addendum (1), (14): stage B of the move of lessons 8–10	2026-10-20	ADR-0083 addendum (1), (14)). 
+-	spec/09-agent.README.md#task	ADR-0083 addendum (1), (14): stage B of the move of lessons 8–10	2026-10-20	ADR-0083 addendum (1), (14)).
 -	spec/09-agent.README.md#inputs-and-their-priority	ADR-0088	2026-10-19	; ADR-0088
 -	spec/09-agent.README.md#inputs-and-their-priority	ADR-0092	2026-10-27	, ADR-0092
 -	acceptance/1/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
@@ -56,17 +56,17 @@ req_id	file	source	date	removed
 -	vectors/follow/README.md#intro	ADR-0083	2026-10-18	 (ADR-0083)
 -	vectors/follow/README.md#intro	ADR-0080 addendum 16	2026-10-17	 (ADR-0080 addendum 16)
 -	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	The rows were transferred from the inputs of the command `follow` of the acceptance of M11/10 (`inputs/follow-*.json`, sc. 06) without a change of bytes: only
--	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	whitespace and line breaks outside JSON strings are removed; 
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	whitespace and line breaks outside JSON strings are removed;
 -	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	the name of the input file; the expectation `ok <JSON>` is the cell `expect` (the plan
 -	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	of the move of lesson 9, § 3; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 06 of the acceptance of M11/10 and its
--	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	inputs were removed by the move of lesson 9: 
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	inputs were removed by the move of lesson 9:
 -	vectors/follow/README.md#files	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	 in rows 01–12,
--	vectors/follow/README.md#files	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	the scenario and the step of the acceptance of M11, 
+-	vectors/follow/README.md#files	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	the scenario and the step of the acceptance of M11,
 -	vectors/follow/README.md#files	run 41 (decisions/inbox/2026-10-18-прогон-41-разбор.md); the reconciliation of M11 09–12	2026-10-18	The vectors were checked by the runs of the implementations of the acceptance of M11/10 (run 41, the reconciliation of M11 09–12) and by the text of the norms; on a discrepancy
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 4 «OpenAPI», V9	2026-10-20	; the move plan of lesson 9
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 4 «OpenAPI», V9	2026-10-20	§ 4 «OpenAPI», V9
 -	spec/09-agent.api.openapi.yaml#/openapi	ADR-0129 addendum (20) item 1	2026-11-07	; the four existing operationIds remain unchanged
--	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan 9 V3	2026-10-20	plan 9 V3: 
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan 9 V3	2026-10-20	plan 9 V3:
 -	spec/09-agent.api.openapi.yaml#/openapi	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), decision 3	2026-10-20	 (analysis of review of stage A 8–10,
 -	spec/09-agent.api.openapi.yaml#/openapi	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), decision 3	2026-10-20	decision 3)
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	From the contract M11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with
@@ -74,7 +74,7 @@ req_id	file	source	date	removed
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	the copy of Refusal of M11/7 (the reason list) is replaced by a reference to
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	The contract M11/4 had no paths of the relay door (only the description
 -	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	«the same forms as at the holder; codes — N2 of the lesson»): the paths
--	spec/09-agent.api.openapi.yaml#/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/description	the Architect's decision on the M11 check, Y8	2026-10-20	the Architect''s decision on the M11 check, Y8; 
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/description	the Architect's decision on the M11 check, Y8	2026-10-20	the Architect''s decision on the M11 check, Y8;
 -	spec/09-agent.api.openapi.yaml#/paths/~1api~1members~1{member}~1{part}/get/summary	ADR-0113	2026-11-01	; ADR-0113)
 -	spec/09-agent.api.openapi.yaml#/paths/~1api~1topology~1{member}/get/summary	ADR-0113 addendum (47) item 3	2026-11-03	; ADR-0113 addendum (47) item 3
 -	spec/09-agent.api.openapi.yaml#/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/get/responses/404/description	ADR-0113 addendum (47) item 1	2026-11-03	 (ADR-0113 addendum (47) item 1)
