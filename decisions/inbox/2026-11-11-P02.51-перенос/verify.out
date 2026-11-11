@@ -1,0 +1,17 @@
+registry errors: [] stats: {'registry_targets': 42, 'registry_routing': 42, 'registry_lessons_with_rows': 2}
+registry targets.tsv: 42 rows from ['Platform/01-store/forms/targets.tsv', 'Platform/02-installer/forms/targets.tsv']; byte-equal to 29128e1e5: True
+registry targets.routing.tsv: 42 rows from ['Platform/01-store/forms/targets.routing.tsv', 'Platform/02-installer/forms/targets.routing.tsv']; byte-equal to 29128e1e5: True
+filter model: 3523 records assembled, duplicates False; without the 6 new records byte-equal to Platform/common/export-model-filter.json of 29128e1e5: True
+  new Platform/01-store/forms/export.json: judge_only
+  new Platform/01-store/forms/targets.routing.tsv: judge_only
+  new Platform/01-store/forms/targets.tsv: model_and_judge
+  new Platform/02-installer/forms/export.json: judge_only
+  new Platform/02-installer/forms/targets.routing.tsv: judge_only
+  new Platform/02-installer/forms/targets.tsv: model_and_judge
+filter judge: 3523 records assembled, duplicates False; without the 6 new records byte-equal to Platform/common/acceptance/judge-input-filter.json of 29128e1e5: True
+  new Platform/01-store/forms/export.json: exclude
+  new Platform/01-store/forms/targets.routing.tsv: include
+  new Platform/01-store/forms/targets.tsv: include
+  new Platform/02-installer/forms/export.json: exclude
+  new Platform/02-installer/forms/targets.routing.tsv: include
+  new Platform/02-installer/forms/targets.tsv: include

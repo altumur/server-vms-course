@@ -1,0 +1,1157 @@
+{
+  "version": 1,
+  "model": [
+    {
+      "path": "Platform/01-store/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-field.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-name.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-domain-roles.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-internal-role.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/scenarios.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-gen-at.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-format.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-header-extra.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-index-above.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-no-header.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-not-json.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-not-row.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-repeat-key.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-extra.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-key.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-missing.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-unreadable.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-version.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-future-floor.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-ok-unordered.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-ok.jsonl",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-on-raft.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-batch.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-delete.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-extra-item.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-other.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-own.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-with-cas.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/forwarded-admin.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/group.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/status-body-limits.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/seams.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P01.104: the code checks of P/01, rows of the kinds of the public dictionary without expected answers (ADR-0133 addendum (39) items 2, 5, 6)."
+    },
+    {
+      "path": "Platform/01-store/forms/code-rules.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/export.json",
+      "disposition": "judge_only",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the M and J lists of the files of P/01; judge-only as the common filter Platform/common/export-model-filter.json."
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.1: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/targets.routing.tsv",
+      "disposition": "judge_only",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the routing rows of the targets of P/01; judge-only as Platform/common/acceptance/forms/targets.routing.tsv."
+    },
+    {
+      "path": "Platform/01-store/forms/targets.tsv",
+      "disposition": "model_and_judge",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the acceptance target rows of P/01 with the common header of Platform/common/acceptance/forms/targets.tsv; public as that table."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "OBSH.39.3: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/probes/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted675e exact private judge CLI companion; public observation contract retained separately."
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root accepted P01.10.5.13/675e whole public production observation/boundary/group/budget contract. Private judge CLI moved to J; no supplied checker implementation in M."
+    },
+    {
+      "path": "Platform/01-store/probes/copy_stream.py",
+      "disposition": "judge_only",
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
+    },
+    {
+      "path": "Platform/01-store/probes/store_fitness.py",
+      "disposition": "judge_only",
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probe_http.py",
+      "disposition": "judge_only",
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probes.py",
+      "disposition": "judge_only",
+      "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
+    },
+    {
+      "path": "Platform/01-store/ru/01-store.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/2/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/2/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root signed P01.10.14–16 exact existing opaque case companion; actual mode/type/blob matched. Whole file judge-only; provenance external."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Root accepted675e exact private judge CLI companion; public observation contract retained separately."
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01-store.README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.norms.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/production-acceptance.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/jcs/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.norms.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/rights.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    }
+  ],
+  "judge": [
+    {
+      "path": "Platform/01-store/README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.cases.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/scenarios.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/seams.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.cases.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-comment.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-field.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-bad-name.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-domain-roles.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights-internal-role.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/inputs/rights.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/scenarios.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.cases.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-epoch.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor-gen-at.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-floor.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-format.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-header-extra.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-index-above.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-no-header.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-not-json.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-not-row.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-repeat-key.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-extra.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-key.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-row-missing.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-unreadable.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/bad-version.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-future-floor.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-ok-unordered.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/copy-ok.jsonl",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-on-raft.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-batch.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-delete.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-extra-item.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-other.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-own.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/door-row-with-cas.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/forwarded-admin.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/group.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/status-body-limits.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/scenarios.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/seams.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.layers.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.schema.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.layers.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/code-rules.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/export.json",
+      "disposition": "exclude",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the M and J lists of the files of P/01; excluded as the common filters, not engine input."
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.1: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/targets.routing.tsv",
+      "disposition": "include",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the routing rows of the targets of P/01; included as Platform/common/acceptance/forms/targets.routing.tsv."
+    },
+    {
+      "path": "Platform/01-store/forms/targets.tsv",
+      "disposition": "include",
+      "basis": "ADR-0135 addendum (14) item 2 (P02.51): the acceptance target rows of P/01; included as Platform/common/acceptance/forms/targets.tsv."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.probes.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/write-checks.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "OBSH.39.3: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/probes/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Records the runs and code of the existing judge; never judge input (ADR-0135 (2) item 1)."
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "disposition": "include",
+      "basis": "Observation contract of the store probes named by N6 of the judge norms; contract text only, without probe code."
+    },
+    {
+      "path": "Platform/01-store/probes/copy_stream.py",
+      "disposition": "exclude",
+      "basis": "Implementation code; never judge input (ADR-0135 (2) item 1)."
+    },
+    {
+      "path": "Platform/01-store/probes/store_fitness.py",
+      "disposition": "exclude",
+      "basis": "Implementation code; never judge input (ADR-0135 (2) item 1)."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probe_http.py",
+      "disposition": "exclude",
+      "basis": "Implementation code; never judge input (ADR-0135 (2) item 1)."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probes.py",
+      "disposition": "exclude",
+      "basis": "Implementation code; never judge input (ADR-0135 (2) item 1)."
+    },
+    {
+      "path": "Platform/01-store/ru/01-store.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/2/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/2/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01-store.README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.2-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/spec/production-acceptance.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/jcs/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.2-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "disposition": "include",
+      "basis": "Groups, budgets and measurements of N6, named as an engine input by spec/acceptance.README.md."
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/rights.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    }
+  ]
+}
