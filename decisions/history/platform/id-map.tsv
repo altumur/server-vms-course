@@ -29,7 +29,7 @@ M10/1-21	P/01.1-20	1.1	an implementation without a door SHOULD run the scenarios
 M10/1-22	P/01.1-21	1.1	a file-based implementation MAY refuse a key shorter than 1024	-
 M10/1-23	P/01.1-22	1.1	a store in the process without a door on a box	-
 M10/1-24	P/01.1-23	1.1	request parsing of N2.1: query, the JSON of the body, the method and	-
-M11/1 N0 «Order of output arrays» (new, review analysis of stage A 8–10, № 19 / decision 4)	P/01.1-24	1.1	the order of output arrays — scope lessons 8–10	rule N0 P/01.1; read by the chapters of lessons 8–10 (before the move — M11/1–12 N0 «lesson 1 N0»)
+M11/1 N0 «Order of output arrays» (new, review analysis of stage A 8–10, № 19 / decision 4)	P/08.0-05	8.0	the order of output arrays — scope lessons 8–10	rule N0 P/08.0 (P/08.0-R011, P/08.0-R012), read by the chapters of lessons 8–10; until P01.176 — P/01.1-24 (ADR-0133 addendum (70) item 2, (71) item 2)
 - (new)	P/01.1-25	1.1	the write conditions not_after, not_before: 409 expired, early; the order of checks; the fingerprint	ADR-0091 item 1
 - (new)	P/01.1-26	1.1	admission time: does not decrease along the log, stored in the log record, the conditions on application	ADR-0091 item 1
 - (new)	P/01.1-27	1.1	the premise of the cluster clocks CLOCK_SKEW 60 s	ADR-0091 item 1
@@ -889,4 +889,3 @@ M11/11 sc. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows o
 - (new)	P/04-30	4	leaving silent with a live worker and a silent resource of its server; the term of the fate on drill 05	split off P/04-13; ADR-0130 addendum (19) item 6
 - (new)	P/04-31	4	the order on the host: systemd does not raise the instance, a number above want stopped by the script (R28)	split off P/04-14; ADR-0130 addendum (19) item 6
 - (new)	P/04-32	4	the lifecycle of the controller process: READY, WATCHDOG at decision boundaries, SIGTERM, Restart by the P/02.4 unit	raised from lifecycle.md «Signals and readiness»; ADR-0130 addendum (19) item 6; the Architect's answer on P04.21, question 5 (b)
-- (new)	P/08.0-05	8.0	the order of output arrays — scope lessons 8–10	moved from P/01.1-24 (withdrawn); rule N0 P/08.0 (P/08.0-R011, P/08.0-R012); ADR-0133 addendum (70) item 2, addendum (71) item 2

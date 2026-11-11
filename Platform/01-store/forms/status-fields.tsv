@@ -18,7 +18,7 @@ term	uint64	true	true	door: 0; box: 1	P/01.3-R211; P/01.3-R169
 commit	uint64	true	true	door: 0	P/01.3-R211
 applied	uint64	true	true	door: 0	P/01.3-R211
 voters	array of MemberId	true	true	the ids of the voters; box: [<id>]	P/01.3-R211; P/01.3-R169
-members	map MemberId → non-empty string	true	true	id → the -api address; a member without -api is not in the map, the map can be {}; a value is never empty; box: {<id>: <api>}, without -api {}	P/01.3-R211; P/01.3-R169
+members	map MemberId → non-empty string	true	true	id → the -api address; a member without -api is not in the map, the map can be {}; a value is never empty; box: {<id>: <api>}, without -api {}	P/01.3-R211; P/01.3-R169; P/01.3-R381
 tls	boolean	true	true	-	P/01.3-R211
 max_value	integer ≥ 1	true	true	this instance's effective row-weight ceiling in bytes, the value of -max-value (the row weight of P/01.1), separately from -max-body; the acceptance stand parameters are P/01.3 N5	P/01.3-R211
 max_body	integer ≥ 1	true	true	this instance's actual configured -max-body in entity-body bytes (including JSON whitespace and an actual LF, excluding HTTP framing); its default is owned only by forms/daemon-flags.tsv; not derived from max_value; the installer reads it for the static finite-profile check before writes; a local observation, not a confirmation by the majority	P/01.3-R211
@@ -27,4 +27,4 @@ again	uint64	false	true	-	P/01.3-R211
 role	string	mode == "door"	true	door: door	P/01.3-R211
 last_snapshot	uint64	false	true	-	P/01.3-R211
 out	array of MemberId	false	true	-	P/01.3-R211
-admission_ahead	number > CLOCK_SKEW	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	by how many seconds the admission time of the last record is ahead of the clock; a follower and a door without a vote have no field	P/01.3-R109; P/01.3-R211
+admission_ahead	number > CLOCK_SKEW	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	(mode == "box" || raft == "leader") && ahead > double(lim.CLOCK_SKEW)	by how many seconds the admission time of the last record is ahead of the clock; a follower and a door without a vote have no field	P/01.3-R109; P/01.3-R365; P/01.3-R211
