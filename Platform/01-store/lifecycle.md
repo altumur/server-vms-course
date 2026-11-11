@@ -16,7 +16,7 @@ durability barriers), [P/01.2](spec/01.2-store.norms.md) (rights file, role sock
 | the group daemon | the unit `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; the runner `w2c-run.sh configstore` | P/02.4 N1.1 `units` |
 | sockets | the units `configstore-admin.socket` and `configstore-<role>.socket`, `FileDescriptorName=admin \| <role>`, `Service=configstore.service` | P/02.4 N1.1, P/01.3 N1.3 `sockets` |
 | first start and restart | `member.json` exists — a restart, otherwise `-bootstrap` (the first server) or `-join` (the others) | P/02.4 N3 «server start» step 1, P/01.3 N1.3 `group.join` |
-| the box store | a build without raft, one voter (`box`) | P/01.3 N1.3 `box` |
+| the box store | one voter without raft: a start without `-raft` and without `-door`, in any build (`box`) | P/01.3 N1.3 `box` |
 | the in-process store | the profile `file://` «the whole box is one implementation», without a door; the on-disk format is not a contract | P/02.4 N1.2 `PLATFORM_STORE`, P/01.1 N2 |
 
 ## Environment
@@ -70,7 +70,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 | data-directory ownership | atomic for one process; after orderly exit or `SIGKILL` former ownership needs no manual cleanup and alone does not forbid start; `start_format` and, on a box, unfinished `import`/`restore` remain | P/01.3 N1.3 «Data-directory ownership»; `start_data_dir_owned`, `local_data_dir_owned` in the form |
 | restart | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
 | readiness | the socket is open; `After=configstore.service` at the others is an order, not readiness: each process itself waits for a reliable read | P/02.4 N3 «server start», «Races» |
-| durability | the barriers are switched off neither by the environment nor by an operation flag | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |
+| durability | the barriers are switched off neither by the environment nor by a flag: the flag set is closed | P/01.3 N1.3 `durability`, P/01.1 «Implementation decides» item 3 |
 | a majority failure | 503 `unavailable` after the effective `-leader-wait` interval; recovery — `recover` by hand | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «recover the store» |
 
 ## Stand
@@ -81,7 +81,7 @@ Flag purposes and administrative commands are [P/01.3 N1.3](spec/01.3-store.norm
 - the store command holds `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}` once each and none of the member flags of the group stand, which the stand appends itself ([substitutions](../common/acceptance/PROFILE.md#substitutions));
 - `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from M10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
 - the directives `@restart store`, `@foreign store`, `@backup store`, `@import store`, the door `restored`;
-- a stand flag that switches off the barriers for speed is named by the implementation in its «Stand» command.
+- the store runs with the durability barriers: the command carries no flag that switches them off (`durability` above).
 
 ## Open
 

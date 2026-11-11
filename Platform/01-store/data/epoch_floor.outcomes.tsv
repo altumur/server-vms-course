@@ -1,6 +1,6 @@
 # Outcomes of an unreadable row platform/epoch_floor (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-/floor	*	epoch issue: the issue is refused, the floor is not replaced by 0; lease confirmation: fenced; import, restore: the whole input is refused, nothing changes	0	row	P/03.2 N3 «take_epoch(id)», «confirm»; P/01.3 N1.3 import, N4
-/generation_at	*	epoch issue and lease confirmation do not read the field — they issue and confirm by the floor; import, restore: the whole input is refused, nothing changes (the current behaviour of both implementations; the norm does not name the outcome)	1	field	P/01.3 N3 «recover the store»
+/floor	*	epoch issue: the issue is refused, the floor is not replaced by 0; lease confirmation: fenced; import, restore: the whole input is refused, nothing changes; op: floor: 409 refused (floor_unreadable), nothing is written	0	row	P/03.2 N3 «take_epoch(id)», «confirm»; P/01.3 N1.3 import, floor, N4
+/generation_at	*	epoch issue and lease confirmation do not read the field — they issue and confirm by the floor; import, restore: the whole input is refused, nothing changes (the current behaviour of both implementations; the norm does not name the outcome); op: floor: 409 refused (floor_unreadable), nothing is written	1	field	P/01.3 N3 «recover the store»; P/01.3 N1.3 floor
 	<s>worker	the whole row is unreadable: epoch issue — the issue is refused, the floor is not replaced by 0; lease confirmation — fenced	2	row	P/03.2 N3 «take_epoch(id)», «confirm»
