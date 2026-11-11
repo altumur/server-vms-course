@@ -22,3 +22,7 @@ the leaving of units) — the acceptance scenarios of P/03.2, P/04 and reading.
 Who performs it — the capture and the renewal of the worker (`03-worker`, P/03.2 N1.4, N3 «capture») — all rows; the controller (`04-controller`, P/04 N3 «fate», «leaving») — the field `state` of all rows, `takeable` is needed only by the capture of the worker. They do not perform it: the console (`06-console`) shows the fields of the row (`slot_garbled`, `released`, `slot_taking`, P/06.5 N2) without the terms `SLOT_TERM` and `TORN_STILL`; the agent (`09-agent`) judges the liveness of a slot on a member by its own rule by `until` (P/09.1 N1.2 `liveness`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 Readable gen includes the current slots-family writer range. TORN_STILL = SLOT_TERM + TORN_MARGIN from the slot contract; the independent margin is not HOLD_SKEW. takeable is the observed-version condition for a torn row; complete capture also checks generation exhaustion and all P/03.2 admission gates.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/slot` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
