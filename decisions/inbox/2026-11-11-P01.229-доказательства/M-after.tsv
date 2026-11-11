@@ -36,7 +36,7 @@
 6554	Platform/02-installer/acceptance/2/README.md
 8932	Platform/02-installer/acceptance/3/README.md
 6088	Platform/02-installer/acceptance/4/README.md
-11610	Platform/02-installer/acceptance/5/README.md
+11679	Platform/02-installer/acceptance/5/README.md
 793	Platform/02-installer/data/alarms-retention.layers.tsv
 620	Platform/02-installer/data/alarms-retention.outcomes.tsv
 28690	Platform/02-installer/data/alarms-retention.schema.json
@@ -81,7 +81,7 @@
 79362	Platform/02-installer/spec/02.2-installer.view.schema.json
 52023	Platform/02-installer/spec/02.3-installer.norms.md
 107250	Platform/02-installer/spec/02.4-installer.norms.md
-42861	Platform/02-installer/spec/02.5-installer.norms.md
+42885	Platform/02-installer/spec/02.5-installer.norms.md
 4580	Platform/02-installer/vectors/canonical/README.md
 1894	Platform/02-installer/vectors/exec/README.md
 3339	Platform/02-installer/vectors/install-order/README.md

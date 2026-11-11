@@ -6,7 +6,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) N5, the full bodies of the two routes are
 [the OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
 The file has 8 scenarios / 70 steps; the roles and the rights file are generated from `testsub` and `testsub2`
-(`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `testsub`.
+(`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `dep` (`{deployment}` = `dep` of the rights derivation command `stand.rights`).
 Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
 `/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md).
 

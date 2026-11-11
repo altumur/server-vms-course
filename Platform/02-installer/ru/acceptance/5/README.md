@@ -6,7 +6,7 @@
 [`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) N5, полные тела двух маршрутов —
 [OpenAPI](../../../../01-store/spec/01-store.api.openapi.yaml) урока P/01.
 В файле 8 сценариев / 70 шагов; роли и файл прав генерируются из `testsub` и `testsub2`
-(`Platform/common/data/testsub/testsub*.subsystem.yaml`) с именем развёртывания `testsub`.
+(`Platform/common/data/testsub/testsub*.subsystem.yaml`) с именем развёртывания `dep` (`{deployment}` = `dep` команды вывода прав `stand.rights`).
 Сценарии 05–08 и 10 (оценщик, `never`, перечисление, страж, личность,
 `/v1/rights`) — в приёмке [P/01.2](../../../../01-store/ru/acceptance/2/README.md).
 

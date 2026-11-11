@@ -131,7 +131,8 @@ req_id	file	source	date	removed
 -	acceptance/PROFILE.md#substitutions	the Architect's decision on P01.89.6	2026-11-10	; the Architect's decision on P01.89.6
 -	acceptance/PROFILE.md#code-check-names	ADR-0133 addendum (39)	2026-11-09	 (ADR-0133 addendum (39))
 -	acceptance/forms/targets.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
--	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	 (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them; listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49)
+-	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	 (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them;
+-	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49). 
 -	acceptance/forms/d7-payload.schema.json#/description	task P01.136	2026-11-10	 (task P01.136)
 -	acceptance/forms/d7.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
 -	acceptance/forms/seam-bridge.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
@@ -159,14 +160,20 @@ req_id	file	source	date	removed
 -	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step-none <name> <s>`)	2026-10-30	ADR-0095
 -	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step-drop <label>`)	2026-10-30	ADR-0095
 -	acceptance/system/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
--	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	Moved from the acceptance of M10/11 (sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6: … (…, sc. 16 of M10/11, …) … The numbers and steps are the former ones.
--	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	is moved by … to the store group stand (work rules (for people) § 4, 2026-10-30); … (ADR-0091 addendum (2), (3)) … (ADR-0091 addendum (4)–(6))
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	Moved from the acceptance of M10/11
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6:
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	, sc. 16 of M10/11,
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	The numbers and steps are the former ones.
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (work rules (for people) § 4, 2026-10-30)
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	 (ADR-0091 addendum (2), (3))
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	 (ADR-0091 addendum (4)–(6))
 -	acceptance/system/README.md#stand	automatic group scenarios plan (2026-10-30), stage 2; work rules § 4	2026-10-30	 Before, it was a drill `@manual` on a real cluster; the plan of stage 2 is `automatic group scenarios plan (2026-10-30, for people)` (work rules (for people) § 4).
 -	acceptance/system/README.md#three-server-cluster-stand	automatic group scenarios plan (2026-10-30), stage 2; work rules § 4	2026-10-30	 (work rules (for people) § 4; stage 2 of the plan `automatic group scenarios plan (2026-10-30, for people)`)
 -	acceptance/system/README.md#three-server-cluster-stand	stage C guess C01-GROUP-BOOTSTRAP-EVEN-01	2026-10-31	, C01-GROUP-BOOTSTRAP-EVEN-01
 -	acceptance/system/README.md#three-server-cluster-stand	Codex review, error class R37	2026-10-31	 (a check of the error class R37, Codex)
 -	acceptance/system/README.md#timings	the Architect's decision of 2026-10-31	2026-10-31	 (the Architect's decision of 2026-10-31)
--	acceptance/system/README.md#three-server-cluster-stand	the date of the row in the cell «Lesson» (seven rows system, one P/01.3)	2026-10-31	 (2026-10-31); (2026-10-30)
+-	acceptance/system/README.md#three-server-cluster-stand	the date of the row in the cell «Lesson» (seven rows system)	2026-10-31	 (2026-10-31)
+-	acceptance/system/README.md#three-server-cluster-stand	the date of the row in the cell «Lesson» (one row P/01.3)	2026-10-30	 (2026-10-30)
 -	acceptance/system/README.md#scenarios	move of sc. 06 recover to sc. 18 of P/01.3	2026-10-30	now 
 -	acceptance/system/README.md#executability	automatic group scenarios plan (2026-10-30), «Dry run before release»	2026-10-30	of the plan
 -	acceptance/tls/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
@@ -180,20 +187,22 @@ req_id	file	source	date	removed
 -	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0094 addendum (16)	2026-10-29	 (ADR-0094 addendum (16))
 -	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	the Architect with the TLS stage of cammeta-acceptance; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	 (the form was agreed by the Architect with the TLS stage of «cammeta-acceptance» 2026-10-21; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22)
 -	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0083 addenda (20), (21) item 9	2026-10-20	 (ADR-0083 addendum (20), addendum (21) item 9)
--	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): items 2, 7, 8, 9 of the debts list	2026-10-20	item 9 — …; for items 2, 7, 8
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): items 2, 7, 8, 9 of the debts list	2026-10-20	(item 9 — the fourth cluster; for items 2, 7, 8 `hold m1 m2` is enough)
 -	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 7 of the debts list	2026-10-20	Item 7 — 
 -	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 2 of the debts list	2026-10-20	Item 2 — 
 -	acceptance/tls/README.md#expectations	ADR-0083 addenda (20), (21) item 9	2026-10-20	 ADR-0083 addendum (20), addendum (21) item 9;
 -	acceptance/tls/README.md#expectations	ADR-0083 addenda (20), (21) item 9	2026-10-20	 (ADR-0083 addendum (20), addendum (21) item 9)
 -	acceptance/tls/README.md#expectations	division of work: Specification and the TLS stage of cammeta-acceptance	2026-10-21	 — the data of «Specification», the directive — the TLS stage of «cammeta-acceptance»
 -	acceptance/tls/README.md#expectations	the Architect's decision of 2026-10-21, № 14	2026-10-21	; the Architect's decision of 2026-10-21, as № 14
--	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 8; the Architect's decision of 2026-10-20	2026-10-20	Item 8 — …; the Architect's decision of 2026-10-20 —
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 8; the Architect's decision of 2026-10-20	2026-10-20	Item 8 — resumption
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 8; the Architect's decision of 2026-10-20	2026-10-20	the Architect's decision of 2026-10-20 — 
 -	acceptance/tls/README.md#expectations	the Architect's decision of 2026-10-21, № 14	2026-10-21	; the Architect's decision of 2026-10-21, as № 14
 -	acceptance/tls/README.md#expectations	review analysis of stage B 8–10, № 14; review analysis of stage A 8–10, № 36	2026-10-20	 (review analysis of stage B 8–10, № 14; review analysis of stage A 8–10, № 36)
--	acceptance/tls/README.md#expectations	division of work: Specification and the TLS stage of cammeta-acceptance; ADR-0083 addendum (9) item 2	2026-10-21	The data of «Specification»; the steps and the scenario are written by the TLS stage of «cammeta-acceptance»; until then — … item 2
+-	acceptance/tls/README.md#expectations	division of work: Specification and the TLS stage of cammeta-acceptance; ADR-0083 addendum (9) item 2	2026-10-21	The data of «Specification»; the steps and the scenario are written by the TLS stage of «cammeta-acceptance»; until then — a debt of the stand. The preparation — as for item 2.
 -	acceptance/tls/README.md#expectations	ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27	2026-10-21	; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27
--	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	№ 14, … (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22; the data — «Specification», … — «cammeta-acceptance»)
--	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23	2026-10-21	№ 14, … (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23)
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	**№ 14, the handshake refusal of the role door on transition 2** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22; the data — «Specification», the directive
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	`@tls-kit` — «cammeta-acceptance»)
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23	2026-10-21	**№ 14, the class `signed` of the console of a cluster** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23)
 -	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4	2026-10-26	 (ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4)
 -	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	agreed with cammeta-acceptance	2026-10-26	 (the form was agreed with «cammeta-acceptance» 2026-10-26)
 -	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	 ((5) item 4)
