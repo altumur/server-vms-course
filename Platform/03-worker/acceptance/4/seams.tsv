@@ -1,5 +1,5 @@
 # SDK seams of P/03.4 (ADR-0125 addendum (4) item 7, addendum (5)).
-# The runner executes this file through the seam adapter; these are not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# The judge executes this file through the seam adapter protocol of the common acceptance README; these are not process scenarios. CALL adapter contract is ../../forms/README.md.
 # Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
 # scenario	step	request	expect
 s1-stand-in-no-watchdog	1	CALL worker-stand-in {"step_age":13,"slot_owned":true,"writing_allowed":true,"loop_heartbeat":{"ts":100,"status":[]},"wall":113}	{"watchdog_calls":0,"epoch_writes":0,"slot_renew_before_confirm":true,"heartbeat":{"ts":113,"stood_in":{"as_of":100}}}
@@ -15,3 +15,7 @@ s10-stand-in-after-stall	1	CALL worker-stand-in {"step_age":12.501,"slot_owned":
 s11-stand-in-before-for	1	CALL worker-stand-in {"step_age":299.999,"slot_owned":true,"writing_allowed":true,"loop_heartbeat":{"ts":100,"status":[]},"wall":399.999}	{"watchdog_calls":0,"epoch_writes":0,"slot_renew_before_confirm":true,"heartbeat":{"ts":399.999,"stood_in":{"as_of":100}}}
 s12-stand-in-at-for	1	CALL worker-stand-in {"step_age":300,"slot_owned":true,"writing_allowed":true,"loop_heartbeat":{"ts":100,"status":[]},"wall":400}	{"watchdog_calls":0,"epoch_writes":0,"slot_renew_before_confirm":true,"heartbeat":{"ts":400,"stood_in":{"as_of":100}}}
 s13-stand-in-after-for	1	CALL worker-stand-in {"step_age":300.001,"slot_owned":true,"writing_allowed":true,"loop_heartbeat":{"ts":100,"status":[]},"wall":400.001}	{"epoch_writes":0,"slot_renew_before_confirm":false,"watchdog_calls":0}
+s14-lease-run-live	1	CALL worker-lease-run {"seconds":60,"role":"live","units":["u1"]}	{"over_ceiling":[],"kinds_written":["heartbeat","slot"]}
+s15-lease-run-nobody	1	CALL worker-lease-run {"seconds":60,"role":"nobody","units":[]}	{"slot_writes":0,"heartbeat_writes":0,"state_writes":0}
+s16-slot-write-ambiguous-replay	1	CALL worker-slot-write {"slot_reads":[{"index":"v1","holder":"box1:1:abcdef","gen":7,"released":false}],"write_replies":["ambiguous","again"],"own_term_open":true}	{"replay_same_id":true,"confirmed_writes":1,"name_lost":false}
+s17-slot-write-unavailable-replay	1	CALL worker-slot-write {"slot_reads":[{"index":"v1","holder":"box1:1:abcdef","gen":7,"released":false}],"write_replies":["unavailable","again"],"own_term_open":true}	{"replay_same_id":true,"confirmed_writes":1,"name_lost":false}

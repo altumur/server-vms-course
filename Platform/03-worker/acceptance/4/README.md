@@ -7,17 +7,17 @@ The norm of the chapter is [`03.4-worker.norms.md`](../../spec/03.4-worker.norms
 M10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Four scenarios / 36 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «heartbeat and a garbled row»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini).
 
-The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24). Observation — rows through the store door P/01.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
+The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the steps of the scenario start. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24). Observation — rows through the store door P/01.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
 
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 37 — the shelf), the directives `@start`, `@sigterm`,
-`@sigkill`, `@spoil object` (sc. 36), `@until`; the expectation is a subset of fields.
+`@sigkill`, `@spoil object` (sc. 36), `@until`; the body of an answer is compared by the mode `body` of the routing row of the target («Expectation» of the dictionary).
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
-The stand begins with an empty store and without workers; the runner stops everything it started after the last step of a scenario. One scenario takes no longer than 3 minutes.
+Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README: a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
 
 **Coverage audit of P/03, second pass (Gemini)** (2026-10-30, the report `gemini/audit-coverage` `fad5fa2ba`, the drafts G03, G05;
 analysis by the Specification):
@@ -29,56 +29,43 @@ analysis by the Specification):
   (`heartbeats.outcomes.tsv` `<s>worker`);
 - sc. 37 — the worker `testsub2` took its own place `sh1` (the shelf — through the door `admin`, as in sc. 23 of the acceptance of chapter 3.2); on `@sigterm`
   the hold row is released (`released: "true"`, `by` as before) and the slot is released (N3 «stop by SIGTERM» step 4; chapter 3.2
-  N3 «place» `release` — before the release of the slot; the steps do not distinguish the order of the two writes — by reading).
+  N3 «place» `release` — before the release of the slot; the order of the two writes is the edge `let-go-place` → `release-slot` of the seams
+  `s1-stop-order` and `s3-stop-slow-unit` of [chapter 3.1](../1/seams.tsv)).
 
-## Scenario boundaries
+## Stand and steps of the chapter
 
-Between scenarios the runner stops all the processes it started, resets the store (rows and objects) and the variables `$name`: each scenario begins with an empty store, there is no slot `w-1`, the console is restarted.
+The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand), including the
+stop of `@sigterm` and `@sigkill`: the step matches only after the whole process group has exited. Own to the chapter:
 
-## Exact preparation and completion
+- the read role of the store has full rights on `testsub/` and `testsub2/` (above); the door `admin` puts the shelf of sc. 37;
+- every worker has the box and the server of the stand; the name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33);
+- the chosen `CAPACITY`/`WORKER_MEMORY_MB` satisfy N1.2 of the chapter: a decreasing memory budget is not provoked;
+- `@start` confirms the start of the process, not its life; the readiness of the slot is checked by the following `@until`.
 
-Each scenario gets a new isolated store, a new console, an empty id memory of the store
-and empty POST claims, and also cleared objects of heartbeats/controller/contenders and cleared runner variables.
-Before the start the catalogue `testsub` and `testsub2` from the common testdata and the service marks of the manifests are installed.
-There are no foreign controllers, resources, spare processes or start timers. The console door is open from the loopback;
-the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
+The comparison is «Expectation» of the [dictionary](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) with the full form by
+door. The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes of a unit.
 
-All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a; each copy gets a new
-instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
-CAPACITY/WORKER_MEMORY_MB must satisfy N1.2 of the chapter. The ordinary configuration of testsub uses
-safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
+## SDK seams of the chapter
 
-@start confirms the start of the process, the readiness of the slot is checked by the following @until.
-@sigterm sends the signal to the right process and **waits for a confirmed termination**;
-a timeout/a wrong process is a refusal of the runner, not ok.
-After the scenario the runner terminates and waits for all the created processes,
-and only then deletes the state. A parallel scenario uses other ports and directories.
+The cases that need a scripted clock, the order of calls or store replies are rows of [seams.tsv](seams.tsv) and of the seams of
+[chapter 3.1](../1/seams.tsv) through the ports of [forms/README.md](../../forms/README.md#seams) (the judge runs them by the seam adapter protocol of the common acceptance README):
 
-## Exact comparison and boundaries
-
-The TSV header and comments are skipped. The step numbers are continuous inside a scenario.
-@until repeats only the nested request and the comparison up to the limit; an exhausted limit — FAIL.
-The new bindings of variables of each comparison attempt are first temporary: they become common only
-after the match of the code and of the whole expect. A failure of any field, type, array element or code discards all the new bindings of this
-attempt; the already common bindings do not change. The order of traversing the fields does not change the result.
-@any requires the presence of a field; @absent — its absence; ~text — a string occurrence.
-JSON types are exact, true is not equal to 1; objects are compared by the given fields recursively,
-arrays — by the number, order and values of the elements, except arrays without a normed order (`configured`) — the dictionary of the common acceptance README. An expectation of a single code does not require an empty body.
-The full HTTP answer additionally matches the contract of the store (P/01.1) or of units (P/06, chapter 6.1).
-
-The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes
-of a unit. The other evidence is N5 of the norms of the chapter, including the first/last heartbeat, the stand-in and the budget.
-
-## Checks outside TSV after run 25
-
-**Server admission outside TSV.** Keep the ordinary profile with SERVER_NAME=srv-a. Through the existing SDK/process startup path, check an empty value and one outside the grammar: the existing exit 2 precedes the presence lock, with no capture or heartbeat publication from that start. With the valid server, read the real heartbeat: server=srv-a, not BOX_ID/instance. The ordinary TSV continues to exercise the valid server; this reading obligation is not an executed extra process scenario.
-
-## Additional check of the class of errors of run 36 (Kimi)
-
-Sc. 03 does not read the heartbeat object and does not prove its period (N1.1 of the chapter).
-
-This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-
-SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
+| Subject | Seams |
+|---|---|
+| the order of the stop by SIGTERM: the units, the closing of the place writers, the last heartbeat, the place let go before the slot is given away (sc. 37 sees only both writes); a crash writes nothing | `s1-stop-order`, `s2-crash-no-hooks` of chapter 3.1 |
+| the stop term (P/03.4-18): a slow `stop_unit` under the scripted clock, the slot given away within `WRITE_WINDOW` − `RENEW_EVERY` from the last confirmation | `s3-stop-slow-unit`, `s4-stop-two-slow-units` of chapter 3.1 |
+| the stand-in at the neighbours of STALL and FOR, its strict place, no revival of a fenced holder | `s1`, `s2`, `s7`–`s13` |
+| the memory budget and the base heartbeat | `s3`–`s6` |
+| the cadence of the heartbeat (at most ⌊seconds / HEARTBEAT_EVERY⌋ + 1 writes) and no writes of a nobody | `s14-lease-run-live`, `s15-lease-run-nobody` |
+| a repeat of a write under the slot after `ambiguous` and after `unavailable` with the same id (P/03.4-07) | `s16-slot-write-ambiguous-replay`, `s17-slot-write-unavailable-replay` |
 
 SDK seams s8–s13 use the existing worker-stand-in at neighbours of STALL and FOR. At age <= STALL there are no stand-in effects; at STALL < age <= FOR they observe slot renewal before confirmation and repeated heartbeat, without watchdog or epoch issue. Beyond FOR this substitution stops and the existing done applies. s13 does not forbid ordinary completion cleanup writes: it observes no renewal-confirmation sequence, epoch issue or watchdog, without a new done port.
+
+## Not judged in this lesson
+
+- The contents of the heartbeat of sc. 03 and its first write before the first pass: sc. 03 does not read the heartbeat object; the cadence is
+  the seam `s14-lease-run-live`, the last heartbeat after the units are stopped — the seam `s1-stop-order`, its `status: []` — steps 05/14–15 of
+  [the acceptance of chapter 3.6](../6/README.md); the first heartbeat before the first pass is checked by reading N1.1 `cadence`.
+- The admission of the server before the presence lock: as in [the acceptance of chapter 3.2](../2/README.md#not-judged-in-this-lesson).
+- A stop call that never returns: the process is ended by the unit manager at `worker.stop_timeout` (P/02.4 N1.1), the stage of the system;
+  the value of `worker.stop_timeout` is «Implementation decides» item 3 of the norms.

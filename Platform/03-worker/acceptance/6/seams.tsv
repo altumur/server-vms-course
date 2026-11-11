@@ -1,5 +1,5 @@
 # SDK seams of P/03.6 (ADR-0125 addendum (4) item 7, addendum (5)).
-# The runner executes this file through the seam adapter; these are not process-runner scenarios. CALL adapter contract is ../../forms/README.md.
+# The judge executes this file through the seam adapter protocol of the common acceptance README; these are not process scenarios. CALL adapter contract is ../../forms/README.md.
 # Each scenario starts a fresh SDK instance; clock/store/subsystem effects are scripted inputs. The adapter invokes real SDK code and records effects.
 # scenario	step	request	expect
 s1-begun-unknown-no-call	1	CALL worker-holder-look {"request":{"unit":"u1","valid_until":200},"mark":null,"now":100,"put_new_reply":"unavailable"}	{"action_calls":0,"outcome_writes":0}
@@ -8,3 +8,5 @@ s3-foreign-begun-before-expiry	1	CALL worker-holder-look {"request":{"unit":"u1"
 s4-group-busy-after-timeout	1	CALL worker-holder-group {"group":"g1","events":["begin:r1","timeout:r1","observe:r2","look","return:r1","look"]}	{"calls_before_return":["r1"],"calls_after_return":["r2"],"max_unfinished":1}
 s5-state-start-born	1	CALL worker-state-write {"start":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3,"epoch":8,"epoch_index":"9007199254740993"},"reread_row":{"born":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","revision":4},"name":"result","value":{"state":"open"},"may_write":true}	{"items":{"born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":"3","epoch":"8","value":"{\"state\":\"open\"}"},"guard":{"key":"testsub/epoch/u1","index":"9007199254740993"}}
 s6-two-holders-late-return	1	CALL worker-holder-takeover {"fixture":"late_return_two_holders","group":"g1","old_epoch":1,"new_epoch":2,"old_begin_at":0.2,"takeover_at":1,"new_eligible_at":11.2,"old_return_at":30.2}	{"old_call_unfinished_after_wait":true,"cross_holder_exclusion_proven_by_wait":false,"witness":"overlap_possible_marked"}
+s7-lease-run-cursor	1	CALL worker-lease-run {"seconds":60,"role":"live","units":["u1"],"cursor_every":1}	{"over_ceiling":[],"kinds_written":["heartbeat","slot","state"]}
+s8-state-write-ambiguous-replay	1	CALL worker-state-write {"start":{"id":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3,"epoch":8,"epoch_index":"v8"},"reread_row":{"born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3},"name":"result","value":{"state":"open"},"may_write":true,"write_replies":["ambiguous","again"]}	{"replay_same_id":true}

@@ -8,7 +8,7 @@ M10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones, except sc. 04 and 08: the first step is `@start resource`, the former ones are shifted by one (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 02, 06 are the acceptance of chapter 3.3, sc. 03 — of chapter 3.4, the rest — [P/04](../../../04-controller/acceptance/README.md).
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers
-`testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
+`testsub` (the training worker of counters), which the steps of the scenario start. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
 the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24): the worker of one manifest does not touch the rows
 of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` (chapter 3.4 N1.1
 `phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 N1.1 `status`; the second pilot, `N-7`). Observation — rows
@@ -22,13 +22,14 @@ the doors `store` (a role with read rights on `testsub/`), `console`, `resource`
 the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<NAME>=<value>` of the worker), `@sigkill`,
 `@sigterm` (sc. 29), the expectation `@oneof` (sc. 33), `@sleep`, `@until`, `ASSERT`, `@cut role testsubworker store` / `@mend role testsubworker store` (sc. 24),
 `@spoil row` (sc. 27), `@spoil object` (sc. 44);
-the expectation is a subset of fields.
+the body of an answer is compared by the mode `body` of the routing row of the target («Expectation» of the dictionary).
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
 
-The stand begins with an empty store and without workers; the runner stops everything it started after the last step of
-a scenario. One scenario takes no longer than 3 minutes.
+Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README:
+a fresh stand per scenario, no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. What is own to the chapter
+is in the section «[Stand and steps of the chapter](#stand-and-steps-of-the-chapter)» below.
 
 In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill (7), 08-two-manifests (11), 09-bad-given-name (6),
 10-name-taken-once (15), 11-labels-off-alphabet (5; `@start worker … labels=`, the VMS request «heartbeat and a garbled row»),
@@ -43,8 +44,8 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
   `worker_state: live`; an empty `rows` with a live worker — FAIL;
 - sc. 08 — the workers of two manifests: `t-1` `testsub2` (the name is also in `TALLY_NAME`, the dictionary `@start`), the slots are held, `gen` 1
   does not grow — an endless capture with a catalogue of two manifests is visible;
-- sc. 09 — a wrong given name: `@start` confirms the start of the process, not its life; the worker exits with code 2, the runner does not compare
-  the code (by reading); observable — neither a slot under this name nor the slot `w-1` (the name is not replaced by a search);
+- sc. 09 — a wrong given name: `@start` confirms the start of the process, not its life; the worker exits with code 2, which the expectation
+  `@exit 2` compares (the dictionary, `@start worker`); observable — neither a slot under this name nor the slot `w-1` (the name is not replaced by a search);
 - sc. 10 — sc. 04 with the resource P/05 (`@start resource` as the first step): the platform journal `audit/<role>` (the event journal
   contract `journal`) is read by the events door of the console; exactly one row `worker.name_taken` — at the displaced copy; the second
   `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) R17).
@@ -52,7 +53,7 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
   of the resource of their server; without the resource the reading is «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 01, 05, 09, 11 do not wait for placement.
 
 **Scenarios of 2026-10-30** (coverage audit of P/03, audit-kimi `ba6666f13`, `fe341f708`). The rows that are not written by the console,
-the runner puts and spoils through the door `admin` (full rights, the dictionary of the common acceptance README) — a write bypassing the writer, as the unit row
+the judge puts and spoils through the door `admin` (full rights, the dictionary of the common acceptance README) — a write bypassing the writer, as the unit row
 of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer itself rewrites the row (a write on top, P/01.1 N1
 `cas`), — there is no race with the renewal. Sc. 09, 11 wait for the start refusal by the expectation `@exit 2` (the dictionary, `@start worker`).
 - sc. 14 — an existing row `w-1` with an unreadable `gen` (released, `holder` empty): the worker with a given name does not
@@ -82,20 +83,17 @@ of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer it
 
 **Scenario of 2026-10-30** (coverage audit of P/03 C11, audit-kimi `7f03ff89b`; the directives `@cut role`/`@mend role` — the dictionary of the common
 acceptance README):
-- sc. 24 — silence of the store for the role `testsubworker` (P/02.5 N1.4): the runner's proxy accepts the connections of the worker and does not
+- sc. 24 — silence of the store for the role `testsubworker` (P/02.5 N1.4): the judge's proxy accepts the connections of the worker and does not
   forward bytes for 10 s — longer than the lease step `LEASE_EVERY` ≈ 8.3 s (N1.2: at least one renewal and one confirmation go into
   silence) and shorter than the lease window of 25 s from the last confirmed request (N1.6: it was no earlier than ≈ 8.3 s before
   the cut, the window stays open another ≈ 6.7 s after the mend). The store did not answer — «still mine» (N3 «renew», N4 «slot renewal: the store did not answer»):
   the slot is the same (`holder`, `gen` 1, `released` false); after `@mend` — a renewal by the same holder
   (`until` changed, `gen` as before — not a new capture), the lease is confirmed (the heartbeat element has no `lease`, chapter 3.4
   N1.1), the epoch of the unit has the same version and number (not released and not issued anew, N3 «lease_step()» step 4, «take_unit_epoch»),
-  the placement is as before. Not checked in the TSV (depends on a choice of the implementation): the count `store_errors` — the deadline of waiting for an answer
-  of the client and the repeats inside a logical call are decided by the implementation ([the store client contract](../../../common/contracts/store-client.md)
-  `wait`; N1.6 «Network retries inside it»); the stand-in heartbeat `stood_in` — whether a step gets stuck longer than STALL 12.5 s also
-  depends on this deadline (chapter 3.4 N3 «stand_in()»); silence longer than the window and `unconfirmed_max` — by reading (N5 of the norms).
+  the placement is as before. The counts of the heartbeat under the silence and a silence longer than the window — «[Not judged in this lesson](#not-judged-in-this-lesson)» below.
 
 **Coverage audit of P/03, second pass (Gemini)** (2026-10-30, the report `gemini/audit-coverage` `fad5fa2ba`, the drafts G01–G05;
-analysis by the Specification). The rows that are not written by the worker, the runner puts through the door `admin`, as in sc. 14–23; the floor of epochs — by the service
+analysis by the Specification). The rows that are not written by the worker, the judge puts through the door `admin`, as in sc. 14–23; the floor of epochs — by the service
 write `op: floor` of the door `admin` (the dictionary of the common acceptance README, P/01.3 N1.3 `floor`): the floor is an integer, at the stand
 `1 << 32` = 4294967296 and `2 << 32` = 8589934592 (the form of the floor of P/01.3 — the generation `<< 32`; the epochs are computed: `max(0, 4294967296) + 1`
 = 4294967297, `max(4294967297, 8589934592) + 1` = 8589934593). The scenario names the box of the contender marks by the environment
@@ -151,171 +149,81 @@ P/02.3 N3 step 4 — the system acceptance, sc. 08 `@manual`).
   the heartbeat is not read — `t-1` takes `sh1` (`gen` 2, `by: t-1`, a new `holder`) and names the shelf in the heartbeat. The draft expected
   the opposite (the place is not taken even after 60 s) — by the decision this is wrong.
 
-## Scenario boundaries
 
-Between scenarios the runner stops all the processes it started, resets the store (rows and objects) and the variables `$name`: each scenario begins with an empty store, there is no slot `w-1`, the console is restarted.
+## Stand and steps of the chapter
 
-## Exact preparation and completion
+The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand). Own to the chapter:
 
-Each scenario gets a new isolated store, a new console, an empty id memory of the store
-and empty POST claims, and also cleared objects of heartbeats/controller/contenders and cleared runner variables.
-Before the start the catalogue `testsub` and `testsub2` from the common testdata and the service marks of the manifests are installed.
-There are no foreign controllers, resources, spare processes or start timers. The console door is open from the loopback;
-the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
+- the read role of the store has full rights on `testsub/` and `testsub2/` (above); the door `admin` prepares the rows bypassing their writers;
+- every worker has the box and the server of the stand, except `@start worker … on <server>` and the environment `<NAME>=<value>` of sc. 11, 22, 28, 29
+  (the dictionary of the common acceptance README, `@start`; analysis of the review of stage B 3–5, № 33); the name is passed by the substitution
+  `{name}` of the directive (the common acceptance README, «Stand»);
+- the chosen `CAPACITY`/`WORKER_MEMORY_MB` satisfy N1.2 of chapter 3.4: a decreasing memory budget is not provoked;
+- `@start` confirms the start of the process, not its life; the readiness of the slot is checked by the following `@until`. In 05-sigkill
+  step 3 also waits for `released="false"`: the intermediate write of the capture with `released="true"` is not yet ready for SIGKILL, so the
+  signal goes only after a completed capture; the control `until` is read after the confirmed termination of the process and compared after 20 s
+  (a read before the signal would admit a race with the renewal).
 
-All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <server>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33) and the environment `<NAME>=<value>` of sc. 22; each copy gets a new
-instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
-CAPACITY/WORKER_MEMORY_MB must satisfy N1.2 of chapter 3.4. The ordinary configuration of testsub uses
-safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
+The comparison is «Expectation» of the [dictionary](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) with the full form by
+door. The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes of a unit;
+a change of the epoch or of the assignment by itself does not prove that the old process has stopped working. 05-sigkill proves the invariance
+of the row during the observed 20 s after the crash, not the common boundary of 90 s: the controller may get a reliable gone earlier.
 
-@start confirms the start of the process, the readiness of the slot is checked by the following @until.
-In 05-sigkill step 3 also waits for released="false": the intermediate write of the capture with released="true"
-is not yet ready for SIGKILL. Only after a completed capture is the signal sent.
-@sigkill sends the signal to the right process and **waits for a confirmed termination**;
-a timeout/a wrong process is a refusal of the runner, not ok. In 05-sigkill the control until is read after
-this confirmation, then compared after 20 s: a read before the signal admitted a race with the renewal.
-After the scenario the runner terminates and waits for all the created processes, including the first copy of w-1,
-and only then deletes the state. A parallel scenario uses other ports and directories.
+## SDK seams of the chapter
 
-## Exact comparison and boundaries
+The cases that need controlled clocks, store replies or the order of calls are rows of [seams.tsv](seams.tsv) through the ports of
+[forms/README.md](../../forms/README.md#seams) (the judge runs them by the seam adapter protocol of the common acceptance README):
 
-The TSV header and comments are skipped. The step numbers are continuous inside a scenario.
-@until repeats only the nested request and the comparison up to the limit; an exhausted limit — FAIL.
-The directive ASSERT compares bound values: `$name` is bound at its first appearance, then compared.
-The new bindings of variables of each comparison attempt are first temporary: they become common only
-after the match of the code and of the whole expect. A repeat of a variable inside expect is compared with its temporary
-value. A failure of any field, type, array element or code discards all the new bindings of this
-attempt; the already common bindings do not change. The order of traversing the fields does not change the result.
-This applies both to an ordinary HTTP step, and to each attempt of @until, and to ASSERT.
-The control for 04-two-copies, step 8: the old holder with gen="1" does not bind $h2; the next answer
-with the new holder and gen="2" successfully binds $h2 to the new one. The earlier bound $h1 is kept.
-@any requires the presence of a field; @absent — its absence; ~text — a string occurrence.
-JSON types are exact, true is not equal to 1; objects are compared by the given fields recursively,
-arrays — by the number, order and values of the elements, except arrays without a normed order (`configured`) — the dictionary of the common acceptance README. An expectation of a single code does not require an empty body.
-The full HTTP answer additionally matches the contract of the store (P/01.1) or of units (P/06, chapter 6.1).
-
-The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes
-of a unit. A change of the epoch/assignment by itself does not prove that the old process has stopped working.
-05-sigkill proves the invariance of the row during the observed 20 s after the crash,
-not the common boundary of 90 s: the controller may get a reliable gone earlier. The other evidence is
-N5 of the norms, including another box and the closing of the place writer.
-
-## Checks outside TSV after run 25
-
-**Server admission outside TSV.** Keep the ordinary profile with SERVER_NAME=srv-a. Through the existing SDK/process startup path, check an empty value and one outside the grammar: the existing exit 2 precedes the presence lock, with no capture or heartbeat publication from that start. With the valid server, read the real heartbeat: server=srv-a, not BOX_ID/instance. The ordinary TSV continues to exercise the valid server; this reading obligation is not an executed extra process scenario.
-
-Check the comparison of @until on two consecutive answers: holder=old/gen="1", then
-holder=new/gen="2", with expect holder=$h2/gen="2". The first attempt does not keep $h2; the second
-passes and binds it to new. Check both orders of the fields and a repeat of a variable in one expect.
-The common variables of the earlier successful steps remain unchanged after any failed attempt.
-
-## A late answer of the epoch issue
-
-Separately from the TSV check the first start on controlled clocks by
-[the cases «First lease window»](#first-lease-window-check-after-run-26) below (from the acceptance of M10/03):
-sending at 0, answers at 24/25/30; a pause between the answer and start_unit; a new CAS attempt with a new
-sending time; a loss of the slot or of writing_allowed during the request. Record the calls of
-start_unit, not only the number epoch. A late success does not start the unit and does not become silent
-even with forever; the number is not rolled back. The next attempt requires a new successful reading of
-the assignment. The TSV steps do not set this delay.
-
-Check the race with the stand-in on both sides of the local acceptance of a start: fencing before it
-does not give start_unit; fencing after it also sees an unfinished start and cancels/stops
-it, the lease is fenced, a late result does not publish the managed unit anew. An additional
-order: the epoch request → the loss of the name → the return of the name → the old answer; the old answer does not start
-the unit even with the gates open again. Only a new attempt after a new reading of the assignment
-can start. During the delay of the request/start_unit the stand-in is able to close the admission;
-holding a lock through the whole external call, which hinders the fencing, does not pass the check.
-Repeat the race for a restart by revision: no new number is issued, last is not reset,
-the fencing cancels this start too. With silent and may_write=true the former unit can continue
-the data, and the change of revision waits for a confirmation; after it the restart keeps the epoch/lease.
-
-## Additional check of the class of errors of run 36 (Kimi)
-
-By reading, reconcile all the producers of marks: NameOnAnotherBox gives refused; another case of the absence of a candidate — waiting until one's own first capture and nameless after the loss of the former one. The priority of refused is kept. The check of a schema above the build on renewal gives fenced without rejoin (N3 «schema check by the worker»; the owner of the schema row — P/06.6).
-
-This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-
-## Cases of the acceptance of M10/03 on the slot, the epoch and the lease (the move of lesson 6)
-
-Moved from the acceptance README of M10/03 with the move of lesson 6 (stage B): the main acceptance of the units door went to
-[the acceptance of P/06.1](../../../06-console/acceptance/1/README.md), the cases below check chapter 3.2.
-
-### Additional checks R29 — slot, epoch, guard, holds
-
-For each case — a separate instance with testsub, empty rows and claim memory, the needed rights and a store with
-a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (P/06.1 N1.3).
-
-| Preparation and action | Expected outcome |
+| Subject | Seams |
 |---|---|
-| The name w- + 1007/1008 letters (the full testsub/slots/… — 1023/1024), then w- + 1009 letters (1025) | The first two pass the limit of the string key and are captured; the last one — a refusal of the candidate without the first write. A given name stays nobody, the automatic search checks the next candidate; an error of a newly computed name ends the search |
-| Badkey after the first write of the capture; separately on renewal; separately at the target key of a write under the slot | The capture does not give out a live slot and does not roll back what was confirmed; the renewal loses the name; the target write is refused, the key error by itself does not prove the loss of the slot |
-| Badkey at the guard key; separately at the issue/confirmation of the epoch; separately at holds | The guard does not admit the write; the issue of the epoch does not start the unit, the confirmation — fenced; the taking of holds is refused, the renewal loses the place per [P/03.2 N3 «place: take, hold, let go»](../../spec/03.2-worker.norms.md); the refusal does not turn into silent |
+| the capture table: unknown read, unreadable `gen`, a lapsed row of another box, a stale and a fresh `names_given`, `taking`, the first start and a repeated search on its own box, a torn `until` at 49/50 s, the cleanup guard, a replay with the same id | `s1`–`s11` |
+| the bounds of `gen` and of the epoch and the floor (2^53 − 1, beyond int64) | `s19`–`s30` |
+| the full slot key of 1023, 1024 and 1025 bytes (`testsub/slots/` and a given name) | `s31-capture-key-1023`, `s32-capture-key-1024`, `s33-capture-key-1025` |
+| `badkey` on the first and on the final write of the capture, on a write under the slot, on the issue and on the confirmation of an epoch (N3 «Full keys and store refusal») | `s34-capture-first-write-badkey`, `s35-capture-final-write-badkey`, `s36-slot-write-target-badkey`, `s38-issue-epoch-badkey`, `s43-confirm-badkey` |
+| the guard after an own renewal and after a foreign one (P/03.2-05) | `s18-guard-own-renewal`, `s37-guard-foreign-renewal` |
+| the first lease window: the answer of the issue at 24, 25 and 30 s after the send, a floor raised after the issue, the same tick | `s39-epoch-answer-before-window-end`, `s40-epoch-answer-at-window-end`, `s12-epoch-initial-late`, `s13-epoch-post-grant-floor`, `s14-epoch-same-tick` |
+| the gates around the local acceptance of a start: the fence before and after it, the old answer after the loss and the return of the name | `s41-gate-fence-before-accept`, `s15-gate-cancelled-late-start`, `s42-gate-old-answer-after-rejoin` |
+| the window of the lease: an overslept request, a monotonic `last`, silence with `unconfirmed_max` off, 2 and forever at 26 s and the ceiling 2 reached at 27 s (P/03.2-07, -08) | `s16-confirm-overslept`, `s17-confirm-last-monotonic`, `s44-confirm-silent-off`, `s45-confirm-silent-below-ceiling`, `s46-confirm-silent-forever`, `s47-confirm-silent-ceiling-reached` |
 
-### Counterexamples of run 23 — slot and lease
+The restart by revision under the same epoch and its wait under silence are the seams of [chapter 3.3](../3/seams.tsv) (`s1-revision-same-epoch`,
+`s3-silent-revision-waits`). The producers of the contender marks are the scenarios: `refused` — sc. 16, 28 and the seam `s3-capture-lapsed-foreign`
+(a lapsed unreleased row of another box is NameOnAnotherBox, without `worker.name_taken`), `waiting` — sc. 28, `nameless` — sc. 29; the priority of
+`refused` — the traces of [contender-writer](../../forms/contender-writer.traces.tsv); a schema above the build on the go — sc. 20.
 
-For slots and the lease — a worker and controlled clocks/delays.
+## The capture table and operations on names (R28-01/02)
 
-| Norm | Initial state and intervention | Expected observation |
-|---|---|---|
-| P/03.2-02 | The preferred name is held by a live instance of another box | NameOnAnotherBox: the process is nobody, the mark refused (without `worker.name_taken` — it is only on the loss of the name, [P/03.2 N3 «nobody and getting the name back»](../../spec/03.2-worker.norms.md)), another name is not taken |
-| P/03.2-02 | B on its first start takes the given name from A of the same box; A after the loss searches for its name again | A stays nobody: the right of the first start is not restored; the live slot of B is not rewritten |
-| P/03.2-01, -02 | gen = bad, the row is still for 50 s; separately — gen = 7 and a torn until, also 50 s; separately — an absent row | unreadable gen: the candidate is refused, the row does not change (also on a release by the controller); readable gen: a new 8; absence: the first 1 |
-| P/03.2-05 | the write is prepared with the guard v1; one's own renewal gives v2 with the same holder/gen; separately — v2 was written by another holder | in both cases the late write gets 412 and changes nothing; the re-read keeps the name in the first case and fences off in the second; the repeat uses a fresh check, not the old guard |
-| P/03.2-07…08 | last = 0, the request at t = 20 did not answer; check t = 26 with off, 2, forever and t = 27 with the ceiling 2 | the actions are halted in all cases; the data at t = 26 are halted only for off, with 2 and forever they are allowed; at t = 27 the ceiling 2 is reached and the data are halted. Without a request inside the window — lost, the continuation of the data is not allowed |
+The order of the names and the next number are the vectors [`slot-name`](../../../common/vectors/slot-name/README.md) (`order`, `next`): the
+slot order of `w-0`, `w-01`, `w-1`, `w-2`, `w-10`, `w-a`, `w-b`, `w-srv-a-1` whatever the order of the source list, the next number without the
+names outside the numeric grammar (`w-1` when there are only they), leading zeros and a suffix beyond 64 bits without overflow. The transitions of the capture are [`forms/slot-capture.tsv`](../../forms/slot-capture.tsv)
+and the seams above; a free readable row, an occupied one, a torn one and its time are also the scenarios 14–17 and 30.
 
-### Slot deadlines (run 25)
+## Not judged in this lesson
 
-For the slot a reading of the implementation or a controlled model is needed: one history of versions, the first look
-of the judge at t=0, the writer's until with shifts -30/0/+300 s. At t=20 the liveness is the same; with gone
-the judge may release after 45 s of observation, with unknown — not earlier than 90 s. A new judge
-at t=80 starts its window from zero. A finite future until does not become torn.
-One's own write under the slot is permitted only by the deadline of one's own confirmed
-request; a re-read and a late answer do not start the window anew. The TSV of the units door does not measure these deadlines.
-
-### First lease window: check after run 26
-
-A separate controlled time/reading of the implementation by the owner, not the main TSV: the slot and the assignment
-are obtained, all the gates are open, the request to write a new epoch is sent at t=0. A success with the answer at 24
-permits a start until 25, answers at 25 and 30 — lost without a call of start_unit; the number could already be written
-and is not rolled back. An answer at 24 with a pause until the start at 26 also forbids the start, if during the pause there was no
-new confirmation. Repeat for off, a finite unconfirmed_max and forever: a late
-first issue is not silent. For CAS-conflict the next attempt has its own t0:
-a conflict at 30, a new sending at 31 and a success at 34 give a window from 31, not from the first call or from 34.
-After a refusal a new successful reading of the assignment is required before a new attempt. Separately
-lose the slot/writing_allowed during a request with a fast answer: the repeated gates forbid
-start_unit, although the window is still open. A log of the real calls of start_unit and of the times of the requests is needed;
-a single epoch row does not prove these outcomes (P/03.2-06, 07 and P/03.2-10).
-
-### The capture table and operations on names (R28-01/02)
-
-Each case is a separate initial state. Prefix = w; the read versions, the CAS result,
-the observation time and the deletion of contributions are controlled by the stand or worked out by reading by the owner of the implementation.
-These are the checks P/03.2-01, -02, -03; the 53 HTTP steps of the units door do not observe them.
-
-| Preparation and action | Expected outcome |
-|---|---|
-| A free row w-1 with gen=bad; separately gen=7, until torn and age 49/50 s; separately a readable released | gen=bad is not rewritten; a torn until admits the transition only from 50 s, a new gen=8; a readable released admits the transition at once |
-| The first CAS succeeds, then a refusal of the guard of a deletion or of the CAS of the final write; separately the success of the final write is not confirmed | The slot is not returned as live, there are no writes under it; foreign contributions are not deleted. On an unknown outcome the current operation is repeated with the same id per [P/03.4-07](../../spec/03.4-worker.norms.md); after a definite refusal a new capture gets fresh versions |
-| A non-answer of the read of slots; separately an empty list read successfully | A non-answer leaves the process nobody. An empty list allows a process without a name to create w-1 |
-| Free are w-b, w-10, w-1, w-01, w-2, w-a, w-0, w-srv-a-1; go through the candidates with a CAS refusal to the previous one | The slot order: w-0, w-01, w-1, w-2, w-10, w-a, w-b, w-srv-a-1; the order of the source list has no effect |
-| Both names w-2/w-10 are released through names_given, then separately both are simply free | For names_given the order by name: w-10 first; for free ones — the slot order: w-2 first |
-| All the listed names are occupied without permission; a process without a name has reached a new name | max=10, the new w-11; w-srv-a-1 and w-a do not enter the numeric max. If there are only they, the new w-1 |
-| There is a digit suffix of 100 nines and its variant with a leading zero; a process without a name has reached a new name | The numbers are equal, the order distinguishes the full names; the new suffix — 1 and 100 zeros, without overflow. w-0 and leading zeros do not change the admissible grammar |
-
-Also checked are the positive neighbouring transitions: the process takes a free slot;
-the first start on its own box keeps the right of N3; a repeated search does not get such a right;
-a fresh names_given permits an occupied slot, a stale one does not. Both writes of the capture
-and the guard of the cleanup are applied; the table of admission does not make them one atomic operation.
-
-### Run 36 (Kimi) — name
-
-NameOnAnotherBox includes an occupied unreleased lapsed row of another box; the mark refused, `worker.name_taken` is not written (only on the loss of the name).
+- The counts `store_errors` and `stood_in` of the heartbeat under the silence of sc. 24: the deadline of waiting for an answer of the client and the
+  repeats inside a logical call are decided by the implementation ([the store client contract](../../../common/contracts/store-client.md) `wait`;
+  N1.6 «Network retries inside it»), and a step stuck longer than STALL depends on it (chapter 3.4 N3 «stand_in()»); checked by reading.
+- A silence of the store longer than the lease window in real time, with `unconfirmed_max`: the stage of the system (P/03.2-04); the window itself
+  is the seams `s16`, `s44`–`s47` on the scripted clock.
+- The admission of the server before the presence lock (an empty `SERVER_NAME` and one outside the grammar end with code 2 before the lock is
+  taken): the order against the OS lock is a race of processes, the stage of the system; the refusal outside the grammar is sc. 22 step 4
+  (`@exit 2`, no slot), the field `server` of a live heartbeat is step 05/11 of [the acceptance of chapter 3.6](../6/README.md).
+- A conflict of the issue write and its next attempt with its own send moment (the window from the new send, not from the first call): the port
+  `worker-grant` has no conflict reply; checked by reading N3 «take_epoch(id)» and N1.6.
+- The fence of a restart by revision during its start and the loss of `writing_allowed` during a fast request: checked by reading N3
+  «lease_step()»; the gates of a first start are the seams above.
+- `badkey` on the guard key and on the taking, renewal and letting go of a place: a reply of the store does not tell the guard key from the
+  target key at the seam, and the place has no own port; checked by reading N3 «Full keys and store refusal» and «place: take, hold, let go».
+- The deadlines of the slot at the judge of a slot (the first look, 45 s with gone, 90 s with unknown, a new judge at 80 s): the reader of the slot
+  is the controller, [P/04](../../../04-controller/acceptance/README.md); the own write under the slot by the own confirmed term is
+  `worker-slot-write` (`own_term_open`) and the seam `s16-confirm-overslept`.
+- The order of the released names of `names_given` by name (`w-10` before `w-2`) against the slot order of the free ones, and a suffix of 100 nines
+  with its variant with a leading zero: the vectors fix the slot order and a suffix beyond 64 bits; checked by reading N3 «capture» and the
+  [slot name contract](../../../common/contracts/slot-name.md).
+- A given name that fails the key limit in an automatic search (the next candidate is checked, a new computed name ends the search): the seams
+  call the capture with a given name; checked by reading N3 «Full keys and store refusal».
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 The generic meanings of `@sleep` and `@until` are defined in the [common stand protocol](../../../common/acceptance/README.md#dictionary-of-directives-and-doors). Scenario-specific wait steps, durations and reasons are kept in the [judge-only case instructions](sleeps.cases.md).
-
-SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
 
 SDK boundary seams s19–s22 distinguish a readable maximum with generation_exhausted from unreadable existing gen above it: s21/s22 retain their original requests/raw bytes and no writes, with gen_readable=false. No new refusal word is introduced. s23–s26 separately cover epoch; s27–s30 keep the owner-defined floor and exact comparisons without int64 narrowing. CALL epoch=0 is confirmed absence, not a positive stored row.
