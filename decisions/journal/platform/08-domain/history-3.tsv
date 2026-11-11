@@ -132,3 +132,8 @@ P/08.3-R021	spec/08.3-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
 -	acceptance/3/README.md#intro	M11/01	2026-11-11	of the acceptance of M11/01
 -	acceptance/3/README.md#stand	M11/03	2026-11-11	(from the acceptance README of M11/03, «Setup of each scenario 01–09»)
 -	acceptance/3/README.md#stand	analysis of review of stage B 8–10, № 22: M-16	2026-11-11	(the review analysis of stage B 8–10, № 22: `M-16`)
+P/08.3-R012	spec/08.3-domain.norms.md#N1.6	history of the format: introduction of the field tls_ca_certs	2026-11-11	: a holder of a former build rejects a report with the field —
+P/08.3-R012	spec/08.3-domain.norms.md#N1.6	history of the format: introduction of the field tls_ca_certs	2026-11-11	the implementations switch at the same time
+-	spec/08.3-domain.norms.md#N5	history of the format: introduction of the field tls_ca_certs	2026-11-11	a holder of a former build rejects a report with the field `tls_ca_certs`
+-	spec/08.3-domain.norms.md#N5	history of the format: introduction of the field tls_ca_certs; ADR-0003	2026-11-11	(the form of the publication is closed, N1.6 `tls_ca_certs`) — by reading: the stand does not raise a holder of a former build
+-	spec/08.3-domain.norms.md#readiness-checklist	history of the format: introduction of the field tls_ca_certs; ADR-0003	2026-11-11	 and a holder of a former build

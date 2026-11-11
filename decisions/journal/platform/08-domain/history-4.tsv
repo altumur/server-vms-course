@@ -177,3 +177,7 @@ P/08.4-R021	spec/08.4-domain.norms.md#N4	M11/9 N4	2026-11-11	The rows of M11/9 N
 -	acceptance/4/README.md#stand	M11/05	2026-11-11	(formerly the acceptance README of
 -	acceptance/4/README.md#stand	M11/05	2026-11-11	M11/05)
 -	acceptance/4/README.md#stand	ADR-0100 §5	2026-11-11	(ADR-0100 §5)
+P/08.4-R003	spec/08.4-domain.norms.md#N1.1	ADR-0098 §3	2026-11-11	: the row is read by a process of the former version too
+P/08.4-R009	spec/08.4-domain.norms.md#N1.3c	history of installations: introduction of first-admin (N1.9)	2026-11-11	at former installations
+-	spec/08.4-domain.norms.md#N5	history of installations: introduction of first-admin (N1.9)	2026-11-11	at a former installation
+-	spec/08.4-domain.norms.md#N5	history of installations: introduction of first-admin (N1.9)	2026-11-11	does not set up a former installation
