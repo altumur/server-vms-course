@@ -1,0 +1,52 @@
+req_id	file	source	date	removed
+-	spec/09.2-agent.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/09.2-agent.norms.md#intro	ADR-0080	2026-10-13	; ADR-0080
+-	spec/09.2-agent.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+P/09.2-R002	spec/09.2-agent.norms.md#N0	ADR-0130 addendum (10)	2026-11-08	 (ADR-0130 Addendum (10))
+-	spec/09.2-agent.norms.md#N1	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the publication	2026-10-20	(M11/3 N1.2)
+P/09.2-R003	spec/09.2-agent.norms.md#N1.1	the Architect's decision, review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md) № 17; ADR-0083 addendum (15)	2026-10-20	; the Architect's decision, analysis of review of stage B 8–10, № 17, ADR-0083 addendum (15)
+P/09.2-R003	spec/09.2-agent.norms.md#N1.1	DOM-AGENT-TURN-01 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md); the owner's consent	2026-10-26	(DOM-AGENT-TURN-01, the owner's consent of 2026-10-26)
+P/09.2-R004	spec/09.2-agent.norms.md#N1.3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	 (moved there from M11/4 N1.3 without
+P/09.2-R004	spec/09.2-agent.norms.md#N1.3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	a change)
+P/09.2-R004	spec/09.2-agent.norms.md#N1.3	ADR-0074	2026-10-11	ADR-0074;
+P/09.2-R004	spec/09.2-agent.norms.md#N1.3	the note of M11 item 4 (the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md))	2026-10-20	, the answer to the note of M11 item 4
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the publication	2026-10-20	(M11/3 N1.2)
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the publication key	2026-10-20	, M11/3
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	ADR-0113 addendum (3) item 5	2026-11-02	 (ADR-0113 addendum (3) item 5)
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	C08-G05 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md); the Architect's decision	2026-10-25	 (moved there without a change; C08-G05, the Architect's decision of 2026-10-25)
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding C1	2026-11-06	 (P09 review C1)
+P/09.2-R005	spec/09.2-agent.norms.md#N1.4	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of domain/reached (now chapter 9.1 N1.7)	2026-10-20	M11/4 N1.4
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	(moved there from M11/8 N1.6
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	`server`, `signed` without a change;
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	the Architect's decision; ADR-0083 addendum (14) item 6	2026-10-20	; the Architect's decision of 2026-10-20, ADR-0083
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	ADR-0083 addendum (14) item 6	2026-10-20	addendum (14) item 6)
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md) № 4	2026-10-20	; analysis of review of stage B 8–10, № 4
+P/09.2-R006	spec/09.2-agent.norms.md#N1.6	ADR-0083 addendum (20); addendum (21) item 6	2026-10-22	ADR-0083 addendum (20), addendum (21) item 6
+P/09.2-R007	spec/09.2-agent.norms.md#N2	C09-RELAY-FIRST-ANSWER-01 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md)	2026-10-23	; C09-RELAY-FIRST-ANSWER-01
+P/09.2-R007	spec/09.2-agent.norms.md#N2	the Architect's decision on the reconciliation of M11, Y8 (the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md))	2026-10-20	; the Architect's decision on the reconciliation of M11, Y8
+P/09.2-R007	spec/09.2-agent.norms.md#N2	the reference of the witnesses and the Architect's decision, items 1, 4–6	2026-10-23	 (the reference of the witnesses and the Architect's decision of 2026-10-23, items 1, 4–6)
+P/09.2-R007	spec/09.2-agent.norms.md#N2	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), decision 3	2026-10-20	 (analysis of review of stage A 8–10, decision 3)
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the change	2026-10-20	, M11/3
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the change	2026-10-20	, M11/3
+P/09.2-R008	spec/09.2-agent.norms.md#N3	C09-ANSWER-LIMIT-01 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md); the Architect's decision	2026-10-29	 (C09-ANSWER-LIMIT-01, the Architect's decision of 2026-10-29)
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the relay pass	2026-10-20	M11/3 N3
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the Architect's decision on the reconciliation of M11, Y2-a (the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md))	2026-10-20	 (the Architect's decision on
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the Architect's decision on the reconciliation of M11, Y2-a (the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md))	2026-10-20	the reconciliation of M11, `Y2-a`)
+P/09.2-R008	spec/09.2-agent.norms.md#N3	C09-RELAY-FIRST-ANSWER-01 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md)	2026-10-23	 (C09-RELAY-FIRST-ANSWER-01)
+P/09.2-R008	spec/09.2-agent.norms.md#N3	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding M1	2026-11-06	 (P09 review M1)
+P/09.2-R008	spec/09.2-agent.norms.md#N3	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): former address of the procedure	2026-10-20	M11/4
+P/09.2-R010	spec/09.2-agent.norms.md#N5	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): the scenarios 02–04 came from M11/04 with their numbers and steps	2026-10-20	 scenarios 02–04 from
+P/09.2-R010	spec/09.2-agent.norms.md#N5	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	M11/04, the numbers and the steps are the former ones,
+P/09.2-R010	spec/09.2-agent.norms.md#N5	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md); the coverage audit of P/09 by Gemini, second pass (decisions/inbox/аудит-покрытия/gemini/АУДИТ-ПОКРЫТИЯ-GEMINI-P09.md)	2026-10-31	(sc. 01 of M11/04 is P/08.3 sc. 15); 06 — the coverage audit of P/09, second pass
+P/09.2-R010	spec/09.2-agent.norms.md#N5	the coverage audit of P/09 by Gemini, second pass (decisions/inbox/аудит-покрытия/gemini/АУДИТ-ПОКРЫТИЯ-GEMINI-P09.md)	2026-10-31	(Gemini, cc36de538)
+P/09.2-R010	spec/09.2-agent.norms.md#N5	DOM-AGENT-TURN-01, -02 of the guesses of stage C (decisions/inbox/2026-10-23-догадки-стадии-C.md); the owner's consent	2026-10-26	 (DOM-AGENT-TURN-01, -02, the owner's consent of 2026-10-26)
+P/09.2-R010	spec/09.2-agent.norms.md#N5	the reference of the witnesses and the Architect's decision	2026-10-23	 (the reference of the witnesses and the Architect's decision of 2026-10-23)
+P/09.2-R010	spec/09.2-agent.norms.md#N5	ADR-0083 addendum (9)	2026-10-20	 (ADR-0083 addendum (9))
+-	spec/09.2-agent.norms.md#readiness-checklist	ADR-0080 addendum (6)	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/09.2-agent.norms.md#readiness-checklist	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md): the row M11/4-07 of the former checklist	2026-10-20	 (the 9.2 part of the row M11/4-07)
+-	spec/09.2-agent.norms.md#readiness-checklist	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding C1	2026-11-06	C1
+-	spec/09.2-agent.norms.md#readiness-checklist	ADR-0083 addendum (9)	2026-10-20	 (ADR-0083 addendum (9))
+-	spec/09.2-agent.norms.md#readiness-checklist	the move of lessons 8–10 from M11 (ADR-0083 addendum (14); plan of the move of lesson 9, decisions/inbox/2026-10-20-план-переноса-урока-9.md); review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md) № 21	2026-10-20	 (part of M11/8-08; analysis of review of stage A 8–10, № 21)
+-	spec/09.2-agent.norms.md#readiness-checklist	the reference of the witnesses and the Architect's decision	2026-10-23	; the reference of the witnesses and the Architect's decision of 2026-10-23
+-	spec/09.2-agent.norms.md#readiness-checklist	ADR-0113	2026-11-01	 (ADR-0113)
+-	spec/09.2-agent.norms.md#readiness-checklist	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding M1	2026-11-06	M1

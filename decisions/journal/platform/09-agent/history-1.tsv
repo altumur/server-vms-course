@@ -1,0 +1,257 @@
+req_id	file	source	date	removed
+-	spec/09.1-agent.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/09.1-agent.norms.md#intro	ADR-0080	2026-10-13	ADR-0080;
+-	spec/09.1-agent.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+P/09.1-R002	spec/09.1-agent.norms.md#N0	ADR-0130 addendum (10)	2026-11-08	 (ADR-0130 Addendum (10))
+-	spec/09.1-agent.norms.md#N1	ADR-0032	2026-10-05	; ADR-0032
+-	spec/09.1-agent.norms.md#N1	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-RING-NOKEY-01	2026-10-23	 (C09-RING-NOKEY-01)
+-	spec/09.1-agent.norms.md#N1	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 3	2026-10-20	 (the Architect's decision on the move plans of 8–10, item 3)
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 N1.1)
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-01, -02; the owner's consent	2026-10-26	; DOM-AGENT-TURN-01, -02, the owner's consent of 2026-10-26
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	reconciliation of M11, M1	2026-10-19	 (added by the reconciliation of M11, M1)
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-MEMBER-KEY-PAIR-01	2026-10-23	 (C09-MEMBER-KEY-PAIR-01)
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 4	2026-10-20	; review
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 4	2026-10-20	of stage B 8–10, № 4
+P/09.1-R003	spec/09.1-agent.norms.md#N1.1	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C4	2026-11-06	 (P09 review C4)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 N1.2; M11/5 N1.2; M11/12 N1.4, N1.5)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0113 addendum (36)	2026-11-02	 (ADR-0113 addendum (36))
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0113 addendum (38) item 1	2026-11-02	 (ADR-0113 addendum (38) item 1)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0113 addendum (37) item 2	2026-11-02	 (ADR-0113 addendum (37) item 2)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the Architect's decision on M11-03 № 5	2026-10-17	 (the Architect's decision on M11-03 № 5)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0113 addendum (33)	2026-11-02	; ADR-0113 addendum (33)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	reconciliation of M11	2026-10-19	; the reconciliation of M11
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), ACC-G01	2026-10-23	 (ACC-G01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the Architect's answer, layout audit, question T5a (decisions/inbox/2026-10-25-аудит-раскладки-03-10-решение.md)	2026-10-25	 (the Architect's answer of 2026-10-25 (layout audit, question T5a))
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the Architect's decision on the reconciliation of M11, A3–A6, A9	2026-10-19	 (the Architect's decision on the reconciliation of M11, A3–A6, A9)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	V7 item 3, the Architect's decision of 2026-10-28, row 25 of the list	2026-10-28	V7 item 3, the Architect's decision of 2026-10-28, on a proposal; row 25 of the list
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-MEMBER-OBJECTS-NONJSON-01, C09-RETAIN99	2026-10-23	 (C09-MEMBER-OBJECTS-NONJSON-01, like C09-RETAIN99)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PRIOR-VALUE-BASE-01	2026-10-23	 (C09-PRIOR-VALUE-BASE-01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0110	2026-11-01	ADR-0110,
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), ACC-G01 (moved to the report reception contract)	2026-10-23	 (moved; ACC-G01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	reconciliation of M11, X1	2026-10-19	 (the reconciliation of M11, X1)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the Architect's decision on R41-04, run 41 analysis (decisions/inbox/2026-10-18-прогон-41-разбор.md)	2026-10-18	(the Architect's decision on R41-04 of run 41)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	ADR-0113 addendum (36), addendum (47) item 4	2026-11-03	(ADR-0113 addendum (36), addendum (47) item 4)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/5 N1.2;
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-BOOK-SEGMENT-01	2026-10-23	 (C09-BOOK-SEGMENT-01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-CONTRIB-PLAIN-SECRET-01	2026-10-23	 (C09-CONTRIB-PLAIN-SECRET-01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the Architect's decision on R41-08, run 41 analysis (decisions/inbox/2026-10-18-прогон-41-разбор.md)	2026-10-18	(the Architect's decision on R41-08 of run 41)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REPORTS-SCOPE-01	2026-10-23	 (C09-REPORTS-SCOPE-01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REPORTS-NAME-01	2026-10-23	 (C09-REPORTS-NAME-01)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REPORTS-SCOPE-02	2026-10-23	 (C09-REPORTS-SCOPE-02)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/12 N1.4,
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/12 N1.5;
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	reconciliation of M11, N9	2026-10-19	 (added by the reconciliation of M11, N9)
+P/09.1-R004	spec/09.1-agent.norms.md#N1.2	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 4	2026-10-20	 (review of stage B 8–10, № 4)
+P/09.1-R005	spec/09.1-agent.norms.md#N1.2a	ADR-0113	2026-11-01	 (ADR-0113)
+P/09.1-R006	spec/09.1-agent.norms.md#N1.3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 N1.4)
+P/09.1-R006	spec/09.1-agent.norms.md#N1.3	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 13 / decision 2	2026-10-20	; review of stage A 8–10, № 13 / decision 2
+P/09.1-R006	spec/09.1-agent.norms.md#N1.3	ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2	2026-10-26	; ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 N1.6; M11/12 N1.2; M11/4 N1.2; M11/5 N1.4; M11/9 N1.3, N1.6)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (24), replaces addendum (22); M1 of the review of norms (24)	2026-11-03	 (ADR-0110 addendum (24), replaces addendum (22); M1 of the review of norms (24))
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (25) item 1	2026-11-03	 (addendum (25) item 1)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (25) item 2, addendum (26)	2026-11-03	 (addendum (25)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (25) item 2, addendum (26)	2026-11-03	item 2, addendum (26))
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (27) item 1	2026-11-03	 (addendum (27) item 1)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	Quint, the merge RV	2026-11-03	 (the merge RV),
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	review of ADR-0110 addenda (26), (27), a minor finding	2026-11-03	; review of addenda (26), (27), a minor finding
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-KEYS-UNREADABLE-REWRITE-01	2026-10-23	C09-KEYS-UNREADABLE-REWRITE-01;
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0110 addendum (27) item 2, addendum (28)	2026-11-03	 (ADR-0110 addendum (27) item 2, addendum (28))
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-HELD-MEMORY-01	2026-10-23	 (C09-HELD-MEMORY-01)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 3, № 13	2026-10-20	; review of stage A 8–10, № 3, № 13
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28, row 44 of the list	2026-10-28	V7 item 3, the Architect's decision of 2026-10-28,
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28, row 44 of the list	2026-10-28	; row 44 of the list
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	Quint, RV	2026-10-28	 — Quint RV:
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 4	2026-10-20	 (review of stage A 8–10, № 4)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	reconciliation of M11, R2	2026-10-19	added by the reconciliation of M11, R2:
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10), M11/12	2026-10-20	 added by M11/12;
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the Architect's decision on finding 27, run 41 analysis (decisions/inbox/2026-10-18-прогон-41-разбор.md)	2026-10-18	(the Architect's decision on finding 27 of run 41)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C5	2026-11-06	 (P09 review C5)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/12 N1.2;
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10), M11/12	2026-10-20	 (added by M11/12)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	VMS request № 19, the Architect's decision	2026-10-23	 (VMS request № 19, the Architect's decision of 2026-10-23)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the Architect's decision on R41-12, run 41 analysis (decisions/inbox/2026-10-18-прогон-41-разбор.md)	2026-10-18	 (the Architect's decision on R41-12 of run 41)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/2 N3, N4,
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0113 addendum (47) item 3	2026-11-03	; ADR-0113 addendum (47) item 3
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	# (M11/4 N1.2; the topology — P/08.3 N1.2)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0074, «assembled books at the holder»	2026-10-11	 (ADR-0074, «assembled books at the holder»)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/5 N1.4
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	finding G09-ANYWHERE-HASH-01	2026-11-05	 (G09-ANYWHERE-HASH-01)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0119 addendum (4) item 1, addendum (6) item 2	2026-11-03	; ADR-0119 addendum (4) item 1, addendum (6) item 2
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0098 §4	2026-10-30	 (ADR-0098 §4)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/9 N1.3
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	ADR-0032	2026-10-05	 (ADR-0032)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/9 N1.3
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-GLASS-HELD-01	2026-10-23	; C08-GLASS-HELD-01
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28, row 31 of the list	2026-10-28	V7 item 3, the decision of the Architect of 2026-10-28,
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28, row 31 of the list	2026-10-28	; row 31 of the list
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/9 N1.6 carry,
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	finding G09-TOPOLOGY-COPY-SHAPE-01	2026-11-05	 (G09-TOPOLOGY-COPY-SHAPE-01)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/6 N1.2, N1.5)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	finding G09-PLACEMENT-AT-COPY-01	2026-11-05	 (G09-PLACEMENT-AT-COPY-01)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-KEPT-AT-PRECISION-01; C08-KEPT-AT-BOUND-01	2026-10-23	(C09-KEPT-AT-PRECISION-01; C08-KEPT-AT-BOUND-01)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	reconciliation of M11, A10	2026-10-19	 (1xx, 3xx — added by the reconciliation of M11, A10)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	reconciliation of M11, A9	2026-10-19	 (added by the reconciliation of M11, A9)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-OUTCOME-HOLD-01	2026-10-23	 (C08-OUTCOME-HOLD-01)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PENDING-ABSENT-01	2026-10-23	 (C09-PENDING-ABSENT-01)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	the data family schemas pilot, R1	2026-10-19	 (added by the data family schemas pilot, R1)
+P/09.1-R008	spec/09.1-agent.norms.md#N1.5	V7 item 3, the Architect's decision of 2026-10-28, row 41 of the list	2026-10-28	; V7 item 3, the Architect's decision of 2026-10-28, on a proposal; row 41 of the list
+P/09.1-R009	spec/09.1-agent.norms.md#N1.6	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/7 N1.2, N1.3)
+P/09.1-R009	spec/09.1-agent.norms.md#N1.6	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 1 / decision 1	2026-10-20	; review of stage A 8–10, № 1 / decision 1
+P/09.1-R009	spec/09.1-agent.norms.md#N1.6	layout audit, A-19 (decisions/inbox/2026-10-25-аудит-раскладки-03-10-решение.md)	2026-10-25	 (`A-19`)
+P/09.1-R009	spec/09.1-agent.norms.md#N1.6	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/7 N1.3
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/4 N1.4, N1.5; M11/8 N1.6)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-01; the owner's consent	2026-10-26	(DOM-AGENT-TURN-01, the owner's consent of 2026-10-26)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-NO-ROAD-01	2026-10-23	 (C09-NO-ROAD-01)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/4 N1.4
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REACHED-FRESH-01	2026-10-23	 (C09-REACHED-FRESH-01)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-CARRY-TRUST-01, C09-REACHED-TRUSTED-01	2026-10-23	 (C09-CARRY-TRUST-01,
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-CARRY-TRUST-01, C09-REACHED-TRUSTED-01	2026-10-23	# C09-REACHED-TRUSTED-01)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	   # M11/4 N1.5
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the Architect's decision on the reconciliation of M11, W4	2026-10-19	 (the Architect's decision on the reconciliation of
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the Architect's decision on the reconciliation of M11, W4	2026-10-19	M11, W4)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	reconciliation of M11, W3	2026-10-19	 (link-local — added by the reconciliation of M11, W3)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REACHED-FRESH-01	2026-10-23	 (C09-REACHED-FRESH-01)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	the answer to the note of M11, item 3	2026-10-17	 (the answer to the note of M11 item 3)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PEER-DEST-MEMBER-01; the Architect's decision	2026-10-29	 (C09-PEER-DEST-MEMBER-01, the Architect's decision of 2026-10-29)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PEER-DEST-MEMBER-02	2026-10-23	 (C09-PEER-DEST-MEMBER-02)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PEER-DEST-MEMBER-04	2026-10-23	; C09-PEER-DEST-MEMBER-04
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PEER-DEST-MEMBER-03	2026-10-23	 (C09-PEER-DEST-MEMBER-03)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-PEER-DEST-MEMBER-03-LIVE; the Architect's decision	2026-10-29	(C09-PEER-DEST-MEMBER-03-LIVE, the Architect's decision of 2026-10-29)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 4	2026-10-20	; review of stage B 8–10, № 4
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	ADR-0083 addendum (20), addendum (21) item 6	2026-10-22	; ADR-0083 addendum (20), addendum (21) item 6
+P/09.1-R011	spec/09.1-agent.norms.md#N1.8	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/10 N3 «follow»; M11/10 N1.6 `switch`, the agent's side)
+P/09.1-R011	spec/09.1-agent.norms.md#N1.8	reconciliation of M11, Y3	2026-10-19	; added by the reconciliation of M11, Y3
+P/09.1-R012	spec/09.1-agent.norms.md#N1.9	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/10 N1.5 `member`)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/11 N1.4, N1.7)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	reconciliation of M11, A4	2026-10-19	 (added by the reconciliation of M11, A4)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SHARED-REFUSED-CLEANUP-01, -02	2026-10-23	 (C09-SHARED-REFUSED-CLEANUP-01; refined by C09-SHARED-REFUSED-CLEANUP-02)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the former address in the source lesson M11 (moves of lessons 8–10), M11/11	2026-10-20	, added by M11/11
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the Architect's decision on the reconciliation of M11, A3	2026-10-19	; the Architect's decision on the reconciliation of M11, A3
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the data family schemas pilot, D1	2026-10-19	 (added by the data family schemas pilot, D1)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the former address in the source lesson M11 (moves of lessons 8–10), M11/11	2026-10-20	, added by M11/11
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-ALARM-WINDOW-01	2026-10-23	; C09-ALARM-WINDOW-01
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the Architect's decision on the reconciliation of M11, H14, A15	2026-10-19	; the Architect's decision
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the Architect's decision on the reconciliation of M11, H14, A15	2026-10-19	on the reconciliation of M11, H14, A15)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-ALARM-REBUILD-FAIL-01	2026-10-23	 (C09-ALARM-REBUILD-FAIL-01)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	the former address in the source lesson M11 (moves of lessons 8–10), M11/11	2026-10-20	, added by M11/11
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-REPORTS-SCOPE-01	2026-10-23	; C09-REPORTS-SCOPE-01
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	reconciliation of M11, A2	2026-10-19	, added by the reconciliation of M11, A2
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/12 N1.3)
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	ADR-0075 addendum 2026-10-26 (5) item 1	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 1
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	review of the norms of ADR-0075 (Kimi, 80ee2b775), N2	2026-10-26	 (review of norms of ADR-0075 Kimi 80ee2b775, N2)
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-AGENT-HTTP-01	2026-10-23	 (C09-AGENT-HTTP-01)
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 4	2026-10-20	 (the Architect's decision on the move plans of 8–10, item 4)
+P/09.1-R014	spec/09.1-agent.norms.md#N1.11	ADR-0032	2026-10-05	 (ADR-0032)
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/12 N1.6, N1.7 `agent`)
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	reconciliation of M11, N2	2026-10-19	 (added by the reconciliation of M11, N2)
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SIGN-FAILURES-COUNT-01	2026-10-23	 (C09-SIGN-FAILURES-COUNT-01)
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SIGN-FAILURES-COUNT-01	2026-10-23	 (C09-SIGN-FAILURES-COUNT-01)
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	reconciliation of M11, N1	2026-10-19	 (added by the reconciliation of M11, N1:
+P/09.1-R015	spec/09.1-agent.norms.md#N1.12	the former address in the source lesson M11 (moves of lessons 8–10), M11/12	2026-10-20	 (added by M11/12 into the agent pass)   # M11/12 N1.7 agent
+P/09.1-R016	spec/09.1-agent.norms.md#N1.13	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-01, -02; the owner's consent	2026-10-26	 (DOM-AGENT-TURN-01, -02, the owner's consent of 2026-10-26)
+P/09.1-R016	spec/09.1-agent.norms.md#N1.13	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-02	2026-10-23	(DOM-AGENT-TURN-02)
+P/09.1-R018	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-01	2026-10-23	; DOM-AGENT-TURN-01
+P/09.1-R019	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 N3)
+P/09.1-R019	spec/09.1-agent.norms.md#N3	reconciliation of M11, N1	2026-10-19	; reconciliation of M11, N1
+P/09.1-R019	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-GET-CARRY-EVERY-01	2026-10-23	(C09-GET-CARRY-EVERY-01)
+P/09.1-R019	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-RETAIN99; the Architect's decision	2026-10-26	 (C09-RETAIN99, the Architect's decision of 2026-10-26)
+P/09.1-R019	spec/09.1-agent.norms.md#N3	reconciliation of M11, R2	2026-10-19	, R2
+P/09.1-R019	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-CARRY-TRUST-01	2026-10-23	 (C09-CARRY-TRUST-01)
+P/09.1-R019	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10), M11/12	2026-10-20	; added by M11/12
+P/09.1-R019	spec/09.1-agent.norms.md#N3	reconciliation of M11, N9	2026-10-19	; reconciliation of M11, N9
+P/09.1-R019	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-ANSWER-LIMIT-01; the Architect's decision	2026-10-29	 (C09-ANSWER-LIMIT-01,
+P/09.1-R019	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-ANSWER-LIMIT-01; the Architect's decision	2026-10-29	the Architect's decision of 2026-10-29)
+P/09.1-R020	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	M11/12 N3 «additions to the passes of lesson 3»,
+P/09.1-R021	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/10 N3)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	layout audit, the Architect's decision, A-08 (decisions/inbox/2026-10-25-аудит-раскладки-03-10-решение.md)	2026-10-25	 (moved there without
+P/09.1-R021	spec/09.1-agent.norms.md#N3	layout audit, the Architect's decision, A-08 (decisions/inbox/2026-10-25-аудит-раскладки-03-10-решение.md)	2026-10-25	a change; layout audit, the Architect's decision of 2026-10-25, A-08)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SET-GUARD-OWN-01, -02, C09-HELD-MEMORY-02	2026-10-23	 (C09-SET-GUARD-OWN-01, C09-SET-GUARD-OWN-02, C09-HELD-MEMORY-02)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	Quint M13 N14; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-TERM-SAME-DIVERGED-01	2026-10-23	 (Quint M13 N14, C08-TERM-SAME-DIVERGED-01)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	Quint M12 N1; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-TERM-DIVERGED-01	2026-10-23	; Quint M12 N1, C08-TERM-DIVERGED-01
+P/09.1-R021	spec/09.1-agent.norms.md#N3	the Architect's decision, ADR-0103 addendum (2), Quint M13; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-TERM-DIVERGED-OWN-01	2026-11-01	 (the Architect's decision of 2026-11-01, ADR-0103 addendum (2), Quint M13, C09-TERM-DIVERGED-OWN-01)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-SAME-TERM-TIE-01	2026-10-23	 (C08-SAME-TERM-TIE-01)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	reconciliation of M11, H10	2026-10-19	; reconciliation of
+P/09.1-R021	spec/09.1-agent.norms.md#N3	reconciliation of M11, H10	2026-10-19	M11, H10)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-SAME-TERM-TIE-01	2026-10-23	C08-SAME-TERM-TIE-01;
+P/09.1-R021	spec/09.1-agent.norms.md#N3	ADR-0110 addendum (24), (25)	2026-11-03	, ADR-0110 addendum (24), (25)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	reconciliation of M11, Y3; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-FOLLOW-ROAD-01	2026-10-19	 (Y3) (C09-FOLLOW-ROAD-01)
+P/09.1-R021	spec/09.1-agent.norms.md#N3	Quint M12 N3; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-FOLLOW-ROAD-02	2026-10-23	 (Quint M12 N3, C09-FOLLOW-ROAD-02)
+P/09.1-R022	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/4 N3)
+P/09.1-R023	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/5 N3)
+P/09.1-R024	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/10 N3)
+P/09.1-R024	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-STOLEN-TERM-BACK-01	2026-10-23	 (C08-STOLEN-TERM-BACK-01)
+P/09.1-R025	spec/09.1-agent.norms.md#N3	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/11 N3)
+P/09.1-R025	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-FORMER-SHARED-01	2026-10-23	 (C08-FORMER-SHARED-01)
+P/09.1-R025	spec/09.1-agent.norms.md#N3	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C08-STOLEN-TERM-BACK-01	2026-10-23	 (C08-STOLEN-TERM-BACK-01)
+P/09.1-R025	spec/09.1-agent.norms.md#N3	the inventory of families (decisions/inbox/2026-10-19-опись-ограничений-семей.md)	2026-10-19	; added by the inventory of families
+P/09.1-R026	spec/09.1-agent.norms.md#N4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	The rows are from N4 of M11/3 (`join`, `m1`), M11/4 (a member behind a relay), M11/5 (`no_seal`), M11/6 (application by the agent; they are
+P/09.1-R026	spec/09.1-agent.norms.md#N4	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 and M11/12 (the member key)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 14	2026-10-20	The scenarios are moved from the acceptances of M11/05, M11/06, M11/10, M11/11,
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 14	2026-10-20	M11/12 (stage B); the numbers and the steps are the former ones, except two: number 04 of M11/05 is taken by a scenario of M11/06, number 06 of M11/11 —
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 14	2026-10-20	by a scenario of M11/12; they got the next numbers after the largest number of the sources of the chapter (M11/10 sc. 12), in the order of
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), item 14	2026-10-20	the lesson of M11, then of the scenario: M11/05 sc. 04 → 13, M11/11 sc. 06 → 14 (the Architect's decision on the move plans 8–10, item 14;
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the coverage audit of P/09 (audit-kimi aee4369fb; second pass Gemini cc36de538)	2026-10-30	the rows of `corrections-1.tsv` (historical correction record)); 16–19 — the coverage audit of P/09 (audit-kimi aee4369fb); 20–25 — its second pass (Gemini,
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the coverage audit of P/09 (audit-kimi aee4369fb; second pass Gemini cc36de538)	2026-10-30	cc36de538).
+P/09.1-R027	spec/09.1-agent.norms.md#N5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-01, -02; the owner's consent	2026-10-26	 (DOM-AGENT-TURN-01, -02, the owner's consent of 2026-10-26)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-MEMBER-KEY-PAIR-01	2026-10-23	 (C09-MEMBER-KEY-PAIR-01)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SIGN-FAILURES-COUNT-01	2026-10-23	 (C09-SIGN-FAILURES-COUNT-01)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SHARED-REFUSED-CLEANUP-01, -02	2026-10-23	 (C09-SHARED-REFUSED-CLEANUP-01, -02)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	layout audit (decisions/inbox/2026-10-25-аудит-раскладки-03-10.md), G-51, G-53, G-54, G-58	2026-10-25	 (G-51, G-53, G-54, G-58)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	layout audit (decisions/inbox/2026-10-25-аудит-раскладки-03-10.md), G-56	2026-10-25	 (G-56)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	layout audit (decisions/inbox/2026-10-25-аудит-раскладки-03-10.md), G-44; stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), DOM-AGENT-TURN-02	2026-10-25	 (G-44); DOM-AGENT-TURN-02
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	; the former sc. 10 of M11/03 is a duplicate, removed by the move of lesson 8
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (the former sc. 06 of M11/08)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	the former sc. 06 of M11/10
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the coverage audit of P/09, second pass (Gemini cc36de538)	2026-10-30	, the coverage audit of P/09, second pass
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 5 (Claude P-1)	2026-10-20	are from M11/10 N5 verbatim, the addresses are new (analysis of review of stage B 8–10, № 5; Claude
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 5 (Claude P-1)	2026-10-20	P-1)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the Architect's decision on the reconciliation of M11, H14	2026-10-19	; the Architect's decision on the reconciliation of M11, H14
+P/09.1-R027	spec/09.1-agent.norms.md#N5	ADR-0083 addendum (13)	2026-10-20	, ADR-0083 addendum
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (the former causes of the checklists of M11: the stand without TLS, the stand does not raise alarms, the stand does not lose the
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	holder's memory, and others)
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	there was no step in the acceptance of M11
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the move plan of lesson 9, V11 (decisions/inbox/2026-10-20-план-переноса-урока-9.md); review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 17	2026-10-20	 (the move plan of lesson 9, V11; analysis of review of
+P/09.1-R027	spec/09.1-agent.norms.md#N5	the move plan of lesson 9, V11 (decisions/inbox/2026-10-20-план-переноса-урока-9.md); review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 17	2026-10-20	stage B 8–10, № 17)
+P/09.1-R028	spec/09.1-agent.norms.md#N5	the former address in the source lesson M11 (moves of lessons 8–10); the move plan of lesson 9, V1 (decisions/inbox/2026-10-20-план-переноса-урока-9.md)	2026-10-20	before the move — M11/12 «Implementation decides» item 3; the move plan of lesson 9, V1)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	(M11/8 «Implementation decides» item 1, M11/10 item 1)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	reconciliation of M11, Y3; the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-19	 (added by the reconciliation of M11, Y3) (M11/3 item 2)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/3 item 3)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/4 item 2)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/5 item 1)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/6 item 2)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/11 item 2)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/8 item 3)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/12 item 1)
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (M11/12
+P/09.1-R029	spec/09.1-agent.norms.md#implementation-decides	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	    item 2)
+-	spec/09.1-agent.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/09.1-agent.norms.md#readiness-checklist	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C4	2026-11-06	C4
+-	spec/09.1-agent.norms.md#readiness-checklist	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (the former sc. 13 of M11/03)
+-	spec/09.1-agent.norms.md#readiness-checklist	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (the former sc. 13 of M11/03)
+-	spec/09.1-agent.norms.md#readiness-checklist	Quint, RV	2026-10-28	 (RV)
+-	spec/09.1-agent.norms.md#readiness-checklist	layout audit (decisions/inbox/2026-10-25-аудит-раскладки-03-10.md), G-56	2026-10-25	 (G-56)
+-	spec/09.1-agent.norms.md#readiness-checklist	reconciliation of M11, A9, A10	2026-10-19	 (reconciliation of M11, A9, A10)
+-	spec/09.1-agent.norms.md#readiness-checklist	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	 (a part of M11/7-03 by `note` of the id-map)
+-	spec/09.1-agent.norms.md#readiness-checklist	the former address in the source lesson M11 (moves of lessons 8–10)	2026-10-20	the former sc. 06 of M11/10;
+-	spec/09.1-agent.norms.md#readiness-checklist	Quint model of M11, G1, G7	2026-10-19	 (G1, G7)
+-	spec/09.1-agent.norms.md#readiness-checklist	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SHARED-ACCEPT-01	2026-10-23	 (C09-SHARED-ACCEPT-01)
+-	spec/09.1-agent.norms.md#readiness-checklist	reconciliation of M11, A4	2026-10-19	 (A4)
+-	spec/09.1-agent.norms.md#readiness-checklist	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-SHARED-REFUSED-CLEANUP-01, -02	2026-10-23	 (C09-SHARED-REFUSED-CLEANUP-01, -02)
+-	spec/09.1-agent.norms.md#readiness-checklist	reconciliation of M11, A3	2026-10-19	 (A3)
+-	spec/09.1-agent.norms.md#readiness-checklist	stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md), C09-MEMBER-KEY-PAIR-01	2026-10-23	 (C09-MEMBER-KEY-PAIR-01)
+-	spec/09.1-agent.norms.md#readiness-checklist	the coverage audit of P/09, J05; the Architect's decision	2026-10-30	 (the coverage audit of P/09, J05; the Architect's decision of 2026-10-30: do not introduce a new norm for the sake of one case)
+-	spec/09.1-agent.norms.md#readiness-checklist	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C1	2026-11-06	C1
+-	spec/09.1-agent.norms.md#readiness-checklist	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C3	2026-11-06	C3
+-	spec/09.1-agent.norms.md#readiness-checklist	ADR-0098 §4	2026-10-30	 (ADR-0098 §4)
+-	spec/09.1-agent.norms.md#readiness-checklist	ADR-0113	2026-11-01	 (ADR-0113)
+-	spec/09.1-agent.norms.md#readiness-checklist	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C2, C5	2026-11-06	C2
+-	spec/09.1-agent.norms.md#readiness-checklist	review of lesson P09 (ADR-0127; decisions/journal/platform/09-agent/2026-11-06-review-p09.md), C2, C5	2026-11-06	C5
+-	spec/09.1-agent.norms.md#N1	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P1	2026-10-28	 (P1)
+P/09.1-R005	spec/09.1-agent.norms.md#N1.2a	ADR-0113 addendum (5) item 12, limit P4	2026-11-02	 (limit P4)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P2	2026-10-28	 (P2)
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P2	2026-10-28	P2;
+P/09.1-R007	spec/09.1-agent.norms.md#N1.4	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P2	2026-10-28	 (P2)
+P/09.1-R010	spec/09.1-agent.norms.md#N1.7	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P1	2026-10-28	 (P1)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P2	2026-10-28	, P2
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P1	2026-10-28	 (P1)
+P/09.1-R013	spec/09.1-agent.norms.md#N1.10	V7 item 3, the Architect's decision of 2026-10-28 (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), rule P1	2026-10-28	 (P1)

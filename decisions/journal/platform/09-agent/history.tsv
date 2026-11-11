@@ -1,0 +1,89 @@
+req_id	file	source	date	removed
+-	README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	README.md#intro	ADR-0124	2026-11-04	ADR-0124:
+-	README.md#intro	ADR-0092	2026-10-27	, ADR-0092
+-	README.md#intro	ADR-0088	2026-10-19	; ADR-0088
+-	lifecycle.md#intro	ADR-0083 addendum (2) item 1	2026-10-18	 (ADR-0083 addendum (2) item 1)
+-	lifecycle.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B	2026-10-20	 (stage B)
+-	lifecycle.md#intro	ADR-0121; ADR-0124 addendum (1) item 2	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 2)
+-	lifecycle.md#environment	Architect's decision 2026-10-18, the second pilot (decisions/inbox/2026-10-18-пилот-кластера.md), N-4	2026-10-18	(the second pilot, N-4)
+-	lifecycle.md#environment	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 22 (Claude M-16, Kimi SB810-08)	2026-10-20	 (the reference to the norm P/06.7 is removed: review analysis of stage B 8–10, № 22, Claude M-16, Kimi SB810-08)
+-	lifecycle.md#environment	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 32	2026-10-20	 «follow» step 1 (review analysis of stage A 8–10, № 32)
+-	lifecycle.md#environment	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 32	2026-10-20	 `networks` (review analysis of stage A 8–10, № 32)
+-	lifecycle.md#environment	DOM-AGENT-TURN-01, the owner's consent	2026-10-26	 (DOM-AGENT-TURN-01, the owner's consent 2026-10-26)
+-	lifecycle.md#environment	ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2	2026-10-26	 (ADR-0075 addendum 2026-10-26 (4) item 3, (5) items 1–2)
+-	lifecycle.md#environment	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	; ADR-0075 addendum 2026-10-26 (5) item 4
+-	lifecycle.md#environment	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 1, decision 1	2026-10-20	 (review analysis of stage A 8–10, № 1 / decision 1)
+-	lifecycle.md#environment	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 4	2026-10-20	; review analysis of stage B 8–10, № 4
+-	lifecycle.md#directories-and-files	C08-RING-FORBIDDEN-ROOTS-01, stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md); the decision of the Domain Specification	2026-10-23	 (C08-RING-FORBIDDEN-ROOTS-01, the decision of the Domain Specification)
+-	lifecycle.md#directories-and-files	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 1, decision 1	2026-10-20	; review analysis of stage A 8–10, № 1 / decision 1
+-	lifecycle.md#exit-codes	the Architect's decision, review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 17; ADR-0083 addendum (15)	2026-10-20	 (the Architect's decision, review analysis of stage B 8–10, № 17, ADR-0083 addendum (15))
+-	lifecycle.md#exit-codes	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md); ADR-0083 addendum (14) item 10; plan 9 V8	2026-10-20	; the Architect's decision on the move plans 8–10, ADR-0083 addendum (14) item 10; plan 9 V8
+-	lifecycle.md#exit-codes	C09-NO-ROAD-01, stage C guesses (decisions/inbox/2026-10-23-догадки-стадии-C.md)	2026-10-23	 (C09-NO-ROAD-01)
+-	lifecycle.md#stand	STAND-ROOTS-CLEAR-01; the Architect's decision	2026-10-27	; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27
+-	lifecycle.md#stand	review analysis of stage B 3–5 (decisions/inbox/2026-10-20-ревью-стадии-b-3-5-разбор.md), № 33	2026-10-20	; review analysis of stage B 3–5, № 33
+-	lifecycle.md#implementation-decides	Architect's decision 2026-10-18, the second pilot	2026-10-18	 (decided by the Architect 2026-10-18 (the second pilot))
+-	spec/09-agent.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/09-agent.README.md#task	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	; the correspondence to the former ids
+-	spec/09-agent.README.md#task	map of former ids, decisions/history/platform/id-map.tsv	2026-11-06	— `id-map.tsv` (historical record).
+-	spec/09-agent.README.md#task	ADR-0083 addendum (1), (14): stage B of the move of lessons 8–10	2026-10-20	The lesson is assembled from lessons M11/3–12 (the agent and relay side) (stage B,
+-	spec/09-agent.README.md#task	ADR-0083 addendum (1), (14): stage B of the move of lessons 8–10	2026-10-20	ADR-0083 addendum (1), (14)).
+-	spec/09-agent.README.md#inputs-and-their-priority	ADR-0088	2026-10-19	; ADR-0088
+-	spec/09-agent.README.md#inputs-and-their-priority	ADR-0092	2026-10-27	, ADR-0092
+-	acceptance/1/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/1/README.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8, V5	2026-10-20	; formerly — the M11 dictionary of the acceptance README
+-	acceptance/1/README.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8, V5	2026-10-20	of M11/01; the plan of the move of lesson 8, V5
+-	acceptance/2/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/2/README.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8, V5	2026-10-20	; formerly — the M11 dictionary of the acceptance README
+-	acceptance/2/README.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8, V5	2026-10-20	of M11/01; the plan of the move of lesson 8, V5
+-	acceptance/1/README.md#stand	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8	2026-10-20	; from the acceptance README of M11/03
+-	acceptance/1/README.md#anywhere-copy-hash	G09-ANYWHERE-HASH-01, Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md)	2026-11-06	 (G09-ANYWHERE-HASH-01)
+-	acceptance/2/README.md#intro	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8, the appendix	2026-10-20	 (the appendix of the plan of the move of lesson 8)
+-	acceptance/2/README.md#stand	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), lesson 8	2026-10-20	formerly — the acceptance README of M11/03
+-	forms/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	forms/README.md#intro	ADR-0125 addendum (5)	2026-11-05	 under ADR-0125 addendum (5)
+-	forms/README.md#forwarded-owner-forms	ADR-0129 addendum (20) item 1	2026-11-07	 Existing four operation blocks and the refusal catalogue are unchanged.
+-	forms/README.md#refusal-catalogue	ADR-0129 addendum (20)	2026-11-07	36 former projections
+-	forms/README.md#refusal-catalogue	ADR-0129 addendum (20)	2026-11-07	the two explicit review outcomes
+-	forms/README.md#refusal-catalogue	ADR-0129 addendum (20)	2026-11-07	 (ADR-0129 (20))
+-	forms/README.md#seams-and-stages	G09-PLACEMENT-AT-COPY-01, Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md)	2026-11-06	 (G09-PLACEMENT-AT-COPY-01)
+-	forms/README.md#seams-and-stages	G09-ANYWHERE-HASH-01, Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md)	2026-11-06	the JSON input of G09-ANYWHERE-HASH-01
+-	forms/README.md#effect-fixtures	ADR-0129 addendum (20)	2026-11-07	Accepted P09 review effect fixtures
+-	forms/README.md#effect-fixtures	ADR-0129 addendum (20)	2026-11-07	The review cases
+-	vectors/follow/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	vectors/follow/README.md#intro	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 8	2026-10-20	 (review analysis of stage A 8–10,
+-	vectors/follow/README.md#intro	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), № 8	2026-10-20	№ 8)
+-	vectors/follow/README.md#intro	ADR-0083	2026-10-18	 (ADR-0083)
+-	vectors/follow/README.md#intro	ADR-0080 addendum 16	2026-10-17	 (ADR-0080 addendum 16)
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	The rows were transferred from the inputs of the command `follow` of the acceptance of M11/10 (`inputs/follow-*.json`, sc. 06) without a change of bytes: only
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	whitespace and line breaks outside JSON strings are removed;
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	the name of the input file; the expectation `ok <JSON>` is the cell `expect` (the plan
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	of the move of lesson 9, § 3; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 06 of the acceptance of M11/10 and its
+-	vectors/follow/README.md#intro	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	inputs were removed by the move of lesson 9:
+-	vectors/follow/README.md#files	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	 in rows 01–12,
+-	vectors/follow/README.md#files	the Architect's decision on the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 3; ADR-0083 addendum (14) item 17	2026-10-20	the scenario and the step of the acceptance of M11,
+-	vectors/follow/README.md#files	run 41 (decisions/inbox/2026-10-18-прогон-41-разбор.md); the reconciliation of M11 09–12	2026-10-18	The vectors were checked by the runs of the implementations of the acceptance of M11/10 (run 41, the reconciliation of M11 09–12) and by the text of the norms; on a discrepancy
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 4 «OpenAPI», V9	2026-10-20	; the move plan of lesson 9
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan of lesson 9 § 4 «OpenAPI», V9	2026-10-20	§ 4 «OpenAPI», V9
+-	spec/09-agent.api.openapi.yaml#/openapi	ADR-0129 addendum (20) item 1	2026-11-07	; the four existing operationIds remain unchanged
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), plan 9 V3	2026-10-20	plan 9 V3:
+-	spec/09-agent.api.openapi.yaml#/openapi	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), decision 3	2026-10-20	 (analysis of review of stage A 8–10,
+-	spec/09-agent.api.openapi.yaml#/openapi	review analysis of stage A 8–10 (decisions/inbox/2026-10-20-ревью-стадии-a-8-10-разбор.md), decision 3	2026-10-20	decision 3)
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	From the contract M11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	 — stage B, without a change of behaviour;
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	the copy of Refusal of M11/7 (the reason list) is replaced by a reference to
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	The contract M11/4 had no paths of the relay door (only the description
+-	spec/09-agent.api.openapi.yaml#/openapi	the move plans of lessons 8–10 (decisions/inbox/2026-10-20-планы-переноса-8-10-решение.md), stage B (the contracts M11/7, M11/4)	2026-10-20	«the same forms as at the holder; codes — N2 of the lesson»): the paths
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1tokens~1{member}~1{sub}~1{kind}/post/responses/502/description	the Architect's decision on the M11 check, Y8	2026-10-20	the Architect''s decision on the M11 check, Y8;
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1members~1{member}~1{part}/get/summary	ADR-0113	2026-11-01	; ADR-0113)
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1topology~1{member}/get/summary	ADR-0113 addendum (47) item 3	2026-11-03	; ADR-0113 addendum (47) item 3
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/get/responses/404/description	ADR-0113 addendum (47) item 1	2026-11-03	 (ADR-0113 addendum (47) item 1)
+-	spec/09-agent.api.openapi.yaml#/components/responses/RelayNothingYet/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1anywhere~1{member}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1backup-part~1{member}~1{part}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1book~1{member}~1{sub}~1{book}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1book~1{member}~1{sub}~1{book}~1{part}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1members~1{member}~1{part}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/paths/~1api~1topology~1{member}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
+-	spec/09-agent.api.openapi.yaml#/components/schemas/UnavailableBody/description	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 22 (Claude M-4)	2026-10-20	; analysis of review of stage B 8–10, № 22, Claude M-4
+-	spec/09-agent.api.openapi.yaml#/components/schemas/RelayCarry/description	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding C1	2026-11-06	; review C1
