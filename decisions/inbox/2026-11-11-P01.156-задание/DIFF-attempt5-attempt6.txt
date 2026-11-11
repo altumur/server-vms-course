@@ -1,0 +1,23 @@
+2c2
+<   "name": "p01-b-raft-d5bd29ddb2dd",
+---
+>   "name": "p01-b-raft-bf8462085c08",
+14,15c14,15
+<   "specs": "/srv/b11-isolation/model-specs/d5bd29ddb2ddc3fb313b557e965dacefa8bb1d40/tree",
+<   "specs_sha": "d5bd29ddb2ddc3fb313b557e965dacefa8bb1d40",
+---
+>   "specs": "/srv/b11-isolation/model-specs/bf8462085c08c5cd5f6b4cce3ca3580ebd74ffae/tree",
+>   "specs_sha": "bf8462085c08c5cd5f6b4cce3ca3580ebd74ffae",
+17c17
+<     "SPEC_VERSION": "d5bd29ddb2ddc3fb313b557e965dacefa8bb1d40\n"
+---
+>     "SPEC_VERSION": "bf8462085c08c5cd5f6b4cce3ca3580ebd74ffae\n"
+88c88,93
+<     "norm_trace": true
+---
+>     "norm_trace": true,
+>     "m_passport": {
+>       "path": "/srv/b11-isolation/model-specs/bf8462085c08c5cd5f6b4cce3ca3580ebd74ffae/PASSPORT-M.json",
+>       "sha256": "ccd61598be4d50b3ed4ddc35088b458c10a34a3ba66d0be612b0d43de27a5ec2"
+>     },
+>     "profile_probe": true
