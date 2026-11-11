@@ -126,7 +126,7 @@ the family schemas `../data/*.schema.json` (the sections «Data families» of ch
 | 3.2: alarm | `worker.name_taken` is written on every capture | only on the loss of the name, once per episode |
 | 3.4: concurrency | the stand-in blocks the loop or renews after the release | a non-blocking lock, the stand-in is stopped first, cas of the owner |
 | 3.4: heartbeat | the system clock and ts give a false freshness | the reader judges by an observed change |
-| 3.4: signals | kill is taken for a performed cleanup | the runner waits for the exit; a crash does not write released |
+| 3.4: signals | kill is taken for a performed cleanup | the judge waits for the exit; a crash does not write released |
 | 3.5 N3 «open» | the opening tries former AAD ways | the single AAD of the contract; not opened — `Sealed` with a reason |
 | 3.6 N3 | a CAS timeout is taken for the absence of the mark | no confirmation of begun — no call; unknown does not permit a repeat |
 | 3.7 N1.5 | the recipient does not look at `aud` | `token` with `expect.cluster` — otherwise the token is good for any member |
