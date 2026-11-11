@@ -25,6 +25,7 @@ P/03.7-R011	spec/03.7-worker.norms.md#N1.6	norms review of ADR-0075, Claude fd85
 P/03.7-R011	spec/03.7-worker.norms.md#N1.6	V7 item 3; Architect's decision 2026-10-28, on a proposal; rows 4, 6 of the list	2026-10-28	 (V7 item 3, the Architect's decision of 2026-10-28, on a proposal; rows 4, 6 of the list)
 P/03.7-R011	spec/03.7-worker.norms.md#N1.6	reconciliation of M11; log of cammeta-go M11-05 № 8	2026-10-19	added by the reconciliation of M11, log of cammeta-go M11-05 № 8; 
 P/03.7-R011	spec/03.7-worker.norms.md#N1.6	stage A, A3	2026-10-19	 (stage A, A3)
+P/03.7-R012	spec/03.7-worker.norms.md#N1.6	course progress record «ПРОГРЕСС/ХОД» (debt of the stand consumer)	2026-10-17	a debt in «PROGRESS» — the consumer of the stand
 P/03.7-R017	spec/03.7-worker.norms.md#N3	review of stage B 3–5, V1	2026-10-20	; review of stage B 3–5, V1
 P/03.7-R018	spec/03.7-worker.norms.md#N3	ADR-0110 addendum (23) item 2	2026-11-03	 (ADR-0110 addendum (23) item 2)
 P/03.7-R019	spec/03.7-worker.norms.md#N4	transfer of the refusal tables to forms/refusals.tsv (c31a4854a «Описать формы пакета P/03 и швы настоящего SDK»)	2026-11-05	carry the normative cells of the former tables in their original order; `-` is an absent cell.

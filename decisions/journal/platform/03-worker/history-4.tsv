@@ -32,9 +32,11 @@ P/03.4-R006	spec/03.4-worker.norms.md#N1.1	W03-G05	2026-10-23	 (W03-G05)
 P/03.4-R006	spec/03.4-worker.norms.md#N1.1	layout audit A-01, Architect's decision 2026-10-25	2026-10-25	; layout audit, the Architect's decision 2026-10-25, «A-01»
 P/03.4-R006	spec/03.4-worker.norms.md#N1.1	added by M10/9	2026-10-20	added by M10/9 
 P/03.4-R006	spec/03.4-worker.norms.md#N1.1	added by M10/8	2026-10-20	added by M10/8 
+P/03.4-R009	spec/03.4-worker.norms.md#N1.2	transfer of lesson 3 from M10/10 (c085b5ced, stage B)	2026-10-20	The part of N1.2 of the source:
 P/03.4-R010	spec/03.4-worker.norms.md#N1.2	layout audit A-16, Architect's decision 2026-10-25	2026-10-25	; layout audit, decision of the Architect 2026-10-25, «A-16»
 P/03.4-R010	spec/03.4-worker.norms.md#N1.2	ADR-0070	2026-10-10	 (ADR-0070)
 P/03.4-R010	spec/03.4-worker.norms.md#N1.2	C03-MEMORY-NO-ROLE-01	2026-11-01	 (C03-MEMORY-NO-ROLE-01)
+P/03.4-R011	spec/03.4-worker.norms.md#N1.6	transfer of lesson 3 from M10/10 (c085b5ced, stage B)	2026-10-20	The row from N1.6 of the source
 P/03.4-R011	spec/03.4-worker.norms.md#N1.6	M10/10	2026-10-20	 (M10/10)
 P/03.4-R012	spec/03.4-worker.norms.md#N1.6	VMS request «commands and the device row», Architect's decision 2026-10-23	2026-10-23	 (VMS request «commands and the device row», decision of the Architect 2026-10-23)
 P/03.4-R012	spec/03.4-worker.norms.md#N1.6	ADR-0094 B4	2026-10-29	; ADR-0094 B4
