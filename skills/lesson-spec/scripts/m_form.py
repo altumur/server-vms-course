@@ -53,7 +53,7 @@ M_FORM_LESSONS = {"P/01"}
 # the judge-only markers, before their norms get the index, «See also», the marks of the checklist (stage B). Only
 # history_phrases (outside STAGE_A_OUTSIDE), judge_only_refs and history_rows run on them. A lesson leaves the set when
 # it enters M_FORM_LESSONS: a lesson in both is an error.
-M_FORM_STAGE_A = set()
+M_FORM_STAGE_A = {"P/03", "P/04", "P/07"}  # этап А принят и влит (OBSH.41); P/02 — после OBSH.42 (номера ADR в построенных блоках form/canonical), P/05, P/06 — после вливания
 STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data are cleaned at stage B
 
 # The common inputs (paths under Platform/common/ that the common filter gives to M) read by `history_phrases`. Empty:
