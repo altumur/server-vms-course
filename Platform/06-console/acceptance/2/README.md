@@ -1,18 +1,16 @@
 # Acceptance P/06.2 — the write of secrets
 
-This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) N5. The scenarios, the fields file and the text below were moved from
-the acceptance of M10/07 whole (stage B, ADR-0083 addendum (1):
-without a change of behaviour); the numbers of the scenarios and the steps are the former ones; the common tables `secret_in.tsv` and `log_mask.tsv` are the vectors
+The norm of the chapter is [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) N5. The common tables `secret_in.tsv` and `log_mask.tsv` are the vectors
 of the chapter [`secret-in`](../../../common/vectors/secret-in/README.md) and [`log-mask`](../../../common/vectors/log-mask/README.md). Two vector tables,
 the fields file and the scenario file; the chapter adds no paths of its own — the units door of chapter 6.1 and the store door.
 
 ## The vectors `secret-in` and `log-mask`
 
-The common tables [`../../../common/vectors/secret-in/cases.tsv`](../../../common/vectors/secret-in/cases.tsv) and
-[`../../../common/vectors/log-mask/cases.tsv`](../../../common/vectors/log-mask/cases.tsv) are one source of the course and of the product (ADR-0003; the product
+The common tables [`../../../common/vectors/secret-in/cases.tsv`](../../../common/vectors/secret-in/cases.tsv) (judge-only: checking material outside M) and
+[`../../../common/vectors/log-mask/cases.tsv`](../../../common/vectors/log-mask/cases.tsv) are one source of the course and of the product (the product
 takes them by `sync-course.sh`), there is no copy here. The format is in the header of each and in the README of the package. The runner: `secret-in` —
 each row is read by the rule of the named field from the section below: the display equals `masked`,
 the refusal is empty or names the field from `fault`, the text of the refusal does not contain the raw value of the password.
@@ -21,17 +19,15 @@ the refusal is empty or names the field from `fault`, the text of the refusal do
 ## The rules of the two fields of the table (acceptance data)
 
 `secret-in` is read by the rule of the field named in the row. The declarations of these fields are data of this acceptance, not
-a reference to the VMS catalogue (ADR-0001): an implementation of chapter 6.2 is not obliged to know the manifests `cam` and `rec`. The declarations
-coincide with the fields `unit.fields.source` of the manifest `cam` and `tables.volumes.fields.url` of the manifest `rec` as of 2026-10-17;
-the catalogue rule for nested addresses and for `log-mask` is the union of the rules of these two fields with the common
+a reference to the VMS catalogue: an implementation of chapter 6.2 is not obliged to know the manifests `cam` and `rec`. The declarations coincide with `unit.fields.source` of the manifest `cam` and `tables.volumes.fields.url` of the manifest `rec`. The catalogue rule for nested addresses and for `log-mask` is the union of the rules of these two fields with the common
 dictionary (N1.1 of the chapter). The form of each key is the summary table of P/02.1 N1.2a and N1.1 of chapter 6.2.
 
-The declarations are the vector file [`fields.yaml`](../../../common/vectors/secret-in/fields.yaml) (moved from this acceptance; the stage C guess URLC-SOURCE-01, the Architect's decision of 2026-10-23): the key is the name of a field from the column `field`
+The declarations are the vector file [`fields.yaml`](../../../common/vectors/secret-in/fields.yaml) (judge-only: checking material outside M): the key is the name of a field from the column `field`
 of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 
 ## scenarios.tsv
 
-The units door of `testsub2` (the rows `tallies`; the tables door `shelves`; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the processes are restarted between scenarios (`@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
+The units door of `testsub2` (the rows `tallies`; the tables door `shelves`; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the processes are restarted between scenarios (`@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
 
 ## Scenario boundaries
 
@@ -71,15 +67,15 @@ store requests of this scenario. ASSERT does not perform an HTTP request.
 - GET of a table without secret fields, nested secrets, snapshots, the log, argv and the heartbeat are
   separate subjects of reading of N5. File permissions and the opening by a worker are confirmed by the stand.
 
-Additional check by reading/model R36-06: the AAD of N1.2 uses the full path. Distinguish the rows a#b with the field c and a with the field b#c, a direct field and a nested one, the same *_secret in different objects/array indices, keys with /, ~, NUL and Unicode. For each path check the unambiguous JSON Pointer escaping and the UTF-8 bytes without normalization; opening does not try the old AAD. This is a check of the form of the context, not of the strength of AES or of an actual opening by an implementation. The transition of old sealed rows requires a separate rollout and a trusted source, it is not checked by the TSV.
+Additional check by reading/model: the AAD of N1.2 uses the full path. Distinguish the rows a#b with the field c and a with the field b#c, a direct field and a nested one, the same *_secret in different objects/array indices, keys with /, ~, NUL and Unicode. For each path check the unambiguous JSON Pointer escaping and the UTF-8 bytes without normalization; opening does not try the old AAD. This is a check of the form of the context, not of the strength of AES or of an actual opening by an implementation. The transition of old sealed rows requires a separate rollout and a trusted source, it is not checked by the TSV.
 
-## Additional check of the class of errors of run 36 (Kimi)
+## Additional checks
 
 By reading, check the order of POST/PUT: after a bounded parsing of the JSON object, the ring comes before the form of the fields, the HMAC and the capture of the claim. An unreadable ring gives the common 503 by chapter 6.1 even with a bad field. GET/DELETE do not acquire this refusal. P/02.5 N1.3 includes domainworker as a platform role; the manifests of subsystems do not include it (there is no process of this role, P/01.2 N1.1). The check of the common table by the loader is the work of an implementation, not of this acceptance.
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
 
-## Check of the error class R37 (Codex)
+## Additional source checks
 
 A source of a public id/name/rid with the suffix _secret is rejected at load, even if the original field is masked. Check a single table.key, all the substitutions and requests.key. The prohibition of NUL is a condition of the seal/open profile of the sealing contract; the common Cmd of P/01.1 by itself does not forbid NUL. Do not attribute a restriction to an owner that does not have it.
 

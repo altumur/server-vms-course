@@ -1,0 +1,74 @@
+req_id	file	source	date	removed
+-	spec/02.3-installer.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.3-installer.norms.md#intro	ADR-0080	2026-10-13	; ADR-0080
+-	spec/02.3-installer.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+-	spec/02.3-installer.norms.md#intro	move of lesson 2 from M10/2, stage B, ADR-0083 addendum (1)	2026-10-19	The chapter is moved from M10/2 (stage B, ADR-0083 addendum (1): without a change of behaviour):
+-	spec/02.3-installer.norms.md#intro	numbering of «Implementation decides» of M10/2	2026-10-19	items 3–7 of 
+-	spec/02.3-installer.norms.md#intro	numbering of M10/2	2026-10-19	 The numbers of the subsections are the former numbers of M10/2.
+-	spec/02.3-installer.norms.md#intro	map of former ids, decisions/history/platform/id-map.tsv	2026-10-19	; the map to former ids is `id-map.tsv` (historical record)
+-	spec/02.3-installer.norms.md#N1.5	ADR-0088 item 7; review of stage B 1–2, item 5; task of the Architect 495cc7833 (built section «Data families»)	2026-10-20	 (ADR-0088 item 7; review of stage B 1–2, item 5; the built section replaced the form block, a task of the Architect by 495cc7833)
+-	spec/02.3-installer.norms.md#N1.5	Architect's decision 2026-10-18, data catalogue	2026-10-18	 (the Architect's decision of 2026-10-18, data catalogue)
+-	spec/02.3-installer.norms.md#N1.5	review of stage A 2	2026-10-19	 (the current behaviour recorded by review of stage A 2)
+-	spec/02.3-installer.norms.md#N1.5	window 2.2, Architect's decision, item 8	2026-10-20	 (window 2.2, the Architect's decision, item 8)
+-	spec/02.3-installer.norms.md#N1.5	ADR-0094 addendum (1)	2026-10-29	; ADR-0094 addendum (1)
+-	spec/02.3-installer.norms.md#N1.5	analysis of review of stage A 6–7, B3, B4	2026-10-20	; analysis of review of stage A 6–7, B3, B4
+-	spec/02.3-installer.norms.md#N1.5	review of stage A 2	2026-10-19	the current behaviour recorded by review of stage A 2; 
+-	spec/02.3-installer.norms.md#process-start	added by M10/10; layout audit A-02, Architect's decision 2026-10-25	2026-10-25	; added by M10/10; layout audit `A-02`, the Architect's decision of 2026-10-25
+-	spec/02.3-installer.norms.md#process-start	ADR-0091 addendum (4), (5); Architect's decisions on the repeated review 2026-10-23	2026-10-23	; ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review 2026-10-23
+-	spec/02.3-installer.norms.md#process-start	ADR-0091 addendum (4), (5); Architect's decisions on the repeated review 2026-10-23	2026-10-23	 (ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review 2026-10-23)
+-	spec/02.3-installer.norms.md#manifest-change	comparison of python and go M10/6–11, C31	2026-10-19	; comparison of python and go M10/6–11, C31
+-	spec/02.3-installer.norms.md#manifest-change	C02-SHELL-TAG-01, Architect's decision 2026-11-01, analysis of the VMS pass	2026-11-01	 (C02-SHELL-TAG-01, the Architect's decision of 2026-11-01, analysis of the VMS pass)
+-	spec/02.3-installer.norms.md#manifest-change	ADR-0094 addendum (3) item 8	2026-10-29	 (ADR-0094 addendum (3) item 8)
+-	spec/02.3-installer.norms.md#manifest-change	review of lesson P/02, S13	2026-11-05	 (review P/02 S13)
+-	spec/02.3-installer.norms.md#manifest-change	ADR-0094 addendum (1)	2026-10-29	 (ADR-0094 addendum (1))
+-	spec/02.3-installer.norms.md#manifest-change	Architect's decision on question Go P/02 № 4	2026-10-21	 (the Architect's decision on question Go P/02 № 4)
+-	spec/02.3-installer.norms.md#manifest-change	window 2.2, item 8	2026-10-20	 (window 2.2, item 8)
+-	spec/02.3-installer.norms.md#manifest-change	Architect's decision on the guess of Go, 2026-10-20	2026-10-20	; the Architect's decision on the guess of Go, 2026-10-20
+-	spec/02.3-installer.norms.md#manifest-change	window 2.2, item 8	2026-10-20	 (window 2.2, item 8)
+-	spec/02.3-installer.norms.md#manifest-change	C02-VIEW-CAS-RESTART-01	2026-10-29	; C02-VIEW-CAS-RESTART-01
+-	spec/02.3-installer.norms.md#manifest-change	ADR-0068	2026-10-07	 (ADR-0068)
+-	spec/02.3-installer.norms.md#manifest-change	analysis of review of stage A 6–7, B1	2026-10-20	; analysis of review of stage A 6–7, B1
+-	spec/02.3-installer.norms.md#manifest-change	Architect's decision on gap Go P/02 № 1	2026-10-19	 (the Architect's decision on gap Go P/02 № 1)
+-	spec/02.3-installer.norms.md#manifest-change	ADR-0068	2026-10-07	 (ADR-0068)
+-	spec/02.3-installer.norms.md#internal-finite-deletion-profile	ADR-0127 P/06 C2 (heading)	2026-11-05	 (ADR-0127 P/06 C2)
+-	spec/02.3-installer.norms.md#internal-finite-deletion-profile	Architect's approval 1f00 of the P/06 C2 source form (decisions/inbox/2026-11-06-p06-c2-active-source)	2026-11-06	, the approved1f00 source-form
+-	spec/02.3-installer.norms.md#internal-finite-deletion-profile	ADR-0091 addendum (4), (5); Architect's decisions on the repeated review 2026-10-23	2026-10-23	 (ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review 2026-10-23)
+-	spec/02.3-installer.norms.md#internal-finite-deletion-profile	ADR-0068	2026-10-07	 (ADR-0068)
+-	spec/02.3-installer.norms.md#N4	ADR-0125 addendum (1) item 5	2026-11-04	 (ADR-0125 addendum (1) item 5)
+-	spec/02.3-installer.norms.md#N5	analysis of review of stage A 6–7, B2	2026-10-20	; analysis of review of stage A 6–7, B2
+-	spec/02.3-installer.norms.md#N5	ADR-0094 B7 (addendum (1)); the rule in words: its platform norms are N1.5 and N3	2026-10-29	N3 and ADR-0094 B7
+-	spec/02.3-installer.norms.md#implementation-decides	ADR-0068 (item 1)	2026-10-07	, ADR-0068
+-	spec/02.3-installer.norms.md#implementation-decides	ADR-0068 (item 2)	2026-10-07	, ADR-0068
+-	spec/02.3-installer.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/02.3-installer.norms.md#readiness-checklist	window 2.2, Architect's decision, item 8 (P/02.3-01)	2026-10-20	 (window 2.2, the Architect's decision, item 8)
+-	spec/02.3-installer.norms.md#readiness-checklist	window 2.2, item 8: vectors and acceptance (P/02.3-01)	2026-10-20	 (window 2.2, item 8: vectors and acceptance)
+-	spec/02.3-installer.norms.md#readiness-checklist	ADR-0094 addendum (1), (3) item 8 (P/02.3-05)	2026-10-29	 (ADR-0094 addendum (1), (3) item 8)
+-	spec/02.3-installer.norms.md#system-checklist	ADR-0130 addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)
+-	spec/02.3-installer.norms.md#system-checklist	ADR-0068 (P/02.3-02)	2026-10-07	 (ADR-0068)
+-	spec/02.3-installer.norms.md#system-checklist	Architect's decision on gap Go P/02 № 1, 22fae38ff; analysis of review of stage A 6–7, B1, B2 (P/02.3-07)	2026-10-20	 (the Architect's decision on gap Go P/02 № 1, 22fae38ff; analysis of review of stage A 6–7, B1, B2)
+-	spec/02.3-installer.norms.md#system-checklist	ADR-0091 addendum (4)–(6) (P/02.3-08)	2026-10-23	 (ADR-0091 addendum (4)–(6))
+-	acceptance/3/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/3/README.md#intro	coverage audit P/02, session audit-kimi, commit 82f4da9fc	2026-10-30	the coverage audit P/02 of 2026-10-30
+-	acceptance/3/README.md#intro	coverage audit P/02, second pass (Gemini)	2026-10-30	its second pass, below
+-	acceptance/3/README.md#intro	ADR-0094 B7 (addendum (1)); the rule in words: static files and the declared shell	2026-10-29	ADR-0094 B7
+-	acceptance/3/README.md#intro	ADR-0094 B1	2026-10-29	, ADR-0094 B1
+-	acceptance/3/README.md#intro	review of lesson P/02, S5	2026-11-05	 (review of lesson P/02, S5)
+-	acceptance/3/README.md#intro	ADR-0112 addendum (3) item 2; the rule in words: the loader accepts a segment of the first kind, the second kind and an unnamed one are a catalogue refusal	2026-11-02	ADR-0112 addendum (3) item 2
+-	acceptance/3/README.md#intro	move of the acceptance of M10/2, stage B	2026-10-19	The table and the files were moved from the acceptance of M10/2 (stage B) without changes; 
+-	acceptance/3/README.md#putstsv	ADR-0091	2026-10-22	 (ADR-0091)
+-	acceptance/3/README.md#putstsv	ADR-0091 addendum (14), (17), (18) item 6	2026-10-23	 (ADR-0091 addendum (14), (17), (18) item 6)
+-	acceptance/3/README.md#putstsv	ADR-0094 B7 (addendum (1))	2026-10-29	 (ADR-0094 B7)
+-	acceptance/3/README.md#putstsv	ADR-0091 addendum (26) item 2	2026-10-23	 (ADR-0091 addendum (26) item 2)
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, session audit-kimi, commit 82f4da9fc (heading)	2026-10-30	The coverage audit P/02 (2026-10-30)
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, session audit-kimi, commit 82f4da9fc	2026-10-30	The session audit-kimi, commit 82f4da9fc, the coverage audit P02 (for people): properties that were formerly checked by reading.
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, B01	2026-10-30	 (B01)
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, B04	2026-10-30	B04; 
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, B02	2026-10-30	 (B02)
+-	acceptance/3/README.md#installer-properties	C02-SHELL-TAG-01	2026-11-01	 (C02-SHELL-TAG-01)
+-	acceptance/3/README.md#installer-properties	run status of C02-SHELL-TAG-01	2026-11-01	; not yet run by an implementation
+-	acceptance/3/README.md#installer-properties	coverage audit P/02, B03	2026-10-30	 (B03)
+-	acceptance/3/README.md#installer-properties	check_spec 0021baa83 (the Architect)	2026-10-30	 The form of the check — check_spec 0021baa83 (the Architect).
+-	acceptance/3/README.md#catalogue-properties	coverage audit P/02, second pass (Gemini), c698f3291 (heading)	2026-10-30	The coverage audit P/02, second pass (Gemini)
+-	acceptance/3/README.md#catalogue-properties	coverage audit P/02, second pass (Gemini), branch gemini/audit-coverage, c698f3291	2026-10-30	The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): catalogue checks that were formerly done by reading.
+-	acceptance/3/README.md#catalogue-properties	Architect's decision (directives of chapter 2.2)	2026-10-30	the Architect's decision, 
+-	spec/02.3-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table

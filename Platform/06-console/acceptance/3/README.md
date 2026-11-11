@@ -1,11 +1,9 @@
 # Acceptance P/06.3 — the guard and the console session
 
-This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) N5. The scenario was moved from the acceptance of
-M10/09 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the numbers of the scenario and of the steps are the former ones. The other scenarios of M10/09 are the acceptance of [chapter 6.5](../5/README.md). The forms of foreign
+The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) N5. The forms of foreign
 doors belong to their owners; the common codes and the parsing of a console request are [chapter 6.5](../../spec/06.5-console.norms.md) N2.
 
 ## Preparation
@@ -30,7 +28,7 @@ The domain login, closed `grants`, `via` of a proven identity, the order of `ide
 `access.denied`, the emergency login and the debug identity are checked by a separate stand (the domain stand: the acceptance P/08.4 and of chapter 6.7) and by a module test, not by this TSV
 (the norms of the chapter, N5, «Checked by reading»).
 
-Additional check of the class of errors of run 36 (Kimi), by reading: without a domain every path, including the open one and /session,
+Additional checks, by reading: without a domain every path, including the open one and /session,
 is closed outside the loopback; after an identity the cookie checks Origin before the grant. Check the emergency login.
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models
@@ -38,4 +36,4 @@ of the author are not a performed stand test.
 
 
 
-ADR-0129(17): a current GET /session response with via=ticket has until equal to the proven ticket exp and grants of its person by gate-and-pass. It does not add a POST /session admission or rights. A source/schema control is separate from executing a real ticket/session exchange.
+A current GET /session response with via=ticket has until equal to the proven ticket exp and grants of its person by gate-and-pass. It does not add a POST /session admission or rights. A source/schema control is separate from executing a real ticket/session exchange.

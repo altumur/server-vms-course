@@ -1,13 +1,13 @@
 # Acceptance P/06.1 — the units door, bodies, tables (stand)
 
-This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.norms.md) N5. In all 46 scenarios / 514 steps.
 
 The full forms of the answers are [the OpenAPI of the lesson](../../spec/06-console.api.openapi.yaml) (the paths `/{rows}`, `/{rows}/{id}`,
 `/{rows}/{id}/{blob_field}`, `/{table}`, `/{table}/{name}`). The state of the slot, the epoch and the lease is not checked here — that is
-the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
+the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (judge-only: checking material outside M).
 
 ## Preparation and order: the units door
 
@@ -31,19 +31,19 @@ within a scenario; the data and the claims — until the end of the whole run. A
 their own instances. Deleting only the units is not enough: old claims can return the former answers.
 If the initial state, the rights or the absence of background changes are not provided, the run is not performed.
 
-## The batch door (ADR-0094 B9)
+## The batch door
 
 `POST /console/batch` (N2 «Batch door», N3 «batch») by an open console, the stand and an empty store are as in the preparation for bodies and tables below. The indices
 of rows are given by the console doors (N2 «Versions»): the element `configured`, `GET` of a table row, a tombstone — `?deleted=1&about=`; `GET /{rows}` reads the heartbeats. The store door stayed where the scenario looks at the row itself. The replay key is by the dictionary: the runner sets its own, `@key(N)` repeats it, `@nokey` removes it.
 
-## Versions (ADR-0094 B4)
+## Versions
 
 The stand and an empty store are as in the preparation for bodies and tables below. `GET /{rows}` reads the heartbeats. `$name` of an index in a request header is by the dictionary: the substitution goes into the request whole, the quotes of the value are written by the scenario.
 The dictionary does not combine an expectation of the body and of a header in one cell, so `ETag` is judged by steps with `@header` without a body: whether the header is there and the quote in it. That the value equals the index — by reading; that an index from the body is good for `If-Match` — by a scenario step.
 
 The right `view` on the unit `about`, `row` and the mask without the right — the acceptance P/08.4 and by reading (N5): the stand of the chapter has no grants.
 
-## The feed (ADR-0094 B2)
+## The feed
 
 `GET /changes` (N2 «Change feed», N3 «feed») by an open console, the stand is as in the preparation for bodies and tables below. Each scenario runs **on its own new instance of the console and the store**: the feed remembers the rows of the previous scenario, and an empty store under a live console would give messages about their removal. The controller, the workers and the row reaper do not write, so `changes` is judged whole: the length and the order of the array.
 
@@ -51,9 +51,9 @@ The tick is asynchronous to the write: a message is waited for by `@until`, not 
 
 A change of a grant and of labels, the filter `view` — the acceptance [P/08.4](../../../08-domain/acceptance/4/README.md): the stand of the chapter has no grants. The series `w2c_changes_*` — [the acceptance of 6.5](../5/README.md).
 
-## Preparation and order: bodies, tables, the order row, the worker table, the coverage audit
+## Preparation and order: bodies, tables, the order row, the worker table
 
-The console doors of `testsub` (root) and `testsub2` (mounted, `console2 …` — its doors `/testsub2/…`), the resource `srv-a` (`@start resource`: `GET /{rows}` reads the heartbeats, and the bytes door writes and reads the body through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29), the store (`store …`); without workers, the controller and the domain. The doors and
+The console doors of `testsub` (root) and `testsub2` (mounted, `console2 …` — its doors `/testsub2/…`), the resource `srv-a` (`@start resource`: `GET /{rows}` reads the heartbeats, and the bytes door writes and reads the body through the objects door of the resource of its server), the store (`store …`); without workers, the controller and the domain. The doors and
 directives are `console`, `console2`, `store`, `@start`, `@until`, `@big(N)`, `@raw`, `@header` in an expectation, `@as`, `@restart console`, `ASSERT`.
 
 The stand: the body limit of the console is 1 MiB (the minimum of the norm), the build with schema 1, the object store with
@@ -86,7 +86,7 @@ Content-Type, the special headers and the absence of a body at HEAD/204. In the 
 after a successful match of the whole answer; the following uses compare, the requests use only already bound
 values. A failed attempt of @until does not change the variables. @until repeats the read up to the given local deadline, not
 a mutation; after the expiry — FAIL with the last answer. @any admits any value of a present field, @absent requires
-absence; they do not substitute the types of the full schema. A JSON object is compared by a subset (`{}` at any level is exactly an empty object: the dictionary of the common README, ACC-EMPTY-OBJECT-01), an array — by the length and the order.
+absence; they do not substitute the types of the full schema. A JSON object is compared by a subset (`{}` at any level is exactly an empty object: the dictionary of the common README), an array — by the length and the order.
 
 Reconcile the reference holds not only for the existence of the lesson: its N1.3 is in the norms of [P/03.2](../../../03-worker/spec/03.2-worker.norms.md)
 and sets the form of the slot without server, plus by. Reconcile the other references of the key layout with the concrete
@@ -94,14 +94,14 @@ owner form; the presence of a file does not prove the correctness of the referen
 
 ## Checks outside the sequential HTTP file
 
-The status of all the checks of the README outside `scenarios.tsv` (this section, «Additional checks», the counterexamples of runs) is
+The status of all the checks of the README outside `scenarios.tsv` (judge-only: checking material outside M) (this section, «Additional checks», additional examples) is
 «checked by reading»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
 with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.
 
-The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
+The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (judge-only: checking material outside M).
 
-## Additional check of the class of errors of run 36 (Kimi)
+## Additional checks
 
 By reading, check the term of completed HTTP<500 of not less than a day and the conservative recovery of the observation; the TSV is short and does not observe a day. (NameOnAnotherBox and the alarm `worker.name_taken` are the acceptance of chapter P/03.2.)
 

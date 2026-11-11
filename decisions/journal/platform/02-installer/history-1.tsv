@@ -1,0 +1,244 @@
+req_id	file	source	date	removed
+-	spec/02.1-installer.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.1-installer.norms.md#intro	ADR-0080	2026-10-13	; ADR-0080
+-	spec/02.1-installer.norms.md#intro	ADR-0083	2026-10-18	 — ADR-0083
+-	spec/02.1-installer.norms.md#intro	ADR-0092	2026-10-27	 (ADR-0092)
+-	spec/02.1-installer.norms.md#intro	move from M10/2, stage B; ADR-0083 addendum (1)	2026-10-18	is moved from M10/2 (stage B, ADR-0083 addendum (1): without a change of behaviour):
+-	spec/02.1-installer.norms.md#intro	move from M10/7	2026-10-20	 of M10/7
+-	spec/02.1-installer.norms.md#intro	move from M11/5, M11/7, M11/11	2026-10-19	 from M11/5, M11/7, M11/11
+-	spec/02.1-installer.norms.md#intro	move from M10/2: numbering of subsections	2026-10-19	 The numbers of subsections are the former numbers of M10/2.
+-	spec/02.1-installer.norms.md#intro	moves of lessons 8–10 from M11	2026-10-20	; «M11/N» is a source lesson of M11 (removed by the moves of lessons 8–10; new addresses — id-map)
+-	spec/02.1-installer.norms.md#N1.1	ADR-0092 items 2–4, addendum (2)	2026-10-27	 (ADR-0092 items 2–4, addendum (2))
+-	spec/02.1-installer.norms.md#N1.1	JSON Schema pilot	2026-10-19	; added by the JSON Schema pilot
+-	spec/02.1-installer.norms.md#N1.1	ADR-0092 item 4	2026-10-27	 (ADR-0092 item 4)
+-	spec/02.1-installer.norms.md#N1.1	ADR-0092 item 4	2026-10-27	 (ADR-0092 item 4)
+-	spec/02.1-installer.norms.md#N1.1	finding V7-FLOW-DASH-01	2026-10-28	; V7-FLOW-DASH-01
+-	spec/02.1-installer.norms.md#N1.1	Architect's decision 2026-10-28 on ADR-0092 addendum (1)	2026-10-28	decision of the Architect of 2026-10-28 on ADR-0092 addendum (1), 
+-	spec/02.1-installer.norms.md#N1.1	ADR-0092 item 3; Architect's decision 2026-10-28 on ADR-0092 addendum (1)	2026-10-28	 (ADR-0092 item 3: 11 deviations of the former norm are removed, deviation 12 — the trailing comma in a flow — by the Architect's decision of 2026-10-28 on ADR-0092 addendum (1), yaml-test-suite UDR7)
+-	spec/02.1-installer.norms.md#N1.1	experience of the text layer	2026-10-19	 (added by the experience of the text layer)
+-	spec/02.1-installer.norms.md#N1.2	ADR-0092 item 8	2026-10-27	ADR-0092 item 8; 
+-	spec/02.1-installer.norms.md#N1.2a	ADR-0092 Confirmation	2026-10-27	 (ADR-0092 Confirmation)
+-	spec/02.1-installer.norms.md#N1.2b	move from M11/5, M11/7, M11/11	2026-10-19	 Moved from M11/5 N1.1, M11/7 N1.1, M11/11 N1.1 and the refusal `domain.witness.member_field` of M11/11 N1.8.
+-	spec/02.1-installer.norms.md#N1.3	ADR-0091 item 3	2026-10-22	; ADR-0091 item 3
+-	spec/02.1-installer.norms.md#N1.3	VMS request № 1; Architect's decision 2026-10-23	2026-10-23	 (VMS request № 1, the Architect's decision of 2026-10-23)
+-	spec/02.1-installer.norms.md#N1.3a	move from M10/7 (N1.1 secret_field, N1.4 never)	2026-10-19	Moved from M10/7 (N1.1 `secret_field`, N1.4 `never` — the loader's part)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0094 B1; ADR-0091 addendum (30)	2026-10-29	ADR-0094 B1, ADR-0091 addendum (30); 
+-	spec/02.1-installer.norms.md#N1.4	ADR-0095	2026-10-30	ADR-0095, 
+-	spec/02.1-installer.norms.md#N1.4	ADR-0094 addendum (12) item 12	2026-10-30	 (ADR-0094 addendum (12) item 12)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (26) item 2	2026-10-23	 (ADR-0091 addendum (26) item 2)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 items 4, 5; ADR-0091 addendum (2) item 4	2026-10-23	 (ADR-0091 items 4, 5, addendum (2) item 4)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (4)–(6)	2026-10-23	; ADR-0091 addendum (4)–(6)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0115 addendum (19)	2026-11-03	 — ADR-0115 addendum (19)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (14) item 1	2026-10-23	; ADR-0091 addendum (14) item 1
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (7)–(9), (14)	2026-10-23	 (ADR-0091 addendum (7)–(9), (14))
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (14) item 1	2026-10-23	; ADR-0091 addendum (14) item 1
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (17) item 5	2026-10-23	 (ADR-0091 addendum (17) item 5)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	 (ADR-0091 addendum (2) item 1, addendum (3) item 4)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 items 2, 3	2026-10-22	; ADR-0091 items 2, 3
+-	spec/02.1-installer.norms.md#N1.4	Architect's decision on ADR-0127, P/06 C3	2026-11-05	 (the Architect's ADR-0127 P/06 C3 decision)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 item 1 (wording of the removed former condition)	2026-10-22	no longer requires
+-	spec/02.1-installer.norms.md#N1.4	ADR-0091 item 1; ADR-0067 addendum 2026-10-10	2026-10-22	 (rules 46–47 in the former numbering, before ADR-0091, are removed, the amendment of ADR-0067 addendum 2026-10-10 by the decision of ADR-0091 item 1)
+-	spec/02.1-installer.norms.md#N1.4	ADR-0094 step 3b	2026-10-29	 (ADR-0094 step 3b)
+-	spec/02.1-installer.norms.md#N1.4	Architect's decision 2026-10-31	2026-10-31	; the Architect's decision of 2026-10-31
+-	spec/02.1-installer.norms.md#N3	ADR-0092	2026-10-27	 (ADR-0092)
+-	spec/02.1-installer.norms.md#N3	corpus of chapter 2.1	2026-10-19	 (added by the corpus of chapter 2.1)
+-	spec/02.1-installer.norms.md#N3	ADR-0091 addendum (26) item 2	2026-10-23	 (ADR-0091 addendum (26) item 2)
+-	spec/02.1-installer.norms.md#N3	ADR-0091 addendum (26) item 1	2026-10-23	; addendum (26) item 1
+-	spec/02.1-installer.norms.md#N3	ADR-0091 item 1; G-8, Architect's clarification 2026-10-22	2026-10-22	 (ADR-0091 item 1; `G-8` — the Architect's clarification of 2026-10-22)
+-	spec/02.1-installer.norms.md#N3	ADR-0091 item 5	2026-10-22	 (ADR-0091 item 5)
+-	spec/02.1-installer.norms.md#N3	ADR-0091 addendum (14) item 1, addendum (17) item 5	2026-10-23	; ADR-0091 addendum (14) item 1, addendum (17) item 5
+-	spec/02.1-installer.norms.md#N3	ADR-0094 B1	2026-10-29	 (ADR-0094 B1)
+-	spec/02.1-installer.norms.md#N3	ADR-0112 addendum (3) item 2	2026-11-02	 (ADR-0112 addendum (3) item 2)
+-	spec/02.1-installer.norms.md#N3	ADR-0113 addendum (9) item 1	2026-11-02	 (ADR-0113 addendum (9) item 1)
+-	spec/02.1-installer.norms.md#N4	ADR-0092 item 5	2026-10-27	 (ADR-0092 item 5)
+-	spec/02.1-installer.norms.md#N4	reconciliation of python and go	2026-10-18	 is as python and go were reconciled on 2026-10-18
+-	spec/02.1-installer.norms.md#N4	experience of the text layer	2026-10-19	 (added by the experience of the text layer)
+-	spec/02.1-installer.norms.md#N4	JSON Schema pilot	2026-10-19	 (added by the JSON Schema pilot)
+-	spec/02.1-installer.norms.md#N4	pilot of variant C, P4	2026-10-19	 (added by the pilot of variant C, P4)
+-	spec/02.1-installer.norms.md#N4	corpus of chapter 2.1	2026-10-19	 (added by the corpus of chapter 2.1)
+-	spec/02.1-installer.norms.md#N4	corpus of chapter 2.1	2026-10-19	 (added by the corpus of chapter 2.1)
+-	spec/02.1-installer.norms.md#N4	pilot of variant C, P3	2026-10-19	 (added by the pilot of variant C, P3)
+-	spec/02.1-installer.norms.md#N4	ADR-0092 item 6	2026-10-27	 (ADR-0092 item 6)
+-	spec/02.1-installer.norms.md#N4	ADR-0125 addendum (1) item 5	2026-11-04	 (ADR-0125 addendum (1) item 5)
+-	spec/02.1-installer.norms.md#N5	ADR-0092 item 5	2026-10-27	 (ADR-0092 item 5)
+-	spec/02.1-installer.norms.md#N5	ADR-0092 set B	2026-10-27	 of ADR-0092
+-	spec/02.1-installer.norms.md#N5	ADR-0092 item 5	2026-10-27	 (ADR-0092 item 5)
+-	spec/02.1-installer.norms.md#implementation-decides	guess of stage C C04-MANIFEST-SDK-01; ADR-0087 addendum (12) item 7 (item 4)	2026-10-28	 (the stage C guess C04-MANIFEST-SDK-01, ADR-0087 addendum (12) item 7)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/02.1-installer.norms.md#readiness-checklist	JSON Schema pilot (P/02.1-02)	2026-10-19	 (the JSON Schema pilot)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 addendum (26) item 2 (P/02.1-11)	2026-10-23	, ADR-0091 addendum (26) item 2
+-	spec/02.1-installer.norms.md#readiness-checklist	coverage audit of P/02, the second pass (P/02.1-11)	2026-10-30	 (the coverage audit of P/02, the second pass)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0080 addendum (17) item 2 (P/02.1-12)	2026-10-19	, ADR-0080 addendum (17) item 2
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 (P/02.1-14)	2026-10-22	 — ADR-0091
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0094 B4 (P/02.1-14)	2026-10-29	 — ADR-0094 B4
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 item 1; ADR-0067 (P/02.1-18)	2026-10-22	the conditions of ADR-0067 on `fixed` and `about` are removed by ADR-0091 item 1
+-	spec/02.1-installer.norms.md#readiness-checklist	coverage audit of P/02, B04 (P/02.1-20)	2026-10-30	; the coverage audit of P/02, B04
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 item 1 (P/02.1-30)	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 items 2, 3 (P/02.1-31)	2026-10-22	 (ADR-0091 items 2, 3)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 items 4, 5 (P/02.1-32)	2026-10-22	 (ADR-0091 items 4, 5)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 addendum (2), (3) (P/02.1-33)	2026-10-23	 (ADR-0091 addendum (2), (3))
+-	spec/02.1-installer.norms.md#readiness-checklist	VMS request № 1 (P/02.1-33)	2026-10-23	 (VMS request № 1)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 addendum (4)–(6) (P/02.1-34)	2026-10-23	 (ADR-0091 addendum (4)–(6))
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 addendum (7)–(9), (14) (P/02.1-35)	2026-10-23	 (ADR-0091 addendum (7)–(9), (14))
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0091 addendum (18) item 6 (P/02.1-35)	2026-10-23	 (ADR-0091 addendum (18) item 6)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0094 addendum (1), (3) item 8, (4) item 2, (8) item 2 (P/02.1-36)	2026-10-29	 (ADR-0094 addendum (1), (3) item 8, (4) item 2, (8) item 2)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0094 B1 (P/02.1-38)	2026-10-29	 (ADR-0094 B1)
+-	spec/02.1-installer.norms.md#readiness-checklist	ADR-0095, ADR-0096 (P/02.1-39)	2026-10-30	the new families of ADR-0095, ADR-0096
+-	spec/02.1-installer.norms.md#system-checklist	ADR-0130 Addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)
+-	acceptance/1/README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/1/README.md#intro	ADR-0080	2026-10-13	 (ADR-0080)
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	ADR-0003	2026-10-04	 (ADR-0003)
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	reviews 14 and 15; Architect's verdicts 2026-10-06; move of spec_verdicts.tsv 2026-10-14	2026-10-14	 Origin: the common table `spec_verdicts.tsv` (reviews 14 and 15, the Architect's verdicts of 2026-10-06), moved here on 2026-10-14 with eight new cases; both sides remove the former place in their own windows.
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	ADR-0092 item 6	2026-10-27	 (ADR-0092 item 6)
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	transition to V7 (ADR-0092): former classes	2026-10-28	 The transition to V7: the former classes `name`, `key`, `value` became `form`, `reference` became `relations` (the deltas — the delta table of set «B» of the skill `lesson-spec`).
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	ADR-0092 item 5	2026-10-27	 (ADR-0092 item 5)
+-	acceptance/1/README.md#verdictstsv-classestsv-diagnosticstsv	ADR-0087 addendum (3) R2	2026-10-19	 (ADR-0087 addendum (3) R2)
+-	acceptance/1/README.md#no-installation-sample	review of stage B 1–2, item 13	2026-10-19	 (review of stage B 1–2, item 13)
+-	acceptance/1/README.md#additional-check-of-string-field-names	R36-01, heading	2026-10-16	 (R36-01)
+-	acceptance/1/README.md#additional-inputs	run 37, heading	2026-10-16	 of run 37
+-	acceptance/1/README.md#additional-inputs	run 32	2026-10-16	 of run 32
+-	acceptance/1/README.md#additional-inputs	ADR-0119 addendum (10), (11)	2026-11-03	, ADR-0119 addendum (10), (11)
+-	acceptance/1/README.md#additional-inputs	ADR-0119	2026-11-03	, ADR-0119
+-	acceptance/1/README.md#additional-inputs	ADR-0116 addendum (6)	2026-11-03	, ADR-0116 addendum (6)
+-	acceptance/1/README.md#additional-inputs	ADR-0115	2026-11-03	 of ADR-0115
+-	acceptance/1/README.md#additional-inputs	ADR-0115 addendum (19)	2026-11-03	, addendum (19)
+-	acceptance/1/README.md#additional-inputs	ADR-0098 §9	2026-10-30	 of ADR-0098 §9 —
+-	acceptance/1/README.md#additional-inputs	ADR-0095, ADR-0096	2026-10-30	 of ADR-0095, ADR-0096 —
+-	acceptance/1/README.md#additional-inputs	ADR-0094 B1	2026-10-29	, ADR-0094 B1
+-	acceptance/1/README.md#additional-inputs	ADR-0094 B2	2026-10-29	, ADR-0094 B2
+-	acceptance/1/README.md#additional-inputs	ADR-0094 B4	2026-10-29	 of ADR-0094 B4 —
+-	acceptance/1/README.md#additional-inputs	ADR-0094 step 3b	2026-10-29	 of ADR-0094 step `3b` —
+-	acceptance/1/README.md#additional-inputs	ADR-0094 B7	2026-10-29	 of ADR-0094 B7 —
+-	acceptance/1/README.md#additional-inputs	coverage audit of P/02	2026-10-30	 of the coverage audit P/02 of 2026-10-30 —
+-	acceptance/1/README.md#additional-inputs	ADR-0092, transition to V7	2026-10-27	 of ADR-0092 at the transition to V7
+-	acceptance/1/README.md#additional-inputs	ADR-0092 (the comment of set B)	2026-10-27	«Set B ADR-0092»
+-	acceptance/1/README.md#additional-inputs	transition to V7: deltas of the former cases	2026-10-28	; the deltas of the former cases (12 deviations of N1.1 from YAML 1.2.2 — the 12th is a trailing comma in a flow, `t33`, `t33b`; TAB and `{k:}`, the integer `4.0`, classes by layer) — the delta table of set «B» of the skill `lesson-spec`
+-	acceptance/1/README.md#additional-inputs	ADR-0092 item 7	2026-10-27	 (ADR-0092 item 7)
+-	acceptance/1/README.md#additional-inputs	C06-METRICS-DSL-33-01	2026-10-25	 per C06-METRICS-DSL-33-01
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (24) item 5	2026-10-23	 per ADR-0091 addendum (24) item 5
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (14) item 1	2026-10-23	 per ADR-0091 addendum (14) item 1
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (10) item 1	2026-10-23	 per ADR-0091 addendum (10) item 1
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (7), (8)	2026-10-23	 per ADR-0091 addendum (7), (8)
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (4), (5)	2026-10-23	 per ADR-0091 addendum (4), (5)
+-	acceptance/1/README.md#additional-inputs	ADR-0091 addendum (2), (3); VMS request № 1	2026-10-23	 per ADR-0091 addendum (2), (3) and VMS request № 1
+-	acceptance/1/README.md#additional-inputs	ADR-0091	2026-10-22	ADR-0091 without replay protection: 
+-	acceptance/1/README.md#additional-inputs	ADR-0091 item 1: rules 46–47 removed	2026-10-22	three former refusals of delete_after with fixed and about — now ok, rules 46–47 removed
+-	acceptance/1/README.md#additional-inputs	ADR-0086 addendum (1) R3	2026-10-19	, ADR-0086 addendum (1) R3
+-	acceptance/1/README.md#additional-inputs	Architect's decision 2026-10-20	2026-10-20	, the Architect's decision of 2026-10-20
+-	acceptance/1/README.md#additional-inputs	decisions of the log digest at the transition to the form source	2026-10-19	 — the decisions of the log digest at the transition to the form source
+-	acceptance/1/README.md#additional-inputs	log digest T15	2026-10-19	 (T15)
+-	acceptance/1/README.md#additional-inputs	log digest T16	2026-10-19	T16; 
+-	acceptance/1/README.md#additional-inputs	review of stage B 1–2, item 7	2026-10-19	 — review of stage B 1–2, item 7
+-	acceptance/1/README.md#additional-inputs	log digest T28	2026-10-19	 (T28)
+-	acceptance/1/README.md#additional-inputs	log digest F1	2026-10-19	 (F1)
+-	acceptance/1/README.md#additional-inputs	log digest F12	2026-10-19	 (F12)
+-	acceptance/1/README.md#additional-inputs	log digest F15	2026-10-19	 (F15)
+-	acceptance/1/README.md#additional-inputs	ADR-0087 addendum (1) R10	2026-10-19	, ADR-0087 addendum (1) R10
+-	acceptance/1/README.md#additional-inputs	ADR-0085: former row numbering	2026-10-19	, the former row numbering of the pair ADR-0085
+-	acceptance/1/README.md#additional-inputs	findings of the corpus F1	2026-10-19	 — findings of the corpus F1
+-	acceptance/1/README.md#additional-inputs	log digest, ADR-0087 addendum (3)	2026-10-19	 — cases of the log digest, addendum (3)
+-	acceptance/1/README.md#additional-inputs	experience of the text layer	2026-10-19	 — the experience of the text layer of 2026-10-19
+-	acceptance/1/README.md#additional-inputs	pilot of variant C	2026-10-19	 — the pilot of variant C of 2026-10-19
+-	acceptance/1/README.md#additional-inputs	JSON Schema pilot	2026-10-19	 — the JSON Schema pilot of 2026-10-19: findings
+-	acceptance/1/README.md#additional-inputs	reconciliation of python and go	2026-10-18	 — the reconciliation of python and go of 2026-10-18
+-	acceptance/1/README.md#additional-inputs	move from M11/5	2026-10-19	 (from M11/5)
+-	acceptance/1/README.md#additional-inputs	analysis of review of stage A 8–10, № 42	2026-10-20	, review analysis of stage A 8–10, № 42
+-	acceptance/1/README.md#additional-inputs	move from M11/7	2026-10-19	 (from M11/7)
+-	acceptance/1/README.md#additional-inputs	move from M11/9 N1.7, N1.8	2026-10-19	 M11/9 N1.7, N1.8
+-	acceptance/1/README.md#additional-inputs	move from M11/11	2026-10-19	 (from M11/11)
+-	acceptance/1/README.md#additional-inputs	history of diagnostics.tsv: reconciliation of python and go, JSON Schema pilot, log digest, transition to V7	2026-10-28	 (the transition to V7 removed the row of a case that became ok; 14 former ones, 22 of the reconciliation of python and go, 4 of the JSON Schema pilot — the path of rules on two keys, 8 c8_* and 4 c9_* of the log digest)
+-	acceptance/1/README.md#additional-inputs	history of classes.tsv: ADR-0054 addendum, mutation check, JSON Schema pilot, c8, review of stage A 2, ADR-0091 and its addenda (2)–(10), VMS request № 1, transition to V7	2026-10-28	the class of the same 36 cases `c4_display_fields_quoted_numeric_key` and `display_options_bool_plain_key` (38) (since 2026-10-17 — four requests_outcome_*, ADR-0054 addendum; 39 m49_* of the mutation check: each forbidden table name, the boundary 2^53; the JSON Schema pilot of 2026-10-19 — 26 more: 20 refusals c5_*, `requests_key_stray_brace` — `value`, `c4_flow_empty_item` — `text` and four diagnostics cases of rules on two keys; c8 of 2026-10-19 — 65 more; review of stage A 2 — 10 profile_*_key_* with the class `text` per N1.1 keys — c9 — 4 more; the class `name` — `name_reserved_platform`, for the sample of `manifest put` by classes; ADR-0091 — 21 more, `c8_ref47` removed from the classes; ADR-0091 addendum (2), (3) and VMS request № 1 — 9 more; ADR-0091 addendum (4), (5) — 10 more; addendum (7), (8) — 5 more; addendum (10) — 2 more; 201 rows in all; the transition to V7 — classes by the layer `text`, `form`, `relations` and the cases of set «B»: 236 rows)
+-	acceptance/1/README.md#additional-inputs	K37-03	2026-10-16	 K37-03
+-	acceptance/1/README.md#the-error-class	R37 (Codex), heading	2026-10-16	 R37 (Codex)
+-	acceptance/1/README.md#the-error-class	ADR-0130 Addendum (19) item 7	2026-11-10	 (ADR-0130 Addendum (19) item 7)
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	K38, heading	2026-10-16	 (K38)
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	ADR-0086 addendum (1) R3	2026-10-19	 (k38_sub_manifest — per ADR-0086 addendum (1) R3)
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	ADR-0096	2026-10-30	 (ADR-0096)
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	ADR-0098	2026-10-30	 of ADR-0098
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	R38-02	2026-10-17	R38-02: three
+-	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	R39-03, heading	2026-10-17	 (R39-03)
+-	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	A39-01	2026-10-17	 of the class A39-01
+-	spec/02.1-installer.schema.json#/properties/unit/properties/state/description	ADR-0091 item 3	2026-10-22	 (ADR-0091 item 3)
+-	spec/02.1-installer.schema.json#/properties/unit/properties/writes_via/description	ADR-0119 addendum (10), (11)	2026-11-03	, ADR-0119 addendum (10), (11)
+-	spec/02.1-installer.schema.json#/properties/events/properties/kinds/description	ADR-0115 addendum (3) item 6, addendum (4) item 2	2026-11-03	 (ADR-0115 addendum (3) item 6, addendum (4) item 2)
+-	spec/02.1-installer.schema.json#/properties/worker/properties/exec/description	ADR-0091 addendum (4), (5)	2026-10-23	 (ADR-0091 addendum (4), (5))
+-	spec/02.1-installer.schema.json#/properties/worker/properties/deletes/description	ADR-0067 addendum 2026-10-17	2026-10-17	 (ADR-0067 addendum 2026-10-17)
+-	spec/02.1-installer.schema.json#/properties/worker/properties/creates/description	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.1-installer.schema.json#/properties/worker/properties/stop_timeout/description	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	 (ADR-0091 addendum (2) item 1, addendum (3) item 4)
+-	spec/02.1-installer.schema.json#/properties/shares/description	ADR-0091 item 5	2026-10-22	 (ADR-0091 item 5)
+-	spec/02.1-installer.schema.json#/properties/shares/additionalProperties/properties/part/description	ADR-0091 addendum (2) item 4	2026-10-23	 (ADR-0091 addendum (2) item 4)
+-	spec/02.1-installer.schema.json#/properties/parts/description	ADR-0091 item 5	2026-10-22	 (ADR-0091 item 5)
+-	spec/02.1-installer.schema.json#/properties/parts/additionalProperties/properties/exec/description	ADR-0091 addendum (5) item 2	2026-10-23	 (ADR-0091 addendum (5) item 2)
+-	spec/02.1-installer.schema.json#/properties/parts/additionalProperties/properties/volumes/description	ADR-0091 item 4	2026-10-22	 (ADR-0091 item 4)
+-	spec/02.1-installer.schema.json#/properties/parts/additionalProperties/properties/stop_timeout/description	ADR-0091 addendum (2) item 1, addendum (3) item 4	2026-10-23	; ADR-0091 addendum (2) item 1, addendum (3) item 4
+-	spec/02.1-installer.schema.json#/properties/door/properties/routes/description	Architect's decision 2026-10-20	2026-10-20	; the Architect's decision of 2026-10-20
+-	spec/02.1-installer.schema.json#/properties/door/properties/routes/description	ADR-0091 addendum (7), (8), (14)	2026-10-23	; ADR-0091 addendum (7), (8), (14)
+-	spec/02.1-installer.schema.json#/properties/door/properties/routes/items/allOf/1/then/properties/domain/description	ADR-0091 addendum (14) item 1	2026-10-23	; ADR-0091 addendum (14) item 1
+-	spec/02.1-installer.schema.json#/properties/door/properties/routes/items/allOf/1/then/properties/rank/description	ADR-0115 addendum (19) item 1	2026-11-03	 (ADR-0115 addendum (19) item 1)
+-	spec/02.1-installer.schema.json#/properties/console/properties/files/items/description	ADR-0094 addendum (4) item 2, addendum (8) item 2	2026-10-29	 (ADR-0094 addendum (4) item 2, addendum (8) item 2)
+-	spec/02.1-installer.schema.json#/$defs/book/properties/key/description	review of stage A 8–10, № 42; Architect's decision 2026-10-20	2026-10-20	 (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)
+-	spec/02.1-installer.schema.json#/$defs/book/properties/to/description	review of stage A 8–10, № 42; Architect's decision 2026-10-20	2026-10-20	 (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)
+-	spec/02.1-installer.schema.json#/$defs/book/properties/stale/description	ADR-0113 addendum (31)–(33)	2026-11-02	; ADR-0113 addendum (31)–(33)
+-	spec/02.1-installer.schema.json#/$defs/display/properties/fields/description	ADR-0115 addendum (3) item 3	2026-11-03	 (ADR-0115 addendum (3) item 3)
+-	spec/02.1-installer.schema.json#/$defs/display/properties/options/description	ADR-0115 addendum (4) item 1	2026-11-03	 (ADR-0115 addendum (4) item 1)
+-	spec/02.1-installer.schema.json#/$defs/display/properties/tables/description	ADR-0115 addendum (11)	2026-11-03	 (ADR-0115 addendum (11))
+-	spec/02.1-installer.schema.json#/$defs/execLine/description	ADR-0091 addendum (5) item 2	2026-10-23	 (ADR-0091 addendum (5) item 2)
+-	spec/02.1-installer.schema.json#/$defs/jsonSchemaLite/description	review of stage A 6–7, № 11	2026-10-20	 (review of stage A 6–7, № 11)
+-	spec/02.1-installer.schema.json#/$defs/label/description	ADR-0115 addendum (2) item 3	2026-11-03	 (ADR-0115 addendum (2) item 3)
+-	spec/02.1-installer.schema.json#/$defs/langs/description	ADR-0115 addendum (2) item 3	2026-11-03	 (ADR-0115 addendum (2) item 3)
+-	spec/02.1-installer.schema.json#/$defs/passCall/description	ADR-0116 addendum (6)	2026-11-03	 (ADR-0116 addendum (6))
+-	spec/02.1-installer.schema.json#/$defs/passCall/description	ADR-0119	2026-11-03	 (ADR-0119)
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/affinity/properties/exclusive/description	ADR-0091 addendum (9) item 6, addendum (10) items 1–2	2026-10-23	; ADR-0091 addendum (9) item 6, addendum (10) items 1–2
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/grows/description	ADR-0084	2026-10-19	 (ADR-0084)
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/retire_when/properties/state/description	ADR-0091 item 3	2026-10-22	 (ADR-0091 item 3)
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/retire_when/properties/delete_after/description	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/ends/description	ADR-0091 item 2	2026-10-22	 (ADR-0091 item 2)
+-	spec/02.1-installer.schema.json#/$defs/placement/properties/unplaced/properties/delete_after/description	ADR-0091 item 1	2026-10-22	 since ADR-0091 item 1
+-	spec/02.1-installer.schema.json#/$defs/requests/properties/outcome/description	ADR-0054 addendum 2026-10-17	2026-10-17	, ADR-0054 addendum 2026-10-17
+-	spec/02.1-installer.schema.json#/$defs/requests/properties/elsewhere/description	Architect's decision; review of stage B 6–7, № 17	2026-10-20	 (the Architect's decision, review of stage B 6–7, № 17)
+-	spec/02.1-installer.schema.json#/$defs/rights/properties/reach/properties/requests/description	Architect's decision; review of stage B 6–7, № 17	2026-10-20	 (the Architect's decision, review of stage B 6–7, № 17)
+-	spec/02.1-installer.schema.json#/$defs/subName/description	ADR-0091 addendum (24) item 5	2026-10-23	; ADR-0091 addendum (24) item 5
+-	spec/02.1-installer.schema.json#/$defs/table/properties/writes_via/description	ADR-0119 addendum (10), (11)	2026-11-03	, ADR-0119 addendum (10), (11)
+-	spec/02.1-installer.schema.json#/$defs/tableField/properties/hidden/description	ADR-0115 item 2.2	2026-11-03	 (ADR-0115 item 2.2)
+-	spec/02.1-installer.schema.json#/$defs/tableField/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
+-	spec/02.1-installer.schema.json#/$defs/tableField/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
+-	spec/02.1-installer.schema.json#/$defs/token/properties/keep/description	ADR-0110 addendum (9)	2026-11-01	; ADR-0110 addendum (9)
+-	spec/02.1-installer.schema.json#/$defs/unitField/properties/hidden/description	ADR-0115 item 2.2	2026-11-03	 (ADR-0115 item 2.2)
+-	spec/02.1-installer.schema.json#/$defs/unitField/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
+-	spec/02.1-installer.schema.json#/$defs/unitField/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
+-	spec/02.1-installer.schema.json#/$defs/unitFields/propertyNames/description	ADR-0115 addendum (4) item 1	2026-11-03	 (ADR-0115 addendum (4) item 1)
+-	spec/02.1-installer.relations.json#/rows/45/norm	ADR-0067	2026-10-07	ADR-0067; 
+-	spec/02.1-installer.relations.json#/rows/63/norm	ADR-0115 addendum (4) item 1	2026-11-03	; ADR-0115 addendum (4) item 1
+-	spec/02.1-installer.relations.json#/rows/64/norm	ADR-0115 addendum (4) item 1	2026-11-03	; ADR-0115 addendum (4) item 1
+-	spec/02.1-installer.relations.json#/rows/65/norm	ADR-0115 addendum (4) item 1	2026-11-03	; ADR-0115 addendum (4) item 1
+-	spec/02.1-installer.relations.json#/rows/66/norm	ADR-0115 addendum (4) item 1	2026-11-03	; ADR-0115 addendum (4) item 1
+-	spec/02.1-installer.relations.json#/rows/72/norm	ADR-0054	2026-10-06	; ADR-0054
+-	spec/02.1-installer.relations.json#/rows/83/norm	ADR-0067	2026-10-07	; ADR-0067
+-	spec/02.1-installer.relations.json#/rows/121/norm	ADR-0094 step 3b; Architect's decision 2026-10-31	2026-10-31	ADR-0094 step 3b; the Architect's decision of 2026-10-31
+-	spec/02.1-installer.relations.json#/rows/122/norm	ADR-0094 step 3b; Architect's decision 2026-10-31	2026-10-31	ADR-0094 step 3b; the Architect's decision of 2026-10-31
+-	spec/02.1-installer.relations.json#/rows/123/norm	ADR-0094 B1	2026-10-29	ADR-0094 B1; 
+-	spec/02.1-installer.relations.json#/rows/124/norm	ADR-0094 B1	2026-10-29	ADR-0094 B1; 
+-	spec/02.1-installer.relations.json#/rows/125/norm	ADR-0094 B1	2026-10-29	ADR-0094 B1; 
+-	spec/02.1-installer.relations.json#/rows/126/norm	ADR-0094 B1	2026-10-29	ADR-0094 B1; 
+-	spec/02.1-installer.relations.json#/rows/127/norm	ADR-0094 B1	2026-10-29	ADR-0094 B1; 
+-	spec/02.1-installer.relations.json#/rows/128/norm	ADR-0095 §8	2026-10-30	ADR-0095 §8; 
+-	spec/02.1-installer.relations.json#/rows/129/norm	ADR-0095 §8	2026-10-30	ADR-0095 §8; 
+-	spec/02.1-installer.relations.json#/rows/130/norm	ADR-0095 §8	2026-10-30	ADR-0095 §8; 
+-	spec/02.1-installer.relations.json#/rows/131/norm	ADR-0095 §8	2026-10-30	ADR-0095 §8; 
+-	spec/02.1-installer.relations.json#/rows/152/norm	ADR-0110 addendum (16) item 3	2026-11-02	ADR-0110 addendum (16) item 3
+-	spec/02.1-installer.relations.json#/rows/153/norm	ADR-0113 addenda (31)–(33)	2026-11-02	ADR-0113 addenda (31)–(33); 
+-	spec/02.1-installer.relations.json#/rows/154/norm	ADR-0115 addendum (6) item 3	2026-11-03	ADR-0115 addendum (6) item 3; 
+-	spec/02.1-installer.relations.json#/rows/155/norm	ADR-0115 addendum (11)	2026-11-03	ADR-0115 addendum (11); 
+-	spec/02.1-installer.relations.json#/rows/156/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
+-	spec/02.1-installer.relations.json#/rows/157/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
+-	spec/02.1-installer.relations.json#/rows/158/norm	ADR-0127 P/06 C3	2026-11-05	ADR-0127 P/06 C3; 
+-	spec/02.1-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
+-	acceptance/1/README.md#no-installation-sample	the former SHOULD sample of the corpus	2026-11-11	former 
+-	acceptance/1/README.md#additional-inputs	fix of the lease background of the corpus	2026-10-16	is fixed: the string off is written
+-	acceptance/1/README.md#additional-inputs	history of the corpus: kept mutations and verdicts, the former refusal	2026-10-19	The target mutations and 9/39 verdicts are kept, but the former refusal
+-	acceptance/1/README.md#additional-inputs	history of the corpus: new cases	2026-10-19	new 
+-	acceptance/1/README.md#additional-inputs	history of the corpus: the key moved from profile_unit_key_quoted_ok	2026-11-03	 — the former key `'1.5'` of the case `profile_unit_key_quoted_ok`, there it is replaced with `'1e5'`
+-	acceptance/1/README.md#additional-inputs	history of the corpus: worker.exec appended to the manifests	2026-10-23	the key is appended mechanically to all other manifests of the corpus, the verdicts and classes are the former ones, the line numbers of the diagnostics are shifted at blob_default and status_worker
+-	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	history of the corpus: the former 251 inputs	2026-10-19	; all the former 251 inputs are unchanged
+-	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	history of the corpus: the former scalar case	2026-10-17	The former scalar is kept as

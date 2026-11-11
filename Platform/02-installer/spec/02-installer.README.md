@@ -1,6 +1,6 @@
 # P/02 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/02-installer.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/02-installer.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/02-installer.md` (for people, not in the export).
 
@@ -16,7 +16,7 @@ rights from the manifest catalogue (chapter 2.5). Pass the N5 acceptance of the 
 - **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of N1.1 (sugar, defaults, the steps P1–P5,
   `ordered`, JCS), the view row of N1.2 and the write of `manifest put` per N3 — the view before the write, above the ceiling — a refusal as a whole, the order
   row — view — mark. Pass the vectors [`canonical`](../vectors/canonical/README.md) byte for byte and the acceptance of the chapter
-  [`acceptance/2/`](../acceptance/2/README.md) (window 2.2, item 8: vectors and acceptance).
+  [`acceptance/2/`](../acceptance/2/README.md).
 - **2.3.** Reading and changing a manifest in the store per N1.5 and N3 of [chapter 2.3](02.3-installer.norms.md); close its
   [readiness checklist](02.3-installer.norms.md#readiness-checklist).
 - **2.4.** Prepare the processes/units, the runner, the installer and the operator procedures of N1 of [chapter 2.4](02.4-installer.norms.md).
@@ -34,13 +34,13 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | File | Role | Priority |
 |---|---|---|
 | [02.1-installer.norms.md](02.1-installer.norms.md) | the canon of chapter 2.1: text, document, fields, references, loading passes, refusals and the corpus | 1 |
-| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the V7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
+| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the V7 layers](../../common/LAYERS.md) | the form source of chapter 2.1: standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
 | [02.3-installer.norms.md](02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
 | [02.4-installer.norms.md](02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
 | [02.5-installer.norms.md](02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
-| [The acceptance README of chapter 2.1](../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/` | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
-| [The acceptance README of chapter 2.3](../acceptance/3/README.md), `puts.tsv`, `puts/` | the installations of `manifest put` | 3 — check the canon, do not add to it |
-| [The acceptance README of chapter 2.5](../acceptance/5/README.md), `scenarios.tsv`, `variants/`; the stand — [the common README](../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.1](../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/` (judge-only: the corpus of chapter 2.1; it checks the items P/02.1-01…40 that name its cases, `classes.tsv` — P/02.1-10) | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.3](../acceptance/3/README.md), `puts.tsv`, `puts/` (judge-only: the installation sequences of chapter 2.3; they check P/02.3-01, P/02.3-05, P/02.1-11, P/02.1-20, P/02.1-30, P/02.1-32, P/02.1-35, P/02.1-36, P/02.1-38, P/02.4-17 and P/02.4-19) | the installations of `manifest put` | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.5](../acceptance/5/README.md), `scenarios.tsv`, `variants/` (judge-only: the scenarios and variants of chapter 2.5; they check the items P/02.5-01…06 that name them); the stand — [the common README](../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
 | [The vectors of the workers script](../vectors/workers-script/README.md) | rules 2–4 of the workers script (chapter 2.4 N1.5) | 3 |
 | [The vectors of the exec command line](../vectors/exec/README.md) | argv of `worker.exec`, `parts.<part name>.exec` (chapter 2.1 `execLine`) | 3 |
 | [The vectors of the installation order](../vectors/install-order/README.md) | the order of `manifest put` of the primary installation (chapter 2.4 N1.7 `order`) | 3 |
@@ -67,7 +67,7 @@ Chapter 2.1:
 2. **Loading of a catalogue** with the checks of `worker.requests` and `placement.near` per N3. The acceptance of one file
    does not substitute for the catalogue check; neighbouring manifests not named by the table are not added to the table runner.
 3. **A run of the common table** by the regular loading path according to the acceptance README. The installation is judged separately, by `puts.tsv` of chapter 2.3
-   (N5); the corpus is not run through `manifest put`.
+   (N5; judge-only: the installation sequences of chapter 2.3; they check P/02.3-01 and P/02.3-05); the corpus is not run through `manifest put`.
 
 Chapter 2.3:
 
@@ -95,7 +95,7 @@ For all chapters:
 
 ## Order of work
 
-The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-0126): goals, gates, weights, kit parts and dependencies. This is a possible plan, not an additional behavior norm. The advice below complements the table; the readiness checklists keep the obligations that need reading, OS installation or a multi-process stand.
+The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv): goals, gates, weights, kit parts and dependencies. This is a possible plan, not an additional behavior norm. The advice below complements the table; the readiness checklists keep the obligations that need reading, OS installation or a multi-process stand.
 
 ### Chapters 2.1 and 2.3 — the manifest
 
@@ -106,9 +106,9 @@ The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-012
    the conversion into a mapping before the library loses this information; one document — by bytes.
 3. *(2.1)* Carry out the loading pass of N3 by layers: text → form (the JSON Schema 2020-12 schema and the words `x-*`, the integer place —
    layer 2) → relations (CEL, only with a clean form). Filling the defaults does not hide an erroneous input.
-4. *(2.1)* Run `verdicts.tsv`: one file — one load. Compare the set of files with the table;
+4. *(2.1)* Run `verdicts.tsv` (judge-only: the corpus table; it checks the items P/02.1-01…40 that name its cases): one file — one load. Compare the set of files with the table;
    count a refusal by the rules of the README, not by any exception or non-zero process code.
-   Compare the class of `classes.tsv`; the paths and lines of `diagnostics.tsv` are a hint in the report without a failure (ADR-0092 item 5).
+   Compare the class of `classes.tsv`; the paths and lines of `diagnostics.tsv` are a hint in the report without a failure (judge-only: `classes.tsv` checks P/02.1-10, the hints of `diagnostics.tsv` accompany P/02.1-01, P/02.1-03 and P/02.1-10).
 5. *(2.1 — catalogue; 2.3 — storage and change)* Check the catalogue, then the storage and the change of a manifest: a repeated installation without changes, a `cas` conflict,
    a lagging and a missing mark, all the reasons for a start refusal of N4 (including an unconfirmed read of the row/mark and a mismatch of the embedded manifest), a start between two writes of the installer, `toolarge` of the main row
    before the write of the mark. For the catalogue, do not ascribe to the read an atomic snapshot or a mandatory refusal on any
@@ -118,10 +118,10 @@ The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-012
 
 1. Match the roles, groups, directories, permissions, sockets and environment to each row of N1.1–N1.2. Check the priority of values and the absence of source for data; do not count After as readiness (N3).
 2. Design the preliminary check and the write points of the installer. Force a refusal at each phase: before the write there are no changes, after the start a partial result with diagnostics is admissible and without enable/start of new services (N1.7).
-3. Check the script of workers on order: budgets, reservation before start, numbers 2…99 (start of the smallest, stop of the largest), no series — nothing, an unknown outcome of a start and a stale console, polkit start/stop of the full names of its own server (ADR-0084). Certificates — a separate test CA, revocation before concluding a full cut-off (N1.5–N1.6).
+3. Check the script of workers on order: budgets, reservation before start, numbers 2…99 (start of the smallest, stop of the largest), no series — nothing, an unknown outcome of a start and a stale console, polkit start/stop of the full names of its own server. Certificates — a separate test CA, revocation before concluding a full cut-off (N1.5–N1.6).
 4. The role certificate (SAN URI `urn:w2c:role:<role>`, CN `<role>.<server>`, the key 0640 root:<the group of the unit's user>) and
    the address rule (a daemon off the loopback — only with TLS; a process door without a kit — the loopback; signer and relay — by an explicit
-   address with a loud log line, on the process default `0.0.0.0` — a start refusal, code 2; resource without a kit — only the loopback, ADR-0075 addendum 2026-10-26 (6) item 2; ADR-0075 addendum 2026-10-26 (5) item 4): confirm it by a structural test of the units and by the tests of the centre (N5) or
+   address with a loud log line, on the process default `0.0.0.0` — a start refusal, code 2; resource without a kit — only the loopback): confirm it by a structural test of the units and by the tests of the centre (N5) or
    explicitly leave it without evidence of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../common/acceptance/system/README.md)).
 
 ### Chapter 2.5 — the derivation of rights
@@ -164,9 +164,9 @@ For all chapters: complete the implementation description and the checklists; do
 ## Done when
 
 - [ ] *(2.1)* All 951 files give the verdict from the table: 203 `ok`, 748 `refused`; the sets of files and cases coincide.
-- [ ] *(2.3)* All 97 installations of `puts.tsv` give the code and rev from the table.
+- [ ] *(2.3)* All 97 installations of `puts.tsv` (judge-only: the installation sequences of chapter 2.3; they check P/02.3-01 and P/02.3-05) give the code and rev from the table.
 - [ ] *(2.1)* Refused files give an explanation with the source name; a crash or a partially loaded manifest is not counted.
-- [ ] *(2.1)* All cases of `classes.tsv` give their class-layer; the hints of `diagnostics.tsv` are written into the report (a divergence is not a failure); the package `yaml-suite`: `layer1` of each test matched.
+- [ ] *(2.1)* All cases of `classes.tsv` give their class-layer; the hints of `diagnostics.tsv` are written into the report (a divergence is not a failure; judge-only: `classes.tsv` checks P/02.1-10, the hints of `diagnostics.tsv` accompany P/02.1-01, P/02.1-03 and P/02.1-10); the package `yaml-suite`: `layer1` of each test matched.
 - [ ] *(2.1)* The sample of the acceptance README is run through the manifest installation, or the description names the reason for deviating from the SHOULD (P/02.1-12).
 - [ ] *(2.5)* The acceptance of the chapter — 8 scenarios / 70 steps — is carried out with the stated isolation and exceptions; the evidence by reading
   names the files and the checked subject: the generator, the effectiveness of rights and the OS settings. A new file is applied on
@@ -185,4 +185,4 @@ For all chapters: complete the implementation description and the checklists; do
 | The table contradicts the norm | pass an acceptance defect to the author of the norms; do not change the verdict for the sake of a green run |
 | The norm is incomplete or contradictory | describe the question with the input file and a reference to the section; agree on a change of the canon |
 | The rights outcome diverges from the norm | match the input and the outcome with N1–N4 of chapter 2.5, then with the acceptance file; report to «Specification» the place, a counterexample and the proposed solution |
-| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `corrections-<K>.tsv` (historical correction record) of its chapter per ADR-0080 |
+| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `corrections-<K>.tsv` (historical correction record) of its chapter |

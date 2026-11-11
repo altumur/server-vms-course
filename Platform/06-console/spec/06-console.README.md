@@ -1,6 +1,6 @@
 # P/06 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/06-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/06-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/06-console.md` (for people, not in the export).
 
@@ -39,7 +39,7 @@ P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, 
   the value on reading (`resolve`). What the domain console and the process `domain` do with the forwarding — lessons
   [P/10](../../10-domain-console/spec/10-domain-console.norms.md) and [P/08](../../08-domain/spec/08.0-domain.norms.md).
 - **6.8.** Cluster folders: the rows of a folder and of membership, the chain to the root, the removal of a unit from the folders by the same batch, the folder reaper — [chapter 6.8](06.8-console.norms.md).
-- **6.9.** Group operations: the reception, the leader under the queue and the generation, the step ticket, the pause, the token term, the operations reaper — [chapter 6.9](06.9-console.norms.md). The chapter stands on the ticket of ADR-0094 B1: without it a step is not executed.
+- **6.9.** Group operations: the reception, the leader under the queue and the generation, the step ticket, the pause, the token term, the operations reaper — [chapter 6.9](06.9-console.norms.md). The chapter stands on the ticket: without it a step is not executed.
 
 ## Inputs and their priority
 
@@ -170,7 +170,7 @@ This is a suggested order, not a mandatory structure of the code.
 8. Fill all the items of the checklist of chapter P/06.1. For the parts outside the TSV attach the reading evidence by the table of subjects of N5
    (for each subject a scenario or an exercise of the owner lesson is named there) or the result of the corresponding stand
    [P/04](../../04-controller/spec/04-controller.norms.md), [P/05](../../05-resource/spec/05-resource.norms.md), chapters 6.2–6.6
-   and lessons M11. A reference to a future stand is not a check by itself.
+   and lessons P/08–P/10. A reference to a future stand is not a check by itself.
 
 ### Chapter 6.2 — the write of secrets
 
@@ -183,7 +183,7 @@ This is a suggested order, not a mandatory structure of the code.
 3. Implement the sealing by the sealing contract, the ring and the states of an absent/unreadable key per N1.2.
    An empty/damaged file does not turn on the development mode. The opening with a wrong
    key, kid, row and field — at the worker, chapter [P/03.5](../../03-worker/spec/03.5-worker.norms.md), and the vectors
-   [`common/vectors/sealing/`](../../common/vectors/sealing/README.md); a visible prefix enc:v2 does not prove a successful encryption.
+   [`common/vectors/sealing/`](../../common/vectors/sealing/README.md) (judge-only: checking material outside M); a visible prefix enc:v2 does not prove a successful encryption.
    Check the ring comments: # at the beginning of a kid is forbidden, inside it is admissible; a comment
    on a separate line, after a key entry — a refusal. In the diagnostics the actual kid is substituted.
 4. Embed the write into the existing POST/PUT of chapter 6.1. Before the POST claim check the constraint
@@ -220,7 +220,7 @@ This is a suggested order, not a mandatory structure of the code.
    `cluster_rows`, `unit_of`, `reach`, `names`); the action `reach.requests` — the field `action` of the request body
    ([chapter 6.4](06.4-console.norms.md) N1.5 `action`).
 4. Pass the acceptance of [chapter 6.3](../acceptance/3/README.md) — scenario 03, in isolation. Check separately the grants with the domain
-   stand (M11): the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
+   stand: the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
 
 ### Chapter 6.4 — requests and events
 
@@ -229,7 +229,7 @@ This is a suggested order, not a mandatory structure of the code.
    to an already sent JSON. Do not promise a common snapshot of the resources. A live resource — a door row fresh by
    [the observation contract](../../common/contracts/observation.md) (`≤ LOST_AFTER`).
 2. An ordinary request contains unit, free_ask does not ([chapter 6.4](06.4-console.norms.md) N1.5).
-3. Separate ordinary requests, the append of ADR-0054, elsewhere and free_ask per N3. The append creates no mark: fetched, the removal
+3. Separate ordinary requests, the append, elsewhere and free_ask per N3. The append creates no mark: fetched, the removal
    of the row and the release of asked; a retry decides by the data. For the ordinary profile perform the table: the admission and the term,
    a confirmed begun, the single call (the holder side — [chapter 3.6](../../03-worker/spec/03.6-worker.norms.md)).
    Check a conflict and an unknown outcome of every read/change. The presence of begun does not yet prove the call of the external
@@ -311,7 +311,7 @@ A chapter of the late layer: it is done after the lessons P/08–P/10, with the 
 
 ### Chapter 6.9 — group operations
 
-The chapter is done after the ticket and the second kind of pass of ADR-0094 B1.
+The chapter is done after the ticket and the second kind of pass.
 
 1. The reception: the step rows, then a batch of `N + 3` rows. The console does not parse the body and the root.
 2. The leader: the queue by the contract, the generation right after the take, a traversal on every tick, including on pause.
@@ -331,7 +331,7 @@ The ordinary P/06 stage can finish before progression to P/07 and P/08 when its 
 executable targets of the ordinary stand and their vectors pass. Available non-domain pass checks belong to this stage too, including scenario 04 of
 [the pass stand](../../common/acceptance/pass/README.md). Chapter 6.7 and the positive group-operation and pass checks that require the domain stand
 (including its person and ticket setup) are recorded separately as unchecked dependencies;
-return to them after P/08–P/10 (ADR-0083 addendum (54) item 1). Continue the independent process work, including the reapers, resealing and the feed.
+return to them after P/08–P/10. Continue the independent process work, including the reapers, resealing and the feed.
 Scenarios 01–02 of acceptance 6.9 confirm only the absence of operation doors without a declaration. They do not close the positive OPS checks
 or the chapter's readiness checklist. A `not_executed` check remains unchecked and does not count as PASS.
 
@@ -369,11 +369,11 @@ or the chapter's readiness checklist. A `not_executed` check remains unchecked a
 | 6.6 N2.1: labels | the anchor $ lets through a trailing newline | check a, vlan:a and a\n as different cases |
 | 6.6 N2: counters | true is taken for 1 | JSON booleans are not numbers |
 | 6.6 N1.2: drain | would_strand is taken for the negation of safe | an unplaced unit can be in the probe with safe: true |
-| 6.6, 6.5: freshness | «changed < 45 s» instead of «in the last LOST_AFTER» | an age of exactly LOST_AFTER is fresh ([the observation contract](../../common/contracts/observation.md); review analysis of stage A 6–7, № 1); the boundary — the vector [`fresh-age`](../../common/vectors/fresh-age/README.md) (review analysis of stage B 6–7, № 20) |
+| 6.6, 6.5: freshness | «changed < 45 s» instead of «in the last LOST_AFTER» | an age of exactly LOST_AFTER is fresh ([the observation contract](../../common/contracts/observation.md)); the boundary — the vector [`fresh-age`](../../common/vectors/fresh-age/README.md)  |
 
 ## Boundary checks
 
-### The full URL of a subsystem (G37-03)
+### The full URL of a subsystem
 
 For the subsystem paths the contract sets two standard servers: the console origin and
 origin/{sub}. A path of paths is appended to the first or the second; origin has no
@@ -383,7 +383,7 @@ Reconcile both URLs, the methods, the codes and the bodies with N2 of chapters 6
 origin without a trailing `/` or origin/{sub}; the common `404 NoRoute`, `405 {detail: method, error: method}`). The common doors (`/drain`, `/schema`, `/changes`, `/servers/{server}/…`) and the resource door (P/05) do not get a prefix from a neighbouring path item.
 Read the existing scenarios root and testsub2 as a control of routing; structural validity does not execute HTTP.
 
-### The mount reconciliation (G37-02/03)
+### Mount checks
 
 Reconcile the full URLs per N2 and the contract of the lesson: read the standard servers together
 with paths, not only the key paths or x-mounting. Make the same request to root
@@ -393,7 +393,7 @@ and /testsub2 with the chosen manifest. The observation /servers has both varian
 GET/HEAD of the page of a mounted subsystem without `console.shell` are both 404, HEAD has no body; with it — the shell (N1.1 `mounted`);
 summary and the text of 405 must correspond to the actual list of methods.
 
-### Chapter 6.1: weights, bodies and tables (runs 25, 33–37)
+### Chapter 6.1: weights, bodies and tables
 
 By the separate rig of the acceptance README check the weights -1/0/1: the lower bound acts after the
 materialisation of POST and for the passed PUT, a refusal does not change the row. A non-number remains an ordinary
@@ -425,7 +425,7 @@ The normalisation probe of N1: pass%E2%80%8Bword after decoding/NFKC/removal of 
 the original spelling of the name are not normalised. Compare U+200B at the beginning/middle/end and an already ordinary password; check
 the display of the mask by the original URL.
 
-### Chapter 6.4: submission and merge (run 33)
+### Chapter 6.4: submission and merge
 
 After any submission refusal the reservation is kept: a parallel retry could have used it. Check the schedule A
 reserve → B accepted → A definite failure and the refusal of a new C at the limit 1; do not release a non-empty accounting by one age.

@@ -1,16 +1,16 @@
 # Manifest and installer — lifecycle (lesson P/02)
 
-This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The lifecycle contract of the installer `w2cctl` and its commands (ADR-0083 addendum (2) item 1): installation and upgrade, manifest installation,
-rights derivation, the certificate center, the on-demand workers script. Stage A — on top of the current norms of M10 and M11. The norms are not
+The lifecycle contract of the installer `w2cctl` and its commands: installation and upgrade, manifest installation,
+rights derivation, the certificate center, the on-demand workers script. The norms are not
 retold here: each line leads to its norm.
 
 Norms: [P/02.4](spec/02.4-installer.norms.md) (N1.1 units, N1.2 environment, N1.5 workers on demand, N1.6 certificates,
 N1.7 installation, N1.9 commands and `w2cctl secrets`, N1.10 a cluster of one, N4), [P/02.3](spec/02.3-installer.norms.md)
 (N1.5 the manifest row, N3 «Manifest change», N4), [P/02.5](spec/02.5-installer.norms.md) (N2 the rights tool,
 N3 «generate_rights», «install»); late chapters — [P/02.4](spec/02.4-installer.norms.md) N1.12 domain ports and units,
-N3 «domain installation» (the move of lesson 8, stage B).
+N3 «domain installation».
 
 ## Start
 
@@ -27,7 +27,7 @@ The installer is not a service but operator commands; a repeated installation is
 | `w2c-ca.sh init \| issue \| revoke \| crl \| own` | the center and the role kits | P/02.4 N1.6 |
 | `w2cctl secrets new \| seal \| rotate \| status` | the key ring | [sealing contract](../common/contracts/sealing.md), P/02.4 N1.9 |
 | `w2cctl mirror \| space \| retention \| tls status \| domain move` | operator rows and checks | P/02.4 N1.9 |
-| `w2c-workers.sh` | the on-demand workers script: `w2c-workers.service` (`Type=oneshot`, `Restart=no`, `User=w2c-workers` without groups, one per server) and `.timer` (`OnBootSec` 1–2 min, `OnUnitActiveSec` 1 min); the series `<sub>_workers_wanted{server}` → `start`/`stop` of the instances `<prefix>-<SERVER_NAME>-<n>`, n 2…99 (ADR-0084) | P/02.4 N1.1, N1.5 |
+| `w2c-workers.sh` | the on-demand workers script: `w2c-workers.service` (`Type=oneshot`, `Restart=no`, `User=w2c-workers` without groups, one per server) and `.timer` (`OnBootSec` 1–2 min, `OnUnitActiveSec` 1 min); the series `<sub>_workers_wanted{server}` → `start`/`stop` of the instances `<prefix>-<SERVER_NAME>-<n>`, n 2…99 | P/02.4 N1.1, N1.5 |
 | a cluster of one with a built-in manifest | the box process itself writes the manifest row and the mark — with the right `admin`, like the installer | P/02.3 N1.5, P/02.4 N1.10 |
 
 ## Environment
@@ -38,7 +38,7 @@ The installer is not a service but operator commands; a repeated installation is
 | `W2C_BOX` | the installation root | `/opt/w2c` | P/02.4 N1.2 |
 | `W2C_ENV` | the file of common settings; `roles/` — next to it | `/etc/w2c/w2c.env` | P/02.4 N1.2 |
 | `PLATFORM_DIR` | the state root, the directory layout | `/data/platform` | P/02.4 N1.2 «The setting channel and the layout» |
-| `SECRETS_KEY` | the ring path: by the layout `<PLATFORM_DIR>/etc/secrets` (`/etc/w2c` is a link), outside the store directory, the object root and the event root | — (the installer's layout: to the unit — `<PLATFORM_DIR>/etc/secrets/platform.key`; not set for a process — development mode, analysis of the review of stage A 6–7, № 19) | P/06.2 N1.2, P/02.4 N1.1 `dirs`, N1.2 |
+| `SECRETS_KEY` | the ring path: by the layout `<PLATFORM_DIR>/etc/secrets` (`/etc/w2c` is a link), outside the store directory, the object root and the event root | — (the installer's layout: to the unit — `<PLATFORM_DIR>/etc/secrets/platform.key`; not set for a process — development mode) | P/06.2 N1.2, P/02.4 N1.1 `dirs`, N1.2 |
 | `W2C_TLS_DIR` | the root of the kits | `/etc/w2c/tls` | P/02.4 N1.2, N1.6 |
 | `HOST_MEMORY_MB`, `WORKER_MEMORY_MB`, `CAPACITY` | the ceiling of the role's workers from `roles/<role>.env` | — | P/02.4 N1.5 rules 4 |
 
@@ -78,18 +78,18 @@ from the highest number (P/02.4 N1.5 rules 3).
 
 ## Stand
 
-«Stand» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
-- the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`);
+«Stand» — the [common acceptance README](../common/acceptance/README.md):
+- the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`; judge-only: the corpus table, which checks the items P/02.1-01…40 that name its cases);
 - `manifest-put {socket} {file}` — through `admin.sock`, the stand's manifests one by one before the first `@start`;
-- the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances moved from M10/4–11 (analysis of the review of stage B 3–5, № 34), and the variants of chapter 2.5.
+- the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances of the other lessons and the variants of chapter 2.5.
 
 ## Late chapters (domain)
 
 | What | How | Norm |
 |---|---|---|
-| domain units | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (no port of its own; the relay door — `RELAY_PORT` 8446); `w2c-domainagent-token-<role>.socket` — the local token door, `<AGENT_TOKEN_DIR>/<role>.sock` | P/02.4 N1.12, N1.1, [local token door contract](../common/contracts/local-token-door.md) (analysis of the review of stage A 8–10, decision 1) |
+| domain units | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (no port of its own; the relay door — `RELAY_PORT` 8446); `w2c-domainagent-token-<role>.socket` — the local token door, `<AGENT_TOKEN_DIR>/<role>.sock` | P/02.4 N1.12, N1.1, [local token door contract](../common/contracts/local-token-door.md) |
 | domain installation | an operator command, once per domain | P/02.4 N3 «domain installation» (P/02.4-10) |
 
 ## Open
 
-- The installer is not in the list of roles of P/01.2 N1.1: its writes go with the right `admin` (the decision on the data catalogue, item 8).
+- The installer is not in the list of roles of P/01.2 N1.1: its writes go with the right `admin`.

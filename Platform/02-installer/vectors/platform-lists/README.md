@@ -1,14 +1,12 @@
 # Vectors: the closed lists of the platform
 
-This English text is the source; the Russian translation `ru/vectors/platform-lists/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/platform-lists/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The owner is chapter [P/02.5](../../spec/02.5-installer.norms.md) of the installer (N1.3 `roles`, `platform_readers`; N1.4 —
-the negations of the secret readers; review analysis of stage A 6–7, № 5). The participants are the loader [P/02.1](../../spec/02.1-installer.norms.md)
+the negations of the secret readers). The participants are the loader [P/02.1](../../spec/02.1-installer.norms.md)
 (N1.2a: `heartbeat.strings` names no string fields of the platform heartbeat; `display.tree.columns[].field` and
 `display.form[].fields[]` — a field of the unit or a name from `platform_shown`; `objects.rows[]` names no families of the platform) and
-the rights generator P/02.5 N2. The bytes are written by the Specification; the conformance of the product — by its acceptance against this table (ADR-0080
-addendum 16, ADR-0083). Moved from `Source/tests/testdata/platform_lists.tsv` byte for byte (stage B, the move of lesson 6,
-the Architect's decision on V8 of the plan of lesson 6 with correction № 5).
+the rights generator P/02.5 N2. The bytes are written by the Specification; the conformance of the product — by its acceptance against this table.
 
 ## `cases.tsv`
 
@@ -27,7 +25,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` are explanations, empty ones a
 
 The side compares each of its closed lists with the set of words of this list in the table: equality of sets. A list
 that the table does not name, or a word beyond the table, is a mismatch.
-Who executes — by `list`, the installer (`02-installer`): `heartbeat_strings`, `platform_shown`, `object_families` — the loader (P/02.1 N1.2a, reference rows 73 and 84); `secret_roles`, `secret_readers` — the rights generator (P/02.5 N1.3 `roles`, `platform_readers`, N3 step 4). Only read the ready result: the worker (`03-worker`, P/03.4 N1.1 `platform_strings` — the fields it writes), the resource (`05-resource`, its own `PLATFORM_DOOR`, P/05 N2), the console (`06-console`, P/06.5 N1.2 `tree.columns`) and the process `domain` (`08-domain`, P/08.2 N1.3 `readers`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes — by `list`, the installer (`02-installer`): `heartbeat_strings`, `platform_shown`, `object_families` — the loader (P/02.1 N1.2a, reference rows 73 and 84); `secret_roles`, `secret_readers` — the rights generator (P/02.5 N1.3 `roles`, `platform_readers`, N3 step 4). Only read the ready result: the worker (`03-worker`, P/03.4 N1.1 `platform_strings` — the fields it writes), the resource (`05-resource`, its own `PLATFORM_DOOR`, P/05 N2), the console (`06-console`, P/06.5 N1.2 `tree.columns`) and the process `domain` (`08-domain`, P/08.2 N1.3 `readers`) (a row is executed by the role whose norm calls its function).
 
 
 ## What the vector does not cover
@@ -37,4 +35,4 @@ the derivation of the rights for the secret rows — the variants of [the accept
 
 ## Vector wire
 
-The wire of `cases.tsv` is set by the `02-installer/platform-lists` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.5-04) is set by the `02-installer/platform-lists` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

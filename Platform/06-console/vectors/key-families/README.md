@@ -1,9 +1,8 @@
 # Vectors: the key families of the domain `families`
 
-This English text is the source; the Russian translation `ru/vectors/key-families/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/key-families/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The owner is chapter P/06.7 ([norms](../../spec/06.7-console.norms.md) N1.11 `families`; stage C guess
-C06-DOMAIN-KEY-FAMILIES-168-21, the Architect's decision of 2026-10-27). The participant is the cluster console (the door `GET /domain/keys`).
+The owner is chapter P/06.7 ([norms](../../spec/06.7-console.norms.md) N1.11 `families`). The participant is the cluster console (the door `GET /domain/keys`).
 The declaration `domain.keys` and its load refusals are [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md)
 (the cases `m59_keys_*`). The bytes are written by the Specification; the rows follow the text of the norm, the rule is there, not here.
 
@@ -26,9 +25,9 @@ Without a stand: the side gives the input to its own computation of `families` o
 `domain/` are replaced by the input). The native outcome is code 0 and the value `families` (one expectation column — the common rule «Vectors»
 of [the common acceptance README](../../../common/acceptance/README.md)); the input is `cells` `decls`, `present`.
 Who executes it is the cluster console (`06-console`, P/06.7 N1.11 `families`). The console module (`07-console-module`) takes
-`families` ready-made: the subsystem page selects its own keys by prefix (ACC-VECTORS-CONNECT-03: a row is executed by the role whose
-norm calls its function; the Architect's decision of 2026-10-27).
+`families` ready-made: the subsystem page selects its own keys by prefix (a row is executed by the role whose
+norm calls its function).
 
 ## Vector wire
 
-The wire of `cases.tsv` is set by the `06-console/key-families` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
+The wire of `cases.tsv` (judge-only: checking material outside M) is set by the `06-console/key-families` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

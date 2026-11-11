@@ -1,17 +1,12 @@
-# P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (N1.1, N1.3, N1.6, N2–N4). Paths and schemas
-# are carried over from the contract M10/8 (08-events-resource-requests.api.openapi.yaml; stage B, without a change of behaviour):
-# /v1/objects, /v1/objects/{key}, GET /events of the resource, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
-# /mirrored/…. The console doors (/marks, /{sub}/requests, /{sub}/asked/{sha16}, the merge GET and HEAD /events) — in
-# the contract P/06 (06-console.api.openapi.yaml, chapter 6.4); the response schemas of /events common to both doors (EventRow, UnitRef,
-# SafeSegment, ObjectKey, Sha256, Subsystem) — here, P/06 refers to them ($ref). PUT /v1/objects/{sub}/blobs/{digest}
-# (a body copy at the resource) — carried over from the contract M10/10 (the Specification's decision on V2 of the transfer); the console bytes door
-# PUT /{rows}/{id}/{blob_field} — P/06 (chapter 6.1).
+# P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (N1.1, N1.3, N1.6, N2–N4).
+# The console doors are in P/06 (06-console.api.openapi.yaml, chapters 6.1 and 6.4).
+# EventRow, UnitRef, SafeSegment, ObjectKey, Sha256 and Subsystem are shared: P/06 refers to them ($ref).
 openapi: 3.1.0
 info:
   title: P/05 — the doors of the server resource
   version: '1'
   description: 'Canon — 05-resource.norms.md. N2 separates JSON, bytes and the absence of a body; the admission of roles and TLS — N2
-    «Resource door admission», P/02.4 N1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
+    «Resource door admission», P/02.4 N1.6 and the role certificate contract; the internal API is not normed. The forms
     of an implementation may diverge: the contract does not claim that any implementation has been checked against it.'
 paths:
   /v1/objects:
@@ -162,7 +157,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -200,7 +195,7 @@ paths:
         type: string
         pattern: "^(?:sha256-[0-9a-f]{64})$"
     put:
-      summary: 'Resource door: accept a full copy of a blob (N1.1 «Bodies at the resource», N2; carried over from the contract M10/10)'
+      summary: 'Resource door: accept a full copy of a blob (N1.1 «Bodies at the resource», N2)'
       parameters:
       - name: Content-Length
         in: header
@@ -294,7 +289,7 @@ paths:
       description: 'The order and the cut (cut, N1.3) — the same for the resource and for the console merge (chapter 6.4 N3 «merge»): before the cut
         remove duplicates by id; first class alarm, then observation; within a class by by (keep newest — descending, oldest —
         ascending), with equal time — id lexicographically by UTF-8 bytes; the first limit rows. truncated — the number
-        of matching rows unique by id that remain after this cut (analysis of review of stage B 6–7, № 32).'
+        of matching rows unique by id that remain after this cut.'
       responses:
         '200':
           description: ResourceEvents
@@ -309,13 +304,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
         '405':
-          description: The method is not supported (including HEAD and POST, N2) — without a body (the comparison of python and go M10/6–11, E17)
+          description: The method is not supported (including HEAD and POST, N2) — without a body
         '503':
           description: Busy or there is no index
           content:
@@ -413,7 +408,7 @@ paths:
   /events/wait:
     x-route-priority: 10
     get:
-      summary: 'Resource: a hint to re-read, without event rows (ADR-0038)'
+      summary: 'Resource: a hint to re-read, without event rows'
       responses:
         '200':
           description: A change, silence, the queue is full or the previous request is displaced
@@ -439,7 +434,7 @@ paths:
               schema:
                 const: '1'
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -517,7 +512,7 @@ paths:
         '404':
           description: Wrong path/unknown unit; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -579,7 +574,7 @@ paths:
         '500':
           description: Failed to prepare the full body/its sum; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -629,7 +624,7 @@ paths:
         '500':
           description: A file/publication error; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -673,7 +668,7 @@ paths:
         '404':
           description: There are no copies of this server; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -719,7 +714,7 @@ paths:
         '500':
           description: Failed to read/check the copy; the body is absent
         '403':
-          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table N2 «Resource door admission»
           content:
             application/json:
               schema:
@@ -865,8 +860,7 @@ components:
       properties:
         id:
           type: string
-          description: 'As read: a string parsed by the form line of the event log contract is given out as is (the reader''s form;
-            stage C guess R05-G02, the Architect''s decision of 2026-10-23). The writer''s duty is the canon
+          description: 'As read: a string parsed by the form line of the event log contract is given out as is (the reader''s form). The writer''s duty is the canon
             e1-<hex of the tree>-<hex of the unit>-<epoch>-<hex of the instance>-<number> (hex UTF-8, epoch and number decimal), the generation and
             the absence of a repeated number — the event log contract (N1.2).'
         subsystem:
@@ -883,7 +877,7 @@ components:
           type: number
         kind:
           type: string
-          description: As read (the form of the reader, R05-G02); a non-empty word is the duty of the writer.
+          description: As read (the form of the reader); a non-empty word is the duty of the writer.
         server:
           $ref: '#/components/schemas/SafeSegment'
         bucket:

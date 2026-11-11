@@ -1,6 +1,5 @@
-# The voter poll of w2cctl rollout — the norm of P/02.4 N1.9 poll (ADR-0115 addenda (28)–(37); form — ADR-0120 item 2 (b),
-# addenda (5) items 4, 5 and (6)). The prose of N1.9 keeps only why, other_order, bound and unproven; where prose and this
-# machine differ, the machine holds. Traces — rollout-poll.traces.tsv; the course checks run them.
+# The voter poll of w2cctl rollout — the norm of P/02.4 N1.9 poll. The prose of N1.9 keeps only why, other_order, bound
+# and unproven; where prose and this machine differ, the machine holds. Traces — rollout-poll.traces.tsv; the course checks run them.
 # One poll is one instance: pre before the actions, pre before the member restart — or, with -last, the -last check in place
 # of both — each with its own targets.
 #
@@ -143,10 +142,10 @@ invariants:                              # CEL over vars and input; hold after e
   held_only_before_self: "self_replied ? size(held) == 0 : size(alive) == 0 && size(replied) == 0"
 
 transitions:
-  # id — the stable address of the transition (ADR-0122 addendum (1) item 4): <event>-<k>, k by the first introduction; not renumbered
-  # tick(k): -allow-downtime with ≤ 2 voters — no poll, the first tick passes (N1.9 pre; ADR-0120 addendum (6) item 3);
+  # id — the stable address of the transition: <event>-<k>, k by the first introduction; not renumbered
+  # tick(k): -allow-downtime with ≤ 2 voters — no poll, the first tick passes (N1.9 pre);
   # otherwise close batch k − 1 (answers that did not come are breaks), judge it, then the new batch; with ≤ 2 voters
-  # the judgement is the pre count also with -last, so two voters without -allow-downtime never pass (review of P/02, S1)
+  # the judgement is the pre count also with -last, so two voters without -allow-downtime never pass
   - {id: tick-5, event: tick, if: "has(input.allow_downtime) && input.allow_downtime && size(input.voters) <= 2", do: [pass], to: passed}
   - {id: tick-1, event: tick, if: "k > 0", do: [close_batch]}
   - {id: tick-2, event: tick, if: "k > 0 && (input.last && size(input.voters) > 2 ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
