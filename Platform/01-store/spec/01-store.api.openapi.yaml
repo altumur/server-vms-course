@@ -19,6 +19,7 @@ paths:
         "400": {$ref: "#/components/responses/BadRequestOrKey"}
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
+        "413": {$ref: "#/components/responses/BodyTooLarge"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/list:
     get:
@@ -37,6 +38,7 @@ paths:
         "400": {$ref: "#/components/responses/BadRequest"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NoRoute"}
+        "413": {$ref: "#/components/responses/BodyTooLarge"}
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/write:
     post:
@@ -56,7 +58,7 @@ paths:
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "409":
-          description: CAS of P/01.1 (for a batch — with key of the row), admission-time conditions (expired, early — ADR-0091 item 1) or floor does not increase (refused — a row of P/01.1 N4); another payload with the same id — 400 badrequest, not 409
+          description: CAS of P/01.1 (for a batch — with key of the row), admission-time conditions (expired, early — ADR-0091 item 1) or floor does not increase or the current floor does not read (refused — floor_not_higher of P/01.1 N4, floor_unreadable of P/01.3 N4); another payload with the same id — 400 badrequest, not 409
           content:
             application/json:
               schema:
@@ -91,6 +93,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestFault'
+        '413':
+          description: The body is larger than the effective -max-body read limit; checked before the route, the method and the identity (chapter 1.1 R034, chapter 1.3 R017)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTooLargeFault'
         '503':
           description: The store is unavailable.
           content:
@@ -131,6 +139,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestFault'
+        '413':
+          description: The body is larger than the effective -max-body read limit; checked before the route, the method and the identity (chapter 1.1 R034, chapter 1.3 R017)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTooLargeFault'
         '503':
           description: The whole JSON body
           content:
@@ -178,7 +192,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BadRequestFault'
         '503':
-          description: Not done, or the outcome of the membership change is unknown; re-read status
+          description: Not done (for another member on admin.sock of a follower — unavailable, admin_not_leader of P/01.3 N4), or the outcome of the membership change is unknown; re-read status
           content:
             application/json:
               schema:
@@ -244,7 +258,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BadRequestFault'
         '503':
-          description: Not done, or the outcome of the membership change is unknown; re-read status
+          description: Not done (for another member on admin.sock of a follower — unavailable, admin_not_leader of P/01.3 N4), or the outcome of the membership change is unknown; re-read status
           content:
             application/json:
               schema:
@@ -375,6 +389,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestFault'
+        '413':
+          description: The body is larger than the effective -max-body read limit; checked before the route, the method and the identity (chapter 1.1 R034, chapter 1.3 R017)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTooLargeFault'
         '503':
           description: The whole JSON body
           content:
@@ -850,6 +870,12 @@ components:
             applied:
               const: 0
   responses:
+    BodyTooLarge:
+      description: The body is larger than the effective -max-body read limit; checked before the route, the method and the identity, whatever the method (chapter 1.1 R034).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BodyTooLargeFault"
     BadKey:
       description: A bad target key or a non-empty guard key.
       content:
@@ -897,7 +923,7 @@ components:
             - $ref: "#/components/schemas/RowTooLargeFault"
             - $ref: "#/components/schemas/BodyTooLargeFault"
     Unavailable:
-      description: The operation is not done; the wait time of the leader or of the local lock, or the connection limit.
+      description: The operation is not done; the wait time of the leader or of the local lock, the connection limit, or the lost version of a row (version_lost, P/01.1 N4).
       headers:
         Retry-After:
           schema: {type: integer, const: 1}
@@ -913,7 +939,7 @@ components:
           schema:
             $ref: "#/components/schemas/BadRequestFault"
     UnavailableOrAmbiguous:
-      description: The write is not done, or the outcome is unknown; the kind decides how to repeat.
+      description: The write is not done (including import_held and admin_not_leader of P/01.3 N4), or the outcome is unknown; the kind decides how to repeat.
       headers:
         Retry-After:
           schema: {type: integer}

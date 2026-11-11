@@ -31,11 +31,11 @@ flag	type	default	default_text	required	commands	bad	norm
 -isolated	bool	false	off	true	recover		P/01.3 N3 step 0; S02
 -upper	int:0..9007199254740991	-	-	false	recover		P/01.3 N3 step 0; S02
 -peers	list:id@addr/addr	-	-	true	recover		P/01.3 N3 recover
--door	bool	false	off	false	daemon		P/01.3 N1.3 door
+-door	bool	false	off	false	daemon	"-raft" in f || "-raft-bind" in f || "-bootstrap" in f || "-join" in f || "-group-size" in f	P/01.3 N1.3 door; P/01.3 N1.3 box
 -voters	list:id@addr	-	-	"-door" in f	daemon		P/01.3 N1.3 door; ADR-0125 addendum (2) item 3
 -tuning	enum:default|lan|slow	default	default	false	daemon		P/01.3 N1.3 tuning
 -leader-wait	duration	5s	5s	false	daemon		P/01.3 N1.3 leader_wait
--max-value	bytes:>0	524288	512KiB	false	daemon		P/01.1 N4; B7
+-max-value	bytes:>0	524288	512KiB	false	daemon,import,restore		P/01.1 N4; B7; P/01.3 N1.3 import
 -max-body	bytes:>0	1048576	1MiB	false	daemon		P/01.1 N2
 -max-conns	int:1..	64	64	false	daemon		P/01.1 N4
 -api-conns	int:1..	32	32	false	daemon		P/01.1 N4

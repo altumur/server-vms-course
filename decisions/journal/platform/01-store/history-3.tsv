@@ -119,3 +119,44 @@ P/01.3-R029	spec/01.3-store.norms.md#N4	guess of stage C S03	2026-10-23	; guess 
 -	acceptance/3/README.md#full-form-and-reproducibility	rule of full form and reproducibility of 2026-10-16	2026-10-16	(2026-10-16)
 -	acceptance/3/README.md#full-form-and-reproducibility	ACC-EMPTY-OBJECT-01	2026-10-26	, ACC-EMPTY-OBJECT-01
 -	acceptance/3/README.md#additional-check-by-reading	class of errors of run 36 (Kimi)	2026-10-16	of the class of errors of run 36 (Kimi)
+-	spec/01.3-store.norms.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0094 B9	2026-10-29	; ADR-0094 B9
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0094 addendum (12) item 2	2026-10-30	 (ADR-0094 addendum (12) item 2)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0091 item 1	2026-10-22	 (ADR-0091 item 1)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0070	2026-10-10	 (ADR-0070)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0130 Addendum (13); ADR-0130 Addendum (15) item 1	2026-11-08	 (ADR-0130 Addendum (13); Addendum (15) item 1)
+P/01.3-R006	spec/01.3-store.norms.md#N1.3	ADR-0130 Addendum (13); ADR-0130 Addendum (14) item 2	2026-11-08	 (ADR-0130 Addendum (13); Addendum (14) item 2)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	ADR-0125 addendum (2) item 1	2026-11-04	 (ADR-0125 addendum (2) item 1)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	ADR-0125 addendum (2) item 1	2026-11-04	 (ADR-0125 addendum (2) item 1)
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	ADR-0125 addendum (2) item 1	2026-11-04	; ADR-0125 addendum (2) item 1
+P/01.3-R007	spec/01.3-store.norms.md#N1.3	ADR-0125 addendum (2) item 1	2026-11-04	; ADR-0125 addendum (2) item 1
+P/01.3-R008	spec/01.3-store.norms.md#N1.3	ADR-0130 Addendum (13) item 11	2026-11-08	 (ADR-0130 Addendum (13) item 11)
+P/01.3-R008	spec/01.3-store.norms.md#N1.3	ADR-0130 Addendum (13)	2026-11-08	 (ADR-0130 Addendum (13))
+P/01.3-R031	spec/01.3-store.norms.md#N1.3	ADR-0125 addendum (2)	2026-11-04	 (ADR-0125 addendum (2))
+P/01.3-R016	spec/01.3-store.norms.md#N2	ADR-0091 item 1	2026-10-22	; ADR-0091 item 1
+P/01.3-R016	spec/01.3-store.norms.md#N2	ADR-0127 P/06 C2	2026-11-05	 (ADR-0127 P/06 C2)
+P/01.3-R018	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (13) item 9	2026-11-08	 (ADR-0130 Addendum (13) item 9)
+P/01.3-R035	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (13) item 11	2026-11-08	 (ADR-0130 Addendum (13) item 11)
+P/01.3-R035	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (13) item 12	2026-11-08	 (ADR-0130 Addendum (13) item 12)
+P/01.3-R035	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (15) item 5	2026-11-08	 (ADR-0130 Addendum (15) item 5)
+P/01.3-R035	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (14) item 5	2026-11-08	 (ADR-0130 Addendum (14) item 5)
+P/01.3-R035	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (13) item 14; ADR-0130 Addendum (15) item 6	2026-11-08	 (ADR-0130 Addendum (13) item 14; Addendum (15) item 6)
+P/01.3-R036	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (13) item 10	2026-11-08	 (ADR-0130 Addendum (13) item 10)
+P/01.3-R036	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (14) item 3	2026-11-08	 (ADR-0130 Addendum (14) item 3)
+P/01.3-R036	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (15) item 3	2026-11-08	 (ADR-0130 Addendum (15) item 3)
+P/01.3-R036	spec/01.3-store.norms.md#N2	ADR-0130 Addendum (15) item 4	2026-11-08	 (ADR-0130 Addendum (15) item 4)
+P/01.3-R021	spec/01.3-store.norms.md#N3	ADR-0130 Addendum (15) item 2	2026-11-08	 (ADR-0130 Addendum (15) item 2)
+P/01.3-R021	spec/01.3-store.norms.md#N3	ADR-0130 Addendum (13) item 9	2026-11-08	 (ADR-0130 Addendum (13) item 9)
+P/01.3-R021	spec/01.3-store.norms.md#N3	ADR-0130 Addendum (14) item 7	2026-11-08	 (ADR-0130 Addendum (14) item 7)
+P/01.3-R034	spec/01.3-store.norms.md#N3	ADR-0130 Addendum (13) item 9	2026-11-08	 (ADR-0130 Addendum (13) item 9)
+P/01.3-R029	spec/01.3-store.norms.md#N4	ADR-0125	2026-11-04	 (ADR-0125)
+-	spec/01.3-store.norms.md#N5	ADR-0083 item 5	2026-10-18	 of ADR-0083 item 5
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0087 addendum (12) item 7 (item 1)	2026-10-28	 (ADR-0087 addendum (12) item 7)
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0070 item 4	2026-10-10	 (ADR-0070 item 4)
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0087 addendum (12) item 7 (item 7)	2026-10-28	 (ADR-0087 addendum (12) item 7)
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0130 Addendum (5) item 3; ADR-0130 Addendum (13) items 10–12 and 14	2026-11-08	 (ADR-0130 Addendum (5) item 3, Addendum (13) items 10–12 and 14)
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0130 Addendum (9)	2026-11-08	 as in ADR-0130 Addendum (9)
+-	spec/01.3-store.norms.md#implementation-decides	ADR-0130 Addendum (15) item 7	2026-11-08	 (ADR-0130 Addendum (15) item 7)
+-	spec/01.3-store.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/01.3-store.norms.md#readiness-checklist	ADR-0083 item 5 (P/01.3-06)	2026-10-18	 of ADR-0083 item 5
+-	spec/01.3-store.norms.md#readiness-checklist	ADR-0130 Addendum (13) items 9–14 (P/01.3-14)	2026-11-08	ADR-0130 Addendum (13) items 9–14: 

@@ -181,9 +181,8 @@ A profile describes those interfaces; it does not change their scenarios or expe
   by the `vectors` entry `common/may` of the profile (the unified command of a package above); with it `stand.covers` is not required, `blocked` — only without
   both; likewise the former commands `fault`, `values-by-type`, `door-token-issue` when there is a `vectors` entry for their package
   (ACC-VECTORS-COVERS-STAND-01, the Specification's decision).
-- **Durability.** The store command MAY carry an implementation flag that switches off the durability barriers for the speed of the
-  stand; the implementation names it in its description (P/01.1 «Implementation decides» item 3). There is no environment variable for this
-  (P/01.3 N1.3 `durability`).
+- **Durability.** The store command runs the store with the durability barriers: there is no flag and no environment variable that switches
+  them off, the flag set of the store is closed (P/01.1 «Implementation decides» item 3; P/01.3 N1.3 `durability`).
 - **Instance** — per scenario (P/01.1) or per full run, as the lesson README says; the runner waits for the socket or the port,
   then checks the parameters by behaviour per N5 P/01.1. A ready door instead of a launch — the run is not isolated and not green.
   A run of named scenarios only (the gate `accept:<chapter>:<scenarios>` of a stage, ADR-0126) keeps the isolation per scenario and
@@ -510,7 +509,7 @@ P/01.1 `seams.tsv` has no `CALL` rows. Its steps are HTTP requests and the direc
 
 This newly selected bridge is a separate test-side contract. It is not an existing `stand.call` or `adapters.call` key, the native vector envelope or a mandatory product API. The separate descriptor is named `SEAM_BRIDGE.json`; the judge supplies its path explicitly for the selected case, with no search in the working directory or profile. No guessed command, profile format 2 field, assembly format 1 field, platform route or working flag is introduced. The actual receiver identity and invocation belong to the run evidence. The current Runner without this receiver has `MissingBinding`/`NOTEXEC`; publishing the format does not implement or activate it.
 
-The descriptor is a closed JSON object with exactly required `format` (integer `1`), `source_pin` (the full Source SHA selected for the case), `scope` (a nonempty exact string: the id of a target of the registry, optionally followed by `#` and the name of one of its scenarios or cases) and `bridge`. `bridge` is closed and has required `identity` and `invoke`, using the exact file-identity and argument-vector forms in D7 below. This test-side Source identity is not an alias for the profile's `spec_version`, which retains its published export-Git-SHA meaning; the actual Source/export provenance is recorded without a new equality/inequality check on the two strings. There is no universal roots object: setup, paths and fresh process/state boundaries remain those of the existing Source owner.
+The descriptor is a closed JSON object with exactly required `format` (integer `1`), `source_pin` (the full Source SHA selected for the case), `scope` (a nonempty exact string: the id of a target of the registry, optionally followed by `#` and the name of one of its scenarios or cases) and `bridge`. `bridge` is closed and has required `identity` and `invoke`, using the exact file-identity and argument-vector forms of [D7 test-side evidence bindings](#d7-test-side-evidence-bindings) (`identity.id`, `executable.path`/`sha256`, `artifacts`, optional `provenance_ref`; `invoke.argv`, an absolute `cwd`). This test-side Source identity is not an alias for the profile's `spec_version`, which retains its published export-Git-SHA meaning; the actual Source/export provenance is recorded without a new equality/inequality check on the two strings. There is no universal roots object: setup, paths and fresh process/state boundaries remain those of the existing Source owner.
 
 Each sequential UTF-8 JSONL request is a closed object with exactly these required fields:
 
@@ -655,11 +654,11 @@ sees from outside; drills on a real cluster ([system acceptance](system/README.m
   is credited without them; there is no feature or another value — the scenarios are not executed (not_executed, as without `keys.tls_stand`; not
   GREEN). The refusals of the build `box` are checked by sc. 04/16 of the stand store and by reading (P/01.3-01); the group stand does not judge it
   (the Architect's decision of 2026-10-30).
-- **Member launch** — the store command of «Stand» (the same as for the stand store, with the speed flag of the stand if there is one), with the environment `BOX_ID=<id>`, `SERVER_NAME=<id>`, `PLATFORM_DIR={data}/<id>` (on the three-server stand — the `PLATFORM_DIR` of its server), and
+- **Member launch** — the store command of «Stand» (the same as for the stand store), with the environment `BOX_ID=<id>`, `SERVER_NAME=<id>`, `PLATFORM_DIR={data}/<id>` (on the three-server stand — the `PLATFORM_DIR` of its server), and
   the member's substitutions: `{data}` is its `PLATFORM_DIR`, `{rundir}` is `{data}/run`, `{socket}` is `admin.sock` there, and `{rights}`. The template carries them in its own flags `-dir {data}/configstore`, `-sockets {rundir}`, `-rights {rights}`, `-max-body {body_limit}`, `-max-value {row_ceiling}` ([substitutions](PROFILE.md#substitutions)), so the store directory of the member is `{data}/configstore` of its `PLATFORM_DIR`. The runner appends only these flags: `-id <id>`, `-tls <kit dir>`,
   `-api {api@<id>}`, `-tuning lan`; for a voter also `-raft {raft@<id>}` (the address of the proxy of the runner,
   which the member names to its partners) and `-raft-bind <own port>` (where it listens; P/01.3 N1.3 «Daemon flags»). The other flags — from the line
-  of the directive as written (`-bootstrap`, `-join`, `-group-size`, `-force`, `-door`, `-voters`). The template holds none of the appended flags, and the speed flag of the stand is none of them: a repeated flag is a start refusal (P/01.3 N1.3; the Architect's answer on P01.86).
+  of the directive as written (`-bootstrap`, `-join`, `-group-size`, `-force`, `-door`, `-voters`). The template holds none of the appended flags: a repeated flag is a start refusal (P/01.3 N1.3; the Architect's answer on P01.86).
 - **Member doors**: `store@<id> <request>` — the door of P/01.1 through the socket of the role of the scenario of the member (the role is named by the chapter README, `@as`
   changes it); `admin@<id> <request>` — through its `admin.sock` (not forwarded: the write is at the leader).
 - **Boundaries**: between scenarios the runner stops all members and deletes their directories; the kits — per scenario.

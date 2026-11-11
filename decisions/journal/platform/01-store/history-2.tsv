@@ -13,3 +13,11 @@ P/01.2-R017	spec/01.2-store.norms.md#N3	reconciliation of python and go M10/6–
 -	acceptance/2/README.md#properties-of-sc-1415	coverage audit P/01, second pass (Gemini), commit 6a5817f88 (heading)	2026-10-30	Coverage audit of P/01, second pass
 -	acceptance/2/README.md#properties-of-sc-1415	coverage audit P/01, second pass (Gemini), commit 6a5817f88, G04	2026-10-30	The coverage audit session, second pass (Gemini, 2026-10-30, commit 6a5817f88, `coverage audit Gemini P01 (for people)`, G04):
 -	acceptance/2/README.md#properties-of-sc-1415	C01-NEVER-DOMAIN-ROLE-01	2026-10-30	; C01-NEVER-DOMAIN-ROLE-01
+-	spec/01.2-store.norms.md#p012--store-rights-norms	ADR-0121	2026-11-04	 (ADR-0121)
+P/01.2-R006	spec/01.2-store.norms.md#N1.1	ADR-0074 C7 item 2; ADR-0074 addendum 5	2026-10-13	; ADR-0074 C7 item 2 and addendum 5
+P/01.2-R006	spec/01.2-store.norms.md#N1.1	ADR-0030	2026-10-05	 (ADR-0030)
+P/01.2-R006	spec/01.2-store.norms.md#N1.1	ADR-0030	2026-10-05	 (ADR-0030)
+P/01.2-R010	spec/01.2-store.norms.md#N1.3	ADR-0074 addendum 3	2026-10-12	 (ADR-0074 addendum 3)
+P/01.2-R010	spec/01.2-store.norms.md#N1.3	ADR-0094 B9	2026-10-29	 (ADR-0094 B9)
+P/01.2-R029	spec/01.2-store.norms.md#N4	ADR-0125	2026-11-04	 (ADR-0125)
+P/01.2-R030	spec/01.2-store.norms.md#N4	ADR-0125 addendum (2) item 7	2026-11-04	; ADR-0125 addendum (2) item 7

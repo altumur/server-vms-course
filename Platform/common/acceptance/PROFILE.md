@@ -4,7 +4,7 @@ This contract describes the generic acceptance interface for Platform implementa
 
 This English text is the source; the Russian text in `../ru/acceptance/PROFILE.md` is a derived translation for people.
 
-The profile is `acceptance.yaml`, with integer `format: 2`. The composition is `assembly.yaml`, with integer `format: 1`. The vector envelope has its own integer `format: 1`. These are different documents and independent format versions.
+The profile is `acceptance.yaml`, with integer `format: 2`. The composition is `assembly.yaml`, with integer `format: 1`; it lies in the root of the implementation ([common acceptance README](README.md#layout-by-processes-stage-c), «Composition of the stand.»). The vector envelope has its own integer `format: 1`. These are different documents and independent format versions.
 
 ## Files and scalar syntax
 
