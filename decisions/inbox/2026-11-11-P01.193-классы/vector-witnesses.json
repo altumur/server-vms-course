@@ -1,0 +1,214 @@
+{
+  "method": "Static code reasoning and independent construction of native byte witnesses; no candidate or engine execution",
+  "rows": [
+    {
+      "package": "crl",
+      "line": 3,
+      "case": "ok",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\",\"1a2b\"],\"ca_next\":[],\"stale\":[]}",
+      "length": 44,
+      "sha256": "fe08c39edd62b3b6d04c2d22dc4ab20578123b60f36a0ab9f845f16fad2c51da",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 7,
+      "case": "ec-sha256",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ef\"],\"ca_next\":[],\"stale\":[]}",
+      "length": 37,
+      "sha256": "12345d0e2ecce4a74469c330d24be71a04df07f2b9d3e130cf1cae4d682282f9",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 13,
+      "case": "expired",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[\"ca\"]}",
+      "length": 41,
+      "sha256": "cf6dfc0eef897f9c1e56c8c568d3c1e793cc82b5d7042e3e700a194ee1a05f8e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 14,
+      "case": "not-yet",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[\"ca\"]}",
+      "length": 41,
+      "sha256": "cf6dfc0eef897f9c1e56c8c568d3c1e793cc82b5d7042e3e700a194ee1a05f8e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 15,
+      "case": "this-ahead-60",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[]}",
+      "length": 37,
+      "sha256": "0caecc4eeb81428a8d0ea4e4005b63e8da42f9ec2b26494865893f14bdc44d17",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 16,
+      "case": "this-ahead-61",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[\"ca\"]}",
+      "length": 41,
+      "sha256": "cf6dfc0eef897f9c1e56c8c568d3c1e793cc82b5d7042e3e700a194ee1a05f8e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 17,
+      "case": "no-next-update",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[\"ca\"]}",
+      "length": 41,
+      "sha256": "cf6dfc0eef897f9c1e56c8c568d3c1e793cc82b5d7042e3e700a194ee1a05f8e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "crl",
+      "line": 23,
+      "case": "unknown-noncritical",
+      "reason": "CRL-ca_next-null",
+      "class": "candidate",
+      "inferred_native_utf8": "{\"ca\":[\"ab\"],\"ca_next\":[],\"stale\":[]}",
+      "length": 37,
+      "sha256": "0caecc4eeb81428a8d0ea4e4005b63e8da42f9ec2b26494865893f14bdc44d17",
+      "matches_saved_body": true
+    },
+    {
+      "package": "revoked",
+      "line": 16,
+      "case": "bad-crlf",
+      "reason": "CR-accepted",
+      "class": "candidate",
+      "inferred_native_utf8": "[\"ab\",\"cd\"]",
+      "length": 11,
+      "sha256": "e8eda248cb4ec1345c53fb373bdb35830e0ce3c5b555331050e49d6f64110b7d",
+      "matches_saved_body": true
+    },
+    {
+      "package": "revoked",
+      "line": 19,
+      "case": "absent",
+      "reason": "bare-absent-json-parse",
+      "class": "candidate",
+      "inferred_native_utf8": "",
+      "length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 20,
+      "case": "line-20",
+      "reason": "nested-src",
+      "class": "candidate",
+      "inferred_native_utf8": "\"/proxy?src=rtsp%3A%2F%2Fadmin%3Ahunter2%40cam\\u0026x=1\"",
+      "length": 56,
+      "sha256": "745e658b96842c72d4473860c8ae1cc898558f3a6960f1e36c73f66069e03643",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 26,
+      "case": "line-26",
+      "reason": "address-end",
+      "class": "candidate",
+      "inferred_native_utf8": "\"a \\\\\\\"rtsp://cam:***\\\" b\"",
+      "length": 26,
+      "sha256": "79b4f165e6cfbf828572445d0250a2537d68787975073bf0d78cb88fcf5b225b",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 29,
+      "case": "line-29",
+      "reason": "login-as-secret",
+      "class": "candidate",
+      "inferred_native_utf8": "\"DESCRIBE rtsp://10.0.0.9:554/user=***\\u0026password=***\\u0026channel=1\\u0026stream=0.sdp RTSP/1.0\"",
+      "length": 99,
+      "sha256": "89a869aff8c6354e6a2fda69caec1476385f15c5b351c0bca8cd068268f703d8",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 31,
+      "case": "line-31",
+      "reason": "login-as-secret",
+      "class": "candidate",
+      "inferred_native_utf8": "\"Authorization: Digest username=***, response=\\\"5ccc\\\"\"",
+      "length": 55,
+      "sha256": "61554b37f7d3f990cf9da46ddf3f54e0913400d66b5bc8a6fe0be97a7a68d643",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 43,
+      "case": "line-43",
+      "reason": "decoded-pair-name",
+      "class": "candidate",
+      "inferred_native_utf8": "\"?%26p%2577d=***\"",
+      "length": 17,
+      "sha256": "c4b85967a62368a21080fb174342962019de59f9d85309fcd0dd34c612b5196e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 53,
+      "case": "line-53",
+      "reason": "unicode-whitespace",
+      "class": "candidate",
+      "inferred_native_utf8": "\"Authorization: Bearer ***\"",
+      "length": 27,
+      "sha256": "900058096e0aa3212dcafc284bac08692e5fda7f9ec0a80174fca9c678bff58e",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 54,
+      "case": "line-54",
+      "reason": "unicode-whitespace",
+      "class": "candidate",
+      "inferred_native_utf8": "\"?pwd=***\\ufffdchannel=1\"",
+      "length": 25,
+      "sha256": "d4856fef6ffbf94fcedbc66a82c85ebbe915c6a6601e01c44727911847a46991",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 56,
+      "case": "line-56",
+      "reason": "unicode-whitespace",
+      "class": "candidate",
+      "inferred_native_utf8": "\"rtsp://h/x?pwd=***\\ufffdb\"",
+      "length": 27,
+      "sha256": "a8f2cd9a866dd6f212778a6ca5ad0bd690919853b783c9e718edd5b47952fc10",
+      "matches_saved_body": true
+    },
+    {
+      "package": "log-mask",
+      "line": 57,
+      "case": "line-57",
+      "reason": "unicode-whitespace",
+      "class": "candidate",
+      "inferred_native_utf8": "\"rtsp://h/x?pwd=***\"",
+      "length": 20,
+      "sha256": "75881e3171aa3560e35603de7da3fc3713ee9f2681a89b580092477f194c7f14",
+      "matches_saved_body": true
+    }
+  ]
+}

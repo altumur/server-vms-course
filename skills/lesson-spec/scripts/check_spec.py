@@ -547,6 +547,7 @@ CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
 ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)"
 LESSON = r"(?:М[0-9]+[A-ZА-Я]*/[0-9]{1,2}|P/[0-9]{2}(?:\.[0-9]+)?)"
 DATA_LINE = re.compile(r"^- (владеет|пишет|читает):\s*(.*?);?\s*$")
+SEE_ALSO_LINE = re.compile(r"^\s*(?:See also|См\. также):")
 # The roles of a lesson's process among the catalog participants and readers (участник — роль файла прав, форма
 # каталога): the process of Platform/lessons.tsv by this table, else the process name itself; and always
 # `proc:<каталог урока>`. `<s>domain` — воркер подсистемы на домене (P/03.7), `admin` — установщик `w2cctl`,
@@ -1115,9 +1116,19 @@ class Check:
             if owned:
                 self.error(path, f"no «Данные» paragraph, the catalog says it owns {sorted(owned)}")
             return said
-        for line in lines[start + 1:]:
+        rest = lines[start + 1:]
+        for at, line in enumerate(rest):
+            if SEE_ALSO_LINE.match(line):          # a «See also» line of the requirement does not end the paragraph
+                continue
             match = DATA_LINE.match(line)
             if not match:
+                # the list ends here; a later list line before the blank line would be silently dropped (P01.200 judge)
+                for later in rest[at + 1:]:
+                    if not later.strip():
+                        break
+                    if DATA_LINE.match(later):
+                        self.error(path, f"«Данные»: the list is broken by «{line.strip()[:40]}» before «{later.strip()[:30]}»")
+                        break
                 break
             for key, op in re.findall(r"`([^`]+)`(?:\s*\(([a-z]+)\))?", match.group(2)):
                 if key not in by_key:

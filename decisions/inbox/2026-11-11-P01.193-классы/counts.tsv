@@ -1,0 +1,49 @@
+candidate	mode	target	result	error	steps_GREEN	steps_red	steps_not_executed	steps_blocked	steps_not_applicable	rows_GREEN	rows_red	rows_not_executed	rows_blocked	rows_not_applicable	entries_GREEN	entries_red	entries_not_executed	entries_blocked	entries_not_applicable
+claude	out	P/01.1/door	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01.1/extra	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01.1/inproc	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01.2/rights	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01.3/daemon	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01.3/group	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-crl	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-jcs	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-log-mask	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-revoked	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-rights-evaluator	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out	P/01/vectors-store-client	NO_RESULT	refused: assembly: open /srv/calib-p0180/p01-e2-claude/cand/claude/work/assembly.yaml: no such file or directory	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01.1/door	red		346	0	0	0	0	92	5	0	0	0	0	0	0	0	0
+claude	out-diag	P/01.1/extra	not_executed		0	0	0	0	0	60	0	0	0	0	14	0	2	0	0
+claude	out-diag	P/01.1/inproc	GREEN		346	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01.2/rights	red		61	6	0	0	0	37	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01.3/daemon	red		121	0	0	0	0	7	1	0	0	0	0	0	0	0	0
+claude	out-diag	P/01.3/group	red		9	9	153	0	0	0	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-crl	blocked		0	0	0	0	0	0	0	0	22	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-jcs	GREEN		0	0	0	0	0	17	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-log-mask	blocked		0	0	0	0	0	0	0	0	39	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-revoked	blocked		0	0	0	0	0	0	0	0	21	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-rights-evaluator	GREEN		0	0	0	0	0	37	0	0	0	0	0	0	0	0	0
+claude	out-diag	P/01/vectors-store-client	blocked		0	0	0	0	0	0	0	0	21	0	0	0	0	0	0
+attempt6	out	P/01.1/door	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01.1/extra	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01.1/inproc	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01.2/rights	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01.3/daemon	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01.3/group	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-crl	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-jcs	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-log-mask	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-revoked	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-rights-evaluator	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out	P/01/vectors-store-client	NO_RESULT	refused: profile /srv/calib-p0180/p01-e2-attempt6/cand/attempt6/work/01-store/acceptance.yaml: keys.request_line_limit: not an integer scalar	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01.1/door	red		346	0	0	0	0	96	1	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01.1/extra	not_executed		0	0	0	0	0	60	0	0	0	0	14	0	2	0	0
+attempt6	out-diag	P/01.1/inproc	red		344	2	0	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01.2/rights	red		59	8	0	0	0	37	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01.3/daemon	red		110	1	10	0	0	7	1	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01.3/group	red		9	9	153	0	0	0	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-crl	red		0	0	0	0	0	14	8	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-jcs	GREEN		0	0	0	0	0	17	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-log-mask	red		0	0	0	0	0	30	9	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-revoked	red		0	0	0	0	0	19	2	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-rights-evaluator	GREEN		0	0	0	0	0	37	0	0	0	0	0	0	0	0	0
+attempt6	out-diag	P/01/vectors-store-client	GREEN		0	0	0	0	0	21	0	0	0	0	0	0	0	0	0
