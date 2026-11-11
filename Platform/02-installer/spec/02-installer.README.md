@@ -66,9 +66,8 @@ Chapter 2.1:
    then filling the defaults in the order of N3. The result is a whole manifest or a refusal with the needed information per N4. After the key check, refuse NaN, infinities and float overflow, including nested numbers of opaque/default/inherit; all accepted values are representable in JSON.
 2. **Loading of a catalogue** with the checks of `worker.requests` and `placement.near` per N3. The acceptance of one file
    does not substitute for the catalogue check; neighbouring manifests not named by the table are not added to the table runner.
-3. **A run of the common table** by the regular loading path according to the acceptance README. The sample of the acceptance README (all `ok` and one refusal
-   per class) SHOULD be run through the manifest installation (`manifest put`, chapter 2.3), as stated in N5
-   and P/02.1-12.
+3. **A run of the common table** by the regular loading path according to the acceptance README. The installation is judged separately, by `puts.tsv` of chapter 2.3
+   (N5); the corpus is not run through `manifest put`.
 
 Chapter 2.3:
 
@@ -164,7 +163,7 @@ For all chapters: complete the implementation description and the checklists; do
 
 ## Done when
 
-- [ ] *(2.1)* All 947 files give the verdict from the table: 203 `ok`, 744 `refused`; the sets of files and cases coincide.
+- [ ] *(2.1)* All 951 files give the verdict from the table: 203 `ok`, 748 `refused`; the sets of files and cases coincide.
 - [ ] *(2.3)* All 87 installations of `puts.tsv` give the code and rev from the table.
 - [ ] *(2.1)* Refused files give an explanation with the source name; a crash or a partially loaded manifest is not counted.
 - [ ] *(2.1)* All cases of `classes.tsv` give their class-layer; the hints of `diagnostics.tsv` are written into the report (a divergence is not a failure); the package `yaml-suite`: `layer1` of each test matched.

@@ -44,7 +44,7 @@ The weight of the view row is the sum of the bytes of the names and values of `i
 - The order of the writes in time (row — view — mark) and the repeat of the view after a `cas` conflict: the tables compare the state after the installation; the order is checked by reading per N5 of the chapter.
 - The ceiling reached through a `cas` conflict of two installers, and any conflict of two installers: they need the store of another lesson (ADR-0130 Addendum (19) item 7) and belong to the stage of the system; the tables install sequentially.
 - A cluster of one process (P/02.4 N1.10, R15) and the reader of the view (P/02.2-06 — by the readers' edits): by reading per N5 of the chapter.
-- An unreadable row `platform/manifest/<name>`: by [`manifest-row.outcomes.tsv`](../../data/manifest-row.outcomes.tsv) the reader `admin` refuses `manifest put` and writes nothing; these tables have no row for it yet, because the form check of the specification does not yet accept the common word `@row-spoil`.
+- An unreadable row `platform/manifest/<name>`: by [`manifest-row.outcomes.tsv`](../../data/manifest-row.outcomes.tsv) the reader `admin` refuses `manifest put` and writes nothing; its rows are `row_spoiled_yaml` and `row_spoiled_sha256` of [`../3/puts.tsv`](../3/puts.tsv) (three columns: a spoiled `sha256` makes the view of item 5 differ from the row by itself).
 
 ## The Gemini coverage audit P/02: the mark `/rev` (the Architect's forms)
 

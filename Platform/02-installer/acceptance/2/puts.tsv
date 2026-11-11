@@ -8,9 +8,9 @@ first	testsub	0 1	course-testsub
 same_twice	testsub testsub	0 1	course-testsub
 view_deleted	testsub @view-delete testsub	0 2	course-testsub
 view_spoiled	testsub @view-spoil testsub	0 2	course-testsub
-view_over_ceiling	probe view-over	2 1	example-sections
+view_over_ceiling	probe view-over	2 1 @stderr ~platform/manifest/probe/canonical/1	example-sections
 view_at_ceiling	probe view-at-ceiling	0 2	example-view-at-ceiling
 sugared	sugared	0 1	example-sugared
 # Gemini P/02 coverage audit (properties 13, 14; the Architect's forms): removed /rev mark — the no-change path completes it; malformed mark — refusal.
 rev_deleted	probe @rev-delete probe	0 1	example-sections
-rev_spoiled	probe @rev-spoil probe	2 1	example-sections
+rev_spoiled	probe @rev-spoil probe	2 1 @stderr ~platform/manifest/probe/rev	example-sections
