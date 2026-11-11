@@ -2,506 +2,6 @@
   "version": 1,
   "files": [
     {
-      "path": "Platform/03-worker/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/1/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/1/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/2/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/2/scenarios.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/2/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/2/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/3/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/3/scenarios.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/3/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/3/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/4/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/4/scenarios.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/4/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/5/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/5/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/6/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/6/scenarios.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/6/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/6/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/7/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/acceptance/7/seams.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/contenders.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/contenders.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/contenders.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/epoch.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/epoch.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/epoch.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/heartbeats.domain.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/heartbeats.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/heartbeats.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/heartbeats.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/holds.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/holds.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/holds.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/slots.domain.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/slots.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/slots.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/slots.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/state.layers.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/state.outcomes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/data/state.schema.json",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/contender-writer.machine.yaml",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/contender-writer.traces.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/daemon-flags.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/refusals.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/row-write-bindings.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/row-write-bindings.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/runtime-constants.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/slot-capture.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/stages.kit.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/stages.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/token-cache.machine.yaml",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/forms/token-cache.traces.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/lifecycle.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/ru/03-worker.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/1/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/2/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/2/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/3/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/3/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/4/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/5/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/6/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/6/sleeps.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/acceptance/7/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/forms/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/forms/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/forms/row-write-bindings.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/lifecycle.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03-worker.README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.1-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.2-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.2-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.3-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.3-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.4-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.4-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.5-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.6-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.6-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/spec/03.7-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/ru/vectors/creates-key/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/03-worker/spec/03-worker.README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.1-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.2-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.2-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.3-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.3-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.4-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.4-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.5-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.6-worker.n5.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.6-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/spec/03.7-worker.norms.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/vectors/creates-key/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
-      "path": "Platform/03-worker/vectors/creates-key/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
-    },
-    {
       "path": "Platform/04-controller/README.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -2473,23 +1973,23 @@
     },
     {
       "path": "Platform/06-console/vectors/request-digest/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/request-digest/digest.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/requests-body/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/requests-body/requests_body.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/resolve/README.md",
@@ -2503,18 +2003,18 @@
     },
     {
       "path": "Platform/06-console/vectors/rid/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/rid/rid.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/06-console/vectors/rid/template.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/07-console-module/CONSOLE-MODULE.md",
@@ -6383,33 +5883,33 @@
     },
     {
       "path": "Platform/common/vectors/domain-token/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/domain-token/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/door-token/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/door-token/issue.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/door-token/place.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/door-token/verify.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/env-file/README.md",
@@ -6428,18 +5928,18 @@
     },
     {
       "path": "Platform/common/vectors/events-merge/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/events-merge/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/events-merge/resource.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/family-read/01.tsv",
@@ -6513,13 +6013,13 @@
     },
     {
       "path": "Platform/common/vectors/group-of/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/group-of/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/heartbeat-read/README.cases.md",
@@ -6573,53 +6073,53 @@
     },
     {
       "path": "Platform/common/vectors/instance/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/instance/box.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/instance/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/append.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/bucket.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/modes.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/names.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/journal/years.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/keys/README.md",
@@ -6638,13 +6138,13 @@
     },
     {
       "path": "Platform/common/vectors/labels/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/labels/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/log-mask/README.cases.md",
@@ -6698,18 +6198,18 @@
     },
     {
       "path": "Platform/common/vectors/object-client/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/object-client/address.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/object-client/read.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/password-hash/README.cases.md",
@@ -6808,53 +6308,53 @@
     },
     {
       "path": "Platform/common/vectors/row-check/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/row-check/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/row-check/state.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/said-id/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/said-id/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/said-id/read.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/said-id/said.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/schema/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/schema/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/schema/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/sealing/README.md",
@@ -6903,33 +6403,33 @@
     },
     {
       "path": "Platform/common/vectors/slot-name/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/slot-name/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/slot-name/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/slot/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/slot/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/slot/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/source-cells/cases.json",
@@ -6988,18 +6488,18 @@
     },
     {
       "path": "Platform/common/vectors/values-by-type/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/values-by-type/README.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/values-by-type/cases.tsv",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
       "path": "Platform/common/vectors/wire.cases.tsv",

@@ -31,3 +31,7 @@ Who executes it is the orderer worker (`03-worker`: the library builds the id, P
 a template with `{input}` — the path of the file into which the judge writes the cell `input` of the row byte for byte; stdout — the UTF-8 bytes of the id exactly
 as `expect`, without a line feed at the end and without a JSON wrapper; code 0. An input not by the form of this README — code 2 (`@exit 2`).
 Another code or extra bytes — FAIL of the row.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `03-worker/creates-key` row of [the single form](../../../common/vectors/wire.tsv) (the surface `stand:creates-key` of the stand command above); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here.

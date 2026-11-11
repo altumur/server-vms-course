@@ -103,4 +103,4 @@ by the contract, not by the code of implementations; on a divergence the contrac
 
 ## Vector wire
 
-The wire of `issue.tsv` is set by the `common/door-token` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
+The wire of `issue.tsv`, `verify.tsv` and `place.tsv` is set by the `common/door-token` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
