@@ -1416,7 +1416,7 @@ class CyrillicJudge(unittest.TestCase):
 
     def test_requested_source_mutants(self):
         for name in ("Platform/01-store/journal/corrections.tsv", "Platform/02-installer/data/test.shell.html",
-                     "tools/normgen/runtime/door.go", "Platform/explanations/notes.md",
+                     "Platform/01-store/code/door.go", "Platform/explanations/notes.md",
                      "Platform/.hidden/source.txt"):
             with self.subTest(name=name):
                 path = self.put(name, "// Cyrillic: Ж\n")
@@ -1561,7 +1561,7 @@ class CyrillicJudge(unittest.TestCase):
         for name in ("Platform/ru/README.md", "Platform/common/ru/wire.tsv", "Platform/01-store/ru/spec/norms.md"):
             self.put(name, "Русский перевод")
         self.assertEqual(self.judge()[0], [])
-        for name in ("tools/normgen/ru/code.go", "Platform/01-store/code/ru/code.go", "Platform/explanations/ru/note.md"):
+        for name in ("Platform/01-store/code/ru/code.go", "Platform/explanations/ru/note.md"):
             with self.subTest(name=name):
                 path = self.put(name, "Ж")
                 self.assertTrue(self.judge()[0])
@@ -1602,7 +1602,7 @@ class CyrillicJudge(unittest.TestCase):
         self.assertEqual(self.judge()[0], [])             # Cyrillic signs/marks are not letters
 
     def test_non_utf8_does_not_hide_valid_cyrillic(self):
-        self.put("tools/normgen/data.bin", b"\xff\x00" + "Ж".encode())
+        self.put("Platform/01-store/data.bin", b"\xff\x00" + "Ж".encode())
         errors, stats = self.judge()
         self.assertTrue(errors)
         self.assertEqual(stats["cyrillic_non_utf8"], 1)
@@ -1677,9 +1677,29 @@ class CyrillicJudge(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.root), "add", "Platform"], check=True, capture_output=True)
         self.assertTrue(self.judge()[0])
         self.put("Platform/untracked.md", "English")
-        self.put("tools/normgen/.hidden.go", "// Ж")
+        self.put("Platform/.hidden.go", "// Ж")
         self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "-C", str(self.root), "add", "Platform"], check=True, capture_output=True)
+        self.assertTrue(self.judge()[0])
+
+    def test_frozen_normgen_is_outside_the_course_scope(self):
+        """ADR-0125 доп. (14) п. 3: tools/normgen is frozen; no Cyrillic judgement, debt or readiness there."""
+        self.assertEqual(check_cyrillic.FROZEN_SOURCE, ("tools/normgen",))
+        self.assertFalse(any(check_cyrillic.under(home, check_cyrillic.FROZEN_SOURCE) for home in check_cyrillic.SCOPES))
+        for name in ("tools/normgen/runtime/door.go", "tools/normgen/ru/code.go", "tools/normgen/.hidden.go"):
+            self.put(name, "// Ж")
+        self.assertEqual(self.judge()[0], [])
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(self.root), "add", "tools"], check=True, capture_output=True)
+        errors, stats = self.judge()
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["cyrillic_scanned_files"], 0)
+        self.assertNotIn("tools/normgen/runtime/door.go", check_cyrillic.scan(self.root)[0])
+        with self.assertRaises(ValueError):
+            check_cyrillic.check(self.root, self.debt, source_scopes=("tools/normgen",))
+        self.registry("debt\ttools/normgen/runtime/door.go\t1")
+        self.assertTrue(any("excluded" in e for e in self.judge()[0]))
+        self.registry("ready\ttools/normgen\t-")
         self.assertTrue(self.judge()[0])
 
     def export_git(self):

@@ -2943,9 +2943,10 @@ class Check:
             self.stats["req_anchors"] = self.stats.get("req_anchors", 0) + stats["req_anchors"]
 
     def check_cyrillic(self, debt_path=None):
-        """All Platform and normgen bytes, independently of the selected lessons."""
+        """All Platform bytes, independently of the selected lessons; tools/normgen is frozen
+        (check_cyrillic.FROZEN_SOURCE, ADR-0125 доп. (14) п. 3) and not judged."""
         import check_cyrillic
-        scopes = ("Platform", "tools/normgen") if self.scope == "platform" else ("VMS",) if self.scope == "vms" else None
+        scopes = ("Platform",) if self.scope == "platform" else ("VMS",) if self.scope == "vms" else None
         errors, stats = check_cyrillic.check(self.root, debt_path or check_cyrillic.DEBT, source_scopes=scopes)
         self.errors.extend(errors)
         self.stats.update(stats)

@@ -1013,16 +1013,20 @@ class CyrillicIntegrationTests(unittest.TestCase):
     def test_global_judge_in_check_spec_cli_even_with_explicit_lesson(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            source = root / "tools/normgen/runtime/door.go"
+            source = root / "Platform/01-store/code/door.go"
             source.parent.mkdir(parents=True)
             source.write_text("// Ж\n")
+            frozen = root / "tools/normgen/runtime/door.go"   # ADR-0125 доп. (14) п. 3: frozen, not judged
+            frozen.parent.mkdir(parents=True)
+            frozen.write_text("// Ж\n")
             debt = root / "debt.tsv"
             debt.write_text("kind\tpath\tletters\n")
             result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
                                      "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-            self.assertIn("tools/normgen/runtime/door.go: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertIn("Platform/01-store/code/door.go: Cyrillic letters 1, debt 0", result.stdout)
+            self.assertNotIn("tools/normgen", result.stdout)
             self.assertIn("cyrillic_debt_files=0", result.stdout)
 
     def test_check_stats_debt_and_ready_are_not_exception_count(self):

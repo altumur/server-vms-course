@@ -17,9 +17,12 @@ from collections import Counter
 from pathlib import Path, PurePosixPath
 
 DEBT = Path(__file__).resolve().parents[1] / "cyrillic-debt.tsv"
-# Course-side canonical source and generator homes; an export is checked in full.
+# Course-side canonical source homes; an export is checked in full.
 # ADR-0083 (115): Source holds immutable witnesses, not canonical inputs.
-SCOPES = ("Platform", "VMS", "tools/normgen")
+SCOPES = ("Platform", "VMS")
+# ADR-0125 доп. (14) п. 3: tools/normgen and the kit package are frozen whole; the
+# judge of ADR-0121 доп. (8) п. 5 no longer covers them in the course source.
+FROZEN_SOURCE = ("tools/normgen",)
 # ADR-VMS-0003 Decision2б: exact public upstream/literal carriers selected by
 # Sourcec8eafc05626112db4c2003b416f762055deaef65, source-owned inbox
 # decisions/inbox/2026-11-08-запрос-vms-v11-english-cb728a4.md.
@@ -70,12 +73,16 @@ LETTER_RANGES = ((0x0400, 0x0481), (0x048A, 0x052F), (0x1C80, 0x1C8A),
 LETTERS = re.compile("[" + "".join(chr(low) + "-" + chr(high) for low, high in LETTER_RANGES) + "]")
 
 
+def under(name, homes):
+    return any(name == home or name.startswith(home + "/") for home in homes)
+
+
 def scoped(name, *, export=False):
-    return export or any(name == scope or name.startswith(scope + "/") for scope in SCOPES)
+    return export or under(name, SCOPES) and not under(name, FROZEN_SOURCE)
 
 
 def mirror(name):
-    # Module, common and lesson mirrors (ADR-0124); not a normgen escape hatch.
+    # Module, common and lesson mirrors (ADR-0124); nothing else is a mirror.
     parts = PurePosixPath(name).parts
     return (len(parts) >= 3 and parts[0] in {"Platform", "VMS"} and parts[1] == "ru" or
             len(parts) >= 4 and parts[0] in {"Platform", "VMS"} and parts[2] == "ru" and
