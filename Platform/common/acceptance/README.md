@@ -222,6 +222,22 @@ C04-STAND-GID-01, the Architect's decision of 2026-10-23):
 - **the entry point of a process on the stand** is a profile command (for example, `controller-stand <sub>`): the process connects to the store
   with its own role (`PLATFORM_STORE` of the role), not `admin`.
 
+### Table header and columns by name
+
+This rule holds for every TSV table whose form names its columns. These are the registries of `forms/` of a lesson and of `common/acceptance/forms/` (among them the [target registry](forms/targets.README.md) and [`targets.routing.tsv`](forms/targets.routing.tsv)), [`runner-targets.tsv`](runner-targets.tsv), the vector registries [`wire.tsv`](../vectors/wire.tsv) and [`consumers.tsv`](../vectors/consumers.tsv), and the [command tables](#command-tables) `puts.tsv`, `expect.tsv` and `check.tsv`. A form of a lesson that names its columns follows the rule as well.
+
+1. The table is UTF-8, its lines are separated by LF and its cells by TAB. Empty lines and lines that begin with `#` are notes, except the declarations that a form names (`# cell-json:`, `# canonical:`, `# beside:`).
+2. The first line that is not a note is the header. Each of its cells is a column name, and a name occurs once.
+3. A reader finds each column by its name in the header, never by its position. A cell means what its column name means in the form. Neither the order of the columns nor an added column changes the meaning of a cell, because a form grows by columns (the column `body` of the routing table) and a reader by position would read a wrong cell after such a change. A column that the form does not name is not read and is not an error, unless the form closes its list of columns.
+4. Every other line has exactly as many cells as the header.
+5. A table outside this form is a data error of the class `data` (N4 of the [norms](spec/acceptance.norms.md), P/AC-R024) of every target that reads it, found before the stand starts. Outside the form are: a table without a header, a repeated column name, a missing column that the form requires (a column it lists, unless the form makes it optional) and a line of another number of cells. Such a table is neither a failure of the judge nor an outcome of the implementation.
+
+**Positional forms.** Three forms fix their cells by position and stay outside this rule, because their own forms give the names of the cells and many tables of the lessons are written without a header line:
+
+- the scenario form: `scenarios.tsv`, `seams.tsv` and `forms/*.scenarios.tsv` — exactly the four cells `scenario`, `step`, `request`, `expect` (the row of `scenarios.tsv` in the [dictionary](#dictionary-of-directives-and-doors)); the header may be a note;
+- the [loader verdicts](#loader-verdicts) of P/02.1: `verdicts.tsv`, `classes.tsv` and `diagnostics.tsv`, with the cells of that form and without a header;
+- a vector case table whose cell `header` in `wire.tsv` begins with `-`: it has no header line, and the names after `-` name its cells by position ([vector wire form](../vectors/wire.md)).
+
 ### Dictionary of directives and doors
 
 One definition per module. A lesson README references this dictionary and writes only its own: the preparation, the roles and
