@@ -1,5 +1,7 @@
-"""The six checks of the reading form of M (m_form.py) on the accepted form of P/01 and on spoiled copies of it."""
+"""The seven checks of the reading form of M (m_form.py), its stage A and the lesson without a list on the accepted form
+of P/01 and on spoiled copies of it."""
 
+import json
 import re
 import shutil
 import tempfile
@@ -119,7 +121,7 @@ class AcceptedFormPasses(AcceptedForm):
         check = self.run_checks()
         self.assertEqual(check.errors, [])
         for name in ("history_phrases", "index_refs", "see_also_refs", "judge_only_refs", "production_scoped",
-                     "history_rows"):
+                     "history_rows", "checklist_marks"):
             self.assertGreater(check.stats[name], 0, name)
 
     def test_run_through_check_spec_method_only_for_checked_lessons(self):
@@ -189,9 +191,13 @@ class HistoryPhrases(AcceptedForm):
         self.replace("spec/01.1-store.norms.md", "Normative keywords follow", "A row removed from the store; keywords follow")
         self.assertEqual(self.run_checks().errors, [])
 
-    def test_adr_later_keeps_forms_and_a_new_file_is_judged(self):
+    def test_adr_later_keeps_outcomes_and_judges_forms_and_a_new_file(self):
+        # P01.176 removed the numbers from forms/*.tsv: a form is judged; data/*.outcomes.tsv wait for OBSH.42.
+        self.assertNotIn("forms/*.tsv", m_form.ADR_LATER["P/01"])
+        self.replace("data/epoch_floor.outcomes.tsv", "\n", "\n# the outcomes of ADR-0129\n")
+        self.assertEqual(self.run_checks().errors, [], "data/*.outcomes.tsv — with the families block (OBSH.42)")
         self.replace("forms/runtime-constants.tsv", "\n", "\n# the constants of ADR-0129\n")
-        self.assertEqual(self.run_checks().errors, [], "forms/*.tsv — after P01.176")
+        self.assert_error(self.run_checks(), f"{HOME}/forms/runtime-constants.tsv", 2, "an ADR number in M")
         self.replace("probes/README.md", "\n", "\nThe probes of ADR-0133.\n")
         self.assert_error(self.run_checks(), f"{HOME}/probes/README.md", 2, "an ADR number in M")
 
@@ -375,6 +381,137 @@ class ProductionScoped(AcceptedForm):
                           "inside a paragraph")
 
 
+class ChecklistMarks(AcceptedForm):
+    REL = "spec/01.1-store.norms.md"
+
+    def test_accepted_marks_pass_with_count(self):
+        check = self.run_checks()
+        self.assertEqual(check.errors, [])
+        items = sum(len(m_form.checklist_items((self.home / rel).read_text(encoding="utf-8")))
+                    for rel in ("spec/01.1-store.norms.md", "spec/01.2-store.norms.md", "spec/01.3-store.norms.md"))
+        self.assertEqual(check.stats["checklist_marks"], 2 * items)       # the source and the translation
+        self.assertGreater(items, 50)
+
+    def test_grammar_of_the_mark_fails(self):
+        item = "- [ ] **P/01.1-15** [reading] a read"
+        cases = [
+            ("- [ ] **P/01.1-15** a read", "no mark"),
+            ("- [ ] **P/01.1-15** [read] a read", "a closed list"),
+            ("- [ ] **P/01.1-15** [test,reading] a read", "a closed list"),
+            ("- [ ] **P/01.1-15** [reading, reading] a read", "repeats a word"),
+            ("- [ ] **P/01.1-15** [test] [reading] a read", "a second mark"),
+            ("- [ ] **P/01.1-15** [reading]a read", "not followed by a space"),
+            ("- [ ] **P/01.1-15**  [reading] a read", "no mark"),
+            ("- [ ] **P/01.1-15** a read [reading]", "no mark"),
+        ]
+        for bad, words in cases:
+            with self.subTest(bad=bad):
+                self.setUp()
+                self.replace(self.REL, item, bad)
+                self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, bad), words)
+
+    def test_production_label_before_the_mark_and_withdrawn_item(self):
+        self.assertIn("- [ ] **P/01.1-32** **Scope: production.** [stand]",
+                      (self.home / self.REL).read_text(encoding="utf-8"))
+        rel = self.REL
+        self.replace(rel, "**P/01.1-32** **Scope: production.** [stand]", "**P/01.1-32** [stand] **Scope: production.**")
+        self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, "**P/01.1-32** [stand]"),
+                          "goes between the id and the mark")
+        self.setUp()
+        self.replace(rel, "- [ ] **P/01.1-24** removed:", "- [ ] **P/01.1-24** [reading] removed:")
+        self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, "**P/01.1-24** [reading]"),
+                          "a withdrawn item has no mark")
+        self.setUp()
+        self.replace(rel, "- [ ] **P/01.1-24** removed: `ADR-0133`", "- [ ] **P/01.1-24** removed: `ADR-0133` [reading]")
+        self.assertEqual(self.run_checks().errors, [])     # the words after a withdrawal are no mark
+
+    def test_translation_has_the_same_english_words(self):
+        rel = "ru/" + self.REL
+        for before, after, words in (
+                ("- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15** [test]", "differs from the source [reading]"),
+                ("- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15** [чтение]", "a closed list"),
+                ("- [ ] **P/01.1-03** [test, reading]", "- [ ] **P/01.1-03** [reading, test]", "differs from the source"),
+                ("**P/01.1-32** **Охват: боевой.** [stand]", "**P/01.1-32** **Охват: боевой.** [test]", "differs"),
+                ("- [ ] **P/01.1-24** снята:", "- [ ] **P/01.1-24** [test] снята:", "a withdrawn item has no mark")):
+            with self.subTest(after=after):
+                self.setUp()
+                self.replace(rel, before, after)
+                self.assert_error(self.run_checks(), f"{HOME}/{rel}", self.line_of(rel, after), words)
+
+    def test_items_in_code_are_not_judged(self):
+        self.replace(self.REL, "## Readiness checklist\n", "## Readiness checklist\n\n```\n- [ ] **P/01.1-99** an example\n```\n")
+        self.assertEqual(self.run_checks().errors, [])
+
+
+class StageA(AcceptedForm):
+    """A lesson of M_FORM_STAGE_A: only history_phrases (without forms/*.tsv and data/*.tsv), judge_only_refs and
+    history_rows (P01.228)."""
+
+    def run_stage_a(self):
+        with patch.object(m_form, "M_FORM_LESSONS", set()), patch.object(m_form, "M_FORM_STAGE_A", {"P/01"}):
+            return self.run_checks()
+
+    def test_stage_a_judges_only_its_three_checks(self):
+        self.replace("spec/01.1-store.norms.md", "- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15**")
+        self.replace("spec/01.1-store.norms.md", "| P/01.1-R019, P/01.1-R020,", "| P/01.1-R020, P/01.1-R019,")
+        self.replace("forms/runtime-constants.tsv", "\n", "\n# the constants of ADR-0129\n")
+        self.replace("data/epoch_floor.outcomes.tsv", "\n", "\n# reconciliation of python and go\n")
+        check = self.run_stage_a()
+        self.assertEqual(check.errors, [])
+        for name in ("history_phrases", "judge_only_refs", "history_rows"):
+            self.assertGreater(check.stats[name], 0, name)
+        for name in ("index_refs", "see_also_refs", "production_scoped", "checklist_marks"):
+            self.assertEqual(check.stats[name], 0, name)
+
+    def test_stage_a_finds_history_judge_only_and_rows(self):
+        self.replace("README.md", "\n", "\nThe store (the Architect's decision of 2026-10-18).\n")
+        self.replace("acceptance/1/README.md", "The table `scenarios.tsv` of the chapter",
+                     "The steps are in `seams.tsv` here. The table `scenarios.tsv` of the chapter")
+        path = self.root / JOURNAL / "history.tsv"
+        path.write_text(path.read_text(encoding="utf-8") + "-\tforms/write-checks.tsv#row:999\tx\t2026-11-11\ty\n",
+                        encoding="utf-8")
+        errors = "\n".join(self.run_stage_a().errors)
+        self.assertIn(f"{HOME}/README.md: line 2: history in M", errors)
+        self.assertIn("judge-only file", errors)
+        self.assertIn("#row:999: no row", errors)
+
+    def test_a_lesson_in_both_sets_is_an_error(self):
+        with patch.object(m_form, "M_FORM_STAGE_A", {"P/01"}):
+            errors = self.run_checks().errors
+        self.assertTrue(any("in M_FORM_LESSONS and in M_FORM_STAGE_A" in e for e in errors), errors)
+
+    def test_stage_a_set_is_empty_for_now(self):
+        self.assertEqual(m_form.M_FORM_STAGE_A, set())
+
+
+class LessonWithoutList(AcceptedForm):
+    """A lesson without forms/export.json takes its files of M from the common filter M (export_lists)."""
+
+    def move_list_to_common(self):
+        listed = self.home / "forms/export.json"
+        data = json.loads(listed.read_text(encoding="utf-8"))
+        listed.unlink()
+        for side, rel in (("model", COMMON_FILES[0]), ("judge", COMMON_FILES[1])):
+            path = self.root / rel
+            common = json.loads(path.read_text(encoding="utf-8"))
+            common["files"] = sorted(common["files"] + [r for r in data[side] if r["path"] != f"{HOME}/forms/export.json"],
+                                     key=lambda r: r["path"].encode("utf-8"))
+            path.write_text(json.dumps(common, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def test_judged_by_the_common_filter(self):
+        self.move_list_to_common()
+        check = self.run_checks()
+        self.assertEqual(check.errors, [])
+        self.assertGreater(check.stats["history_phrases"], 0)
+        self.replace("README.md", "\n", "\nThe store (the Architect's decision of 2026-10-18).\n")
+        self.assert_error(self.run_checks(), f"{HOME}/README.md", 2, "history in M")
+
+    def test_no_file_of_m_is_an_error(self):
+        (self.home / "forms/export.json").unlink()
+        errors = self.run_checks().errors
+        self.assertTrue(any(e.startswith(f"{HOME}: ") and "names no file model_and_judge" in e for e in errors), errors)
+
+
 class HistoryRows(AcceptedForm):
     def journal(self, name):
         return self.root / JOURNAL / name
@@ -428,6 +565,37 @@ class HistoryRows(AcceptedForm):
         path = self.journal("history.tsv")
         path.write_text(path.read_text(encoding="utf-8").replace("req_id\tfile", "req\tfile", 1), encoding="utf-8")
         self.assert_error(self.run_checks(), f"{JOURNAL}/history.tsv", 1, "the header")
+
+    def test_tsv_addresses_header_and_row_by_key(self):
+        # A row of a form by the value of its first column, the comment of its header — not by a line number.
+        for address in ("forms/write-checks.tsv#header", "forms/write-checks.tsv#row:3",
+                        "forms/runtime-constants.tsv#row:JSON_DEPTH", "forms/group.tsv#row:stand_size",
+                        "forms/write-checks.tsv.schema.json#/description"):
+            with self.subTest(address=address):
+                self.setUp()
+                self.add_row("history.tsv", f"-\t{address}\tx\t2026-11-11\ty")
+                self.assertEqual(self.run_checks().errors, [])
+
+    def test_tsv_addresses_fail(self):
+        cases = [
+            ("forms/write-checks.tsv#row:999", "no row with the first column «999»"),
+            ("forms/write-checks.tsv#row:", "#header or #row:"),
+            ("forms/write-checks.tsv#L20", "#header or #row:"),
+            ("forms/write-checks.tsv#/fields/1", "#header or #row:"),
+            ("forms/write-checks.probes.tsv#row:0", "repeats at lines"),
+            ("forms/targets.tsv#header", "no comment lines"),
+            ("spec/01.1-store.norms.md#row:1", "addresses a TSV form"),
+            ("spec/01-store.api.openapi.yaml#header", "addresses a TSV form"),
+        ]
+        for address, words in cases:
+            with self.subTest(address=address):
+                self.setUp()
+                if address.startswith("forms/targets.tsv"):
+                    path = self.home / "forms/targets.tsv"
+                    path.write_text("".join(line for line in path.read_text(encoding="utf-8").splitlines(True)
+                                            if not line.startswith("#")), encoding="utf-8")
+                line = self.add_row("history.tsv", f"-\t{address}\tx\t2026-11-11\ty")
+                self.assert_error(self.run_checks(), f"{JOURNAL}/history.tsv", line, words)
 
     def test_history_of_a_chapter_the_lesson_has_not(self):
         shutil.copy(self.journal("history-1.tsv"), self.journal("history-9.tsv"))

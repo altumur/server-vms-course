@@ -1,5 +1,5 @@
 """Checks of the reading form of M (ADR-0133 addendum (56); P01.175; decisions of the Architect 2026-11-11 on the
-lesson-spec proposal, item 4; review P01.214 C1–C5). Six checks, each a FAIL with its file and line:
+lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228). Seven checks, each a FAIL with its file and line:
 
 - `history_phrases` — no origin text in the files of M: a closed list of history phrases (both languages) and `ADR-0`
   outside tombstones, in the English sources and their translations of the lessons of `M_FORM_LESSONS` and of the
@@ -19,8 +19,17 @@ lesson-spec proposal, item 4; review P01.214 C1–C5). Six checks, each a FAIL w
 - `history_rows` — the history files `decisions/journal/<module>/<lesson>/history[-K].tsv`: the header
   `req_id file source date removed`, `req_id` `-` or a requirement of the lesson, `file#fragment` exists by its kind
   (`#intro`; `#N0`…`#N5` with subsections — the section of the norms by its number in any language; `#/…` in YAML or
-  JSON — a JSON Pointer into the parsed document; any other fragment of Markdown — a heading anchor), an ISO date,
-  nonempty source and removed text.
+  JSON — a JSON Pointer into the parsed document; `#header` — the comment lines of a TSV before its column header,
+  `#row:<key>` — the one row of a TSV whose first column is the key; any other fragment of Markdown — a heading
+  anchor), an ISO date, nonempty source and removed text;
+- `checklist_marks` — every item `- [ ] **P/NN.K-MM**` of the checklists of the norms names right after its id (after
+  the label «**Scope: production.**» when it has it) one mark of the way it is closed: `[test]`, `[reading]`,
+  `[stand]` or several of these words through «, »; a withdrawn item has none; the translation has the same English
+  words (P/01.1-R151; the Architect on P01.176, P01.228).
+
+A lesson of `M_FORM_STAGE_A` is judged by stage A of its form only: `history_phrases` without its `forms/*.tsv` and
+`data/*.tsv`, `judge_only_refs` and `history_rows`. A lesson without `forms/export.json` takes its files of M from the
+common filter M (`export_lists`, ADR-0135 addendum (14)).
 
 Built text is judged at its builder: `data/*.schema.json` (v7.build from the dialect and `common.form.yaml`) and the
 families block of the norms (`<!-- families:begin -->` … `<!-- families:end -->`, v7/section.py) are not read by
@@ -39,6 +48,13 @@ import yaml
 # Lessons whose M is in the reading form (P01.175, P01.177). A lesson enters when its form is brought in by its own
 # task: the checks run on a lesson only after its norms carry no history, their index and «See also» lines.
 M_FORM_LESSONS = {"P/01"}
+
+# Lessons whose stage A of the form is accepted (OBSH.41; the Architect on P04.29, P01.228): history out of the text and
+# the judge-only markers, before their norms get the index, «See also», the marks of the checklist (stage B). Only
+# history_phrases (outside STAGE_A_OUTSIDE), judge_only_refs and history_rows run on them. A lesson leaves the set when
+# it enters M_FORM_LESSONS: a lesson in both is an error.
+M_FORM_STAGE_A = set()
+STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data are cleaned at stage B
 
 # The common inputs (paths under Platform/common/ that the common filter gives to M) read by `history_phrases`. Empty:
 # on main 2026-11-11 the common inputs carry history (Platform/common/acceptance/: 107 phrases and 148 ADR numbers in
@@ -61,12 +77,11 @@ TOMBSTONE = re.compile(r"<!-- removed: \S+ by ADR-[0-9]{4} -->")
 WITHDRAWN = re.compile(r"\*\*[^*\s]+\*\*\s+(?:снята|withdrawn|removed):\s*`?ADR-[0-9]{4}`?")
 
 # ADR numbers outside the norms that stay for now, by lesson, as paths from the lesson root (fnmatch). Item 2 of the
-# decision removes the numbers from the text of the norms; P01.177 removed them from spec/*.norms.md. The forms keep
-# theirs until P01.176 (the Architect on P01.177). The other files of M have not been cleaned yet: they enter by the
-# word of the Architect. An exact path whose source and translation carry no number any more is stale — an error.
+# decision removes the numbers from the text of the norms; P01.177 removed them from spec/*.norms.md, P01.176 from
+# forms/*.tsv. The other files of M have not been cleaned yet: they enter by the word of the Architect. An exact path
+# whose source and translation carry no number any more is stale — an error.
 ADR_LATER = {
     "P/01": {
-        "forms/*.tsv": "comments and the column norm of the forms — включить после P01.176",
         "README.md": "outside the norms; not cleaned by P01.177",
         "lifecycle.md": "outside the norms; not cleaned by P01.177",
         "spec/01-store.README.md": "outside the norms; not cleaned by P01.177",
@@ -75,8 +90,10 @@ ADR_LATER = {
         "acceptance/1/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/2/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/3/README.md": "outside the norms; not cleaned by P01.177",
-        "data/configstore-doors.outcomes.tsv": "outside the norms; not cleaned by P01.177",
-        "data/epoch_floor.outcomes.tsv": "outside the norms; not cleaned by P01.177",
+        "data/configstore-doors.outcomes.tsv": "their texts are in the families block of 01.3: together with the "
+                                               "rebuild of the families block (OBSH.42)",
+        "data/epoch_floor.outcomes.tsv": "their texts are in the families block of 01.3: together with the rebuild of "
+                                         "the families block (OBSH.42)",
         "vectors/jcs/README.md": "outside the norms; not cleaned by P01.177",
         "vectors/rights-evaluator/README.md": "outside the norms; not cleaned by P01.177",
     },
@@ -92,6 +109,13 @@ REQ_ID = re.compile(REQ)
 REQ_ANCHOR = re.compile(r"<!-- req: (" + REQ + r") -->")
 REMOVED_ANCHOR = re.compile(r"<!-- removed: (" + REQ + r") by ADR-[0-9]{4} -->")
 CHECK_ITEM = re.compile(r"^\s*- \[[ x]\] \*\*[^*\s]+\*\*\s+")
+# An item of a checklist of the norms and the mark of the way it is closed (P/01.1-R151): the words are English in both
+# languages; the label of production scope stands between the id and the mark.
+ITEM_ID = re.compile(r"^\s*[-*+] \[[ xX]\] \*\*(P/[0-9]{2}(?:\.[0-9]+)?-[0-9]{2})\*\*")
+MARK_WORDS = ("test", "reading", "stand")
+MARK = re.compile(r"\[([^\]\n]*)\]")
+WITHDRAWN_TAIL = re.compile(r"\s+(?:снята|withdrawn|removed):\s*`?ADR-[0-9]{4}")   # WITHDRAWN after a mark
+SECOND_MARK = re.compile(r"\s*\[(?:test|reading|stand)(?:, [^\]\n]*)?\]")
 HISTORY_HEADER = ["req_id", "file", "source", "date", "removed"]
 HISTORY_FILE = re.compile(r"history(?:-((?:0|[1-9][0-9]?)))?\.tsv")
 SECTION_NUMBER = re.compile(r"N[0-9](?:\.[0-9]+[a-z]?)*")
@@ -174,30 +198,41 @@ def lesson_homes(check, lessons):
     homes = {}
     for _, row in check.lessons_table()[1]:
         key = f"P/{row.get('lesson')}"
-        if key in M_FORM_LESSONS and (lessons is None or row.get("lesson") in lessons) and row.get("dir"):
+        if key in M_FORM_LESSONS | M_FORM_STAGE_A and (lessons is None or row.get("lesson") in lessons) and \
+                row.get("dir"):
             homes[key] = check.root / "Platform" / row["dir"]
     return homes
 
 
 def run(check, lessons=None):
-    """All six checks over the lessons of M_FORM_LESSONS that this run checks (`lessons` — lesson numbers; None — all)
-    and the common inputs of M_FORM_COMMON."""
+    """The checks over the lessons of M_FORM_LESSONS and M_FORM_STAGE_A that this run checks (`lessons` — lesson
+    numbers; None — all) and the common inputs of M_FORM_COMMON."""
     homes = lesson_homes(check, lessons)
     if not homes and not M_FORM_COMMON:
         return
     model = export_model(check)
     for key, home in sorted(homes.items()):
         lesson = Lesson(check, key, home)
-        if not (home / "forms/export.json").is_file():
-            check.error(home / "forms/export.json", f"{key} is in M_FORM_LESSONS: the files of M come from its list")
-            continue
+        if key in M_FORM_LESSONS and key in M_FORM_STAGE_A:
+            check.error(home, f"{key} is in M_FORM_LESSONS and in M_FORM_STAGE_A: stage B of the form judges stage A "
+                              "too — remove the lesson from m_form.M_FORM_STAGE_A")
+        stage_a = key not in M_FORM_LESSONS
+        # The files of M: the lesson's own list forms/export.json, or the common filter M for a lesson that has not
+        # brought its list yet (export_lists assembles both).
         files = lesson.m_files(model)
-        history_phrases(check, lesson, files)
+        if not files:
+            check.error(home / "forms/export.json" if (home / "forms/export.json").is_file() else home,
+                        f"{key} is in the form of M, and the assembled filter M names no file model_and_judge of it")
+            continue
+        history_phrases(check, lesson, files, STAGE_A_OUTSIDE if stage_a else ())
+        judge_only_refs(check, lesson, files, model)
+        history_rows(check, lesson)
+        if stage_a:
+            continue
         index_refs(check, lesson)
         see_also_refs(check, lesson)
-        judge_only_refs(check, lesson, files, model)
         production_scoped(check, lesson, files)
-        history_rows(check, lesson)
+        checklist_marks(check, lesson)
     common_history(check, model)
 
 
@@ -235,11 +270,12 @@ def scan_history(check, path, later=None):
     return numbers
 
 
-def history_phrases(check, lesson, files):
+def history_phrases(check, lesson, files, outside=()):
+    """`outside` — globs from the lesson root not judged at this stage of the form (STAGE_A_OUTSIDE)."""
     carried = {}
     for source in files:
         rel = source.relative_to(lesson.home).as_posix()
-        if source.suffix not in TEXT_SUFFIXES or any(fnmatch.fnmatchcase(rel, b) for b in BUILT):
+        if source.suffix not in TEXT_SUFFIXES or any(fnmatch.fnmatchcase(rel, b) for b in BUILT + tuple(outside)):
             continue
         later = _later(lesson, rel)
         for path in (source, lesson.translation(source)):
@@ -248,7 +284,8 @@ def history_phrases(check, lesson, files):
                 if later is not None:
                     check.stats["history_adr_later"] += 1
     for glob in ADR_LATER.get(lesson.key, {}):
-        if not any(ch in glob for ch in "*?[") and not carried.get(glob):
+        if not any(ch in glob for ch in "*?[") and not carried.get(glob) and \
+                not any(fnmatch.fnmatchcase(glob, o) for o in outside):
             check.error(lesson.home / glob, f"stale ADR_LATER entry of {lesson.key}: the file carries no ADR number "
                                             "(or is not in M) — remove the entry from m_form.ADR_LATER")
 
@@ -597,6 +634,80 @@ def production_scoped(check, lesson, files):
                     blank = True
 
 
+# --- checklist_marks -----------------------------------------------------------------------------------------------
+
+class Error(str):
+    """Why a checklist item breaks the grammar of its mark."""
+
+
+def checklist_items(text, label=LABELS[0]):
+    """[(line, id, mark)] of the checklist items outside code: mark — the tuple of the words of the one mark right
+    after the id (and the label `label`), "withdrawn" for a withdrawn item, or an error text by the grammar."""
+    out = []
+    for n, line, fence in fenced_lines(text):
+        m = None if fence else ITEM_ID.match(line)
+        if not m:
+            continue
+        rest = line[m.end():]
+        labelled = rest.startswith(" " + label)
+        after = rest[len(label) + 1:] if labelled else rest
+        mark = MARK.match(after, 1) if after.startswith(" [") else None
+        if WITHDRAWN.match(line, line.index("**")):
+            out.append((n, m[1], Error("a withdrawn item has no mark") if mark else "withdrawn"))
+            continue
+        if mark is None:
+            out.append((n, m[1], Error("no mark [test], [reading] or [stand] right after the id" +
+                                       (f" and {label}" if labelled else ""))))
+            continue
+        words, tail = tuple(mark[1].split(", ")), after[mark.end():]
+        if WITHDRAWN_TAIL.match(tail):
+            out.append((n, m[1], Error("a withdrawn item has no mark")))
+        elif label in tail:
+            out.append((n, m[1], Error(f"the label {label} goes between the id and the mark")))
+        elif any(w not in MARK_WORDS for w in words):
+            out.append((n, m[1], Error(f"the mark [{mark[1]}]: the words {', '.join(MARK_WORDS)} through «, », "
+                                       "a closed list")))
+        elif len(set(words)) != len(words):
+            out.append((n, m[1], Error(f"the mark [{mark[1]}] repeats a word")))
+        elif SECOND_MARK.match(tail):
+            out.append((n, m[1], Error("a second mark: one mark, several words in it through «, »")))
+        elif tail and not tail.startswith(" "):
+            out.append((n, m[1], Error(f"the mark [{mark[1]}] is not followed by a space")))
+        else:
+            out.append((n, m[1], words))
+    return out
+
+
+def withdrawn_items(text):
+    """The ids of the withdrawn checklist items of a source of norms (stage_norms of check_spec: no stage required)."""
+    return {value for _, value, mark in checklist_items(text) if mark == "withdrawn"}
+
+
+def _shown(mark):
+    return mark if mark == "withdrawn" else f"[{', '.join(mark)}]"
+
+
+def checklist_marks(check, lesson):
+    for norms in lesson.chapters:
+        marks = {}
+        for n, value, mark in checklist_items(norms.read_text(encoding="utf-8"), LABELS[0]):
+            check.stats["checklist_marks"] += 1
+            if isinstance(mark, Error):
+                check.error(norms, f"line {n}: {value}: {mark} (P/01.1-R151)")
+            else:
+                marks[value] = mark
+        translation = lesson.translation(norms)
+        if not translation.is_file():
+            continue
+        for n, value, mark in checklist_items(translation.read_text(encoding="utf-8"), LABELS[1]):
+            check.stats["checklist_marks"] += 1
+            if isinstance(mark, Error):
+                check.error(translation, f"line {n}: {value}: {mark} (P/01.1-R151)")
+            elif value in marks and marks[value] != mark:
+                check.error(translation, f"line {n}: {value}: the mark {_shown(mark)} differs from the source "
+                                         f"{_shown(marks[value])}: the same English words")
+
+
 # --- history_rows --------------------------------------------------------------------------------------------------
 
 def _pointer(document, fragment):
@@ -619,6 +730,38 @@ def _sections(path):
         if m:
             numbers.add(m[1])
     return numbers
+
+
+def _tsv(target):
+    """(the comment lines before the column header, {value of the first column: [lines]}) of a TSV form."""
+    lines = target.read_bytes().decode("utf-8").split("\n")
+    head = next((i for i, line in enumerate(lines) if line and not line.startswith("#")), len(lines))
+    keys = {}
+    for n, line in enumerate(lines[head + 1:], head + 2):
+        if line and not line.startswith("#"):
+            keys.setdefault(line.split("\t", 1)[0], []).append(n)
+    return [line for line in lines[:head] if line.startswith("#")], keys
+
+
+def _tsv_problem(target, fragment, parsed):
+    """A TSV is addressed by its rows, not by line numbers: `#header` — the comment of its header (the lines # before
+    the column header), `#row:<key>` — the one row whose first column is the key (the Architect on P02.59, P01.228)."""
+    if target not in parsed:
+        try:
+            parsed[target] = _tsv(target)
+        except (OSError, UnicodeError) as exc:
+            return f"unreadable: {exc}"
+    comment, keys = parsed[target]
+    if fragment == "header":
+        return None if comment else "#header: the form has no comment lines # before its column header"
+    if not fragment.startswith("row:") or fragment == "row:":
+        return "a TSV form is addressed by #header or #row:<value of the first column>"
+    key = fragment[len("row:"):]
+    if key not in keys:
+        return f"#row:{key}: no row with the first column «{key}»"
+    if len(keys[key]) > 1:
+        return f"#row:{key}: the first column «{key}» repeats at lines {', '.join(map(str, keys[key]))}: not an address"
+    return None
 
 
 def history_rows(check, lesson):
@@ -677,6 +820,10 @@ def address_problem(check, lesson, address, parsed):
     target = lesson.home / name
     if not target.is_file():
         return f"no file {lesson.rel}/{name}"
+    if target.suffix == ".tsv":
+        return _tsv_problem(target, fragment, parsed)
+    if fragment == "header" and target.suffix != ".md" or fragment.startswith("row:"):
+        return f"#{fragment} addresses a TSV form"
     if fragment == "intro":
         return None if target.suffix == ".md" else "#intro addresses the introduction of a Markdown file"
     if SECTION_NUMBER.fullmatch(fragment):

@@ -80,6 +80,29 @@ class StageNormCoverageControls(unittest.TestCase):
         self.stages(["P/01.1-01; P/01.1-02"])
         self.assertEqual(self.check().errors, [])
 
+    def test_withdrawn_item_needs_no_stage_and_may_still_be_named_once(self):
+        # A withdrawn item (m_form.WITHDRAWN) keeps its id, not a requirement (P01.176 item 4, P01.228).
+        self.source.write_text(self.source.read_text() + "- [ ] **P/01.1-03** removed: `ADR-0133`; moved to P/08.0\n",
+                               encoding="utf-8")
+        for cells in (["P/01.1-01; P/01.1-02"], ["P/01.1-01; P/01.1-02; P/01.1-03"]):
+            with self.subTest(cells=cells):
+                self.stages(cells)
+                result = self.check()
+                self.assertEqual(result.errors, [])
+                self.assertEqual(result.stats["stage_norm_items"], 3)
+                self.assertEqual(result.stats["stage_norm_withdrawn"], 1)
+        self.stages(["P/01.1-01; P/01.1-02; P/01.1-03", "P/01.1-03"])
+        self.assertTrue(any("P/01.1-03 repeats" in error for error in self.check().errors))
+
+    def test_an_item_without_the_withdrawal_form_still_needs_a_stage(self):
+        for line in ("- [ ] **P/01.1-03** [reading] removed: `ADR-0133`\n", "- [ ] **P/01.1-03** removed: later\n",
+                     "~~~\n- [ ] **P/01.1-04** removed: `ADR-0133`\n~~~\n- [ ] **P/01.1-03** live\n"):
+            with self.subTest(line=line):
+                self.source.write_text("## Readiness checklist\n\n- [ ] **P/01.1-01** First item.\n"
+                                       "- [ ] **P/01.1-02** Second item.\n" + line, encoding="utf-8")
+                self.stages(["P/01.1-01; P/01.1-02"])
+                self.assertTrue(any("P/01.1-03 is at no stage" in error for error in self.check().errors))
+
     def test_canonical_foreign_item_is_not_authorized_by_stage_copy(self):
         self.source.write_text(self.source.read_text() + "- [ ] **P/02.1-01** Wrong owner.\n",
                                encoding="utf-8")

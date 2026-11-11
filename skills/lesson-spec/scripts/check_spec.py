@@ -1958,7 +1958,8 @@ class Check:
                                       f"{'without' if chaptered else 'with'} chapters")
         if not required and not counts:
             return
-        wanted, system_items = [], set()
+        import m_form
+        wanted, system_items, withdrawn = [], set(), set()
         sources = sorted((home / "spec").glob("*.norms.md"))
         if not sources:
             self.error(home / "spec", "stage norms: no canonical norms files")
@@ -1975,14 +1976,18 @@ class Check:
                 else:
                     wanted.append(value)
             system_items.update(outline(body, None, SYSTEM_EN)[1])
+            withdrawn.update(m_form.withdrawn_items(body))
         expected = set(wanted)
+        # A withdrawn item («removed: `ADR-…`», m_form.WITHDRAWN) keeps its id and no requirement: it needs no stage
+        # (the Architect on P01.176 item 4, P01.228); a stage may still name it until the stage table drops it.
+        withdrawn &= expected
         if required and not expected:
             self.error(home / "spec", "stage norms: no canonical checklist items")
         for value, count in Counter(wanted).items():
             if count != 1:
                 self.error(home / "spec", f"stage norms: duplicate canonical checklist item {value}")
         for value in sorted(expected if required else counts.keys() & expected):
-            if counts[value] == 0:
+            if counts[value] == 0 and value not in withdrawn:
                 self.error(table, f"stage norms: checklist item {value} is at no stage")
             elif counts[value] > 1:
                 self.error(table, f"stage norms: checklist item {value} repeats at stages {stages[value]}")
@@ -1991,6 +1996,7 @@ class Check:
         for value in sorted(counts.keys() - expected - system_items):
             self.error(table, f"stage norms: {value} is no checklist item of this lesson")
         self.stats["stage_norm_items"] += len(expected)
+        self.stats["stage_norm_withdrawn"] += len(withdrawn)
         self.stats["stage_norm_placements"] += sum(counts.values())
 
     # Every directive a scenario uses is in a stand dictionary («Словарь директив»): the shared one of the Platform
@@ -2808,7 +2814,8 @@ class Check:
 
     def m_form(self):
         """The reading form of M (ADR-0133 addendum (56), P01.175; m_form.py): history_phrases, index_refs, see_also_refs,
-        judge_only_refs, production_scoped, history_rows over the lessons of m_form.M_FORM_LESSONS this run checks."""
+        judge_only_refs, production_scoped, history_rows, checklist_marks over the lessons of m_form.M_FORM_LESSONS this
+        run checks; stage A (history_phrases, judge_only_refs, history_rows) over those of m_form.M_FORM_STAGE_A."""
         import m_form
         m_form.run(self, {f"{n}" for n in self.lessons_seen})
 
