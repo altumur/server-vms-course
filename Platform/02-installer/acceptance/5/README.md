@@ -17,15 +17,7 @@ Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). 
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store, `@as <role>`, `@header` before the method, `$name`, `ASSERT`;
-the expectation is a subset of fields, `index` may be omitted. Own additions:
-
-- `expect` without a body at the code `403` — the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key.
-
-An absent expectation body of 200 does not mean an empty answer. Its form is checked by the contract
-of the input of chapter P/01.1; 403 — exactly the strings kind/error without console fields. `$name` is bound only
-after a match of the whole step; a repeat of a variable is compared with the earlier value. The order
-of keys in list remains the order of the store, the runner does not sort the actual answer.
+The format is [the dictionary of directives and doors of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store of P/01.1, a step goes from the role of `@as <role>`; the expectation `<code> <JSON>` is a subset of fields, and every answer is also judged by the full form of the store door (P/01): `403` is exactly the strings `{kind: "forbidden", error}`, 200 is the form of `Row` or `Written` of P/01.1. The bindings and the order of arrays follow the same dictionary.
 
 The roles of the scenarios: `console`, `testsubcontroller`, `testsubworker`, `testsub2controller`, `testsub2worker`, `resource`;
 also the domain roles `testsubdomain` and `domainagent` (a domain role `<s>domain` exists only at a manifest with `domain.kept` or a transferable
@@ -37,52 +29,17 @@ The reconciliation of python and go M10/6–11 (R1–R5, R7) is part of these sc
 
 Each scenario, including a repeated run, gets a separate instance with empty
 application rows and an empty id replay memory. Clearing the prefixes does not substitute for clearing this
-memory. The runner variables are reset, the role is set by the first `@as`; the rights file is the same
+memory. The bindings `$name` are reset, the role is set by the first `@as`; the rights file is the same
 in all scenarios. Parallel runs do not share an instance.
 
 The background consoles, controllers, workers and the resource do not write into these rows. The permission data
-is prepared by the runner through the generator and the instance setup, and each step is executed only by
+is prepared by the judge through the generator and the instance setup, and each step is executed only by
 the named role. A read right is checked without creating the row:
 an allowed read of an absent row returns Row with items null per chapter P/01.1.
 
 ## Manifest variants (`variants/`)
 
-The derivation of rights by meaning on manifests outside the stand (the reconciliation of python and go M10/6–11: R2–R8, R10, R12; registry line e31e5c28).
-The directory `variants/<variant>/` — the files `*.subsystem.yaml` (the manifest catalogue of the variant, loaded per chapter 2.1) and exactly
-one of: `expect.tsv` (the derivation of rights and probes), `refused` (an expected generation refusal), `check.tsv` with the directory `check/` (the comparison
-`--check`); the forms of `refused` and `check.tsv` are the Architect's decision on the question of the form (the Gemini audit P/02, properties 24, 25).
-
-**`expect.tsv`:** UTF-8, LF, fields separated by TAB; lines with `#` are skipped; the header `role	action	key	expect`; then one
-line per probe: a role of the rights file (P/01.2 N1.1), the action `read` | `write` | `delete`, the row key, `allow` | `deny`.
-
-**Execution.** For each variant the runner:
-1. calls the rights derivation tool of the implementation (N2, «Implementation decides» item 1) on the catalogue of the variant with the deployment `dep` —
-   by the rights derivation command of the «Stand» of the common acceptance README; code ≠ 0 — a mismatch of the variant;
-2. starts a fresh store instance with this file (`{rights}`);
-3. for each line calls through the role socket: `read` — `GET /v1/get?key=<key>`, `write` — `put` with `items: {"p": "1"}`, `delete`
-   — `delete`, without `cas` and a guard. The rule is as in the evaluator vector (`Platform/01-store/vectors/rights-evaluator`):
-   `allow` — only a confirmed success: for a read 200 of the form `Row` (for an absent row — `{items: null, index: ""}`,
-   chapter P/01.1 N2), for a write and a deletion 200 `Written`; `deny` — 403 `forbidden`; there is no role socket — the same as 403 (the role is not in the
-   file: «role not in the file → no», P/01.2 N1.3); 5xx, a transport error and another answer — an undetermined outcome: the probe is not
-   counted either as `allow` or as `deny`, the run of the variant is not green (review of stage A, RA1-16).
-
-The order of lines does not matter: each probe is its own action on one fresh instance. This checks the meaning of the rights file (P/01.2 N1.3 and
-`never`), not its bytes: the order of patterns, `comment`, extra equivalent patterns (R18) and groups are not compared.
-
-**`refused`:** UTF-8, LF; lines with `#` are skipped; exactly one other line — the `name` of the manifest of the variant whose declaration
-is refused. The runner calls the rights derivation command as in item 1 above: the code MUST be `2`, there is no rights file at the path `{file}` (a generation refusal
-before the file, N4), stderr names this manifest — its `name` or its file (N4: «declaration name and manifest»);
-the text beyond this is not compared. The store is not started, there are no probes.
-
-**`check.tsv`:** UTF-8, LF, fields separated by TAB; lines with `#` are skipped; the header `case	file	code`; then one line per
-case: `case` — `[a-z0-9_]+`, unique; `file` — `check/<case>.rights`, a rights file; `code` — `0` (the file by meaning
-equals the generated one) or `!0` (any code except 0). For each line the runner calls the rights comparison of the implementation (`rights --check
-<file>`, N2, N3 «install») — by the command `stand.rights-check` of the profile `02-installer` ([the common acceptance README](../../../common/acceptance/README.md),
-«Rights comparison command»): `{manifests}` — the manifest catalogue of the variant, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
-the outcome is the code, compared with the column `code`. No key in the profile — the cases of `check.tsv` are not executed (neither GREEN nor an outcome of the
-implementation) (the Architect's decision of 2026-10-30, the norm questions of the Gemini audit, P/02 item 3; C02-RIGHTS-CHECK-STAND-01). The comparison by meaning
-is N3 «install»: the set of roles, for each one `group` and the sets of patterns `read`, `write`, `delete` (no `delete` — an empty
-set); `comment`, order, repeats and spaces are not compared; a file not by the form of P/01.2 N1.2 — diverges.
+The derivation of rights by meaning on manifests outside the stand (the reconciliation of python and go M10/6–11: R2–R8, R10, R12; registry line e31e5c28). The directories `variants/<variant>/` are run by the engine word `variants` in the form «[Rights variants](../../../common/acceptance/README.md#rights-variants)» of the common acceptance README: the files of a variant, `expect.tsv`, `refused`, `check.tsv` with `check/`, the calls of `stand.rights` and `stand.rights-check` with the deployment `dep` and what counts as `allow` and `deny` are defined there. The forms of `refused` and `check.tsv` are the Architect's decision on the question of the form (the Gemini audit P/02, properties 24, 25). The comparison of `check.tsv` by meaning is N3 «install»: the set of roles, for each one `group` and the sets of patterns `read`, `write`, `delete` (no `delete` — an empty set); `comment`, order, repeats and spaces are not compared; a file not by the form of P/01.2 N1.2 diverges.
 
 The variants and their expected outcomes are in [judge-only case data](README.cases.md). They cover these subjects:
 
@@ -102,35 +59,23 @@ The variants and their expected outcomes are in [judge-only case data](README.ca
 | a declaration that directly names a row inside `<s>/idem/`: a generation refusal before the file | P/02.5 N1.4 the general rules, N4 (C02-IDEM-ASKED-EXPLICIT-READ-01) |
 | an element of `secrets.reads` strictly nested in a secret prefix of another manifest: a generation refusal before the file | P/02.5 N3 step 4, N4 (C02-SECRETS-READS-INTERSECTION-01) |
 | `secrets.readers` with `domainworker` | R6 |
+| the two kept admission rows of the controller: read and write without delete; the console and the worker only read them; the other deletions of the controller stay | P/02.5 N5 with P/04 N1.5 (`v1-base`) |
+| the roles keep the full manifest name and the suffix at the longest name whose controller group fits 32 characters | P/02.5 N1.4, N3 step 1; P/02.4 N1.1 (`v15-name18-roles`) |
+| an exact secret key closes one row, a secret prefix only the rows under the slash; the neighbours keep the ordinary rights | P/02.5 N1.3, N1.4, N3 step 4 (`v5-secret-domainworker`, `v16-secret-prefix`) |
 
-The manifests of the variants `v1`–`v5` come from the reconciliation of python and go M10/6–11; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below).
+The manifests of the variants `v1`–`v5` come from the reconciliation of python and go M10/6–11; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below). `v15-name18-roles`, `v16-secret-prefix` and the admission probes of `v1-base` — the readiness audit of P/02 (P02.20).
 
-## Checks outside the scenario file
+## Not judged in this lesson
 
-- The checks of `/v1/rights`, of the rights file form, of the evaluator, of `never` and of forwarding — in the acceptance of P/01.2 (stage B).
-- Check the derivation of roles with a short and with the limit 32-character manifest name: the roles of the rights file (the grammar of P/01.2) keep
-  the full name and the suffix — by the rights derivation function over the manifest, without OS names; a full catalogue with such a name — a catalogue refusal by
-  OS names longer than 32 characters (P/02.4 N1.1 `users_groups` names; C02-NAME32-ROLES-01). `--check` uses an unchanged catalogue.
-  The negative example of the file form contains no manually extended rights.
-- Per N5, compare the effective read/write/delete of both admission rows of the controller and
-  the preservation of the other deletions. Secret readers are compared among the ordinary roles;
-  admin has a separate exception, it is not added to secrets.readers.
-
-These are subjects of a separate reading/structural test, not additional executed
-scenarios. Socket modes, forwarding and the certificate need a corresponding stand.
-
-The probes of run 32: the declarations testsub/vault*, testsub/va*ult/, !testsub/vault and delete:testsub/vault are rejected before the file. For an admissible exact testsub/vault the neighbouring vault2 and vault/nested keep their ordinary rights; testsub/vault/ denotes only the family under the slash. The common Key/Listing of chapter P/01.1 still admit a literal * as data.
+- The checks of `/v1/rights`, of the rights file form, of the evaluator, of `never`, of forwarding and of the internal admin (P/01.2 N1.3: admin is not a role of the rights file and is not added to `secrets.readers`) — in the acceptance of P/01.2 (stage B).
+- The roles of a manifest name of 19–32 characters: such a catalogue is refused at the installation by the OS names (P/02.4 N1.1 `users_groups` names; the row `os_name_sub_len_33` of the acceptance of chapter 2.3), so the rights derivation over it is checked by reading the function, without OS names (C02-NAME32-ROLES-01).
+- The declarations `<s>/vault*`, `<s>/va*ult/`, `!<s>/vault` and `delete:<s>/vault` of run 32 are a load refusal by the form of `secrets.readers` (P/02.1 N1, P/02.5 N1.3 `rule`, N4 row 3); the corpus of chapter 2.1 has no case for them yet. The store keys themselves may hold a literal `*` (P/01.1 Key/Listing).
+- The inequality of the secret readers (it cannot be built from the manifests of a catalogue: the readers are derived from the same declarations) and `CLUSTER=` (an input of the environment, not of the catalogue of the variant).
+- The TLS key belongs to the user of the unit or to root with the group of the user of the unit (ADR-0075 addendum 3), the group of a role socket gives no access to the key; the socket modes and the certificate — the stage of the system.
 
 The check R36-05 (since 2026-10-30 — cases of the acceptance of chapter 2.1; the coverage audit P/02, B06): worker.writes with the name of its own unit.rows gives refused:reference, without generating rights. A declared table of the worker is admissible, console only reads it; this does not extend to a unit row. Compare all common manifests and all generator paths, including the list form of tables; the current TSV has no loader run on such a changed manifest.
 
-## Additional check of the error class of run 36 (Kimi)
-
-By reading: the TLS key belongs to the user of the unit or to root with the group of the user of the unit (ADR-0075 addendum 3), the group of a role socket gives no access to the key. Compute the resulting set of rights with never and the negations of the secret readers: a positive baseline does not return a forbidden access. The generator keeps both families domain/placed and domain/placement and a separate console delete:platform/doors/*.
-
-This is a subject of a manual check of the specification and of a future check of an implementation. The author's prepared requests, reading and finite models are not a performed stand test.
-
-The request marks `objects/<s>/commands/*` (P/06.4 N1.5 mark): the worker of a manifest with `requests` writes, reads and
-deletes its own, of a foreign manifest — 403, the controller — 403 (N1.4; the log of cammeta-go, lesson 8 № 4).
+The generator keeps both families `domain/placed` and `domain/placement` (`v10-worker-domain-reads`) and a separate console `delete:platform/doors/*` (`v1-base`). The request marks `objects/<s>/commands/*` (P/06.4 N1.5 mark): the worker of a manifest with `requests` writes, reads and deletes its own, of a foreign manifest — 403, the controller — 403 (N1.4; the log of cammeta-go, lesson 8 № 4) — scenario 11 and `v2-requests`.
 
 ## The coverage audit P/02, second pass (Gemini)
 

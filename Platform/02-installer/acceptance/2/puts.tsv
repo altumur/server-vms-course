@@ -1,7 +1,8 @@
 # Acceptance P/02.2: manifest put installations with a canonical view (N3; window 2.2, item 8). Row: case<TAB>puts<TAB>expect<TAB>canonical.
-# puts lists space-separated `puts/<name>.subsystem.yaml` files with @view-delete and @view-spoil directives between them; expect is the code
+# puts lists space-separated `puts/<name>.subsystem.yaml` files with the directives @view-delete, @view-spoil, @rev-delete, @rev-spoil between them; expect is the code
 # of the final installation and the resulting rev of platform/manifest/<name>; canonical is the vectors/canonical case (manifest bytes of the view)
-# or «-» (no view). Rules: README.
+# or «-» (no view). Form and execution: «Installation sequences» of the common acceptance README (engine word puts); the subjects: README.
+# canonical: Platform/02-installer/vectors/canonical
 case	puts	expect	canonical
 first	testsub	0 1	course-testsub
 same_twice	testsub testsub	0 1	course-testsub

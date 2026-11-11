@@ -42,3 +42,24 @@ domainconsole	read	platform/schema	allow
 domainconsole	read	platform/doors/srv-a	deny
 domainconsole	read	platform/manifest/va	allow
 domainconsole	read	platform/manifest/va/rev	allow
+# P/02.5 N5 with P/04 N1.5: the two kept admission rows of the controller — read and write, no delete; console and worker read only; the other deletions of the controller stay.
+vacontroller	read	va/controller/placement_turn	allow
+vacontroller	read	va/controller/placement_intent	allow
+vacontroller	write	va/controller/placement_intent	allow
+vacontroller	delete	va/controller/placement_intent	deny
+vacontroller	delete	va/workers/w-1	allow
+vacontroller	delete	va/placement/u1	allow
+vacontroller	delete	va/slots/w-1	allow
+vacontroller	delete	va/decommissioned/u1	allow
+console	read	va/controller/placement_turn	allow
+console	write	va/controller/placement_turn	deny
+console	delete	va/controller/placement_turn	deny
+console	read	va/controller/placement_intent	allow
+console	write	va/controller/placement_intent	deny
+console	delete	va/controller/placement_intent	deny
+vaworker	read	va/controller/placement_turn	allow
+vaworker	write	va/controller/placement_turn	deny
+vaworker	delete	va/controller/placement_turn	deny
+vaworker	read	va/controller/placement_intent	allow
+vaworker	write	va/controller/placement_intent	deny
+vaworker	delete	va/controller/placement_intent	deny

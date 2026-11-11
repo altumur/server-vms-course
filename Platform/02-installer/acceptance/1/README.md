@@ -6,63 +6,25 @@ The scenarios of [the norms of chapter 2.1](../../spec/02.1-installer.norms.md) 
 
 ## Profile interface
 
-Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.load` loads the single file `{file}` through the normal loader: success exits zero; a refusal names the source file and follows this chapter's outcome rules. The optional `adapters.load` exposes that same loader as the persistent path/JSON-line transport defined by the common contract, without template substitutions. `keys.path_style` declares `json` or `dotted` for transporting the loader's own diagnostic paths; diagnostic authority remains the hint rules below. The installation sample uses the same `stand.manifest-put` interface as [chapter 2.3](../3/README.md), against the prepared public store. Neither adapter supplies a case-based answer or an alternate loader.
+Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.load` loads the single file `{file}` through the normal loader: success exits zero; a refusal names the source file and follows this chapter's outcome rules. The optional `adapters.load` exposes that same loader as the persistent path/JSON-line transport defined by the common contract, without template substitutions. `keys.path_style` declares `json` or `dotted` for transporting the loader's own diagnostic paths; diagnostic authority remains the hint rules below. Neither adapter supplies a case-based answer or an alternate loader.
 
-## verdicts.tsv
+## verdicts.tsv, classes.tsv, diagnostics.tsv
 
-Tab-separated: `case`, `verdict`. Lines with `#` and empty lines are not scenarios.
-
-- `case` — the file `cases/<case>.subsystem.yaml`, loaded **alone** (without a catalogue of other manifests).
-- `verdict` — `ok`: the manifest loads; `refused`: a loading refusal.
-
-The acceptance runner:
-
-- loads each file by the regular loading path of the implementation (the one by which a manifest is read from the store or from a file, N3 of the chapter), not by a bypass function; the way of calling is the command for loading one file that the implementation named in its description (the norms of the chapter, «Implementation decides» item 3): exit code 0 — a manifest, another one — a refusal;
-- counts `refused` only as **a refusal in words that names the file** (the file name is part of the text); a crash, an exception of another kind, a partially loaded manifest — a mismatch;
-- counts `ok` when the loading returned a manifest;
-- checks that the set of files in `cases/` equals the set of rows of the table: an extra file or an extra row — a mismatch;
-- the verdict and the exit code are strict (ADR-0092 item 5); for the cases of `classes.tsv` it checks the refusal class; the information of `diagnostics.tsv` is a hint: the runner writes it into the report without a failure;
-- SHOULD run a sample through the manifest installation path (`manifest put` of the implementation, chapter 2.3 N3): all cases with the verdict `ok`, one refusal per each class `refused:<class>` from `classes.tsv` (the first by case name) and all installations of `puts.tsv` (chapter 2.3); the verdicts of the other cases are checked by the loading mode (the decision ADR-0080 addendum (17) item 2). An accepted file lands as the row `platform/manifest/<name>`; a refused one is not put into the store, the return code is non-zero. The installation checks the candidate in the full catalogue, and six accepted files name `testsub` in the catalogue checks: `bound_to_string`, `blob_required_false`, `secrets_reader_domainconsole` (`worker.requests: [testsub]`), `m49_table_shelf_log_ok`, `c6_secrets_reads_with_slash_ok`, `c3_near_by_ok`; therefore the run through `manifest put` is done in a store where `testsub` is already installed (`Platform/common/data/testsub/testsub.subsystem.yaml`). In an empty store these six files correctly get `refused:catalogue` (review of stage B 1–2, item 13).
+The three tables are run by the engine word `verdicts` in the form «[Loader verdicts](../../../common/acceptance/README.md#loader-verdicts)» of the common acceptance README: the call, what counts as a manifest and as a refusal that names the file, the strict verdict, the class `refused:<class>` and the hint of the diagnostics are defined there. The interface of the call is `stand.load` or `adapters.load` above. This README keeps only the data of the chapter.
 
 The rules by which the verdicts are set are the norms of the chapter N1 (text, document, field, references) and N4; they are not here, so that there are not two versions of one norm (ADR-0003). Origin: the common table `spec_verdicts.tsv` (reviews 14 and 15, the Architect's verdicts of 2026-10-06), moved here on 2026-10-14 with eight new cases; both sides remove the former place in their own windows.
+
+**`classes.tsv`.** The class is the layer of the N4 refusal (ADR-0092 item 6): `text`, `form`, `relations`, `catalogue`. The transition to V7: the former classes `name`, `key`, `value` became `form`, `reference` became `relations` (the deltas — the delta table of set «B» of the skill `lesson-spec`).
+
+**`diagnostics.tsv`.** The paths and lines of a loader refusal are a hint, not a norm (ADR-0092 item 5). A list index in a path is a JSON integer (`0`), a key name is a string (`"0"`): these are different segments (N4 «Diagnostics»). The paths of a row are written in the canonical order — by the bytes of the JSON Pointer path (RFC 6901), the line numbers ascending (ADR-0087 addendum (3) R2). An empty `lines` means that the case does not look for line numbers; it does not forbid them in the refusal. In `unknown_multiple` the hint names all three paths, not only the first typo found; in `dup_top_key_name` it names line 36, the second declaration of `name`. The requirement to name the source file stays — it is a norm: `unknown_depth4.subsystem.yaml: error` passes the verdict, and the report notes the missing path `unit.fields.name.requried`. For the other cases the implementation SHOULD give the path and the line per N4 of the norms — as a hint.
+
+## No installation sample
+
+The corpus is not run through `manifest put`. The form «Installation sequences» installs only the files `puts/` of its own directory, and loading and installation are judged separately: the verdicts of this directory judge the loader; the installation, the catalogue checks and a refused installation are the rows of [`../3/puts.tsv`](../3/puts.tsv) and the seam `s1-put-invalid-source` of [`../4/seams.tsv`](../4/seams.tsv). The former SHOULD sample (all `ok` cases, one refusal per class) is therefore not part of the judgement. Six accepted files of the corpus name `testsub` in catalogue relations (`bound_to_string`, `blob_required_false`, `secrets_reader_domainconsole`, `m49_table_shelf_log_ok`, `c6_secrets_reads_with_slash_ok`, `c3_near_by_ok`); loaded alone they are `ok`, in a catalogue without `testsub` they are `refused:catalogue` (review of stage B 1–2, item 13).
 
 ## puts.tsv
 
 The manifest installation `manifest put` (`puts.tsv`, `puts/`) — [the acceptance of chapter 2.3](../3/README.md).
-
-## classes.tsv
-
-The N4 refusal class of selected cases: tab-separated `case`, `class` — the layer where the refusal is (ADR-0092 item 6): `text`, `form`,
-`relations`, `catalogue`. Each `case` is in `verdicts.tsv` with `refused`; the class is compared with the class of the regular refusal
-of the loader (the word `refused:<class>`). A correct verdict with another class is a mismatch. The corpus checks the verdict and the class;
-the path and the line are a hint (`diagnostics.tsv`). The transition to V7: the former classes `name`, `key`, `value` became `form`,
-`reference` became `relations` (the deltas — the delta table of set «B» of the skill `lesson-spec`).
-
-## diagnostics.tsv
-
-Hints for selected refusals (ADR-0092 item 5: the paths and lines of a loader refusal are a hint, not a norm; the runner writes
-a divergence into the report without a failure): tab-separated `case`, `paths`, `lines`. A header with `#` and empty
-lines are not cases. Each `case` occurs once and has `refused` in `verdicts.tsv`.
-
-- `paths` — a JSON array of paths; each path is an array of key names from the root; a list index is a JSON integer (`0`), a key name is a string
-  (`"0"`): these are different segments (N4 «Diagnostics»). The paths are a set: in the table they are written in the canonical order —
-  by the bytes of the JSON Pointer path (RFC 6901), line numbers ascending (ADR-0087 addendum (3) R2); the set of paths
-  named in the refusal is compared, a missing or an extra path is a divergence of the hint. In `unknown_multiple` all three
-  paths are needed in one refusal, not only the first typo found.
-- `lines` — a JSON array of the mandatory line numbers of the source file, starting from 1. An empty array means
-  that this case does not check line numbers; it does not forbid them in the refusal. For `dup_top_key_name` the number
-  of the second declaration of `name` — 36 — is needed; a reference only to the first declaration is not enough.
-- The runner extracts this information from **the regular refusal of the loader**: from the error information already provided by it
-  or from the text in the format adopted by the implementation. It describes the way of extraction; the case name and the input
-  file do not serve as a source of invented paths or numbers for the comparison. The path separators, the labels of the line number
-  and the rest of the message text remain the choice of the implementation. This table sets the values for the check,
-  not a mandatory internal error type or an additional door of the loader.
-- The requirement to name the source from `verdicts.tsv` stays — it is a norm. For example, `unknown_depth4.subsystem.yaml: error`
-  passes the verdict, and the hint of the report will note that there is no path `unit.fields.name.requried`; a refusal for `dup_top_key_name`
-  without line 36 — likewise.
-
-For the other cases the verdict table checks acceptance/refusal and the source name; the implementation SHOULD give the path and the line
-per N4 of the norms — as a hint.
 
 ## Additional check of string field names (R36-01)
 
@@ -72,7 +34,6 @@ The cases profile_* cover the positive neighbouring values and the restrictions 
 and also the types of field keys and the membership of worker.writes (P/02.1-06/07, P/02.5-01).
 The prepared verdicts are not a result of running an implementation: the author checked the data and the stated
 canon, the regular execution loader was not run here.
-
 
 ## Additional inputs of run 37
 
@@ -84,21 +45,15 @@ Two additional refusals K37-03 — r37_rows_cluster/r37_rows_worker; together
 with profile_rows_ts the whole list cluster/worker/ts is covered, and profile_rows_records_ok
 remains the positive control. The new files differ from profile_rows_ts only in rows.
 The count of the corpus is also reconciled in N5 and in the implementation instructions; readiness requires the whole normative checklist.
-The pairwise intersection of the catalogue is checked separately: two correct single documents
-with the name b at the second manifest and the table b at the first give refused:catalogue before the write.
-The same with unit.rows=b; when the family is renamed to b_rows, the catalogue passes exactly this
-check. Single verdicts do not prove the check of a pair. The regular loader was not run here.
+The pairwise intersection of the catalogue is judged by installation into one store: see «Catalogue intersection» below.
 
-## Check of the error class R37 (Codex)
+## The error class R37 (Codex)
 
-Check not only the changed field of the generated input, but also the whole common background: lease off remains a string, true/false do not replace off/on when read by another YAML library. Single verdicts and the catalogue check are separate pieces of evidence. During an installation, different manifest names are changed by one operator sequentially; two writes of one manifest are resolved by CAS. Before the first write the candidate is checked in the full confirmed catalogue.
+The common background is part of the data: `lease` is the quoted string `off` in every file of the background, and `true`/`false` do not stand for `off`/`on`; the verdicts of these files judge it with the regular loader. Single verdicts and the catalogue check are separate pieces of evidence: the catalogue check is «Catalogue intersection» below, including a catalogue of one manifest.
 
-This is a subject of a check of the norms/data and of a future stand, not a performed test of an implementation.
+The value of `{name:int}` (P/02.1 N1.4, P/02.1-21) is converted when a door builds a key from the body of a request, not when the manifest loads. The loader judges only the template: the cases `r37_requests_plain_*`, `r37_requests_int_*`, `r37_table_key_bool`, `r37_table_template_bool`, `r37_table_int_template`. The bounds of the conversion (binary64, modulus not greater than 2^53−1, a canonical decimal without an exponent; bool, null, a string or a non-finite number — 400) are not judged in this lesson: they are an outcome of the door that applies the template.
 
-The boundaries of :int per P/02.1: binary64, modulus not greater than 2^53−1; bool/null/string/non-numeric/non-finite/out of bounds — 400, not a language conversion. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and a canonical decimal result without an exponent.
-
-The catalogue check includes the intersection of the name with its own rows/tables: even a catalogue of one such manifest is refused. This is a separate catalogue refusal; a single parse of a file is not declared a check of non-intersection.
-
+Two writes of one manifest by two installers are resolved by `cas` (P/02.3 N3); a conflict of two installers needs the store of another lesson and is not judged in this lesson (ADR-0130 Addendum (19) item 7).
 
 ## The full list of names and the catalogue check (K38)
 
@@ -107,33 +62,24 @@ name_reserved_platform and r37_sub_where/r37_sub_metrics/r37_sub_healthz all 23 
 are checked; a96_sub_folders adds the twenty-fourth, `folders` (ADR-0096); a98_sub_* — the seven names of ADR-0098; r37_sub_where2, a86_sub_manifest2 and a96_sub_folders2 remain admissible neighbours. The background of the 19 files is kept
 byte for byte, including lease off; only the top-level name changes.
 
-Non-intersection is checked by reading the implementation of `load_catalogue`, including a catalogue
-of ONE manifest. The verdicts runner calls `load`, not `load_catalogue`;
-one file is not automatically a catalogue of one file. Therefore adding
-refused for a correct single parse of name=own rows/table here is not allowed.
-The implementation description states the branch of the catalogue check and the checked cases:
-
-| Catalogue composition | Conflicting family | Expectation of the catalogue check |
-|---|---|---|
-| A=B: one manifest name=b | unit.rows=b | refused:catalogue |
-| A=B: name=b, unit.rows=b_rows | map tables contains b | refused:catalogue |
-| A=B: name=b, unit.rows=b_rows | list tables=[b] | refused:catalogue |
-| A≠B: name=a and name=b | rows of manifest a equals b | refused:catalogue |
-| A≠B: name=a and name=b | map tables of manifest a contains b | refused:catalogue |
-| A≠B: name=a and name=b | list tables of manifest a contains b | refused:catalogue |
-
-The other parts are the correct background base; the second manifest has rows=b_rows, the first a_rows,
-except the explicitly changed rows. The positive control of each row: change
-the conflicting family name b to ledger (and the references to it), keeping the manifest names a/b;
-this non-intersection check passes. For map a correct table declaration remains,
-for list — only the family name, without ascribing HTTP doors to it. The result is the same
-for any choice of root and a swap of the two manifests. On a refusal the catalogue is not given out
-partially and the installer does not perform the first write.
-
-This is an assigned check by reading with a subject and a reason per P/02.1-20, not a performed
-run of the loader/catalogue/installer. The author checked the norm and the finite examples.
+The verdicts call `load`, not `load_catalogue`: one file is not a catalogue of one file. So a correct single parse of a manifest whose name equals its own rows or table is `ok` here; the refusal is the catalogue check of the installation.
 
 R38-02: three r38_unit_* without unit/rows/id must be refused by mandatoriness with the path of the missing value; r38_unit_minimal has rows=things/id=numeric without fields and must load with an empty set of fields. A common catalogue is not required; all the former 251 inputs are unchanged. The verdict check is the regular loader; the author's check of the YAML structure does not replace it.
+
+## Catalogue intersection
+
+The non-intersection of a manifest name with the families of the catalogue (P/02.1 N3 «load_catalogue», P/02.1-20) is judged by the rows of [`../3/puts.tsv`](../3/puts.tsv): each installation loads the candidate in the full confirmed catalogue, and a refusal comes before the first write.
+
+| Catalogue | Conflicting family | Refusal (`refused:catalogue`, code 2) | Positive control | Swapped order |
+|---|---|---|---|---|
+| A=B: one manifest `name=b` | `unit.rows=b` | `self_rows` | `self_rows_renamed` | — |
+| A=B: `name=b` | map `tables` contains `b` | `self_table` | `self_table_renamed` | — |
+| A=B: `name=b` | list `tables=[b]` | `self_table_list` | `list_tables_ok` | — |
+| A≠B: `name=a` and `name=b` | `rows` of `a` equals `b` | `other_rows` | `other_rows_renamed` | `other_rows_swap` |
+| A≠B: `name=a` and `name=b` | map `tables` of `a` contains `b` | `other_table` | `other_table_renamed` | `other_table_swap` |
+| A≠B: `name=a` and `name=b` | list `tables` of `a` contains `b` | `other_table_list` | `other_table_list_renamed` | `other_table_list_swap` |
+
+A positive control differs from its refusal only by the conflicting family name; the manifest names stay.
 
 ## Separate check of the form and of the reference group_by (R39-03)
 
@@ -141,6 +87,8 @@ R38-02: three r38_unit_* without unit/rows/id must be refused by mandatoriness w
 
 The author's check of the class A39-01: `fields_derived_items_unknown` is assigned in N5 to the unknown keys of N1.2. `unit.derived` is not part of the grammar of the lessons; the refusal of this file does not confirm the check of the reference items. The two display_tree_*_unknown check references, and display_tree_word_erase checks the unknown key erase; in N5 they are also assigned to the corresponding groups. The inputs and verdicts are kept, no new form of derived is introduced.
 
-## Supplementary core seams for the kit
+## Supplementary core seams
 
-[`seams.tsv`](seams.tsv) contains 14 steps in 4 scenarios over pure loading: isolation after a refusal, a whole catalogue after a refusal, parallel loading, and layer order. The source is P/02.1 N3, including its race/purity rules. CALL normalization and projection are defined by [`forms/README.md`](../../forms/README.md). These are generated adapter tests, not additional rows of `verdicts.tsv` and not an executed acceptance of the implementation. The shared regular loading path (P/02.1-12) remains checked by reading; these tests do not prove which path another process calls.
+[`seams.tsv`](seams.tsv) contains 14 steps in 4 scenarios over pure loading: isolation after a refusal, a whole catalogue after a refusal, parallel loading, and layer order. The source is P/02.1 N3, including its race/purity rules. The engine word `run` executes the table through the seam adapter protocol of the common acceptance README; CALL normalization and projection are defined by [`forms/README.md`](../../forms/README.md). These are not additional rows of `verdicts.tsv`.
+
+The single regular loading path (P/02.1-12: every process loads a manifest by the same loader) is not judged in this lesson: these seams call the loader through the adapter and do not show which path another process calls. It is checked by reading the code in review.

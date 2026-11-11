@@ -22,4 +22,4 @@ Generic rules remain in [README.md](README.md). The following original passages 
 
 after the call. In `s12` (the default D) `identity/x` matches no row family: it is listed, code 1; the kept rows
 `domain/testsub/ledger` and `domain/testsub/badges/b1` (testsub `domain.kept: [ledger, badges/]`) are not listed. In `s13` (the given
-prefix `domain/`, only kept rows) nothing is walked: code 0. Both seams are outside a stage gate of
+prefix `domain/`, only kept rows) nothing is walked: code 0. Both seams are excluded from the judgement (README, «Secrets walk selection»).

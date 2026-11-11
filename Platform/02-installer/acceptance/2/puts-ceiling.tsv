@@ -1,5 +1,6 @@
 # Acceptance P/02.2: a non-default store row ceiling (P/02 coverage audit, B00). Row: case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling.
-# The first four fields follow this chapter's puts.tsv (shared puts/ files); ceiling is {row_ceiling} of the fresh instance for this row. Rules: README.
+# The first four fields follow this chapter's puts.tsv (shared puts/ files); ceiling is {row_ceiling} of the fresh instance for this row. Form and execution: «Installation sequences» of the common acceptance README (engine word puts); the subjects: README.
+# canonical: Platform/02-installer/vectors/canonical
 case	puts	expect	canonical	ceiling
 ceiling_976	probe	2 -	-	976
 ceiling_977	probe	0 1	example-sections	977
