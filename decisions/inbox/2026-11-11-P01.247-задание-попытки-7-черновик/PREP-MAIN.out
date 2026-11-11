@@ -1,0 +1,9 @@
+stages 11 ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'rights', 'daemon_doors', 'daemon_copy', 'durable', 'group']
+code_at ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'daemon_copy', 'durable', 'group']
+norm_trace 54 {'store_core': 11, 'http': 8, 'rights_eval': 1, 'rights': 8, 'daemon_doors': 1, 'daemon_copy': 3, 'durable': 6, 'group': 16}
+mode_stages {'group': {'when': "keys.store_build != 'box'", 'modules': ['github.com/hashicorp/raft']}}
+mode_items 16 marks {'test': 1, 'test, reading, stand': 2, 'reading': 5, 'test, reading': 8}
+mode items without the mark test ['P/01.1-15', 'P/01.1-27', 'P/01.3-09', 'P/01.3-10', 'P/01.3-14']
+all items marks {'test': 22, 'test, reading': 16, 'test, reading, stand': 3, 'reading': 10, None: 1, 'stand': 2}
+items without the mark test ['P/01.1-15', 'P/01.1-18', 'P/01.1-19', 'P/01.1-20', 'P/01.1-21', 'P/01.1-22', 'P/01.1-27', 'P/01.1-32', 'P/01.3-09', 'P/01.3-10', 'P/01.3-12', 'P/01.3-13', 'P/01.3-14']
+items with no mark right after the id ['P/01.1-32']
