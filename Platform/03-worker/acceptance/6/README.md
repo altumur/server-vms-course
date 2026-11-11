@@ -11,27 +11,21 @@ these scenarios; the forms of foreign doors belong to their owners ([P/05](../..
 
 ## Preparation of each scenario
 
-The two scenarios are independent. Before each one stop all the processes of the previous
-scenario and wait for them, create isolated directories/ports and an empty store: rows, objects,
-the id memory of the store, the POST claims of the console, the asked accounting and the commands marks are absent.
-Clear the event tree, the mirrors and the index cache, the variables and the replay keys of the runner.
-Install the current testsub from the common testdata with its service mark using administrative
-rights. There are no units and no user rows yet. The preparation is not a transfer of the state of
-the previous scenario and not a check of the installer.
+Each scenario runs on the [testsub process stand](../../../common/acceptance/README.md#testsub-process-stand) of the common acceptance README:
+a fresh stand per scenario (with it no asked accounting, commands marks, event tree, mirrors, index cache, bound names or replay keys of the
+judge remain), no foreign processes, one box, the stop of `@sigterm` and `@sigkill`, the time of a scenario. Own to the chapter:
 
-Start the store, a new console testsub and the resource srv-a per the section «Stand» of the common acceptance README. Their doors must be ready;
-the resource is registered and available to the console before the first step (in sc. 38–43 the resource is not started before the first step: step 1 `@start resource` starts it, as in the acceptance of P/05). All the processes of this box
-use one BOX_ID and server=srv-a; each new process gets a new instance.
-Initially there is no controller and no workers: the scenarios start them by the directives @start.
-platform/mirror and platform/space are not set; requests for release and for a copy are not prepared.
-
-console — the door of the console testsub from the loopback, access to operations and units is allowed;
-resource — the door of the resource srv-a with an admissible identity; store — the door of the store with reading of
-testsub/ and objects/testsub/. If the deployment uses TLS, issue the corresponding
-certificates and roles per P/02.4 N1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`) and the address rule of P/02.4 N1.6;
-these scenarios do not replace the check of TLS refusals.
-Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
-ticks of the holder and the reaper are expected, settle=60 by default.
+- sc. 05 uses only the manifest `testsub`; there are no units and no user rows yet; `platform/mirror` and `platform/space` are not set;
+  requests for release and for a copy are not prepared;
+- the resource `srv-a` is started before the first step and is registered and available to the console (in sc. 38–43 the resource is not
+  started before the first step: step 1 `@start resource` starts it, as in the acceptance of P/05); there is no controller and no workers at
+  first: the scenarios start them by the directives `@start`;
+- console — the door of the console testsub from the loopback, access to operations and units is allowed; resource — the door of the resource
+  srv-a with an admissible identity; store — the door of the store with reading of testsub/ and objects/testsub/;
+- if the deployment uses TLS, issue the corresponding certificates and roles per P/02.4 N1.6 (`w2c-ca.sh issue <server> <role>`, the kit `kit`)
+  and the address rule of P/02.4 N1.6; these scenarios do not replace the check of TLS refusals;
+- the parameters of testsub are the values of its manifest: valid_for=30, most_valid=600, settle=60 by default, with the ordinary ticks of the
+  holder and the reaper.
 
 **Scenario 07** (the append) installs the catalogue `testsub` and `testsub2` (the order — «Stand» of the common acceptance README) and starts the controllers and
 the workers of both by directives; `store` also reads `testsub2/` and `objects/testsub2/`. The shelves `sh1`
@@ -64,42 +58,52 @@ Steps of the reconciliation of python and go M10/6–11 (2026-10-18):
 
 `Idempotency-Key` and `@key(N)` — per the dictionary. The body of the repeat 05/10 is the same as the original one.
 
-Scenario 05 after performed admits 90 s (settle 60 plus a tick/margin);
-the runner must not end the whole scenario earlier than the total budget of its steps. After
-the last step wait for the stop of all the created processes, then delete the state.
-
 ## Comparison
 
-The forms of expectation — per the dictionary. An expectation of a single code does not require an empty body.
+The comparison is «Expectation» of the [dictionary](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) with the full
+form by door: the store — P/01.1, the units — P/06.1, the doors of the resource — P/05 N2, the other doors — [chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) N2.
+So `answered` with `@any` in the TSV is still a full mark of one of the three forms of AnsweredMark. Step 05/5 binds `$rid` by the prefix
+`@rid $rid` of the dictionary before it is sent (testsub has no `requests.key`): the branch 202 compares `queued` with this rid, the branch
+200 is `answered` by the full form; another 2xx is not permitted by the contract.
 
-A repeat of a variable inside expect compares its temporary value.
-In 05, before sending step 5, the runner binds $rid = r- + the first 16 lowercase hex of SHA-256 of
-the exact UTF-8 bytes of the Idempotency-Key issued to this step (testsub has no requests.key).
-Step 05/5 accepts only 200 Answered or 202 Queued by the full contract: with 202
-queued equals the precomputed $rid; with 200 answered relates to c5 and the digest of the submitted
-body. Another 2xx is not permitted by the contract. The correlation of `queued` and `answered` applies to every `POST` of the door of requests answered with 200 or 202 in this chapter, not only to step 05/5; the form of the digest follows `requests.key` of the manifest. So a fast answer does not change the variables of the following steps. The directives are not sent
-to the server as HTTP. The full answer is additionally checked by the contract of its owner:
-the store — P/01.1, the units — P/06.1, the doors of the resource — P/05 N2, the other doors — [chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) N2. In particular, answered
-with @any in the TSV is still bound to be a full mark of one of the three forms of AnsweredMark.
+## SDK seams of the chapter
 
-## Evidence outside TSV
+The cases of the holder that need a scripted clock, a store reply or the order of calls are rows of [seams.tsv](seams.tsv) through the ports of
+[forms/README.md](../../forms/README.md#seams) (the judge runs them by the seam adapter protocol of the common acceptance README):
 
-These are tasks for the implementation/stand, not checks already performed:
-
-| Area | Counterexample and the required observation |
+| Subject | Seams |
 |---|---|
-| Suppression | suppress gives out the first one and the total (from the row «Events» of the former README) |
-| Requests | Two contenders for begun: no more than one call; a lost answer of put_new: zero calls by assumption. A foreign unit/digest is not overwritten; unknown does not start a repeat |
-| Outcome and cleanup | An old CAS of the reaper does not overwrite performed. A late answer replaces unknown with late. An error of publishing the mark leaves the row; the console does not delete the mark |
+| a lost answer of `put_new` gives no call; an own `begun` is not repeated; a foreign `begun` waits until the timeout of the foreign call | `s1-begun-unknown-no-call`, `s2-own-begun-no-repeat`, `s3-foreign-begun-before-expiry` |
+| two requests of one group: at most one unfinished call, the timeout does not stand in for the end of the call | `s4-group-busy-after-timeout` |
+| two holder epochs and a late return: the fixed wait is not cross-holder exclusion | `s6-two-holders-late-return` |
+| the state from the start snapshot under the epoch guard; its repeat after `ambiguous` with the same id (P/03.4-07) | `s5-state-start-born`, `s8-state-write-ambiguous-replay` |
+| the cursor state not more often than `STATE_EVERY` (at most ⌊seconds / STATE_EVERY⌋ + 1 writes) | `s7-lease-run-cursor` |
 
-Additional probes of Kimi 33: The outcome refused after a call always has error, never performed; check both the pass and the form of the mark. These are tasks of a check of the norms/stand, not a statement about the execution of an implementation.
+## Not judged in this lesson
 
-Additional check of the class of errors of run 36 (Kimi), by reading: suppress is always divided by tree/unit/epoch/kind/class; by is a non-empty list of strings, t/id/repeats/since/until are forbidden. unit is taken from the path, an absent selected field differs from null; without by only the five service fields are excluded. Reconcile structured JSON values, two different units and epochs. The deadline of kept is max(60, ttl) from the moment when the holder saw that the request row is no longer there, and not earlier than valid_until ([the request and its mark contract](../../../common/contracts/request-mark.md) `kept`; C03-KEPT-FROM-ABSENT-01).
-
-Additional case R38-03/04/05:
-
-- The append, P/03.6-04 (the holder) and P/06.4-07 (the console) (scenario 07 — the path request → data → removal → repeat; the rest below — by reading; the loading of the key
-  is checked by the cases of P/02.1 `requests_outcome_*`, the debt of the product — in the specification progress note (for people)): an admissible unit testsub2/tallies/t1, the request {unit:"t1",from:1,to:2}, rid=t1-1-2, the reserve asked. The holder reconciles the data and reports fetched; objects/testsub2/commands/t1-1-2 is absent before/after. After the local settle the console removes the read version of the row by CAS and releases the rid in asked by CAS, keeping a concurrently added rid. A CAS conflict/an unknown fetched does not permit counting the removal as done. A repeat after the removal again reconciles the data without begun and does not repeat the range already present. Without fetched the mark expired/unknown is not created and age alone does not release the reserve. free_ask does not get into this branch; a body with `action` from `elsewhere` in the append profile — the same branch: the holder reconciles the data and reports fetched (steps 07/34–36; (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). This is a separate case of the boundary of ADR-0054, not a performed run rec and not a promise of a single call for the append.
+- The correlation of `queued` and `answered` with the request of each other `POST` of the requests door (the unit and the digest of the
+  submitted body, by `requests.key` of the manifest): the steps compare the rid or the key; the relation of `answered` to the request is
+  checked by reading P/06.4 N3 «file a request».
+- `suppress`: the first and the total, the division by tree, unit, epoch, kind and class, the form of `by` (a non-empty list of strings,
+  `t`/`id`/`repeats`/`since`/`until` forbidden), `unit` from the path, an absent selected field against `null`, the five service fields without
+  `by`: the vectors [`events-merge`](../../../common/vectors/events-merge/README.md) have no rows of `suppress`; checked by reading N1.2 and the
+  [event journal contract](../../../common/contracts/event-journal.md).
+- Two contenders for `begun` from two processes (no more than one call), a foreign unit or digest that is not overwritten, `unknown` that
+  does not start a repeat, and a late answer that replaces `unknown` with `late`: the seams call one holder; checked by reading N3 «holder's look».
+- The outcome `refused` after a call always with `error`, never `performed`: how an action refuses is the handler of the subsystem, not a port
+  of the seams; a refusal before the call with `error` is sc. 39; checked by reading N3 «holder's look» step 10.1.
+- The reaper and the cleanup of the mark (an old CAS of the reaper does not overwrite `performed`, an error of publishing the mark leaves the
+  row, the console does not delete the mark) and the console side of the append (P/06.4-07): the console, [P/06.4](../../../06-console/spec/06.4-console.norms.md).
+- The deadline of `kept` — max(60, ttl) from the moment when the holder saw that the request row is no longer there, and not earlier than
+  `valid_until` ([the request and its mark contract](../../../common/contracts/request-mark.md) `kept`; C03-KEPT-FROM-ABSENT-01): checked by reading.
+- The append beyond sc. 07, P/03.6-04 (the holder): the CAS removal of the read version of the row and of the rid in asked, a CAS conflict or an
+  unknown `fetched`, a repeat after the removal without `begun`, no mark `expired`/`unknown` without `fetched`, `free_ask`; the loading of the key —
+  the cases of P/02.1 `requests_outcome_*`. Sc. 07 carries the path request → data → removal → repeat and the body with `action` from
+  `elsewhere` (steps 07/34–36); the rest is checked by reading N3 and ADR-0054 (the debt of the product — in the specification progress note,
+  for people).
+- The epoch guard and `not_after` of the order write, a repeat after a physical cleanup and the move of the clock (P/01.1 sc. 28 — only the
+  edges), the fencing of the holder in the middle of a write: checked by reading N3 «order» and «write state»; the fencing after the loss of the
+  name is sc. 10.
 
 The form of the consumer of the append in `testsub2` (in the bytes of the manifest since 2026-10-17, ADR-0054 addendum 2026-10-17; the field `action` —
 analysis of the review of stage A 6–7, № 14):
@@ -122,8 +126,6 @@ requests:                     # the append profile of ADR-0054: the key from the
 # adds nothing
 ```
 
-This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 The generic meanings of `@sleep` and `@until` are defined in the [common stand protocol](../../../common/acceptance/README.md#dictionary-of-directives-and-doors). Scenario-specific wait steps, durations and reasons are kept in the [judge-only case instructions](sleeps.cases.md).
@@ -143,13 +145,13 @@ carry the training orderer, the workers `testsub2` — the training state holder
   «lease_step()» step 6; the Architect's decision of 2026-10-27); the holder of the count `t1` writes under epoch 1 the state `result` `{state: "open"}` with `born` and `revision` of the row;
   the console shows it in `configured[].state` (P/06.1 N2 «State in the answer»).
 
-Checked by reading: the epoch guard and `not_after` of the order write, a repeat after a physical cleanup and the move of the clock (P/01.1 sc. 28 —
-only the edges), the fencing of the holder in the middle of a write (after the loss of the name — sc. 10), the cursor not more often than `STATE_EVERY`.
+The epoch guard and `not_after` of the order write and the fencing of the holder in the middle of a write — «[Not judged in this lesson](#not-judged-in-this-lesson)»;
+the cursor not more often than `STATE_EVERY` — the seam `s7-lease-run-cursor`.
 
 ## Scenario 10 (coverage audit of P/03, 2026-10-30)
 
 **10-slot-swap** — the preparation of sc. 09 (the shelf — through the door `admin`); the holder `t1` under epoch 1
-has written `result`; the runner rewrites the slot row `testsub2/slots/t-1` to the `holder` of the box `otherbox` through the door `admin` without
+has written `result`; the judge rewrites the slot row `testsub2/slots/t-1` to the `holder` of the box `otherbox` through the door `admin` without
 `cas` (on top of the renewal, P/01.1 N1 `cas`). The lease step of the worker sees a foreign `holder` — `release_name()`, the fencing (P/03.2
 N3 «lease_step()» step 1): exactly one row `worker.name_taken` in `audit/testsub2worker` (once per episode; the repeated
 search — NameOnAnotherBox, does not write it), the version of the slot does not change, there is no heartbeat any more (`ts` as before, P/03.2 N3
@@ -158,7 +160,7 @@ search — NameOnAnotherBox, does not write it), the version of the slot does no
 ## Scenarios 38–43 (coverage audit of P/03, the second pass of Gemini, 2026-10-30)
 
 The report `gemini/audit-coverage` `fad5fa2ba`, the drafts G07, G08; analysis by the Specification. The request rows `testsub/requests/<rid>`,
-the order rows `testsub2/tallies/*` and the state row are put by the runner through the door `admin` bypassing the writers (as in sc. 10). The request row is
+the order rows `testsub2/tallies/*` and the state row are put by the judge through the door `admin` bypassing the writers (as in sc. 10). The request row is
 the form of the family `requests` (P/06.4 N1.5): `unit`, the body field `add` as a string, `digest` — SHA-256 of the JCS of the client body without the deadline
 (`{"add":5,"unit":"c38"}` → `46367a34…`, computed by python), the stamps `by`, `at`; rid — the form `r-` + 16 hex, as at the door (sc. 05).
 - **38-request-expired-holder** — the deadline of the request (`valid_until: 100`) has long passed: the holder writes before the call the mark `expired`
@@ -181,7 +183,7 @@ the form of the family `requests` (P/06.4 N1.5): `unit`, the body field `add` as
 - **42-order-unchanged-never** — its own order row with `until: "0"` (without a deadline, `placement.ends` `testsub2`) and `made.at` in
   the year 2100, `made.keep = made.at + 720` = 4102445520 (computed by python): the former `until` = never is not touched, `made.at` =
   max(former, t_E) and `made.keep` = max(former, `made.at` + 720) are as before — the outcome `unchanged`, no write (`revision` 1).
-- **43-state-unreadable** — the preparation of sc. 09 (the shelf — through the door `admin`): the holder has written `result` under epoch 1; the runner
+- **43-state-unreadable** — the preparation of sc. 09 (the shelf — through the door `admin`): the holder has written `result` under epoch 1; the judge
   rewrites the state row not by the form (without `cas`); the worker `t-1` is restarted — the new holder under epoch 2 reads
   the unreadable state as absent and writes `result` anew (`state.outcomes.tsv` `<s>worker`; the norms of the chapter, N5
   `tally_result`: «if there is no current result»). Without spoiling, the state in effect survives the move and would not
@@ -192,7 +194,5 @@ the stand cannot be set: a far deadline runs into `most_valid`, a passed one —
 `most_valid` before the closing of a foreign `begun`, then the deadline, as the witness: N3 «holder's look», C03-REQUEST-CHECK-ORDER-01,
 the Architect's decision of 2026-10-30, P/03 item 2); a refusal of an order by a `fixed` field of its own row (the norm: its own row is extended
 only by the fields `until`, `made.at`, `made.keep` — `of` from F is not written, the outcome would be `extended`, not `refused`).
-
-SDK tests at the seams are in [seams.tsv](seams.tsv); their adapter contract is [forms/README.md](../../forms/README.md). They supplement the process scenarios and do not change the counts above or replace a reading witness they do not execute.
 
 s5-state-start-born retains the current born from the accepted start and exact opaque epoch_index="9007199254740993" after another life is reread. That index is not gen/epoch and is not narrowed. The seam input and expectation remain unchanged.
