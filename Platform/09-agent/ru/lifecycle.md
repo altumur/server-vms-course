@@ -101,7 +101,7 @@ TLS: комплект роли `domainagent` по `W2C_ROLE`; клиент дв�
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
 приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) N1.1 `dirs`).
 
-Стенд нескольких кластеров ([общий README приёмки](../../common/ru/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
+Стенд нескольких кластеров ([общий README приёмки](../../common/ru/acceptance/domain-stand.md#стенд-домена), раздел «Стенд домена»): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
 посредник раннера; `@start agent <кластер> via <ретранслятор>` — `RELAY_URL` вместо `DOMAIN_URL`; `@join <кластер>
 [<файл>]` — команда `join` с файлом восстановления; `@clock` — `W2C_WALL_OFFSET`. `{data}` — `PLATFORM_DIR` кластера
 ([общий README приёмки](../../common/ru/acceptance/README.md) «Стенд»). Четвёртый кластер

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.2-agent.norms.md`](../../spec/09.2-agent.norms.md) N5. In total 5 scenarios / 62 steps. There are no inputs.
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.2-agent.norms.md`](../../spec/09.2-agent.norms.md) N5. In total 5 scenarios / 62 steps. There are no inputs.
 
 The division: the outcome of all three scenarios is the door, the package and the relay pass. The neighbours on
 the stand: the holder on the relay package and the knock ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) N3 «the holder on `POST /api/relay/<relay>`»;

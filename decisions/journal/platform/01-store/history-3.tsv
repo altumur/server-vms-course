@@ -161,3 +161,11 @@ P/01.3-R029	spec/01.3-store.norms.md#N4	ADR-0125	2026-11-04	 (ADR-0125)
 -	spec/01.3-store.norms.md#readiness-checklist	ADR-0083 item 5 (P/01.3-06)	2026-10-18	 of ADR-0083 item 5
 -	spec/01.3-store.norms.md#readiness-checklist	ADR-0130 Addendum (13) items 9–14 (P/01.3-14)	2026-11-08	ADR-0130 Addendum (13) items 9–14: 
 P/01.3-R037	spec/01.3-store.norms.md#N1.3	ADR-0129 addendum (12): the norm describes only the current format, a former flag is not named	2026-11-11	-socket is removed: the socket path is one — -sockets
+-	acceptance/3/README.md#store-group-stand	Architect's decision of 2026-10-30 (the section moved here from the common acceptance README by P01.229)	2026-10-30	(the Architect's decision of 2026-10-30).
+-	acceptance/3/README.md#stand	the store pilot	2026-10-18	; the store pilot
+-	acceptance/3/README.md#store-group-stand	work rules § 4; automatic group scenarios plan accepted by the Architect 2026-10-30	2026-10-30	 (work rules (for people) § 4; the plan `automatic group scenarios plan (2026-10-30, for people)`, accepted by the Architect on 2026-10-30)
+-	acceptance/3/README.md#store-group-stand	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/3/README.md#store-group-stand	C01-DOOR-ID-CN-01	2026-11-09	, C01-DOOR-ID-CN-01
+-	acceptance/3/README.md#store-group-stand	C01-RAFT-DOOR-LEAF-01	2026-10-30	 (C01-RAFT-DOOR-LEAF-01)
+-	acceptance/3/README.md#store-group-stand	the coverage audit of P/01	2026-10-30	 (the coverage audit of P/01, 2026-10-30)
+-	acceptance/3/README.md#store-group-stand	the date of the row in the cell «Lesson» of the directives of the group stand	2026-10-30	 (2026-10-30)

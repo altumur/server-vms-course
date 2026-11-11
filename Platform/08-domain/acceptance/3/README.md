@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand)
 (the dictionary of directives and doors of the stand of several clusters). The norm of the chapter is
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) N5. In total 21 scenarios / 218 steps.
 

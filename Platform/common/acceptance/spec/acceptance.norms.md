@@ -24,13 +24,13 @@ The first wave of the engine is the targets of P/01 with a stand, scenarios or v
 
 <!-- req: P/AC-R003 -->
 
-The judge reads every `scenarios.tsv` by the row form of the [dictionary](../README.md#dictionary-of-directives-and-doors) and every `seams.tsv` by the [seam adapter protocol](../README.md#seam-adapter-protocol) and the seam grammar of its owner, and every table of the engine words `verdicts`, `puts` and `variants` by its form of the [command tables](../README.md#command-tables). It reads a table whole before the stand of the target starts. A table cell declared `# cell-json:` follows the [source-cell form](../../contracts/source-cells.md).
+The judge reads every `scenarios.tsv` by the row form of the [dictionary](../README.md#dictionary-of-directives-and-doors) and every `seams.tsv` by the [seam adapter protocol](../seams.md#seam-adapter-protocol) and the seam grammar of its owner, and every table of the engine words `verdicts`, `puts` and `variants` by its form of the [command tables](../command-tables.md#command-tables). It reads a table whole before the stand of the target starts. A table cell declared `# cell-json:` follows the [source-cell form](../../contracts/source-cells.md).
 
 ### N1.2 Vector tables
 
 <!-- req: P/AC-R004 -->
 
-Vector tables, their consumers, input columns, fixtures, expectations and comparisons are defined by the [vector wire form](../../vectors/wire.md), its `wire.tsv` and `consumers.tsv`, and the README of each package. The older Platform vector commands keep the form of the [common stand](../README.md#layout-by-processes-stage-c).
+Vector tables, their consumers, input columns, fixtures, expectations and comparisons are defined by the [vector wire form](../../vectors/wire.md), its `wire.tsv` and `consumers.tsv`, and the README of each package. The older Platform vector commands keep the form of the [common stand](../stand.md#layout-by-processes-stage-c).
 
 <!-- req: P/AC-R005 -->
 
@@ -40,7 +40,7 @@ In a table with a header, a row whose cell count differs from the header is a da
 
 <!-- req: P/AC-R006 -->
 
-The targets are the rows of the registry: the public table [`forms/targets.tsv`](../forms/targets.README.md) and the judge-side routing table `forms/targets.routing.tsv` in the same directory, each assembled from its common header and the rows of the lessons ([assembly](../README.md#target-registry-and-export-lists-assembled-from-the-lessons)). The routing table has one row for each `id` of the public table and repeats no other column. A target's owner, interfaces, keys, requirement anchors and flags come only from the public table; its engine family, acceptance directories, scenario selection, parts of other lessons and the comparison mode of answer bodies (`body`) come only from the routing table; a lesson or a chapter name sets no comparison mode. The [target requirements](../runner-targets.README.md) define the columns they share. In a routing row the first directory holds the table the target executes and the selection of scenarios applies to it alone; the other directories hold only its inputs. The column `tables` names the files whose rows the target executes besides that table; an engine word makes no directory executable.
+The targets are the rows of the registry: the public table [`forms/targets.tsv`](../forms/targets.README.md) and the judge-side routing table `forms/targets.routing.tsv` in the same directory, each assembled from its common header and the rows of the lessons ([assembly](../tables.md#target-registry-and-export-lists-assembled-from-the-lessons)). The routing table has one row for each `id` of the public table and repeats no other column. A target's owner, interfaces, keys, requirement anchors and flags come only from the public table; its engine family, acceptance directories, scenario selection, parts of other lessons and the comparison mode of answer bodies (`body`) come only from the routing table; a lesson or a chapter name sets no comparison mode. The [target requirements](../runner-targets.README.md) define the columns they share. In a routing row the first directory holds the table the target executes and the selection of scenarios applies to it alone; the other directories hold only its inputs. The column `tables` names the files whose rows the target executes besides that table; an engine word makes no directory executable.
 
 ### N1.4 Verdict of a target
 
@@ -58,7 +58,7 @@ The result of a target is GREEN, red, `not_executed`, `not_applicable` or `block
 
 <!-- req: P/AC-R030 -->
 
-The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, for a row of `puts` with the column `ceiling` whose store ceiling the judge could not confirm; `installer_rights_check_missing`, for a row of `check.tsv` of a rights variant when the profile has no `stand.rights-check`; `store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`; `no_machine_form`, for a probe of [`forms/extra.tsv`](../forms/extra.tsv) whose `id` names no scenario of the files of the column `tables` of its target; `io_counter_unreadable`, for a step `@io` whose counter the judge cannot read and the steps that compare its name; `precondition:<id>`, for every other case of a target whose row `<id>` of `forms/extra.tsv` has the kind `precondition`, runs before them and is red; `MissingBinding`, when a case outside the target `P/01/production` needs a test-side input of R050 that the invocation does not name; the reasons of the table of N6.5 for the target `P/01/production`, which there also name a missing test-side input; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class. An `ASSERT` step runs like any other step and matches or does not; it is `not_executed` only when a name it compares is unbound because the earlier step that names it did not match or matched an `@oneof` branch that does not bind it, and then its reason is the scenario and the number of the latest earlier step of the scenario that names that name.
+The reason of a `not_executed` result is one of the closed list: `installer_ceiling_unproven`, for a row of `puts` with the column `ceiling` whose store ceiling the judge could not confirm; `installer_rights_check_missing`, for a row of `check.tsv` of a rights variant when the profile has no `stand.rights-check`; `store_rights_template`, for a scenario with `@rights store` when the command template of the stand store holds the flag `-rights {rights}` or `-rights={rights}` not exactly once; `store_spoil_row_missing`, for a scenario with `@spoil row` or `@spoil row-index` when the profile has no `stand.spoil-row`; `stage_package_not_exported`, for a target a directory of whose routing row (the column `acceptance` of [`forms/targets.routing.tsv`](../forms/targets.routing.tsv)) is not in the judge input: the pinned export does not publish that directory, and the target runs none of its rows; a table that a published directory assigns to a consumer and that is absent from it stays a data error by N1.2; `no_machine_form`, for a probe of [`forms/extra.tsv`](../../../01-store/forms/extra.tsv) whose `id` names no scenario of the files of the column `tables` of its target; `io_counter_unreadable`, for a step `@io` whose counter the judge cannot read and the steps that compare its name; `precondition:<id>`, for every other case of a target whose row `<id>` of `forms/extra.tsv` has the kind `precondition`, runs before them and is red; `MissingBinding`, when a case outside the target `P/01/production` needs a test-side input of R050 that the invocation does not name; the reasons of the table of N6.5 for the target `P/01/production`, which there also name a missing test-side input; or, when a public interface or profile key that the target requires is absent or has a value that the target does not accept, the name of that interface or key. For the steps that an abort of a scenario leaves unrun the reason is the scenario and the number of the step whose failure ended it; that step keeps its own class. An `ASSERT` step runs like any other step and matches or does not; it is `not_executed` only when a name it compares is unbound because the earlier step that names it did not match or matched an `@oneof` branch that does not bind it, and then its reason is the scenario and the number of the latest earlier step of the scenario that names that name.
 
 <!-- req: P/AC-R031 -->
 
@@ -70,7 +70,7 @@ A target that is `not_executed`, `not_applicable` or `blocked` does not stop the
 
 <!-- req: P/AC-R008 -->
 
-Before running a target, the judge builds an inventory of what it will run: for scenarios — their names, order, steps, source lines and manual steps; for vector rows — the identity of the row of [the unified vector command](../PROFILE.md#unified-vector-command); for the rows of the files of the column `tables` of the routing and of the [command tables](../README.md#command-tables) of the engine words `verdicts`, `puts` and `variants` — the file and the number of the physical line of the row. A target is GREEN only if its result equals this inventory, at least one row or step ran, all its processes were cleaned up and the sealed inputs did not change. A result that does not agree with the inventory is red with the class `runner`.
+Before running a target, the judge builds an inventory of what it will run: for scenarios — their names, order, steps, source lines and manual steps; for vector rows — the identity of the row of [the unified vector command](../PROFILE.md#unified-vector-command); for the rows of the files of the column `tables` of the routing and of the [command tables](../command-tables.md#command-tables) of the engine words `verdicts`, `puts` and `variants` — the file and the number of the physical line of the row. A target is GREEN only if its result equals this inventory, at least one row or step ran, all its processes were cleaned up and the sealed inputs did not change. A result that does not agree with the inventory is red with the class `runner`.
 
 <!-- req: P/AC-R009 -->
 
@@ -100,13 +100,13 @@ The stand manifests `testsub` and `testsub2` come from [`Platform/common/data/te
 
 <!-- req: P/AC-R050 -->
 
-Test-side inputs of a run are files that the invocation of the judge names explicitly; the engine decides the syntax of that invocation. They have three closed forms: the [seam bridge descriptor](../README.md#explicit-test-side-seam-bridge) ([schema](../forms/seam-bridge.schema.json)), the [D7 descriptor](../README.md#d7-test-side-evidence-bindings) ([schema](../forms/d7.schema.json)) and the input of the production qualification of N6.2 ([schema](../forms/production-input.schema.json)). A file with the field `bridge` is a seam bridge descriptor, one with `providers` is a D7 descriptor, and one with neither field and without `scope` is the input of N6.2; a file of none of these forms, or invalid against its schema, is a data error of the run. A descriptor serves the target whose id is its `scope`, or, when the scope is that id followed by `#` and the name of a scenario or case, that one case; a descriptor of a case wins over one of its target, and two descriptors of one form for one scope are a data error. The input of N6.2 serves the target `P/01/production`; a second one is a data error. The `source_pin` of every test-side input equals the Source commit of the run, the delivery marker `COURSE_COMMIT` of the pinned export ([the two pins](../PROFILE.md#specification-pin-and-source-pin)); another pin is a data error. A case that needs a test-side input which the invocation does not name is `not_executed`, as the D7 bindings say: with the reason `MissingBinding` of R030, and in the target `P/01/production` with a reason of the table of N6.5. The judge searches no working directory, profile, implementation repository or environment variable for these files.
+Test-side inputs of a run are files that the invocation of the judge names explicitly; the engine decides the syntax of that invocation. They have three closed forms: the [seam bridge descriptor](../seams.md#explicit-test-side-seam-bridge) ([schema](../forms/seam-bridge.schema.json)), the [D7 descriptor](../seams.md#d7-test-side-evidence-bindings) ([schema](../forms/d7.schema.json)) and the input of the production qualification of N6.2 ([schema](../../../01-store/forms/production-input.schema.json)). A file with the field `bridge` is a seam bridge descriptor, one with `providers` is a D7 descriptor, and one with neither field and without `scope` is the input of N6.2; a file of none of these forms, or invalid against its schema, is a data error of the run. A descriptor serves the target whose id is its `scope`, or, when the scope is that id followed by `#` and the name of a scenario or case, that one case; a descriptor of a case wins over one of its target, and two descriptors of one form for one scope are a data error. The input of N6.2 serves the target `P/01/production`; a second one is a data error. The `source_pin` of every test-side input equals the Source commit of the run, the delivery marker `COURSE_COMMIT` of the pinned export ([the two pins](../PROFILE.md#specification-pin-and-source-pin)); another pin is a data error. A case that needs a test-side input which the invocation does not name is `not_executed`, as the D7 bindings say: with the reason `MissingBinding` of R030, and in the target `P/01/production` with a reason of the table of N6.5. The judge searches no working directory, profile, implementation repository or environment variable for these files.
 
 ### N2.2 Interfaces of the implementation
 
 <!-- req: P/AC-R014 -->
 
-The interfaces are the commands of `stand` with their [substitutions](../PROFILE.md#substitutions) and [owners](../PROFILE.md#command-ownership-and-build-results), the [executable adapters](../PROFILE.md#executable-adapters), the [unified vector command](../PROFILE.md#unified-vector-command) and the [seam adapter protocol](../README.md#seam-adapter-protocol) with its [D7 bindings](../README.md#d7-test-side-evidence-bindings). A stand process receives only the variables of the [environment of stand processes](../README.md#environment-of-stand-processes).
+The interfaces are the commands of `stand` with their [substitutions](../PROFILE.md#substitutions) and [owners](../PROFILE.md#command-ownership-and-build-results), the [executable adapters](../PROFILE.md#executable-adapters), the [unified vector command](../PROFILE.md#unified-vector-command) and the [seam adapter protocol](../seams.md#seam-adapter-protocol) with its [D7 bindings](../seams.md#d7-test-side-evidence-bindings). A stand process receives only the variables of the [environment of stand processes](../stand.md#environment-of-stand-processes).
 
 ## N3 Procedure
 
@@ -120,7 +120,7 @@ Before it starts any process the judge lists the plan: all selected targets, for
 
 <!-- req: P/AC-R016 -->
 
-The judge starts stand processes as the [layout by processes](../README.md#layout-by-processes-stage-c), the [stand without root](../README.md#stand-without-root) and the rows of the dictionary say. The readiness of a store is the single rule of «Role sockets» in that section; a directive that waits for a store applies this rule. Its term is in the table «Terms of the stand» of that section.
+The judge starts stand processes as the [layout by processes](../stand.md#layout-by-processes-stage-c), the [stand without root](../stand.md#stand-without-root) and the rows of the dictionary say. The readiness of a store is the single rule of «Role sockets» in that section; a directive that waits for a store applies this rule. Its term is in the table «Terms of the stand» of that section.
 
 <!-- req: P/AC-R017 -->
 
@@ -132,7 +132,7 @@ The teardown of a stand first sends SIGCONT to frozen processes, then closes the
 
 <!-- req: P/AC-R033 -->
 
-A failed step ends its scenario only when it is a directive of preparation without which the later steps have no meaning: `@spoil row`, `@spoil row-index`, `@spoil object`, `@backup store`, `@import store`, `@group-setup` and the directives that start a stand or a role of it (`@start`, `@store-start`, `@server-start`, `@domain`, `@install domain`). The other steps go on and are judged. Steps that an abort leaves unrun are `not_executed`, not red.
+A failed step ends its scenario only when it is a directive of preparation without which the later steps have no meaning: `@spoil row`, `@spoil row-index`, `@spoil object`, `@backup store`, `@import store`, `@group-setup` and the directives that start a stand or a role of it (`@start`, `@store-start`, `@server-start`, `@domain`, `@install domain`). The other steps go on and are judged. Steps that an abort leaves unrun are `not_executed`, not red. A directive that the judge does not execute is `not_executed` with its reason of R030, and so is every later step of its scenario, with the same reason.
 
 <!-- req: P/AC-R034 -->
 
@@ -223,7 +223,7 @@ This section assigns the production qualification of P/01 to the judge (ADR-0135
 
 <!-- req: P/AC-R040 -->
 
-The target `P/01/production` of the registry has the engine word `production`. Its inventory (N1.4) is the 17 [case groups](../../../01-store/spec/production-acceptance.md#case-groups) `RUN-*` and the 13 probes of N6.3, which are the rows of [the probe debt](../../../01-store/spec/production-acceptance.md#probe-debt) by name. An entry is executed once: `RUN-L03` is the first initial state of `prod-stop`, and `RUN-F01`, `RUN-F02`, `RUN-F04` are the stages of `prod-fault-stage`; their results are shown under both names. The rows of [`forms/production.tsv`](../forms/production.tsv) list this inventory with the inputs and terms of each entry; the table names the entries and adds no outcome.
+The target `P/01/production` of the registry has the engine word `production`. Its inventory (N1.4) is the 17 [case groups](../../../01-store/spec/production-acceptance.md#case-groups) `RUN-*` and the 13 probes of N6.3, which are the rows of [the probe debt](../../../01-store/spec/production-acceptance.md#probe-debt) by name. An entry is executed once: `RUN-L03` is the first initial state of `prod-stop`, and `RUN-F01`, `RUN-F02`, `RUN-F04` are the stages of `prod-fault-stage`; their results are shown under both names. The rows of [`forms/production.tsv`](../../../01-store/forms/production.tsv) list this inventory with the inputs and terms of each entry; the table names the entries and adds no outcome.
 
 <!-- req: P/AC-R041 -->
 
@@ -237,7 +237,7 @@ The [public store probes](../../../01-store/probes/README.md) are eight checkers
 
 <!-- req: P/AC-R043 -->
 
-The values that the implementation declares and the facts of the environment reach the judge in a separate test input, as the [descriptor of the D7 bindings](../README.md#d7-test-side-evidence-bindings) does. It is not a profile field and it gives the implementation no interface. It is one JSON object with the closed fields:
+The values that the implementation declares and the facts of the environment reach the judge in a separate test input, as the [descriptor of the D7 bindings](../seams.md#d7-test-side-evidence-bindings) does. It is not a profile field and it gives the implementation no interface. It is one JSON object with the closed fields:
 
 | Field | Type and meaning |
 |---|---|
@@ -253,7 +253,7 @@ The closed keys of `budgets` are `output`, `cancellation`, `response_write`, `co
 
 <!-- req: P/AC-R044 -->
 
-Each probe has its input, its observed outcome and its term as written here; the norm named in the row is the source of the outcome. «Group stand» is the [store group stand](../README.md#store-group-stand); on `keys.store_build: box` such a probe, or its named part, is `not_applicable`.
+Each probe has its input, its observed outcome and its term as written here; the norm named in the row is the source of the outcome. «Group stand» is the [store group stand](../../../01-store/acceptance/3/README.md#store-group-stand); on `keys.store_build: box` such a probe, or its named part, is `not_applicable`.
 
 | Probe | Norm | Input and means | Observed outcome | Term |
 |---|---|---|---|---|
@@ -299,7 +299,7 @@ An entry ends in one of these results:
 
 <!-- req: P/AC-R048 -->
 
-Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../README.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. Named mutants of a candidate belong to the comparison of R028 and are not an input of the engine.
+Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../seams.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. Named mutants of a candidate belong to the comparison of R028 and are not an input of the engine.
 
 <!-- req: P/AC-R049 -->
 

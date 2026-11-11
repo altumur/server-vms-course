@@ -1,5 +1,5 @@
-# The closed dictionary of the kinds of code checks (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them;
-# listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49). Public, in the model input. The rows of a lesson are
+# The closed dictionary of the kinds of code checks.
+# Public, in the model input. The rows of a lesson are
 # Platform/<lesson>/forms/code-rules.tsv with the columns id, kind, name, args, stage, norm; a row names a kind of this dictionary and carries no expected
 # answer. The rows of the judge engine are forms/engine-code-rules.tsv with the same columns, in the J input only; its header gives its map, names and
 # stages. The generation cycle checks the rows by one common interpreter that holds no literal of a lesson; the acceptance does not read them. This

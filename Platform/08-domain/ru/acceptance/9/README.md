@@ -3,7 +3,7 @@
 Текст производный от `acceptance/9/README.md`, руками не правится: источник — английский [`acceptance/9/README.md`](../../../acceptance/9/README.md), правка идёт в него, русский пересобирается переводом.
 
 Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/ru/acceptance/README.md#словарь-директив-и-дверей) и его
-раздел [«Стенд домена»](../../../../common/ru/acceptance/README.md#стенд-домена) (двери `holder`, `member`, директивы `@domain`, `@person`). Норма главы —
+раздел [«Стенд домена»](../../../../common/ru/acceptance/domain-stand.md#стенд-домена) (двери `holder`, `member`, директивы `@domain`, `@person`). Норма главы —
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) N5. Формы чужих дверей — их владельцы.
 
 ## Стенд

@@ -2,6 +2,7 @@
 # A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words of its dictionary and of the acceptance READMEs of P/01 chapters 1.1 and 1.3 (@wire, @halfclose, @rep, @profile, @close, @noreply included); no cell-json.
 # The target runs these rows through the column tables of forms/targets.routing.tsv; every scenario runs on its own instance as Platform/01-store/acceptance/1/README.md says.
 # The numbers are the stand parameters of P/01.1 N5 (body limit 1048576, row ceiling 524288) and the constants of Platform/01-store/forms/runtime-constants.tsv.
+# The header name X-Configstore-Role is the designation of the role forwarding header that keys.role_header of the profile names, as in the scenarios of Platform/01-store/acceptance/2; on the stand of a box every role header is a forwarding that is not trusted (P/01.2-R045).
 # scenario	step	request	expect
 extra-parameters	1	POST /v1/write {"op":"put","key":"acc/extra-parameters/b1","items":{"blob":"@big(1048512)"}}	413 {"kind":"toolarge","key":"acc/extra-parameters/b1","size":1048516,"limit":524288}
 extra-parameters	2	POST /v1/write {"op":"put","key":"acc/extra-parameters/b2","items":{"blob":"@big(1048513)"}}	413 {"kind":"toolarge","limit":1048576}
@@ -20,6 +21,11 @@ extra-full-key	10	POST /v1/write {"op":"put","key":"acc/extra-full-key/h2","item
 extra-full-key	11	POST /v1/write {"op":"put","key":"acc/extra-full-key/g3","items":{"v":"1"},"guard":{"key":"acc/\ud83d\ude00@big(1016)","index":"$f"}}	200 {"index":"$g3"}
 extra-full-key	12	POST /v1/write {"op":"put","key":"acc/extra-full-key/h3","items":{"v":"1"},"guard":{"key":"acc/\ud83d\ude00@big(1017)","index":""}}	400 {"kind":"badkey"}
 extra-full-key	13	POST /v1/write {"op":"put","key":"acc/extra-full-key/g9","items":{"v":"1"},"guard":{"key":"acc/\u0436@big(1018)","index":""}}	200 {"index":"$g9"}
+extra-forwarded-list	1	POST /v1/write {"op":"put","key":"acc/extra-forwarded-list/a","items":{"v":"1"}}	200 {"index":"$a"}
+extra-forwarded-list	2	@header X-Configstore-Role: acc GET /v1/list?prefix=acc/extra-forwarded-list/	403 {"kind":"forbidden"}
+extra-forwarded-list	3	@header X-Configstore-Role: console GET /v1/list?prefix=acc/extra-forwarded-list/	403 {"kind":"forbidden"}
+extra-forwarded-list	4	@header X-Configstore-Role: admin GET /v1/list?prefix=acc/extra-forwarded-list/	403 {"kind":"forbidden"}
+extra-forwarded-list	5	GET /v1/list?prefix=acc/extra-forwarded-list/	200 {"keys":{"acc/extra-forwarded-list/a":"$a"}}
 extra-raw-line	1	@wire GET /v1/list\r\n\r\n	400 {"kind":"badrequest"}
 extra-raw-line	2	@wire @big(@profile+1(request_line_limit))\r\nHost: localhost\r\n\r\n	400 {"kind":"badrequest"}
 extra-raw-line	3	@wire GET /v1/get?key=acc/x HTTP/1.1\r\nHost: localhost\r\nX-Bad\r\n\r\n	400 {"kind":"badrequest"}

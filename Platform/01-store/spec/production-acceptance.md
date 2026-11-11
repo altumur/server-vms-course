@@ -99,7 +99,7 @@ The [store probes](../probes/README.md) are eight public observation checkers ov
 
 ### Probe debt
 
-The checks below have no executable probe yet. Until one exists, each stays checked by reading, and its group is blocked/NotExecuted for production qualification, not a success (ADR-0130 Addendum (13)). Runner writes the probes and their negative controls; this table names the debt and adds no route, flag or value. A capacity input comes from the environment (ADR-0130 Addendum (5) item 3). A clock input comes through the `clock` binding of [D7](../../common/acceptance/README.md#d7-test-side-evidence-bindings) (ADR-0130 Addendum (11)); until that binding is supplied, the dependent case is `MissingBinding`/`NOTEXEC`.
+The checks below have no executable probe yet. Until one exists, each stays checked by reading, and its group is blocked/NotExecuted for production qualification, not a success (ADR-0130 Addendum (13)). Runner writes the probes and their negative controls; this table names the debt and adds no route, flag or value. A capacity input comes from the environment (ADR-0130 Addendum (5) item 3). A clock input comes through the `clock` binding of [D7](../../common/acceptance/seams.md#d7-test-side-evidence-bindings) (ADR-0130 Addendum (11)); until that binding is supplied, the dependent case is `MissingBinding`/`NOTEXEC`.
 
 | Missing check | Norm | Input |
 |---|---|---|
@@ -119,7 +119,7 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 
 ### Clocks in a group
 
-ADR-0130 Addendum (15) item 8 and Addendum (11): this is the public scope of a D7 [`clock` binding](../../common/acceptance/README.md#d7-test-side-evidence-bindings) in a store group. It adds no field, route, flag, directive or number, and it is not a qualification.
+ADR-0130 Addendum (15) item 8 and Addendum (11): this is the public scope of a D7 [`clock` binding](../../common/acceptance/seams.md#d7-test-side-evidence-bindings) in a store group. It adds no field, route, flag, directive or number, and it is not a qualification.
 
 A node is addressed by its stable daemon `-id` in the topology of the case (P/01.3 N1.3). Leader and follower are observed changing roles (`leader_id` of `/v1/status`), not addresses. One `clock` provider controls the explicitly listed consuming wall-clock domains of the case, each named by the `-id` of its node; a domain that is not listed is not controlled. The independent monotonic baseline of the observer is not shifted. Offsets use the seconds of the wall stamps of the chapter, and no skew allowance is added.
 

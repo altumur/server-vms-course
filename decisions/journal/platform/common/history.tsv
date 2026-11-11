@@ -1,0 +1,215 @@
+req_id	file	source	date	removed
+-	acceptance/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	(ADR-0121; ADR-0124 addendum (1) item 4).
+-	acceptance/README.md#dictionary-of-directives-and-doors	move of the lessons of M10 into the module «Platform»	2026-11-06	the former lesson M10/N (before the move),
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084 (the form `@grow`)	2026-11-04	`ADR-NNNN` — a decision without a lesson (like `@grow`, ADR-0084);
+-	acceptance/README.md#dictionary-of-directives-and-doors	review analysis of stage B 3–5, № 33	2026-11-04	adds a row here (review analysis of stage B 3–5, № 33).
+-	acceptance/README.md#dictionary-of-directives-and-doors	move of the lessons of M10 into the module «Platform»	2026-11-06	6.1, 6.3, 6.5, 6.6 (the former M10/1, 6 and M10/3, 4, 9).
+-	acceptance/README.md#dictionary-of-directives-and-doors	the store pilot	2026-11-04	| 11 (the store pilot) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	the store pilot	2026-11-04	| 11 (the store pilot) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	the store pilot	2026-11-04	| 11 (the store pilot) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	the store pilot	2026-11-04	| 11 (the store pilot) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	Codex review of the runner series 4faf728	2026-11-04	(Codex review of the runner series 4faf728)
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.142	2026-11-10	| P/01.1 (P01.142) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.149	2026-11-10	| P/01 (P01.149) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.149	2026-11-10	| P/01 (P01.149) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.149	2026-11-10	| P/01 (P01.149) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.149	2026-11-10	| P/01 (P01.149) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.149	2026-11-10	| P/01 (P01.149) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	P03.25	2026-11-11	| P/03.6 (P03.25) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	mutation check of M11, 2026-10-18	2026-10-18	| M11 (mutation check 2026-10-18) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	mutation check of M11, 2026-10-18	2026-10-18	| M11 (mutation check 2026-10-18) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084	2026-11-06	(stand only, P/04 N1.4 `SHRINK_AFTER`; ADR-0084)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/03, 2026-10-30	2026-10-30	`SERVER_NAME`; the coverage audit of P/03, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084	2026-11-06	`on <server>` (ADR-0084) — a process
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084	2026-11-06	`on <server>` — ADR-0084;
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/03, 2026-10-30	2026-10-30	(the coverage audit of P/03, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/03, 2026-10-30	2026-10-30	(the coverage audit of P/03, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/04, 2026-10-30	2026-10-30	(the coverage audit of P/04, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/04, 2026-10-30	2026-10-30	(the coverage audit of P/04, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/05, 2026-10-30	2026-10-30	(the coverage audit of P/05, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/05, 2026-10-30	2026-10-30	(the coverage audit of P/05, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/05, 2026-10-30	2026-10-30	(the coverage audit of P/05, 2026-10-30)
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084 addendum (4) R26	2026-11-06	(the base one `-1` is started by the scenario itself; ADR-0084 addendum (4) R26)
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084 addendum (2) R14	2026-11-06	(P/02.4 N1.5; ADR-0084 addendum (2) R14)
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0084	2026-11-04	the test of the unit and the policy) | ADR-0084 |
+-	acceptance/README.md#dictionary-of-directives-and-doors	DOM-AGENT-TURN-01	2026-11-06	`@start agent <cluster> second`; DOM-AGENT-TURN-01)
+-	acceptance/README.md#dictionary-of-directives-and-doors	review analysis of stage B 8–10, № 15	2026-11-06	`@on <cluster> …`; review analysis of stage B 8–10, № 15)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the Architect's request of 2026-10-30; the audits of P/03, P/04	2026-10-30	(at the Architect's request of 2026-10-30, the estimate of the runner ~2–3 h; the audits of P/03, P/04)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the Architect's request of 2026-10-30; the audits of P/03 C11, P/04 D07	2026-10-30	(at the Architect's request of 2026-10-30, the estimate of the runner ~1 day; the audits of P/03 C11, P/04 D07)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the audits of P/03, P/04, 2026-10-30	2026-10-30	| P/03, P/04 (2026-10-30) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	the audits of P/03, P/04, 2026-10-30	2026-10-30	| P/03, P/04 (2026-10-30) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	mutation check of M11	2026-11-06	| M11/11 (mutation check) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	C05-SPOIL-OBJECT-BYTES-01, the Specification's decision	2026-11-04	(C05-SPOIL-OBJECT-BYTES-01, the Specification's decision)
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go	2026-11-04	| 11 (reconciliation of python and go) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/01, 2026-10-30	2026-10-30	| P/01.2 (the coverage audit of P/01, 2026-10-30) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	coverage audit of P/01, 2026-10-30	2026-10-30	| P/01.1 (the coverage audit of P/01, 2026-10-30) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go M10/6–11, S8	2026-11-06	| 7 (reconciliation of python and go M10/6–11, S8) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	EJ-G06	2026-11-06	«Writer refusals», EJ-G06)
+-	acceptance/README.md#dictionary-of-directives-and-doors	review analysis of stage B 3–5, V1	2026-11-06	«Writing a line», step 4 — review analysis of stage B 3–5, V1;
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go M10/6–11, E19	2026-11-06	| 8 (reconciliation of python and go M10/6–11, E19) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go M10/6–11, B8	2026-11-06	| 11 (reconciliation of python and go M10/6–11, B8) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0080 addendum (17) item 4	2026-11-04	(ADR-0080 addendum (17) item 4)
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0119 addendum (18)	2026-11-04	would not show | ADR-0119 addendum (18) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	the Architect's decision on the reconciliation of M11, H14	2026-11-06	| M11 (the Architect's decision on the reconciliation of M11, H14);
+-	acceptance/README.md#dictionary-of-directives-and-doors	the request of VMS of 2026-10-29 (C-ONEOF-01, the Specification's decision)	2026-10-29	| the request of VMS of 2026-10-29 (C-ONEOF-01, the Specification's decision) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	move of the lessons of M10 into the module «Platform»	2026-11-11	`subset` (since the former M10/3) —
+-	acceptance/README.md#dictionary-of-directives-and-doors	ACC-EMPTY-OBJECT-01, the Architect's decision of 2026-10-26	2026-10-26	(ACC-EMPTY-OBJECT-01, the Architect's decision of 2026-10-26)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the Architect's decision of 2026-10-27	2026-10-27	(the Architect's decision of 2026-10-27)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the log of cammeta-python; the Architect's decision of 2026-10-18	2026-10-18	(the log of cammeta-python; the Architect's decision of 2026-10-18)
+-	acceptance/README.md#dictionary-of-directives-and-doors	the Architect's decision of 2026-10-18	2026-10-18	| 1 (the Architect's decision of 2026-10-18) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	mutation check of M11, 2026-10-18	2026-10-18	| 3; several — M11 (mutation check 2026-10-18) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go M10/6–11, C39	2026-11-06	| 9 (reconciliation of python and go M10/6–11, C39) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	reconciliation of python and go M10/6–11, C34	2026-11-06	| 9; repeated — reconciliation of python and go M10/6–11, C34 |
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0094 B7; C06-HEADER-EXACT-01	2026-10-31	| 6 (ADR-0094 B7; C06-HEADER-EXACT-01) |
+-	acceptance/README.md#dictionary-of-directives-and-doors	ADR-0094 B7; C06-HEADER-EXACT-01	2026-10-31	| 6 (ADR-0094 B7; C06-HEADER-EXACT-01) |
+-	acceptance/stand.md#layout-by-processes-stage-c	ACC-EMPTY-OBJECT-02, the Architect's decision of 2026-10-26	2026-10-26	(ACC-EMPTY-OBJECT-02, the Architect's decision of 2026-10-26).
+-	acceptance/stand.md#layout-by-processes-stage-c	ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26	2026-10-26	(ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26; the line «Native outcome»
+-	acceptance/stand.md#layout-by-processes-stage-c	the Architect's decision of 2026-10-27	2026-10-27	README (the Architect's decision of 2026-10-27).
+-	acceptance/stand.md#layout-by-processes-stage-c	move of the acceptances from M10/4–11	2026-11-06	in the acceptances moved from M10/4–11 — the rights derived
+-	acceptance/stand.md#layout-by-processes-stage-c	the log of cammeta-python, lesson 11 № 29	2026-11-04	(the log of cammeta-python, lesson 11 № 29).
+-	acceptance/stand.md#layout-by-processes-stage-c	the store pilot, A6	2026-11-06	(the store pilot, A6).
+-	acceptance/stand.md#layout-by-processes-stage-c	reconciliation of python and go M10/6–11	2026-11-04	(reconciliation of python and go M10/6–11).
+-	acceptance/stand.md#layout-by-processes-stage-c	the Architect's decision, the second pilot	2026-11-04	(the Architect's decision, the second pilot);
+-	acceptance/stand.md#layout-by-processes-stage-c	I02-RING-FIXTURE	2026-10-23	below (I02-RING-FIXTURE).
+-	acceptance/stand.md#layout-by-processes-stage-c	move of the acceptances from the lessons before M10/6	2026-11-06	In the acceptances moved from the lessons before M10/6 (rights — now P/01.2), the runner reads the store with a role that has full rights on the prefix of the subsystem.
+-	acceptance/stand.md#layout-by-processes-stage-c	ADR-0084 addendum (2) R17	2026-11-06	(P/04 N3 «pass()» step 0; ADR-0084 addendum (2) R17)
+-	acceptance/stand.md#layout-by-processes-stage-c	the second pilot, N-4	2026-11-04	«The setting channel and the layout»; the second pilot, N-4)
+-	acceptance/stand.md#layout-by-processes-stage-c	the Architect's decision on P01.89.4	2026-11-10	(the Architect's decision on P01.89.4)
+-	acceptance/stand.md#layout-by-processes-stage-c	the choice of the owner of the runners, cammeta-acceptance e3ec5c3	2026-11-04	(the choice of the owner of the runners, cammeta-acceptance e3ec5c3)
+-	acceptance/stand.md#layout-by-processes-stage-c	ADR-0094 B7	2026-10-30	(ADR-0094 B7).
+-	acceptance/stand.md#layout-by-processes-stage-c	stage A, A6; ADR-0084; the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5	2026-10-20	`workers-script` (stage A, A6; ADR-0084; `shrink-allowed` — the Architect's decision of 2026-10-20, № 12 of the review analysis of stage B 3–5) — templates with
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess I02-STAND, the Architect's decision of 2026-10-23	2026-10-23	`Platform/common/vectors/door-token/`; the stage C guess I02-STAND, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess C04-VECTOR-01, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess C04-VECTOR-01, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess C06-F2-IO-01, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess C06-F2-IO-01, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess GP-G06, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess GP-G06, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess C04-ENV-01, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess C04-ENV-01, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess W03-G03, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess W03-G03, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	the stage C guess C06-F2-IO-02, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guess C06-F2-IO-02, the Architect's decision of 2026-10-23).
+-	acceptance/stand.md#layout-by-processes-stage-c	C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26	2026-10-26	«covers» (C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26). This
+-	acceptance/stand.md#layout-by-processes-stage-c	ACC-VECTORS-COVERS-STAND-01, the Specification's decision	2026-11-04	(ACC-VECTORS-COVERS-STAND-01, the Specification's decision).
+-	acceptance/stand.md#layout-by-processes-stage-c	ADR-0126	2026-11-05	`accept:<chapter>:<scenarios>` of a stage, ADR-0126)
+-	acceptance/stand.md#stand-without-root	the stage C guesses I02-RING-FIXTURE, C04-STAND-GID-01, the Architect's decision of 2026-10-23	2026-10-23	(the stage C guesses I02-RING-FIXTURE, C04-STAND-GID-01, the Architect's decision of 2026-10-23):
+-	acceptance/stand.md#stand-without-root	ACC-EJ-STAND-GROUP-01, the Architect's decision of 2026-10-28	2026-10-28	`modes`; ACC-EJ-STAND-GROUP-01, the Architect's decision of 2026-10-28)
+-	acceptance/stand.md#stand-without-root	STAND-ROOTS-CLEAR-01, the Architect's decision of 2026-10-27	2026-10-27	(STAND-ROOTS-CLEAR-01, the Architect's decision of 2026-10-27);
+-	acceptance/tables.md#target-registry-and-export-lists-assembled-from-the-lessons	ADR-0135 addendum (14)	2026-11-11	the parts of the lessons (ADR-0135 addendum (14)).
+-	acceptance/command-tables.md#installation-sequences	P02.33, the P/02 dictionary of the common acceptance (the former P/02.2 stderr rule written by the word @stderr)	2026-11-11	The former rule of P/02.2 «with code `2` stderr names the key of the view, after `@rev-spoil` the key of the mark» is now written in the table by the word `@stderr`.
+-	acceptance/command-tables.md#installation-sequences	the Gemini coverage audit of P/02 (rows @rev-delete, @rev-spoil)	2026-11-11	(the Gemini coverage audit of P/02)
+-	acceptance/command-tables.md#installation-sequences	the coverage audit of P/02, B02 (row @rev-max)	2026-11-11	(the coverage audit of P/02, B02)
+-	acceptance/command-tables.md#installation-sequences	task P02.33 (rows @row-spoil, @stderr)	2026-11-11	(P02.33)
+-	acceptance/command-tables.md#installation-sequences	the coverage audit of P/02, B03 (row @shell-put)	2026-11-11	(the coverage audit of P/02, B03)
+-	acceptance/command-tables.md#installation-sequences	ADR-0094 B7 (row @file-fill)	2026-10-30	(ADR-0094 B7)
+-	acceptance/seams.md#explicit-test-side-seam-bridge	selection of the bridge as a new test-side contract	2026-11-08	This newly selected bridge is a separate test-side contract.
+-	acceptance/seams.md#explicit-test-side-seam-bridge	Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4	2026-11-08	(the Architect's decision of 2026-11-08, ADR-0126 addendum (11) item 4)
+-	acceptance/seams.md#d7-test-side-evidence-bindings	selection of D7 as a new test-side contract	2026-11-08	This is a newly selected test-side contract for clock, storage, progress and controlled-fault bindings.
+-	acceptance/domain-stand.md#domain-stand	stage B, lesson 8: the move plan of lesson 8, V5 (the section taken from the dictionary of M11/01)	2026-10-20	the domain vectors not yet moved into packages are also here. Moved as it is from «Dictionary of directives and doors of M11» of the acceptance README of M11/01 (the directory was removed by the move of lesson 8) (stage B, lesson 8; the move plan of lesson 8, V5).
+-	acceptance/domain-stand.md#domain-vector-commands	review analysis of stage B 8–10, № 22: M-1	2026-11-06	(review analysis of stage B 8–10, № 22: M-1)
+-	acceptance/domain-stand.md#domain-vector-commands	review analysis of stage B 8–10, № 6, № 22: M-1	2026-11-06	(review analysis of stage B 8–10, № 6, № 22: M-1)
+-	acceptance/domain-stand.md#domain-vector-commands	Architect's decision on the reconciliation of M11, H14	2026-10-19	(the Architect's decision on the reconciliation of M11, H14)
+-	acceptance/domain-stand.md#multi-cluster-stand	review analysis of stage B 8–10, № 22: M-1	2026-11-06	; review analysis of stage B 8–10, № 22: M-1
+-	acceptance/domain-stand.md#multi-cluster-stand	the reconciliation of M11, I3	2026-10-20	; the reconciliation of M11, I3
+-	acceptance/domain-stand.md#multi-cluster-stand	review analysis of stage B 8–10, № 22: M-18	2026-11-06	; review analysis of stage B 8–10, № 22: M-18
+-	acceptance/domain-stand.md#multi-cluster-stand	review analysis of stage B 8–10, № 22: M-1	2026-11-06	; review analysis of stage B 8–10, № 22: M-1
+-	acceptance/domain-stand.md#multi-cluster-stand	review analysis of stage A 8–10, decision 1	2026-10-19	; review analysis of stage A 8–10, decision 1
+-	acceptance/domain-stand.md#multi-cluster-stand	stage C guess C06-EVENTS-VIEW-33-01 (owner P/06); the coverage audit of P/08	2026-10-30	`@append event` — C06-EVENTS-VIEW-33-01; `@freeze`, `@thaw` — P/08 (the coverage audit of P/08, 2026-10-30)
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0095 (row @on <cluster> @start console#<n>)	2026-10-31	ADR-0095
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0083 addendum (9) (row @clusters)	2026-10-20	(ADR-0083 addendum (9))
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0083 addendum (9) (row @tls-setup)	2026-10-20	(ADR-0083 addendum (9))
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4 (row @kit-start)	2026-10-26	ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4
+-	acceptance/domain-stand.md#multi-cluster-stand	TLS debt № 14, ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22 (row @tls-kit)	2026-10-21	TLS № 14 (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22)
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0083 addendum (20), addendum (21) item 9 (row @tls)	2026-10-22	, ADR-0083 addendum (20), addendum (21) item 9
+-	acceptance/domain-stand.md#multi-cluster-stand	the reading of the commits of «cammeta-acceptance» tls-stand (row @tls)	2026-10-20	; the reading of the commits of «cammeta-acceptance» tls-stand 2026-10-20
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0083 addendum (9) (row @tls)	2026-10-20	(ADR-0083 addendum (9))
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0083 addendum (9) (rows @cut-route, @mend-route)	2026-10-20	(ADR-0083 addendum (9))
+-	acceptance/domain-stand.md#multi-cluster-stand	ADR-0113, roadmap 4.5 (the batch of @join)	2026-11-04	; the batch — ADR-0113, roadmap 4.5
+-	acceptance/PROFILE.md#parameters-in-keys	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
+-	acceptance/PROFILE.md#substitutions	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/PROFILE.md#substitutions	the Architect's decision on P01.89.6	2026-11-10	; the Architect's decision on P01.89.6
+-	acceptance/PROFILE.md#code-check-names	ADR-0133 addendum (39)	2026-11-09	 (ADR-0133 addendum (39))
+-	acceptance/forms/targets.README.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	 (ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36, the decisions of the Architect on them;
+-	acceptance/forms/code-rules.tsv#header	ADR-0133 addenda (27), (28), (39); review P01.103, task P02.36 and the Architect's decisions on them; ADR-0135 addendum (13) item 4, tasks P02.48, P02.49 (listed_words, no_literals)	2026-11-09	listed_words and no_literals: ADR-0135 addendum (13) item 4, tasks P02.48, P02.49). 
+-	acceptance/forms/d7-payload.schema.json#/description	task P01.136	2026-11-10	 (task P01.136)
+-	acceptance/forms/d7.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
+-	acceptance/forms/seam-bridge.schema.json#/description	the Architect's answer on P01.86	2026-11-10	 (the Architect's answer on P01.86)
+-	acceptance/forms/profile-keys.tsv#header	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/forms/profile-substitutions.tsv#header	the Architect's answer on P01.86	2026-11-10	; the Architect's answer on P01.86
+-	acceptance/ops/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
+-	acceptance/ops/README.md#intro	ADR-0095	2026-10-30	ADR-0095; 
+-	acceptance/ops/README.md#sleeps-sleep	ADR-0080 addendum (17) item 4	2026-10-18	, ADR-0080 addendum (17) item 4
+-	acceptance/pass/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
+-	acceptance/pass/README.md#intro	ADR-0094 B1, Confirmation	2026-10-29	ADR-0094 B1, Confirmation; 
+-	acceptance/pass/README.md#intro	ADR-0094 addendum (16)	2026-10-29	[ADR-0094 addendum (16)]
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1	2026-10-29	 (ADR-0094 B1)
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-worker [<cluster>] <sub> <name> [kit=<leaf>]`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-open <label> <door> <request>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-answer <label> <code> <Content-Type\)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-chunk <label> <text>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-result <label>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-abort <label>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-closed <label>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-fill <cluster> <sub>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-seen <name>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0094 B1 (the cell «Lesson» of the row `@pass-call <client> <request>`)	2026-10-29	B1
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step <label> [<name>]`)	2026-10-30	ADR-0095
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step-answer <label> <code> <Content-Type\)	2026-10-30	ADR-0095
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step-none <name> <s>`)	2026-10-30	ADR-0095
+-	acceptance/pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind	ADR-0095 (the cell «Lesson» of the row `@pass-step-drop <label>`)	2026-10-30	ADR-0095
+-	acceptance/system/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	Moved from the acceptance of M10/11
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6:
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	, sc. 16 of M10/11,
+-	acceptance/system/README.md#intro	move from the acceptance of M10/11, stage B, ADR-0083 addendum (1); the Architect's decision on V2 of the move plan of lesson 6	2026-10-18	The numbers and steps are the former ones.
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (work rules (for people) § 4, 2026-10-30)
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	 (ADR-0091 addendum (2), (3))
+-	acceptance/system/README.md#intro	work rules (for people) § 4, 2026-10-30; ADR-0091 addenda (2)–(6)	2026-10-30	 (ADR-0091 addendum (4)–(6))
+-	acceptance/system/README.md#stand	automatic group scenarios plan (2026-10-30), stage 2; work rules § 4	2026-10-30	 Before, it was a drill `@manual` on a real cluster; the plan of stage 2 is `automatic group scenarios plan (2026-10-30, for people)` (work rules (for people) § 4).
+-	acceptance/system/README.md#three-server-cluster-stand	automatic group scenarios plan (2026-10-30), stage 2; work rules § 4	2026-10-30	 (work rules (for people) § 4; stage 2 of the plan `automatic group scenarios plan (2026-10-30, for people)`)
+-	acceptance/system/README.md#three-server-cluster-stand	stage C guess C01-GROUP-BOOTSTRAP-EVEN-01	2026-10-31	, C01-GROUP-BOOTSTRAP-EVEN-01
+-	acceptance/system/README.md#three-server-cluster-stand	Codex review, error class R37	2026-10-31	 (a check of the error class R37, Codex)
+-	acceptance/system/README.md#timings	the Architect's decision of 2026-10-31	2026-10-31	 (the Architect's decision of 2026-10-31)
+-	acceptance/system/README.md#three-server-cluster-stand	the date of the row in the cell «Lesson» (seven rows system)	2026-10-31	 (2026-10-31)
+-	acceptance/system/README.md#three-server-cluster-stand	the date of the row in the cell «Lesson» (one row P/01.3)	2026-10-30	 (2026-10-30)
+-	acceptance/system/README.md#scenarios	move of sc. 06 recover to sc. 18 of P/01.3	2026-10-30	now 
+-	acceptance/system/README.md#executability	automatic group scenarios plan (2026-10-30), «Dry run before release»	2026-10-30	of the plan
+-	acceptance/tls/README.md#intro	ADR-0121; ADR-0124 addendum (1) item 4	2026-11-04	 (ADR-0121; ADR-0124 addendum (1) item 4)
+-	acceptance/tls/README.md#intro	ADR-0083 addendum (9), the owner's decision, 387a71377	2026-10-20	 per ADR-0083 addendum (9) (the owner's decision, 387a71377)
+-	acceptance/tls/README.md#intro	ADR-0083 addenda (20), (21)	2026-10-20	 (ADR-0083 addendum (20), addendum (21))
+-	acceptance/tls/README.md#intro	ADR-0083 addendum (9): items 3 and 7 of the debts list (item 3 — the break of DELETE /domain/users)	2026-10-20	Item 3 and «the holder of a previous build» from item 7
+-	acceptance/tls/README.md#kits-standjsonstandjson	ADR-0075 addendum 2026-10-26 (4) item 7	2026-10-26	 (ADR-0075 addendum 2026-10-26 (4) item 7)
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0083 addendum (18)	2026-10-20	 (ADR-0083 addendum (18))
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0083 addenda (20), (21)	2026-10-20	; ADR-0083 addendum (20), addendum (21)
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0083 addendum (18)	2026-10-20	; ADR-0083 addendum (18)
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0094 addendum (16)	2026-10-29	 (ADR-0094 addendum (16))
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	the Architect with the TLS stage of cammeta-acceptance; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	 (the form was agreed by the Architect with the TLS stage of «cammeta-acceptance» 2026-10-21; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22)
+-	acceptance/tls/README.md#doors-and-clients-of-the-probe-tls	ADR-0083 addenda (20), (21) item 9	2026-10-20	 (ADR-0083 addendum (20), addendum (21) item 9)
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): items 2, 7, 8, 9 of the debts list	2026-10-20	(item 9 — the fourth cluster; for items 2, 7, 8 `hold m1 m2` is enough)
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 7 of the debts list	2026-10-20	Item 7 — 
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 2 of the debts list	2026-10-20	Item 2 — 
+-	acceptance/tls/README.md#expectations	ADR-0083 addenda (20), (21) item 9	2026-10-20	 ADR-0083 addendum (20), addendum (21) item 9;
+-	acceptance/tls/README.md#expectations	ADR-0083 addenda (20), (21) item 9	2026-10-20	 (ADR-0083 addendum (20), addendum (21) item 9)
+-	acceptance/tls/README.md#expectations	division of work: Specification and the TLS stage of cammeta-acceptance	2026-10-21	 — the data of «Specification», the directive — the TLS stage of «cammeta-acceptance»
+-	acceptance/tls/README.md#expectations	the Architect's decision of 2026-10-21, № 14	2026-10-21	; the Architect's decision of 2026-10-21, as № 14
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 8; the Architect's decision of 2026-10-20	2026-10-20	Item 8 — resumption
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (9): item 8; the Architect's decision of 2026-10-20	2026-10-20	the Architect's decision of 2026-10-20 — 
+-	acceptance/tls/README.md#expectations	the Architect's decision of 2026-10-21, № 14	2026-10-21	; the Architect's decision of 2026-10-21, as № 14
+-	acceptance/tls/README.md#expectations	review analysis of stage B 8–10, № 14; review analysis of stage A 8–10, № 36	2026-10-20	 (review analysis of stage B 8–10, № 14; review analysis of stage A 8–10, № 36)
+-	acceptance/tls/README.md#expectations	division of work: Specification and the TLS stage of cammeta-acceptance; ADR-0083 addendum (9) item 2	2026-10-21	The data of «Specification»; the steps and the scenario are written by the TLS stage of «cammeta-acceptance»; until then — a debt of the stand. The preparation — as for item 2.
+-	acceptance/tls/README.md#expectations	ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27	2026-10-21	; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	**№ 14, the handshake refusal of the role door on transition 2** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22; the data — «Specification», the directive
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22	2026-10-21	`@tls-kit` — «cammeta-acceptance»)
+-	acceptance/tls/README.md#expectations	№ 14; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23	2026-10-21	**№ 14, the class `signed` of the console of a cluster** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23)
+-	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4	2026-10-26	 (ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4)
+-	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	agreed with cammeta-acceptance	2026-10-26	 (the form was agreed with «cammeta-acceptance» 2026-10-26)
+-	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	ADR-0075 addendum 2026-10-26 (5) item 4	2026-10-26	 ((5) item 4)
+-	acceptance/tls/README.md#the-client-of-its-own-box-and-the-address-defaults	ADR-0094 B6	2026-10-29	ADR-0094 B6; 
+-	acceptance/tls/README.md#the-fourth-cluster--the-er-branches-p088-n18-step-6	ADR-0083 addendum (9): item 9 of the debts list	2026-10-20	item 9; 
+-	acceptance/tls/README.md#the-fourth-cluster--the-er-branches-p088-n18-step-6	the Quint model of M11	2026-10-20	, added by the Quint model of M11
+-	acceptance/tls/README.md#the-fourth-cluster--the-er-branches-p088-n18-step-6	agreed with cammeta-acceptance; the Architect's decision of 2026-10-20	2026-10-20	 (agreed with «cammeta-acceptance», the Architect's decision of 2026-10-20)
+-	acceptance/tls/README.md#the-fourth-cluster--the-er-branches-p088-n18-step-6	ADR-0083 addendum (9): item 3 of the debts list	2026-10-20	like item 3
+P/AC-R030	acceptance/spec/acceptance.norms.md#N1.4	P01.168 B2 (conditions of the closed reasons: store_rights_template and store_spoil_row_missing from the dictionary of directives and acceptance/1 README of P/01; stage_package_not_exported from the meaning of the former course runner, inventory P01.28.4 item 6.21, «the pinned export does not publish this stage package»); the Architect on P01.229 2026-11-11T21:06:45Z	2026-11-11	`store_rights_template`, `store_spoil_row_missing`, `stage_package_not_exported`;
+P/AC-R033	acceptance/spec/acceptance.norms.md#N3.2	P01.168 A3, B1 (outcome of the steps after a directive that the judge does not execute)	2026-11-11	-

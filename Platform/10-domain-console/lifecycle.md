@@ -72,7 +72,7 @@ None: the setting channel is only the environment (P/02.4 N1.2).
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) N1.1 `dirs`).
 
-The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#domain-stand), the section «Domain stand»): `@start domain` brings up the processes `domain` and of the domain console on
+The stand of several clusters ([the common acceptance README](../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand»): `@start domain` brings up the processes `domain` and of the domain console on
 `hold`; the door `holder <request>` — the domain console on `hold`, `holder@<cluster>` — on another cluster after the move;
 `Idempotency-Key` at `POST`, `PUT`, `DELETE` — by the rule `@key`. `{data}` — `PLATFORM_DIR` of the cluster ([the common
 acceptance README](../common/acceptance/README.md) «Stand»).

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/7/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.7-domain.norms.md`](../../spec/08.7-domain.norms.md) N5. The input deadline of 10 s — by reading (there is no slow-client directive). In total 7 scenarios / 55 steps.
 
 Issuing in all scopes and refusal words without a stand is checked by the vector [`issue`](../../vectors/issue/README.md) (cases and their provenance: the canonical package README). The refusals of a kind declaration are the cases `m57_tokens_*` of the corpus of

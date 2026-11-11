@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
-section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`). The norm of the chapter is
+section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`). The norm of the chapter is
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) N5. The forms of foreign doors are for their owners.
 
 ## Stand

@@ -4507,6 +4507,16 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/command-tables.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
+    },
+    {
+      "path": "Platform/common/acceptance/domain-stand.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
+    },
+    {
       "path": "Platform/common/acceptance/forms/code-rules.tsv",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -4535,36 +4545,6 @@
       "path": "Platform/common/acceptance/forms/engine-code-rules.tsv.schema.json",
       "disposition": "exclude",
       "basis": "P02.49: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/extra.scenarios.tsv",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/extra.tsv",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/process-1.1.scenarios.tsv",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/process-1.3.scenarios.tsv",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/production-input.schema.json",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
-    },
-    {
-      "path": "Platform/common/acceptance/forms/production.tsv",
-      "disposition": "include",
-      "basis": "Common acceptance: the judge lesson."
     },
     {
       "path": "Platform/common/acceptance/forms/profile-keys.tsv",
@@ -4657,21 +4637,6 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
-      "path": "Platform/common/acceptance/production/README.md",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/common/acceptance/production/bindings.tsv",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/common/acceptance/production/input.json",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
       "path": "Platform/common/acceptance/runner-targets.README.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -4687,6 +4652,11 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/seams.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
+    },
+    {
       "path": "Platform/common/acceptance/spec/acceptance.README.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -4695,6 +4665,11 @@
       "path": "Platform/common/acceptance/spec/acceptance.norms.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/stand.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
     },
     {
       "path": "Platform/common/acceptance/system/README.cases.md",
@@ -4715,6 +4690,16 @@
       "path": "Platform/common/acceptance/system/scenarios.tsv",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
+    },
+    {
+      "path": "Platform/common/acceptance/tables.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
+    },
+    {
+      "path": "Platform/common/acceptance/testsub-stand.md",
+      "disposition": "include",
+      "basis": "P01.229: a topic of the common acceptance README, split from it by topic."
     },
     {
       "path": "Platform/common/acceptance/tls/README.cases.md",
@@ -5062,6 +5047,16 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/acceptance/command-tables.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/domain-stand.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
       "path": "Platform/common/ru/acceptance/forms/targets.README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -5087,17 +5082,17 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
-      "path": "Platform/common/ru/acceptance/production/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
       "path": "Platform/common/ru/acceptance/runner-targets.README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
       "path": "Platform/common/ru/acceptance/runner-targets.provenance.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/seams.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
@@ -5112,12 +5107,27 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/acceptance/stand.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
       "path": "Platform/common/ru/acceptance/system/README.cases.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
       "path": "Platform/common/ru/acceptance/system/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/tables.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/acceptance/testsub-stand.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },

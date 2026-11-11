@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters). The norm of the chapter is
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.5-domain.norms.md`](../../spec/08.5-domain.norms.md) N5. In total 7 scenarios / 72 steps. The delivery of a key with the `sub` of a book and the key `role:` — by reading: the stand does not give a row with `sub` when the book is already assembled.
 
 The assembly on all edges without a stand is checked by the vector [`assemble`](../../vectors/assemble/README.md) (cases and their provenance: the canonical package README).

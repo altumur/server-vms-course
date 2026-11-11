@@ -28,7 +28,7 @@
   роли](../../../common/ru/contracts/role-certificate.md), [`peer`](../../../common/ru/contracts/peer.md), [журнала
   событий](../../../common/ru/contracts/event-journal.md).
 - [Приёмка](../acceptance/README.md) — стенд нескольких кластеров ([общий README
-  приёмки](../../../common/ru/acceptance/README.md#стенд-домена), раздел «Стенд домена») и вектор
+  приёмки](../../../common/ru/acceptance/domain-stand.md#стенд-домена), раздел «Стенд домена») и вектор
   [`alarms`](../vectors/alarms/README.md). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
 - Лекция (`ru/10-domain-console.md`, для человека, в выгрузку не входит) объясняет причины.
 

@@ -6,13 +6,20 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 [`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) N5, the full bodies of the two routes are
 [the OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
 The file has 8 scenarios / 70 steps; the roles and the rights file are generated from `testsub` and `testsub2`
-(`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `testsub`.
+(`Platform/common/data/testsub/testsub*.subsystem.yaml`) with the deployment name `dep` (`{deployment}` = `dep` of the rights derivation command `stand.rights`).
 Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
 `/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md).
 
 ## Profile interface
 
 Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). `stand.rights` consumes `{manifests}`, `{deployment}` and output `{file}` and derives the rights file by this chapter's algorithm; refusals and file absence are those below. `stand.rights-check` consumes the same manifest/deployment inputs and the existing `{file}` to compare, without writing it; zero means semantic equality, nonzero means disagreement. `stand.ring` and `stand.manifest-put` prepare the existing common stand as assigned there; the selected `01-store` profile owns the store process and its role sockets. The implementation chooses the commands and flags for these interfaces. Missing comparison coverage remains unexecuted, not a generated substitute result.
+
+- **Rights check command** (P/02.5 N2 `--check`, N3 «install») — the key `stand.rights-check` of the profile `02-installer`, a template with
+  the same substitutions as the rights derivation command (`stand.rights`): `{manifests}` — the directory of the manifests, `{deployment}`, `{file}` —
+  the rights file that is checked (not written); the outcome is the code: 0 — the file is equal in meaning to the rights derived from the manifests, another — they differ.
+  The acceptance variants of P/02.5 with `check.tsv` (judge-only: the case table of a variant) call it for each case with the manifest directory of the variant, `{deployment}` = `dep` and
+  `{file}` = `check/<case>.rights`; the code is compared with the column `code` (`0` | `!0`). There is no key in the profile — the cases of `check.tsv` (judge-only: the case table of a variant)
+  are not executed (not GREEN and not an outcome of the implementation). There is no substitution `{specs}` in the stand vocabulary.
 
 ## scenarios.tsv
 
@@ -36,7 +43,7 @@ an allowed read of an absent row returns Row with items null per chapter P/01.1.
 
 ## Manifest variants (`variants/`)
 
-The derivation of rights by meaning on manifests outside the stand. The directories `variants/<variant>/` are run by the engine word `variants` in the form «[Rights variants](../../../common/acceptance/README.md#rights-variants)» of the common acceptance README: the files of a variant, `expect.tsv`, `refused`, `check.tsv` with `check/`, the calls of `stand.rights` and `stand.rights-check` with the deployment `dep` and what counts as `allow` and `deny` are defined there (judge-only: `expect.tsv`, `check.tsv` and `check/` of each variant; they check P/02.5-01, P/02.5-02, P/02.5-03, P/02.5-04, P/02.5-05). The comparison of `check.tsv` (judge-only: the `check.tsv` of `v12-check-rights`; checks P/02.5-02) by meaning is N3 «install»: the set of roles, for each one `group` and the sets of patterns `read`, `write`, `delete` (no `delete` — an empty set); `comment`, order, repeats and spaces are not compared; a file not by the form of P/01.2 N1.2 diverges.
+The derivation of rights by meaning on manifests outside the stand. The directories `variants/<variant>/` are run by the engine word `variants` in the form «[Rights variants](../../../common/acceptance/command-tables.md#rights-variants)» of the common acceptance README: the files of a variant, `expect.tsv`, `refused`, `check.tsv` with `check/`, the calls of `stand.rights` and `stand.rights-check` with the deployment `dep` and what counts as `allow` and `deny` are defined there (judge-only: `expect.tsv`, `check.tsv` and `check/` of each variant; they check P/02.5-01, P/02.5-02, P/02.5-03, P/02.5-04, P/02.5-05). The comparison of `check.tsv` (judge-only: the `check.tsv` of `v12-check-rights`; checks P/02.5-02) by meaning is N3 «install»: the set of roles, for each one `group` and the sets of patterns `read`, `write`, `delete` (no `delete` — an empty set); `comment`, order, repeats and spaces are not compared; a file not by the form of P/01.2 N1.2 diverges.
 
 The variants and their expected outcomes are in [judge-only case data](README.cases.md) (judge-only: the variant table; it checks P/02.5-01, P/02.5-02, P/02.5-03, P/02.5-04, P/02.5-05). They cover these subjects:
 

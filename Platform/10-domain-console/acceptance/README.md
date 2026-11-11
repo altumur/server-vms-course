@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
-section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
+section [«Domain stand»](../../common/acceptance/domain-stand.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
 `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`). The norm of the lesson is
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) N5. The command `alarms` — the vector [`vectors/alarms`](../vectors/alarms/README.md) (the current corpus). The forms of foreign doors — their owners.
 

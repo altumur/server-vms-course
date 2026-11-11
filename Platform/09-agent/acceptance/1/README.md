@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
-the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
+the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
 [the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). In total 22 scenarios / 252 steps.
 
 The agent side in the scenarios of other chapters — the list «Neighbours on the stand» of the norm of the chapter, N5.

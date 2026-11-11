@@ -1,0 +1,11 @@
+PHASE VMS_CANONICAL PASS
+EXCEPTION VMS_CANONICAL V/04 no-openapi -: своей HTTP-двери у детектора нет: кадры — доля cam.shm или приёмник rec, события — журнал платформы (запрос VMS «реестр V04»)
+EXCEPTION VMS_CANONICAL V/05 no-openapi -: своей HTTP-двери у задачи скана нет: архив читает дверью rec, итог — unit.state строки (запрос VMS «реестр V05»)
+EXCEPTION VMS_CANONICAL V/06 no-openapi -: своей HTTP-двери у detedge нет: архив устройства читает дверью cam, итог — unit.state строки (запрос VMS «реестр V06»)
+EXCEPTION VMS_CANONICAL V/07 no-openapi -: своей HTTP-двери у auto нет: события читает дверью консоли, действия — просьбами и строками других подсистем (запрос VMS «реестр V07»)
+EXCEPTION VMS_CANONICAL V/09 no-openapi -: своей двери и манифеста у развёртывания нет (запрос VMS «реестр V09»)
+EXCEPTION VMS_CANONICAL V/09 no-acceptance -: ни одна глава приёмки не имеет: проверка — чтением и установкой на стенде реализации (запрос VMS «реестр V09»)
+EXCEPTION VMS_CANONICAL V/11 no-openapi -: дверь — контракт consolem продукта на закреплённом коммите (VMS/11-backend/consolem.openapi.json, копия с SHA-256), не правится: своего OpenAPI у урока нет (ADR-0094 A1)
+COUNTS VMS_CANONICAL anchored_files=8 catalog_rows=172 count_phrases=4 cyrillic_debt_files=0 cyrillic_debt_letters=0 cyrillic_exact_source_files=31 cyrillic_export=0 cyrillic_non_utf8=0 cyrillic_ready=0 cyrillic_scanned_files=252 data_paragraphs=41 english_mirrors=138 families_with_section=0 families_without_section=24 family_outcomes=112 family_schemas=24 id_map_ids=508 lessons=12 local_links=2299 local_refs=272 norm_ids=508 openapi=6 openapi_cross_refs=0 openapi_patterns=11 scenarios=139 steps=2052 vms_catalog_rows=24 vms_families=24 vms_family_read_rows=832 vms_family_read_tables=7 vms_frozen=56 vms_lessons=12 vms_lessons_checked=12 vms_manifests=10 vms_table_rows=570
+VMS_REPORT /tmp/check-spec-vms-n1c9o3zf/report.json
+PASS structural checks only; semantic review and implementation acceptance remain separate
