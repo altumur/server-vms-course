@@ -150,7 +150,7 @@ Chapter 1.3:
 
 ## Done when
 
-- [ ] all 75 scenarios / 704 steps of the three chapters (1.1 — 40, 1.2 — 11, 1.3 — 24; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
+- [ ] all 75 scenarios / 705 steps of the three chapters (1.1 — 40, 1.2 — 11, 1.3 — 24; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
   per the acceptance README of chapter 1.1; sc. 07, 17, 18, 25–29, 31 of chapter 1.3 on the store group stand (for the box build — not_applicable);
 - [ ] (SHOULD) the same scenarios are green through the in-process API for each data store;
 - [ ] the implementation description answers all items of the section «Implementation decides»;
