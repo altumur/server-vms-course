@@ -1,3 +1,33 @@
 req_id	file	source	date	removed
 P/08.0-R011	spec/08.0-domain.norms.md#N0	moved from P/01.1-R014 (P/01.1 N0 «Order of output arrays») by ADR-0133 addendum (70) item 2, addendum (71) item 2, task P01.176; earlier moved from M11/1 N0, review of stage A 8–10, № 19 / decision 4	2026-11-11	(formerly module M11, all lessons)
 P/08.0-R012	spec/08.0-domain.norms.md#N0	moved from P/01.1-R015 (P/01.1 N0 «Order of output arrays») by ADR-0133 addendum (70) item 2, addendum (71) item 2, task P01.176; earlier review of stage B 8–10, № 22	2026-11-11	(formerly of module M11, all its lessons)
+-	spec/08.0-domain.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121).
+-	spec/08.0-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(ADR-0080; module «Platform» — ADR-0083)
+P/08.0-R003	spec/08.0-domain.norms.md#N1.6	M11/8 N1.6	2026-11-11	(moved there from M11/8 N1.6 `server`, `signed` without change;
+P/08.0-R003	spec/08.0-domain.norms.md#N1.6	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 6; review of stage A 8–10, № 21	2026-10-20	N1.6; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 6; review of stage A
+P/08.0-R003	spec/08.0-domain.norms.md#N1.6	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 6; review of stage A 8–10, № 21	2026-10-20	8–10, № 21).
+P/08.0-R003	spec/08.0-domain.norms.md#N1.6	ADR-0083 addendum (20), addendum (21)	2026-11-11	`clients`; ADR-0083 addendum (20), addendum (21)).
+P/08.0-R004	spec/08.0-domain.norms.md#N1.8	ADR-0032	2026-11-11	(ADR-0032;
+P/08.0-R004	spec/08.0-domain.norms.md#N1.8	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 5	2026-10-20	doors», the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 5;
+P/08.0-R004	spec/08.0-domain.norms.md#N1.8	review of stage A 8–10, № 23; reconciliation of M11; cammeta-python M11-09 № 22; P16	2026-11-11	(review of stage A 8–10, № 23; the history is there too:
+P/08.0-R004	spec/08.0-domain.norms.md#N1.8	review of stage A 8–10, № 23; reconciliation of M11; cammeta-python M11-09 № 22; P16	2026-11-11	reconciliation of M11, cammeta-python M11-09 № 22, P16);
+P/08.0-R005	spec/08.0-domain.norms.md#N1.9	ADR-0094 B3, B4	2026-11-11	(ADR-0094 B3, B4).
+P/08.0-R006	spec/08.0-domain.norms.md#N1.9	P08 review C3	2026-11-11	(P08 review C3).**
+P/08.0-R006	spec/08.0-domain.norms.md#N1.9	the Architect's decision of 2026-10-29 on the plan of the domain share, V3	2026-10-29	(the Architect's decision of 2026-10-29 on the plan of the domain share, V3).
+P/08.0-R008	spec/08.0-domain.norms.md#N2	M11/12	2026-11-11	`standby`; added by M11/12);
+P/08.0-R008	spec/08.0-domain.norms.md#N2	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 5	2026-10-20	(the Architect's decision of 2026-10-20, ADR-0083
+P/08.0-R008	spec/08.0-domain.norms.md#N2	the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 5	2026-10-20	addendum (14) item 5).
+P/08.0-R008	spec/08.0-domain.norms.md#N2	ADR-0119	2026-11-11	N1.8; ADR-0119)
+P/08.0-R010	spec/08.0-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5).
+-	spec/08.0-domain.norms.md#N5	M11/3 sc. 01, 02	2026-11-11	process; formerly M11/3 sc. 01, 02);
+-	spec/08.0-domain.norms.md#N5	ADR-0083 addendum (20), addendum (21) item 9	2026-11-11	— ADR-0083 addendum (20), addendum (21) item 9)
+-	spec/08.0-domain.norms.md#N5	ADR-0083 addendum (9)	2026-11-11	(ADR-0083 addendum (9)).
+-	spec/08.0-domain.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6):
+-	spec/08.0-domain.norms.md#readiness-checklist	M11/3-12; review of stage A 8–10, № 18	2026-11-11	(the 8.0 part of the row M11/3-12; review of stage A 8–10, № 18)
+-	spec/08.0-domain.norms.md#readiness-checklist	ADR-0083 addendum (20), addendum (21)	2026-11-11	alert; ADR-0083 addendum (20), addendum (21))
+-	spec/08.0-domain.norms.md#readiness-checklist	ADR-0083 addendum (9); M11/8-08; review of stage A 8–10, № 21	2026-11-11	(ADR-0083 addendum (9)) (part of M11/8-08; review of stage A 8–10, № 21)
+-	spec/08.0-domain.norms.md#readiness-checklist	ADR-0094 B4	2026-11-11	(ADR-0094 B4):
+-	spec/08.0-domain.norms.md#readiness-checklist	ADR-0094 B3	2026-11-11	(ADR-0094 B3):
+-	acceptance/0/README.md#intro	ADR-0121	2026-11-11	(ADR-0121).
+-	spec/08.0-domain.norms.md#readiness-checklist	finding C3	2026-11-11	C3 
+-	spec/08.0-domain.norms.md#readiness-checklist	finding C3	2026-11-11	C3 

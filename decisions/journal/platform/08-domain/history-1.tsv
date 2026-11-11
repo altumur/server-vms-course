@@ -1,0 +1,65 @@
+req_id	file	source	date	removed
+-	spec/08.1-domain.norms.md#intro	ADR-0121	2026-11-11	is not edited by hand (ADR-0121).
+-	spec/08.1-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(the domain process; ADR-0080; module «Platform» — ADR-0083)
+P/08.1-R001	spec/08.1-domain.norms.md#N0	review of stage A 8–10, № 19 / decision 4	2026-11-11	8–10; review of stage A 8–10, № 19 / decision 4).
+P/08.1-R001	spec/08.1-domain.norms.md#N0	ADR-0130 addendum (10)	2026-11-11	apply here (ADR-0130 Addendum (10)). Use
+P/08.1-R004	spec/08.1-domain.norms.md#N1.2	ADR-0111 item 3	2026-11-11	the main one and the other records of a camera (ADR-0111 item 3). This
+P/08.1-R004	spec/08.1-domain.norms.md#N1.2	ADR-0091 addendum (12) item 2; ADR-0091 addendum (13) item 4	2026-11-11	the heartbeat of such a unit goes into the member's report as before (ADR-0091 addendum (12) item 2, addendum (13) item 4)
+P/08.1-R005	spec/08.1-domain.norms.md#N1.3	layout audit, A-01; the Architect's decision of 2026-10-25	2026-10-25	# the same term as for a worker's heartbeat (layout audit, the Architect's decision of 2026-10-25, A-01)
+P/08.1-R005	spec/08.1-domain.norms.md#N1.3	layout audit, A-15; the Architect's decision of 2026-10-25	2026-10-25	«Freshness of a domain member» (moved there without a change; layout audit, the Architect's decision of 2026-10-25, A-15)
+P/08.1-R005	spec/08.1-domain.norms.md#N1.3	ADR-0113 addendum (47) item 4	2026-11-11	no key — LOST_AFTER; ADR-0113 addendum (47) item 4)
+P/08.1-R005	spec/08.1-domain.norms.md#N1.3	M11 reconciliation, V6	2026-11-11	in any field are not a change (added by the M11 reconciliation, V6)
+P/08.1-R005	spec/08.1-domain.norms.md#N1.3	cammeta-python M11-01 № 2, 3	2026-11-11	"unobserved" and the age of the mark (cammeta-python M11-01 № 2, 3)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0111 item 11	2026-11-11	no link is built (ADR-0111 item 11);
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0113 addendum (33)	2026-11-11	none — no field (ADR-0113 addendum (33));
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0111 item 2	2026-11-11	# a word of the server, not of the unit (ADR-0111 item 2);
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0113 addendum (4) item 4	2026-11-11	(chapter 8.8 N1.5 new_camera; ADR-0113 addendum (4) item 4)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0110	2026-11-11	it is the version for an edit (ADR-0110)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	M11 reconciliation, V9	2026-11-11	`<sub>/heartbeats/<name>` (added by the M11 reconciliation, V9)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	M11 reconciliation, V4	2026-11-11	60.05 → 60.1 (added by the M11 reconciliation, V4)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	M11 reconciliation, V5	2026-11-11	in the order of UTF-8 bytes (added by the M11 reconciliation, V5)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	ADR-0091 addendum (12) item 1, addendum (13) items 1–2, addendum (15) items 1–2	2026-11-11	by N3 step 5 (ADR-0091 addendum (12) item 1, addendum (13) items 1–2, addendum (15) items 1–2)
+P/08.1-R006	spec/08.1-domain.norms.md#N1.4	the Architect's decision of 2026-10-20; Go M11-01 № 7; review of stage B 6–7, № 14, № 15	2026-10-20	(N1.6 `claim`) (the Architect's decision of 2026-10-20 (Go M11-01 № 7; the family heartbeats, review of stage B 6–7, № 14, № 15)).
+P/08.1-R007	spec/08.1-domain.norms.md#N1.4a	ADR-0110; review «the domain snapshot is short»	2026-11-11	the rules and rights stand on tables (ADR-0110, review: «the domain snapshot is short»). Tables
+-	spec/08.1-domain.norms.md#N1.4b	ADR-0113 item 4	2026-11-11	### N1.4b The view by parts (ADR-0113 item 4)
+P/08.1-R008	spec/08.1-domain.norms.md#N1.4b	ADR-0113 item 4	2026-11-11	member_list: removed from the view: the list
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	ADR-0091 addendum (15) item 1	2026-11-11	ADR-0091 addendum (15) item 1); the copies
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	M11 reconciliation, V14; W03-G02; W03-G05; ADR-0091 addendum (13) item 4	2026-11-11	(added by the M11 reconciliation, V14); an element phase: sealed (the epoch is not taken, P/03.4 N1.1, P/03.5 N3) — no claim
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	M11 reconciliation, V14; W03-G02; W03-G05; ADR-0091 addendum (13) item 4	2026-11-11	(W03-G02); an element phase: unreadable (the epoch is not taken, P/03.3 N3 step 2) — no claim (W03-G05); a unit without
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	M11 reconciliation, V14; W03-G02; W03-G05; ADR-0091 addendum (13) item 4	2026-11-11	a value of domain.ref (N1.2 no_value) — no claim: neither unmanaged nor conflict (ADR-0091 addendum (13) item 4);
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	M11 reconciliation, V11	2026-11-11	with an equal epoch — this member, added
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	M11 reconciliation, V11	2026-11-11	by the M11 reconciliation, V11); orphaned, unknown
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	the Architect's decision on the M11 reconciliation, V10	2026-11-11	(the Architect's decision on the M11 reconciliation, V10); the count goes on
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	C08-ORPHAN-SILENT-01	2026-11-11	the claim has come back — the count is removed (C08-ORPHAN-SILENT-01)
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	ADR-0091 addendum (15) item 3, addendum (17) item 2	2026-11-11	nor are reset (ADR-0091 addendum (15) item 3, addendum (17) item 2)
+P/08.1-R010	spec/08.1-domain.norms.md#N1.6	C08-SHADOW-STALL-LAG-01	2026-11-11	not stalled at once, C08-SHADOW-STALL-LAG-01);
+P/08.1-R011	spec/08.1-domain.norms.md#N1.7	ADR-0113 addendum (11) item 6	2026-11-11	none — server (ADR-0113 addendum (11) item 6)
+P/08.1-R011	spec/08.1-domain.norms.md#N1.7	M11/12	2026-11-11	N1.6a — P/08.3-11; added by M11/12)
+P/08.1-R012	spec/08.1-domain.norms.md#N1.2a	M11/2 N1.2; review of stage A 8–10, № 21	2026-11-11	Moved from M11/2 N1.2 (review of stage A 8–10,
+P/08.1-R012	spec/08.1-domain.norms.md#N1.2a	M11/2 N1.2; review of stage A 8–10, № 21	2026-11-11	№ 21: a field of the view without an item — P/08.1-11). The set
+P/08.1-R013	spec/08.1-domain.norms.md#N1.6a	M11/4 N1.6; review of stage A 8–10, № 21	2026-11-11	Moved from M11/4 N1.6 (review of stage A 8–10, № 21:
+P/08.1-R013	spec/08.1-domain.norms.md#N1.6a	M11/4 N1.6; review of stage A 8–10, № 21	2026-11-11	fields of the view without an item — P/08.1-11). The topology
+P/08.1-R013	spec/08.1-domain.norms.md#N1.6a	C08-RELAY-REFUSED-LAST-01	2026-11-11	after a restart the field is empty (C08-RELAY-REFUSED-LAST-01)
+P/08.1-R013	spec/08.1-domain.norms.md#N1.6a	C08-RELAY-REFUSED-NAMES-01	2026-11-11	# the form of the view is the former one (C08-RELAY-REFUSED-NAMES-01)
+P/08.1-R014	spec/08.1-domain.norms.md#N2	G08-VIEW-CAMERA-INPUT-01	2026-11-11	Native camera input (G08-VIEW-CAMERA-INPUT-01).
+P/08.1-R016	spec/08.1-domain.norms.md#N3	C08-PASS-UNREADABLE-01	2026-11-11	is not replaced by an empty list (C08-PASS-UNREADABLE-01)
+P/08.1-R016	spec/08.1-domain.norms.md#N3	C08-MARK-NO-COPY-01	2026-11-11	as for any member with a mark, N1.7; C08-MARK-NO-COPY-01)
+P/08.1-R016	spec/08.1-domain.norms.md#N3	ADR-0091 addendum (13) item 1	2026-11-11	there are no placements of this pass (ADR-0091 addendum (13) item 1)
+P/08.1-R016	spec/08.1-domain.norms.md#N3	C08-PASS-PART-01	2026-11-11	works of their own, they go on (C08-PASS-PART-01).
+-	spec/08.1-domain.norms.md#N5	M11/03; M11/06; the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 14	2026-10-20	the holder's door `GET /domain`. The numbers of the scenarios and steps are the former numbers of the acceptances
+-	spec/08.1-domain.norms.md#N5	M11/03; M11/06; the Architect's decision of 2026-10-20; ADR-0083 addendum (14) item 14	2026-10-20	M11/03 (04, 06–09) and M11/06 (06 → 15, the number 06 is taken; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 14).
+-	spec/08.1-domain.norms.md#N5	review of stage A 8–10, № 37	2026-11-11	names their sha256; review of stage A 8–10,
+-	spec/08.1-domain.norms.md#N5	review of stage A 8–10, № 37	2026-11-11	№ 37).
+-	spec/08.1-domain.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-11-11	the records of windows refer to (ADR-0080 addendum 6):
+-	spec/08.1-domain.norms.md#readiness-checklist	M11 reconciliation	2026-11-11	the vectors `12-*`…`16-*` (the M11 reconciliation), a duplicate
+-	spec/08.1-domain.norms.md#readiness-checklist	step 11 of the review of ADR-0110	2026-11-11	the tables of N1.4a — by reading until step 11 of the review of ADR-0110;
+-	spec/08.1-domain.norms.md#readiness-checklist	ADR-0091 addenda (12)–(19)	2026-11-11	(N1.2 no_value, N1.4 executors, N3 steps 3a–5; ADR-0091 addenda (12)–(19))
+-	spec/08.1-domain.norms.md#readiness-checklist	V10	2026-11-11	`orphaned_from` at a change of the target (V10) — `21-orphan-retarget-*`
+-	spec/08.1-domain.norms.md#readiness-checklist	coverage audit of P/08, second pass	2026-11-11	`19-sealed-unreadable-no-claim` (coverage audit of P/08, second pass)
+-	spec/08.1-domain.norms.md#readiness-checklist	M11/04 sc. 05	2026-11-11	(../acceptance/3/README.md) (the former M11/04 sc. 05) and sc. 02
+-	spec/08.1-domain.norms.md#readiness-checklist	M11/04 sc. 02	2026-11-11	(../../09-agent/acceptance/2/README.md) (the former M11/04 sc. 02);
+-	spec/08.1-domain.norms.md#readiness-checklist	coverage audit of P/08; review of stage A 8–10, № 21; M11/2-02; M11/4-02	2026-11-11	of the acceptance of chapter 8.3 (coverage audit of P/08; review of stage A 8–10, № 21; parts of the items M11/2-02, M11/4-02);
+-	acceptance/1/README.md#intro	ADR-0121	2026-11-11	is not edited by hand (ADR-0121).
+-	acceptance/1/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	(a stand of several clusters; formerly — the M11 dictionary of the acceptance README of
+-	acceptance/1/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	M11/01; the plan of the move of lesson 8, V5). The norm
+-	acceptance/1/README.md#preparation	M11/03	2026-11-11	formerly — the acceptance README of M11/03): the runner

@@ -1,0 +1,43 @@
+req_id	file	source	date	removed
+-	spec/08.7-domain.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/08.7-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(the domain process; ADR-0080; module «Platform» — ADR-0083)
+P/08.7-R002	spec/08.7-domain.norms.md#N1	C08-TOKEN-SELF-CHECK-01	2026-11-11	(C08-TOKEN-SELF-CHECK-01)
+P/08.7-R002	spec/08.7-domain.norms.md#N1	stage B	2026-11-11	(stage B)
+P/08.7-R003	spec/08.7-domain.norms.md#N1.1	stage B	2026-11-11	stage B;
+P/08.7-R003	spec/08.7-domain.norms.md#N1.1	the former number N1.2 of the section	2026-11-11	(formerly N1.2)
+P/08.7-R003	spec/08.7-domain.norms.md#N1.1	review of stage A 8–10, № 1 / decision 1	2026-11-11	; review of stage A 8–10, № 1 / decision 1
+P/08.7-R004	spec/08.7-domain.norms.md#N1.3	layout audit, the Architect's decision of 2026-10-25, A-19	2026-10-25	; moved without a change; layout audit, the Architect's decision of 2026-10-25, A-19
+P/08.7-R006	spec/08.7-domain.norms.md#N2	M11/12	2026-11-11	; added by M11/12
+P/08.7-R008	spec/08.7-domain.norms.md#N3	V7 item 3, the Architect's decision of 2026-10-28, P1; row 51 of the list	2026-10-28	(V7 item 3, the Architect's decision of 2026-10-28, P1; row 51 of the list)
+P/08.7-R008	spec/08.7-domain.norms.md#N3	reconciliation of M11, T2	2026-11-11	; added by the reconciliation of M11, T2
+P/08.7-R008	spec/08.7-domain.norms.md#N3	C08-ASSIGNMENT-BADKEY-01	2026-11-11	; C08-ASSIGNMENT-BADKEY-01
+P/08.7-R008	spec/08.7-domain.norms.md#N3	reconciliation of M11	2026-11-11	(added by the reconciliation of M11)
+P/08.7-R008	spec/08.7-domain.norms.md#N3	C08-SCENARIO-MEMBER-01, the Architect's decision of 2026-11-01, review of the VMS invariants	2026-11-01	(C08-SCENARIO-MEMBER-01, the Architect's decision of 2026-11-01, review of the VMS invariants)
+P/08.7-R009	spec/08.7-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
+P/08.7-R009	spec/08.7-domain.norms.md#N4	review of stage A 8–10, № 1 / decision 1	2026-11-11	(review of stage A 8–10, № 1 / decision 1)
+P/08.7-R009	spec/08.7-domain.norms.md#N4	stage B	2026-11-11	(stage B)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	M11/07	2026-11-11	scenarios 01, 02 from M11/07 (the numbers and the steps
+P/08.7-R009	spec/08.7-domain.norms.md#N5	M11/07	2026-11-11	are the former ones),
+P/08.7-R009	spec/08.7-domain.norms.md#N5	stage C guesses LTD-E01, LTD-E02	2026-11-11	(stage C guesses LTD-E01, LTD-E02)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	coverage audit of P/08	2026-11-11	(coverage audit of P/08)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	coverage audit of P/08, second pass by Gemini	2026-11-11	(coverage audit of P/08, second pass by Gemini)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	reconciliation of M11, T4	2026-11-11	(added by the reconciliation of M11, T4)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	C08-ISSUE-DECL-RELATIONS-01	2026-11-11	(C08-ISSUE-DECL-RELATIONS-01)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	stage C guesses LTD-E01, LTD-E02	2026-11-11	(stage C guesses LTD-E01, LTD-E02)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	G-35	2026-11-11	(G-35)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	reconciliation of M11, T4	2026-11-11	reconciliation of M11, T4;
+P/08.7-R009	spec/08.7-domain.norms.md#N5	review of stage A 8–10, № 1 / decision 1	2026-11-11	(review of stage A 8–10, № 1 / decision 1: formerly — a choice of the implementation)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	stage B	2026-11-11	(stage B)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	M11/7-03; M11/7-02; review of stage A 8–10, № 20	2026-11-11	The items of the chapter are M11/7-03, -04, -05 (the move of lesson 8; part of M11/7-03 by the `note`
+P/08.7-R009	spec/08.7-domain.norms.md#N5	M11/7-03; M11/7-02; review of stage A 8–10, № 20	2026-11-11	of id-map: the check of the answer by the agent — chapter 9.1; `TOKEN_HOLDER_BODY` at the holder — from the item M11/7-02, review of stage A
+P/08.7-R009	spec/08.7-domain.norms.md#N5	M11/7-03; M11/7-02; review of stage A 8–10, № 20	2026-11-11	8–10, № 20).
+P/08.7-R009	spec/08.7-domain.norms.md#N5	reconciliation of M11, T7	2026-11-11	(reconciliation of M11, T7)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	reconciliation of M11, T4	2026-11-11	(reconciliation of M11, T4)
+P/08.7-R009	spec/08.7-domain.norms.md#N5	coverage audit of P/08, second pass by Gemini	2026-11-11	(coverage audit of P/08, second pass by Gemini)
+-	acceptance/7/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	acceptance/7/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	; formerly the dictionary of the M11 README of the acceptance
+-	acceptance/7/README.md#intro	M11/01; the plan of the move of lesson 8, V5	2026-11-11	M11/01; the plan of the move of lesson 8, V5
+-	acceptance/7/README.md#intro	the plan of the move of lesson 8, V12	2026-11-11	(the plan of the move of lesson 8, V12)
+-	acceptance/7/README.md#preparation	M11/03	2026-11-11	; before the move, the acceptance README of
+-	acceptance/7/README.md#preparation	M11/03	2026-11-11	M11/03, «Setup of each scenario 01–09»

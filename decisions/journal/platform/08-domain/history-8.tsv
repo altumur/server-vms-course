@@ -1,0 +1,219 @@
+req_id	file	source	date	removed
+-	spec/08.8-domain.norms.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	spec/08.8-domain.norms.md#intro	ADR-0080; ADR-0083	2026-11-11	(the process domain; ADR-0080; module «Platform» — ADR-0083)
+P/08.8-R001	spec/08.8-domain.norms.md#N0	ADR-0130 Addendum (10)	2026-11-11	(ADR-0130 Addendum (10))
+P/08.8-R002	spec/08.8-domain.norms.md#N1	the Architect's decision of 2026-10-20	2026-10-20	(the Architect's decision of 2026-10-20)
+P/08.8-R002	spec/08.8-domain.norms.md#N1	M11	2026-11-11	; before the move —
+P/08.8-R002	spec/08.8-domain.norms.md#N1	M11	2026-11-11	«Common to lessons 1–9 N1» of M11
+P/08.8-R002	spec/08.8-domain.norms.md#N1	ADR-0066; the Architect's decision on the questions of M11/10	2026-11-11	(ADR-0066, the
+P/08.8-R002	spec/08.8-domain.norms.md#N1	ADR-0066; the Architect's decision on the questions of M11/10	2026-11-11	Architect's decision on the questions of M11/10)
+P/08.8-R003	spec/08.8-domain.norms.md#N1.1	review of stage A 8–10, № 13 / decision 2	2026-11-11	; review of stage A 8–10, № 13 / decision 2
+P/08.8-R003	spec/08.8-domain.norms.md#N1.1	P1	2026-11-11	(P1)
+P/08.8-R003	spec/08.8-domain.norms.md#N1.1	C08-CLAIM-1-01	2026-11-11	(C08-CLAIM-1-01)
+P/08.8-R004	spec/08.8-domain.norms.md#N1.2	Quint M12 N12	2026-11-11	(Quint M12 N12)
+P/08.8-R004	spec/08.8-domain.norms.md#N1.2	C08-STOLEN-KEY-ENTRY-01	2026-11-11	(C08-STOLEN-KEY-ENTRY-01)
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	M11/10	2026-11-11	, added by M11/10
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	C08-KEEPERS-VIEW-01	2026-11-11	; C08-KEEPERS-VIEW-01
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	C08-COPIES-GARBLED-01	2026-11-11	(C08-COPIES-GARBLED-01)
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	C08-DEPOSED-VIEW-01	2026-11-11	(C08-DEPOSED-VIEW-01)
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	C08-STRANDED-ONCE-MEMORY-01	2026-11-11	(C08-STRANDED-ONCE-MEMORY-01)
+P/08.8-R005	spec/08.8-domain.norms.md#N1.3	C08-DEPOSED-VIEW-02	2026-11-11	(C08-DEPOSED-VIEW-02)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	review of stage B 8–10, № 4	2026-11-11	review of stage B 8–10, № 4:
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	ADR-0098 §5	2026-11-11	ADR-0098 §5:
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	reconciliation of M11, X14	2026-11-11	; added by the reconciliation of M11, X14
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	M11/11	2026-11-11	; added by M11/11
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	C08-BACKUP-JSON-99 addendum, the Architect's decision of 2026-10-26	2026-10-26	(C08-BACKUP-JSON-99 addendum, the Architect's decision of 2026-10-26)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	C08-BACKUP-JSON-99 addendum, the Architect's decision of 2026-10-26	2026-10-26	(C08-BACKUP-JSON-99 addendum, the Architect's decision of 2026-10-26)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26	2026-10-26	(C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	the cammeta-go journal, M11-10 № 6; the Architect's decision	2026-11-11	(the cammeta-go journal, M11-10 № 6; the Architect's decision)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	reconciliation of M11, H3	2026-11-11	(added by the reconciliation of M11, H3)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	the stage C guess I02-BACKUP-HMAC	2026-11-11	; moved out by the stage C guess I02-BACKUP-HMAC
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	M11/10	2026-11-11	, added by M11/10
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	the former form of the AAD path	2026-11-11	the former
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	the cammeta-go journal, M11-10 № 6; the Architect's decision	2026-11-11	(the cammeta-go journal, M11-10 № 6; the Architect's decision)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	C08-BACKUP-REV-NEXT-01	2026-11-11	(C08-BACKUP-REV-NEXT-01)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	ADR-0113 addendum (1) item 4	2026-11-11	(ADR-0113 addendum (1) item 4)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	ADR-0113 addendum (4), addendum (5) item 9	2026-11-11	(ADR-0113 addendum (4), addendum (5) item 9)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	C08-KEEPERS-EVERY-PASS-01	2026-11-11	(C08-KEEPERS-EVERY-PASS-01)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	M11/10	2026-11-11	, added by M11/10
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	reconciliation of M11, X1	2026-11-11	(added by the reconciliation of M11, X1)
+P/08.8-R006	spec/08.8-domain.norms.md#N1.5	Kimi's addition to the review of stage A 6–7, SA67-B4	2026-11-11	; Kimi's addition to the review of stage A 6–7, `SA67-B4`
+P/08.8-R007	spec/08.8-domain.norms.md#N1.5a	ADR-0113 item 4	2026-11-11	(ADR-0113 item 4)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STOLEN-TERM-BACK-01	2026-11-11	; C08-STOLEN-TERM-BACK-01
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-YIELD-SET-01	2026-11-11	, C08-YIELD-SET-01
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-SAME-TERM-TIE-01	2026-11-11	, C08-SAME-TERM-TIE-01
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Quint model M11, G4, YIELD_SAME_TERM	2026-11-11	(of the same term — added by the Quint model
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Quint model M11, G4, YIELD_SAME_TERM	2026-11-11	M11, G4, YIELD_SAME_TERM)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	layout audit, the Architect's decision of 2026-10-25, B-04	2026-10-25	(moved there without
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	layout audit, the Architect's decision of 2026-10-25, B-04	2026-10-25	a change; layout audit, the Architect's decision of 2026-10-25, B-04)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11, H19	2026-11-11	; the login — the Architect's decision on the reconciliation of
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Architect's decision on the reconciliation of M11, H19	2026-11-11	M11, H19
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-DEPOSED-DETAIL-N-01, the Architect's decision of 2026-10-29	2026-10-29	(C08-DEPOSED-DETAIL-N-01, the Architect's decision of 2026-10-29)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	reconciliation of M11, H3	2026-11-11	(added by the reconciliation of M11, H3)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-SWITCH-01	2026-11-11	(C08-STRANDED-SWITCH-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Architect's decision on cammeta-go M11-10 № 16; the reconciliation of M11, H7	2026-11-11	(the Architect's decision on cammeta-go M11-10 № 16; the reconciliation of M11, H7)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-DEPOSED-01	2026-11-11	; C08-STRANDED-DEPOSED-01
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-AGAIN-01	2026-11-11	(C08-STRANDED-AGAIN-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-ONCE-MEMORY-01	2026-11-11	(C08-STRANDED-ONCE-MEMORY-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-TERM-HOLDER-01	2026-11-11	(C08-STRANDED-TERM-HOLDER-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-BASE-OWN-01	2026-11-11	(C08-STRANDED-BASE-OWN-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the decision of the Architect of 2026-10-29, C08-HANDOVER-STRANDED-UNKNOWN-01	2026-10-29	(the decision
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the decision of the Architect of 2026-10-29, C08-HANDOVER-STRANDED-UNKNOWN-01	2026-10-29	of the Architect of 2026-10-29, C08-HANDOVER-STRANDED-UNKNOWN-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-HANDOVER-STRANDED-WRITE-01	2026-11-11	(C08-HANDOVER-STRANDED-WRITE-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-AGAIN-01	2026-11-11	(C08-STRANDED-AGAIN-01)
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	reconciliation of M11, H8	2026-11-11	; added by the reconciliation of M11, H8
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	C08-STRANDED-DEPOSED-01	2026-11-11	; C08-STRANDED-DEPOSED-01
+P/08.8-R008	spec/08.8-domain.norms.md#N1.6	the Architect's decision on cammeta-go M11-10 № 16; the reconciliation of M11, H7	2026-11-11	(the Architect's decision on cammeta-go M11-10 № 16; the reconciliation of M11, H7)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	review of stage B 8–10, № 4	2026-11-11	review of stage B 8–10, № 4:
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-DEADLINE-01	2026-11-11	(C08-HANDOVER-DEADLINE-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-ANSWER-CHECK-01	2026-11-11	, C08-HANDOVER-ANSWER-CHECK-01
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-SWITCH-WRITE-01	2026-11-11	C08-HANDOVER-SWITCH-WRITE-01),
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-DEADLINE-02	2026-11-11	(C08-HANDOVER-DEADLINE-02)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-TARGET-RELAY-01	2026-11-11	(C08-TARGET-RELAY-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-FROZEN-BOUNDARY-01	2026-11-11	the doors of the boundary C08-FROZEN-BOUNDARY-01, including
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-FROZEN-BOUNDARY-01	2026-11-11	(C08-FROZEN-BOUNDARY-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	ADR-0110 addendum (11) item 3	2026-11-11	(ADR-0110 addendum (11) item 3)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-PREPARE-AGAIN-01	2026-11-11	(C08-PREPARE-AGAIN-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	reconciliation of M11, X2	2026-11-11	(added by the reconciliation of M11, X2)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	the Quint model of M11, HF	2026-11-11	(added by the Quint model of M11,
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	the Quint model of M11, HF	2026-11-11	HF)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-STEPS-CALLED-OFF-01	2026-11-11	(C08-HANDOVER-STEPS-CALLED-OFF-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-STRANDED-UNKNOWN-01	2026-11-11	(C08-HANDOVER-STRANDED-UNKNOWN-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-SWITCH-WRITE-01	2026-11-11	(C08-HANDOVER-SWITCH-WRITE-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-SWITCH-WRITE-01	2026-11-11	(C08-HANDOVER-SWITCH-WRITE-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-HANDOVER-ANSWER-CHECK-01	2026-11-11	(C08-HANDOVER-ANSWER-CHECK-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	reconciliation of M11, H4	2026-11-11	(added by the reconciliation of M11, H4)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-MOVE-TERM-LIMIT-01	2026-11-11	(C08-MOVE-TERM-LIMIT-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	reconciliation of M11, H15	2026-11-11	; the reconciliation of M11, H15
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-TAKEN-SEALED-FORM-01	2026-11-11	(C08-TAKEN-SEALED-FORM-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	the Architect's decision on the reconciliation of M11, X12	2026-11-11	(the Architect's decision on the
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	the Architect's decision on the reconciliation of M11, X12	2026-11-11	reconciliation of M11, X12)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-TAKE-ORDER-01	2026-11-11	(C08-TAKE-ORDER-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-SIGNER-BATCH-01	2026-11-11	, C08-SIGNER-BATCH-01
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	C08-TAKE-ORDER-01	2026-11-11	(C08-TAKE-ORDER-01)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	P08 review C1	2026-11-11	(P08 review C1)
+P/08.8-R009	spec/08.8-domain.norms.md#N1.7	the former behaviour («as before»)	2026-11-11	before a take starts, as before, but
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-BY-FILE-01	2026-11-11	the other doors and the gate stay as before (C08-MOVE-BY-FILE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	reconciliation of M11, H18	2026-11-11	; added by the reconciliation of M11, H18
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-BY-FILE-01	2026-11-11	(C08-MOVE-BY-FILE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-SAME-TERM-TIE-01	2026-11-11	; C08-SAME-TERM-TIE-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-BY-FILE-01	2026-11-11	(C08-MOVE-BY-FILE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	reconciliation of M11, H17	2026-11-11	; the reconciliation of M11, H17
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-PEER-WAIT-01	2026-11-11	(C08-MOVE-PEER-WAIT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	V7 item 3, the Architect's decision of 2026-10-28, on a proposal; row 17 of the list	2026-10-28	(V7 item 3, the Architect's decision of 2026-10-28, on a proposal; row 17 of the list)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	P2	2026-11-11	, P2
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-OWN-HOLDER-UNREADABLE-01	2026-11-11	(C08-MOVE-OWN-HOLDER-UNREADABLE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Quint model of M11, RB	2026-11-11	(added by the Quint model of M11, RB)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-UNCONFIRMED-KEYS-02	2026-11-11	(C08-MOVE-UNCONFIRMED-KEYS-02)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	P2	2026-11-11	P2,
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-10-29, C08-MOVE-UNCONFIRMED-KEYS-01	2026-10-29	; the Architect's decision of 2026-10-29, C08-MOVE-UNCONFIRMED-KEYS-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-NOTHING-HELD-01	2026-11-11	(C08-MOVE-NOTHING-HELD-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-11-01, ADR-0103 addendum (2), C08-MOVE-NOTHING-HELD-02	2026-11-01	(the Architect's decision of 2026-11-01, ADR-0103 addendum (2), C08-MOVE-NOTHING-HELD-02)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Quint model of M11, ER	2026-11-11	(added by the Quint model of M11, ER)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	review of stage A 8–10, № 34	2026-11-11	(review of stage A 8–10, № 34)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Quint model of M11, RB	2026-11-11	; added by the Quint model of M11, RB
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	reconciliation of M11, H16	2026-11-11	(added by the reconciliation of M11, H16)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	Quint M12 N4; C08-MOVE-TERM-LIMIT-01	2026-11-11	(Quint M12 N4; C08-MOVE-TERM-LIMIT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	Quint M12 N6; C08-SPLIT-STRANDED-01	2026-11-11	(Quint M12 N6; C08-SPLIT-STRANDED-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	reconciliation of M11, H15	2026-11-11	(added by the reconciliation of M11, H15)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0110 addendum (12) item 1	2026-11-11	, ADR-0110 addendum (12) item 1
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-UNTIL-01	2026-11-11	(C08-MOVE-UNTIL-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	Quint M12 N10; ADR-0110 addendum (13) item 6	2026-11-11	(Quint M12 N10; ADR-0110 addendum (13) item 6)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-SEAL-BASE-01	2026-11-11	(C08-MOVE-SEAL-BASE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-REVOKED-MERGE-01	2026-11-11	(C08-MOVE-REVOKED-MERGE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0110 addendum (26), (27)	2026-11-11	; ADR-0110 addendum (26), (27)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0110 addendum (19) item 2, addendum (20) item 1	2026-11-11	(ADR-0110 addendum (19) item 2, addendum (20) item 1)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0110 addendum (21)	2026-11-11	; ADR-0110 addendum (21)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	P2	2026-11-11	, P2
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the decision of the Architect of 2026-10-29, C08-RESTORE-EXACT-01	2026-10-29	(the decision
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the decision of the Architect of 2026-10-29, C08-RESTORE-EXACT-01	2026-10-29	of the Architect of 2026-10-29, C08-RESTORE-EXACT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-11-01, Quint M14 N16, C08-SEAL-COPY-BATCH-01	2026-11-01	(the Architect's decision of 2026-11-01, Quint M14 N16, C08-SEAL-COPY-BATCH-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-SHARED-SPLIT-BATCH-01	2026-11-11	(C08-SHARED-SPLIT-BATCH-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-BACKUP-KEY-REV-01	2026-11-11	; C08-MOVE-BACKUP-KEY-REV-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	I4	2026-11-11	, I4
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-STOLEN-KEY-ENTRY-01	2026-11-11	; C08-STOLEN-KEY-ENTRY-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-STOLEN-KEY-01	2026-11-11	(C08-MOVE-STOLEN-KEY-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-TERM-NONE-01	2026-11-11	; C08-MOVE-TERM-NONE-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	Quint M12 N4; C08-MOVE-TERM-LIMIT-01	2026-11-11	(Quint M12 N4; C08-MOVE-TERM-LIMIT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-SHARED-NONE-01	2026-11-11	(C08-MOVE-SHARED-NONE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-10-31, Quint M12 N7, C08-KEYS-CLAIM-BATCH-01; C08-TAKE-ORDER-01	2026-10-31	; the Architect's decision of 2026-10-31, Quint M12 N7, C08-KEYS-CLAIM-BATCH-01; C08-TAKE-ORDER-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-11-01, Quint M13 N13, C08-SIGNER-BATCH-01; Quint M14 N16, C08-SEAL-COPY-BATCH-01; the Architect's decision of 2026-11-01, ADR-0103 addendum (2), C08-SHARED-SPLIT-BATCH-01	2026-11-01	; the Architect's decision of 2026-11-01, Quint M13 N13, C08-SIGNER-BATCH-01; Quint M14 N16, C08-SEAL-COPY-BATCH-01; the Architect's decision of 2026-11-01, ADR-0103 addendum (2), C08-SHARED-SPLIT-BATCH-01
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26	2026-10-26	(C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-UNANSWERED-01	2026-11-11	(C08-MOVE-UNANSWERED-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	Quint M12 N9	2026-11-11	(Quint M12 N9)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-STOLEN-TERM-BACK-01	2026-11-11	(C08-STOLEN-TERM-BACK-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-STOLEN-COPY-LIMIT-01	2026-11-11	(C08-STOLEN-COPY-LIMIT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-RIGHTS-NEWER-LIMIT-01	2026-11-11	(C08-RIGHTS-NEWER-LIMIT-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-OUTCOME-HOLD-01	2026-11-11	(C08-OUTCOME-HOLD-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVE-BY-FILE-01	2026-11-11	(C08-MOVE-BY-FILE-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	reconciliation of M11, H15	2026-11-11	(added by the reconciliation of M11, H15)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0100 §2	2026-11-11	; ADR-0100 §2
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	ADR-0098 §5	2026-11-11	(ADR-0098 §5)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	the Architect's decision of 2026-10-29, C08-MOVED-BY-01	2026-10-29	(the Architect's decision of 2026-10-29, C08-MOVED-BY-01)
+P/08.8-R010	spec/08.8-domain.norms.md#N1.8	C08-MOVED-BY-ABSENT-01	2026-11-11	(C08-MOVED-BY-ABSENT-01)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 item 5, addendum (5)	2026-11-11	(ADR-0113 item 5, addendum (5))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 1, addendum (16) items 1, 2	2026-11-11	(addendum (5) item 1, addendum (16) items 1, 2)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (17)	2026-11-11	(addendum (17))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (16) item 2, addendum (17), addendum (18) item 2	2026-11-11	(addendum (16) item 2, addendum (17), addendum (18) item 2)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (20)	2026-11-11	: addendum (20)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (18) item 3	2026-11-11	(addendum (18) item 3)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 2	2026-11-11	(addendum (5) item 2)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 8	2026-11-11	(addendum (5) item 8)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 7	2026-11-11	(addendum (5) item 7)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 3	2026-11-11	(addendum (5) item 3)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 5, addendum (18) item 1	2026-11-11	(addendum (5) item 5, addendum (18) item 1)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (20)	2026-11-11	, addendum (20)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (18) item 1	2026-11-11	(addendum (18) item 1)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (16) item 1, addendum (17)	2026-11-11	(addendum (16) item 1, addendum (17))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (21)	2026-11-11	(addendum (21))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (18) item 4	2026-11-11	(addendum (18) item 4)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (16) item 4, addendum (17)	2026-11-11	(addendum (16) item 4, addendum (17))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (16) item 3	2026-11-11	(addendum (16) item 3)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (5) item 4	2026-11-11	(addendum (5) item 4)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (16) item 5	2026-11-11	(addendum (16) item 5)
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	ADR-0113 addendum (17)	2026-11-11	(addendum (17))
+P/08.8-R011	spec/08.8-domain.norms.md#N1.8a	Quint M12 N10	2026-11-11	(Quint M12 N10)
+P/08.8-R012	spec/08.8-domain.norms.md#N2	M11/10	2026-11-11	(added by M11/10)
+P/08.8-R014	spec/08.8-domain.norms.md#N3	review of stage A 8–10, № 13 / decision 2	2026-11-11	chapter; moved there without a change; the step numbers as before; review of stage A 8–10, № 13 / decision 2). Vectors —
+P/08.8-R015	spec/08.8-domain.norms.md#N3	review of stage A 8–10, № 13 / decision 2	2026-11-11	(owner — this chapter; moved there
+P/08.8-R015	spec/08.8-domain.norms.md#N3	review of stage A 8–10, № 13 / decision 2	2026-11-11	without a change; review of stage A 8–10, № 13 / decision 2).
+P/08.8-R015	spec/08.8-domain.norms.md#N3	the Quint model of M11, G4	2026-11-11	(added by the Quint model of M11, G4)
+P/08.8-R015	spec/08.8-domain.norms.md#N3	G7	2026-11-11	(G7)
+P/08.8-R015	spec/08.8-domain.norms.md#N3	Quint M12 N1	2026-11-11	(Quint M12 N1)
+P/08.8-R015	spec/08.8-domain.norms.md#N3	C08-KEYS-CLAIM-BATCH-01, C08-SEAL-COPY-BATCH-01	2026-11-11	(C08-KEYS-CLAIM-BATCH-01, C08-SEAL-COPY-BATCH-01)
+P/08.8-R016	spec/08.8-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10; the coverage audit of P/08; the coverage audit of P/08, the second pass of Gemini	2026-11-11	The numbers
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10; the coverage audit of P/08; the coverage audit of P/08, the second pass of Gemini	2026-11-11	of the scenarios and steps are the former numbers of the acceptance of M11/10; sc. 13, 14 — the coverage audit of P/08; 15–17 — the coverage audit of P/08, the second pass of Gemini.
+P/08.8-R016	spec/08.8-domain.norms.md#N5	REC-G01, REC-G02, REC-TRUSTED-TIME73, C08-BACKUP-JSON-99	2026-11-11	; REC-G01, REC-G02, REC-TRUSTED-TIME73, C08-BACKUP-JSON-99)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10; the move plan of lesson 8, V1; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 17	2026-10-20	: scenarios 05 and 07 of M11/10 are removed — the same
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10; the move plan of lesson 8, V1; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 17	2026-10-20	cases (the move plan of lesson 8, V1; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 17).
+P/08.8-R016	spec/08.8-domain.norms.md#N5	the Architect's decision of 2026-10-20 on the open questions of the review of stage B 8–10, question 2	2026-10-20	; the Architect's decision of 2026-10-20 on the open questions of the review of stage B 8–10, question 2
+P/08.8-R016	spec/08.8-domain.norms.md#N5	the Architect's decision on the reconciliation of M11, H14	2026-11-11	; the Architect's decision on the reconciliation of M11, H14
+P/08.8-R016	spec/08.8-domain.norms.md#N5	HF; C08-HANDOVER-STEPS-CALLED-OFF-01	2026-11-11	(HF; C08-HANDOVER-STEPS-CALLED-OFF-01)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10 (the former scenario numbers 01, 06, 11)	2026-11-11	Scenarios of M11/10 outside the chapter: 01 (`/api/held`, the keepers, `view.term`, `/api/backup` without a signature) — [acceptance of chapter 6.7](../../06-console/acceptance/7/README.md)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10 (the former scenario numbers 01, 06, 11)	2026-11-11	sc. 15, 06 (`follow`) — the package [`follow`](../../09-agent/vectors/follow/README.md), 11 (a revocation does not revive after a move) —
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ER; review of stage A 8–10, № 34	2026-11-11	, ER; review of stage A 8–10, № 34
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ADR-0083 addendum (9)	2026-11-11	; ADR-0083 addendum (9)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	reconciliation of M11 09–12	2026-11-11	(the move `py↔go` with secrets is closed by the reconciliation of M11 09–12)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	G4	2026-11-11	G4;
+P/08.8-R016	spec/08.8-domain.norms.md#N5	SW	2026-11-11	(SW)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	X12	2026-11-11	(X12)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ADR-0080 addendum 6	2026-11-11	(ADR-0080 addendum 6)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10	2026-11-11	(formerly sc. 05 of M11/10)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10	2026-11-11	(formerly M11/10 sc. 01)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	reconciliation of M11, X3, X14	2026-11-11	; the reconciliation of M11, X3, X14
+P/08.8-R016	spec/08.8-domain.norms.md#N5	H19	2026-11-11	, H19
+P/08.8-R016	spec/08.8-domain.norms.md#N5	the coverage audit of P/08, Gemini's second pass	2026-11-11	(the coverage audit of P/08, Gemini's second pass)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	G4	2026-11-11	(G4)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	X12	2026-11-11	(X12)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	the coverage audit of P/08, Gemini's second pass; P08 review C1	2026-11-11	(the coverage audit of P/08, Gemini's second pass); C1
+P/08.8-R016	spec/08.8-domain.norms.md#N5	C08-RESTORE-EXACT-01; the coverage audit of P/08, Gemini's second pass	2026-11-11	(C08-RESTORE-EXACT-01; the coverage audit of P/08, Gemini's second pass)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	RB	2026-11-11	(RB)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ER	2026-11-11	(ER)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	M11/10	2026-11-11	(formerly sc. 07 of M11/10)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	SW	2026-11-11	(SW)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ADR-0098 §5, ADR-0100 §2	2026-11-11	(ADR-0098 §5, ADR-0100 §2)
+P/08.8-R016	spec/08.8-domain.norms.md#N5	ADR-0113 addendum (5)	2026-11-11	(ADR-0113 addendum (5))
+-	acceptance/8/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
+-	acceptance/8/README.md#intro	M11/01	2026-11-11	(before the merge, the dictionary of the M11 README of the acceptance M11/01)
+-	acceptance/8/README.md#stand	M11/03	2026-11-11	; from the acceptance README of M11/03

@@ -1,6 +1,6 @@
 # P/08 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/08-domain.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/08-domain.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/08-domain.md` (for people, not in the export).
 
@@ -30,8 +30,8 @@ history, the queue — by the eleven chapters of the lesson; pass the N5 accepta
 
 The inventory is built from the readiness checklists below; all 90 full ids must occur exactly once. P/08.9-04 moved to P/10; see `id-map.tsv` (historical record).
 
-The lesson is assembled from lessons M11/1–12 (the holder side) (stage B,
-ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
+The lesson covers the holder side.
+The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
 console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
 - **8.0.** The door `SIGNER_URL`: one writer of the holder rows, the acceptance of the edits that the domain console passes
@@ -84,16 +84,16 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   (the gate of the console, 502) are carried by the contracts of the consoles (lesson P/10, chapter 6.7). `X-W2C-Client` at the doors that
   the domain console passes — by a reference to the forwarding contract. The schemas of the bodies of the agent publication and of the relay package, of the edits, of the view and
   of the shadow report — the original is here: the agent (lesson P/09) and the domain console (lesson P/10) read them from here.
-- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the sections «Data families» of the chapters; ADR-0088); the forms
+- The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the sections «Data families» of the chapters); the forms
   shared by a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
-  family schema is self-contained, ADR-0092).
+  family schema is self-contained).
 - The acceptance of the chapters checks the norms: [8.1](../acceptance/1/README.md), 8.2 (the vectors of the common packages — [N5 of the chapter](08.2-domain.norms.md)),
   [8.3](../acceptance/3/README.md), [8.4](../acceptance/4/README.md), [8.5](../acceptance/5/README.md),
   [8.6](../acceptance/6/README.md), [8.7](../acceptance/7/README.md), [8.8](../acceptance/8/README.md),
   [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); chapter 8.0 has no catalogue (N5). The stand of several
   clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
   The vectors of the lesson — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
-  [`issue`](../vectors/issue/README.md) (8.7); the common ones — [`keys`](../../common/vectors/keys/README.md),
+  [`issue`](../vectors/issue/README.md) (8.7); the common ones (judge-only: the common vector packages) — [`keys`](../../common/vectors/keys/README.md),
   [`domain-token`](../../common/vectors/domain-token/README.md),
   [`domain-envelopes`](../../common/vectors/domain-envelopes/README.md) (8.2, 8.3),
   [`accept`](../../common/vectors/accept/README.md), [`agent-sig`](../../common/vectors/agent-sig/README.md) (8.3),
@@ -123,7 +123,7 @@ an unsupported case. Record a change of the acceptance in `corrections-<K>.tsv` 
   «Client address»); its own refusals `deposed`, `frozen`, `standby` — by its own word in `error`. The server side of the class
   `signed` — [the role certificate contract](../../common/contracts/role-certificate.md#the-server-side-the-class-signed)
   (do not require a client certificate and do not give it rights; requesting it is optional, and a presented one is checked in the
-  handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert; ADR-0083 addendum (20), addendum (21)).
+  handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert).
 - **8.1.** The holder's pass of N3: the domain view (the head once every 3 s, the sections in a round) and the shadow report, the objects `domain/view` and `domain/shadow`; the view fields
   of the other chapters by the same pass. The command `view` with the same function without the store; its call is the door `view` of the vocabulary of the
   «Domain stand».
@@ -290,7 +290,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.0 N1.9 | writing the target and the claim row by two writes; putting the index into the answer body | the target and the claim — one batch `op: batch`; the index of the batch is unknown before the write, so the `ETag` of a replay is the index of the claim row itself or its field `index` |
 | 8.0 N1.9 | the print of a body with a password by an ordinary hash | HMAC `print` of chapter P/06.2 N1 under the holder ring |
 | 8.0 N1.8, 8.4 N1.10 | trusting `X-W2C-Client` from any connection or counting the login limit by the TCP peer of the process | the header — only on a connection of the role `domainconsole` (the client certificate, SAN), otherwise — the address of the TCP peer; without it all people are one address of the console |
-| 8.0 N1.6 | requesting a client certificate and accepting any leaf, or refusing a foreign CA by an HTTP answer after the handshake; resuming sessions | a presented one — check it in the handshake by its own `ca.pem`, `ca.next.pem` (the CA, the validity, EKU `clientAuth`) — an alert; do not resume sessions (the role certificate contract `signer`) |
+| 8.0 N1.6 | requesting a client certificate and accepting any leaf, or refusing a foreign CA by an HTTP answer after the handshake; resuming sessions | a presented one — check it in the handshake by its own ca.pem, ca.next.pem for the CA, the validity, EKU `clientAuth` — an alert; do not resume sessions (the role certificate contract `signer`) |
 | 8.0 N1.8 | rewriting 409 `deposed`, 503 `frozen`, 503 `standby` into a common refusal | the answer of the process — by its own word in `error`; the console gives it out as it came |
 | 8.2 N1.1 | pinning the root by the first set that arrived | the root is pinned only by the installation and the acceptance (chapter 8.3); without `pinned` — `no_pin` |
 | 8.2 N1.2 | rewriting the set at an equal `rev` | an equal one — `holding`, the row does not change |
@@ -310,7 +310,7 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 | 8.3 N1.4a | including `members_rev` into the whole generation | outside the delta, like `stale` and `tls_ca` |
 | 8.1 N1.3 | the age by the wall clock or by the member's `sent_at` | only the holder's monotonic clock and a change before its eyes |
 | 8.1 N1.4 | two claims of one ref — take the first in order | both in `contested`, none in `units`, `complete: false` |
-| 8.1 N1.4 | a ref at the executors of a placement is also a dispute; `origin` is an executor | `{cluster} ∪ copies` — not a dispute, both units in `units`; `origin` does not change the set; the placements are not read — a dispute, as before (ADR-0091 addendum (12)–(19)) |
+| 8.1 N1.4 | a ref at the executors of a placement is also a dispute; `origin` is an executor | `{cluster} ∪ copies` — not a dispute, both units in `units`; `origin` does not change the set; the placements are not read — a dispute |
 | 8.1 N1.6 | the placements are not read — a report with empty placements | the report of the pass is not built: the previous `domain/shadow`, `clean_streak` does not change |
 | 8.1 N1.4 | a unit from a shard repeats a unit from a heartbeat | an id already taken from a heartbeat is not added by the shard |
 | 8.1 N1.6 | comparing revisions for equality | the lag — `revision > observed_revision`; the stagnation — time without a change |
