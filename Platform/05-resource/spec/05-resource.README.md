@@ -1,6 +1,6 @@
 # P/05 — instructions for an implementation
 
-This English text is the source; the Russian translation `ru/spec/05-resource.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/05-resource.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/05-resource.md` (for people, not in the export).
 
@@ -13,7 +13,7 @@ Give the platform objects, events and their reading; give the resource the clean
 - The canon is the [norms](05-resource.norms.md), the definitions of N0 — per P/01.1; the file contracts are
   [the event journal](../../common/contracts/event-journal.md) and [the presence lock](../../common/contracts/presence-lock.md).
 - The [HTTP contract](05-resource.api.openapi.yaml) expresses N2.
-- The [acceptance](../acceptance/README.md) sets the preparation and the observations.
+- The [acceptance](../acceptance/README.md) (judge-only: P/05-R006–P/05-R058) sets the preparation and the observations.
 - The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
 The objects use the store vocabulary of P/01.1, the roles — [P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) and
@@ -48,7 +48,7 @@ are different boundaries of confirmation; one does not prove another.
    on which the form and the owner of the row were checked. The mirror is published after the check of the full body
    and the sum; a failure keeps the former copy.
    The door row carries, next to `room.<sub>`, the list `live.<sub>` — the numbers n ≥ 2 of the live locks of the same snapshot (the presence
-   lock contract; ADR-0084 addendum (3) R14′): the controller computes the free space of the server by it.
+   lock contract): the controller computes the free space of the server by it.
 6. Pass the 35 scenarios / 292 steps of the acceptance separately. Check full answers by the owner of the form,
    even when only a code is expected in the TSV. For each checklist item name a separate
    observation; the probes outside the TSV are listed in the README of the acceptance.
@@ -76,12 +76,12 @@ Pass to the Specification the slice, the place and a counterexample; establish w
 Fix the source of the norm and its direct consumers, check the whole related class.
 Do not extend the lesson with a new mechanism for the sake of a case outside the declared profile.
 
-An additional check after run 33: GET of an object: the published door byte limit/+1, without a successful truncation.
+An additional check: GET of an object: the published door byte limit/+1, without a successful truncation.
 
 Check the id for collisions of the composite names a-e1-j/node:1:aaaaaa and a/j-e1-node:1:aaaaaa, UTF-8, different trees/epochs/parallel numbers, a restart and the outcome of the suppression; copies keep the original id. For both lists buckets/mirrored: an absent, an empty known and an unreadable directory are distinguished; an error before the headers is 500 without a body, a break does not give a full answer. Additional probes outside the TSV.
 
 ## Forms and implementation stages
 
-The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
+The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: P/05-R006–P/05-R058) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
 
 The numeric source of independent scalars is [runtime-constants.tsv](../forms/runtime-constants.tsv); HTTP values stay in the current [OpenAPI form](05-resource.api.openapi.yaml), high/low in the P/02 space form. Scenario 41 observes early stability; synchronous s63 separately awaits the real end of relieve. Declared s63–s67 and family cells require actual execution, never an adapter answer from expect. The ms support is still a separate dependency, not PASS.

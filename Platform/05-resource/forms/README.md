@@ -1,6 +1,6 @@
 # P/05 forms and resource seams
 
-This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export (ADR-0121). These forms express the resource norms under ADR-0125 addendum (5).
+This English text is the source; `ru/forms/README.md` is its Russian translation for people, not in the export. These forms express the resource norms of the lesson.
 
 ## Process inputs and refusals
 
@@ -16,7 +16,7 @@ Routing is declared by `x-route-priority`, `x-path-capture`, `x-path-decode`, `x
 
 ## Seams
 
-[acceptance/seams.tsv](../acceptance/seams.tsv) is kit stagetesting with the CALL/JSON grammar of [P/03](../../03-worker/forms/README.md) and [P/02](../../02-installer/forms/README.md): one JSON input, native JSON output, recursive object subset, exact arrays and empty objects. Chapter `5` uses acceptance/ directly. These ports normalize evidence, not the implementation API; invoke real resource functions and record their effects, never return an expected answer. Each scenario has a fresh temporary root and valid catalogue, directory, identity, limits, rows and files before its intervention. An unexpected panic or unrelated error fails; it is not a normal refusal.
+[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks of P/05-R006–P/05-R058) is kit stagetesting with the CALL/JSON grammar of [P/03](../../03-worker/forms/README.md) and [P/02](../../02-installer/forms/README.md): one JSON input, native JSON output, recursive object subset, exact arrays and empty objects. Chapter `5` uses acceptance/ directly. These ports normalize evidence, not the implementation API; invoke real resource functions and record their effects, never return an expected answer. Each scenario has a fresh temporary root and valid catalogue, directory, identity, limits, rows and files before its intervention. An unexpected panic or unrelated error fails; it is not a normal refusal.
 
 Unspecified input values complete a valid neutral background, not an unavailable read. Fixture words select the byte/file or controlled-client setup below, not precomputed outcomes. Version labels v1/v2 denote fresh schema-valid versions of the controlled store; map observed versions back to these labels, never send those labels as malformed wire versions. Counters and body sizes come from actual calls and bytes. Absent optional lines_garbled/truncated normalize to zero only in their numeric observations.
 
@@ -47,7 +47,7 @@ Match the decoded text against `pattern` before removing every `strip` character
 
 The literal patterns in OpenAPI are the machine source. from/to accept underscores only between ASCII digits, optional minus, a decimal point with digits on at least one side and an optional exponent; no leading plus. limit/late accept ASCII digits including leading zeros. timeout accepts ASCII digits and at most one dot with digits on at least one side; no sign, exponent or underscores. since is canonical unsigned decimal. These are the existing resource spellings, not the different console query grammar.
 
-## ADR-0127 P/05 review witnesses
+## Resource witnesses
 
 The additional seams s38-s62 use the same ports and real implementation paths. They add no native command, CLI, role, response word or kit part.
 
@@ -57,9 +57,9 @@ The additional seams s38-s62 use the same ports and real implementation paths. T
 - resource-restore: empty_404 is an actual 404 without body for the neighbour's mirrored listing GET. complete is a full valid listing; bucket_replies 404 means the subsequent GET of that listed bucket returns 404 without body, repeated through PEER_FAILS. missing counts that unreceived listed bucket, not retries; done comes from the real implementation. Never turn a failed GET into an empty listing.
 - resource-retain: publish a whole closed bucket through the ordinary writer at its logical written, with the supplied path window. mtime is deliberately changed independently. Invoke the actual retention pass with a controlled wall clock; observe physical removal and the logical stamp read before deciding, not a decision computed by the adapter. audit keeps its default term; console's effective term is at least the longest tree. A late mirror has its own receiver written and source bucket written; its term adds MIRROR_RETENTION_EXTRA. For restore_copy_written, perform the real checksum-checked restore first at the supplied restore_clock, then evict caches/reindex or restart and run retain; do not seed an already restored metadata answer. The copied stamp remains the local stamp. At each boundary equality deletes, the previous millisecond keeps. confirmed_hold supplies an actual readable hold that covers this unit/window; unreadable holds is an actual failed read. Both keep the bucket before the expiration predicate.
 
-These are mandatory source witnesses for the accepted review, pending actual generator/runner implementation and the joint normgen+kit GATE at coord103. Publishing these inputs is not execution of the resource, OS durability, TLS or SUT acceptance.
+These are mandatory source witnesses, pending actual generator/runner implementation and the joint normgen+kit GATE at coord103. Publishing these inputs is not execution of the resource, OS durability, TLS or SUT acceptance.
 
-## ADR-0129(16) current source and completed calls
+## Numeric source and completed calls
 
 [runtime-constants.tsv](runtime-constants.tsv) is the sole numeric source of the 14 owned positive integer settings. The lesson [OpenAPI](../spec/05-resource.api.openapi.yaml) keeps the existing typed HTTP bounds/defaults; the P02 space schema keeps high/low. This adds no environment, CLI setting, public response word, native command or kit part. PEER_FAILS in s47/s48 uses this source, not a second value.
 
@@ -71,4 +71,4 @@ The five added calls use the previous 14 ports and fresh real setup:
 - `resource-restore`: a real complete listing of checksum-valid closed buckets. An actual successful bucket resets the local consecutive-failure sequence. Observe completion, actual call trace, next-attempt consultation and whether accumulated diagnostic counters reset; no synthetic diagnostic totals.
 - `resource-pass`: valid closed local buckets and a live door, the supplied copy reply sequences through real passes at their normal admitted starts. The next pass is driven with a controlled clock according to PASS_EVERY, not bypassed or delayed by an invented bound. Observe calls after the current-pass skip, consultation on the next pass, the successful-copy reset and cumulative diagnostics. The restore sequence is not shared with mirror.
 
-All normalized booleans above are observations of actual calls/rows/counters. Adapter or producer support is a separate obligation; this source does not claim it executed any call. Old 62 rows, all process steps and relieve vectors remain byte-exact. The current heartbeat reader and writer have the same mandatory door/waits/restore/mirror/units and mtls expiry, with genuine unknown-presence and incomplete-restore positives retained.
+All normalized booleans above are observations of actual calls/rows/counters. Adapter or producer support is a separate obligation; this source does not claim it executed any call. The current heartbeat reader and writer have the same mandatory door/waits/restore/mirror/units and mtls expiry, with genuine unknown-presence and incomplete-restore positives retained.
