@@ -12,7 +12,7 @@
 #var body dyn — the request object {method, path, query, size, role_header, rights}: method — the HTTP method; path — the target before ?, byte for byte; query — the pairs of the query by P/01.1 N2.1, a map from a name to the list of its values in order; size — the number of bytes of the HTTP body (of chunked — the decoded bytes); role_header — the value of the role forwarding header, null without the header; rights — true while a rights file is loaded (a setting of the daemon, not the state of the store)
 #var sock string — the caller role at this check, defined once by P/01.2-R017 (spec/01.2-store.norms.md, N3 check)
 #var lone list<string> — not read by this table: the request object carries no strings of a JSON body
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim; this table has none
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; binding by name, not declaration order (P/01.1-R055); this table has none
 #fn allowed(string, string, string) -> bool — full permission for the effective role, operation read | write | delete and key by P/01.2 N3 «check», including never and admin/internal-role exceptions; not only the ordinary-role file evaluator
 # The effective role of rows 4 and 6 is defined by P/01.2-R017; the transport prefix peer: is not part of that role.
 # id — the stable address of the row, prefixed rc-, independent of check and the order n; not renamed or renumbered

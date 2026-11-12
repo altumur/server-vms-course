@@ -24,8 +24,7 @@ rule:      the catalogue rule is the union of the rules (credentials, secret_in)
            of the process with the common vocabulary common_words (the address contract «The field rule and the common vocabulary»): the names that
            a manifest adds are secret names too; at a process without a manifest catalogue (the store daemon, its CLI)
            the catalogue is empty — the rule = common_words and the address contract (userinfo, the headers Authorization and
-           Proxy-Authorization); the command vectors takes the catalogue for the same function from the input (files: fields.yaml), as for
-           all roles (C01-C02-LOG-MASK-ROLES-01, the Architect's decision of 2026-10-27)
+           Proxy-Authorization); the vectors caller supplies the catalogue as input to the same function for all roles
 ```
 
 ## What is masked
@@ -92,8 +91,7 @@ mask_in: a value of ≥ 3 characters of the set «* ＊ ∗ ⁎ ✱ • ● ∙ 
 
 ## Vectors
 
-The package [`log-mask`](../vectors/log-mask/README.md) (`cases.tsv`; «Mask at the input» — `mask_in.tsv`; the catalogue rule — the field declarations
-[`secret-in/fields.yaml`](../vectors/secret-in/fields.yaml)). The value of a field `type: url` is the package
+The package [`log-mask`](../vectors/log-mask/README.md) supplies test text and field declarations to the masking function. The concrete field-catalogue fixture is not part of the model input; the caller supplies it at vector execution. The field declaration form is `secretIn` of P/02.1; no fixture is required to implement the catalogue rule above. The store daemon and its CLI use the empty catalogue, not test field declarations. The value of a field `type: url` is the package
 [`secret-in`](../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
 (P/06.2-05).
 

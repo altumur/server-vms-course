@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-The norm of the chapter is [`01.3-store.norms.md`](../../spec/01.3-store.norms.md) N5.
+The acceptance checks the requirements of P/01.3 named below.
 
 Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store` (sc. 10), `@backup store`,
 `@import store` and the door `restored` (sc. 11, 12, 14); the store group stand — `@group-setup`, `@store-start`,
@@ -19,7 +19,7 @@ Use the `01-store` [profile format](../../../common/acceptance/PROFILE.md). `sta
 
 The stand store: schema 1, the manifest rows `testsub` and `testsub2` are written by the runner itself through `admin.sock`, without the installer
 (ADR-0083 addendum (98)): `put` with `cas: ""` and exactly the fields of the writer of P/02.3 N1.5 — `yaml` (the bytes of the file), `sha256`
-of these bytes, `rev` `"1"`; the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../2/inputs/rights.json) (judge-only: `acceptance/2/inputs/rights.json`, a rights file by P/01.2-R007); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
+of these bytes, `rev` `"1"`; the rights file `{rights}` is the prepared rights file of P/01.2-R007; the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
 `console` without the rights of `admin` (`@as console`: sc. 08 step 8, sc. 15 steps 1–2) and the manifest rows `testsub`, `testsub2` (sc. 11
 steps 9–10: the copy `backup` carries the manifest rows). The resource, the controller, the console and the workers are not needed by the chapter. The stand store of the chapter is
 a single member of a box without `-api` (N1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this (judge-only: sc. 08 step 8, sc. 15 steps 1–2, sc. 11 steps 9–10, sc. 16; checks P/01.3-R006, P/01.3-R016, P/01.3-R017).
@@ -148,8 +148,7 @@ The runner starts no next joining voter until this barrier succeeds. It polls st
 
 ## The store group (sc. 07, 17, 18, 25–29, 31)
 
-The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
-[`inputs/group.json`](inputs/group.json) (judge-only: `acceptance/3/inputs/group.json`, kits by P/01.3-R009, P/01.3-R010, P/01.3-R011) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
+The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the stand supplies kits by P/01.3-R009, P/01.3-R010, P/01.3-R011 (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The size of the stand group and the transport of its traffic are the keys `stand_size` and `transport` of [`forms/group.tsv`](../../forms/group.tsv). The box store build
 (`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–34 are not_applicable for it, not red; without
 the marker they are not executed («Store group stand» above) (judge-only: sc. 07, 17, 18, 25–29, 31–34; checks P/01.3-R006, P/01.3-R007, P/01.3-R011, P/01.3-R016, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R022, P/01.3-R032, P/01.2-R025, P/01.1-R062).
@@ -203,7 +202,7 @@ This is a subject of a manual check of the specification and of a future check o
 
 ## Review seams
 
-[seams.tsv](seams.tsv) (judge-only: `acceptance/3/seams.tsv`; checks P/01.3-R006, P/01.3-R026) uses the CALL/JSON grammar of [P/02](../../../02-installer/forms/README.md). These four kit seams assist the existing acceptance and reading; they are not new public runner targets. The existing chapter 1.1 s2 seam repeats the **same id** after early and a clock advance (judge-only: seam s2 of `acceptance/1/seams.tsv`; checks P/01.1-R080, P/01.1-R132).
+The kit seams checking P/01.3-R006 and P/01.3-R026 use the CALL/JSON grammar of [P/02](../../../02-installer/forms/README.md). These four kit seams assist the existing acceptance and reading; they are not new public runner targets. The existing chapter 1.1 s2 seam repeats the **same id** after early and a clock advance (judge-only: seam s2 of `acceptance/1/seams.tsv`; checks P/01.1-R080, P/01.1-R132).
 
 `store-start-flags` invokes the ordinary daemon command-line parsing and startup configuration admission (before build-specific Raft capability checks), not a validator that exists only for tests. Valid temporary dir/sockets, id and all neutral inputs are supplied. loopback/non_loopback select valid addresses under the existing loopback predicate, not new address syntax. Missing TLS must refuse before network setup; observe actual calls and exit code. Acceptance here proves configuration admission, not full process/group execution.
 

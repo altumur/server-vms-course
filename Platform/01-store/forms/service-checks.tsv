@@ -12,7 +12,7 @@
 #var body dyn — the request object: method — the HTTP method as sent (GET, POST, HEAD, …); path — the path of the request target, byte for byte; query — the string after ?, "" without one, no row reads it; size — the number of entity-body bytes, 0 without a body; role_header — the value of the role forwarding header, null without one
 #var sock string — the caller role at this check, defined once by P/01.2-R017 (spec/01.2-store.norms.md, N3 check)
 #var lone list<string> — not read by this table
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; binding by name, not declaration order (P/01.1-R055)
 #lim BODY_LIMIT — P/01.3 N1.3 the flag -max-body: the effective entity-body read limit of every request, whatever the method
 # id — the stable address of the row, prefixed sc-, independent of check and the order n; not renamed or renumbered
 # check — the refusal name in refusals.tsv; several checks may select the same refusal

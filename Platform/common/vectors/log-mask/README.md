@@ -6,6 +6,8 @@ The owner is [the log mask contract](../../contracts/log-mask.md) (chapter [P/06
 The participants are all processes of the platform that write a log (id-map: M10/7-08 → P/06.2-05, «all processes»). The bytes are written by
 «Specification»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16, ADR-0083).
 
+The concrete `fields.yaml` fixture is absent from the model input. The vector caller supplies its contents through `files`; the public field-declaration contract defines how the implementation reads it.
+
 ## `cases.tsv`
 
 UTF-8, LF, fields separated by TAB; lines with `#` are explanations, empty lines are skipped. There is no header. A cell is read byte for byte
@@ -20,7 +22,7 @@ between TABs, nothing is unescaped: `\t`, `\n` in a cell are two characters. Thr
 ## Run
 
 A side masks `raw` by the log mask of a process that knows the manifests of the stand, and compares with `masked` byte for byte. The rule
-of the catalog is the union of the rules of the fields `cam.source` and `rec.volumes.url` from [`fields.yaml`](../secret-in/fields.yaml) of the vectors `secret-in`
+of the catalog is the union of the rules of the fields `cam.source` and `rec.volumes.url` from `fields.yaml` of the vectors `secret-in`
 (in the input of the single command `vectors` — `files` with the key `fields.yaml`; `cells: {raw}`; the inventory C04/C06-NEXT-167, the Architect's decision 2026-10-27)
 with the common dictionary N1.1 `common_words` (the names that the manifest adds — `sig`, `psd` — are included).
 Who performs it — every process of the platform that writes a log (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26; the principle ACC-VECTORS-CONNECT-03): the store daemon and its CLI (`01-store`),

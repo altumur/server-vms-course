@@ -2,14 +2,13 @@
 
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
-[`01.1-store.norms.md`](../../spec/01.1-store.norms.md) N5.
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The acceptance checks the requirements of P/01.1 named below.
 
 ## Profile interface
 
 The profile is `01-store` in the [generic profile and assembly contract](../../../common/acceptance/PROFILE.md). `stand.store1` starts a fresh store instance for this chapter: it consumes the assigned data directory, administrative socket, prepared rights file and the body/row test parameters through the common stand substitutions. Its ordinary side serves the published `acc` role. `keys.request_line_limit` names the implementation's request-line boundary; `keys.role_header` names its role-forwarding header where a probe needs one. The optional `adapters.door` exposes the same ordinary/admin operations through the persistent transport of the common contract; it does not replace raw HTTP checks. The JCS package uses the `vectors` entry assigned by its [wire form](../../../common/vectors/wire.tsv), not a guessed `stand.jcs` invocation. The implementation chooses its own executable names and flags and binds these responsibilities in its profile.
 
-- **Durability.** The store command keeps the durability barriers on: the row `durability` of [lifecycle](../../lifecycle.md#signals-and-readiness) and its section [Stand](../../lifecycle.md#stand).
+- **Durability.** The store command keeps the durability barriers on (P/01.3-R111); the stand does not disable them.
 
 ## `scenarios.tsv`
 
@@ -89,7 +88,7 @@ The runner passes the bytes of the body from `request` after the substitutions, 
 
 ## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
 
-[`seams.tsv`](seams.tsv) (judge-only: `acceptance/1/seams.tsv`) — the original six scenarios plus the six additions below, covering the properties of the core that the checklist checks «by reading»: the `id`
+The process seams cover the properties of the core that the checklist checks «by reading»: the `id`
 memory does not forget by time alone (P/01.1-11), equality and both sides of fractional admission-time bounds for put, delete and batch
 (P/01.1-25), the admission time retains its fraction when clocks go back and after a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
 restart (P/01.1-31). The runner executes them through the seam adapter, by the [normalization below](#seam-normalization) (the directives `@clock`, `@reopen`, `@parallel` are defined there and in the header of the file). The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `seams:1.1:<scenarios>` in their `gate`.

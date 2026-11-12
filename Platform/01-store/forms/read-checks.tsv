@@ -9,7 +9,7 @@
 #var body dyn — the request object {method, path, query, size, role_header}: method — the method of the request line; path — the path of the request target, byte for byte, without the query; query — an object: the name of a parameter → the list of its values in the order of the query, after the parsing of N2.1 «Query» (percent-decoding included), no parameter — no name; size — the number of bytes of the body (for chunked — the decoded bytes), 0 without a body; role_header — not read by this table (its rows are forms/rights-checks.tsv)
 #var sock string — the caller role at this check, defined once by P/01.2-R017 (spec/01.2-store.norms.md, N3 check)
 #var lone list<string> — the JSON Pointer of every string of the input with a lone surrogate; a query value whose decoded bytes are not UTF-8 carries a lone surrogate U+DC80–U+DCFF (the surrogate escape of the byte) in place of each byte that is not UTF-8, and its pointer is /query/<name>/<index>
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; binding by name, not declaration order (P/01.1-R055)
 #lim BODY_LIMIT — P/01.1 N2 POST /v1/write: the body read limit of the door, the effective -max-body of a daemon
 #fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most KEY_BYTES UTF-8 bytes
 # fault — the required fields of the refusal; a body refusal MAY also carry size (P/01.1 N2).
