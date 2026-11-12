@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-A micromodule: a library in each language, the role `<sub>worker`. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people), the table «Lessons».
+A micromodule: a library in each language, the role `<sub>worker`. Its contracts are listed below.
 
 The layout of the catalogue (the English source on the canonical path, the Russian text for people in `ru/`):
 
@@ -21,7 +21,7 @@ The kit forms are [forms/README.md](forms/README.md): process inputs, the refusa
 
 ## What this lesson takes from common
 
-These common files supply definitions used by the chapters, the implementation instructions, lifecycle and forms. The chapter norms remain the canon; this index adds no requirements. Entries outside M are marked judge-only. Vector data and SDK seam cases do not replace the requirements in M.
+These common files supply definitions used by the chapters, the implementation instructions, lifecycle and forms. The chapter norms remain the canon; this index adds no requirements. Vector data and SDK seam cases do not replace the requirements in M.
 
 | File | Sections and use |
 |---|---|
@@ -59,7 +59,6 @@ These common files supply definitions used by the chapters, the implementation i
 | [Vector protocol](../common/vectors/wire.md) | Rows and sources; Input selection and groups; Comparison and assertions — assigned shared packages |
 | [Shared schema definitions](../common/data/common.schema.json) | `$defs` used by the owned families — common scalar and object shapes |
 | [Vector consumers](../common/vectors/consumers.tsv), [wire table](../common/vectors/wire.tsv) | Assigned shared packages of consumer `03-worker` and their input/output bindings |
-| [Sealing vectors](../common/vectors/sealing/README.md), [door-token vectors](../common/vectors/door-token/README.md), [domain-token vectors](../common/vectors/domain-token/README.md) | judge-only: package definitions and vector tables; checks of P/03.5-R005 (opening) and P/03.5-R020, P/03.5-R031 (ring-text parsing), P/03.4-R026 (door tokens) and P/03.7-R016, P/03.7-R064, P/03.7-R065, P/03.7-R066 (domain-token verification) |
 | [Row check](../common/contracts/row-check.md) | Unit row; The customer’s row: `made`; Unit state; Preparation of fields; Identifier and field constraints — row types, life ids, ordered rows and state guards |
 | [Pool](../common/contracts/pool.md) | Live worker; Pool; Keeper of a place with `distinct`; Server eligibility: `placeable`, `why` — capacity, weight, headroom and admission of places |
 | [Forwarding](../common/contracts/forwarding.md) | Client address; Domain worker pass hop policy — `X-W2C-Client` and the domain-worker forwarding boundary |
@@ -71,7 +70,7 @@ These common files supply definitions used by the chapters, the implementation i
 
 ### Other external files and exact sections
 
-The external files and sections referenced by this lesson's M. A closed-file entry names the governing rule in M.
+The public external files and sections used by this lesson's M.
 
 | File | Sections and boundary |
 |---|---|
@@ -86,7 +85,7 @@ The external files and sections referenced by this lesson's M. A closed-file ent
 | `Platform/04-controller/spec/04-controller.norms.md` | [file](../04-controller/spec/04-controller.norms.md) |
 | `Platform/05-resource/spec/05-resource.norms.md` | [file](../05-resource/spec/05-resource.norms.md), [`#n2-doors`](../05-resource/spec/05-resource.norms.md#n2-doors) |
 | `Platform/05-resource/vectors/relieve/README.md` | [file](../05-resource/vectors/relieve/README.md) |
-| `Platform/06-console/acceptance/1/README.md` | [file](../06-console/acceptance/1/README.md) |
+| `Platform/06-console/acceptance/1/README.md` | [file](../06-console/acceptance/1/README.md) — scenarios 20 and 21: unit state in the answer and worker tables; the witness of checklist P/03.6-06 |
 | `Platform/06-console/spec/06-console.api.openapi.yaml` | [file](../06-console/spec/06-console.api.openapi.yaml) |
 | `Platform/06-console/spec/06.1-console.norms.md` | [file](../06-console/spec/06.1-console.norms.md) |
 | `Platform/06-console/spec/06.2-console.norms.md` | [file](../06-console/spec/06.2-console.norms.md) |
@@ -97,7 +96,7 @@ The external files and sections referenced by this lesson's M. A closed-file ent
 | `Platform/06-console/vectors/requests-body/README.md` | [file](../06-console/vectors/requests-body/README.md) |
 | `Platform/08-domain/README.md` | [file](../08-domain/README.md) |
 | `Platform/08-domain/acceptance/5/README.md` | [file](../08-domain/acceptance/5/README.md) |
-| `Platform/08-domain/acceptance/7/README.md` | [file](../08-domain/acceptance/7/README.md) |
+| `Platform/08-domain/acceptance/7/README.md` | [file](../08-domain/acceptance/7/README.md) — scenario 01: the token check at the recipient; the witness of checklist P/03.7-06 |
 | `Platform/08-domain/data/holder.outcomes.tsv` | [file](../08-domain/data/holder.outcomes.tsv) |
 | `Platform/08-domain/data/keys.outcomes.tsv` | [file](../08-domain/data/keys.outcomes.tsv) |
 | `Platform/08-domain/spec/08.2-domain.norms.md` | [file](../08-domain/spec/08.2-domain.norms.md) |
@@ -110,8 +109,6 @@ The external files and sections referenced by this lesson's M. A closed-file ent
 | `Platform/10-domain-console/spec/10-domain-console.norms.md` | [file](../10-domain-console/spec/10-domain-console.norms.md) |
 | `Platform/common/acceptance/seams.md` | [`#seam-adapter-protocol`](../common/acceptance/seams.md#seam-adapter-protocol) |
 | `Platform/common/contracts/sealing.md` | [file](../common/contracts/sealing.md), [`#aad-path`](../common/contracts/sealing.md#aad-path), [`#envelope`](../common/contracts/sealing.md#envelope), [`#ring-file`](../common/contracts/sealing.md#ring-file) |
-| `Platform/common/vectors/sealing/open.tsv` | [file](../common/vectors/sealing/open.tsv) (judge-only: checks of P/03.5-R005) |
-| `Platform/common/vectors/sealing/ring.tsv` | [file](../common/vectors/sealing/ring.tsv) (judge-only: ring-text parsing for P/03.5-R020 and P/03.5-R031) |
 | `Platform/common/vectors/values-by-type/README.md` | [file](../common/vectors/values-by-type/README.md) |
 | `Platform/01-store/spec/01.2-store.norms.md` | [file](../01-store/spec/01.2-store.norms.md) — Rights and roles used by the domain worker |
 | `Platform/04-controller/lifecycle.md` | [file](../04-controller/lifecycle.md) — Controller neighbour process contract |

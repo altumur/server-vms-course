@@ -1,6 +1,6 @@
 """Checks of the reading form of M (ADR-0133 addendum (56); P01.175; decisions of the Architect 2026-11-11 on the
 lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228; the rollback of the format, ADR-0133 addenda (93), (94),
-OBSH.50). Nine checks, each a FAIL with its file and line:
+OBSH.50; OBSH.53). Ten checks, each a FAIL with its file and line:
 
 - `history_phrases` — no origin text in the files of M: a closed list of history phrases (both languages) and `ADR-0`
   outside tombstones, in the English sources and their translations of the lessons of `M_FORM_LESSONS` and of the
@@ -18,6 +18,9 @@ OBSH.50). Nine checks, each a FAIL with its file and line:
   table «What this lesson takes from common» of its README does not name — has the marker «(judge-only: …)» in the
   same sentence (a heading, a quoted section name «…» and the textual `sc. NN` are outside this check); a marker
   without such a reference is not judged;
+- `qualification_refs` — the same rule for a reference from any Markdown file of M (the lessons of the run, common,
+  the Platform root) to a file of the input Q `<dir>/qualification/…` (ADR-0130 addendum (20) item 1): Q is outside M,
+  its files never enter the files of M of a lesson or the narrow M of a pair; without Q files nothing is read;
 - `req_refs` — every full id `P/NN.K-RNNN` of a lesson of the run in the text of the files of M and J (both
   dispositions of the assembled filter M, translations included) is a live requirement: a removed or merged id is an
   error (the writer readdresses it to the live id), and so is an id the lesson has not; a short `RNNN` of the English
@@ -69,6 +72,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 import yaml
+
+from export_lists import q_kind, qualification_files
 
 # Lessons whose M is in the reading form (P01.175, P01.177). A lesson enters when its form is brought in by its own
 # task: the checks run on a lesson only after its norms carry no history, their index and «See also» lines.
@@ -244,7 +249,7 @@ class Lesson:
         out = []
         for path, disposition in model.items():
             if disposition == "model_and_judge" and path.startswith(self.rel + "/") and \
-                    not path[len(self.rel) + 1:].startswith("ru/"):
+                    not path[len(self.rel) + 1:].startswith("ru/") and not q_kind(path):
                 out.append(self.check.root / path)
         return sorted(out)
 
@@ -327,6 +332,7 @@ def run(check, lessons=None):
         checklist_marks(check, lesson)
     req_refs(check, checked, model)
     common_history(check, model)
+    qualification_refs(check, model, {lesson.rel for lesson in checked} if lessons is not None else None)
 
 
 # --- history_phrases ---------------------------------------------------------------------------------------------
@@ -697,13 +703,14 @@ def pair_m(check, lesson, model):
     if named is None:
         return None
     excluded = set(PAIR_COMMON_EXCLUDE.get(lesson.key, ()))
-    return {p for p, d in model.items() if d == "model_and_judge" and p not in excluded and (
+    return {p for p, d in model.items() if d == "model_and_judge" and p not in excluded and not q_kind(p) and (
         p.startswith(lesson.rel + "/") or p.startswith("Platform/common/") or p in PAIR_ALWAYS or p in named)}
 
 
 def judge_only_refs(check, lesson, files, model):
-    judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p}
-    seen_model = {p for p, d in model.items() if d == "model_and_judge"}
+    # The files of Q are outside M too; their references are judged by qualification_refs over every file of M.
+    judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p and not q_kind(p)}
+    seen_model = {p for p, d in model.items() if d == "model_and_judge" and not q_kind(p)}
     outside = set()                                     # model_and_judge of the course, outside M of the pair
     if lesson.key in M_NARROW:
         pair = pair_m(check, lesson, model)
@@ -778,6 +785,70 @@ def judge_only_refs(check, lesson, files, model):
                     else:
                         check.error(path, f"line {n}: a reference to the judge-only file {target} without "
                                           "«(judge-only: …)» in the same sentence (the file is not in M)")
+
+
+# --- qualification_refs --------------------------------------------------------------------------------------------
+
+def qualification_refs(check, model, homes=None):
+    """A reference from a Markdown file of M to a file of the input Q (`<dir>/qualification/…`, ADR-0130 addendum (20)
+    item 1) is a reference outside M: «(judge-only: …)» in the same sentence, as for judge_only_refs. Every
+    model_and_judge Markdown source of Platform and its translation are read — of the lessons `homes` (repository paths;
+    None — all), of Platform/common/ and of the Platform root; without Q files the check reads nothing."""
+    root = check.root
+    q = {p for p in qualification_files(root) if q_kind(p) == "source"}
+    if not q:
+        return
+
+    def home_of(path):
+        parts = path.split("/")
+        return "/".join(parts[:2]) if len(parts) > 2 else parts[0]
+
+    def target_of(token, base_dir, home, link):
+        token = unquote(urlsplit(token).path) if link else token
+        if not token or (not link and not PATHISH.fullmatch(token)):
+            return None
+        full = base_dir / token
+        candidates = [posixpath.normpath(full.relative_to(root).as_posix()) if full.is_relative_to(root) else None]
+        if not link:
+            candidates.append(posixpath.normpath(f"{home}/{token}"))
+            if token.split("/", 1)[0] == "Platform":
+                candidates.append(posixpath.normpath(token))
+        for candidate in filter(None, candidates):
+            parts = candidate.split("/")
+            if len(parts) > 3 and parts[0] == "Platform" and parts[2] == "ru":
+                candidate = "/".join(parts[:2] + parts[3:])        # a translation of a file is that file for M
+            if candidate in q or "*" in candidate and any(fnmatch.fnmatchcase(p, candidate) for p in q):
+                return candidate
+        return None
+
+    for rel, disposition in sorted(model.items()):
+        if disposition != "model_and_judge" or not rel.endswith(".md") or not rel.startswith("Platform/") or \
+                q_kind(rel) or "/ru/" in rel:
+            continue
+        home = home_of(rel)
+        if homes is not None and home not in homes and home != "Platform/common" and home != "Platform":
+            continue
+        source = root / rel
+        parts = rel.split("/")
+        translation = root.joinpath(*parts[:2], "ru", *parts[2:]) if len(parts) > 2 else root / "Platform/ru" / parts[1]
+        for path in (source, translation):
+            if not path.is_file():
+                continue
+            base_dir = source.parent.resolve()
+            link_dir = path.parent.resolve()
+            for first, sentence in units(path.read_text(encoding="utf-8")):
+                marked = any(mark in sentence for mark in JUDGE_MARKS)
+                found = [(m.start(), m.group(1), False) for m in CODE_SPAN.finditer(sentence)] + \
+                        [(m.start(), m.group(1), True) for m in LINK_TARGET.finditer(sentence)]
+                for at, token, link in sorted(found):
+                    target = target_of(token, link_dir if link else base_dir, home, link)
+                    if target is None or quoted(sentence, at):
+                        continue
+                    check.stats["qualification_refs"] += 1
+                    if not marked:
+                        check.error(path, f"line {first + sentence.count(chr(10), 0, at)}: a reference to {target}, a "
+                                          "file of the input Q (qualification), without «(judge-only: …)» in the same "
+                                          "sentence: Q is outside M, the obligation is said in M in words")
 
 
 # --- production_scoped ---------------------------------------------------------------------------------------------

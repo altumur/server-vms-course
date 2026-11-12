@@ -2824,7 +2824,9 @@ class Check:
     def export_lists(self):
         """ADR-0135 addendum (14): the export filters M and J assembled from the common filters and the lists
         forms/export.json of the lessons (`export_lists`): form of a list, a lesson's files each named once in model and in
-        judge, one record per path, M and J name the same paths, the routing of the judge never in M."""
+        judge, one record per path, M and J name the same paths, the routing of the judge never in M; the input Q
+        (ADR-0130 addendum (20)): Q files outside M, their translations outside the exports, the form and composition of
+        Platform/common/qualification-input-filter.json where it is."""
         import export_lists
         _filters, errors, stats = export_lists.assemble(self.root)
         for path, message in errors:
@@ -2834,7 +2836,7 @@ class Check:
     def m_form(self):
         """The reading form of M (ADR-0133 addenda (56), (93), (94), P01.175; m_form.py): history_phrases, index_refs,
         see_also_refs, judge_only_refs, production_scoped, history_rows, checklist_marks, req_map, req_refs over the
-        lessons of m_form.M_FORM_LESSONS this run checks; stage A (history_phrases, judge_only_refs, history_rows,
+        lessons of m_form.M_FORM_LESSONS this run checks, qualification_refs over the files of M; stage A (history_phrases, judge_only_refs, history_rows,
         req_map, req_refs) over those of m_form.M_FORM_STAGE_A."""
         import m_form
         m_form.run(self, {f"{n}" for n in self.lessons_seen})

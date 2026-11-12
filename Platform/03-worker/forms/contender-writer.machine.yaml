@@ -1,6 +1,6 @@
 # Local contender-writer policy; actual capture, cadence and object IO remain with the ordinary core.
 machine: contender-writer
-norm: P/03.2-R012, P/03.2-R121, P/03.2-R122, P/03.2-R123, P/03.2-R125, P/03.2-R128, P/03.2-R129, P/03.2-R233, P/03.2-R234
+norm: P/03.2-R012, P/03.2-R121, P/03.2-R121, P/03.2-R123, P/03.2-R125, P/03.2-R128, P/03.2-R128, P/03.2-R233, P/03.2-R234
 states:
 - seeking
 - holding

@@ -16,11 +16,11 @@ DOOR_HEAD_WITHIN	5	s	P/03.4-R105	Deadline for a complete process-door request li
 DOOR_PACE_FLOOR_BYTES	65536	bytes	P/03.4-R103	Minimum average transfer byte count per one second after DOOR_PACE_AFTER.
 DOOR_PACE_AFTER	30	s	P/03.4-R103	Delay before measuring the connection transfer pace.
 DOOR_BODY_BYTES	1048576	bytes	P/03.4-R195	Maximum process-door request body.
-DOOR_BUSY_RETRY_AFTER	1	s	P/03.4-R194	Retry-After duration on the existing process_busy response.
+DOOR_BUSY_RETRY_AFTER	1	s	P/03.4-R104	Retry-After duration on the existing process_busy response.
 PERFORM_TIMEOUT	10	s	P/03.6-R155	Request handler call timeout within one holder.
 PERFORM_GRACE_MS	200	ms	P/03.6-R155	Post-timeout grace; exact seconds are PERFORM_GRACE_MS / 1000.
 REQUESTS_HOLD_MS	500	ms	P/03.6-R225	Request look hold; exact seconds are REQUESTS_HOLD_MS / 1000.
-COMMANDS_PER_LOOK	200	count	P/03.6-R226	Maximum commands processed in one holder look.
+COMMANDS_PER_LOOK	200	count	P/03.6-R225	Maximum commands processed in one holder look.
 STATE_EVERY	10	s	P/03.6-R133	Cadence for writing ordinary unit state.
 MADE_ROWS_MIN_INTERVAL	60	s	P/03.4-R077	Minimum interval between made_rows listings; no upper listing deadline and no obligation to list exactly at this interval.
 COMMAND_BEHIND_TOLERANCE	1	s	P/03.4-R197	Strict threshold for a filing timestamp earlier than the prior listing that did not see it; behind only when the difference is greater.

@@ -33,10 +33,10 @@ C19	complexity	reconcile_core	{"max_branches": 15, "max_lines": 80}	reconciliati
 C20	pure_core	open_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	opening	P/03.5 N1.2; P/03.5 N3 open
 C21	pure_core	holder_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	requests_state_orders	P/03.6 N1.5; P/03.6 N3 holder's look
 C22	complexity	holder_core	{"max_branches": 15, "max_lines": 80}	requests_state_orders	P/03.6 N3 holder's look
-C23	table_driven	state_bindings	{"form": "Platform/03-worker/forms/row-write-bindings.tsv", "min_cell": 9}	requests_state_orders	P/03.6-R018; P/03.6-R124; P/03.6-R128; P/03.6-R129; P/03.6-R192; forms/row-write-bindings.tsv
+C23	table_driven	state_bindings	{"form": "Platform/03-worker/forms/row-write-bindings.tsv", "min_cell": 9}	requests_state_orders	P/03.6-R018; P/03.6-R018; P/03.6-R128; P/03.6-R128; P/03.6-R192; forms/row-write-bindings.tsv
 C24	pure_core	contender_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	reconciliation	P/03.2 N1.4a; P/03.2 N3 nobody and getting the name back
-C25	step_form	contender_step	{"core": "contender_core"}	reconciliation	P/03.2-R012; P/03.2-R121; P/03.2-R122; P/03.2-R123; P/03.2-R125; P/03.2-R128; P/03.2-R129; P/03.2-R233; P/03.2-R234; forms/contender-writer.machine.yaml
-C26	property_tests	contender_step	{}	reconciliation	P/03.2-R012; P/03.2-R121; P/03.2-R122; P/03.2-R123; P/03.2-R125; P/03.2-R128; P/03.2-R129; P/03.2-R233; P/03.2-R234; forms/contender-writer.machine.yaml
+C25	step_form	contender_step	{"core": "contender_core"}	reconciliation	P/03.2-R012; P/03.2-R121; P/03.2-R121; P/03.2-R123; P/03.2-R125; P/03.2-R128; P/03.2-R128; P/03.2-R233; P/03.2-R234; forms/contender-writer.machine.yaml
+C26	property_tests	contender_step	{}	reconciliation	P/03.2-R012; P/03.2-R121; P/03.2-R121; P/03.2-R123; P/03.2-R125; P/03.2-R128; P/03.2-R128; P/03.2-R233; P/03.2-R234; forms/contender-writer.machine.yaml
 C27	pure_core	token_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	domain_worker	P/03.7 N1.5; P/03.7 N3 check at the recipient
 C28	step_form	token_cache_step	{"core": "token_core"}	domain_worker	P/03.7-R009; P/03.7-R055; P/03.7-R056; P/03.7-R057; P/03.7-R058; P/03.7-R059; P/03.7-R060; P/03.7-R106; P/03.7-R107; forms/token-cache.machine.yaml
 C29	property_tests	token_cache_step	{}	domain_worker	P/03.7-R009; P/03.7-R055; P/03.7-R056; P/03.7-R057; P/03.7-R058; P/03.7-R059; P/03.7-R060; P/03.7-R106; P/03.7-R107; forms/token-cache.machine.yaml
