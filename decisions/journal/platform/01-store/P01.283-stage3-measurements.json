@@ -34,17 +34,17 @@
   },
   "global_M_after": {
     "files": 787,
-    "bytes": 13746572
+    "bytes": 13747126
   },
   "proposed_pair_M": {
     "files": 178,
-    "bytes": 4226999,
-    "sha256_of_sorted_path_and_file_hash_manifest": "f9c101668b856d91acf026484a4d2b50cd96ce90f4587262197538389265ac18",
+    "bytes": 4227553,
+    "sha256_of_sorted_path_and_file_hash_manifest": "f34fee22f4c2f8fa11c5e55cf5c33f86715f88df337a9bb30464d337762a5dab",
     "files_manifest": [
       {
         "path": "Platform/01-store/README.md",
-        "bytes": 15117,
-        "sha256": "b71074b7a5f252490c73e3df7f7755b5cbf4abba5b3a8edec085d040746542f0"
+        "bytes": 15671,
+        "sha256": "b9d7d71b6253b5556d0a38c558ac513ea9440d40e3e5de6dcec8166f2fade2c4"
       },
       {
         "path": "Platform/01-store/acceptance/1/README.md",
@@ -1062,5 +1062,8 @@
     "engine dry/parse; its runner and export operator are separate owners",
     "pair publication and M subset of an actual full-J export byte comparison",
     "P01.284 m-invariance over the changed checklist rows and stage_head with hidden group.tsv"
-  ]
+  ],
+  "initial_stage3_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0",
+  "accepted_dependency_row_source_commit": "06062133ec6297ad4965f5b52da3003f7f72ec37",
+  "final_snapshot_note": "Includes only the subsequent P01.285 accepted dependency-row concordance; the pair path set and all other source files remain as at initial_stage3_commit. Evidence: P01.283-reconciliation.json."
 }

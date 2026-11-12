@@ -1,7 +1,7 @@
 {
   "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
   "stage2_commit": "799405c9c1e19bada972b4aad31c4281766d519d",
-  "scope": "Final actual English source diff of stage3; translations are mirrored, not independent changes. Intermediate clean drafts are not evidence.",
+  "scope": "Actual English source diff of stage3 at target_commit; translations are mirrored, not independent changes. Intermediate clean drafts are not evidence. Subsequent accepted dependency-row concordance is recorded separately in P01.283-reconciliation.json.",
   "fragments": [
     {
       "file": "Platform/01-store/README.md",
@@ -795,5 +795,6 @@
     "Whole shared contracts and machine-read Full form by door table.",
     "Contextual dependency files of other owners: their prose is not rewritten by this task."
   ],
-  "history_rows_added": 79
+  "history_rows_added": 79,
+  "target_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0"
 }

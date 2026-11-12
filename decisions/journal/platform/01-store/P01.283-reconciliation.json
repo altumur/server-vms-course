@@ -1,0 +1,113 @@
+{
+  "source_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0",
+  "accepted_task": "P01.285",
+  "accepted_source_commit": "06062133ec6297ad4965f5b52da3003f7f72ec37",
+  "scope": "Only the three already declared dependency rows in README en/ru: exact accepted wording and positions. Other lines are byte-exact. No merge of main and no new dependency paths.",
+  "files": [
+    {
+      "file": "Platform/01-store/README.md",
+      "before_bytes": 15117,
+      "after_bytes": 15671,
+      "before_sha256": "b71074b7a5f252490c73e3df7f7755b5cbf4abba5b3a8edec085d040746542f0",
+      "after_sha256": "b9d7d71b6253b5556d0a38c558ac513ea9440d40e3e5de6dcec8166f2fade2c4",
+      "changes": [
+        {
+          "dependency": "02-installer/spec/02.1-installer.norms.md",
+          "before": "| [`02-installer/spec/02.1-installer.norms.md`](../02-installer/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../02-installer/spec/02.1-installer.schema.json) | N1.3a Secret in the manifest; `secretIn` and address-field declarations in the schema | the address and log-mask contracts; the definitions read by P/01, without the installer implementation |\n",
+          "after": "| [`02-installer/spec/02.1-installer.norms.md`](../02-installer/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../02-installer/spec/02.1-installer.schema.json) | [N1.3a Secret in the manifest](../02-installer/spec/02.1-installer.norms.md#n13a-secret-in-the-manifest); [Definitions](../02-installer/spec/02.1-installer.norms.md#definitions), `secretIn` and `schemes`; the matching schema definitions | field declarations and the machine definitions used by the address contract and log masking; no loader implementation is taken from them |\n",
+          "before_line": 60,
+          "after_line": 53,
+          "accepted_source_line": 53,
+          "insert_before_dependency": "02-installer/spec/02.4-installer.norms.md",
+          "exact_accepted_row": true
+        },
+        {
+          "dependency": "03-worker/data/epoch.schema.json",
+          "before": "| [`03-worker/data/epoch.schema.json`](../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../03-worker/data/epoch.outcomes.tsv) | the epoch family form, integer/codec/whole layers and unreadable outcomes | upper and the complete input check of import/restore/recover |\n",
+          "after": "| [`03-worker/data/epoch.schema.json`](../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../03-worker/data/epoch.outcomes.tsv) | the `epoch` property; its integer, codec and whole layers; the row with reader `proc:01-store` | the closed epoch form used to compute `upper`; refusal of an unreadable epoch on import or restore |\n",
+          "before_line": 61,
+          "after_line": 57,
+          "accepted_source_line": 57,
+          "insert_before_dependency": "03-worker/spec/03.2-worker.norms.md",
+          "exact_accepted_row": true
+        },
+        {
+          "dependency": "06-console/spec/06.2-console.norms.md",
+          "before": "| [`06-console/spec/06.2-console.norms.md`](../06-console/spec/06.2-console.norms.md) | N1.1a The address; N1.4 Where a secret is not | address credentials and the log mask |\n",
+          "after": "| [`06-console/spec/06.2-console.norms.md`](../06-console/spec/06.2-console.norms.md) | [N1.1 What a secret is](../06-console/spec/06.2-console.norms.md#n11-what-a-secret-is); [N1.1a The address: where the login and the password are in it](../06-console/spec/06.2-console.norms.md#n11a-the-address-where-the-login-and-the-password-are-in-it); [N1.4 Where a secret is not](../06-console/spec/06.2-console.norms.md#n14-where-a-secret-is-not) | secret fields, address rules and masking |\n",
+          "before_line": 62,
+          "after_line": 61,
+          "accepted_source_line": 61,
+          "insert_before_dependency": "08-domain/spec/08.2-domain.norms.md",
+          "exact_accepted_row": true
+        }
+      ],
+      "all_other_lines_and_order_byte_exact": true
+    },
+    {
+      "file": "Platform/01-store/ru/README.md",
+      "before_bytes": 19175,
+      "after_bytes": 19899,
+      "before_sha256": "abf62814483e4b645511e1eadc229ffa9a7e7d6d6313e0524efc89d2f0cbca44",
+      "after_sha256": "075fd5027b7c6f9675ff2742766075abe1dbf80967473450363cc2d061b42773",
+      "changes": [
+        {
+          "dependency": "02-installer/spec/02.1-installer.norms.md",
+          "before": "| [`02-installer/spec/02.1-installer.norms.md`](../../02-installer/ru/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../../02-installer/spec/02.1-installer.schema.json) | N1.3a Секрет в манифесте; `secretIn` и объявления адресных полей в схеме | договоры адреса и маски журнала; определения для P/01 без реализации установщика |\n",
+          "after": "| [`02-installer/spec/02.1-installer.norms.md`](../../02-installer/ru/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../../02-installer/spec/02.1-installer.schema.json) | [N1.3a Секрет в манифесте](../../02-installer/ru/spec/02.1-installer.norms.md#n13a-секрет-в-манифесте); [Определения](../../02-installer/ru/spec/02.1-installer.norms.md#определения), `secretIn` и `schemes`; соответствующие определения схемы | объявления полей и машинные определения для адресного договора и маски журналов; реализация загрузчика из них не берётся |\n",
+          "before_line": 60,
+          "after_line": 53,
+          "accepted_source_line": 53,
+          "insert_before_dependency": "02-installer/spec/02.4-installer.norms.md",
+          "exact_accepted_row": true
+        },
+        {
+          "dependency": "03-worker/data/epoch.schema.json",
+          "before": "| [`03-worker/data/epoch.schema.json`](../../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../../03-worker/data/epoch.outcomes.tsv) | форма семьи epoch, слои integer/codec/whole и исходы нечитаемой строки | upper и полная проверка входа import/restore/recover |\n",
+          "after": "| [`03-worker/data/epoch.schema.json`](../../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../../03-worker/data/epoch.outcomes.tsv) | свойство `epoch`; его слои integer, codec и whole; строка с читателем `proc:01-store` | закрытая форма эпохи для вычисления `upper`; отказ при нечитаемой эпохе на import или restore |\n",
+          "before_line": 61,
+          "after_line": 57,
+          "accepted_source_line": 57,
+          "insert_before_dependency": "03-worker/spec/03.2-worker.norms.md",
+          "exact_accepted_row": true
+        },
+        {
+          "dependency": "06-console/spec/06.2-console.norms.md",
+          "before": "| [`06-console/spec/06.2-console.norms.md`](../../06-console/ru/spec/06.2-console.norms.md) | N1.1a Адрес; N1.4 Где секрета нет | реквизиты адреса и маска журнала |\n",
+          "after": "| [`06-console/spec/06.2-console.norms.md`](../../06-console/ru/spec/06.2-console.norms.md) | [N1.1 Что секрет](../../06-console/ru/spec/06.2-console.norms.md#n11-что-секрет); [N1.1a Адрес: где в нём логин и пароль](../../06-console/ru/spec/06.2-console.norms.md#n11a-адрес-где-в-нём-логин-и-пароль); [N1.4 Где секрета нет](../../06-console/ru/spec/06.2-console.norms.md#n14-где-секрета-нет) | секретные поля, правила адреса и маска |\n",
+          "before_line": 62,
+          "after_line": 61,
+          "accepted_source_line": 61,
+          "insert_before_dependency": "08-domain/spec/08.2-domain.norms.md",
+          "exact_accepted_row": true
+        }
+      ],
+      "all_other_lines_and_order_byte_exact": true
+    }
+  ],
+  "history_rows_added": 3,
+  "stage3_proof_target_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0",
+  "measurements_before": {
+    "global_M_after": {
+      "files": 787,
+      "bytes": 13746572
+    },
+    "proposed_pair_M": {
+      "files": 178,
+      "bytes": 4226999,
+      "sha256_of_sorted_path_and_file_hash_manifest": "f9c101668b856d91acf026484a4d2b50cd96ce90f4587262197538389265ac18"
+    }
+  },
+  "measurements_after": {
+    "global_M_after": {
+      "files": 787,
+      "bytes": 13747126
+    },
+    "proposed_pair_M": {
+      "files": 178,
+      "bytes": 4227553,
+      "sha256_of_sorted_path_and_file_hash_manifest": "f34fee22f4c2f8fa11c5e55cf5c33f86715f88df337a9bb30464d337762a5dab"
+    }
+  },
+  "unchanged": "The 178 pair paths, 24 external dependency paths, 406 live R-id, map554, checklist rows, stages, scenario/vector inputs, transport and Full form by door are unchanged from initial_stage3_commit."
+}
