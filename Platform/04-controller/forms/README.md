@@ -12,7 +12,7 @@ These forms express the existing controller norms; no controller HTTP door is in
 Alias checks run before defaults. Empty `bad` does not remove imported validation. The launcher parses environment files, the process consumes them.
 
 [refusals.tsv](refusals.tsv) has `chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller`.
-The separator is literal TAB, without CSV quoting. Chapter is `4`; the four final cells preserve all former N4 cells in source order.
+The separator is literal TAB, without CSV quoting. Chapter is `4`; the final four cells define the cause, outcome, diagnostic and caller action.
 `start` is process start, `call` a controller procedure, `peer` an imported console door. A fixed code supplements the normative outcome;
 `-` adds no machine projection. `kind` is `-`: the console's error is not a controller HTTP Fault. N4 refers to the form, without a second table.
 
@@ -32,7 +32,7 @@ cleanup, decommission batches and placement turn/intent procedures remain their 
 
 ## Seams
 
-[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R026–P/04-R066) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
+[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
 those of [the P/03 forms README](../../03-worker/forms/README.md) and [the P/02 forms README](../../02-installer/forms/README.md): CALL with one
 JSON value, object subset, exact empty objects/lists, fresh scenario roots; no shell. The single-chapter address is `4`, with no acceptance subdirectory.
 The port names normalize tests, not the implementation API. Invoke the real controller functions and record effects, never return a canned expect.
@@ -45,7 +45,7 @@ fields are decoded values; release_items are store wire strings. A normal refusa
 
 | CALL port | Intervention and observation |
 |---|---|
-| `controller-fate` | Supply typed observations of slot-fate. For release, supply a valid slot and controlled CAS reply, run the real release path and record its items/version. A conflict leaves no permission; next_observation drives a fresh pass. No slot_writes means no attempt, no confirmed_slot_writes means no confirmed mutation. The five former release witnesses include no-units gone/runs/unlisted, gone with units, and competing renewal. |
+| `controller-fate` | Supply typed observations of slot-fate. For release, supply a valid slot and controlled CAS reply, run the real release path and record its items/version. A conflict leaves no permission; next_observation drives a fresh pass. No slot_writes means no attempt, no confirmed_slot_writes means no confirmed mutation. The five release witnesses include no-units gone/runs/unlisted, gone with units, and competing renewal. |
 | `controller-admit` | Workers, units and an explicit interleaving of two turn holders. Accept the first decision before the second holder gets its fresh look. Observe effective load, assignments and admission, not two independent choices over one stale snapshot. |
 | `controller-complete-intent` | A valid active intent and assignments; optionally break after the first confirmed removal and change holder. Resume from all removals, never add before their confirmation. An ambiguous write requires the own-turn barrier; a foreign holder stops all later writes and new admissions. |
 | `controller-key-admission` | Read the actual implementation's declared key limit; construct a valid named unit whose unit-row key fits and placement key is exactly placement_key_over_by bytes over it (one here), with ASCII filler in the id. Do not invent a smaller limit or make both keys inadmissible. Put it with another member of one group, plus an independent fitting unit. Observe refusal of the whole group's intent/placements and progress of the independent unit. |
@@ -98,3 +98,16 @@ All s51-s63 use the existing controller-pass port. fixture and scripted replies 
 - publication_cycles: keep one process across the listed cycles and run ordinary passes. For target_counter materialize an independent real bad state/type in a snapshot field or real serialization above the table ceiling. The next valid cycle repairs that source. orphan_states creates an actual orphan state for guarded sweep, not a seeded counter. snapshot_read/put script client outcomes; commit_reply_lost really persists the new object before losing its reply. External object readback observes persisted bytes, not controller confirmation. Freeze control timing/ok/failures at control end, release turn before snapshots, and write the one final report after both attempts. Count actual report writes and IO order; introduce no runtime counter or port.
 
 Pure seams do not prove OS/process recovery or SUT. An unsupported binding remains an explicit gap until adapter/independent-check delivery, never canned PASS or an excluded execution.
+
+## Shrink checks
+
+This is the ordered selector of P/04-R051. The first true row returns `why`; only `ok` allows shrinking. `victim_exists` means an eligible live top number `n = want(s) > 1` under the victim/wanted-place rules, never a number above want. `waiting` uses the existing placeable set; `distinct` and `placeless` use the heartbeat-place policy. `no_shortage_for` is seconds since the first pass without waiting, null when shortage is present; a new controller starts that observation again. `in_flight` is the heartbeat count of missing numbers in `2…want`, excluding the base. `per` is the existing positive capacity estimate, or null. `remaining_free_after_move` is the suitable live workers' free capacity after transferring the victim's units, excluding the victim and numbers above want; with distinct, only place keepers contribute. The existing numeric forms and units apply; no new constant is introduced. Equality at `SHRINK_AFTER` refuses; equality at `per` passes.
+
+| n | CEL | outcome | R-id |
+|---|---|---|---|
+| 1 | `!victim_exists` | `no_victim` | P/04-R051 |
+| 2 | `distinct && waiting > 0 && placeless` | `placeless_with_waiting` | P/04-R051 |
+| 3 | `waiting > 0 \|\| no_shortage_for == null \|\| no_shortage_for <= SHRINK_AFTER` | `no_shortage_long_enough` | P/04-R051 |
+| 4 | `in_flight > 0` | `in_flight` | P/04-R051 |
+| 5 | `per == null \|\| remaining_free_after_move < per` | `hysteresis` | P/04-R051 |
+| 6 | `true` | `ok` | P/04-R051 |

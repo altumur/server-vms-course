@@ -9,5 +9,5 @@ RAISE_QUIET	600	s	P/04-R014	quiet interval for a server that failed to raise
 RAISE_FAILS_LOUD	3	count	P/04-R014	consecutive raise failures before increased alarm severity
 SHRINK_BUDGET	1	count	P/04-R014	shrink move budget, independent of HOME_BUDGET
 SNAPSHOT_TABLE_MAX	1048576	bytes	P/04-R013	own table snapshot serialized-byte ceiling; independent of resource door L
-WRITE_CONFLICT_LIMIT	10	count	P/04-R014	normative consecutive conflicts on one logical write; moved out of implementation choice under accepted sectionE
+WRITE_CONFLICT_LIMIT	10	count	P/04-R014	normative consecutive conflicts on one logical write
 WANT_NUM_MAX	99	count	P/04-R006	maximum requested role-process target; equality with existing role-number carriers must be preserved

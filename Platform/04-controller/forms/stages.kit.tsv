@@ -1,19 +1,19 @@
-# A possible implementation order for P/04 (ADR-0126): a plan, not a norm or a reduction of the lesson checklist. Read all norms and imported contracts in full.
+# A possible implementation order for P/04: a plan, not a norm or a reduction of the lesson checklist. Read all norms and imported contracts in full.
 # Single-chapter address 4 maps to acceptance/scenarios.tsv and acceptance/seams.tsv, not acceptance/4/.
 # gate uses the P/01 grammar: tests:4:<cases|*>[:seams], accept:4:<cases|*>, vectors:<own package>, vectors:<owner>/<package> (a package of another owner with a consumers.tsv row whose consumer is 04-controller), code:*, build (the profile build); checks separated by ;.
 # tests:4:<cases|*>:seams is kit stagetests over acceptance/seams.tsv. accept selects only acceptance/scenarios.tsv, which the judge runs on the process stand; never seams.tsv. All former gates keep holding.
 # code:* — the rows of forms/code-rules.tsv whose stage is this stage or a stage of a smaller n hold, under the closed dictionary of the code
-# checks Platform/common/acceptance/forms/code-rules.tsv (ADR-0133 addendum (39)); the generation cycle checks them, not the acceptance; * is
+# checks Platform/common/acceptance/forms/code-rules.tsv; the generation cycle checks them, not the acceptance; * is
 # the only argument; a row is a data error when neither its stage nor a stage of a larger n has code:* in its gate.
 # weight relative1–5; kit closes the whole stage (none claimed); parts lists reused kit pieces; depends lists earlier n; when=true applies always.
 # core calls generated slot-fate/slot-release and implements their YOURS CAS/anchor procedures. A generated selector does not prove the process.
 # Common vectors remain assigned by common/vectors/consumers.tsv and their package README row/field selections; a vectors:<owner>/<package> gate runs all assigned tables of the package. Do not replace them with local tests.
 # The accept scenarios start the resource (P/05) and most use the console doors (P/06): their gate stands at controller_stand, which waits for these lessons;
-# an item stands at the stage of its subject, and its full-stand scenarios remain evidence in its text (the Architect's answer on P04.21, question 1).
+# an item stands at the stage of its subject, and its full-stand scenarios remain evidence in its text.
 # norms — elements separated by «; »: the sections of the norms, the forms and the packages the stage builds on (read in full, above), and the items of the readiness
 # checklist of spec/04-controller.norms.md (the lines - [ ] **P/04-MM**), written P/04-MM (a lesson without chapters); each item stands in the norms of exactly one stage,
-# the stage at which every subject of the item exists (ADR-0133 addendum (43)); an item at no stage or at two stages is a data error. The items of the system
-# checklist of spec/04-controller.norms.md stand at no stage: they need the OS, a host or several lessons (ADR-0130 Addendum (19) item 6).
+# the stage at which every subject of the item exists; an item at no stage or at two stages is a data error. The items of the system
+# checklist of spec/04-controller.norms.md stand at no stage: they need the OS, a host or several lessons.
 n	stage	goal	norms	gate	weight	kit	parts	depends	when
 1	model	Process inputs and owned data families, no controller HTTP API	P/04 N1.1; P/04 Data families; P/04 N2; P/04 N4; lifecycle.md Environment; lifecycle.md Exit codes; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv; data/	build;code:*	2	-	flags,refusals,families,core	-	true
 2	slot_fates	The ordered local-clock judgement, exact boundaries, release CAS and permission versions	P/04 N1.4; P/04 N1.4a; P/04 N3 fate; forms/slot-fate.tsv; forms/slot-release.tsv; P/04-04; P/04-10; P/04-11	tests:4:s1-fate-before-term,s2-fate-release-term,s3-fate-gone-with-units,s4-fate-margin,s5-fate-two-silences,s6-fate-gone-before-fresh-beat,s7-fate-hung-young,s8-fate-hung-boundary,s9-fate-wait-no-units,s10-fate-wait-boundary,s11-fate-runs-no-units,s12-fate-presence-unknown,s13-fate-unreachable-boundary,s14-fate-no-permission-bad-gen,s15-release-cas-race,s16-release-unreadable-gen,s34-fate-resource-never-seen-assigned,s35-fate-resource-never-seen-empty:seams;vectors:common/fresh-age;vectors:common/slot;vectors:common/resource-state;vectors:common/heartbeat-read;code:*	3	-	core,slot-fate,slot-release,stagetests	1	true
