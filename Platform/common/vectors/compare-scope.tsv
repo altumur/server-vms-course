@@ -1,0 +1,4 @@
+# The scope of the comparison words of wire.tsv and wire.cases.tsv, judge-only (wire.md «Turn comparison»). A word of the column compare that has rows here is admitted
+# only in a row whose package, table and surface equal one of its rows; a word without rows here is admitted in every row; another use is a form error of that row.
+compare	package	table	surface
+turn	common/turn	cases.tsv	vectors

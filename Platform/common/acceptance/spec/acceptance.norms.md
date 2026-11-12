@@ -30,7 +30,7 @@ The judge reads every `scenarios.tsv` by the row form of the [dictionary](../REA
 
 <!-- req: P/AC-R004 -->
 
-Vector tables, their consumers, input columns, fixtures, expectations and comparisons are defined by the [vector wire form](../../vectors/wire.md), its `wire.tsv` and `consumers.tsv`, and the README of each package. The older Platform vector commands keep the form of the [common stand](../stand.md#layout-by-processes-stage-c).
+Vector tables, their consumers, input columns, fixtures, expectations and comparisons are defined by the [vector wire form](../../vectors/wire.md), its `wire.tsv`, `consumers.tsv` and `compare-scope.tsv` (the scope of the comparison words), and the README of each package. The older Platform vector commands keep the form of the [common stand](../stand.md#layout-by-processes-stage-c).
 
 <!-- req: P/AC-R005 -->
 
@@ -136,7 +136,7 @@ The teardown of a stand first sends SIGCONT to frozen processes, then closes the
 
 <!-- req: P/AC-R033 -->
 
-A failed step ends its scenario only when it is a directive of preparation without which the later steps have no meaning: `@spoil row`, `@spoil row-index`, `@spoil object`, `@backup store`, `@import store`, `@group-setup` and the directives that start a stand or a role of it (`@start`, `@store-start`, `@server-start`, `@domain`, `@install domain`). The other steps go on and are judged. Steps that an abort leaves unrun are `not_executed`, not red. A directive that the judge does not execute is `not_executed` with its reason of R030, and so is every later step of its scenario, with the same reason.
+A failed step ends its scenario only when it is a directive of preparation without which the later steps have no meaning: `@spoil row`, `@spoil row-index`, `@spoil object`, `@backup store`, `@import store`, `@group-setup` and the directives that start a stand or a role of it (`@start`, `@store-start`, `@server-start`, `@domain`, `@install domain`); a step whose door adapter (`adapters.door`) exited, broke its stream or answered outside its frame (R038) ends its scenario as well, since the scenario has no instance left, and the next scenario gets a new adapter process. The other steps go on and are judged. Steps that an abort leaves unrun are `not_executed`, not red. A directive that the judge does not execute is `not_executed` with its reason of R030, and so is every later step of its scenario, with the same reason.
 
 <!-- req: P/AC-R034 -->
 
@@ -197,7 +197,7 @@ The class of a chapter or a target over its steps is the first of `runner`, `sta
 
 <!-- req: P/AC-R038 -->
 
-A command of the profile of the implementation, `build`, `unit`, a command of `stand`, an adapter or a vector command, that could not start (the shell codes 126 and 127), died by a signal or whose term expired has the class `implementation`. The class `stand` applies only to a command of the stand itself or a proxy of the judge.
+A command of the profile of the implementation, `build`, `unit`, a command of `stand`, an adapter or a vector command, that could not start (the shell codes 126 and 127), died by a signal or whose term expired has the class `implementation`; so has such a command that exits by itself before it answers a request, breaks its stream or answers outside the frame of its protocol (not JSON, other fields, no LF while the process lives): the class is that of the step or row it served. The class `stand` applies only to a command of the stand itself or a proxy of the judge.
 
 <!-- req: P/AC-R053 -->
 

@@ -56,7 +56,7 @@ still checks the domain console of its own box by its own `ca.pem` (the forwardi
 of a foreign CA; the server gives the leaf and its CA from `ca.next.pem` (the role certificate contract «Server side»). While
 `foreign` is in place, the client of the stand checks the server of this console (the door `member <cluster> console`) by the CAs of the kit (`ca.pem`
 and `ca.next.pem`), the other doors — as before; the other clusters do not go to this console during these steps. The expectation is `ok`: the console
-listens again; a wrong form of the directive — the class «data», the stop, the start and the tool — the class «stand».
+listens again; a wrong form of the directive — the class «data»; a failed stop or start of the console of the candidate — the class «implementation» (P/AC-R017, R038 of the [norms](../spec/acceptance.norms.md); judge-only: the norms of the judge); a failure of the tool — the class «stand».
 
 A client is the name of a leaf: `<cluster>-<role>` (`m2-console`, `m2-domainagent`, `foreign-console`) or a key of `negative`
 (`m2-no-role`, …); `null` — without a client certificate. The client of a probe presents the indicated leaf on any certificate request
@@ -76,8 +76,9 @@ an error of this check is an outcome of the tool, not a TLS alert.
   the refusal is before the choice; `reused: false`, `session_available: false`.
 - `reused` — a session is presented and the server resumed it; `session_available` — the server issued a usable session (a ticket or
   an identifier) over this connection.
-- A connection refusal, a break, a timeout, an error of the server check by the client and an error of the tool are the class «stand»: they are not an outcome
-  of the probe and do not satisfy any expectation. The text of the library and the number of the alert are diagnostics, not a word
+- A connection refusal, a break or a timeout of the server of the candidate and an error of the server check by the client are the class «implementation» of the step
+  (N4 and P/AC-R038 of the [norms](../spec/acceptance.norms.md); judge-only: the norms of the judge), an error of the tool is the class «stand»: none of them is an outcome
+  of the probe, and none satisfies any expectation. The text of the library and the number of the alert are diagnostics, not a word
   of the implementation.
 
 The expectation in a scenario row is `ok <JSON>` (the dictionary of «Domain stand», `@tls`); the JSON is compared by a subset of fields on top of the closed form.
@@ -150,7 +151,7 @@ of the connection with the substitution `{port}` (the port of the door of this p
 cluster (`own_client`): the CA fingerprint of the kit, the role of the process, `host` — the `server` of the kit if the host of `url` is
 a loopback literal (the threshold `loopback`), otherwise the host of `url` (an IP literal other than loopback is a data error); then revocation (the `revoked` of the kit is empty). The outcome is the closed form above
 with the field `peer`: `"ok"` or a word of the contract `peer`; on a word the client closes the handshake — `handshake: "ok"` (the server did not refuse), `http: null`, `version` may be `null`. The server refused with the handshake — `handshake: "alert"`, `peer: null`, `http: null`. A refusal of the check
-of the server at the door `kit` is an outcome of the probe, not the class «stand» (at the other doors — as before). The client judges the steps of `peer` over the handshake chain: a leaf without a CA in `chain[1:]` — `foreign_ca` (step 3). Of the words the table names `wrong_name`; the other words are not judged by the acceptance, except `peer: "ok"`.
+of the server at the door `kit` is an outcome of the probe, not a failure of the step (at the other doors it is the class «implementation», as above). The client judges the steps of `peer` over the handshake chain: a leaf without a CA in `chain[1:]` — `foreign_ca` (step 3). Of the words the table names `wrong_name`; the other words are not judged by the acceptance, except `peer: "ok"`.
 
 - A console with a kit listens on the `CONSOLE_HOST` default `127.0.0.1` (P/02.4 N1.6 `console`: TLS on the loopback too).
 - `own_client`: for a loopback literal in `url` the `host` is the `server` of the kit; `localhost` is a name and is checked as a name (`loopback`): a leaf that does not carry it gives the word `wrong_name`, without an HTTP answer; the system host of the stand is not touched.

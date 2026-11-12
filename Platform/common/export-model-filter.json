@@ -5827,6 +5827,11 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/compare-scope.tsv",
+      "disposition": "judge_only",
+      "basis": "P01.256, the Architect's decision of 2026-11-12T09:39:53Z (B7, G07): the scope of the comparison words of wire.tsv, read by the judge's validator instead of a package literal; judge-side."
+    },
+    {
       "path": "Platform/common/vectors/consumers.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
