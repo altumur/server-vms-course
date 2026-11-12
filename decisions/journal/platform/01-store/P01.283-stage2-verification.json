@@ -1,0 +1,15 @@
+{
+  "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
+  "live_by_chapter": {
+    "1": 160,
+    "2": 64,
+    "3": 182
+  },
+  "retired": 554,
+  "source_fragments": 960,
+  "complete_english_composition": true,
+  "complete_russian_composition": true,
+  "history_exact_reversible_fragments": true,
+  "families_exact_bytes": true,
+  "failures": []
+}

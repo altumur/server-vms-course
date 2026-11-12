@@ -1,7 +1,7 @@
 # The order of the identity and rights checks of a request at a door of the store (P/01.2 N3 «check»). The norm refers to this table and does not repeat it in prose.
 # The input is one request of a store door of chapters 1.1 and 1.2 (a daemon of a group or a box); body is the request object below, not the JSON body of the request.
 # Rows in the order of n: the first row whose when is true gives the refusal code, kind and the fields fault; none — the request goes on to its operation. The table does not read the store state.
-# Before the table: the frame and the body limit (P/01.1 N2.1, R217 of P/01.1), the route and the method of the door (404 — P/01.1 N2.1); for GET /v1/get and GET /v1/list
+# Before the table: the frame and the body limit (P/01.1 N2.1, P/01.1-R034), the route and the method of the door (404 — P/01.1 N2.1); for GET /v1/get and GET /v1/list
 # the rows 1–5 of forms/read-checks.tsv (the form of the query and the key rules: N3 «read» of P/01.1 step 1 before step 2 «check»); POST /v1/write comes to the table
 # before its body is parsed and goes on after row 3 to the form of its body and to forms/write-checks.tsv, whose rows wc-rights, wc-guard_rights, wc-write_rights
 # and wc-guard_elem_rights (n 14, 15, 33, 34) are the write, delete and guard rights of this check; they are not repeated here.

@@ -4,13 +4,13 @@
 # a door without a vote is not a raft member: it gives no series configstore_raft_* and configstore_doors, otherwise dashboards would count it as a member of the group.
 # value_rule — what the value is; «box: …» — the value at a box, one member.
 series	labels	type	emitted_by	value_rule	norm
-configstore_raft_term	-	gauge	voter, box	the current Raft term; box: 1	P/01.3-R160; P/01.3-R170
-configstore_raft_state	state=leader|follower|candidate|shutdown	gauge	voter, box	the sample of the current state has value 1; other state samples, when given, have value 0; box: state="leader" with value 1	P/01.3-R032; P/01.3-R191; P/01.3-R170
-configstore_raft_elections_total	-	counter	voter, box	the elections; box: 1	P/01.3-R160; P/01.3-R170
+configstore_raft_term	-	gauge	voter, box	the current Raft term; box: 1	P/01.3-R160; P/01.3-R169
+configstore_raft_state	state=leader|follower|candidate|shutdown	gauge	voter, box	the sample of the current state has value 1; other state samples, when given, have value 0; box: state="leader" with value 1	P/01.3-R032; P/01.3-R032; P/01.3-R169
+configstore_raft_elections_total	-	counter	voter, box	the elections; box: 1	P/01.3-R160; P/01.3-R169
 configstore_raft_index	kind=last|commit|applied	gauge	voter, box	the index of that kind	P/01.3-R160
-configstore_raft_last_contact_seconds	-	gauge	voter, box	box: 0	P/01.3-R160; P/01.3-R170
-configstore_raft_voters	-	gauge	voter, box	box: 1	P/01.3-R160; P/01.3-R170
-configstore_raft_voters_expected	-	gauge	voter, box	box: 1	P/01.3-R160; P/01.3-R170
-configstore_doors	-	gauge	voter, box	the number of rows platform/configstore-doors/<id> that read in their own form with seen_at not older than DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY; every voter, the leader and a follower, gives it by its own replica of the rows and its own clock, without asking the leader (with an unreachable leader the series is the same); box: 0	P/01.3-R084; P/01.3-R160; P/01.3-R170
+configstore_raft_last_contact_seconds	-	gauge	voter, box	box: 0	P/01.3-R160; P/01.3-R169
+configstore_raft_voters	-	gauge	voter, box	box: 1	P/01.3-R160; P/01.3-R169
+configstore_raft_voters_expected	-	gauge	voter, box	box: 1	P/01.3-R160; P/01.3-R169
+configstore_doors	-	gauge	voter, box	the number of rows platform/configstore-doors/<id> that read in their own form with seen_at not older than DOOR_SEEN_PERIODS × DOOR_SEEN_EVERY; every voter, the leader and a follower, gives it by its own replica of the rows and its own clock, without asking the leader (with an unreachable leader the series is the same); box: 0	P/01.3-R084; P/01.3-R160; P/01.3-R169
 configstore_door_forwards_total	outcome=answered|unavailable|ambiguous	counter	door	the requests that the door passed to the group, by outcome: answered — an answer of a voter was received, with any code; unavailable — no voter was reached, the door answered 503 unavailable; ambiguous — the write was sent, there is no answer, 503 ambiguous	P/01.3-R160
 configstore_door_voters_reachable	-	gauge	door	the voters that answered the last membership poll of the door, once per DOOR_MEMBERS_EVERY	P/01.3-R076; P/01.3-R160

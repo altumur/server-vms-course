@@ -1,9 +1,9 @@
 # P/01 numeric source; existing runtime-constants class, literal TAB. Not flags or environment settings.
 name	value	unit	norm	meaning
-JSON_DEPTH	128	count	P/01.1-R233	Nested objects/arrays from the root; root object counts one, including extra fields.
+JSON_DEPTH	128	count	P/01.1-R048	Nested objects/arrays from the root; root object counts one, including extra fields.
 HEADER_BYTES	65536	bytes	P/01.1-R242	Sum of header field-line bytes without CRLF or the final empty line; exact limit passes.
 BATCH_WRITES	64	count	P/01.1-R193	Maximum writes under the owning caller exemptions; exact limit passes, one more is out of form.
-BATCH_GUARDS	64	count	P/01.1-R313	Maximum guards under the owning caller exemptions; exact limit passes, one more is out of form.
+BATCH_GUARDS	64	count	P/01.1-R193	Maximum guards under the owning caller exemptions; exact limit passes, one more is out of form.
 CLOCK_SKEW	60	s	P/01.1-R013	Maximum wall-clock difference assumed between cluster writers; deployment premise, not a store clock check.
 KEY_BYTES	1024	bytes	P/01.1-R156	Maximum UTF-8 length of a key at the door in every implementation.
 ID_REPLAY_MIN_AGE	120	s	P/01.1-R141	Strict age threshold since first application; forgetting also requires ID_REPLAY_MIN_RECORDS.
@@ -13,6 +13,6 @@ DOOR_REQUEST_MARGIN	1	s	P/01.3-R075	Margin of the door forwarding attempt.
 DOOR_MEMBERS_EVERY	5	s	P/01.3-R076	Door group-membership polling interval.
 DOOR_SEEN_EVERY	30	s	P/01.3-R077	Door own seen_at publication interval.
 DOOR_SEEN_PERIODS	3	count	P/01.3-R084	Maximum age of a visible door is this many DOOR_SEEN_EVERY intervals.
-RAFT_LAG_ALARM	1000	count	P/01.3-R304	Follower lag (the commit of the leader minus the applied of the follower, P/01.3-R407) strictly above this threshold is the voter alarm of the reader of /metrics (P/01.3-R406).
-RAFT_ELECTION_ALARM_COUNT	3	count	P/01.3-R305	More elections than this count in RAFT_ELECTION_ALARM_WINDOW raises the existing voter alarm.
-RAFT_ELECTION_ALARM_WINDOW	600	s	P/01.3-R305	Window of the existing election-frequency alarm.
+RAFT_LAG_ALARM	1000	count	P/01.3-R304	Follower lag (the commit of the leader minus the applied of the follower, P/01.3-R304) strictly above this threshold is the voter alarm of the reader of /metrics (P/01.3-R304).
+RAFT_ELECTION_ALARM_COUNT	3	count	P/01.3-R304	More elections than this count in RAFT_ELECTION_ALARM_WINDOW raises the existing voter alarm.
+RAFT_ELECTION_ALARM_WINDOW	600	s	P/01.3-R304	Window of the existing election-frequency alarm.
