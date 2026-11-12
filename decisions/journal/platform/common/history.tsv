@@ -268,3 +268,4 @@ P/AC-R053	acceptance/spec/acceptance.norms.md#N4	P01.256, the Architect's decisi
 -	acceptance/forms/targets.README.md#table-form	P01.256, the Architect's decision of 2026-11-12T09:00:02Z (A K3: a profile key is not an interface)	-
 -	acceptance/forms/profile-keys.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:00:02Z (A K3: a key of the column keys is required by its target)	-
 -	acceptance/forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:00:02Z (A K5: run executes scenarios.tsv or seams.tsv, never both)	-
+-	acceptance/README.md#dictionary-of-directives-and-doors	P01.256, the Architect's decision of 2026-11-12T09:04:28Z (B3′: the markers of a whole expectation — $name and !contains text, the others — data)	2026-11-12	-
