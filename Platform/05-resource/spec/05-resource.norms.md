@@ -332,7 +332,7 @@ See also: P/05-R005, P/05-R011, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05
 
 <!-- req: P/05-R110 -->
 
-**Body copies.** Copies — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1.
+**Body copies.** `copies` — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1.
 
 See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
@@ -344,7 +344,7 @@ See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05
 
 <!-- req: P/05-R112 -->
 
-**Body copies.** Reception: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>` of a subsystem with a blob field; another key (uppercase hex, without `sha256-`, a subsystem without a blob field) — an ordinary object, its owner writes it: 405.
+**Body copies.** `reception`: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>` of a subsystem with a blob field; another key (uppercase hex, without `sha256-`, a subsystem without a blob field) — an ordinary object, its owner writes it: 405.
 
 See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
@@ -447,7 +447,7 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 <!-- req: P/05-R259 -->
 
-**Event line and writing.** Server — the owner of the bucket.
+**Event line and writing.** `server` — the owner of the bucket.
 
 See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R049, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
@@ -459,13 +459,13 @@ See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05
 
 <!-- req: P/05-R261 -->
 
-**Event query and merge.** Epoch_is and fenced are set by the merger — the console or the worker by the event log merge contract; at the resource the lines are without them.
+**Event query and merge.** `epoch_is` and fenced are set by the merger — the console or the worker by the event log merge contract; at the resource the lines are without them.
 
 See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R071 -->
 
-**`index.epoch_is`.** Current | fenced | earlier-run | unknown   — by current_epochs from `<sub>`/epoch/* and the policy of the manifest; unknown — only at the worker for an epoch that it did not declare in worker.reads; the needed epoch is not read — a line without epoch_is, incomplete[`<sub>`/epoch] (the event log merge contract «Epochs»).
+**`index.epoch_is`.** `current` | `fenced` | `earlier-run` | `unknown`   — by current_epochs from `<sub>`/epoch/* and the policy of the manifest; unknown — only at the worker for an epoch that it did not declare in worker.reads; the needed epoch is not read — a line without epoch_is, incomplete[`<sub>`/epoch] (the event log merge contract «Epochs»).
 
 See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
@@ -501,7 +501,7 @@ See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05
 
 <!-- req: P/05-R262 -->
 
-**Retention and holds.** Days — a finite number > 0, anything else — «not known», remove nothing.
+**Retention and holds.** `days` — a finite number > 0, anything else — «not known», remove nothing.
 
 See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
@@ -567,7 +567,7 @@ See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05
 
 <!-- req: P/05-R231 -->
 
-**Retention and holds.** Restore preserves the copy's `written`; it does not restart the retention clock.
+**Retention and holds.** `restore` preserves the copy's `written`; it does not restart the retention clock.
 
 See also: P/05-R020, P/05-R024, P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R053, P/05-R054, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R086, P/05-R092, P/05-R122, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R142, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R194, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R274.
 
@@ -683,31 +683,31 @@ See also: P/05-R025, P/05-R026, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05
 
 <!-- req: P/05-R194 -->
 
-**Resource heartbeat.** Retention_garbled, retention_withheld — the reasons of the retention pass (N3 retain, N4; no reason — no fields).
+**Resource heartbeat.** `retention_garbled`, retention_withheld — the reasons of the retention pass (N3 retain, N4; no reason — no fields).
 
 See also: P/05-R020, P/05-R024, P/05-R025, P/05-R026, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R077, P/05-R092, P/05-R122, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R195 -->
 
-**Resource heartbeat.** Settings_unread?: [mirror | space] — the setting rows of the pass that did not read: the step mirror (and the body copies of N1.1) or relieve is not executed in this pass; in ascending order of bytes; none — no field.
+**Resource heartbeat.** `settings_unread`?: [mirror | space] — the setting rows of the pass that did not read: the step mirror (and the body copies of N1.1) or relieve is not executed in this pass; in ascending order of bytes; none — no field.
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R196 -->
 
-**Resource heartbeat.** Door: {addr, mode: loopback | mtls, cert_until} — in every heartbeat, written by the resource: addr — RESOURCE_HOST:RESOURCE_PORT.
+**Resource heartbeat.** `door`: {addr, mode: loopback | mtls, cert_until} — in every heartbeat, written by the resource: addr — RESOURCE_HOST:RESOURCE_PORT.
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R267 -->
 
-**Resource door row and freshness.** Mode — loopback without RESOURCE_TLS (loopback only), mtls with RESOURCE_TLS=1.
+**Resource door row and freshness.** `mode` — loopback without RESOURCE_TLS (loopback only), mtls with RESOURCE_TLS=1.
 
 See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05-R077, P/05-R080, P/05-R082, P/05-R089, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R268, P/05-R269, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R268 -->
 
-**Resource door row and freshness.** Cert_until — the wall seconds of the end of the term of the server certificate of its own kit, with mtls.
+**Resource door row and freshness.** `cert_until` — the wall seconds of the end of the term of the server certificate of its own kit, with mtls.
 
 See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05-R077, P/05-R080, P/05-R082, P/05-R089, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R267, P/05-R269, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
@@ -719,7 +719,7 @@ See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05
 
 <!-- req: P/05-R197 -->
 
-**Resource heartbeat.** Waits, restore, mirror, units — in every heartbeat: units — {`<sub>`: [`<id>`…]} of the units that the heartbeats of the workers of this box from running name in status, ids in ascending order of bytes; none — {}.
+**Resource heartbeat.** `waits`, restore, mirror, units — in every heartbeat: units — {`<sub>`: [`<id>`…]} of the units that the heartbeats of the workers of this box from running name in status, ids in ascending order of bytes; none — {}.
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
@@ -737,25 +737,25 @@ See also: P/05-R025, P/05-R026, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05
 
 <!-- req: P/05-R198 -->
 
-**Worker presence and room.** Running: [`<sub>`/`<slot name>`…] — with a live process (it holds the presence lock, the content in form with a non-empty worker).
+**Worker presence and room.** `running`: [`<sub>`/`<slot name>`…] — with a live process (it holds the presence lock, the content in form with a non-empty worker).
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R199, P/05-R200, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R199 -->
 
-**Worker presence and room.** Unknown: [`<sub>`/`<slot name>`…] — the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read or flock/stat of the lock gave an error, except «busy» and ENOENT of stat (the presence lock contract).
+**Worker presence and room.** `unknown`: [`<sub>`/`<slot name>`…] — the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read or flock/stat of the lock gave an error, except «busy» and ENOENT of stat (the presence lock contract).
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R200, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R200 -->
 
-**Worker presence and room.** Instances: {`<sub>`/`<slot name>`: `<instance>`}; the key is with the subsystem: a slot name is unique only within its own subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names.
+**Worker presence and room.** `instances`: {`<sub>`/`<slot name>`: `<instance>`}; the key is with the subsystem: a slot name is unique only within its own subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names.
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R201 -->
 
-**Resource heartbeat.** Pass_stalled: `<seconds>`, only while the pass hangs (PULSE_LIMIT). One heartbeat form: the console gives it as ResourceRow P/06.5 (a derived output), the controller derives the presence from it (below, P/04 «fate»).
+**Resource heartbeat.** `pass_stalled`: `<seconds>`, only while the pass hangs (PULSE_LIMIT). One heartbeat form: the console gives it as ResourceRow P/06.5 (a derived output), the controller derives the presence from it (below, P/04 «fate»).
 
 See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
@@ -767,25 +767,25 @@ See also: P/05-R025, P/05-R053, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R271 -->
 
-**Volume usage.** Usage_at — the wall seconds of the measurement.
+**Volume usage.** `usage_at` — the wall seconds of the measurement.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R272 -->
 
-**Volume usage.** Space — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1 (not a flag).
+**Volume usage.** `space` — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1 (not a flag).
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R273.
 
 <!-- req: P/05-R273 -->
 
-**Volume usage.** Volumes — the same per volume.
+**Volume usage.** `volumes` — the same per volume.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272.
 
 <!-- req: P/05-R080 -->
 
-**`door_row`.** Platform/doors/`<host>` {url, since, at, room.`<sub>`…, live.`<sub>`…}; at — every ALIVE_EVERY (the observation contract «Resource state»).
+**`door_row`.** `platform/doors/<host>` {url, since, at, room.`<sub>`…, live.`<sub>`…}; at — every ALIVE_EVERY (the observation contract «Resource state»).
 
 See also: P/05-R025, P/05-R027, P/05-R082, P/05-R089, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
 
@@ -815,7 +815,7 @@ See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R099, P/05-R100, P/05
 
 <!-- req: P/05-R084 -->
 
-**`space`.** Platform/space {enabled, high, low}   — shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off:
+**`space`.** `platform/space` {enabled, high, low}   — shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off:
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -827,7 +827,7 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R204 -->
 
-**Space and free requests.** Enabled: false — the resource removes its own row free-*.
+**Space and free requests.** `enabled`: false — the resource removes its own row free-*.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -851,7 +851,7 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R207 -->
 
-**Space and free requests.** Server — a non-empty key segment of P/01.1, hyphens are allowed. The split at the last hyphen is unambiguous.
+**Space and free requests.** `server` — a non-empty key segment of P/01.1, hyphens are allowed. The split at the last hyphen is unambiguous.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -863,7 +863,7 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R209 -->
 
-**Space and free requests.** Free = used − total·low − Σ freeing from the heartbeats (only the freeing not yet reflected in used).
+**Space and free requests.** `free` = used − total·low − Σ freeing from the heartbeats (only the freeing not yet reflected in used).
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -899,7 +899,7 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R086 -->
 
-**`mirror`.** Platform/mirror {enabled, copies}; no row or no field enabled — enabled: false, buckets are not copied until enabled: true.
+**`mirror`.** `platform/mirror` {enabled, copies}; no row or no field enabled — enabled: false, buckets are not copied until enabled: true.
 
 See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
@@ -947,7 +947,7 @@ See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05
 
 <!-- req: P/05-R087 -->
 
-**`presence`.** Runs | gone | unlisted | unknown   — about the worker process of its own box — a conclusion from the heartbeat fields above: the key `<sub>`/`<name>` of the worker slot of the subsystem `<sub>`: in running — runs; in unknown — unknown; in workers, but not in running and not in unknown, — gone (the resource knew the process, it is dead); not named in workers — unlisted (not registered at the resource); a heartbeat without these fields — nothing about the worker (P/04 «fate»); an absent one of the three fields is an empty list, not unreadability: the selection is [decision-order.tsv](../forms/decision-order.tsv), procedure `presence`.
+**`presence`.** `runs` | `gone` | `unlisted` | `unknown`   — about the worker process of its own box — a conclusion from the heartbeat fields above: the key `<sub>`/`<name>` of the worker slot of the subsystem `<sub>`: in running — runs; in unknown — unknown; in workers, but not in running and not in unknown, — gone (the resource knew the process, it is dead); not named in workers — unlisted (not registered at the resource); a heartbeat without these fields — nothing about the worker (P/04 «fate»); an absent one of the three fields is an empty list, not unreadability: the selection is [decision-order.tsv](../forms/decision-order.tsv), procedure `presence`.
 
 See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
 
@@ -959,7 +959,7 @@ See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05
 
 <!-- req: P/05-R222 -->
 
-**Worker presence and room.** Silent is a state of the resource itself (the observation contract), not a value of the presence.
+**Worker presence and room.** `silent` is a state of the resource itself (the observation contract), not a value of the presence.
 
 See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R223, P/05-R224, P/05-R225.
 
@@ -977,7 +977,7 @@ See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05
 
 <!-- req: P/05-R089 -->
 
-**`requires`.** Placement.requires: resource — the worker is outside the pool while the resource of its server is silent (P/04).
+**`requires`.** `placement.requires`: resource — the worker is outside the pool while the resource of its server is silent (P/04).
 
 See also: P/05-R025, P/05-R027, P/05-R080, P/05-R082, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
 
@@ -1073,7 +1073,7 @@ See also: P/05-R029, P/05-R030, P/05-R128, P/05-R130, P/05-R131, P/05-R132, P/05
 
 <!-- req: P/05-R130 -->
 
-**Restore and peer attempts.** Done when the full lists are received and the copies are checked from all known necessary neighbours.
+**Restore and peer attempts.** `done` when the full lists are received and the copies are checked from all known necessary neighbours.
 
 See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
@@ -1121,7 +1121,7 @@ See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05
 
 <!-- req: P/05-R138 -->
 
-**Restore and peer attempts.** Restored of the heartbeat — only the buckets actually pulled from this neighbour; a bucket already lying on the volume does not count.
+**Restore and peer attempts.** `restored` of the heartbeat — only the buckets actually pulled from this neighbour; a bucket already lying on the volume does not count.
 
 See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
@@ -1243,7 +1243,7 @@ See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05
 
 <!-- req: P/05-R248 -->
 
-**Event hint and long poll.** Seq belongs to one process of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
+**Event hint and long poll.** `seq` belongs to one process of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
 
 See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
@@ -2003,7 +2003,7 @@ See also: P/05-R046, P/05-R048, P/05-R052.
 
 <!-- req: P/05-R048 -->
 
-as the first step of the resource start, before reading the manifest (P/02.3): the schema contract «Check at start» ([the schema contract](../../common/contracts/schema.md)).
+As its first startup step, before reading the manifest (P/02.3), the resource performs «Check at start» of [the schema contract](../../common/contracts/schema.md).
 
 See also: P/05-R046, P/05-R047, P/05-R052.
 
@@ -2049,7 +2049,7 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 <!-- req: P/05-R097 -->
 
-**Step 5.** Epoch_is and fenced the resource does not set: they are set by the merger (the event log merge contract); the resource needs no rights to `<sub>`/epoch/*.
+**Step 5.** `epoch_is` and fenced the resource does not set: they are set by the merger (the event log merge contract); the resource needs no rights to `<sub>`/epoch/*.
 
 See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
@@ -2061,7 +2061,7 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 <!-- req: P/05-R299 -->
 
-**Event query and merge.** more simultaneously computed requests than the P/06.4 N3 merge lane bound → 503 busy, Retry-After: 1 (counted are the requests /events that are being computed now; a held wait /events/wait does not take this lane).
+**Event query and merge.** The resource answers `503 busy` with `Retry-After: 1` when the number of simultaneously computed `/events` requests exceeds the P/06.4 N3 merge lane bound. Only requests being computed now count; a held `/events/wait` does not take this lane.
 
 See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R031, P/05-R032, P/05-R036, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R177, P/05-R178, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278.
 
@@ -2105,7 +2105,7 @@ See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R100, P/05
 
 <!-- req: P/05-R233 -->
 
-**Retention and holds.** Days is not a number or ≤ 0 or the row did not answer → not known: remove nothing, name it in the heartbeat — a wrong days: `<sub>` in retention_garbled and retention_withheld[`<sub>`] = days_garbled; the row did not answer — retention_withheld[`<sub>`] = unknown; the holds are not read (the holds contract) — retention_withheld[`<sub>`] = holds_unread.
+**Retention and holds.** `days` is not a number or ≤ 0 or the row did not answer → not known: remove nothing, name it in the heartbeat — a wrong days: `<sub>` in retention_garbled and retention_withheld[`<sub>`] = days_garbled; the row did not answer — retention_withheld[`<sub>`] = unknown; the holds are not read (the holds contract) — retention_withheld[`<sub>`] = holds_unread.
 
 See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
@@ -2129,13 +2129,13 @@ See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05
 
 <!-- req: P/05-R101 -->
 
-**`relieve`.** Platform/space.enabled ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.`<volume>` of this volume; N1.4 free_ask).
+**`relieve`.** `platform/space.enabled` ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.`<volume>` of this volume; N1.4 free_ask).
 
 See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R102, P/05-R242.
 
 <!-- req: P/05-R236 -->
 
-**Space and free requests.** Platform/space does not read — the step is not executed (N1.4 space).
+**Space and free requests.** `platform/space` does not read — the step is not executed (N1.4 space).
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -2147,7 +2147,7 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R238 -->
 
-**Space and free requests.** Need > 0 → write free-`<server>`-`<volume>` {free: need, volume, server, at}: cas "" or cas by the version of a row of ITS OWN form (without unit AND with the exact server/volume of the current volume); before the write check the grammar of N1.4 `free_ask`.
+**Space and free requests.** `need` > 0 → write free-`<server>`-`<volume>` {free: need, volume, server, at}: cas "" or cas by the version of a row of ITS OWN form (without unit AND with the exact server/volume of the current volume); before the write check the grammar of N1.4 `free_ask`.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
@@ -2159,19 +2159,19 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05
 
 <!-- req: P/05-R240 -->
 
-**Space and free requests.** Need ≤ 0 (all that is needed is already being freed) or below low → delete the row of its own form if there is one: delete with cas of the version on which the absence of unit AND the exact match of server/volume were checked (P/01.1).
+**Space and free requests.** `need` ≤ 0 (all that is needed is already being freed) or below low → delete the row of its own form if there is one: delete with cas of the version on which the absence of unit AND the exact match of server/volume were checked (P/01.1).
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R241 -->
 
-**Space and free requests.** Conflict — under the key there is already another row (an ordinary request or a new own one) → do not touch it, the journal free_ask.key_taken.
+**Space and free requests.** `conflict` — under the key there is already another row (an ordinary request or a new own one) → do not touch it, the journal free_ask.key_taken.
 
 See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R102 -->
 
-**`mirror`.** Platform/mirror does not read → the step is not executed, settings_unread: mirror (N1.4 mirror); platform/mirror.enabled → the neighbours = the next copies live ones by name (liveness — the door row, N1.4 mirror); the closed buckets that the neighbour does not have (the sum) → PUT /mirror/`<me>`/`<path>` with X-Sum = SHA-256 of the bucket; PEER_FAILS consecutive failures → the neighbour is skipped until the end of this mirror pass.
+**`mirror`.** `platform/mirror` does not read → the step is not executed, settings_unread: mirror (N1.4 mirror); platform/mirror.enabled → the neighbours = the next copies live ones by name (liveness — the door row, N1.4 mirror); the closed buckets that the neighbour does not have (the sum) → PUT /mirror/`<me>`/`<path>` with X-Sum = SHA-256 of the bucket; PEER_FAILS consecutive failures → the neighbour is skipped until the end of this mirror pass.
 
 See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R242.
 

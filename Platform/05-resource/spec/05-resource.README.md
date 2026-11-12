@@ -34,7 +34,7 @@ Meanings below point to the norms; they introduce no new rule or interface.
 | copy | A body copy keeps source written; a bucket mirror has its receiver stamp; a received copy is not an owner source. | P/05-R012, P/05-R159, P/05-R185 |
 | bucket | An event file at the path and period of the event-journal contract, not an event or a store row. | P/05-R018, P/05-R034 |
 | server | The resource server owns a bucket; an event payload server may instead name the subject server. | P/05-R062, P/05-R259, P/05-R260 |
-| unit | The logical `<tree>/<unit>` reference excludes the .alarms layout suffix; of names the event addressee. | P/05-R019, P/05-R096 |
+| unit | The logical `<tree>/<unit>` reference excludes the .alarms layout suffix; `of` names the event addressee. | P/05-R019, P/05-R096 |
 | presence | A worker-process observation from OS locks and one role snapshot; silent is a resource state. | P/05-R087, P/05-R090, P/05-R091 |
 | unknown | An unavailable read or incomplete role snapshot does not prove absence; malformed readable content has its specified separate outcome. | P/05-R023, P/05-R090, P/05-R122, P/05-R199 |
 | pass | The resource retain→usage→relieve→mirror attempt differs from the client ordinary periodic poll after a hint. | P/05-R031, P/05-R032, P/05-R052, P/05-R053 |
