@@ -9,9 +9,9 @@ of its own: the module is a library in the browser, it has no door of its own (N
 environment or exit codes; the publication of the module is [chapter 6.5](../../06-console/spec/06.5-console.norms.md).
 The late layer — the domain section, `sections: [domain]` of the call `mount`, the
 holder mode — is N1.6, without separate readiness ids of its own.
-The canon of the module is the norms N1.5: the published
-bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](../CONSOLE-MODULE.md) follow
-it («Implementation decides» item 1, closed). The three parts of the console, the mounting
+The canon of the module is the norms N1.5. Conformance of the published
+bytes of `console.js`, `console.html` and the description [`CONSOLE-MODULE.md`](../CONSOLE-MODULE.md) to N1.4 and N1.5
+is not closed in full («Implementation decides» item 1). The three parts of the console, the mounting
 `PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 N1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN; «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
 «P/10» is the lesson of the domain console. Readiness ids are `P/07-MM`; individual requirements have `P/07-RNNN` anchors.
@@ -39,7 +39,7 @@ Topics whose rules are stated in separate places; file paths identify other M te
 | `extensions` Shell extensions and disabled input | P/07-R054, P/07-R055, P/07-R056, P/07-R135, P/07-R136, P/07-R137, P/07-R138, P/07-R139, P/07-R140, P/07-R141, P/07-R142, P/07-R143, P/07-R144, P/07-R145, P/07-R146, P/07-R211, P/07-R212, P/07-R213, P/07-R309, P/07-R317, P/07-R318 | `spec/07-console-module.README.md`, `CONSOLE-MODULE.md` |
 | `holder_door` Passing a holder door to the shell | P/07-R008, P/07-R128, P/07-R129, P/07-R130, P/07-R351 | `spec/07-console-module.README.md`, `CONSOLE-MODULE.md` |
 | `pending` Pending counts and outcomes | P/07-R194, P/07-R195, P/07-R220 | `CONSOLE-MODULE.md`, `spec/07-console-module.README.md` |
-| `byte_publication` Published bytes and generation-line packaging | P/07-R059, P/07-R060, P/07-R061, P/07-R239, P/07-R264, P/07-R266, P/07-R267, P/07-R289, P/07-R291, P/07-R342, P/07-R343 | `spec/07-console-module.README.md`, `CONSOLE-MODULE.md` |
+| `byte_publication` Canonical evidence, published bytes and generation-line packaging | P/07-R059, P/07-R060, P/07-R061, P/07-R239, P/07-R258, P/07-R259, P/07-R264, P/07-R265, P/07-R266, P/07-R267, P/07-R289, P/07-R291, P/07-R342, P/07-R343 | `spec/07-console-module.README.md`, `CONSOLE-MODULE.md` |
 
 ## N0 Vocabulary
 
@@ -992,7 +992,7 @@ Topics whose rules are stated in separate places; file paths identify other M te
 ## N5 Acceptance
 
 <!-- req: P/07-R258 -->
-- The checks of N5 read the current canonical P/07 module files.
+- Behavioural evidence for the published module must apply to the current canonical P/07 module files. A test that loads a frozen Source module does not establish execution of the current canonical module.
 
 <!-- req: P/07-R259 -->
 - Declare fixture origins separately: a frozen wrapper is not the canonical module; an instrumented navigation return and a substituted shell-short module are not unchanged-module executions.
@@ -1013,7 +1013,7 @@ Topics whose rules are stated in separate places; file paths identify other M te
 - The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) — sc. 01 (judge-only: checks P/07-R264) of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) (P/06.5 N1.1).
 
 <!-- req: P/07-R265 -->
-- The subjects of N1.4 and N1.5 are checked by the specification owner's jsdom tests `Source/tests/console` (judge-only: owner test sources; existing fixture cases are mapped in N5 rows P/07-R271…P/07-R282): a test mounts the published module on a page in jsdom and intercepts its requests; the module is one for all implementations and the evidence is one for all.
+- The specification owner supplies common evidence for N1.4 and N1.5 using jsdom checks and reading. Existing fixture cases are mapped in P/07-R271…P/07-R282 (judge-only: owner test sources in `Source/tests/console`; their input origin determines the scope of evidence under P/07-R258 and P/07-R259). The module is one for all implementations and the evidence is one for all.
 
 <!-- req: P/07-R266 -->
 - For a generation line, P/07 is packaging: the published files are taken unchanged and checked byte for byte together with scenario 01 (judge-only: checks P/07-R264) of acceptance 6.5, including `?v=1`.
@@ -1174,11 +1174,12 @@ Topics whose rules are stated in separate places; file paths identify other M te
 ## Implementation decides
 
 The module is one code in all implementations: an implementation does not write it and chooses nothing in it, but serves the published bytes
-(P/06.5 N1.1 `module`). The items below are debts of the published module; the owner of the specification closes them; items 1–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
+(P/06.5 N1.1 `module`). The items below are debts of the published module; the owner of the specification closes them; item 1 is not closed in full; items 2–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
 
-1. **closed: the bytes of `console.js`, `console.html` and the description `CONSOLE-MODULE.md` are brought to N1.4, N1.5**.
-   The evidence — the jsdom tests `Source/tests/console` (judge-only: owner test sources; existing fixture cases are mapped in N5 rows P/07-R271…P/07-R282) by the table of N5. The debt
-   of the product — to «Build»: its copy of the module is brought to these bytes.
+1. **not closed in full: conformance of the canonical `console.js`, `console.html` and `CONSOLE-MODULE.md` to N1.4 and N1.5.**
+   Evidence applies only to the requirements and input files actually checked under P/07-R258 and P/07-R259; existing bounded fixture cases remain mapped in N5 rows P/07-R271…P/07-R282.
+   The open criteria and byte-owner debts in N5 remain open; a generation line packages the published files unchanged under P/07-R266 and P/07-R267.
+   The debt of the product — to «Build»: its copy of the module is brought to these bytes.
 2. **closed: the form of the shared document by `schema`** (N1.6 `schema`).
    The evidence —
    jsdom test `module-shared-schema` (judge-only: existing mocked form/serialization cases for P/07-R233…P/07-R237, P/07-R339…P/07-R341; no server schema-validation evidence) (N5). The debt of the product — to «Build».
