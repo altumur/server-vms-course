@@ -1,0 +1,64 @@
+{
+ "M": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159",
+ "task_sha256": "9eeabadbfc6ab1f924fa4ec0e4120f3712f52689fcdb515ade349758f970e8ca",
+ "control_sha256": "e653edd6d2e47f08c2188464d3758f721022481cfaaa4cdcbd38a21ebb145a00",
+ "control_source_sha256": "48a875d15732f3c9988ce6f30f166d998e1cc36e5356c5a42e6c9e97c737a44c",
+ "control_changes": [
+  "SPEC_VERSION only; all 14 reading paths remain present"
+ ],
+ "task_delta_against_P01.254": [
+  {
+   "field": "miniswe_plan_idle_steps",
+   "before": 3,
+   "after": 8
+  },
+  {
+   "field": "name",
+   "before": "p01-b-raft-847ac9d1fb36",
+   "after": "p01-b-raft-c4a17f0588dd"
+  },
+  {
+   "field": "seed_files.SPEC_VERSION",
+   "before": "847ac9d1fb36bd1153450f99ddc4805c2609877e\n",
+   "after": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159\n"
+  },
+  {
+   "field": "specs",
+   "before": "/srv/b11-isolation/model-specs/847ac9d1fb36bd1153450f99ddc4805c2609877e/tree",
+   "after": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/tree"
+  },
+  {
+   "field": "specs_sha",
+   "before": "847ac9d1fb36bd1153450f99ddc4805c2609877e",
+   "after": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159"
+  },
+  {
+   "field": "stages.m_passport.path",
+   "before": "/srv/b11-isolation/model-specs/847ac9d1fb36bd1153450f99ddc4805c2609877e/PASSPORT-M.json",
+   "after": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/PASSPORT-M.json"
+  },
+  {
+   "field": "stages.m_passport.sha256",
+   "before": "6bd5488d483ac38d848cbe21eed7099b91729dec3efa2234b766bd872cf96c8f",
+   "after": "9d82a3a0ab38356ba49cbb6630adae2f980fc7066c1c21f204d25e699829ca6c"
+  },
+  {
+   "field": "stages.mech.test",
+   "before": "go test -count=1 ./...",
+   "after": "go test -race -count=1 ./..."
+  }
+ ],
+ "local_prep_delta": [
+  {
+   "field": "specs",
+   "before": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/tree",
+   "after": "/home/pilot/P01.277-evidence/M-tree-final"
+  },
+  {
+   "field": "stages.m_passport.path",
+   "before": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/PASSPORT-M.json",
+   "after": "/home/pilot/P01.277-evidence/passport/PASSPORT-M-c4a17f0588dd.json"
+  }
+ ],
+ "OK": true
+}
