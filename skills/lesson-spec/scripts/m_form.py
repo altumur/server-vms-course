@@ -95,6 +95,12 @@ M_FORM_COMMON = ("Platform/common/acceptance/",)  # P01.230: общая приё
 M_NARROW = {"P/01"}
 DEPENDENCIES = {"en": "## What this lesson takes from common", "ru": "## Что урок берёт из common"}
 PAIR_ALWAYS = ("Platform/README.md", "Platform/lessons.tsv")
+# Files of Platform/common/ that belong to another lesson's material and stay out of the narrow M of a pair, by lesson
+# (ADR-0133 addendum (93) item 6; project P01.280, inventory P01.283; OBSH.52): a reference from M of the lesson to one
+# of them is a reference outside M and needs «(judge-only: …)».
+PAIR_COMMON_EXCLUDE = {
+    "P/01": ("Platform/common/acceptance/testsub-stand.md", "Platform/common/vectors/slot/README.md"),
+}
 
 # The id map of a lesson whose requirements were merged into paragraphs (ADR-0133 addendum (93); P01.280 §3): a journal
 # beside the history files, outside M and J. A merged id keeps no tombstone in M: its row reserves it (no reuse) and
@@ -685,12 +691,14 @@ def dependencies(check, lesson):
 
 
 def pair_m(check, lesson, model):
-    """The files of M of the pair of a lesson of M_NARROW: model_and_judge records of the lesson, of Platform/common/,
-    PAIR_ALWAYS and of the dependency table; None — the README has no dependency table."""
+    """The files of M of the pair of a lesson of M_NARROW: model_and_judge records of the lesson, of Platform/common/
+    without its PAIR_COMMON_EXCLUDE, PAIR_ALWAYS and of the dependency table; None — the README has no dependency
+    table."""
     named = dependencies(check, lesson)
     if named is None:
         return None
-    return {p for p, d in model.items() if d == "model_and_judge" and (
+    excluded = set(PAIR_COMMON_EXCLUDE.get(lesson.key, ()))
+    return {p for p, d in model.items() if d == "model_and_judge" and p not in excluded and (
         p.startswith(lesson.rel + "/") or p.startswith("Platform/common/") or p in PAIR_ALWAYS or p in named)}
 
 

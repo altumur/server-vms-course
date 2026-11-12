@@ -71,7 +71,7 @@ class AcceptedForm(unittest.TestCase):
         root = Path(cls.base.name).resolve()
         shutil.copytree(ROOT / HOME, root / HOME)
         (root / JOURNAL).mkdir(parents=True)
-        for path in (ROOT / JOURNAL).glob("history*.tsv"):
+        for path in (ROOT / JOURNAL).glob("*.tsv"):     # history files and the id map req-id-map.tsv (P01.283)
             shutil.copy(path, root / JOURNAL / path.name)
         names = list(COMMON_FILES) + ["Platform/lessons.tsv", "Platform/module-design.md"]
         check = Check(ROOT, scope="platform")
@@ -822,6 +822,19 @@ class JudgeOnlyByReference(AcceptedForm):
         pair = m_form.pair_m(check, m_form.Lesson(check, "P/01", self.home), model)
         return next(p for p, d in sorted(model.items()) if d == "model_and_judge" and p not in pair and
                     "/ru/" not in p and p.endswith(".md"))
+
+    def test_common_files_of_another_lesson_are_outside_the_pair(self):
+        check = Check(self.root, scope="platform")
+        model = m_form.export_model(check)
+        pair = m_form.pair_m(check, m_form.Lesson(check, "P/01", self.home), model)
+        for path in m_form.PAIR_COMMON_EXCLUDE["P/01"]:
+            self.assertIn(path, model)
+            self.assertNotIn(path, pair)
+        self.assertTrue(any(p.startswith("Platform/common/") for p in pair))
+        excluded = m_form.PAIR_COMMON_EXCLUDE["P/01"][0]
+        line = self.add(f"The stand is in `{excluded}`.")
+        errors = self.run_checks().errors
+        self.assertTrue(any(excluded in e and f"{HOME}/{self.REL}" in e for e in errors), errors)
 
     def test_marker_without_a_reference_is_not_an_error(self):
         self.add("The order of the refusals is fixed (judge-only: a scenario of the chapter checks it).")
