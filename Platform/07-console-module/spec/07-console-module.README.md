@@ -57,8 +57,9 @@ The following behaviour is the responsibility of the owner of the common module 
 1. Connect the closed may. Tell apart a replay of one request and a new action; allow an automatic replay only by
    the memory of the owner. For an unknown PUT/table — a read first (N1.5). The three states of the session by which `may` judges —
    [chapter 6.3](../../06-console/spec/06.3-console.norms.md) N1.3 `session`.
-2. Check the module/shell separately: the jsdom test of the owner of the specification `Source/tests/console` (judge-only: owner test sources; existing examples for P/07-R059…P/07-R060 and P/07-R129 only; N5 records required and open subjects separately) by the subjects of N5.
-   An implementation neither reads nor runs the jsdom tests of N5. Existing Source fixtures read the frozen witness unless a test explicitly loads the canonical module; the owner separately verifies the current canonical bytes under P/07-R258. The proof of an implementation is the bytes of the module as they are and the load of `?v=1` (sc. 01 (judge-only: checks P/07-R264) of the acceptance
+2. Check the module/shell separately: the jsdom test of the owner of the specification `Source/tests/console` (judge-only: owner test sources; existing fixture cases are mapped in N5 rows P/07-R271…P/07-R282) by the subjects of N5.
+   An implementation neither reads nor runs the jsdom tests of N5: they check the published bytes
+   of the module at the owner of the specification; the proof of an implementation is the bytes of the module as they are and the load of `?v=1` (sc. 01 (judge-only: checks P/07-R264) of the acceptance
    of chapter 6.5).
 3. The library for the shell turns the absent field `door` of the HTTP answer `Where` into `null` (N1.5 `where`). Check
    this level separately from HTTP: a `Where` without a trustworthy door has no field `door` — the check of the door is in
@@ -83,7 +84,7 @@ polling. The parts of the list that the domain introduces are checked in the mod
 
 ## Done when
 
-The owner of the common module records concrete evidence for every id (`P/07-01…08`): a jsdom test by the subjects of N5 or a reading with a reason. P/07-07 and P/07-08 remain this owner's open debt until `module-unplaceable-all` (judge-only: required cases for P/07-R016…P/07-R017, P/07-R305; open debt, no evidence of closure), `module-subsystems-none` (judge-only: required cases for P/07-R015; open debt, no evidence of closure) and `module-writes-via` (judge-only: required cases for P/07-R106…P/07-R109, P/07-R316; open debt, no evidence of closure) pass on the published module. A generation line records the debt explicitly; its completion evidence is the packaging check from Task, not a separate implementation of these JavaScript branches.
+The owner of the common module records concrete evidence for every id (`P/07-01…08`): a jsdom test by the subjects of N5 or a reading with a reason. P/07-07 and P/07-08 remain this owner's open debt until `module-unplaceable-all` (judge-only: required cases for P/07-R016…P/07-R017, P/07-R305; open debt, no evidence of closure), `module-subsystems-none` (judge-only: required cases for P/07-R015; open debt, no evidence of closure) and `module-writes-via` (judge-only: required cases for P/07-R106…P/07-R107, P/07-R109, P/07-R316; open debt, no evidence of closure) pass on the published module. A generation line records the debt explicitly; its completion evidence is the packaging check from Task, not a separate implementation of these JavaScript branches.
 The compatibility of the common console module is a separate comparison of bytes (sc. 01 (judge-only: checks P/07-R264) of the acceptance of chapter 6.5) and a reading by the norms N1.4, N1.5.
 
 On a discrepancy — compare the norm, the answer form and the scenario. Record the exact input and outcome; do not carry a difference of an implementation
