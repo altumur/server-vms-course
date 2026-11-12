@@ -824,8 +824,16 @@ def _tsv(target):
     lines = target.read_bytes().decode("utf-8").split("\n")
     head = next((i for i, line in enumerate(lines) if line and not line.startswith("#")), len(lines))
     names = lines[head].split("\t") if head < len(lines) else []
+    first = head + 1                                   # the first data line (index) after a plain header line
+    # a commented header (scenario tables: «# scenario<TAB>step<TAB>…» and data from the first plain line, the
+    # Architect on P01.249): the last # line before the data, with as many TAB fields as the first data line
+    above = [i for i in range(head) if lines[i].startswith("#")]
+    if above and "\t" in lines[above[-1]] and head < len(lines):
+        cells = lines[above[-1]].lstrip("#").strip(" ").split("\t")
+        if len(cells) == len(lines[head].split("\t")):
+            names, first = [c.strip() for c in cells], head
     keys, rows = {}, []
-    for n, line in enumerate(lines[head + 1:], head + 2):
+    for n, line in enumerate(lines[first:], first + 1):
         if line and not line.startswith("#"):
             cells = line.split("\t")
             keys.setdefault(cells[0], []).append(n)

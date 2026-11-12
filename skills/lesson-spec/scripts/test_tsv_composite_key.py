@@ -35,3 +35,15 @@ class CompositeKey(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CommentedHeader(unittest.TestCase):
+    """Scenario tables keep their column names in the last # line; data starts at the first plain line (P01.249)."""
+
+    def test_commented_header_names_and_first_data_row(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "s.tsv"
+            path.write_text("# a table\n# scenario\tstep\trequest\texpect\n32-copy-raw\t5\tHEAD\t200\n32-copy-raw\t6\tGET\t200\n",
+                            encoding="utf-8")
+            self.assertIsNone(m_form._tsv_problem(path, "row:scenario=32-copy-raw&step=5", {}))
+            self.assertIn("repeats", m_form._tsv_problem(path, "row:32-copy-raw", {}))
