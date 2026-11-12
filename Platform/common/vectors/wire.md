@@ -144,7 +144,7 @@ A probe table that lies in the forms of a lesson, not under `vectors/`, and some
 
 The form has one row, the package `01-store/write-checks`. It evaluates [`write-checks.tsv`](../../01-store/forms/write-checks.tsv) by the implementation's own function (P/01.1 N2.1, the order of command and batch checks) over the probe table `Platform/01-store/forms/write-checks.probes.tsv` (judge-only: the probes of the table; P/01.1-R255, P/01.1-R342). Its row says:
 
-- `package` is `01-store/write-checks`, `table` is `write-checks.probes.tsv`, `case` is `line-<physical source line>`, `variant` is `""` and `files` is `{}`;
+- `package` is `01-store/write-checks`, `table` is `write-checks.probes.tsv` (the column `table` of the row; the column `source` is the path of the probe table, whose file name it is), `case` is `line-<physical source line>`, `variant` is `""` and `files` is `{}`;
 - `cells` are exactly `sock`, `body`, `lim` and `allow`, strings as P/01.1 N2.1 describes them: `sock` and `body` are the cells of the row; `lim` is one JSON object text for every row, from the `#lim` lines of the probes; `allow` is one JSON array text for every row: each element is one JSON string, the text of one `#allow` line after the word `#allow` and one space (`#allow writer read acc/` gives `"writer read acc/"`), in the order of the lines;
 - every row is executed except a row of the case `nopair`, whose body is prose;
 - the native output is one JSON object, compared by value: `{"n": 0}`, or `{"n", "code", "kind"}` with the code and kind of row `n` of `write-checks.tsv`.

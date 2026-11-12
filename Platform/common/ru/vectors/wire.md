@@ -144,7 +144,7 @@ ValueExpr `map` имеет ровно key (исходная колонка) и v
 
 В форме одна строка — пакет `01-store/write-checks`. Он вычисляет [`write-checks.tsv`](../../../01-store/forms/write-checks.tsv) собственной функцией реализации (P/01.1 N2.1, порядок проверок команды и пачки) над таблицей проб `Platform/01-store/forms/write-checks.probes.tsv` (только для судьи: пробы таблицы; P/01.1-R255, P/01.1-R342). Её строка говорит:
 
-- `package` — `01-store/write-checks`, `table` — `write-checks.probes.tsv`, `case` — `line-<physical source line>`, `variant` — `""`, `files` — `{}`;
+- `package` — `01-store/write-checks`, `table` — `write-checks.probes.tsv` (столбец `table` строки; столбец `source` — путь таблицы проб, это имя её файла), `case` — `line-<physical source line>`, `variant` — `""`, `files` — `{}`;
 - `cells` — ровно `sock`, `body`, `lim` и `allow`, строки, как их описывает P/01.1 N2.1: `sock` и `body` — ячейки строки; `lim` — один текст JSON-объекта для всех строк, из строк `#lim` проб; `allow` — один текст JSON-массива для всех строк: каждый элемент — одна JSON-строка, текст одной строки `#allow` после слова `#allow` и одного пробела (`#allow writer read acc/` даёт `"writer read acc/"`), в порядке строк;
 - исполняется каждая строка, кроме строки случая `nopair`, у которой тело — проза;
 - нативный выход — один JSON-объект, сравнение по значению: `{"n": 0}` или `{"n", "code", "kind"}` с кодом и видом строки `n` таблицы `write-checks.tsv`.

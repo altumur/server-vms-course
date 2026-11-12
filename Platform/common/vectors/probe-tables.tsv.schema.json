@@ -12,7 +12,16 @@
     {
       "name": "table",
       "type": "string",
-      "description": "A repository-relative path of the probe table.",
+      "description": "The field table of the envelope: the file name of the probe table, the last component of source.",
+      "constraints": {
+        "required": true,
+        "pattern": "^[a-z0-9][a-z0-9.-]*\\.tsv$"
+      }
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "description": "A repository-relative path of the probe table; its last component equals table (checked with the form, not by this schema).",
       "constraints": {
         "required": true,
         "pattern": "^Platform/[^\\s]+\\.tsv$"
