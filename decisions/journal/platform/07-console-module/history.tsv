@@ -194,3 +194,6 @@ req_id	file	source	date	removed
 -	spec/07-console-module.norms.md#implementation-decides	«Implementation decides» item 4: the change of behaviour of the owner of the specification, the former refusal (ADR-0094 B5, addendum (13) item 3)	2026-11-11	   the text of the refusal only in the common `.pc-err`.
 -	spec/07-console-module.norms.md#implementation-decides	«Implementation decides» item 5: the change of behaviour of the owner of the specification, the former polling (ADR-0094 B2)	2026-11-11	 — by a change of behaviour of the owner of the specification: before — only polling by `poll_s`.
 -	spec/07-console-module.norms.md#N2	«Implementation decides» items 1 and 2: the changes of behaviour (the Architect's decision of 2026-10-21)	2026-10-21	are removed by changes of behaviour
+P/07-R006	spec/07-console-module.norms.md#N1.4	M10/10; P07.16, форма M	2026-11-12	; added by M10/10
+P/07-R006	spec/07-console-module.norms.md#N1.4	M10/10; P07.16, форма M	2026-11-12	 (added by M10/10)
+-	data/localization.tsv#row:debugTip	ADR-0050; P07.16 answered 2026-11-12T01:11:20Z architect (en/ru and both published WORDS values)	2026-11-12	, ADR-0050
