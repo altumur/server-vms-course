@@ -1,24 +1,12 @@
-# The code checks of the judge engine (ADR-0135 addendum (2) item 7, addendum (13) item 4; task P02.48, the decisions of the Architect on it and on the
-# question of task P02.49): rows of the kinds of the closed dictionary forms/code-rules.tsv, which defines the columns, the outcome and the checks; no
-# expected answer. Judge only: in the J input, not in the model input of a product. The generation cycle of the engine checks the rows on the code of the
-# engine by the interpreter of the dictionary; the acceptance does not read them. A path of args names a file of the J input, relative to its root.
-# The map: the file code-map.json in the directory from which the generation cycle runs the engine command, one JSON object. Its keys are the adapter
-# names, each optional: stand (start and stop of the stand processes), transport (sockets and HTTP to the stand and the stub), files (reading the files
-# of the J input, writing the report). A value is the import path of a package of the main module of the engine, as go list prints it. A missing map,
-# another key or a value that is not such a package fails every row as no mapping.
-# name: a set of packages of the main module of the engine, its nontest packages that go list names for the default build context; not a key of the map.
-# module — every package of the main module, the adapters and the packages named main included. core — every package of module other than the packages
-# that the map names and the packages named main; the package main joins the core and the adapters, imports both and stays out of the core. A row holds
-# when its check holds on each package of the set; an empty set fails the row; a failing row names the package. The name type of both names is package.
-# Paths: the engine opens a file of the J input only by a path that a cell of a form of the J input gives, joined to the root that the engine command
-# receives (--spec); no string literal of module begins with Platform/ (the prefix of the rows of no_literals). The words of the forms are data of the J
-# input: no case clause and no composite literal of module lists them, and no literal of module is the id or the owner of a target.
-# stage: the stage of the generation cycle of the engine from which the row holds (tables, plan, own_tests, run_form); another word is a data error.
-# norm: the norms of the subject.
+# Code requirements for the judge engine, in J only. Rows use the kinds, columns and outcomes of forms/code-rules.tsv; no expected answer is carried.
+# Engine generation has no external code-check gates. The retained row states a code requirement; it does not promise execution by the generation cycle.
+# The map is code-map.json in the engine command's working directory: one JSON object with optional adapter names stand (starting and stopping stand
+# processes), transport (sockets and HTTP to the stand and the stub), files (reading J input and writing the report). Each value is an import path of a package of the engine's
+# main module, as go list prints it. A missing map, another key or a value outside those packages fails the row as no mapping.
+# name denotes a set of nontest packages of the engine's main module for the default build context, rather than a map key. module is every package,
+# including adapters and packages named main. core is module except the packages named by the map and packages named main; main joins core and adapters.
+# A row holds when its check holds on every package of its set; an empty set fails, and a failure names the package. Both name types are package.
+# Paths: the engine opens a file of the J input only by a path that a cell of a form of the J input gives, joined to the root that the engine command receives (--spec).
+# stage is the retained applicability label of the row, not an executable gate of engine generation. norm names its governing requirement.
 id	kind	name	args	stage	norm
 E01	pure_core	core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	tables	ADR-0135 addendum (13) item 4
-E02	listed_words	module	{"form": "Platform/common/acceptance/forms/targets.routing.tsv", "part": "comment:engine", "min_chars": 3}	tables	P/AC N1.3; ADR-0135 addendum (2) item 7
-E03	listed_words	module	{"form": "Platform/common/acceptance/forms/targets.routing.tsv", "part": "header", "min_chars": 2}	tables	P/AC N1.3; ADR-0135 addendum (13) item 4
-E04	listed_words	module	{"form": "Platform/common/acceptance/forms/targets.tsv", "part": "header", "min_chars": 2}	tables	P/AC N1.3; ADR-0135 addendum (13) item 4
-E05	no_literals	module	{"form": "Platform/common/acceptance/forms/targets.tsv", "part": "column:id", "min_chars": 3, "prefixes": ["Platform/"]}	tables	P/AC N1.3; ADR-0135 addendum (2) item 7
-E06	no_literals	module	{"form": "Platform/common/acceptance/forms/targets.tsv", "part": "column:owner", "min_chars": 3}	tables	P/AC N1.3; ADR-0135 addendum (2) item 7

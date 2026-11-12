@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/01-store.READM
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/01-store.md` (for people, not in the export).
 
+Scenarios, fixtures and reference outputs are supplied only to the judge. The visible norms and public contracts state every implementation duty; a judge-only annotation identifies a specific closed file that this text still needs to name.
+
 ## Task
 
 Implement the store process of lesson P/01 in the language `<LANG>` so that it passes the N5 acceptance of the three chapters
@@ -17,7 +19,7 @@ the cluster; show the loaded rights file only to admin.
 |---|---|---|
 | [`01.1-store.norms.md`](01.1-store.norms.md), [`01.2-store.norms.md`](01.2-store.norms.md), [`01.3-store.norms.md`](01.3-store.norms.md) | the norms of the chapters: what MUST be | 1 — the canon |
 | [`01-store.api.openapi.yaml`](01-store.api.openapi.yaml) | the form of the HTTP requests and answers of all doors, the full bodies of `/v1/rights` and `/v1/list` | 2 — on a divergence from the norms, the norms are right |
-| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`README.md`; judge-only: `scenarios.tsv` of each chapter, which checks the items of the readiness checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 that name its scenarios); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
+| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`README.md`); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
 | `ru/01-store.md` (for people, not in the export) | context, motivation | not a norm; do not derive requirements from it |
 | [`../lifecycle.md`](../lifecycle.md) | flags, environment, exit codes, units | a pointer to the norms of chapter 1.3 |
 
@@ -71,7 +73,7 @@ Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evalua
 | `common/family-read` | `P/01/vectors-family-read` | `01.tsv` | the reading of the data families owned by this lesson (the catalogue column `owner`) by the common library of the implementation | [README](../../common/vectors/family-read/README.md) |
 | `common/crl` | `P/01/vectors-crl` | `cases.tsv` | the reading of the file `crl.pem` by the door that checks a TLS peer (chapter 1.3 N1.6) | [README](../../common/vectors/crl/README.md) |
 
-The tables of the column «Table» are outside the model input (judge-only: `cases.tsv` and `01.tsv` of these packages). They check the functions of the column «What runs in this lesson»: `revoked` and `crl.pem` — P/01.3-R009, P/01.3-R009, P/01.3-R009; the store answer to the CLI — `admin_ops` of P/01.3-R006; the families owned by this lesson — P/01.3-R003, P/01.3-R003; the log mask — P/06.2 N1.4 `never.log` and the log mask contract, which the README of the package names (the norms of P/01 have no requirement of their own for it).
+The packages check the functions named in the table: peer checks for `revoked` and `crl.pem` under P/01.3-R009; the store answer to the CLI under `admin_ops` of P/01.3-R006; the owned families under P/01.3-R003. The log mask follows P/06.2 N1.4 `never.log` and the log-mask contract named by its package README; P/01 adds no separate rule for it.
 
 ## Order of work
 
@@ -116,7 +118,7 @@ References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
 2. On a separate model check all phases of restore/import/recover: isolation, a reliable upper, the uint64 bounds, one raise of the floor, a partial transfer and continuation of the same attempt. Force does not allow a lowering or two operators (N3).
 
-3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–34 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input (judge-only: the scenarios of this item, chapter 1.3); they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.
+3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–34 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input; they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.
 
 ## Language-dependent pitfalls
 
@@ -127,7 +129,7 @@ Places where idiomatic code in many languages breaks a norm:
 | the order of list keys is by bytes (N3) | Java, C#, JS, Kotlin sort strings by UTF-16; `localeCompare` by locale | compare the UTF-8 bytes |
 | the weight and the key length are in UTF-8 bytes (N1) | `len()` / `.length` count characters or UTF-16 units | the length of the UTF-8 encoding |
 | the version is opaque (N1) | parsing into a number and comparing with `>` | store and compare as a string; inside the store the counter MAY be a number |
-| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03 (judge-only: sc. 03 of chapter 1.1) does not observe shared memory |
+| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03  does not observe shared memory |
 | indivisibility (N3) | the check and the write under different locks; async breaks between steps | the steps after «the remaining steps run as one operation» in one critical section |
 | the guard before CAS (N3) | checking in the order of the request fields | strictly: the guard, then CAS |
 | the whole batch (N3 «write batch») | writing the rows one at a time under a lock: power is lost between files, and half of the batch remains | the way of item 3 of «Implementation decides»: an intent log with a barrier before the rows are published; one raft log record |

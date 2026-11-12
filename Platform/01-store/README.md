@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: a process; roles are sockets. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people), the table «Lessons».
+A micromodule: a process; roles are sockets.
 
 The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`):
 
@@ -57,7 +57,9 @@ The files outside the lesson that the files of the model input of P/01 rely on (
 | [`04-controller/spec/04-controller.norms.md`](../04-controller/spec/04-controller.norms.md) | [N1.4a Server failure: the move](../04-controller/spec/04-controller.norms.md#n14a-server-failure-the-move) | a server failure and a majority failure of the store — [lifecycle](lifecycle.md), chapter 1.3 |
 | [`06-console/spec/06.1-console.norms.md`](../06-console/spec/06.1-console.norms.md), [`06-console/spec/06.3-console.norms.md`](../06-console/spec/06.3-console.norms.md), [`06-console/spec/06.4-console.norms.md`](../06-console/spec/06.4-console.norms.md), [`06-console/spec/06.5-console.norms.md`](../06-console/spec/06.5-console.norms.md), [`06-console/acceptance/5/README.md`](../06-console/acceptance/5/README.md) | [N1.3 Identifier](../06-console/spec/06.1-console.norms.md#n13-identifier); [N2 Doors](../06-console/spec/06.1-console.norms.md#n2-doors); [N1.5 The keys `rights:` of the manifest — the boundary of the rights of people](../06-console/spec/06.3-console.norms.md#n15-the-keys-rights-of-the-manifest--the-boundary-of-the-rights-of-people); [N1.5 Request](../06-console/spec/06.4-console.norms.md#n15-request) | the console as a caller of the store (batches, early refusal, `door.pass` of chapter 1.3 N5); the identifier grammar of the family schemas; `rights:` of the manifest (chapter 1.2); a JCS reader (`vectors/jcs`) |
 | [`08-domain/spec/08.2-domain.norms.md`](../08-domain/spec/08.2-domain.norms.md), [`08-domain/spec/08.4-domain.norms.md`](../08-domain/spec/08.4-domain.norms.md), [`08-domain/spec/08.8-domain.norms.md`](../08-domain/spec/08.8-domain.norms.md), [`08-domain/forms/runtime-constants.tsv`](../08-domain/forms/runtime-constants.tsv) | the examples named in chapter 1.1; the row `REPORT_RATE` of the form | examples of callers of chapter 1.1; the write rate of [production acceptance](spec/production-acceptance.md) |
-| `Platform/module-design.md` (judge-only: the module design note, for people) | «Lessons», «Vectors» | this page and `vectors/jcs`: what the lesson norms; no requirement is taken from it |
+| [`02-installer/spec/02.1-installer.norms.md`](../02-installer/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../02-installer/spec/02.1-installer.schema.json) | N1.3a Secret in the manifest; `secretIn` and address-field declarations in the schema | the address and log-mask contracts; the definitions read by P/01, without the installer implementation |
+| [`03-worker/data/epoch.schema.json`](../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../03-worker/data/epoch.outcomes.tsv) | the epoch family form, integer/codec/whole layers and unreadable outcomes | upper and the complete input check of import/restore/recover |
+| [`06-console/spec/06.2-console.norms.md`](../06-console/spec/06.2-console.norms.md) | N1.1a The address; N1.4 Where a secret is not | address credentials and the log mask |
 
 ## Cores and machines
 

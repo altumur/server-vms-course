@@ -2,7 +2,7 @@
 
 Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Микромодуль: процесс, роли — сокеты. Что нормирует и откуда — записка модуля `Platform/module-design.md` (только для судьи: для человека), таблица «Lessons».
+Микромодуль: процесс; роли — сокеты.
 
 Раскладка каталога (ADR-0124: английский источник — на каноническом пути, русский текст для человека — в `ru/`):
 
@@ -57,7 +57,9 @@ ru/                              для человека, в выгрузку н
 | [`04-controller/spec/04-controller.norms.md`](../../04-controller/ru/spec/04-controller.norms.md) | [N1.4a Отказ сервера: переезд](../../04-controller/ru/spec/04-controller.norms.md#n14a-отказ-сервера-переезд) | отказ сервера и отказ большинства хранилища — [жизненный цикл](lifecycle.md), глава 1.3 |
 | [`06-console/spec/06.1-console.norms.md`](../../06-console/ru/spec/06.1-console.norms.md), [`06-console/spec/06.3-console.norms.md`](../../06-console/ru/spec/06.3-console.norms.md), [`06-console/spec/06.4-console.norms.md`](../../06-console/ru/spec/06.4-console.norms.md), [`06-console/spec/06.5-console.norms.md`](../../06-console/ru/spec/06.5-console.norms.md), [`06-console/acceptance/5/README.md`](../../06-console/ru/acceptance/5/README.md) | [N1.3 Идентификатор](../../06-console/ru/spec/06.1-console.norms.md#n13-идентификатор); [N2 Двери](../../06-console/ru/spec/06.1-console.norms.md#n2-двери); [N1.5 Ключи `rights:` манифеста — граница прав людей](../../06-console/ru/spec/06.3-console.norms.md#n15-ключи-rights-манифеста--граница-прав-людей); [N1.5 Просьба](../../06-console/ru/spec/06.4-console.norms.md#n15-просьба) | консоль как вызывающий хранилища (пакеты, ранний отказ, `door.pass` главы 1.3 N5); грамматика идентификатора в схемах семей; `rights:` манифеста (глава 1.2); читатель JCS (`vectors/jcs`) |
 | [`08-domain/spec/08.2-domain.norms.md`](../../08-domain/ru/spec/08.2-domain.norms.md), [`08-domain/spec/08.4-domain.norms.md`](../../08-domain/ru/spec/08.4-domain.norms.md), [`08-domain/spec/08.8-domain.norms.md`](../../08-domain/ru/spec/08.8-domain.norms.md), [`08-domain/forms/runtime-constants.tsv`](../../08-domain/forms/runtime-constants.tsv) | примеры, названные в главе 1.1; строка `REPORT_RATE` формы | примеры вызывающих главы 1.1; темп записи [производственной приёмки](spec/production-acceptance.md) |
-| `Platform/module-design.md` (только для судьи: записка модуля, для человека) | «Lessons», «Vectors» | эта страница и `vectors/jcs`: что нормирует урок; требований из неё не берут |
+| [`02-installer/spec/02.1-installer.norms.md`](../../02-installer/ru/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../../02-installer/spec/02.1-installer.schema.json) | N1.3a Секрет в манифесте; `secretIn` и объявления адресных полей в схеме | договоры адреса и маски журнала; определения для P/01 без реализации установщика |
+| [`03-worker/data/epoch.schema.json`](../../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../../03-worker/data/epoch.outcomes.tsv) | форма семьи epoch, слои integer/codec/whole и исходы нечитаемой строки | upper и полная проверка входа import/restore/recover |
+| [`06-console/spec/06.2-console.norms.md`](../../06-console/ru/spec/06.2-console.norms.md) | N1.1a Адрес; N1.4 Где секрета нет | реквизиты адреса и маска журнала |
 
 ## Ядра и машины
 

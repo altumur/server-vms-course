@@ -105,7 +105,7 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 |---|---|---|
 | RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted | P/01.3 R034 | qualified stop observer and actual manager configuration |
 | RUN-F01, RUN-F02, RUN-F04, executable | P/01.1 R144 | qualified fault-stage binding |
-| Loss of the leader after sending (the death of the leader; a held answer of a forwarded write — (judge-only: sc. 32–34 of chapter 1.3; checks P/01.3-R064)); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |
+| Loss of the leader after sending (the death of the leader; a held answer of a forwarded write); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |
 | Interrupted `import` in a group: start, holding writers, continuation through `admin.sock` of the leader, `recover` after the loss of a majority | P/01.3 N1.3 `import` | group stand with an interruption |
 | Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 N3 R021 | qualified interruption point |
 | Full disk and exhausted descriptors | P/01.3 R036 | capacity input from the environment |
