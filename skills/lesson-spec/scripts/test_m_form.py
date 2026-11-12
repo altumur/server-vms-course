@@ -1,4 +1,4 @@
-"""The nine checks of the reading form of M (m_form.py), its stage A and the lesson without a list on the accepted form
+"""The ten checks of the reading form of M (m_form.py), its stage A and the lesson without a list on the accepted form
 of P/01 and on spoiled copies of it; the paragraph layout of the rollback (ADR-0133 addenda (93), (94)) on the copy
 with a synthetic paragraph and a merged id, so that the cases do not depend on the text the rollback rewrites."""
 
@@ -890,6 +890,74 @@ class JudgeOnlyByReference(AcceptedForm):
         self.replace("README.md", m_form.DEPENDENCIES["en"], "## What this lesson borrows")
         errors = self.run_checks().errors
         self.assertTrue(any("is in m_form.M_NARROW, and its README.md has no" in e for e in errors), errors)
+
+
+class QualificationRefs(AcceptedForm):
+    """The input Q (ADR-0130 addendum (20) item 1): a reference from M to a file `qualification/…` is a reference
+    outside M — «(judge-only: …)» in the same sentence; Q never enters the files of M or the narrow M of the pair; a
+    tree without Q files is judged as before."""
+    REL = "spec/production-acceptance.md"
+    Q = f"{HOME}/qualification/README.md"
+
+    def with_q(self):
+        for rel, text in (("qualification/README.md", "# Qualification of the store\n\nThe case groups.\n"),
+                          ("ru/qualification/README.md", "# Квалификация хранилища\n\nГруппы случаев.\n")):
+            (self.home / rel).parent.mkdir(parents=True, exist_ok=True)
+            (self.home / rel).write_text(text, encoding="utf-8")
+
+    def test_without_q_files_a_reference_to_the_path_is_not_judged(self):
+        self.add_sentence(self.REL, "The procedures are in `qualification/README.md` of the lesson.")
+        check = self.run_checks()
+        self.assertFalse([e for e in check.errors if "input Q" in e], check.errors)
+        self.assertEqual(check.stats["qualification_refs"], 0)
+
+    def test_reference_without_marker_fails_in_backquotes_and_link(self):
+        self.with_q()
+        line = self.add_sentence(self.REL, "The procedures are in `qualification/README.md` of the lesson.")
+        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", line, f"{self.Q}, a file of the input Q")
+        self.setUp()
+        self.with_q()
+        line = self.add_sentence("acceptance/1/README.md", "The groups are [there](../../qualification/README.md).")
+        self.assert_error(self.run_checks(), f"{HOME}/acceptance/1/README.md", line, f"{self.Q}, a file of the input Q")
+
+    def test_reference_from_the_translation_is_judged_by_its_source(self):
+        self.with_q()
+        rel = "ru/" + self.REL
+        text = (self.home / rel).read_text(encoding="utf-8")
+        at = text.index("\n\n") + 2
+        (self.home / rel).write_text(text[:at] + "Процедуры — в [квалификации](../qualification/README.md).\n\n" +
+                                     text[at:], encoding="utf-8")
+        self.assert_error(self.run_checks(), f"{HOME}/{rel}", text[:at].count("\n") + 1, "a file of the input Q")
+
+    def test_reference_from_a_common_file_of_m_fails(self):
+        self.with_q()
+        seams = self.root / "Platform/common/acceptance/seams.md"
+        seams.parent.mkdir(parents=True, exist_ok=True)
+        seams.write_text("# Seams\n\nThe clock of D7 is used by `Platform/01-store/qualification/README.md`.\n",
+                         encoding="utf-8")
+        self.assert_error(self.run_checks(), "Platform/common/acceptance/seams.md", 3, "a file of the input Q")
+
+    def test_marked_reference_passes(self):
+        self.with_q()
+        self.add_sentence(self.REL, "The procedures are in `qualification/README.md` (judge-only: the qualifier "
+                                    "reads them) of the lesson.")
+        check = self.run_checks()
+        self.assertEqual(check.errors, [])
+        self.assertEqual(check.stats["qualification_refs"], 1)
+
+    def test_q_is_outside_the_files_of_m_and_the_pair(self):
+        self.with_q()
+        check = Check(self.root, scope="platform")
+        model = dict(m_form.export_model(check), **{self.Q: "model_and_judge"})   # a spoiled list: Q given to M
+        lesson = m_form.Lesson(check, "P/01", self.home)
+        self.assertNotIn(self.root / self.Q, lesson.m_files(model))
+        text = (self.home / "README.md").read_text(encoding="utf-8")
+        head = text.index(m_form.DEPENDENCIES["en"])
+        end = text.index("\n", text.index("|---|", head)) + 1
+        (self.home / "README.md").write_text(text[:end] + "| [`qualification/README.md`](qualification/README.md) | "
+                                             "the whole file | a test dependency |\n" + text[end:], encoding="utf-8")
+        self.assertIn(self.Q, m_form.dependencies(check, lesson))
+        self.assertNotIn(self.Q, m_form.pair_m(check, lesson, model))
 
 
 if __name__ == "__main__":
