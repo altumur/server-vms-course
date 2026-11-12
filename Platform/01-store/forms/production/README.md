@@ -10,7 +10,7 @@ These are the data of the stand for [the production qualification of P/01](../..
 
 - `RUN-W03` and `prod-id-age`: `clock` in the mode `observe`, real waiting with an independent observer of the clock; the stand shifts no clock.
 - `prod-clock-group`: `clock` in the mode `control` over the separate wall-clock domains of the voters `s1`, `s2`, `s3`. A stand whose members share one wall clock cannot give it, and the probe is then `not_executed` with the reason `clock`.
-- `storage` names the medium `ext4`, the envelope of [the first approved budgets](../../spec/production-acceptance.md#first-approved-budgets); tmpfs is not that medium.
+- `storage` names the medium `ext4`, the envelope of [the first approved budgets](../../qualification/README.md#first-approved-budgets); tmpfs is not that medium.
 
 ## Input of N6.2
 

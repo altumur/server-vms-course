@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "disposition": "include",
+      "basis": "Existing workload row, connection, body and leader-wait limits referenced by the procedures."
+    },
+    {
+      "path": "Platform/01-store/forms/production-input.schema.json",
+      "disposition": "include",
+      "basis": "The existing qualification input form: budgets, manager and capacity."
+    },
+    {
+      "path": "Platform/01-store/forms/production.tsv",
+      "disposition": "include",
+      "basis": "The existing inventory of the 17 groups and 13 production probes with their inputs and terms."
+    },
+    {
+      "path": "Platform/01-store/forms/production/README.md",
+      "disposition": "include",
+      "basis": "Existing stand inputs and explicit D7 activations; no provider is supplied by publication."
+    },
+    {
+      "path": "Platform/01-store/forms/production/bindings.tsv",
+      "disposition": "include",
+      "basis": "Existing stand inputs and explicit D7 activations; no provider is supplied by publication."
+    },
+    {
+      "path": "Platform/01-store/forms/production/input.json",
+      "disposition": "include",
+      "basis": "Existing stand inputs and explicit D7 activations; no provider is supplied by publication."
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "disposition": "include",
+      "basis": "Existing outcome vocabulary and HTTP refusal forms referenced by the procedures."
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "disposition": "include",
+      "basis": "Normative replay age and count definitions used by the procedures."
+    },
+    {
+      "path": "Platform/01-store/probes/README.cases.md",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/probes/copy_stream.py",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/probes/store_fitness.py",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probe_http.py",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/probes/store_probes.py",
+      "disposition": "include",
+      "basis": "Public observation checkers and their contract; not a native qualification result."
+    },
+    {
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "include",
+      "basis": "Qualification procedures of P/01: cases, budgets, measurements, probe debt, clocks and evidence."
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "disposition": "include",
+      "basis": "The public HTTP contract referenced by the qualification procedures."
+    },
+    {
+      "path": "Platform/08-domain/forms/runtime-constants.tsv",
+      "disposition": "include",
+      "basis": "The REPORT_RATE workload definition referenced by the first approved budgets."
+    },
+    {
+      "path": "Platform/common/acceptance/PROFILE.md",
+      "disposition": "include",
+      "basis": "Source pin, invocation and role definitions used by the qualification inputs."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+      "disposition": "include",
+      "basis": "The public activation and observation payload forms of D7."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/d7.schema.json",
+      "disposition": "include",
+      "basis": "The closed descriptor form of the D7 providers."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+      "disposition": "include",
+      "basis": "Descriptor form referenced by the whole shared seams contract."
+    },
+    {
+      "path": "Platform/common/acceptance/seams.md",
+      "disposition": "include",
+      "basis": "The public D7 provider contract, retained as a whole file."
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "disposition": "include",
+      "basis": "The existing N6 procedure and result rules used by production forms; no other judge file is included implicitly."
+    },
+    {
+      "path": "Platform/common/contracts/gate-and-pass.md",
+      "disposition": "include",
+      "basis": "The parsing owner named by the related-scope boundary of the procedures."
+    },
+    {
+      "path": "Platform/common/contracts/production-obligations.md",
+      "disposition": "include",
+      "basis": "Common finite-budget obligations and missing-input outcomes used by qualification."
+    },
+    {
+      "path": "Platform/common/vectors/production-obligations/README.md",
+      "disposition": "include",
+      "basis": "Public production sequences referenced by the common production obligations."
+    }
+  ]
+}

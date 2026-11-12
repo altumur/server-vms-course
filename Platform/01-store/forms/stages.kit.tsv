@@ -13,7 +13,7 @@
 # - — none;
 # depends — the n of former stages, comma-separated, - — none; when — CEL over the keys of the profile, empty — always applicable.
 # The one-box daemon work is split into daemon_doors (24 acceptance steps, weight 1), then daemon_copy (51 steps, weight 3).
-# Functional gates and engineering group preparation are separate from production qualification: spec/production-acceptance.md.
+# Functional gates and engineering group preparation are separate from production qualification: qualification/README.md.
 # Its independent qualified workload, finite budgets and storage/time/fault/stream observations are not inferred from these gates; absent bindings stay NotExecuted.
 n	stage	goal	norms	gate	weight	kit	parts	depends	when
 1	model	The pure checks of the data model and the write command: key, items, cas, guard, id, the order of the checks	P/01.1 N1; P/01.1 N2.1; forms/write-checks.tsv	vectors:write-checks	2	writecheck	-	-	

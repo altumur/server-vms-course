@@ -6,7 +6,7 @@ The observation contract remains in [README.md](README.md). The following origin
 
 ### Original passage 1
 
-These are the public observation checkers of [production acceptance](../spec/production-acceptance.md). They judge supplied observations. They do not start, discover or qualify an implementation, and an implementation does not import them. Python 3.12 standard library only.
+These are the public observation checkers of [production acceptance](../qualification/README.md). They judge supplied observations. They do not start, discover or qualify an implementation, and an implementation does not import them. Python 3.12 standard library only.
 
 ### Original passage 2
 
@@ -35,7 +35,7 @@ python3.12 -B -m store_probes --capture <file> --probe <name>
 
 ### Original passage 4
 
-Groups are partial slices of the [case groups](../spec/production-acceptance.md#case-groups): a probe does not execute a whole group. `--list` prints the owning norm references and required bindings of each probe.
+Groups are partial slices of the [case groups](../qualification/README.md#case-groups): a probe does not execute a whole group. `--list` prints the owning norm references and required bindings of each probe.
 
 ### Original passage 5
 

@@ -1,6 +1,6 @@
 # Store production probes
 
-This is the observation contract of [production acceptance](../spec/production-acceptance.md): the properties that are judged over supplied observations. A check does not start, discover or qualify an implementation, and an implementation does not import it.
+This is the observation contract of [production acceptance](../qualification/README.md): the properties that are judged over supplied observations. A check does not start, discover or qualify an implementation, and an implementation does not import it.
 
 `OBSERVATION_PASS` means only that the supplied observations passed that check. It is not a native run or a production result.
 
@@ -10,7 +10,7 @@ A check ends in one of four outcomes: the observation checks passed; a normative
 
 ## Probes
 
-Groups are partial slices of the [case groups](../spec/production-acceptance.md#case-groups): a probe does not execute a whole group.
+Groups are partial slices of the [case groups](../qualification/README.md#case-groups): a probe does not execute a whole group.
 
 | Name | Property | Case groups | Budgets |
 |---|---|---|---|
