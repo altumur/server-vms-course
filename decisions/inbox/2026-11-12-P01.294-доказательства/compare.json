@@ -794,6 +794,14 @@
     {
       "path": "Platform/01-store/ru/probes/README.md",
       "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/common/acceptance/seams.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/common/ru/acceptance/seams.md",
+      "only_source_address_and_marker_changed": true
     }
   ],
   "history": [

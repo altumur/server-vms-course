@@ -87,6 +87,13 @@ for lang, marker in [('', ' (judge-only: qualification procedures)'), ('ru/', ' 
         assert normalized == before(path), (path, 'non-address change')
         result['inventories'].append({'path': path, 'only_source_address_and_marker_changed': True})
 
+for lang, marker in [('', ' (judge-only: qualification procedures)'), ('ru/', ' (только для судьи: процедуры квалификации)')]:
+    path = f'Platform/common/{lang}acceptance/seams.md'
+    normalized = (ROOT/path).read_text().replace(marker, '')
+    normalized = normalized.replace('qualification/README.md', 'spec/production-acceptance.md')
+    assert normalized == before(path), (path, 'non-address change')
+    result['inventories'].append({'path': path, 'only_source_address_and_marker_changed': True})
+
 m = (ROOT/'Platform/01-store/spec/production-acceptance.md').read_text()
 assert not re.search(r'RUN-|BUDGET_|WORKLOAD_|ADR-0|## (Qualified inputs|First approved budgets|Case groups|Measurement definitions|Public executable probes|Evidence and outcomes)', m)
 assert 'strictly below its corresponding budget' in (ROOT/'Platform/01-store/spec/01.1-store.norms.md').read_text()
