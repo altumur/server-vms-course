@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row <sub>/slots/<name> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/slots/<name>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 /gen	<s>controller	an unreadable gen neither resets nor permits a capture: at release do not change the row, do not give the permission to capture; the row does not enter names_given until the generation is restored	0	row	P/04 N3 «fate» write release; P/04-10, P/04-11
