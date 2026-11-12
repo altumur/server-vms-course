@@ -73,8 +73,10 @@ class Constants(unittest.TestCase):
         self.assertEqual(set(check_constants.schema_bindings()), set(self.roster))
         errors, stats = self.check()
         self.assertEqual(errors, [])
+        # ca38a0818 put Judge.relay_members into check_p08_constants: the P08 owner carrier and the P10 reader copy.
         self.assertEqual(stats, {"p08_schema_equalities": 141, "p08_form_equalities": 5,
-                                 "p08_closed_contracts": 4, "p08_password_vectors": 13})
+                                 "p08_closed_contracts": 4, "p08_password_vectors": 13,
+                                 "p08_relay_member_equalities": 2})
 
     def test_each_of_141_numeric_carriers_has_its_own_mutant(self):
         for rel, pointer, _, _ in self.roster:
@@ -449,7 +451,12 @@ class StoreConstants(unittest.TestCase):
         number = str(self.values["KEY_BYTES"])
         bad = [text.replace("UTF-8 bytes", unit) for unit in ("characters", "UTF-8 characters", "UTF-16 bytes", "bytes")]
         bad += [text.replace(number, value) for value in ("0" + number, number + ".0", "١٠٢٤", "true")]
-        bad += [text + " " + text, text + " Another limit is accepted.", text.replace("a smaller file limit", "a larger file limit"),
+        # P01.257 (af760f774) withdrew R021: the sentence no longer allows a smaller file limit; the withdrawn
+        # wording and a narrowing of "every implementation" are both refused.
+        withdrawn = text.replace("applies to every implementation and is checked separately",
+                                 "and a smaller file limit are checked separately")
+        bad += [text + " " + text, text + " Another limit is accepted.", withdrawn,
+                text.replace("every implementation", "a file implementation"),
                 text.replace("maxLength does not express", "maxLength expresses"), "UTF-8 bytes " + number]
         for changed in bad:
             with self.subTest(description=changed):
@@ -513,8 +520,17 @@ class StoreConstants(unittest.TestCase):
 
     def test_actual_mutants_fail_through_check_spec_hook(self):
         from check_spec import Check
-        for source in (ROOT / "Platform/01-store/spec").glob("*.norms.md"):
-            shutil.copyfile(source, self.root / "Platform/01-store/spec" / source.name)
+        import frictionless_forms
+        # Since c4b8f32c2 (OBSH.39) Check.check_forms first validates the whole selected form package once
+        # Platform/01-store exists, and then judges every P01 form; the hook fixture therefore holds the actual
+        # lesson and the package with its common resources, not only the three carriers and the norms.
+        shutil.copytree(ROOT / "Platform/01-store", self.root / "Platform/01-store", dirs_exist_ok=True)
+        for rel in (frictionless_forms.PACKAGE,
+                    *(f"Platform/{name}{suffix}" for name in frictionless_forms.RESOURCES.values()
+                      for suffix in ("", ".schema.json"))):
+            (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, self.root / rel)
+        self.restore()
         clean = Check(self.root)
         clean.check_forms()
         self.assertEqual(clean.errors, [])
@@ -1064,8 +1080,12 @@ class NumericSubjectHookIntegration(unittest.TestCase):
             setattr(constants, name, Mock(name=name, return_value=payloads[name]))
         shell = types.SimpleNamespace(root=root, stats={"preexisting_count": 91}, errors=[])
         shell.error = Mock(side_effect=lambda path, message: shell.errors.append((path, message)))
+        # check_forms reads the shared validated package rows first (Check.standard_forms, c4b8f32c2, OBSH.39);
+        # the stub gives no validated tables and no selected paths, so every form selector runs on its own.
+        shell.standard_forms = Mock(return_value=({}, set()))
         with patch.dict(sys.modules, {"check_forms": forms, "check_constants": constants}):
             namespace["check_forms"](shell)
+        shell.standard_forms.assert_called_once_with()
         for name in selectors:
             getattr(forms, name).assert_called_once_with(root)
         for name in attrs - selectors:
