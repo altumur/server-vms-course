@@ -228,3 +228,25 @@ P/10-R017	spec/10-domain-console.norms.md#implementation-decides	M11/11	2026-11-
 -	spec/10-domain-console.api.openapi.yaml#/components/schemas/SharedView/properties/delivery/description	C10-SHARED-OPAQUE-COPY-01	2026-11-11	(N1.2f, C10-SHARED-OPAQUE-COPY-01)
 -	acceptance/README.md#store-rows-on-the-stand	P/10 coverage audit, second pass (Gemini)	2026-11-11	## Coverage audit of P/10, the second pass (Gemini)
 -	vectors/alarms/README.md#intro	M11/11 acceptance, scenario 04, inputs/alarms-*.json	2026-11-11	`case` is the name of the input file
+-	forms/stages.tsv#header	ADR-0126	2026-11-12	 (ADR-0126)
+-	forms/stages.kit.tsv#header	ADR-0126	2026-11-12	 (ADR-0126)
+-	data/refusal-words.tsv#header	ADR-0094 B5	2026-11-12	 (ADR-0094 B5)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	C10-ROLE-NOKIT-01	2026-11-12	; C10-ROLE-NOKIT-01
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	M11 reconciliation	2026-11-12	 (reconciliation of M11)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	ADR-0083 addendum (19) item 2; ADR-0090 review 27	2026-11-12	 (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	C10-ROLE-NOKIT-01	2026-11-12	; C10-ROLE-NOKIT-01
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	M11 reconciliation	2026-11-12	 (reconciliation of M11)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	ADR-0083 addendum (19) item 2; ADR-0090 review 27	2026-11-12	 (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27)
+P/10-R015	forms/refusals.tsv#row:name=c10_002_404	M11 reconciliation D4	2026-11-12	; reconciliation of M11, D4
+P/10-R015	forms/refusals.tsv#row:name=c10_010_503	V7 item 3; Architect 2026-10-28 P1	2026-11-12	; V7 item 3, the Architect's decision of 2026-10-28, P1; lines 36, 42, 43, 50, 54 of the list
+P/10-R015	forms/refusals.tsv#row:name=c10_014_409	ADR-0091 addendum (15) item 4	2026-11-12	; ADR-0091 addendum (15) item 4
+-	spec/10-domain-console.norms.md#readiness-checklist	P10.10; readiness introduction	2026-11-12	the norm id `P/10-MM` is what the deltas of decisions,
+-	spec/10-domain-console.norms.md#readiness-checklist	P10.10; readiness introduction	2026-11-12	findings and window records refer to.
+-	forms/refusals.tsv#header	P10.10; final form of refusal catalogue	2026-11-12	Original three N4 cells are preserved as word/outcome/cause.
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	preserves all 16 original N4 rows as 25 code projections
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	word/outcome/cause contain the original three cells byte for byte
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	for those source rows
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	chapter=10 and row preserve the published addresses
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	The added names GateDenied
+P/10-R015	spec/10-domain-console.norms.md#N4	P10.10; final form of refusal catalogue	2026-11-12	row retains the former N4 row number.
+P/10-R015	spec/10-domain-console.norms.md#N4	P10.10; final form of refusal catalogue	2026-11-12	word/outcome/cause preserve the original three cells verbatim;

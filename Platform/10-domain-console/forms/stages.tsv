@@ -1,4 +1,4 @@
-# A possible implementation order for P/10 (ADR-0126): a plan, not a norm or a reduction of the readiness checklist. Read all norms and imported contracts in full.
+# A possible implementation order for P/10: a plan, not a norm or a reduction of the readiness checklist. Read all norms and imported contracts in full.
 # Single-chapter address 10 maps to acceptance/scenarios.tsv and acceptance/seams.tsv, not acceptance/10/.
 # gate: checks separated by ;. seams:10:<cases> runs those scenarios of acceptance/seams.tsv through the seam adapter; vectors:alarms is the lesson vector; accept:10:* is the runner's process scenarios; build is the profile build. Former gates keep holding.
 # weight relative 1–5; depends lists earlier n; when=true applies always.

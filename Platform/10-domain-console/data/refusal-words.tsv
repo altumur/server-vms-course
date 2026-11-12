@@ -1,4 +1,4 @@
-# The closed list of error words of the own doors of the domain console (ADR-0094 B5): the read doors, /domain/alarms. The rules — N4; the format of field — P/06.1 N2. Transition 3 — the words of the process domain, P/08 data/refusal-words.tsv, as they came.
+# The closed list of error words of the own doors of the domain console: the read doors, /domain/alarms. The rules — N4; the format of field — P/06.1 N2. Transition 3 — the words of the process domain, P/08 data/refusal-words.tsv, as they came.
 # door — view /domain, /domain/shadow, /domain/members, /domain/topology, /domain/<sub>/<rows>, /domain/shared; placement /domain/placement…;
 # alarms /domain/alarms; * — every own door. The words of the peer and pass contracts — their sections. field — as in the table of P/06; the own doors have no bodies, there is no field.
 door	code	error	field	norm

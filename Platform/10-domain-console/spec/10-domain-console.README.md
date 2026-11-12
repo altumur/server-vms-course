@@ -40,6 +40,23 @@ an output that does not match the expectation on an acceptance input. An accepta
 for which the norm gives no unambiguous outcome: record the place and a counterexample and hand it to «Specification» with a proposal.
 The instructions introduce no new refusal. The source owner records acceptance changes in the lesson change record.
 
+## Glossary
+
+These names disambiguate existing rules; the glossary adds no behaviour.
+
+| Word | Meaning here | Norm |
+|---|---|---|
+| process / role / kit | `domainconsole` is the executable process; the same role name selects its TLS kit. | P/10-R003; N1.1, N1.4 |
+| holder / member | The holder cluster runs the domain console; it is also a member with its own agent and report. | P/10-R003, P/10-R036; N1 |
+| forward / pass | The cluster console forwards to this console; this console passes edits to `domain` or `door.pass` to the domain worker. | P/10-R005, P/10-R007, P/10-R009 |
+| row / part / page | A row is read from the store; a part groups stored records; an HTTP page obeys the member budget and can end inside a part. | P/10-R004; N1.2a, N1.2b |
+| version / revision / index | The store row index is the exact string used for ETag; document `rev` or `revision` is a separate field. | N1.2; P/10-17 |
+| view / grant view / visibility | `domain/view` is the stored aggregate; `view` is a grant action; visibility filters the returned records. | P/10-R004, P/10-R008; N1.2, N1.5 |
+| reported / report / alarm page | The confirmed mark identifies a report generation; that report can have no alarm page or have an unreadable page. | P/10-R011, P/10-R014; N1.8, N3 |
+| witness / clock / silent | The originating report offsets the witness clock; `silent_after` is per member; `silent` and `not_reporting` keep the last known alarms. | P/10-R011, P/10-R014; N1.8, N3 |
+| token / ticket / callback | The person token proves identity; second-kind pass uses a request-bound ticket; this console has no ticket callback door. | P/10-R008, P/10-R009; N1.5, N1.6 |
+| refusal / unreadable / unconfirmed | A refusal is the published outcome; a malformed confirmed report mark differs from a store read that was not confirmed. | P/10-R014, P/10-R015; N3, N4 |
+
 ## What to create
 
 - The read doors of N1.2 and the alarm list of N1.8 with the function `alarms` (the command `alarms`).
