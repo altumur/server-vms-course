@@ -15,8 +15,8 @@ state	Leader | Follower | Candidate | Shutdown | Door	true	true	box: Leader; doo
 leader	string	true	true	the -api address of the leader, as in members; empty if the leader is unknown or was started without -api; box: its own -api address, empty without -api	P/01.3-R211; P/01.3-R169
 leader_id	string	true	true	the id of the leader; empty if the leader is unknown; box: its own id	P/01.3-R211; P/01.3-R169
 term	uint64	true	true	door: 0; box: 1	P/01.3-R211; P/01.3-R169
-commit	uint64	true	true	door: 0	P/01.3-R211
-applied	uint64	true	true	door: 0	P/01.3-R211
+commit	uint64	true	true	door: 0; box: 0 (no Raft index)	P/01.3-R211; P/01.3-R169
+applied	uint64	true	true	door: 0; box: 0 (no Raft index)	P/01.3-R211; P/01.3-R169
 voters	array of MemberId	true	true	the ids of the voters; box: [<id>]	P/01.3-R211; P/01.3-R169
 members	map MemberId → non-empty string	true	true	id → the -api address; a member without -api is not in the map, the map can be {}; a value is never empty; box: {<id>: <api>}, without -api {}	P/01.3-R211; P/01.3-R169; P/01.3-R381
 tls	boolean	true	true	-	P/01.3-R211

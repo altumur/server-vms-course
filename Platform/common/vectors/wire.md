@@ -38,6 +38,8 @@ For `stand:<key>`, `arg_file` is exactly `{"column":"name"}`, `{"literal":"text"
 
 Optional `group_by` is an array of column names: absent means per row, `["list"]` groups equal list values, `[]` forms one group of the selected table. Filter by input when first, then group, then call once per group and variant. Group keys sort by UTF-8; rows retain source order. All row-based `when` evaluations in an expectation, native descriptor or file declaration must agree across every row of a group. A cell, case or substituted path from a column must be constant across the group. There is no implicit first-row rule.
 
+The inventory of grouped calls is [P/AC-R008](../acceptance/spec/acceptance.norms.md#n14-verdict-of-a-target); target surfaces and callable interfaces are [P/AC-R006](../acceptance/spec/acceptance.norms.md#n13-target-registry) and [the target form](../acceptance/runner-targets.README.md).
+
 ## Fixtures and values
 
 ```text

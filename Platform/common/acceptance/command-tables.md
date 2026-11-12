@@ -6,6 +6,8 @@ In a command table a row is a call of a command or an adapter of the profile, no
 
 ## Loader verdicts
 
+Row inventory, including diagnostic hints: [P/AC-R008](spec/acceptance.norms.md#n14-verdict-of-a-target); failure classes: [P/AC-R024](spec/acceptance.norms.md#n4-failures).
+
 The word `verdicts` runs `verdicts.tsv` of the first directory with `classes.tsv` and `diagnostics.tsv` next to it. The rules by which a verdict is set are the norms of the owner of the target (P/02.1 N1, N4); this form says only how a row runs and what the judge observes.
 
 - **`verdicts.tsv`.** A row is `case<TAB>verdict`. The input is the file `cases/<case>.subsystem.yaml`, loaded alone, without a catalogue of other manifests. `verdict` is `ok` (the manifest loads) or `refused` (a loading refusal). The set of files of `cases/` equals the set of rows; an extra file or an extra row is a data error.

@@ -4,6 +4,23 @@
 
 Канон общего урока приёмки. [Инструкция](acceptance.README.md), [общий стенд и его словарь](../README.md), [профили и сборка](../PROFILE.md), [реестр целей](../forms/targets.README.md). Судья — программа, которая проверяет сгенерированную реализацию по этой спецификации; общая README приёмки зовёт её раннером. У урока нет своего процесса, и он не открывает двери реализации. Номера норм — `P/AC-NN`; якоря требований `P/AC-RNNN` есть только в источнике.
 
+### Index
+
+Существующие правила по темам; пути — от `common/`.
+
+| Тема | Требования | Файлы |
+|---|---|---|
+| `vector_dispatch` поверхность цели и вызываемый интерфейс | P/AC-R006 | `acceptance/runner-targets.README.md`, `vectors/wire.md`, `acceptance/forms/targets.tsv` |
+| `row_inventory` групповые вызовы векторов и диагностические подсказки | P/AC-R004, P/AC-R008 | `vectors/wire.md`, `acceptance/PROFILE.md`, `acceptance/command-tables.md` |
+| `store_doors` заголовки store, порядок list, исходы TLS и полная форма ответа | P/01.1-R065, P/01.2-R017, P/01.3-R059, P/01.3-R211 | `acceptance/README.md`, `../01-store/acceptance/1/README.md`, `../01-store/acceptance/2/README.md`, `../01-store/acceptance/3/README.md` |
+| `source_binding` нормализация швов Source и отсутствующий dispatch | P/AC-R030, P/AC-R050 | `acceptance/seams.md` |
+| `scope_and_directives` выбранные цели и поддержка известных директив | P/AC-R020, P/AC-R024, P/AC-R029 | `acceptance/README.md`, `acceptance/domain-stand.md`, `acceptance/pass/README.md` |
+| `production_binding` отсутствующие входы квалификации и сбои прибора | P/AC-R024, P/AC-R047, P/AC-R050 | `acceptance/seams.md`, `../01-store/forms/production.tsv` |
+| `preflight_and_abort` предварительная проверка сценария и обрыв подготовки | P/AC-R015, P/AC-R030, P/AC-R033 | `acceptance/PROFILE.md` |
+| `command_failure` команды продукта, команды судьи и обрыв | P/AC-R024, P/AC-R033, P/AC-R038 | `acceptance/seams.md`, `acceptance/stand.md` |
+| `until_form` повтор чтения и неверная форма директивы | P/AC-R020, P/AC-R024 | `acceptance/README.md` |
+| `object_spoil_order` явная остановка перед порчей объекта | P/AC-R017, P/AC-R020 | `acceptance/README.md` |
+
 ## N0 Область и нормативные слова
 
 Нормативные слова — по [канону курса](../../NORMATIVE-TERMS.md). Этот урок задаёт, что судья делает и что он наблюдает. Поведения реализации он не задаёт: нормы и таблицы приёмки каждого урока остаются источником того, что реализация должна делать, а общий стенд даёт слова, которыми таблицы это говорят.

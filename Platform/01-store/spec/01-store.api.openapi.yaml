@@ -206,7 +206,7 @@ paths:
                 const: 1
               description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
         '409':
-          description: The whole JSON body
+          description: 'Inadmissible membership (P/01.3-R272); on a door, join/leave are refused after form and identity checks (P/01.3-R087).'
           content:
             application/json:
               schema:
@@ -272,7 +272,7 @@ paths:
                 const: 1
               description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
         '409':
-          description: 'The store of a box without raft: leave of the last vote (N1.3 box)'
+          description: 'Inadmissible membership (P/01.3-R272), including the last voter; on a door, join/leave are refused after form and identity checks (P/01.3-R087).'
           content:
             application/json:
               schema:
@@ -301,6 +301,8 @@ paths:
         framing is required; EOF-only framing is not successful completion.
         After 200 a failure closes the stream without a second fault or false final
         zero chunk. HEAD is unsupported: 405 with Allow GET and no body.
+        A door returns 503 unavailable before successful headers after request and
+        identity checks (P/01.3-R411); it has no local consistent copy.
         Internal read-fence/admit/import frames remain implementation-private.
       responses:
         '200':
@@ -801,10 +803,12 @@ components:
           minimum: 0
           maximum: 18446744073709551615
         commit:
+          description: 'Raft commit index; box and door use 0 (forms/status-fields.tsv, P/01.3-R169, P/01.3-R211). '
           type: integer
           minimum: 0
           maximum: 18446744073709551615
         applied:
+          description: 'Raft applied index; box and door use 0 (forms/status-fields.tsv, P/01.3-R169, P/01.3-R211). '
           type: integer
           minimum: 0
           maximum: 18446744073709551615
