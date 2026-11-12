@@ -32,7 +32,7 @@ cleanup, decommission batches and placement turn/intent procedures remain their 
 
 ## Seams
 
-[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
+Controller seams use kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
 those of [the P/03 forms README](../../03-worker/forms/README.md) and [the P/02 forms README](../../02-installer/forms/README.md): CALL with one
 JSON value, object subset, exact empty objects/lists, fresh scenario roots; no shell. The single-chapter address is `4`, with no acceptance subdirectory.
 The port names normalize tests, not the implementation API. Invoke the real controller functions and record effects, never return a canned expect.

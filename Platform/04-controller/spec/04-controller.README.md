@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/04-controller.
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/04-controller.md` (for people, not in the export).
 
+The model is not given acceptance scenarios, fixtures or expected outputs. The `sc. NN` / `scenario NN` and named CALL seam references identify acceptance evidence; the public norms and forms define the required behaviour.
+
 ## Task
 
 Implement the controller of the manifest. The controller makes its decisions as rows; the launch of processes is the units `w2c-controller@.service` and
@@ -12,8 +14,7 @@ the drain, the labels and the decommission of a server are the doors of the cons
 
 ## Inputs and their priority
 
-The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541) shows observable examples;
-the lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
+The canon is the [norms](04-controller.norms.md), including N0. The lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
 The forms of a unit are set in [P/06.1](../../06-console/spec/06.1-console.norms.md), of the slot — in
 [P/03.2](../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../02-installer/spec/02.1-installer.norms.md),
 the heartbeat — in [P/03.4](../../03-worker/spec/03.4-worker.norms.md). The forms of the rows and objects of the lesson are the family schemas `data/*.schema.json`
@@ -29,13 +30,13 @@ These terms point to their governing requirements; this table adds no rules.
 | `row` | A store key with textual items, not an HTTP response or an object. P/04-R003. |
 | `object` | A JSON report or snapshot read through the resource object door. P/04-R007, P/04-R011, P/04-R013. |
 | `placement` | The decision; an active intent supplies the effective decision for its members. P/04-R021. |
-| `assignment` | The derived workers row, listing the units assigned to that worker. P/04-R078, P/04-R079, P/04-R036. |
-| `version`, `index` | The exact opaque store version for CAS/guard, distinct from the counters below. P/04-R026, P/04-R096, P/04-R103. |
-| `rev` | The lesson counter in a placement/assignment; its increment rule depends on that row. P/04-R076, P/04-R080. |
-| `manifest_rev` | The revision of the manifest under which a decision was taken. P/04-R077, P/04-R116, P/04-R405. |
-| `turn holder` | The unique capture-attempt mark in placement_turn; its version fences store mutations. P/04-R209, P/04-R212, P/04-R242. |
+| `assignment` | The derived workers row, listing the units assigned to that worker. P/04-R078, P/04-R036. |
+| `version`, `index` | The exact opaque store version for CAS/guard, distinct from the counters below. P/04-R026, P/04-R094, P/04-R103. |
+| `rev` | The lesson counter in a placement/assignment; its increment rule depends on that row. P/04-R076, P/04-R078. |
+| `manifest_rev` | The revision of the manifest under which a decision was taken. P/04-R076, P/04-R116, P/04-R405. |
+| `turn holder` | The unique capture-attempt mark in placement_turn; its version fences store mutations. P/04-R209, P/04-R212, P/04-R026. |
 | `slot holder` | The process occupying a slot; it is not the holder of the placement turn. P/03.2 N1.4; P/04-R041. |
-| `place keeper` | The worker selected for a non-empty place under distinct policy. P/04-R152, P/04-R153. |
+| `place keeper` | The worker selected for a non-empty place under distinct policy. P/04-R152. |
 | `resource_state`, `presence`, `fate` | Resource freshness, the resource word about a process, and this controller’s slot judgement are separate. P/04-R196, P/04-R197, P/04-R198, P/04-R040. |
 | `at`, `ts`, `age` | at and ts are wall timestamps with the field-specific meanings of N1; age and policy deadlines use the specified local observation. P/04-R002, P/04-R039. |
 | `live(s)`, `live.<sub>` | Heartbeat process presence for shortage versus door lock numbers for the order share. P/04-R329, P/04-R332. |
@@ -43,7 +44,7 @@ These terms point to their governing requirements; this table adds no rules.
 | `home`, `near`, `affinity` | Preferences and place constraints have different admission effects. P/04-R157, P/04-R158, P/04-R159, P/04-R290. |
 | `want`, `pending`, `decommission-pending` | Absolute process target, in-flight count in a report, and durable server-removal progress respectively. P/04-R094, P/04-R107, P/04-R330. |
 | `release`, `names_given` | A confirmed release write and the exact version permitting capture are separate results. P/04-R041, P/04-R310, P/04-R311, P/04-R042. |
-| `pass`, `control part`, `cycle` | The control part ends before snapshot attempts and the cycle’s final report. P/04-R142, P/04-R143, P/04-R146. |
+| `pass`, `control part`, `cycle` | The control part ends before snapshot attempts and the cycle’s final report. P/04-R142. |
 
 ## What to create
 
@@ -120,13 +121,13 @@ P/04-01…28 are fulfilled, the choices of the implementation are described, the
 and the remaining guarantees have evidence per N5.
 State the slice, the commands/stand, the observations and the limitations. A check of the documents does not mean
 the passing of an implementation. A discrepancy of a norm and a form is to be drawn up with a counterexample by the rules of the project;
-a repeatable error of the acceptance is to be written into `corrections.tsv` (judge-only: historical correction record).
+a repeatable error of the acceptance is to be recorded in the lesson correction history outside the model input.
 
 ## On a discrepancy
 
 Reconcile the norm and the scenario on one exact input. Record the places, the initial state,
 the intervention and the expected/actual result; if the sources diverge, pass the question to the Specification
 with a recommendation and do not carry the behaviour of the implementation into the canon silently. A correction of a norm affects
-the acceptance; a repeatable error of the acceptance is to be written into `corrections.tsv` (judge-only: historical correction record).
+the acceptance; a repeatable error of the acceptance is to be recorded in the lesson correction history outside the model input.
 
 The optional kit plan is [forms/stages.tsv](../forms/stages.tsv), with [forms/README.md](../forms/README.md) describing inputs, machines and test normalization. Kit seams supplement the reading witnesses and runner acceptance; they do not replace them.

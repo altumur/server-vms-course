@@ -32,4 +32,3 @@ an integer 1…99 or with a leading zero; a repeat of a name; `want` is not an o
 Who executes it is the controller (`04-controller`: the victim of shrinking, P/04 N3 «shrink», `victim`) — all the rows. The server script (`02-installer`) does not choose the victim: it stops the numbers above the ready `want` by its own rule (P/02.4 N1.5 `rules` 3, the vectors `workers-script`); the worker (`03-worker`) sees the ready `retiring` (a row is executed by the role whose norm calls its function).
 
 The composed seams s36/s37 also require: run the actual victim choice, retiring/move/end decision and the existing P/02 server-script reconciliation, observing the target and physically selected stop number. A pure victim vector alone does not establish that composition.
- Detailed witness inputs and expected states are in [judge-only case data](README.cases.md) (judge-only: checks P/04-R051).

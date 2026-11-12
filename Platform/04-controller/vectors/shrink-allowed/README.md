@@ -31,7 +31,7 @@ a refusal (who would be the victim), `null` — only with `no_victim`. Compariso
 
 ## Binding the vector to the shrink form
 
-The vector uses its declared input and victim selection below; it adds no runtime field or check. Bind the variables of [the shrink checks](../../forms/README.md#shrink-checks) as follows (P/04-R342):
+The vector uses its declared input and victim selection below; it adds no runtime field or check. Bind the variables of [the shrink checks](../../forms/README.md#shrink-checks) as follows (P/04-R051):
 
 | Form variable | Vector input or computation |
 |---|---|
@@ -76,4 +76,3 @@ step; the clock (the first pass without a shortage) — N1.4. There is no field 
 of the reasons and their words are held by this vector, the pass report does not show them.
 
 only live top n=want(s)>1 is eligible. places.wanted protection is covered by shrink-victim and composed s36/s37, without adding a field to this closed form.
- Named-input-to-outcome associations are in [judge-only case data](README.cases.md) (judge-only: checks P/04-R051).
