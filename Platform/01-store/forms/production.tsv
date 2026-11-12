@@ -1,3 +1,4 @@
+# Results and missing inputs: P/AC-R047; qualification of evidence bindings: P/AC-R050 and Platform/common/acceptance/seams.md.
 # The inventory of the target P/01/production (N6 of spec/acceptance.norms.md; the Architect's answer on P01.86): the 17 case groups and the 13 probes, one row each.
 # The rows name the entries and add no outcome: the observed outcomes are in the row of the source. kind: group or probe. source: the row that owns the entry.
 # executed_by: the probe that executes a group as its initial state or stage, - when the entry is executed by itself; the result is shown under both names (P/AC-R040).

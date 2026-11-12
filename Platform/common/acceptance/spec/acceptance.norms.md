@@ -4,6 +4,23 @@ This English text is the source; the Russian translation `ru/acceptance/spec/acc
 
 The canon of the shared acceptance lesson. [Instructions](acceptance.README.md), [the common stand and its dictionary](../README.md), [profiles and assembly](../PROFILE.md), [target registry](../forms/targets.README.md). The judge is the program that checks a generated implementation against this specification; the common acceptance README calls it the runner. The lesson has no process of its own and opens no door of the implementation. Norm ids are `P/AC-NN`; requirement anchors `P/AC-RNNN` are in this source only.
 
+### Index
+
+Existing rules by topic; paths are from `common/`.
+
+| Topic | Requirements | Files |
+|---|---|---|
+| `vector_dispatch` target surface and callable | P/AC-R006 | `acceptance/runner-targets.README.md`, `vectors/wire.md`, `acceptance/forms/targets.tsv` |
+| `row_inventory` grouped vector calls and diagnostic hints | P/AC-R004, P/AC-R008 | `vectors/wire.md`, `acceptance/PROFILE.md`, `acceptance/command-tables.md` |
+| `store_doors` store headers, list order, TLS outcomes and full response form | P/01.1-R065, P/01.2-R017, P/01.3-R059, P/01.3-R211 | `acceptance/README.md`, `../01-store/acceptance/1/README.md`, `../01-store/acceptance/2/README.md`, `../01-store/acceptance/3/README.md` |
+| `source_binding` Source seam normalization and missing dispatch | P/AC-R030, P/AC-R050 | `acceptance/seams.md` |
+| `scope_and_directives` selected targets and known directive support | P/AC-R020, P/AC-R024, P/AC-R029 | `acceptance/README.md`, `acceptance/domain-stand.md`, `acceptance/pass/README.md` |
+| `production_binding` missing qualification inputs and instrument failures | P/AC-R024, P/AC-R047, P/AC-R050 | `acceptance/seams.md`, `../01-store/forms/production.tsv` |
+| `preflight_and_abort` scenario preflight and preparation abort | P/AC-R015, P/AC-R030, P/AC-R033 | `acceptance/PROFILE.md` |
+| `command_failure` product commands, judge commands and abort | P/AC-R024, P/AC-R033, P/AC-R038 | `acceptance/seams.md`, `acceptance/stand.md` |
+| `until_form` read repetition and malformed directives | P/AC-R020, P/AC-R024 | `acceptance/README.md` |
+| `object_spoil_order` explicit stop before object spoil | P/AC-R017, P/AC-R020 | `acceptance/README.md` |
+
 ## N0 Scope and normative words
 
 <!-- req: P/AC-R001 -->
