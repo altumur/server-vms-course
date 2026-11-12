@@ -6,7 +6,7 @@
 # Success rows and abstract procedure/load outcomes remain present; they are not new refusals.
 chapter	row	name	surface	code	kind	fields	headers	log	norm	word	response_schema	cause	outcome	diagnostic	caller
 6.1	1	c61_001_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	no `Idempotency-Key` at `POST /{rows}`; the key of any door is empty, contains `/`, equals `..` or is > 200 bytes	400	`error: Idempotency-Key required`, `detail` with the cause	a client error
-6.1	2	c61_002_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	the full target key or the guard key does not pass P/01.1 N1, including the declared limit of the file store	400	`detail`, `error: badkey`, without fault and `field`	fix the component/the choice of the store; the state of the POST claim — by N3; a refusal to save the result — 503
+6.1	2	c61_002_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	the full target key or the guard key does not pass P/01.1 N1, including `KEY_BYTES` for the full UTF-8 key (P/01.1-R156)	400	`detail`, `error: badkey`, without fault and `field`	fix the component; the state of the POST claim — by N3; a refusal to save the result — 503
 6.1	3	c61_003_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	the body is not a JSON object	400	`error: not_json`, `fault: not_json`	a client error
 6.1	4	c61_004_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	a platform field is set	400	`error: platform_field`, `field`, `detail` «a client may not set …»	a client error
 6.1	5	c61_005_400_1	http	400	-	detail,error	-	-	P/06.1-R031	-	Refusal	an unknown field	400	`error: unknown field`, `field` — the first name, `detail` «unknown field(s) …»	a client error
