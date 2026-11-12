@@ -6,7 +6,9 @@
 #allow writer read acc/
 #allow writer write acc/
 #allow admin *
+#allow configstore-door read platform/configstore-doors/srv-a
 n	case	sock	body
+0	pass	peer:configstore-door	{"method": "GET", "path": "/v1/get", "query": {"key": ["platform/configstore-doors/srv-a"]}, "size": 0, "role_header": null, "rights": true}
 0	pass	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null, "rights": true}
 0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["acc/"]}, "size": 0, "role_header": null, "rights": true}
 0	pass	writer	{"method": "GET", "path": "/v1/list", "query": {"prefix": ["zzz/"]}, "size": 0, "role_header": null, "rights": true}
@@ -38,4 +40,5 @@ n	case	sock	body
 6	only	writer	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": null, "rights": true}
 6	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["zzz/a"]}, "size": 0, "role_header": "writer", "rights": true}
 6	only	peer:configstore	{"method": "GET", "path": "/v1/get", "query": {"key": ["acc/a"]}, "size": 0, "role_header": null, "rights": true}
+6	only	peer:configstore-door	{"method": "GET", "path": "/v1/get", "query": {"key": ["platform/configstore-doors/srv-b"]}, "size": 0, "role_header": null, "rights": true}
 6	nopair	writer	the last row of the table

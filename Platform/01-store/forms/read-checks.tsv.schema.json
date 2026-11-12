@@ -14,7 +14,7 @@
     {
       "name": "id",
       "type": "string",
-      "description": "rd-<check>, stable, not renumbered.",
+      "description": "The stable address of the row, prefixed rd-, independent of check and the order n; not renamed or renumbered.",
       "constraints": {
         "required": true,
         "pattern": "(?:rd-[a-z][a-z0-9_]*)"
@@ -46,7 +46,8 @@
       "constraints": {
         "required": true,
         "pattern": "(?:[a-z][a-z0-9_]*)"
-      }
+      },
+      "description": "The refusal name in refusals.tsv; several checks may select the same refusal."
     },
     {
       "name": "when",

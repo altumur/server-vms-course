@@ -26,10 +26,10 @@
     {
       "name": "sock",
       "type": "string",
-      "description": "A role of the #allow lines of the header; checked by the existing check.",
+      "description": "The caller role at this check by P/01.2-R017; for floor the transport role, otherwise the effective role. Checked by the existing check.",
       "constraints": {
         "required": true,
-        "pattern": "(?:[a-z][a-z0-9_-]*)"
+        "pattern": "(?:(?:peer:)?[a-z][a-z0-9_-]*)"
       }
     },
     {

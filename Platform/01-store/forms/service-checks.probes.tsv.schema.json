@@ -26,10 +26,10 @@
     {
       "name": "sock",
       "type": "string",
-      "description": "The caller (#var sock of the table); checked by the existing check.",
+      "description": "The caller transport role by P/01.2-R017 (#var sock of the table); checked by the existing check.",
       "constraints": {
         "required": true,
-        "pattern": "(?:[a-z][a-z0-9_-]*)"
+        "pattern": "(?:(?:peer:)?[a-z][a-z0-9_-]*)"
       }
     },
     {

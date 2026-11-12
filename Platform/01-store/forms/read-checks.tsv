@@ -4,18 +4,20 @@
 # (N3 «read» step 2, N3 «list»), and then to its procedure. The table does not read the store state.
 # op — * in every row: the request object has no field op, the routes are told by body.path and body.method. Row 1 applies to every request of the doors of the store;
 # the other rows — to the paths /v1/get and /v1/list only; another path is not a route of this table (N2, N2.1 «The path»), its order is its own norm.
-# Rows 3–4 are the parsing of the query by N2.1, which precedes the procedures of N3; for a read, the key rules before the check is N3 «read» steps 1–2.
+# Rows 3–5 are the parsing of the query by N2.1, which precedes the procedures of N3; for a read, the key rules before the check is N3 «read» steps 1–2.
 # when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
 #var body dyn — the request object {method, path, query, size, role_header}: method — the method of the request line; path — the path of the request target, byte for byte, without the query; query — an object: the name of a parameter → the list of its values in the order of the query, after the parsing of N2.1 «Query» (percent-decoding included), no parameter — no name; size — the number of bytes of the body (for chunked — the decoded bytes), 0 without a body; role_header — not read by this table (its rows are forms/rights-checks.tsv)
-#var sock string — the role of the role socket the request came to (P/01.2 N1.1 identity)
+#var sock string — the caller role at this check, defined once by P/01.2-R017 (spec/01.2-store.norms.md, N3 check)
 #var lone list<string> — the JSON Pointer of every string of the input with a lone surrogate; a query value whose decoded bytes are not UTF-8 carries a lone surrogate U+DC80–U+DCFF (the surrogate escape of the byte) in place of each byte that is not UTF-8, and its pointer is /query/<name>/<index>
 #var lim map<string,int> — the parameters of the lesson, only the names of #lim
 #lim BODY_LIMIT — P/01.1 N2 POST /v1/write: the body read limit of the door, the effective -max-body of a daemon
 #fn key_ok(string) -> bool — the key rules of N1 row.key: not empty, does not start with /, no segment .., at most KEY_BYTES UTF-8 bytes
 # fault — the required fields of the refusal; a body refusal MAY also carry size (P/01.1 N2).
-# id — the stable address of the row: rd-<check>, apart from the order n; not renumbered
+# id — the stable address of the row, prefixed rd-, independent of check and the order n; not renamed or renumbered
+# check — the refusal name in refusals.tsv; several checks may select the same refusal
 n	id	op	group	each	check	when	code	kind	fault	norm
 1	rd-body_limit	*			body_limit	body.size > lim.BODY_LIMIT	413	toolarge	{"limit": lim.BODY_LIMIT}	P/01.1 N2
-2	rd-method	*			method	body.path in ["/v1/get", "/v1/list"] && body.method != "GET"	404	badrequest		P/01.1 N2.1 «Method and HTTP»
-3	rd-query_form	*			query_form	(body.path == "/v1/get" && (!has(body.query.key) || size(body.query.key) != 1)) || (body.path == "/v1/list" && has(body.query.prefix) && size(body.query.prefix) != 1)	400	badrequest		P/01.1 N2.1
-4	rd-key_rules	*			key_rules	body.path == "/v1/get" && ("/query/key/0" in lone || !key_ok(body.query.key[0]))	400	badkey		P/01.1 N1 row.key; P/01.1 N2.1
+2	rd-method	*			no_route	body.path in ["/v1/get", "/v1/list"] && body.method != "GET"	404	badrequest		P/01.1 N2.1 «Method and HTTP»
+3	rd-query_form	*			body_form	body.path == "/v1/get" && (!has(body.query.key) || size(body.query.key) != 1)	400	badrequest		P/01.1 N2.1
+4	rd-list_form	*			list_form	body.path == "/v1/list" && has(body.query.prefix) && size(body.query.prefix) != 1	400	badrequest		P/01.1 N2.1; P/01.2 N4
+5	rd-key_rules	*			key_rules	body.path == "/v1/get" && ("/query/key/0" in lone || !key_ok(body.query.key[0]))	400	badkey		P/01.1 N1 row.key; P/01.1 N2.1
