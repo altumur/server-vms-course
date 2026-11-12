@@ -284,3 +284,5 @@ req_id	file	source	date	removed
 -	spec/02.4-installer.norms.md#N5	stand of lesson M11/3 (now P/08.3)	2026-11-06	the stand M11/3
 -	spec/02.4-installer.norms.md#system-checklist	stand of lesson M11/3 (now P/08.3) (P/02.4-11)	2026-11-06	the stand M11/3
 -	spec/02.4-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
+P/02.4-R235	spec/02.4-installer.norms.md#N1.7	ADR-0091 addendum (8) item 8 (the decision the rule names «this decision»; the rule in words: the way to a door through the console is not normed here)	2026-10-23	in this decision
+-	acceptance/4/README.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)

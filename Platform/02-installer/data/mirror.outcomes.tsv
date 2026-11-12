@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row platform/mirror (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row platform/mirror. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 /copies	*	copies — 1 (the mirror of bodies); the other fields of the row are read	0	field	P/05 N1.1 mirror
