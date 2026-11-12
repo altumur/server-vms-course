@@ -189,7 +189,7 @@
      },
      "groups": {
       "$ref": "#/$defs/count",
-      "description": "waiting groups; always, 0 too (analysis of review of stage B 3–5, № 13)"
+      "description": "waiting groups; always, 0 too"
      },
      "ordered": {
       "$ref": "#/$defs/count",
@@ -287,7 +287,7 @@
    }
   },
   "near_waiting": {
-   "description": "the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (N1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field",
+   "description": "the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (N1.3 near); otherwise there is no field",
    "type": "array",
    "items": {
     "type": "string",
