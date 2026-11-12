@@ -1,0 +1,42 @@
+{
+  "description": "Frictionless Table Schema of Platform/common/acceptance/forms/stand-environment.tsv (ADR-0125 addenda (12), (13); task P01.250). Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; what a value means stays with stand.md and the norms of the norm column.",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "^[A-Z_][A-Z0-9_]*$"
+      }
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "description": "A value of the stand; {…} — a substitution of «Stand», - — the form sets no value.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "processes",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "every",
+          "process-stands"
+        ]
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "name"
+  ]
+}
