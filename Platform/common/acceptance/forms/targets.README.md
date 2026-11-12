@@ -23,6 +23,6 @@ id\towner\tstand_commands\tstand_addresses\tkeys\trequirements\tnorm_anchors\tfl
 
 | Flag | Meaning |
 |---|---|
-| `optional` | A profile that does not declare the interface of the target leaves the target not executed. Without this flag an absent interface blocks the target. At `P/01/production` the flag concerns only the functional verdict (N6.1 of the judge norms). |
+| `optional` | A profile that does not declare the interface of the target leaves the target not executed. Without this flag an absent interface blocks the target. A profile key of the column `keys` is not an interface: absent, it leaves the target not executed with the name of the key, with or without the flag (P/AC-R030; judge-only: the norms of the judge). At `P/01/production` the flag concerns only the functional verdict (N6.1 of the judge norms). |
 
 These columns add no profile field, command, substitution, address or parameter.

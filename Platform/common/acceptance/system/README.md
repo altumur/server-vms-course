@@ -15,7 +15,7 @@ the manifests `testsub` and `testsub2`, the event mirror is switched on by step 
 
 Sc. 07 and 08 check a box with systemd, not a group: a real test server with the units of the platform
 ([P/02.4](../../../02-installer/spec/02.4-installer.norms.md) N1.1). The operator runs the drills by the drill log, the runner only prints the steps
-`@manual` ([the dictionary of directives](../README.md#dictionary-of-directives-and-doors)): they do not enter the result, they are neither green nor
+`@manual` ([the dictionary of directives](../README.md#dictionary-of-directives-and-doors)): their result is the word `manual`, they are neither green nor
 red, they get no PASS from printing. The log of the operator is to name the preconditions of N3 of the norms, the outcomes and the limitations.
 
 ## Three-server cluster stand
