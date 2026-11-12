@@ -19,5 +19,5 @@ n	id	op	group	each	check	when	code	kind	fault	norm
 1	rd-body_limit	*			body_limit	body.size > lim.BODY_LIMIT	413	toolarge	{"limit": lim.BODY_LIMIT}	P/01.1 N2
 2	rd-method	*			no_route	body.path in ["/v1/get", "/v1/list"] && body.method != "GET"	404	badrequest		P/01.1 N2.1 «Method and HTTP»
 3	rd-query_form	*			body_form	body.path == "/v1/get" && (!has(body.query.key) || size(body.query.key) != 1)	400	badrequest		P/01.1 N2.1
-4	rd-list_form	*			list_form	body.path == "/v1/list" && has(body.query.prefix) && size(body.query.prefix) != 1	400	badrequest		P/01.1 N2.1; P/01.2 N4
-5	rd-key_rules	*			key_rules	body.path == "/v1/get" && ("/query/key/0" in lone || !key_ok(body.query.key[0]))	400	badkey		P/01.1 N1 row.key; P/01.1 N2.1
+4	rd-key_rules	*			key_rules	body.path == "/v1/get" && ("/query/key/0" in lone || !key_ok(body.query.key[0]))	400	badkey		P/01.1 N1 row.key; P/01.1 N2.1
+5	rd-list_form	*			list_form	body.path == "/v1/list" && has(body.query.prefix) && size(body.query.prefix) != 1	400	badrequest		P/01.1 N2.1; P/01.2 N4
