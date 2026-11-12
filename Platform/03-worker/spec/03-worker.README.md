@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/03-worker.READ
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/03-worker.md` (for people, not in the export).
 
+Concrete scenarios, fixtures and expected answers are not supplied in M; the judge receives them separately. The public norms and forms define the implementation obligations, including the acceptance interfaces and observation limits stated in N5. In chapter checklists, `sc. NN` names a process scenario of that chapter; an explicitly named chapter selects its acceptance. Seam ids name the SDK scenarios in the named seam table.
+
 ## Task
 
 Implement the basic loop of the worker in the language `<LANG>`: ownership of a name, leases of units, the heartbeat, the stand-in for a stuck step,
@@ -106,7 +108,7 @@ These distinctions explain the chapter terms; they add no rule to the norms.
    The right to the data of a unit and the right to the place are checked jointly; neither replaces the other.
 10. Implement SIGTERM in the order of [chapter 3.4](03.4-worker.norms.md) N3 and distinguish it from SIGKILL. Describe the choices of the implementation
     («Implementation decides» of the chapters), including TimeoutStopSec and the presence of the process at the resource.
-11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../common/vectors/sealing/README.md); judge-only: the common sealing vectors)
+11. Opening: pass the vectors of the contract [`open.tsv`](../../common/vectors/sealing/open.tsv) and [`ring.tsv`](../../common/vectors/sealing/ring.tsv) (judge-only: opening and ring-text vectors)
     with one's own opening function; the opening by the worker and `why` on an error — by reading [chapter 3.5](03.5-worker.norms.md) N3 «open»
     (there is no worker with secrets on the stand).
 12. Write an event under the epoch per the [event journal contract](../../common/contracts/event-journal.md) (lesson P/05); suppression — [chapter 3.6](03.6-worker.norms.md) N1.2. Separate

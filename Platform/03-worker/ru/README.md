@@ -2,7 +2,7 @@
 
 Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом.
 
-Микромодуль: библиотека на каждом языке, роль <sub>worker. Что нормирует и откуда — записка модуля `Platform/module-design.md` (только для судьи: для человека), таблица «Lessons».
+Микромодуль: библиотека на каждом языке, роль <sub>worker. Договоры перечислены ниже.
 
 Раскладка каталога (английский источник — на каноническом пути, русский текст для человека — в `ru/`):
 
@@ -21,7 +21,7 @@ ru/                              для человека, в выгрузку н
 
 ## Что урок берёт из common
 
-Эти общие файлы задают определения, на которые опираются главы, инструкция реализации, lifecycle и формы. Нормы глав остаются каноном; указатель не добавляет требований. Места вне M помечены «только для судьи». Данные векторов и случаи швов SDK не заменяют требования в M.
+Эти общие файлы задают определения, на которые опираются главы, инструкция реализации, lifecycle и формы. Нормы глав остаются каноном; указатель не добавляет требований. Данные векторов и случаи швов SDK не заменяют требования в M.
 
 | Файл | Разделы и назначение |
 |---|---|
@@ -59,7 +59,6 @@ ru/                              для человека, в выгрузку н
 | [Протокол векторов](../../common/ru/vectors/wire.md) | Строки и источники, выбор входа и групп, сравнение и утверждения — назначенные общие пакеты |
 | [Общие определения схем](../../common/data/common.schema.json) | `$defs` семей урока — общие формы скаляров и объектов |
 | [Потребители векторов](../../common/vectors/consumers.tsv), [таблица wire](../../common/vectors/wire.tsv) | Назначенные общие пакеты потребителя `03-worker` и их привязки входа и выхода |
-| [Векторы запечатывания](../../common/ru/vectors/sealing/README.md), [векторы токена двери](../../common/ru/vectors/door-token/README.md), [векторы токена домена](../../common/ru/vectors/domain-token/README.md) | только для судьи: определения пакетов и таблицы векторов; проверки P/03.5-R005 (открытие) и P/03.5-R020, P/03.5-R031 (разбор текста кольца), P/03.4-R026 (токены двери) и P/03.7-R016, P/03.7-R064 (проверка токенов домена) |
 | [Проверка строки](../../common/ru/contracts/row-check.md) | Строка единицы; Строка заказчика: `made`; Состояние единицы; Подготовка полей; Идентификатор и ограничения полей — типы строк, id жизни, заказанные строки и стражи состояния |
 | [Пул](../../common/ru/contracts/pool.md) | Живой воркер; Пул; Хранитель места при `distinct`; Пригодность сервера: `placeable`, `why` — ёмкость, вес, остаток и допуск мест |
 | [Пересылка](../../common/ru/contracts/forwarding.md) | Адрес клиента; Политика hop передачи доменному воркеру — `X-W2C-Client` и граница пересылки доменного воркера |
@@ -71,7 +70,7 @@ ru/                              для человека, в выгрузку н
 
 ### Остальные внешние файлы и точные разделы
 
-Файлы и разделы, на которые ссылается M урока. Пометка у закрытого файла называет проверяемое правило в M.
+Публичные внешние файлы и разделы, которые использует M урока.
 
 | Файл | Разделы и граница |
 |---|---|
@@ -86,7 +85,7 @@ ru/                              для человека, в выгрузку н
 | `Platform/04-controller/spec/04-controller.norms.md` | [файл](../../04-controller/ru/spec/04-controller.norms.md) |
 | `Platform/05-resource/spec/05-resource.norms.md` | [файл](../../05-resource/ru/spec/05-resource.norms.md), [`#n2-doors`](../../05-resource/ru/spec/05-resource.norms.md#n2-двери) |
 | `Platform/05-resource/vectors/relieve/README.md` | [файл](../../05-resource/ru/vectors/relieve/README.md) |
-| `Platform/06-console/acceptance/1/README.md` | [файл](../../06-console/ru/acceptance/1/README.md) |
+| `Platform/06-console/acceptance/1/README.md` | [файл](../../06-console/ru/acceptance/1/README.md) — сценарии 20 и 21: состояние единицы в ответе и таблицы воркера; свидетельство пункта P/03.6-06 |
 | `Platform/06-console/spec/06-console.api.openapi.yaml` | [файл](../../06-console/spec/06-console.api.openapi.yaml) |
 | `Platform/06-console/spec/06.1-console.norms.md` | [файл](../../06-console/ru/spec/06.1-console.norms.md) |
 | `Platform/06-console/spec/06.2-console.norms.md` | [файл](../../06-console/ru/spec/06.2-console.norms.md) |
@@ -97,7 +96,7 @@ ru/                              для человека, в выгрузку н
 | `Platform/06-console/vectors/requests-body/README.md` | [файл](../../06-console/ru/vectors/requests-body/README.md) |
 | `Platform/08-domain/README.md` | [файл](../../08-domain/ru/README.md) |
 | `Platform/08-domain/acceptance/5/README.md` | [файл](../../08-domain/ru/acceptance/5/README.md) |
-| `Platform/08-domain/acceptance/7/README.md` | [файл](../../08-domain/ru/acceptance/7/README.md) |
+| `Platform/08-domain/acceptance/7/README.md` | [файл](../../08-domain/ru/acceptance/7/README.md) — сценарий 01: проверка токена у получателя; свидетельство пункта P/03.7-06 |
 | `Platform/08-domain/data/holder.outcomes.tsv` | [файл](../../08-domain/data/holder.outcomes.tsv) |
 | `Platform/08-domain/data/keys.outcomes.tsv` | [файл](../../08-domain/data/keys.outcomes.tsv) |
 | `Platform/08-domain/spec/08.2-domain.norms.md` | [файл](../../08-domain/ru/spec/08.2-domain.norms.md) |
@@ -110,8 +109,6 @@ ru/                              для человека, в выгрузку н
 | `Platform/10-domain-console/spec/10-domain-console.norms.md` | [файл](../../10-domain-console/ru/spec/10-domain-console.norms.md) |
 | `Platform/common/acceptance/seams.md` | [`#seam-adapter-protocol`](../../common/ru/acceptance/seams.md#протокол-адаптера-швов) |
 | `Platform/common/contracts/sealing.md` | [файл](../../common/ru/contracts/sealing.md), [`#aad-path`](../../common/ru/contracts/sealing.md#путь-aad), [`#envelope`](../../common/ru/contracts/sealing.md#конверт), [`#ring-file`](../../common/ru/contracts/sealing.md#файл-кольца) |
-| `Platform/common/vectors/sealing/open.tsv` | [файл](../../common/vectors/sealing/open.tsv) (только для судьи: проверки P/03.5-R005) |
-| `Platform/common/vectors/sealing/ring.tsv` | [файл](../../common/vectors/sealing/ring.tsv) (только для судьи: разбор текста кольца по P/03.5-R020 и P/03.5-R031) |
 | `Platform/common/vectors/values-by-type/README.md` | [файл](../../common/ru/vectors/values-by-type/README.md) |
 | `Platform/01-store/spec/01.2-store.norms.md` | [файл](../../01-store/ru/spec/01.2-store.norms.md) — Права и роли доменного воркера |
 | `Platform/04-controller/lifecycle.md` | [файл](../../04-controller/ru/lifecycle.md) — Договор соседнего процесса контроллера |
