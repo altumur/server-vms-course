@@ -1,4 +1,4 @@
-# A possible order under ADR-0126, not a lesson norm. Single chapter5 maps to acceptance/ directly.
+# A possible order, not a lesson norm. Single chapter5 maps to acceptance/ directly.
 # gates separated by ;: build, seams:5:<cases>, vectors:<local-package>, accept:5:*. All former gates keep holding.
 # weight1..5; depends earlier n; when=true.
 # Common packages and reading remain mandatory by their own norms; build/seams are not full runner acceptance.
