@@ -906,6 +906,55 @@ def code_stage_errors(lesson, stages):
     return errors
 
 
+CODE_RULE_COLUMNS = ["id", "kind", "name", "args", "stage", "norm"]
+
+
+def code_rule_forms(root):
+    """The rows of the code checks: forms/code-rules.tsv of a lesson and the judge engine's engine-code-rules.tsv."""
+    root = Path(root)
+    return sorted([*root.glob("Platform/*/forms/code-rules.tsv"),
+                   *root.glob("Platform/common/acceptance/forms/engine-code-rules.tsv")])
+
+
+def check_code_rules(path, *, validated=None):
+    """ADR-0133 доп. (86) п. 1 (F07): the optional field `key_columns` of a `table_driven` row — a nonempty JSON list of
+    distinct column names of the form at `form` (a path from the root of the Source); cells of those columns are lawful
+    literals in code, the ban stays on the other cells. A row without the field is judged as before (the rest of the
+    args grammar belongs to the code gate)."""
+    path = Path(path)
+    errors, rows = read(path, CODE_RULE_COLUMNS, validated=validated)
+    if errors:
+        return errors, {}
+    root = next((p.parent for p in path.parents if p.name == "Platform"), path.parent)
+    for row in rows:
+        try:
+            args = json.loads(row["args"])
+        except ValueError:
+            continue
+        if not isinstance(args, dict) or "key_columns" not in args:
+            continue
+        where = f"{path.name}: {row['id']}: key_columns"
+        if row["kind"] != "table_driven":
+            errors.append(f"{where}: a field of table_driven only, not of {row['kind']}")
+            continue
+        keys = args["key_columns"]
+        if not isinstance(keys, list) or not keys or any(not isinstance(k, str) for k in keys) or len(keys) != len(set(keys)):
+            errors.append(f"{where}: {keys!r} is not a nonempty list of distinct column names")
+            continue
+        form = args.get("form")
+        target = root / form if isinstance(form, str) and not Path(form).is_absolute() and ".." not in Path(form).parts \
+            else None
+        if target is None or target.is_symlink() or not target.is_file():
+            errors.append(f"{where}: form {form!r} is not a form file of the Source")
+            continue
+        header = next((line.split("\t") for line in target.read_text(encoding="utf-8").splitlines()
+                       if line and not line.startswith("#")), [])
+        unknown = [k for k in keys if k not in header]
+        if unknown:
+            errors.append(f"{where}: {unknown} are not columns of {form}")
+    return errors, {}
+
+
 ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)
 TOMBSTONE = re.compile(r"^<!-- removed: (\S+) by ADR-[0-9]{4} -->$", re.M)
 REQ = re.compile(r"P/([0-9]{2})(?:\.([0-9]+))?-R([0-9]{3})")   # P/NN.K-RNNN или P/NN-RNNN урока одной главой

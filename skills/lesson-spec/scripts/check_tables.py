@@ -9,6 +9,9 @@
 - пробы: у каждой строки есть вход `only`; у каждой — `pair` или `nopair` с причиной; каждый вход сверяется с таблицей
   прогоном: `only` — первой нарушена n, ни одна следующая вычислимая не нарушена; `pair` — первой нарушена n и ближайшая
   следующая вычислимая тоже; `pass` — не нарушена ни одна, и все вычислимы. Вычислимая — `when` без ошибки CEL.
+- необязательные столбцы (ADR-0133 доп. (86) п. 1, F08): `refusal` таблицы — имя строки `forms/refusals.tsv` урока
+  (пусто или `-` — без имени); `local_admin` проб — `true`/`false`, вход CEL `local_admin` при `#var local_admin bool`
+  таблицы (столбец и объявление — только вместе).
 """
 import json
 import math
@@ -17,6 +20,12 @@ from pathlib import Path
 
 COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id — ADR-0122 доп. (1) п. 4
 PROBE_COLUMNS = ["n", "case", "sock", "body"]
+# ADR-0133 доп. (86) п. 1 (F08, OBSH.48): optional columns. A row of a table may name its row of forms/refusals.tsv of the
+# lesson (refusal); an input may carry local_admin — the request came through the physical local admin.sock, not a
+# forwarded one — when the table declares «#var local_admin bool». The other columns stay in their order.
+TABLE_OPTIONAL = ("refusal",)
+PROBE_OPTIONAL = ("local_admin",)
+NO_REFUSAL = ("", "-")
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")
 CEL_BUILTINS = {"type", "has", "size", "string", "bytes", "int", "double", "matches", "startsWith", "endsWith",
                 "contains", "split", "exists", "all", "exists_one", "map", "filter", "in", "dyn", "bool"}
@@ -43,16 +52,37 @@ class Table:
             self.errors.extend(errors)
         else:
             body = [line for line in lines if not line.startswith("#")]
-            if not body or body[0].split("\t") != COLUMNS:
-                self.error(f"columns must be {COLUMNS}")
+            head = body[0].split("\t") if body else []
+            if not optional_head(head, COLUMNS, TABLE_OPTIONAL):
+                self.error(f"columns must be {COLUMNS}, optional {list(TABLE_OPTIONAL)} once each")
                 return
             for no, line in enumerate(body[1:], 2):
                 cells = line.split("\t")
-                if len(cells) != len(COLUMNS):
-                    self.error(f"row {no}: {len(cells)} cells, expected {len(COLUMNS)}")
+                if len(cells) != len(head):
+                    self.error(f"row {no}: {len(cells)} cells, expected {len(head)}")
                     continue
-                self.rows.append(dict(zip(COLUMNS, cells)))
+                self.rows.append(dict(zip(head, cells)))
+        if "local_admin" in self.vars and self.vars["local_admin"] != "bool":
+            self.error(f"#var local_admin {self.vars['local_admin']} — bool")
         self.form(standard=validated is not None)
+        self.refusals()
+
+    def refusals(self):
+        """The column refusal: every value that is not empty or - is a name of forms/refusals.tsv of the lesson."""
+        named = [row for row in self.rows if row.get("refusal", "") not in NO_REFUSAL]
+        if not named:
+            return
+        catalogue = self.path.with_name("refusals.tsv")
+        if not catalogue.is_file():
+            self.error("column refusal, but no refusals.tsv next to the table")
+            return
+        lines = [line.split("\t") for line in catalogue.read_text(encoding="utf-8").splitlines()
+                 if line and not line.startswith("#")]
+        head = lines[0] if lines else []
+        names = {dict(zip(head, line)).get("name") for line in lines[1:]} if "name" in head else set()
+        for row in named:
+            if row["refusal"] not in names:
+                self.error(f"n {row['n']}: refusal {row['refusal']!r} is not a name of refusals.tsv")
 
     def error(self, message):
         self.errors.append(f"{self.path.name}: {message}")
@@ -169,6 +199,8 @@ class Runner:
                                                             [types[a] for a in args], impl=impls[name])]))
         cfg = cel.NewEnvConfigFromYaml("name: checks\nextensions:\n  - name: strings\n  - name: two-var-comprehensions\n")
         variables = {"body": T.DYN, "sock": T.STRING, "lone": T.List(T.STRING), "lim": T.Map(T.STRING, T.INT)}
+        if "local_admin" in table.vars:                  # declared by the table only (ADR-0133 доп. (86) п. 1)
+            variables["local_admin"] = T.BOOL
         for row in table.rows:
             if row["each"]:
                 i, x, _ = EACH.fullmatch(row["each"]).groups()
@@ -196,8 +228,9 @@ class Runner:
             return "error", v.value()
         return "ok", v.plain_value()
 
-    def run(self, sock, body, lone):
-        """→ [(row, status, value)] over the chain: status ok | error; rows of other commands are skipped."""
+    def run(self, sock, body, lone, inputs=None):
+        """→ [(row, status, value)] over the chain: status ok | error; rows of other commands are skipped. `inputs` —
+        the optional inputs of the probe (local_admin)."""
         op = body.get("op") if isinstance(body, dict) else None
         out = []
         for row, binding in self.table.steps(body):
@@ -206,12 +239,17 @@ class Runner:
             if binding is None:
                 out.append((row, "error", "each over a non-list"))
                 continue
-            data = {"body": body, "sock": sock, "lone": lone, "lim": self.lims, **binding}
+            data = {"body": body, "sock": sock, "lone": lone, "lim": self.lims, **(inputs or {}), **binding}
             status, value = self.eval(row, "when", data)
             if status == "ok" and not isinstance(value, bool):
                 status, value = "error", f"when gives {type(value).__name__}, not bool"
             out.append((row, status, value, data) if status == "ok" else (row, status, value))
         return out
+
+
+def optional_head(head, columns, optional):
+    """The header: `columns` in their order, each of `optional` at most once anywhere, nothing else."""
+    return [c for c in head if c not in optional] == columns and all(head.count(c) <= 1 for c in optional)
 
 
 def key_ok(k):
@@ -248,31 +286,43 @@ def check(table_path, *, validated=None, validated_probes=None):
         from check_forms import read
         errors, rows = read(probes_path, PROBE_COLUMNS, validated=validated_probes)
         table.errors.extend(errors)
-        probes = [(no, *(row[column] for column in PROBE_COLUMNS))
-                  for no, row in enumerate(rows, 2)]
+        head = validated_probes["columns"]
+        probes = [(no, row) for no, row in enumerate(rows, 2)]
     else:
         body = [line for line in lines if not line.startswith("#")]
-        if not body or body[0].split("\t") != PROBE_COLUMNS:
-            table.error(f"{probes_path.name}: columns must be {PROBE_COLUMNS}")
+        head = body[0].split("\t") if body else []
+        if not optional_head(head, PROBE_COLUMNS, PROBE_OPTIONAL):
+            table.error(f"{probes_path.name}: columns must be {PROBE_COLUMNS}, optional {list(PROBE_OPTIONAL)} once each")
             return table.errors, {}
         for no, line in enumerate(body[1:], 2):
             cells = line.split("\t")
-            if len(cells) != 4 or cells[1] not in {"only", "pair", "nopair", "pass"}:
-                table.error(f"{probes_path.name} row {no}: n, case only|pair|nopair|pass, sock, body")
+            if len(cells) != len(head) or cells[head.index("case")] not in {"only", "pair", "nopair", "pass"}:
+                table.error(f"{probes_path.name} row {no}: {', '.join(head)}; case only|pair|nopair|pass")
                 continue
-            probes.append((no, *cells))
+            probes.append((no, dict(zip(head, cells))))
+    local = "local_admin" in head
+    if ("local_admin" in table.vars) != local:
+        table.error(f"{probes_path.name}: no column local_admin, the table declares #var local_admin" if not local else
+                    f"{probes_path.name}: a column local_admin, the table does not declare #var local_admin")
     if table.errors:
         return table.errors, {}
     runner = Runner(table, lims, allows)
     numbers = {row["n"]: row for row in table.rows}
     cases = {}
-    for no, n, case, sock, text in probes:
+    for no, probe in probes:
+        n, case, sock, text = (probe[column] for column in PROBE_COLUMNS)
         where = f"{probes_path.name} row {no} (n {n}, {case})"
         cases.setdefault(n, set()).add(case)
         if case == "nopair":
             if n not in numbers or not text.strip():
                 table.error(f"{where}: nopair names a row and gives a reason")
             continue
+        inputs = {}
+        if local:
+            if probe["local_admin"] not in ("true", "false"):
+                table.error(f"{where}: local_admin {probe['local_admin']!r} — true or false")
+                continue
+            inputs["local_admin"] = probe["local_admin"] == "true"
         if case == "pass" and n != "0" or case != "pass" and n not in numbers:
             table.error(f"{where}: n {n!r} — a row of the table (0 for pass)")
             continue
@@ -281,7 +331,7 @@ def check(table_path, *, validated=None, validated_probes=None):
         except ValueError as exc:
             table.error(f"{where}: body is not JSON: {exc}")
             continue
-        chain = runner.run(sock, value, lone)
+        chain = runner.run(sock, value, lone, inputs)
         hits = [k for k, step in enumerate(chain) if step[1] == "ok" and step[2] is True]
         if case == "pass":
             bad = [s[0]["n"] for s in chain if s[1] != "ok" or s[2] is not False]

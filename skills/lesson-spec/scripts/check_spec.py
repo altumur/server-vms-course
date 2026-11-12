@@ -2955,6 +2955,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for path in check_forms.code_rule_forms(self.root):          # table_driven key_columns, ADR-0133 доп. (86) п. 1
+            if path in selected_standard and path not in standard:
+                continue
+            for message in check_forms.check_code_rules(path, validated=standard.get(path))[0]:
+                self.error(path, message)
         for lesson in check_forms.req_lessons(self.root):
             errors, stats = check_forms.check_req_anchors(lesson)
             for message in errors:

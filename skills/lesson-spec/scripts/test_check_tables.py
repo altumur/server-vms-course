@@ -89,5 +89,132 @@ class Checks(unittest.TestCase):
         self.assertEqual(body["key"], "a�")
 
 
+# ADR-0133 доп. (86) п. 1 (OBSH.48): вход local_admin формы проверок и столбец refusal — необязательные.
+SMALL_HEAD = (
+    "#var body dyn — the body\n"
+    "#var sock string — the effective role\n"
+    "{local}"
+    "#var lone list<string> — lone surrogates\n"
+    "#var lim map<string,int> — the parameters\n")
+SMALL_ROWS = (
+    "1\twc-body_object\t*\t\t\tbody_object\ttype(body) != map\t400\tbadrequest\t\tN2.1{r1}\n"
+    "2\twc-floor_socket\t*\t\t\tfloor_socket\t{when}\t403\tforbidden\t\tN4{r2}\n")
+LOCAL = "#var local_admin bool — the request came through the physical local admin.sock, not forwarded\n"
+REFUSALS = ("# catalogue\n"
+            "chapter\trow\tname\tsurface\tcode\tkind\tfields\theaders\tlog\tnorm\n"
+            "1.1\t1\tbody_form\thttp\t400\tbadrequest\t-\t-\t-\tN4\n"
+            "1.3\t1\tadmin_only\thttp\t403\tforbidden\t-\t-\t-\tN4\n")
+
+
+class OptionalInputs(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir)
+        self.table, self.probes = self.dir / "write-checks.tsv", self.dir / "write-checks.probes.tsv"
+
+    def write(self, *, local=True, probe_local=True, refusal=None, refusals=None, when=None):
+        head = SMALL_HEAD.format(local=LOCAL if local else "")
+        columns = list(check_tables.COLUMNS)
+        r1 = r2 = ""
+        if refusal is not None:
+            columns.append("refusal")
+            r1, r2 = (f"\t{v}" for v in refusal)
+        when = when or ("!local_admin" if local else "sock != \"admin\"")
+        self.table.write_text(head + "\t".join(columns) + "\n" + SMALL_ROWS.format(r1=r1, r2=r2, when=when),
+                              encoding="utf-8")
+        if probe_local:
+            rows = ["n\tcase\tsock\tlocal_admin\tbody",
+                    "1\tonly\twriter\ttrue\t[]", "1\tpair\twriter\tfalse\t[]",
+                    "2\tonly\tadmin\tfalse\t{}", "2\tnopair\tadmin\t-\tthe last row",
+                    "0\tpass\tadmin\ttrue\t{}"]
+        else:
+            rows = ["n\tcase\tsock\tbody",
+                    "1\tonly\tadmin\t[]", "1\tpair\twriter\t[]",
+                    "2\tonly\twriter\t{}", "2\tnopair\twriter\tthe last row",
+                    "0\tpass\tadmin\t{}"]
+        self.probes.write_text("# probes\n" + "\n".join(rows) + "\n", encoding="utf-8")
+        if refusals is not None:
+            (self.dir / "refusals.tsv").write_text(refusals, encoding="utf-8")
+
+    def errors(self):
+        return check_tables.check(self.table)[0]
+
+    @staticmethod
+    def validated(path):
+        lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
+        return {"path": path, "columns": lines[0].split("\t"), "rows": [line.split("\t") for line in lines[1:]]}
+
+    def refused(self, needle):
+        errors = self.errors()
+        self.assertTrue(any(needle in e for e in errors), errors)
+
+    def test_local_admin_input_agrees(self):
+        self.write()
+        errors, stats = check_tables.check(self.table)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats, {"check_rows": 2, "check_probes": 5})
+
+    def test_local_admin_input_agrees_validated(self):
+        self.write(refusal=("body_form", "admin_only"), refusals=REFUSALS)
+        self.assertEqual(check_tables.check(self.table, validated=self.validated(self.table),
+                                            validated_probes=self.validated(self.probes)),
+                         check_tables.check(self.table))
+        self.assertEqual(check_tables.check(self.table)[0], [])
+
+    def test_local_admin_value_is_used(self):           # the value of the column reaches CEL: a wrong probe is caught
+        self.write()
+        self.probes.write_text(self.probes.read_text(encoding="utf-8").replace(
+            "2\tonly\tadmin\tfalse\t{}", "2\tonly\tadmin\ttrue\t{}"), encoding="utf-8")
+        self.refused("the first violated row is None, not 2")
+
+    def test_local_admin_not_bool(self):
+        self.write()
+        self.probes.write_text(self.probes.read_text(encoding="utf-8").replace(
+            "1\tonly\twriter\ttrue\t[]", "1\tonly\twriter\tyes\t[]"), encoding="utf-8")
+        self.refused("local_admin 'yes' — true or false")
+
+    def test_local_admin_declared_without_probe_column(self):
+        self.write(probe_local=False)
+        self.refused("no column local_admin")
+
+    def test_local_admin_column_without_declaration(self):
+        self.write(local=False)
+        self.refused("does not declare #var local_admin")
+
+    def test_local_admin_undeclared_in_when(self):      # without #var the name is not a CEL variable
+        self.write(local=False, probe_local=False, when="!local_admin")
+        self.refused("does not compile")
+
+    def test_local_admin_wrong_type(self):
+        self.write()
+        self.table.write_text(self.table.read_text(encoding="utf-8").replace(
+            "#var local_admin bool", "#var local_admin string"), encoding="utf-8")
+        self.refused("#var local_admin string — bool")
+
+    def test_without_new_inputs_as_before(self):
+        self.write(local=False, probe_local=False)
+        self.assertEqual(check_tables.check(self.table), ([], {"check_rows": 2, "check_probes": 5}))
+
+    def test_refusal_column_names_catalogue_rows(self):
+        for cells in (("body_form", "admin_only"), ("body_form", ""), ("-", "admin_only")):
+            with self.subTest(cells=cells):
+                self.write(refusal=cells, refusals=REFUSALS)
+                self.assertEqual(self.errors(), [])
+
+    def test_refusal_column_unknown_name(self):
+        self.write(refusal=("body_form", "floor_socket"), refusals=REFUSALS)
+        self.refused("n 2: refusal 'floor_socket' is not a name of refusals.tsv")
+
+    def test_refusal_column_without_catalogue(self):
+        self.write(refusal=("body_form", "admin_only"))
+        self.refused("no refusals.tsv")
+
+    def test_refusal_column_twice_or_misplaced(self):
+        self.write(refusal=("body_form", "admin_only"), refusals=REFUSALS)
+        text = self.table.read_text(encoding="utf-8").replace("\tnorm\trefusal\n", "\tnorm\trefusal\trefusal\n")
+        self.table.write_text(text, encoding="utf-8")
+        self.refused("columns must be")
+
+
 if __name__ == "__main__":
     unittest.main()
