@@ -14,7 +14,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 |---|---|
 | `case` | the name of the row |
 | `input` | a JSON object: `ca` — the content of `ca.pem` (PEM), `ca_next` — `ca.next.pem` or `null`, `crl` — the content of `crl.pem`, `now` — Unix seconds |
-| `expect` | `@bad` — the file is wrong (the contract `crl`): the refusal is closed; otherwise a JSON object: `ca`, `ca_next` — the serials revoked for the leaves of this centre (the canonical notation of the package `revoked`: lowercase hex without leading zeros, ascending by value; `[]` — there is no block of this centre; `ca_next` — `null` when there is no `ca.next.pem`), `stale` — the centres whose block is without `nextUpdate`, with `nextUpdate` earlier than `now` or with `thisUpdate` later than `now` by more than 60 s: for each a log line and a count, the list is in effect |
+| `expect` | `@bad` — the file is wrong (the contract `crl`): the refusal is closed; otherwise a JSON object: `ca`, `ca_next` — the serials revoked for the leaves of this centre (the canonical notation of the package `revoked`: lowercase hex without leading zeros, ascending by value; `[]` — there is no block of this centre; `ca_next` — `null` when there is no `ca.next.pem`), `stale` — the centres whose block is without `nextUpdate`, with `nextUpdate` earlier than `now` or with `thisUpdate` later than `now` by more than 60 s: for each a log line and a count, the list is in effect; the list holds the centres in the order `ca`, `ca_next` |
 | `note` | the rule |
 
 ## Run

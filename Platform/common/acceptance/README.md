@@ -36,7 +36,7 @@ adds a row here. A directive or a door that only one lesson uses is defined in t
 
 | Door | Where | Lesson |
 |---|---|---|
-| `store` | the store door of P/01.1 through the socket of the role of the scenario; the role is named by the lesson README, `@as` changes it | 5 |
+| `store` | the store door of P/01.1 through the socket of the role of the scenario; the initial role is the column `role` of the routing row of the target ([`forms/targets.routing.tsv`](forms/targets.routing.tsv); judge-only: the routing of the judge), `@as` changes it | 5 |
 | `admin` | the store door through `admin.sock`; the stand sets the epoch floor through it — `admin POST /v1/write {"op": "floor", "floor": N, "id": …}` (P/01.3 N1.3 `floor`, `admin_ops`); there is no `w2cctl` command for the floor | 11; floor — P/01 |
 | `restored` | P/01, definition: [acceptance/3/README.md «Directives of chapter 1.3»](../../01-store/acceptance/3/README.md#directives-of-chapter-13) | 11 |
 | `console` | the console on `{port}`, the root subsystem `testsub` | 5 |
@@ -150,7 +150,7 @@ A subset in `expect` does not cancel the full form of the answer per the contrac
 
 | Door | Contract of the full form |
 |---|---|
-| `store`, `admin`, `restored`, `store@<id>`, `admin@<id>` | P/01 |
+| `store`, `admin`, `restored`, `store@<id>`, `admin@<id>` | P/01: the response schema of the operation (method and path) and of the status in [`01-store.api.openapi.yaml`](../../01-store/spec/01-store.api.openapi.yaml) |
 | `console`, `console2`, `member <cluster> console`, `member <cluster> console2`: the paths `/api/…` and `/domain…`; on a stand other than the domain stand, every path | P/06 |
 | `console` on a forwarded path `/domain/at/<cluster>/…` of a successful answer | P/06 of the forwarded path |
 | `resource`, `resource#<name>` | P/05 |

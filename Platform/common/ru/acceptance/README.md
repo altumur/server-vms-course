@@ -36,7 +36,7 @@
 
 | Дверь | Куда | Урок |
 |---|---|---|
-| `store` | дверь хранилища P/01.1 сокетом роли сценария; роль называет README урока, `@as` её меняет | 5 |
+| `store` | дверь хранилища P/01.1 сокетом роли сценария; начальная роль — столбец `role` строки маршрута цели ([`forms/targets.routing.tsv`](../../acceptance/forms/targets.routing.tsv); только для судьи: маршруты судьи), `@as` её меняет | 5 |
 | `admin` | дверь хранилища через `admin.sock`; пол эпохи стенд ставит ею — `admin POST /v1/write {"op": "floor", "floor": N, "id": …}` (P/01.3 N1.3 `floor`, `admin_ops`); команды `w2cctl` для пола нет | 11; пол — P/01 |
 | `restored` | P/01, определение: [acceptance/3/README.md «Директивы главы 1.3»](../../../01-store/ru/acceptance/3/README.md#директивы-главы-13) | 11 |
 | `console` | консоль на `{port}`, корневая подсистема `testsub` | 5 |
@@ -150,7 +150,7 @@
 
 | Дверь | Договор полной формы |
 |---|---|
-| `store`, `admin`, `restored`, `store@<id>`, `admin@<id>` | P/01 |
+| `store`, `admin`, `restored`, `store@<id>`, `admin@<id>` | P/01: схема ответа операции (метод и путь) и статуса в [`01-store.api.openapi.yaml`](../../../01-store/spec/01-store.api.openapi.yaml) |
 | `console`, `console2`, `member <кластер> console`, `member <кластер> console2`: пути `/api/…` и `/domain…`; на стенде, кроме стенда домена, — любой путь | P/06 |
 | `console` на пересланном пути `/domain/at/<кластер>/…` успешного ответа | P/06 пересланного пути |
 | `resource`, `resource#<имя>` | P/05 |

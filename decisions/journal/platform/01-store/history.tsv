@@ -81,3 +81,4 @@ P/01.3-R035	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (15) item
 -	forms/daemon-flags.tsv#row:-api-bind	P01.233, the Architect's decision of 2026-11-11T22:12:38Z and 2026-11-11T22:18:32Z (B1 revised: the row -api-bind, as -raft-bind)	2026-11-11	-
 -	data/configstore-doors.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-11	 (ADR-0088 addendum (1) R7, addendum (2) S11)
 -	data/epoch_floor.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-11	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:51:38Z (B8, S1: the column role of the common routing header, a cell in every row of this lesson)	2026-11-12	-

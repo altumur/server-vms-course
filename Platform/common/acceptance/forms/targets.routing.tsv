@@ -8,4 +8,7 @@
 # parts: JSON array of {key,owner}, the parts of other lessons in the stand of this target.
 # body: the comparison mode of an answer body of the forms <code> <JSON> and @oneof («Expectation» of the dictionary of the common README): whole or subset for the engine words run, seams, extra, l06, l11, store_group and power_stand;
 # - for vector, production, verdicts, puts and variants, whose rows are not HTTP steps; another value is a data error. The mode is a word of the row: a lesson or a chapter name sets no mode.
-id	engine	acceptance	scenarios	tables	parts	body
+# role: the initial role of the doors store and store@<id> of the scenarios of the target: a role of the rights file of the stand, through whose socket <role>.sock these steps go until an @as;
+# @as — the first @as of each scenario sets the role, and a step of these doors before it is a data error of the row; - — the target has no such doors in its table (vector, production,
+# verdicts, puts and variants rows among them). keys.role of a profile does not replace it; a lesson or a chapter README sets no role.
+id	engine	acceptance	scenarios	tables	parts	body	role
