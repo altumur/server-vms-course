@@ -632,6 +632,16 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/05-resource/forms/decision-order.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P05.9: Frictionless Table Schema data of check_spec; outside the judge input."
+    },
+    {
       "path": "Platform/05-resource/forms/door-roles.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."

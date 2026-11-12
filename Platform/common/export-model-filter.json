@@ -632,6 +632,16 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/05-resource/forms/decision-order.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P05.9: Public ordered resource decisions, classified like the neighbouring public lesson forms."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P05.9: Frictionless Table Schema data of check_spec; course tooling, not a model input."
+    },
+    {
       "path": "Platform/05-resource/forms/door-roles.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
