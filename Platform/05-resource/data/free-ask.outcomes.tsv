@@ -1,6 +1,6 @@
-# Outcomes of an unreadable row <sub>/requests/free-<server>-<volume> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/requests/free-<server>-<volume>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>worker	a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (V7 item 3, row 10)	0	row	P/03.6 N3 «holder's look»
+	<s>worker	a row not in the resource's form is not a request: skipped, the cause goes to the log without the value	0	row	P/03.6 N3 «holder's look»
 	console	a resource row without a live owner is removed by ttl	0	row	P/06.4 N3 «reaper»
 	resource	not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip	0	row	P/05 N1.4 free_ask, N3 «resource pass» relieve

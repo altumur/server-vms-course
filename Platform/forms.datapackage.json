@@ -1,6 +1,6 @@
 {
   "name": "platform-forms",
-  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3) the judge engine code-check form (P02.49) and the forms of P01.176: the orders of read, rights and service checks with their probes, Status, metrics and the group (P01.228). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
+  "description": "The forms of Platform checked by Frictionless Table Schema (ADR-0125 addenda (12), (13); OBSH.39.1), first and second groups (OBSH.39.1, OBSH.39.3) the judge engine code-check form (P02.49) and the forms of P01.176: the orders of read, rights and service checks with their probes, Status, metrics and the group (P01.228) and the environment of the stand processes (P01.250). Paths are relative to Platform/. headerRows is the physical line of the header after the comment lines (#).",
   "resources": [
     {
       "name": "stages_p01",
@@ -305,6 +305,22 @@
         }
       },
       "schema": "common/acceptance/forms/engine-code-rules.tsv.schema.json"
+    },
+    {
+      "name": "stand_environment",
+      "path": "common/acceptance/forms/stand-environment.tsv",
+      "format": "tsv",
+      "encoding": "utf-8",
+      "dialect": {
+        "commentChar": "#",
+        "headerRows": [
+          14
+        ],
+        "csv": {
+          "delimiter": "\t"
+        }
+      },
+      "schema": "common/acceptance/forms/stand-environment.tsv.schema.json"
     }
   ]
 }

@@ -7,7 +7,7 @@
 32-copy-raw	2	admin GET /v1/copy	200 @header Content-Type: =application/x-ndjson
 32-copy-raw	3	store GET /v1/copy	403 {"kind": "forbidden"}
 32-copy-raw	4	admin POST /v1/copy	405 @header Allow: =GET
-32-copy-raw	5	admin HEAD /v1/copy	200 @empty
+32-copy-raw	5	admin HEAD /v1/copy	405 @empty @header Allow: =GET
 32-copy-raw	6	admin GET /v1/copy/x	404
 33-stop	1	@hold store 4	ok
 33-stop	2	@sigterm store	ok @by(15)
