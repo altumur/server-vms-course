@@ -1,0 +1,8 @@
+# The stand manifests and their order (stand.md «Manifests»): the runner sets them up by the command manifest-put one by one, in the order of n, after the
+# store is ready and before the first @start; the manifests reference each other, so their files do not give the order. stand.md refers to this form.
+# n: the position of the installation, 1, 2, … without gaps. manifest: the name of the manifest. file: the manifest file, a repository-relative path.
+# beside: a repository-relative directory whose whole content the stand puts next to the copy of the manifest under the same paths (the files of
+# console.shell and console.files, which the installation reads next to the manifest file); - — nothing.
+n	manifest	file	beside
+1	testsub	Platform/common/data/testsub/testsub.subsystem.yaml	-
+2	testsub2	Platform/common/data/testsub/testsub2.subsystem.yaml	Platform/06-console/acceptance/5/inputs/testsub2

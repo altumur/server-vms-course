@@ -14,7 +14,7 @@ Write one engine that executes the targets of the registry from the data of the 
 - The [common stand](../README.md) gives the stand, the dictionary of directives and doors, the seam protocol and the expectation forms.
 - The [profile contract](../PROFILE.md) gives the shape of `acceptance.yaml`, `assembly.yaml`, the command ownership, the substitutions, the adapters and the vector envelope.
 - The [vector wire form](../../vectors/wire.md) and `wire.tsv` give the vector rows; `consumers.tsv` gives their owners.
-- The [target registry](../forms/targets.README.md) gives the targets and their requirements; `forms/targets.routing.tsv` gives the engine family, the acceptance directories and the scenario selection of each target.
+- The [target registry](../forms/targets.README.md) gives the targets and their requirements; `forms/targets.routing.tsv` gives the engine family, the acceptance directories, the scenario selection, the body mode, the initial role, the admitted unnamed fields and the rights file of the stand store of each target.
 - The README of a chapter's acceptance gives its preparation and special comparison rules.
 - [The production qualification of the store](../../../01-store/spec/production-acceptance.md) gives the groups, budgets and measurements of N6 of the norms.
 

@@ -17,6 +17,11 @@
       "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
     },
     {
+      "path": "Platform/01-store/acceptance/1/inputs/rights.json",
+      "disposition": "model_and_judge",
+      "basis": "The rights file of the stand of chapter 1.1 (the role acc of «Role sockets» of the common stand); public like that paragraph."
+    },
+    {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
@@ -730,6 +735,11 @@
     },
     {
       "path": "Platform/01-store/acceptance/1/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/inputs/rights.json",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
     },

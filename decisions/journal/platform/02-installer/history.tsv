@@ -123,3 +123,4 @@ req_id	file	source	date	removed
 -	forms/README.md#internal-finite-deletion-profile	the approved revision 1f00 of the finite profile	2026-11-06	approved1f00
 -	forms/README.md#internal-finite-deletion-profile	the Architect's decision on the finite profile judge	2026-11-06	The Architect authors the shared judge by exact source hash; 
 -	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:51:38Z (B8, S1: the column role of the common routing header, a cell in every row of this lesson)	2026-11-12	-
+-	forms/targets.routing.tsv#header	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (B1, B2: the columns free and rights, a cell in every row of this lesson)	2026-11-12	-

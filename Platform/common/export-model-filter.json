@@ -4582,6 +4582,16 @@
       "basis": "P01.250: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
     },
     {
+      "path": "Platform/common/acceptance/forms/stand-manifests.tsv",
+      "disposition": "model_and_judge",
+      "basis": "The stand manifests and their order (stand.md «Manifests»); public like that paragraph."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/stand-manifests.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "Frictionless schema of a form, a checker input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.README.md",
       "disposition": "model_and_judge",
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 generic public target form/flags/profile semantics, wholefile."
@@ -6295,6 +6305,16 @@
       "path": "Platform/common/vectors/presence-room/cases.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/common/vectors/probe-tables.tsv",
+      "disposition": "model_and_judge",
+      "basis": "The envelope of the probe tables run as vector packages (wire.md «P/01 write-checks transport»); public like wire.tsv."
+    },
+    {
+      "path": "Platform/common/vectors/probe-tables.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "Frictionless schema of a form, a checker input."
     },
     {
       "path": "Platform/common/vectors/production-obligations/README.md",

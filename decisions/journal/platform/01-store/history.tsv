@@ -91,3 +91,21 @@ P/01.1-R156	spec/01-store.api.openapi.yaml#/components/schemas/Key/description	P
 -	forms/export.json#/judge/129/disposition	P01.257 S5; P01.256 B9; Architect decision 2026-11-12T09:51:38Z	2026-11-12	exclude
 -	forms/export.json#/judge/129/basis	P01.257 S5; P01.256 B9; Architect decision 2026-11-12T09:51:38Z	2026-11-12	Outside the judge input: neither the common acceptance nor data of P/01.
 -	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:51:38Z (B8, S1: the column role of the common routing header, a cell in every row of this lesson)	2026-11-12	-
+-	forms/targets.routing.tsv#header	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (B1, B2: the columns free and rights, a cell in every row of this lesson)	2026-11-12	-
+-	acceptance/1/inputs/rights.json#/roles	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (item 3: the rights file of «Role sockets» of the common stand as a file)	2026-11-12	-
+-	forms/export.json#/model/3	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (item 3: the rights file of chapter 1.1, public like «Role sockets»)	2026-11-12	-
+-	forms/export.json#/judge/3	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (item 3: the rights file of chapter 1.1 in the judge input)	2026-11-12	-
+-	README.md#what-this-lesson-takes-from-common	P01.259, the Architect's decision of 2026-11-12T10:32:43Z (item 5: the form probe-tables.tsv)	2026-11-12	-
+-	forms/production.tsv#header	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv)	2026-11-12	[] for a group: its needs are the third column of its row.
+-	forms/production.tsv#row:RUN-W01	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-W02	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-W03	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-W04	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-L01	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-L02	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-L03	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-F01	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-F02	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-F03	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-F04	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]
+-	forms/production.tsv#row:RUN-H03	P01.259, the Architect's decisions of 2026-11-12T10:32:43Z (B3) and 2026-11-12T10:48:54Z (b: the D7 words of forms/production/bindings.tsv): the cell inputs	2026-11-12	[]

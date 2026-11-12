@@ -4582,6 +4582,16 @@
       "basis": "P01.250: data of check_spec (ADR-0125 addenda (12) item 2, (13)); outside the judge input."
     },
     {
+      "path": "Platform/common/acceptance/forms/stand-manifests.tsv",
+      "disposition": "include",
+      "basis": "Stand form of the common acceptance: the stand manifests and their order."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/stand-manifests.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "Frictionless schema of a form, a checker input; outside the judge input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.README.md",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."
@@ -6295,6 +6305,16 @@
       "path": "Platform/common/vectors/presence-room/cases.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/probe-tables.tsv",
+      "disposition": "include",
+      "basis": "Vector wire form: the envelope of the probe tables (wire.md «P/01 write-checks transport»)."
+    },
+    {
+      "path": "Platform/common/vectors/probe-tables.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "Frictionless schema of a form, a checker input; outside the judge input."
     },
     {
       "path": "Platform/common/vectors/production-obligations/README.md",
