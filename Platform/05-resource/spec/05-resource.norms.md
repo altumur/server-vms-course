@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/spec/05-resource.norms.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The canon of the lesson. Lecture (`ru/05-resource.md`, for people, not in the export), [contract](05-resource.api.openapi.yaml), [instructions](05-resource.README.md),
-[life cycle](../lifecycle.md), [acceptance](../acceptance/README.md) (judge-only: stand preparation and observation instructions). The form of the event line, the event id,
+[life cycle](../lifecycle.md). The form of the event line, the event id,
 the buckets, the writers of the file, the encoding of names and the writing of a line are [the event log contract](../../common/contracts/event-journal.md); the presence
 lock and the count `room` are [the presence lock contract](../../common/contracts/presence-lock.md): the lesson is the owner of both. The request of N1.5, the merge, the reaper, the submission and the console doors are [chapter 6.4](../../06-console/spec/06.4-console.norms.md) (P/06);
 repeat suppression and the execution of requests are [chapter 3.6](../../03-worker/spec/03.6-worker.norms.md). «P/0N» is a lesson of the
@@ -15,31 +15,31 @@ The index locates existing rules and introduces none.
 
 | Topic | Requirements | Files |
 |---|---|---|
-| `local_objects` local objects | P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R066, P/05-R256, P/05-R257, P/05-R258 | `spec/05-resource.README.md`, `Platform/common/contracts/event-journal.md` (file-names-in-shared-trees) |
-| `object_keys` keys and prefixes | P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R254, P/05-R255 | `spec/05-resource.api.openapi.yaml`, `forms/README.md` |
+| `local_objects` local objects | P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R066 | `spec/05-resource.README.md`, `Platform/common/contracts/event-journal.md` (file-names-in-shared-trees) |
+| `object_keys` keys and prefixes | P/05-R007, P/05-R008, P/05-R041, P/05-R057, P/05-R060, P/05-R109 | `spec/05-resource.api.openapi.yaml`, `forms/README.md` |
 | `row_objects` row objects and file objects | P/05-R006, P/05-R007, P/05-R064, P/05-R104 | `spec/05-resource.README.md`, `spec/05-resource.api.openapi.yaml` |
-| `object_door` object door admission | P/05-R008, P/05-R036, P/05-R040, P/05-R065, P/05-R167, P/05-R191, P/05-R192, P/05-R193 | `spec/05-resource.api.openapi.yaml`, `forms/door-roles.tsv` |
-| `object_listing` object listing | P/05-R008, P/05-R038, P/05-R040, P/05-R106 | `spec/05-resource.api.openapi.yaml` |
+| `object_door` object door admission | P/05-R008, P/05-R036, P/05-R040, P/05-R065, P/05-R167, P/05-R193 | `spec/05-resource.api.openapi.yaml`, `forms/door-roles.tsv` |
+| `object_listing` object listing | P/05-R008, P/05-R038, P/05-R040 | `spec/05-resource.api.openapi.yaml` |
 | `cluster_objects` cluster reads and missing answers | P/05-R027, P/05-R039, P/05-R040, P/05-R059, P/05-R062, P/05-R105 | `Platform/common/contracts/object-client.md` (reading-cluster-objects), `spec/05-resource.api.openapi.yaml` |
-| `object_versions` object written and tombstones | P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252 | `Platform/common/contracts/tombstone.md`, `spec/05-resource.README.md` |
-| `body_copy` body copies | P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193 | `spec/05-resource.api.openapi.yaml`, `Platform/common/contracts/tombstone.md` |
-| `ceilings` independent size and time limits | P/05-R013, P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R163, P/05-R164 | `forms/runtime-constants.tsv`, `spec/05-resource.api.openapi.yaml` |
-| `event_lines` event line and writing | P/05-R018, P/05-R049, P/05-R117, P/05-R259, P/05-R260 | `Platform/common/contracts/event-journal.md`, `spec/05-resource.README.md` |
-| `event_query` event query and merge | P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299 | `spec/05-resource.api.openapi.yaml`, `forms/README.md`, `spec/05-resource.README.md` |
-| `index_cache` live index and cache | P/05-R020, P/05-R050, P/05-R067, P/05-R068 | `spec/05-resource.README.md`, `forms/runtime-constants.tsv` |
-| `retention` retention and holds | P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266 | `data/resource-heartbeat.schema.json`, `data/resource-heartbeat.outcomes.tsv`, `forms/decision-order.tsv`, `Platform/common/contracts/event-journal.md` (retention-of-a-tree) |
-| `heartbeat` resource heartbeat | P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270 | `data/resource-heartbeat.schema.json`, `data/resource-heartbeat.outcomes.tsv`, `lifecycle.md` |
-| `presence` worker presence and room | P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225 | `Platform/common/contracts/presence-lock.md`, `data/presence-lock.schema.json`, `data/presence-lock.outcomes.tsv`, `forms/decision-order.tsv` |
-| `door_row` resource door row and freshness | P/05-R025, P/05-R027, P/05-R080, P/05-R082, P/05-R089, P/05-R202, P/05-R267, P/05-R268, P/05-R269 | `data/doors.schema.json`, `data/doors.outcomes.tsv`, `Platform/common/contracts/observation.md` (resource-state-resource_state) |
-| `volume_usage` volume usage | P/05-R025, P/05-R053, P/05-R079, P/05-R271, P/05-R272, P/05-R273 | `data/resource-heartbeat.schema.json`, `lifecycle.md` |
-| `resource_pass` resource pass and stalled steps | P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R242 | `lifecycle.md`, `forms/runtime-constants.tsv`, `spec/05-resource.README.md` |
-| `free_ask` space and free requests | P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273 | `data/free-ask.schema.json`, `data/free-ask.outcomes.tsv`, `vectors/relieve/README.md`, `data/resource-heartbeat.schema.json` |
-| `bucket_mirror` bucket mirroring | P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274 | `spec/05-resource.api.openapi.yaml`, `data/resource-heartbeat.schema.json`, `forms/runtime-constants.tsv` |
-| `restore` restore and peer attempts | P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231 | `spec/05-resource.api.openapi.yaml`, `data/resource-heartbeat.schema.json`, `lifecycle.md`, `forms/runtime-constants.tsv` |
-| `wait` event hint and long poll | P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299 | `spec/05-resource.api.openapi.yaml`, `forms/decision-order.tsv`, `data/resource-heartbeat.schema.json`, `forms/runtime-constants.tsv` |
-| `routing` raw paths and route matching | P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297 | `spec/05-resource.api.openapi.yaml`, `forms/README.md` |
+| `object_versions` object written and tombstones | P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R185, P/05-R187, P/05-R190 | `Platform/common/contracts/tombstone.md`, `spec/05-resource.README.md` |
+| `body_copy` body copies | P/05-R005, P/05-R012, P/05-R015, P/05-R036, P/05-R065, P/05-R112, P/05-R176, P/05-R185, P/05-R187, P/05-R193 | `spec/05-resource.api.openapi.yaml`, `Platform/common/contracts/tombstone.md` |
+| `ceilings` independent size and time limits | P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R163 | `forms/runtime-constants.tsv`, `spec/05-resource.api.openapi.yaml` |
+| `event_lines` event line and writing | P/05-R018, P/05-R023, P/05-R049, P/05-R259 | `Platform/common/contracts/event-journal.md`, `spec/05-resource.README.md` |
+| `event_query` event query and merge | P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R259, P/05-R261, P/05-R299 | `spec/05-resource.api.openapi.yaml`, `forms/README.md`, `spec/05-resource.README.md` |
+| `index_cache` live index and cache | P/05-R020, P/05-R050, P/05-R067 | `spec/05-resource.README.md`, `forms/runtime-constants.tsv` |
+| `retention` retention and holds | P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R077, P/05-R092, P/05-R122, P/05-R226, P/05-R227, P/05-R231, P/05-R232, P/05-R234, P/05-R263, P/05-R264, P/05-R265, P/05-R266 | `data/resource-heartbeat.schema.json`, `data/resource-heartbeat.outcomes.tsv`, `forms/decision-order.tsv`, `Platform/common/contracts/event-journal.md` (retention-of-a-tree) |
+| `heartbeat` resource heartbeat | P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R126, P/05-R127, P/05-R196, P/05-R197, P/05-R199, P/05-R201 | `data/resource-heartbeat.schema.json`, `data/resource-heartbeat.outcomes.tsv`, `lifecycle.md` |
+| `presence` worker presence and room | P/05-R025, P/05-R026, P/05-R080, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R199, P/05-R223 | `Platform/common/contracts/presence-lock.md`, `data/presence-lock.schema.json`, `data/presence-lock.outcomes.tsv`, `forms/decision-order.tsv` |
+| `door_row` resource door row and freshness | P/05-R025, P/05-R027, P/05-R080, P/05-R082, P/05-R089, P/05-R196 | `data/doors.schema.json`, `data/doors.outcomes.tsv`, `Platform/common/contracts/observation.md` (resource-state-resource_state) |
+| `volume_usage` volume usage | P/05-R025, P/05-R053, P/05-R079 | `data/resource-heartbeat.schema.json`, `lifecycle.md` |
+| `resource_pass` resource pass and stalled steps | P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R100, P/05-R101, P/05-R102, P/05-R234, P/05-R242 | `lifecycle.md`, `forms/runtime-constants.tsv`, `spec/05-resource.README.md` |
+| `free_ask` space and free requests | P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R101, P/05-R182, P/05-R209, P/05-R211, P/05-R212, P/05-R214, P/05-R238, P/05-R240 | `data/free-ask.schema.json`, `data/free-ask.outcomes.tsv`, `vectors/relieve/README.md`, `data/resource-heartbeat.schema.json` |
+| `bucket_mirror` bucket mirroring | P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R159, P/05-R160, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R216, P/05-R217, P/05-R220, P/05-R227, P/05-R231, P/05-R274 | `spec/05-resource.api.openapi.yaml`, `data/resource-heartbeat.schema.json`, `forms/runtime-constants.tsv` |
+| `restore` restore and peer attempts | P/05-R030, P/05-R128, P/05-R130, P/05-R134, P/05-R135, P/05-R138, P/05-R139, P/05-R140, P/05-R143, P/05-R146, P/05-R231 | `spec/05-resource.api.openapi.yaml`, `data/resource-heartbeat.schema.json`, `lifecycle.md`, `forms/runtime-constants.tsv` |
+| `wait` event hint and long poll | P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R148, P/05-R152, P/05-R153, P/05-R154, P/05-R246, P/05-R248, P/05-R250, P/05-R251, P/05-R299 | `spec/05-resource.api.openapi.yaml`, `forms/decision-order.tsv`, `data/resource-heartbeat.schema.json`, `forms/runtime-constants.tsv` |
+| `routing` raw paths and route matching | P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R280, P/05-R282, P/05-R288, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297 | `spec/05-resource.api.openapi.yaml`, `forms/README.md` |
 | `http_streams` representations and stream failures | P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R283, P/05-R298 | `spec/05-resource.api.openapi.yaml`, `forms/refusals.tsv` |
-| `tls` TLS and role admission | P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286, P/05-R287 | `forms/door-roles.tsv`, `spec/05-resource.api.openapi.yaml`, `lifecycle.md`, `Platform/common/contracts/role-certificate.md` |
+| `tls` TLS and role admission | P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R196, P/05-R286 | `forms/door-roles.tsv`, `spec/05-resource.api.openapi.yaml`, `lifecycle.md`, `Platform/common/contracts/role-certificate.md` |
 | `start` resource start | P/05-R046, P/05-R047, P/05-R048, P/05-R052 | `lifecycle.md`, `forms/daemon-flags.tsv`, `Platform/common/contracts/schema.md` (check-at-start) |
 | `console_owners` console-owned operations | P/05-R018, P/05-R021, P/05-R037, P/05-R055, P/05-R162 | `Platform/06-console/spec/06.4-console.norms.md`, `spec/05-resource.README.md` |
 | `refusals` refusals and durability outcomes | P/05-R010, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R058 | `forms/refusals.tsv`, `spec/05-resource.api.openapi.yaml`, `Platform/common/contracts/production-obligations.md` |
@@ -102,39 +102,15 @@ The `object` form is defined by its separately identified rules: P/05-R059, P/05
 
 <!-- req: P/05-R063 -->
 
-**`written`.** The mark of the keeper resource at the write of the key (X-Written of the door, written of the listing), not a time field of the body.
-
-<!-- req: P/05-R183 -->
-
-**Object written and tombstones.** Every write of the key sets written strictly greater than the former written of the same key: the clock has not moved forward — the former + 0.001 s.
-
-<!-- req: P/05-R184 -->
-
-**Object written and tombstones.** A new write of the same bytes is a new version, the same (server, written) is the same version (the observation contract «changed»).
+**`written`.** The mark of the keeper resource at the write of the key (X-Written of the door, written of the listing), not a time field of the body. **Object written and tombstones.** Every write of the key sets written strictly greater than the former written of the same key: the clock has not moved forward — the former + 0.001 s. A new write of the same bytes is a new version, the same (server, written) is the same version (the observation contract «changed»).
 
 <!-- req: P/05-R185 -->
 
-**Object written and tombstones.** A body copy (PUT .../blobs/`<digest>` with X-Written, the mirror) keeps the written of the source copy, not its own: otherwise a copy that lay before the delete would be newer than the tombstone.
-
-<!-- req: P/05-R186 -->
-
-**Object written and tombstones.** For a copy of the same key already lying there written does not decrease (the greater of the two).
+**Object written and tombstones.** A body copy (PUT .../blobs/`<digest>` with X-Written, the mirror) keeps the written of the source copy, not its own: otherwise a copy that lay before the delete would be newer than the tombstone. For a copy of the same key already lying there written does not decrease (the greater of the two).
 
 <!-- req: P/05-R187 -->
 
-**Object written and tombstones.** For a key deleted here the former written is the written of its tombstone `.gone/<object-key>` while it lies: a new write is strictly greater than it (otherwise the neighbours would count it older than the delete, the tombstone contract `drop`, `rewrite`).
-
-<!-- req: P/05-R188 -->
-
-**Object written and tombstones.** There is no separate memory — the tombstone is the mark.
-
-<!-- req: P/05-R252 -->
-
-**Object written and tombstones.** A write after written removes the tombstone by the same action, before the answer of the write (the tombstone contract `rewrite`).
-
-<!-- req: P/05-R189 -->
-
-**Object written and tombstones.** The tombstone is removed — the bound is only the former rules.
+**Object written and tombstones.** For a key deleted here the former written is the written of its tombstone `.gone/<object-key>` while it lies: a new write is strictly greater than it (otherwise the neighbours would count it older than the delete, the tombstone contract `drop`, `rewrite`). There is no separate memory — the tombstone is the mark. A write after written removes the tombstone by the same action, before the answer of the write (the tombstone contract `rewrite`). The tombstone is removed — the bound is only the former rules.
 
 <!-- req: P/05-R190 -->
 
@@ -146,15 +122,7 @@ The `object` form is defined by its separately identified rules: P/05-R059, P/05
 
 <!-- req: P/05-R065 -->
 
-**`door`.** Only the families PLATFORM_DOOR (platform/resources/*, domain/* (M11), */heartbeats/*, */contenders/*, */snapshot/*, */snapshot-tables/*, */controller/*, */blobs/*) and objects.door of the manifest; anything else — 403.
-
-<!-- req: P/05-R191 -->
-
-**Object door admission.** Tombstones .gone/`<object-key>` — read only: the listing prefix=.gone/ and GET of the body (the tombstone contract).
-
-<!-- req: P/05-R192 -->
-
-**Object door admission.** `*` of the first part is a subsystem of the manifest catalogue: `other/heartbeats/x` without a manifest other — 403.
+**`door`.** Only the families PLATFORM_DOOR (platform/resources/*, domain/* (M11), */heartbeats/*, */contenders/*, */snapshot/*, */snapshot-tables/*, */controller/*, */blobs/*) and objects.door of the manifest; anything else — 403. **Object door admission.** Tombstones .gone/`<object-key>` — read only: the listing prefix=.gone/ and GET of the body (the tombstone contract). `*` of the first part is a subsystem of the manifest catalogue: `other/heartbeats/x` without a manifest other — 403.
 
 <!-- req: P/05-R193 -->
 
@@ -162,27 +130,11 @@ The `object` form is defined by its separately identified rules: P/05-R059, P/05
 
 <!-- req: P/05-R066 -->
 
-**`disk`.** `<PLATFORM_DIR>`/objects/`<key>`.
-
-<!-- req: P/05-R256 -->
-
-**Local objects.** Directory 0775, file 0644.
-
-<!-- req: P/05-R257 -->
-
-**Local objects.** The write — temp + rename under the directory lock `<dir>/~lock`, flock(LOCK_EX), the file is not deleted.
-
-<!-- req: P/05-R258 -->
-
-**Local objects.** Service names (the lock, the temporary name) — the event log contract «File names».
+**`disk`.** `<PLATFORM_DIR>`/objects/`<key>`. **Local objects.** Directory 0775, file 0644. The write — temp + rename under the directory lock `<dir>/~lock`, flock(LOCK_EX), the file is not deleted. Service names (the lock, the temporary name) — the event log contract «File names».
 
 <!-- req: P/05-R007 -->
 
-An object key is a non-empty relative path: non-empty segments, without exact `.`/`..`, backslash and control characters.
-
-<!-- req: P/05-R103 -->
-
-**Keys and prefixes.** `prefix` is the beginning of such a key, also emptiness or an ending `/`; it is not a full key.
+An object key is a non-empty relative path: non-empty segments, without exact `.`/`..`, backslash and control characters. **Keys and prefixes.** `prefix` is the beginning of such a key, also emptiness or an ending `/`; it is not a full key.
 
 <!-- req: P/05-R104 -->
 
@@ -192,37 +144,13 @@ An object key is a non-empty relative path: non-empty segments, without exact `.
 
 **Cluster reads and missing answers.** With equal `written` the server with the lexicographically greater name is chosen; the absence of an answer is called `missing`, not the absence of the object.
 
-<!-- req: P/05-R106 -->
-
-**Object listing.** A listing returns the closed form ObjectListing of N2; deleted objects are tombstones `.gone/<object-key>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is a read-only listing of tombstones.
-
 <!-- req: P/05-R008 -->
 
-A listing gives only the keys of the door families under `prefix` — a filter, not a refusal: `prefix=testsub/`, `prefix=t`, an empty `prefix` — 200 with the keys of the door families that start with it; keys outside the door families do not enter the listing.
-
-<!-- req: P/05-R107 -->
-
-**Keys and prefixes.** A `prefix` with which no possible key of the door families starts (`other/`) — 403.
-
-<!-- req: P/05-R108 -->
-
-**Keys and prefixes.** A `prefix` not in UTF-8 (`%FF`) — 400.
+**Object listing.** A listing returns the closed form ObjectListing of N2; deleted objects are tombstones `.gone/<object-key>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is a read-only listing of tombstones. A listing gives only the keys of the door families under `prefix` — a filter, not a refusal: `prefix=testsub/`, `prefix=t`, an empty `prefix` — 200 with the keys of the door families that start with it; keys outside the door families do not enter the listing. **Keys and prefixes.** A `prefix` with which no possible key of the door families starts (`other/`) — 403. A `prefix` not in UTF-8 (`%FF`) — 400.
 
 <!-- req: P/05-R109 -->
 
-**Keys and prefixes.** Reading a key: a key not by the grammar (not UTF-8, Cc, Zl, Zp — including U+2028, `.`/`..`, an empty segment) — 400.
-
-<!-- req: P/05-R253 -->
-
-**Keys and prefixes.** A key outside the door families, including the directory `testsub/heartbeats` of two parts, — 403.
-
-<!-- req: P/05-R254 -->
-
-**Keys and prefixes.** A key of a family that does not exist (including a directory inside a family, `testsub/heartbeats/sub`), — 404.
-
-<!-- req: P/05-R255 -->
-
-**Keys and prefixes.** A key that differs from the written one only by case or normalization (`W-1` with `w-1`), is its own key: 404, not another's object.
+**Keys and prefixes.** Reading a key: a key not by the grammar (not UTF-8, Cc, Zl, Zp — including U+2028, `.`/`..`, an empty segment) — 400. A key outside the door families, including the directory `testsub/heartbeats` of two parts, — 403. A key of a family that does not exist (including a directory inside a family, `testsub/heartbeats/sub`), — 404. A key that differs from the written one only by case or normalization (`W-1` with `w-1`), is its own key: 404, not another's object.
 
 <!-- req: P/05-R009 -->
 
@@ -232,31 +160,17 @@ A listing gives only the keys of the door families under `prefix` — a filter, 
 
 A file system error after admission is a refusal of the write, not a success and not «there is no file».
 
-<!-- req: P/05-R011 -->
-
-**Bodies at the resource** (the field `blob`, the digest, the bytes door of the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-console.norms.md) N1.5):
-
 <!-- req: P/05-R012 -->
 
-**`mirror`.** Every owner-originated local body (a received copy is not a source) — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled.
-
-<!-- req: P/05-R110 -->
-
-**Body copies.** `copies` — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1.
-
-<!-- req: P/05-R111 -->
-
-**Body copies.** The row does not read — bodies are not copied in this pass, the reason is in the heartbeat (settings_unread: mirror).
+**Bodies at the resource** (the field `blob`, the digest, the bytes door of the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-console.norms.md) N1.5): **`mirror`.** Every owner-originated local body (a received copy is not a source) — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled. **Body copies.** `copies` — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1. The row does not read — bodies are not copied in this pass, the reason is in the heartbeat (settings_unread: mirror).
 
 <!-- req: P/05-R112 -->
 
 **Body copies.** `reception`: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>` of a subsystem with a blob field; another key (uppercase hex, without `sha256-`, a subsystem without a blob field) — an ordinary object, its owner writes it: 405.
 
-<!-- req: P/05-R013 -->
+<!-- req: P/05-R014 -->
 
 Resource ceilings (the shared ceilings — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.4; checked at the door before reading the body where possible; a refusal, not a truncation):
-
-<!-- req: P/05-R014 -->
 
 | What | Limit | Where | Words / code |
 |---|---|---|---|
@@ -269,13 +183,9 @@ Resource ceilings (the shared ceilings — [P/06.1](../../06-console/spec/06.1-c
 
 Body cleanup ([P/06.1](../../06-console/spec/06.1-console.norms.md) N3 «body sweep»): in the exclusive window the operator also closes the incoming mirror copies; a copy than which the tombstone of the deleter is newer is not accepted (N4, «deleted later» — 409).
 
-<!-- req: P/05-R016 -->
-
-**Tombstones and convergence of body copies** (the bodies, their digest, the bytes door of the console, the mirror of bodies at the console and the cleanup — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5):
-
 <!-- req: P/05-R017 -->
 
-**`delete`.** The tombstone .gone/`<object-key>` {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal — [the tombstone contract](../../common/contracts/tombstone.md); the objects door has no DELETE.
+**Tombstones and convergence of body copies** (the bodies, their digest, the bytes door of the console, the mirror of bodies at the console and the cleanup — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5): **`delete`.** The tombstone .gone/`<object-key>` {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal — [the tombstone contract](../../common/contracts/tombstone.md); the objects door has no DELETE.
 
 ### N1.2 Event
 
@@ -285,49 +195,25 @@ The form of the event line (`line`), the bucket and its path (`bucket`), the cla
 
 <!-- req: P/05-R019 -->
 
-`subsystem` of an index line is the name of the manifest, for the lines of the alarm tree too (`testsub`, not `testsub.alarms`).
-
-<!-- req: P/05-R276 -->
-
-**Event query and merge.** `unit` in the answer of the index is the full reference `<tree>/<unit>`.
-
-<!-- req: P/05-R277 -->
-
-**Event query and merge.** for the journal it is `audit/<role>`, for a mark — `console/<instance>`, and its `of` is the addressee.
-
-<!-- req: P/05-R278 -->
-
-**Event query and merge.** The reference is logical: the tree is without the suffix `.alarms`, which is the layout of the writer ([the event log contract](../../common/contracts/event-journal.md) `class`); a line from `audit.alarms/<role>` answers and is selected by a query as `audit/<role>`, from `<sub>.alarms/<unit>` — as `<sub>/<unit>`, together with the observations (N3 «query» step 2).
+`subsystem` of an index line is the name of the manifest, for the lines of the alarm tree too (`testsub`, not `testsub.alarms`). **Event query and merge.** `unit` in the answer of the index is the full reference `<tree>/<unit>`. For the journal it is `audit/<role>`, for a mark — `console/<instance>`, and its `of` is the addressee. The reference is logical: the tree is without the suffix `.alarms`, which is the layout of the writer ([the event log contract](../../common/contracts/event-journal.md) `class`); a line from `audit.alarms/<role>` answers and is selected by a query as `audit/<role>`, from `<sub>.alarms/<unit>` — as `<sub>/<unit>`, together with the observations (N3 «query» step 2).
 
 ### N1.3 Index and term
 
 <!-- req: P/05-R020 -->
 
-The `index` form is defined by its separately identified rules: P/05-R067, P/05-R068, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R073, P/05-R074, P/05-R075, P/05-R076.
+The `index` form is defined by its separately identified rules: P/05-R067, P/05-R069, P/05-R259, P/05-R071, P/05-R072, P/05-R073, P/05-R074, P/05-R075, P/05-R076.
 
 <!-- req: P/05-R067 -->
 
-**`index.one_per_resource`.** Over its own tree and the .mirror/`<server>`/ copies; the state is always live; there is no rebuild.
-
-<!-- req: P/05-R068 -->
-
-**`index.cache`.** Bounded (INDEX_CACHE_BYTES), dropped without loss of correctness; a file is reread by size/mtime/inode from the place.
+**`index.one_per_resource`.** Over its own tree and the .mirror/`<server>`/ copies; the state is always live; there is no rebuild. **`index.cache`.** Bounded (INDEX_CACHE_BYTES), dropped without loss of correctness; a file is reread by size/mtime/inode from the place.
 
 <!-- req: P/05-R069 -->
 
 **`index.query`.** The query rules that the merge needs (parameters, defaults, by) — the event log merge contract «The resource query and answer»; the grammar of the parameters and the refusals — below this block.
 
-<!-- req: P/05-R070 -->
-
-**`index.row`.** {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …fields}.
-
 <!-- req: P/05-R259 -->
 
-**Event line and writing.** `server` — the owner of the bucket.
-
-<!-- req: P/05-R260 -->
-
-**Event line and writing.** A line with its own field server (a line about a server: drain.*, server.decommission_*, workers.no_server) keeps it — in such a row server is the server the line is about, the index does not overwrite it, as class.
+**`index.row`.** {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …fields}. **Event line and writing.** `server` — the owner of the bucket. A line with its own field server (a line about a server: drain.*, server.decommission_*, workers.no_server) keeps it — in such a row server is the server the line is about, the index does not overwrite it, as class.
 
 <!-- req: P/05-R261 -->
 
@@ -355,11 +241,7 @@ The `index` form is defined by its separately identified rules: P/05-R067, P/05-
 
 <!-- req: P/05-R076 -->
 
-**`retention.rule`.** Per subsystem, not per unit.
-
-<!-- req: P/05-R262 -->
-
-**Retention and holds.** `days` — a finite number > 0, anything else — «not known», remove nothing.
+**`retention.rule`.** Per subsystem, not per unit. **Retention and holds.** `days` — a finite number > 0, anything else — «not known», remove nothing.
 
 <!-- req: P/05-R263 -->
 
@@ -387,19 +269,7 @@ The `index` form is defined by its separately identified rules: P/05-R067, P/05-
 
 <!-- req: P/05-R227 -->
 
-**Retention and holds.** For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor.
-
-<!-- req: P/05-R228 -->
-
-**Retention and holds.** A mirror copy uses the corresponding tree's term plus `MIRROR_RETENTION_EXTRA`, measured from its own copy `written`.
-
-<!-- req: P/05-R229 -->
-
-**Retention and holds.** Equality deletes; a time below the deadline keeps it.
-
-<!-- req: P/05-R230 -->
-
-**Retention and holds.** Neither window start/end nor filesystem `mtime` substitutes for `written`.
+**Retention and holds.** For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor. A mirror copy uses the corresponding tree's term plus `MIRROR_RETENTION_EXTRA`, measured from its own copy `written`. Equality deletes; a time below the deadline keeps it. Neither window start/end nor filesystem `mtime` substitutes for `written`.
 
 <!-- req: P/05-R231 -->
 
@@ -415,31 +285,11 @@ The merge of the resource answers by the console (`merge`) — [chapter 6.4](../
 
 <!-- req: P/05-R022 -->
 
-A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer within the HTTP form bounds: - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with digits on at least one side, an optional exponent `e`/`E` with a sign; `1_0`, `.5`, `5.`, `1e3` are numbers, `1e-400` is 0; `+1`, a space (`%201`, `1%20`), non-ASCII digits (`١`), `0x10`, an overflow — 400.
-
-<!-- req: P/05-R113 -->
-
-**Event query and merge.** `limit` — only ASCII digits (leading zeros are allowed: `01`), otherwise 400; `since` of the hint — by N1.6.
-
-<!-- req: P/05-R114 -->
-
-**Event query and merge.** `unit` — UnitRef `<sub>/<id>`: a bare id, empty, `testsub/`, `/c1` — 400.
-
-<!-- req: P/05-R115 -->
-
-**Event query and merge.** `late` — an integer ≥ 0 in decimal notation, only together with `by=occurred`: anything else — 400.
-
-<!-- req: P/05-R116 -->
-
-**Event query and merge.** An empty or repeated parameter — 400 (N2); an unknown non-empty parameter is not read (for `/events/wait` — 400, N1.6).
+A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer within the HTTP form bounds: - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with digits on at least one side, an optional exponent `e`/`E` with a sign; `1_0`, `.5`, `5.`, `1e3` are numbers, `1e-400` is 0; `+1`, a space (`%201`, `1%20`), non-ASCII digits (`١`), `0x10`, an overflow — 400. **Event query and merge.** `limit` — only ASCII digits (leading zeros are allowed: `01`), otherwise 400; `since` of the hint — by N1.6. `unit` — UnitRef `<sub>/<id>`: a bare id, empty, `testsub/`, `/c1` — 400. `late` — an integer ≥ 0 in decimal notation, only together with `by=occurred`: anything else — 400. An empty or repeated parameter — 400 (N2); an unknown non-empty parameter is not read (for `/events/wait` — 400, N1.6).
 
 <!-- req: P/05-R023 -->
 
-**Unreadable bucket line** (P/01.1 N0 «Stability of output»). A line that is not JSON, not an object, with a BOM, with a number outside JSON (`NaN`), without `kind`, `t` or `id`, with `id` not a string, and also a file not in its place (a bucket path not by N1.2, for example `e01`) is skipped: it does not enter `events` and `truncated`, the answer is 200, and the number of such lines is `lines_garbled` of the answer (the field is present only when it is greater than 0).
-
-<!-- req: P/05-R117 -->
-
-**Event line and writing.** A torn last line is still `partial`, not `lines_garbled`.
+**Unreadable bucket line** (P/01.1 N0 «Stability of output»). A line that is not JSON, not an object, with a BOM, with a number outside JSON (`NaN`), without `kind`, `t` or `id`, with `id` not a string, and also a file not in its place (a bucket path not by N1.2, for example `e01`) is skipped: it does not enter `events` and `truncated`, the answer is 200, and the number of such lines is `lines_garbled` of the answer (the field is present only when it is greater than 0). **Event line and writing.** A torn last line is still `partial`, not `lines_garbled`.
 
 <!-- req: P/05-R118 -->
 
@@ -473,59 +323,23 @@ Another query form — 400, including NaN/Infinity, a fractional limit and a bar
 
 <!-- req: P/05-R025 -->
 
-The `resource` form is defined by its separately identified rules: P/05-R077, P/05-R078, P/05-R079, P/05-R080, P/05-R081, P/05-R082, P/05-R083, P/05-R084, P/05-R085, P/05-R086, P/05-R087, P/05-R088, P/05-R089. There is one resource process per server, without a controller.
+The `resource` form is defined by its separately identified rules: P/05-R077, P/05-R199, P/05-R079, P/05-R080, P/05-R082, P/05-R083, P/05-R084, P/05-R085, P/05-R086, P/05-R087, P/05-R088, P/05-R089. There is one resource process per server, without a controller.
 
 <!-- req: P/05-R077 -->
 
-**`heartbeat`.** The object platform/resources/`<server>`/heartbeat every HEARTBEAT_EVERY {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]}, workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door, retention_garbled?: [`<sub>`…], retention_withheld?: {`<sub>`: days_garbled | unknown | holds_unread}, …}.
-
-<!-- req: P/05-R194 -->
-
-**Resource heartbeat.** `retention_garbled`, retention_withheld — the reasons of the retention pass (N3 retain, N4; no reason — no fields).
-
-<!-- req: P/05-R195 -->
-
-**Resource heartbeat.** `settings_unread`?: [mirror | space] — the setting rows of the pass that did not read: the step mirror (and the body copies of N1.1) or relieve is not executed in this pass; in ascending order of bytes; none — no field.
+**`heartbeat`.** The object platform/resources/`<server>`/heartbeat every HEARTBEAT_EVERY {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]}, workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door, retention_garbled?: [`<sub>`…], retention_withheld?: {`<sub>`: days_garbled | unknown | holds_unread}, …}. **Resource heartbeat.** `retention_garbled`, retention_withheld — the reasons of the retention pass (N3 retain, N4; no reason — no fields). `settings_unread`?: [mirror | space] — the setting rows of the pass that did not read: the step mirror (and the body copies of N1.1) or relieve is not executed in this pass; in ascending order of bytes; none — no field.
 
 <!-- req: P/05-R196 -->
 
-**Resource heartbeat.** `door`: {addr, mode: loopback | mtls, cert_until} — in every heartbeat, written by the resource: addr — RESOURCE_HOST:RESOURCE_PORT.
-
-<!-- req: P/05-R267 -->
-
-**Resource door row and freshness.** `mode` — loopback without RESOURCE_TLS (loopback only), mtls with RESOURCE_TLS=1.
-
-<!-- req: P/05-R268 -->
-
-**Resource door row and freshness.** `cert_until` — the wall seconds of the end of the term of the server certificate of its own kit, with mtls.
-
-<!-- req: P/05-R269 -->
-
-**Resource door row and freshness.** With mtls the server presents the leaf, then its authority (the role certificate contract server; the client — own_client, the object client contract tls); read by w2cctl tls status (P/02.4 N1.9).
+**Resource heartbeat.** `door`: {addr, mode: loopback | mtls, cert_until} — in every heartbeat, written by the resource: addr — RESOURCE_HOST:RESOURCE_PORT. **Resource door row and freshness.** `mode` — loopback without RESOURCE_TLS (loopback only), mtls with RESOURCE_TLS=1. `cert_until` — the wall seconds of the end of the term of the server certificate of its own kit, with mtls. With mtls the server presents the leaf, then its authority (the role certificate contract server; the client — own_client, the object client contract tls); read by w2cctl tls status (P/02.4 N1.9).
 
 <!-- req: P/05-R197 -->
 
-**Resource heartbeat.** `waits`, restore, mirror, units — in every heartbeat: units — {`<sub>`: [`<id>`…]} of the units that the heartbeats of the workers of this box from running name in status, ids in ascending order of bytes; none — {}.
-
-<!-- req: P/05-R270 -->
-
-**Resource heartbeat.** A worker heartbeat is unreadable (the family heartbeats P/03.4: the whole object, for the resource also an element status[] not in form) — its units do not enter units: the unreadable does not widen.
-
-<!-- req: P/05-R078 -->
-
-**`workers`.** [`<sub>`/`<slot name>`…] — all the slots that the resource knows about on its box.
-
-<!-- req: P/05-R198 -->
-
-**Worker presence and room.** `running`: [`<sub>`/`<slot name>`…] — with a live process (it holds the presence lock, the content in form with a non-empty worker).
+**Resource heartbeat.** `waits`, restore, mirror, units — in every heartbeat: units — {`<sub>`: [`<id>`…]} of the units that the heartbeats of the workers of this box from running name in status, ids in ascending order of bytes; none — {}. A worker heartbeat is unreadable (the family heartbeats P/03.4: the whole object, for the resource also an element status[] not in form) — its units do not enter units: the unreadable does not widen.
 
 <!-- req: P/05-R199 -->
 
-**Worker presence and room.** `unknown`: [`<sub>`/`<slot name>`…] — the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read or flock/stat of the lock gave an error, except «busy» and ENOENT of stat (the presence lock contract).
-
-<!-- req: P/05-R200 -->
-
-**Worker presence and room.** `instances`: {`<sub>`/`<slot name>`: `<instance>`}; the key is with the subsystem: a slot name is unique only within its own subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names.
+**`workers`.** [`<sub>`/`<slot name>`…] — all the slots that the resource knows about on its box. **Worker presence and room.** `running`: [`<sub>`/`<slot name>`…] — with a live process (it holds the presence lock, the content in form with a non-empty worker). `unknown`: [`<sub>`/`<slot name>`…] — the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read or flock/stat of the lock gave an error, except «busy» and ENOENT of stat (the presence lock contract). `instances`: {`<sub>`/`<slot name>`: `<instance>`}; the key is with the subsystem: a slot name is unique only within its own subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names.
 
 <!-- req: P/05-R201 -->
 
@@ -533,31 +347,11 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R079 -->
 
-**`usage`.** An integer — the bytes of the bucket files of the trees of this server and of the copies in .mirror/.
-
-<!-- req: P/05-R271 -->
-
-**Volume usage.** `usage_at` — the wall seconds of the measurement.
-
-<!-- req: P/05-R272 -->
-
-**Volume usage.** `space` — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1 (not a flag).
-
-<!-- req: P/05-R273 -->
-
-**Volume usage.** `volumes` — the same per volume.
+**`usage`.** An integer — the bytes of the bucket files of the trees of this server and of the copies in .mirror/. **Volume usage.** `usage_at` — the wall seconds of the measurement. `space` — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1 (not a flag). `volumes` — the same per volume.
 
 <!-- req: P/05-R080 -->
 
-**`door_row`.** `platform/doors/<host>` {url, since, at, room.`<sub>`…, live.`<sub>`…}; at — every ALIVE_EVERY (the observation contract «Resource state»).
-
-<!-- req: P/05-R081 -->
-
-**`room`.** The elements room.`<sub>` and live.`<sub>` — by the presence lock contract «Count room» (presence-lock.md).
-
-<!-- req: P/05-R202 -->
-
-**Resource door row and freshness.** Do not write the door while platform/decommission/`<my server>` stands (the observation contract «Server decommissioned» narrower; the console deleted it).
+**`door_row`.** `platform/doors/<host>` {url, since, at, room.`<sub>`…, live.`<sub>`…}; at — every ALIVE_EVERY (the observation contract «Resource state»). **`room`.** The elements room.`<sub>` and live.`<sub>` — by the presence lock contract «Count room» (presence-lock.md). **Resource door row and freshness.** Do not write the door while platform/decommission/`<my server>` stands (the observation contract «Server decommissioned» narrower; the console deleted it).
 
 <!-- req: P/05-R082 -->
 
@@ -569,43 +363,15 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R084 -->
 
-**`space`.** `platform/space` {enabled, high, low}   — shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off:
-
-<!-- req: P/05-R203 -->
-
-**Space and free requests.** No row — enabled with high/low defaults of that space form.
-
-<!-- req: P/05-R204 -->
-
-**Space and free requests.** `enabled`: false — the resource removes its own row free-*.
-
-<!-- req: P/05-R205 -->
-
-**Space and free requests.** The row does not read — the step relieve is not executed: the high/low defaults of the space form are not substituted, its own row free-* is neither written nor removed, the reason is in the heartbeat settings_unread: space the form of the row — P/02.4 N1.9 (written by admin, w2cctl space).
+**`space`.** `platform/space` {enabled, high, low}   — shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off: **Space and free requests.** No row — enabled with high/low defaults of that space form. `enabled`: false — the resource removes its own row free-*. The row does not read — the step relieve is not executed: the high/low defaults of the space form are not substituted, its own row free-* is neither written nor removed, the reason is in the heartbeat settings_unread: space the form of the row — P/02.4 N1.9 (written by admin, w2cctl space).
 
 <!-- req: P/05-R085 -->
 
-**`free_ask`.** `<sub>`/requests/free-`<server>`-`<volume>` {free, volume, server, at}   — its own form: written and rewritten with cas only by the resource, not create-once, without unit/digest/family schema; for manifests with requests.free, while the volume > high.
-
-<!-- req: P/05-R206 -->
-
-**Space and free requests.** For requests.free volume — a non-empty name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen (a box has one volume — the file system of the event tree, the name events).
-
-<!-- req: P/05-R207 -->
-
-**Space and free requests.** `server` — a non-empty key segment of P/01.1, hyphens are allowed. The split at the last hyphen is unambiguous.
-
-<!-- req: P/05-R208 -->
-
-**Space and free requests.** Another volume is out of profile: diagnose the configuration, do not create/change the request of this volume.
+**`free_ask`.** `<sub>`/requests/free-`<server>`-`<volume>` {free, volume, server, at}   — its own form: written and rewritten with cas only by the resource, not create-once, without unit/digest/family schema; for manifests with requests.free, while the volume > high. **Space and free requests.** For requests.free volume — a non-empty name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen (a box has one volume — the file system of the event tree, the name events). `server` — a non-empty key segment of P/01.1, hyphens are allowed. The split at the last hyphen is unambiguous. Another volume is out of profile: diagnose the configuration, do not create/change the request of this volume.
 
 <!-- req: P/05-R209 -->
 
-**Space and free requests.** `free` = used − total·low − Σ freeing from the heartbeats (only the freeing not yet reflected in used).
-
-<!-- req: P/05-R210 -->
-
-**Space and free requests.** With free ≤ 0 (and under the mark low) the row is removed.
+**Space and free requests.** `free` = used − total·low − Σ freeing from the heartbeats (only the freeing not yet reflected in used). With free ≤ 0 (and under the mark low) the row is removed.
 
 <!-- req: P/05-R211 -->
 
@@ -613,11 +379,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R212 -->
 
-**Space and free requests.** The addressee — all the workers of the subsystem `<sub>` on the server `<server>`; `<volume>` — the volume of the resource, not a place of the subsystem.
-
-<!-- req: P/05-R213 -->
-
-**Space and free requests.** Σ freeing — the sum of freeing.`<volume>` (P/03.4 N1.1) over the live heartbeats of the workers `<sub>` on this server, no field — 0 (vectors 05-resource/vectors/relieve; the VMS request freeing).
+**Space and free requests.** The addressee — all the workers of the subsystem `<sub>` on the server `<server>`; `<volume>` — the volume of the resource, not a place of the subsystem. Σ freeing — the sum of freeing.`<volume>` (P/03.4 N1.1) over the live heartbeats of the workers `<sub>` on this server, no field — 0 (vectors 05-resource/vectors/relieve; the VMS request freeing).
 
 <!-- req: P/05-R214 -->
 
@@ -625,11 +387,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R086 -->
 
-**`mirror`.** `platform/mirror` {enabled, copies}; no row or no field enabled — enabled: false, buckets are not copied until enabled: true.
-
-<!-- req: P/05-R215 -->
-
-**Bucket mirroring.** The row does not read — the step mirror is not executed, the reason is in the heartbeat settings_unread: mirror, `copies 1, enabled false` are not substituted; bodies — N1.1 mirror.
+**`mirror`.** `platform/mirror` {enabled, copies}; no row or no field enabled — enabled: false, buckets are not copied until enabled: true. **Bucket mirroring.** The row does not read — the step mirror is not executed, the reason is in the heartbeat settings_unread: mirror, `copies 1, enabled false` are not substituted; bodies — N1.1 mirror.
 
 <!-- req: P/05-R216 -->
 
@@ -637,15 +395,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R217 -->
 
-**Bucket mirroring.** Only closed buckets.
-
-<!-- req: P/05-R218 -->
-
-**Bucket mirroring.** The copy in .mirror/`<server>`/….
-
-<!-- req: P/05-R219 -->
-
-**Bucket mirroring.** A copy is never a source while the owner answers; PEER_FAILS, a bucket within the resource door byte limit (OpenAPI Content-Length.maximum) as a whole,.
+**Bucket mirroring.** Only closed buckets. The copy in .mirror/`<server>`/…. A copy is never a source while the owner answers; PEER_FAILS, a bucket within the resource door byte limit (OpenAPI Content-Length.maximum) as a whole,.
 
 <!-- req: P/05-R274 -->
 
@@ -657,15 +407,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R087 -->
 
-**`presence`.** `runs` | `gone` | `unlisted` | `unknown`   — about the worker process of its own box — a conclusion from the heartbeat fields above: the key `<sub>`/`<name>` of the worker slot of the subsystem `<sub>`: in running — runs; in unknown — unknown; in workers, but not in running and not in unknown, — gone (the resource knew the process, it is dead); not named in workers — unlisted (not registered at the resource); a heartbeat without these fields — nothing about the worker (P/04 «fate»); an absent one of the three fields is an empty list, not unreadability: the selection is [decision-order.tsv](../forms/decision-order.tsv), procedure `presence`.
-
-<!-- req: P/05-R221 -->
-
-**Worker presence and room.** The listing `<events root>`/.workers/`<sub>`/ is not obtained (an error, except ENOENT of a directory not yet created — that one is empty): the heartbeat has none of the three fields — nothing about the workers (P/04 wait), the former names are not carried over, there is no partial set; the rest of the heartbeat — as usual. How the resource learns the presence — the presence lock contract.
-
-<!-- req: P/05-R222 -->
-
-**Worker presence and room.** `silent` is a state of the resource itself (the observation contract), not a value of the presence.
+**`presence`.** `runs` | `gone` | `unlisted` | `unknown`   — about the worker process of its own box — a conclusion from the heartbeat fields above: the key `<sub>`/`<name>` of the worker slot of the subsystem `<sub>`: in running — runs; in unknown — unknown; in workers, but not in running and not in unknown, — gone (the resource knew the process, it is dead); not named in workers — unlisted (not registered at the resource); a heartbeat without these fields — nothing about the worker (P/04 «fate»); an absent one of the three fields is an empty list, not unreadability: the selection is [decision-order.tsv](../forms/decision-order.tsv), procedure `presence`. **Worker presence and room.** The listing `<events root>`/.workers/`<sub>`/ is not obtained (an error, except ENOENT of a directory not yet created — that one is empty): the heartbeat has none of the three fields — nothing about the workers (P/04 wait), the former names are not carried over, there is no partial set; the rest of the heartbeat — as usual. How the resource learns the presence — the presence lock contract. `silent` is a state of the resource itself (the observation contract), not a value of the presence.
 
 <!-- req: P/05-R088 -->
 
@@ -685,11 +427,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R124 -->
 
-**Resource heartbeat.** At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero.
-
-<!-- req: P/05-R125 -->
-
-**Resource heartbeat.** Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt.
+**Resource heartbeat.** At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero. Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt.
 
 <!-- req: P/05-R126 -->
 
@@ -701,15 +439,7 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 <!-- req: P/05-R090 -->
 
-**Unnamed presence uncertainty.** A current lock error without a readable slot name makes the whole role snapshot unknown, even after a successful listing and at cold start.
-
-<!-- req: P/05-R224 -->
-
-**Worker presence and room.** Apply the presence-lock contract's “An unknown role snapshot”: omit `workers`, `running`, `unknown` and snapshot-derived `instances`, set the affected `room.<sub>` to `"unknown"`, omit its `live.<sub>`, keep independently complete room/live of other roles.
-
-<!-- req: P/05-R225 -->
-
-**Worker presence and room.** Do not infer a slot from the filename, prior memory, or another lock; do not interpret the omission as `unlisted` or `gone`.
+**Unnamed presence uncertainty.** A current lock error without a readable slot name makes the whole role snapshot unknown, even after a successful listing and at cold start. **Worker presence and room.** Apply the presence-lock contract's “An unknown role snapshot”: omit `workers`, `running`, `unknown` and snapshot-derived `instances`, set the affected `room.<sub>` to `"unknown"`, omit its `live.<sub>`, keep independently complete room/live of other roles. Do not infer a slot from the filename, prior memory, or another lock; do not interpret the omission as `unlisted` or `gone`.
 
 <!-- req: P/05-R091 -->
 
@@ -723,37 +453,17 @@ The `resource` form is defined by its separately identified rules: P/05-R077, P/
 
 PULSE_LIMIT is a finite positive limit of the duration of one step of the resource in seconds, chosen and declared by the implementation before the start. The duration is measured by the local monotonic clock, not by t/at of the writer; while a step runs beyond the limit, every heartbeat carries pass_stalled; it is cleared when the step ends, including before the next heartbeat. It is a diagnostic threshold, not a promise to stop a hung call or to wait for an answer.
 
-<!-- req: P/05-R029 -->
-
-**Bucket restore** (a server failure and `power_pull` — [P/04](../../04-controller/spec/04-controller.norms.md) N1.4a, the drill — [system acceptance](../../common/acceptance/system/README.md) (judge-only: restore drill for P/05-R030)):
-
 <!-- req: P/05-R030 -->
 
-**`restore`.** At start the resource pulls its closed buckets from the neighbours whose heartbeats mirrors name it: GET /mirrored/`<me>`, each bucket by its sum, tmp + rename.
+**Bucket restore** (a server failure and `power_pull` — [P/04](../../04-controller/spec/04-controller.norms.md) N1.4a): **`restore`.** At start the resource pulls its closed buckets from the neighbours whose heartbeats mirrors name it: GET /mirrored/`<me>`, each bucket by its sum, tmp + rename.
 
 <!-- req: P/05-R128 -->
 
-**Restore and peer attempts.** PEER_FAILS consecutive failures — the neighbour is skipped until the end of this restore attempt.
-
-<!-- req: P/05-R129 -->
-
-**Restore and peer attempts.** RESTORE_RETRY, doubling up to RESTORE_RETRY_MAX.
+**Restore and peer attempts.** PEER_FAILS consecutive failures — the neighbour is skipped until the end of this restore attempt. RESTORE_RETRY, doubling up to RESTORE_RETRY_MAX.
 
 <!-- req: P/05-R130 -->
 
-**Restore and peer attempts.** `done` when the full lists are received and the copies are checked from all known necessary neighbours.
-
-<!-- req: P/05-R131 -->
-
-**Restore and peer attempts.** The necessary neighbours — those whose readable heartbeats mirrors name this server.
-
-<!-- req: P/05-R132 -->
-
-**Restore and peer attempts.** The local events are lost, and the heartbeats of the neighbours do not read or there is no heartbeat of a neighbour — all known server doors are necessary (platform/doors, door_row above), except its own: each is to answer with a full listing GET /mirrored/`<me>` (a full empty listing and 404 — there are no copies, so that neighbour is complete).
-
-<!-- req: P/05-R133 -->
-
-**Restore and peer attempts.** 404 of GET of an already listed bucket is a missing copy, not an empty listing: the attempt stays incomplete.
+**Restore and peer attempts.** `done` when the full lists are received and the copies are checked from all known necessary neighbours. The necessary neighbours — those whose readable heartbeats mirrors name this server. The local events are lost, and the heartbeats of the neighbours do not read or there is no heartbeat of a neighbour — all known server doors are necessary (platform/doors, door_row above), except its own: each is to answer with a full listing GET /mirrored/`<me>` (a full empty listing and 404 — there are no copies, so that neighbour is complete). 404 of GET of an already listed bucket is a missing copy, not an empty listing: the attempt stays incomplete.
 
 <!-- req: P/05-R134 -->
 
@@ -761,15 +471,7 @@ PULSE_LIMIT is a finite positive limit of the duration of one step of the resour
 
 <!-- req: P/05-R135 -->
 
-**Restore and peer attempts.** An unknown or unreadable door leaves the restore incomplete.
-
-<!-- req: P/05-R136 -->
-
-**Restore and peer attempts.** A skipped/unreadable neighbour leaves the restore incomplete; 500 of a listing and a broken answer by N2, N4 do not count as an empty full list.
-
-<!-- req: P/05-R137 -->
-
-**Restore and peer attempts.** If there were never any neighbours, there is no remote restore.
+**Restore and peer attempts.** An unknown or unreadable door leaves the restore incomplete. A skipped/unreadable neighbour leaves the restore incomplete; 500 of a listing and a broken answer by N2, N4 do not count as an empty full list. If there were never any neighbours, there is no remote restore.
 
 <!-- req: P/05-R138 -->
 
@@ -781,11 +483,7 @@ PULSE_LIMIT is a finite positive limit of the duration of one step of the resour
 
 <!-- req: P/05-R140 -->
 
-**Restore and peer attempts.** The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass.
-
-<!-- req: P/05-R141 -->
-
-**Restore and peer attempts.** A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again.
+**Restore and peer attempts.** The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass. A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again.
 
 <!-- req: P/05-R142 -->
 
@@ -793,15 +491,7 @@ PULSE_LIMIT is a finite positive limit of the duration of one step of the resour
 
 <!-- req: P/05-R143 -->
 
-**Restore and peer attempts.** These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary.
-
-<!-- req: P/05-R144 -->
-
-**Restore and peer attempts.** A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue.
-
-<!-- req: P/05-R145 -->
-
-**Restore and peer attempts.** A 404 at the GET of a bucket that the peer listed is such a failure: the peer declared the copy and did not give it.
+**Restore and peer attempts.** These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary. A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue. A 404 at the GET of a bucket that the peer listed is such a failure: the peer declared the copy and did not give it.
 
 <!-- req: P/05-R146 -->
 
@@ -811,63 +501,27 @@ PULSE_LIMIT is a finite positive limit of the duration of one step of the resour
 
 <!-- req: P/05-R031 -->
 
-`GET /events/wait` of the resource is a hint, not a delivery of events. The profile of the lesson: `want` — a non-empty comma-separated list `<sub>/<kind>[/<unit>]`; each part of ASCII letters, digits, `_`, `-`, `.`, 1…64 characters, not starting with a dot.
-
-<!-- req: P/05-R243 -->
-
-**Event hint and long poll.** `client`, if given, — 1…128 printable ASCII characters without a space.
-
-<!-- req: P/05-R147 -->
-
-**Event hint and long poll.** `since` — a decimal uint64 without a sign/leading zeros, 0 by default.
-
-<!-- req: P/05-R244 -->
-
-**Event hint and long poll.** `timeout` — finite seconds with the bounds and default of `GET /events/wait` in the [HTTP form](05-resource.api.openapi.yaml).
-
-<!-- req: P/05-R245 -->
-
-**Event hint and long poll.** Empty/repeated parameters, unknown parameters (`&foo=1`), other forms and values out of range — 400; `since` and `timeout` — only ASCII digits (and a dot for `timeout`), non-ASCII digits — 400.
+`GET /events/wait` of the resource is a hint, not a delivery of events. The profile of the lesson: `want` — a non-empty comma-separated list `<sub>/<kind>[/<unit>]`; each part of ASCII letters, digits, `_`, `-`, `.`, 1…64 characters, not starting with a dot. **Event hint and long poll.** `client`, if given, — 1…128 printable ASCII characters without a space. `since` — a decimal uint64 without a sign/leading zeros, 0 by default. `timeout` — finite seconds with the bounds and default of `GET /events/wait` in the [HTTP form](05-resource.api.openapi.yaml). Empty/repeated parameters, unknown parameters (`&foo=1`), other forms and values out of range — 400; `since` and `timeout` — only ASCII digits (and a dot for `timeout`), non-ASCII digits — 400.
 
 <!-- req: P/05-R148 -->
 
-**Event hint and long poll.** `since=0` — the client has no position: the answer at once is `{changed: true, seq, touched}` if under want there are lines in the buckets of the resource of any age; seq is an opaque monotonic number of the resource process, the client only compares it and passes it back.
-
-<!-- req: P/05-R149 -->
-
-**Event hint and long poll.** With `since` equal to the `seq` last returned by this resource process and no line under `want` written after that `seq`, the wait ends at its term with `{changed: false, seq}`; a line under `want` written after that `seq` answers `{changed: true, seq, touched}`.
+**Event hint and long poll.** `since=0` — the client has no position: the answer at once is `{changed: true, seq, touched}` if under want there are lines in the buckets of the resource of any age; seq is an opaque monotonic number of the resource process, the client only compares it and passes it back. With `since` equal to the `seq` last returned by this resource process and no line under `want` written after that `seq`, the wait ends at its term with `{changed: false, seq}`; a line under `want` written after that `seq` answers `{changed: true, seq, touched}`.
 
 <!-- req: P/05-R246 -->
 
-**Event hint and long poll.** The hint is given by the subsystem trees of the catalogue (`<sub>`, `<sub>.alarms`); the trees `console` and `audit` give no hint.
-
-<!-- req: P/05-R247 -->
-
-**Event hint and long poll.** This bounded profile does not require accepting any internal unit names: the periodic pass of the client stays mandatory and works without the hint.
+**Event hint and long poll.** The hint is given by the subsystem trees of the catalogue (`<sub>`, `<sub>.alarms`); the trees `console` and `audit` give no hint. This bounded profile does not require accepting any internal unit names: the periodic pass of the client stays mandatory and works without the hint.
 
 <!-- req: P/05-R032 -->
 
-The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[…]}`, `{changed:false, seq}`, `{changed:false, seq, full:true}` or `{changed:false, seq, replaced:true}`.
-
-<!-- req: P/05-R150 -->
-
-**Event hint and long poll.** In touched — the sorted unique `<sub>/<kind>/<unit>` that match want; the events themselves are not there.
+The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[…]}`, `{changed:false, seq}`, `{changed:false, seq, full:true}` or `{changed:false, seq, replaced:true}`. **Event hint and long poll.** In touched — the sorted unique `<sub>/<kind>/<unit>` that match want; the events themselves are not there.
 
 <!-- req: P/05-R248 -->
 
-**Event hint and long poll.** `seq` belongs to one process of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
-
-<!-- req: P/05-R151 -->
-
-**Event hint and long poll.** With full/replaced the client does not advance its cursor by seq, but returns to the ordinary pass.
+**Event hint and long poll.** `seq` belongs to one process of the resource; after a restart/an unknown sequence the client makes an ordinary pass. With full/replaced the client does not advance its cursor by seq, but returns to the ordinary pass.
 
 <!-- req: P/05-R152 -->
 
-**Event hint and long poll.** By default up to LONG_POLL_WAITERS_DEFAULT waits (the deployment parameter LONG_POLL_WAITERS); a new wait when full is answered 200/full.
-
-<!-- req: P/05-R249 -->
-
-**Event hint and long poll.** Apply [decision-order.tsv](../forms/decision-order.tsv), procedure `wait`, for replacement and capacity. Thus at a full effective LONG_POLL_WAITERS a replacement is admitted and the same number remain; a different CN cannot free that place.
+**Event hint and long poll.** By default up to LONG_POLL_WAITERS_DEFAULT waits (the deployment parameter LONG_POLL_WAITERS); a new wait when full is answered 200/full. Apply [decision-order.tsv](../forms/decision-order.tsv), procedure `wait`, for replacement and capacity. Thus at a full effective LONG_POLL_WAITERS a replacement is admitted and the same number remain; a different CN cannot free that place.
 
 <!-- req: P/05-R153 -->
 
@@ -887,11 +541,7 @@ The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[
 
 <!-- req: P/05-R033 -->
 
-Paths `/mirror/{server}/{path}`, `/mirrored/{server}[/{path}]`, `/events/{path}`: `{server}` — one segment by the grammar of a server name (P/02.4 N1.2 `SERVER_NAME`); `{path}` — a bucket path of N1.2 (`<tree>/<unit>/e<epoch>/<start>Z.events.jsonl`), no segment is empty or `.`/`..`, `%2F` is not a separator, `.tmp` is not a bucket. Otherwise: `GET /mirrored/…` and `GET /events/…` — 404 without a body, `PUT /mirror/…` — 400 without a body.
-
-<!-- req: P/05-R275 -->
-
-**Raw paths and route matching.** The resource never reads or writes a file outside its tree (`.mirror/<server>/` for copies).
+Paths `/mirror/{server}/{path}`, `/mirrored/{server}[/{path}]`, `/events/{path}`: `{server}` — one segment by the grammar of a server name (P/02.4 N1.2 `SERVER_NAME`); `{path}` — a bucket path of N1.2 (`<tree>/<unit>/e<epoch>/<start>Z.events.jsonl`), no segment is empty or `.`/`..`, `%2F` is not a separator, `.tmp` is not a bucket. Otherwise: `GET /mirrored/…` and `GET /events/…` — 404 without a body, `PUT /mirror/…` — 400 without a body. **Raw paths and route matching.** The resource never reads or writes a file outside its tree (`.mirror/<server>/` for copies).
 
 <!-- req: P/05-R155 -->
 
@@ -909,21 +559,13 @@ Paths `/mirror/{server}/{path}`, `/mirrored/{server}[/{path}]`, `/events/{path}`
 
 The HTTP representations are in the schemas of N2. `BucketInfo` is the description of one bucket, not an event; `/buckets` gives UTF-8 JSON Lines: one object per LF, without an array.
 
-<!-- req: P/05-R158 -->
-
-**Bucket mirroring.** `/mirrored/<server>` by the canon of this lesson gives `{copies:[{path,written,size,sum}]}`.
-
 <!-- req: P/05-R159 -->
 
-**Bucket mirroring.** `written` of a copy is the wall seconds (N0) when the receiver published this copy at itself (the time of the copy file or its own record): `PUT /mirror` does not carry the time of the source bucket, only `X-Sum`; the bytes of the bucket do not change; a repeated reception of the same bucket with the same sum does not shift `written`.
+**Bucket mirroring.** `/mirrored/<server>` by the canon of this lesson gives `{copies:[{path,written,size,sum}]}`. `written` of a copy is the wall seconds (N0) when the receiver published this copy at itself (the time of the copy file or its own record): `PUT /mirror` does not carry the time of the source bucket, only `X-Sum`; the bytes of the bucket do not change; a repeated reception of the same bucket with the same sum does not shift `written`.
 
 <!-- req: P/05-R160 -->
 
-**Bucket mirroring.** The bytes of a copy are a separate GET.
-
-<!-- req: P/05-R161 -->
-
-**Bucket mirroring.** The field `sum` and the header X-Sum are 64 lowercase hex digits of the SHA-256 of the whole body.
+**Bucket mirroring.** The bytes of a copy are a separate GET. The field `sum` and the header X-Sum are 64 lowercase hex digits of the SHA-256 of the whole body.
 
 <!-- req: P/05-R162 -->
 
@@ -1275,11 +917,7 @@ The full contract: [OpenAPI](05-resource.api.openapi.yaml).
 
 <!-- req: P/05-R163 -->
 
-**Independent size and time limits.** GET of an object is limited to the resource door byte limit (OpenAPI Content-Length.maximum) by the bytes actually read: exactly the limit is allowed, +1 byte — 413 ResourceError before the success headers; until the size is confirmed the body is buffered within bounds or checked against an immutable object with a reliable size.
-
-<!-- req: P/05-R164 -->
-
-**Independent size and time limits.** The ceiling of the store itself can be higher and does not cancel this limit of the door. It distinguishes the resource and the console, JSON answers, a byte stream and the absence of a body.
+**Independent size and time limits.** GET of an object is limited to the resource door byte limit (OpenAPI Content-Length.maximum) by the bytes actually read: exactly the limit is allowed, +1 byte — 413 ResourceError before the success headers; until the size is confirmed the body is buffered within bounds or checked against an immutable object with a reliable size. The ceiling of the store itself can be higher and does not cancel this limit of the door. It distinguishes the resource and the console, JSON answers, a byte stream and the absence of a body.
 
 <!-- req: P/05-R165 -->
 
@@ -1327,19 +965,11 @@ ResourceError is only `{error: text}`.
 
 <!-- req: P/05-R041 -->
 
-**Query parsing.** The resource door — by P/01.1 N2.1 (query, the path byte for byte, HTTP by RFC 9112, an early refusal) with deviations: a refusal of query parsing — 400 ResourceError `{error}`.
-
-<!-- req: P/05-R279 -->
-
-**Raw paths and route matching.** an empty or repeated parameter — 400, except an empty `prefix` of the object listing (200).
+**Query parsing.** The resource door — by P/01.1 N2.1 (query, the path byte for byte, HTTP by RFC 9112, an early refusal) with deviations: a refusal of query parsing — 400 ResourceError `{error}`. **Raw paths and route matching.** an empty or repeated parameter — 400, except an empty `prefix` of the object listing (200).
 
 <!-- req: P/05-R280 -->
 
-**Raw paths and route matching.** no path and an unsupported method — 404/405 without a body, including `OPTIONS`, `POST /events`, `PUT /v1/objects` (the listing), `GET`/`POST`/`DELETE` on `/mirror/…`.
-
-<!-- req: P/05-R281 -->
-
-**Raw paths and route matching.** `PUT /v1/objects/{non-blob}` — the application 405 ResourceError (N4).
+**Raw paths and route matching.** no path and an unsupported method — 404/405 without a body, including `OPTIONS`, `POST /events`, `PUT /v1/objects` (the listing), `GET`/`POST`/`DELETE` on `/mirror/…`. `PUT /v1/objects/{non-blob}` — the application 405 ResourceError (N4).
 
 <!-- req: P/05-R282 -->
 
@@ -1375,23 +1005,7 @@ ResourceDenied (`error=refused`, detail, role on a refusal of the role) — 403 
 
 <!-- req: P/05-R288 -->
 
-**Raw paths and route matching.** Match the raw path exactly, with no percent-decoding of literals, path normalization or implicit trailing slash.
-
-<!-- req: P/05-R289 -->
-
-**Raw paths and route matching.** A path parameter declares `x-path-capture` (`segment` or `remainder`, only at the end) and `x-path-decode: percent-segment`.
-
-<!-- req: P/05-R290 -->
-
-**Raw paths and route matching.** Capture the raw remainder including an empty tail and empty inner segments; decode each captured segment separately.
-
-<!-- req: P/05-R291 -->
-
-**Raw paths and route matching.** A decoded slash does not create a separator and is invalid.
-
-<!-- req: P/05-R292 -->
-
-**Raw paths and route matching.** Empty or other out-of-form values are parameter errors of the selected operation, not a fallback to another route.
+**Raw paths and route matching.** Match the raw path exactly, with no percent-decoding of literals, path normalization or implicit trailing slash. A path parameter declares `x-path-capture` (`segment` or `remainder`, only at the end) and `x-path-decode: percent-segment`. Capture the raw remainder including an empty tail and empty inner segments; decode each captured segment separately. A decoded slash does not create a separator and is invalid. Empty or other out-of-form values are parameter errors of the selected operation, not a fallback to another route.
 
 <!-- req: P/05-R293 -->
 
@@ -1427,23 +1041,11 @@ ResourceDenied (`error=refused`, detail, role on a refusal of the role) — 403 
 
 <!-- req: P/05-R044 -->
 
-For door mode `mtls`, the per-operation role table is [forms/door-roles.tsv](../forms/door-roles.tsv), with the paths and methods of the OpenAPI.
-
-<!-- req: P/05-R284 -->
-
-**TLS and role admission.** `<sub>worker` expands only over the loaded manifest catalogue; `*` means any authenticated kit role.
-
-<!-- req: P/05-R285 -->
-
-**TLS and role admission.** The role check precedes the matched operation handler; the TLS checks above remain mandatory.
+For door mode `mtls`, the per-operation role table is [forms/door-roles.tsv](../forms/door-roles.tsv), with the paths and methods of the OpenAPI. **TLS and role admission.** `<sub>worker` expands only over the loaded manifest catalogue; `*` means any authenticated kit role. The role check precedes the matched operation handler; the TLS checks above remain mandatory.
 
 <!-- req: P/05-R286 -->
 
-**TLS and role admission.** The loopback mode keeps the admission of the role certificate contract.
-
-<!-- req: P/05-R287 -->
-
-**TLS and role admission.** This does not admit unknown paths or methods.
+**TLS and role admission.** The loopback mode keeps the admission of the role certificate contract. This does not admit unknown paths or methods.
 
 <!-- req: P/05-R045 -->
 
@@ -1529,11 +1131,7 @@ Execute the following steps in their listed order: P/05-R093, P/05-R094, P/05-R0
 
 <!-- req: P/05-R177 -->
 
-**Event query and merge.** A read error of a file or a directory is not given as a full answer; after the HTTP stream has started — a break, before it — 503 ResourceError.
-
-<!-- req: P/05-R178 -->
-
-**Event query and merge.** An unreadable line is not a read error: it is skipped and counted (N1.3, P/01.1 N0 «Stability of output»).
+**Event query and merge.** A read error of a file or a directory is not given as a full answer; after the HTTP stream has started — a break, before it — 503 ResourceError. An unreadable line is not a read error: it is skipped and counted (N1.3, P/01.1 N0 «Stability of output»).
 
 ### resource pass — at start, then every PASS_EVERY from the end of the pass
 
@@ -1543,23 +1141,11 @@ The first pass is right after readiness (the door row is written), not after PAS
 
 <!-- req: P/05-R053 -->
 
-Execute the following steps in their listed order: P/05-R099, P/05-R100, P/05-R101, P/05-R102.
-
-<!-- req: P/05-R099 -->
-
-**`retain`.** For each tree: days = `<sub>`/retention | the default (tree.alarms — alarms_retention | the default; audit, console — the default; the defaults — the event log contract «Retention of a tree»).
-
-<!-- req: P/05-R233 -->
-
-**Retention and holds.** `days` is not a number or ≤ 0 or the row did not answer → not known: remove nothing, name it in the heartbeat — a wrong days: `<sub>` in retention_garbled and retention_withheld[`<sub>`] = days_garbled; the row did not answer — retention_withheld[`<sub>`] = unknown; the holds are not read (the holds contract) — retention_withheld[`<sub>`] = holds_unread.
+Execute the following steps in their listed order: P/05-R234, P/05-R100, P/05-R101, P/05-R102.
 
 <!-- req: P/05-R234 -->
 
-**Retention and holds.** Each tree is kept by its own term (`<sub>` — retention, `<sub>`.alarms — alarms_retention); retention_withheld[`<sub>`] — one reason selected by [decision-order.tsv](../forms/decision-order.tsv), procedure `retention`; retention_garbled — a `<sub>` for which any term (retention or alarms_retention) is wrong, regardless of retention_withheld.
-
-<!-- req: P/05-R235 -->
-
-**Retention and holds.** Apply the inclusive deadline now >= written + seconds of N1.3 retention, only to closed buckets (the console marks — not earlier than the longest; holds keep — also the buckets of the units of other subsystems whose about names the held one, and the buckets of unknown units; what a row holds, the window, an incomplete declaration and unreadable rows — the holds contract common/contracts/holds.md, P/06.4 N1.5; the mirror copies — the tree term plus MIRROR_RETENTION_EXTRA); the journal events.removed; index.forget.
+**`retain`.** For each tree: days = `<sub>`/retention | the default (tree.alarms — alarms_retention | the default; audit, console — the default; the defaults — the event log contract «Retention of a tree»). **Retention and holds.** `days` is not a number or ≤ 0 or the row did not answer → not known: remove nothing, name it in the heartbeat — a wrong days: `<sub>` in retention_garbled and retention_withheld[`<sub>`] = days_garbled; the row did not answer — retention_withheld[`<sub>`] = unknown; the holds are not read (the holds contract) — retention_withheld[`<sub>`] = holds_unread. Each tree is kept by its own term (`<sub>` — retention, `<sub>`.alarms — alarms_retention); retention_withheld[`<sub>`] — one reason selected by [decision-order.tsv](../forms/decision-order.tsv), procedure `retention`; retention_garbled — a `<sub>` for which any term (retention or alarms_retention) is wrong, regardless of retention_withheld. Apply the inclusive deadline now >= written + seconds of N1.3 retention, only to closed buckets (the console marks — not earlier than the longest; holds keep — also the buckets of the units of other subsystems whose about names the held one, and the buckets of unknown units; what a row holds, the window, an incomplete declaration and unreadable rows — the holds contract common/contracts/holds.md, P/06.4 N1.5; the mirror copies — the tree term plus MIRROR_RETENTION_EXTRA); the journal events.removed; index.forget.
 
 <!-- req: P/05-R100 -->
 
@@ -1567,31 +1153,15 @@ Execute the following steps in their listed order: P/05-R099, P/05-R100, P/05-R1
 
 <!-- req: P/05-R101 -->
 
-**`relieve`.** `platform/space.enabled` ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.`<volume>` of this volume; N1.4 free_ask).
-
-<!-- req: P/05-R236 -->
-
-**Space and free requests.** `platform/space` does not read — the step is not executed (N1.4 space).
-
-<!-- req: P/05-R237 -->
-
-**Space and free requests.** A heartbeat of a worker of this subsystem on this server does not read — the need of this subsystem is not computed, the step neither writes nor removes its row free-*, the reason goes to the journal.
+**`relieve`.** `platform/space.enabled` ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.`<volume>` of this volume; N1.4 free_ask). **Space and free requests.** `platform/space` does not read — the step is not executed (N1.4 space). A heartbeat of a worker of this subsystem on this server does not read — the need of this subsystem is not computed, the step neither writes nor removes its row free-*, the reason goes to the journal.
 
 <!-- req: P/05-R238 -->
 
-**Space and free requests.** `need` > 0 → write free-`<server>`-`<volume>` {free: need, volume, server, at}: cas "" or cas by the version of a row of ITS OWN form (without unit AND with the exact server/volume of the current volume); before the write check the grammar of N1.4 `free_ask`.
-
-<!-- req: P/05-R239 -->
-
-**Space and free requests.** Under this key a row with unit, another's server/volume or a spoiled form → do not touch it, the journal free_ask.key_taken, skip.
+**Space and free requests.** `need` > 0 → write free-`<server>`-`<volume>` {free: need, volume, server, at}: cas "" or cas by the version of a row of ITS OWN form (without unit AND with the exact server/volume of the current volume); before the write check the grammar of N1.4 `free_ask`. Under this key a row with unit, another's server/volume or a spoiled form → do not touch it, the journal free_ask.key_taken, skip.
 
 <!-- req: P/05-R240 -->
 
-**Space and free requests.** `need` ≤ 0 (all that is needed is already being freed) or below low → delete the row of its own form if there is one: delete with cas of the version on which the absence of unit AND the exact match of server/volume were checked (P/01.1).
-
-<!-- req: P/05-R241 -->
-
-**Space and free requests.** `conflict` — under the key there is already another row (an ordinary request or a new own one) → do not touch it, the journal free_ask.key_taken.
+**Space and free requests.** `need` ≤ 0 (all that is needed is already being freed) or below low → delete the row of its own form if there is one: delete with cas of the version on which the absence of unit AND the exact match of server/volume were checked (P/01.1). `conflict` — under the key there is already another row (an ordinary request or a new own one) → do not touch it, the journal free_ask.key_taken.
 
 <!-- req: P/05-R102 -->
 
@@ -1637,13 +1207,13 @@ The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 
 
 ## N5 Acceptance
 
-The directory [`../acceptance/`](../acceptance/README.md) (judge-only: scenarios and observations): 35 independent scenarios, 292 steps — the objects door, the event query, the resource paths, the door row of the server and the presence lock, and the body copy at the resource. Each gets
+Acceptance: 35 independent scenarios, 292 steps — the objects door, the event query, the resource paths, the door row of the server and the presence lock, and the body copy at the resource. Each gets
 an empty store, objects and events, all except `10-body-copy` also a new console (the scenario `10-body-copy` needs no console and no
-controller); the resource srv-a ([the common acceptance README](../../common/acceptance/README.md) (judge-only: resource stand setup),
+controller); the resource srv-a ([the common acceptance README](../../common/acceptance/README.md),
 «Resource») is ready before the first step, for `09-resource-door`, `10-body-copy`, `16-presence-lock`, 17–28, 31 and 37–41 a step of the scenario starts it (`@start resource`; for 31 also the resource `srv-b`); the worker `w-1` — only for `16-presence-lock`, `19-service-names`, 42 and 43, the workers of `testsub2` — for `20-door-room` and 24–28, the controller — for 42. The installed manifest
 `testsub` (for `10-body-copy`, `20-door-room`, `23-object-ceiling`, 24–31, 37–41, 44 and 45 — the catalogue `testsub` and `testsub2`) is part of the preparation, not user data.
 
-Detailed case descriptions and their expected outcomes are recorded in [N5 coverage](05-resource.n5.cases.md) (judge-only: object cases P/05-R006–P/05-R009, P/05-R012, P/05-R014; event/hint cases P/05-R018–P/05-R020, P/05-R022–P/05-R024, P/05-R031–P/05-R034, P/05-R050; resource cases P/05-R025, P/05-R030, P/05-R048, P/05-R052–P/05-R053; HTTP cases P/05-R036, P/05-R039–P/05-R041). Governing rules and the public acceptance scope remain in this chapter.
+The governing rules and the public acceptance scope are in this chapter.
 
 The existing synchronous ports separately establish completed relieve, query candidate/calendar fallback and independent peer-retry boundaries. A process pass_started mark plus a fixed sleep does not prove completion of relieve; an early process observation remains early. A seam declaration is not implementation execution. Detailed witness inputs and addresses are judge-only coverage.
 
@@ -1701,4 +1271,3 @@ An implementation conforms to the lesson when every norm is fulfilled:
 - [ ] **P/05-14** [test, reading] the body copy at the resource (N1.1 «Bodies at the resource» `mirror`, N2): the mirror of bodies always (copies 1 without the row `platform/mirror`, on the first pass to the neighbour with the source `written`) — sc. 31; the reception with a hash, the copy door only for a blob key of a subsystem with a blob field — sc. 10; `written` of a copy does not decrease — sc. 30; the refusals of the copy door (422, 400 without `X-Written`, 405) — sc. 10; 409 «deleted later» — sc. 45; 408, 411 and the closing of incoming copies in the cleanup window — checked by reading
 - [ ] **P/05-15** [test, reading] the resource ceilings (N1.1 «Resource ceilings»): the resource door byte limit (OpenAPI Content-Length.maximum) at the resource door — the refusal 413, not a truncation; `limit` of `/events` — sc. 02; a body copy of exactly the resource door byte limit (OpenAPI Content-Length.maximum) — 204 and the read 200 — sc. 23, +1 byte — 413 without a write — checked by reading (413 before reading the body; the door is not obliged to drain beyond its volume — the client can get a break, P/01.1 N2.1 and item 9); GET of an object larger than the resource door byte limit (OpenAPI Content-Length.maximum) and `max_bytes` of the object store — checked by reading (the acceptance README, evidence outside TSV)
 - [ ] **P/05-16** [test] the request to free space: the addressee — the workers of the subsystem on the server `<server>`, `<volume>` — the volume of the resource, `Σ freeing` — over the live heartbeats of this subsystem on this server for this volume (N1.4 `free_ask`, N3 `relieve`) — the vectors [`relieve`](../vectors/relieve/README.md): the answer `freeing: 0` and `freeing: N` (the VMS request freeing)
-
