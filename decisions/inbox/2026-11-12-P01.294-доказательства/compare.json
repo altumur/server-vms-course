@@ -789,6 +789,16 @@
       "removed_unchanged": true
     },
     {
+      "old": "forms/export.json#/judge/129/disposition",
+      "new": "forms/export.json#/judge/131/disposition",
+      "removed_unchanged": true
+    },
+    {
+      "old": "forms/export.json#/judge/129/basis",
+      "new": "forms/export.json#/judge/131/basis",
+      "removed_unchanged": true
+    },
+    {
       "old": "spec/production-acceptance.md#qualified-inputs",
       "new": "qualification/README.md#qualified-inputs",
       "removed_unchanged": true
@@ -803,6 +813,28 @@
     "explicit_files": 26,
     "existing_unique_english_paths": true
   },
+  "export_q_records": [
+    {
+      "side": "model",
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "judge_only"
+    },
+    {
+      "side": "model",
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "judge_only"
+    },
+    {
+      "side": "judge",
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "include"
+    },
+    {
+      "side": "judge",
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "exclude"
+    }
+  ],
   "m_obligations": [
     {
       "group": "RUN-W01",

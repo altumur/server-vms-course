@@ -532,6 +532,11 @@
       "basis": "Root P01.10.5.13 / P01.34 M1: existing judge implementation remains J-only; product model writes its own tests/driver from public observation contract, no checker package in M."
     },
     {
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures are outside the implementation input M."
+    },
+    {
       "path": "Platform/01-store/ru/01-store.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -590,6 +595,11 @@
       "path": "Platform/01-store/ru/probes/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures are outside the implementation input M."
     },
     {
       "path": "Platform/01-store/ru/spec/01-store.README.md",
@@ -1254,6 +1264,11 @@
       "basis": "Implementation code; never judge input (ADR-0135 (2) item 1)."
     },
     {
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "include",
+      "basis": "The full judge input retains the qualification procedures; functional selection is unchanged."
+    },
+    {
       "path": "Platform/01-store/ru/01-store.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -1312,6 +1327,11 @@
       "path": "Platform/01-store/ru/probes/README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; qualification exports contain only the English source."
     },
     {
       "path": "Platform/01-store/ru/spec/01-store.README.md",

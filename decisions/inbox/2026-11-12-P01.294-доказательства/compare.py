@@ -99,10 +99,32 @@ for old_row, new_row in zip(old_journal, new_journal):
     if old_row != new_row:
         old_cells, new_cells = old_row.split('\t'), new_row.split('\t')
         assert old_cells[0] == new_cells[0] and old_cells[2:] == new_cells[2:]
-        assert new_cells[1] == old_cells[1].replace('spec/production-acceptance.md#', 'qualification/README.md#')
+        export_address = re.fullmatch(r'forms/export\.json#/(model|judge)/(\d+)(/.*)?', old_cells[1])
+        if export_address:
+            side, index, suffix = export_address.groups()
+            old_export = json.loads(before('Platform/01-store/forms/export.json'))
+            new_export = json.loads((ROOT/'Platform/01-store/forms/export.json').read_text())
+            carrier = old_export[side][int(index)]['path']
+            new_index = next(i for i, row in enumerate(new_export[side]) if row['path'] == carrier)
+            assert new_cells[1] == f'forms/export.json#/{side}/{new_index}{suffix or ""}'
+        else:
+            assert new_cells[1] == old_cells[1].replace('spec/production-acceptance.md#', 'qualification/README.md#')
         readdressed.append({'old': old_cells[1], 'new': new_cells[1], 'removed_unchanged': True})
 result['historical_carrier_addresses'] = readdressed
 result['filter'] = {'explicit_files': len(paths), 'existing_unique_english_paths': True}
+old_export = json.loads(before('Platform/01-store/forms/export.json'))
+new_export = json.loads((ROOT/'Platform/01-store/forms/export.json').read_text())
+q_source = 'Platform/01-store/qualification/README.md'
+q_translation = 'Platform/01-store/ru/qualification/README.md'
+result['export_q_records'] = []
+for side in ('model', 'judge'):
+    retained = [row for row in new_export[side] if row['path'] not in (q_source, q_translation)]
+    assert retained == old_export[side], (side, 'previous export record changed')
+    for path in (q_source, q_translation):
+        record = next(row for row in new_export[side] if row['path'] == path)
+        expected = 'judge_only' if side == 'model' else ('exclude' if path == q_translation else 'include')
+        assert record['disposition'] == expected
+        result['export_q_records'].append({'side': side, 'path': path, 'disposition': expected})
 m_groups = {
     'RUN-W01': 'Incremental write cost', 'RUN-W02': 'Import validation and cost',
     'RUN-W03': 'Replay retention', 'RUN-W04': 'Replay resources',
