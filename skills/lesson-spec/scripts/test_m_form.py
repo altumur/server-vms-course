@@ -124,7 +124,7 @@ class AcceptedFormPasses(AcceptedForm):
     def test_accepted_form_passes_every_check_with_counts(self):
         check = self.run_checks()
         self.assertEqual(check.errors, [])
-        for name in ("history_phrases", "index_refs", "see_also_refs", "judge_only_refs", "production_scoped",
+        for name in ("history_phrases", "index_refs", "judge_only_refs", "production_scoped",
                      "history_rows", "checklist_marks"):
             self.assertGreater(check.stats[name], 0, name)
 
@@ -286,69 +286,19 @@ class IndexRefs(AcceptedForm):
                         check.errors)
 
 
-class SeeAlsoRefs(unittest.TestCase):
-    """A small chapter: the See also lines against the union of the index topics (P01.214 C5)."""
+class SeeAlsoRefs(AcceptedForm):
+    """Form M navigates by the index alone: a «See also» line is an error (the Architect 2026-11-12, by P08.25)."""
+    REL = "spec/01.1-store.norms.md"
 
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="m-form-see-")
-        self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name).resolve()
-        self.home = self.root / HOME
-        (self.home / "spec").mkdir(parents=True)
-        (self.home / "ru/spec").mkdir(parents=True)
+    def test_no_see_also_lines_pass(self):
+        self.assertEqual([e for e in self.run_checks().errors if "See also" in e or "См. также" in e], [])
 
-    def chapter(self, rows, see, ru_see=None):
-        head = "# P/01.1\n\n## Index\n\n| Topic | Requirements | Files |\n|---|---|---|\n" + "".join(
-            f"| `t{i}` t | {', '.join(ids)} | `spec/01.1-store.norms.md` |\n" for i, ids in enumerate(rows))
-        body = "\n## N0 Vocabulary\n\n" + "".join(
-            f"<!-- req: P/01.1-R00{n} -->\nRule {n}.\n\n" + (f"See also: {', '.join(see[n])}.\n\n" if see.get(n) else "")
-            for n in range(1, 6))
-        (self.home / "spec/01.1-store.norms.md").write_text(head + body, encoding="utf-8")
-        ru_see = see if ru_see is None else ru_see
-        (self.home / "ru/spec/01.1-store.norms.md").write_text(
-            head.replace("## Index", "## Указатель") + "\n## N0 Словарь\n\n" + "".join(
-                f"Правило {n}.\n\n" + (f"См. также: {', '.join(ru_see[n])}.\n\n" if ru_see.get(n) else "")
-                for n in range(1, 6)), encoding="utf-8")
-        check = Check(self.root, scope="platform")
-        m_form.see_also_refs(check, m_form.Lesson(check, "P/01", self.home))
-        return check
-
-    @staticmethod
-    def ids(*numbers):
-        return [f"P/01.1-R00{n}" for n in numbers]
-
-    def test_intersecting_topics_give_the_union(self):
-        check = self.chapter([self.ids(1, 2, 3), self.ids(3, 4)],
-                             {1: self.ids(2, 3), 2: self.ids(1, 3), 3: self.ids(1, 2, 4), 4: self.ids(3)})
-        self.assertEqual(check.errors, [])
-        self.assertEqual(check.stats["see_also_refs"], 4)
-
-    def test_symmetric_cycle_is_not_the_union(self):
-        check = self.chapter([self.ids(1, 2, 3, 4)],
-                             {1: self.ids(2, 4), 2: self.ids(1, 3), 3: self.ids(2, 4), 4: self.ids(1, 3)})
-        self.assertEqual(len([e for e in check.errors if "not the union" in e]), 4, check.errors)
-        text = (self.home / "spec/01.1-store.norms.md").read_text(encoding="utf-8")
-        line = text[:text.index("See also: P/01.1-R002, P/01.1-R004")].count("\n") + 1
-        self.assertTrue(any(f": line {line}: See also of P/01.1-R001" in e and "missing P/01.1-R003" in e
-                            for e in check.errors), check.errors)
-
-    def test_missing_line_extra_line_order_repeat_self(self):
-        cases = [
-            ({1: self.ids(2)}, "P/01.1-R002 is in an index row and has no"),
-            ({1: self.ids(2), 2: self.ids(1), 5: self.ids(1)}, "which is in no index row"),
-            ({1: ["P/01.1-R002", "P/01.1-R002"], 2: self.ids(1)}, "ascending, each id once"),
-            ({1: self.ids(1, 2), 2: self.ids(1)}, "names itself"),
-            ({1: ["P/01.1-R009"], 2: self.ids(1)}, "is not a requirement of P/01"),
-        ]
-        for see, words in cases:
-            with self.subTest(words=words):
-                check = self.chapter([self.ids(1, 2)], see)
-                self.assertTrue(any(re.search(r": line [0-9]+: ", e) and words in e for e in check.errors), check.errors)
-
-    def test_translation_differs(self):
-        check = self.chapter([self.ids(1, 2)], {1: self.ids(2), 2: self.ids(1)}, {1: self.ids(2), 2: self.ids(1, 2)})
-        self.assertTrue(any("ru/spec/01.1-store.norms.md: line " in e and "differs" in e for e in check.errors),
-                        check.errors)
+    def test_a_see_also_line_is_an_error_in_source_and_translation(self):
+        self.replace(self.REL, "<!-- req: P/01.1-R149 -->", "See also: P/01.1-R150.\n\n<!-- req: P/01.1-R149 -->")
+        self.replace("ru/" + self.REL, "**Охват: боевой.** Сохранение", "См. также: P/01.1-R150.\n\n**Охват: боевой.** Сохранение")
+        errors = self.run_checks().errors
+        self.assertTrue(any(f"{HOME}/{self.REL}: line " in e and "navigates by the index alone" in e for e in errors), errors)
+        self.assertTrue(any(f"{HOME}/ru/{self.REL}: line " in e and "navigates by the index alone" in e for e in errors), errors)
 
 
 class JudgeOnlyRefs(AcceptedForm):
@@ -408,8 +358,8 @@ class ProductionScoped(AcceptedForm):
                           self.line_of(self.REL, "fixed-size write **Scope"), "inside a paragraph")
 
     def test_label_opening_a_second_paragraph_of_a_requirement(self):
-        self.replace(self.REL, "\nSee also: P/01.1-R149, P/01.1-R150, P/01.1-R151, P/01.1-R302,",
-                     "\n**Scope: production.** A second paragraph.\n\nSee also: P/01.1-R149, P/01.1-R150, P/01.1-R151, P/01.1-R302,")
+        self.replace(self.REL, "<!-- req: P/01.1-R149 -->",
+                     "**Scope: production.** A second paragraph.\n\n<!-- req: P/01.1-R149 -->")
         self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "A second paragraph"),
                           "not the first after a req anchor")
 

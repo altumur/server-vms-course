@@ -310,7 +310,7 @@
      "x-opaque": true
     },
     "raw": {
-     "description": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)",
+     "description": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw)",
      "type": "object",
      "properties": {},
      "propertyNames": {
@@ -748,7 +748,7 @@
      ]
     },
     "cap": {
-     "description": "none < view < edit < admin; none — only at a role row (ADR-0099 §1): a rule of the row, not the form",
+     "description": "none < view < edit < admin; none — only at a role row: a rule of the row, not the form",
      "type": "string",
      "enum": [
       "none",
@@ -758,7 +758,7 @@
      ]
     },
     "sub": {
-     "description": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform (ADR-0097 §1)",
+     "description": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform",
      "type": "string",
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
     },
@@ -801,7 +801,7 @@
    "pattern": "^(?:[^/\\\\|\",\u0000-\u001f-  ٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+)$"
   },
   "common.person_name": {
-   "description": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
+   "description": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters; «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
    "type": "string",
    "not": {
     "enum": [
@@ -827,11 +827,11 @@
    "type": "object",
    "properties": {
     "domain": {
-     "description": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)"
+     "description": "the domain name (chapter 8.2); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior"
+     "description": "the holder's term (chapter 8.8); the order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
@@ -868,11 +868,11 @@
      "pattern": "^(?:[0-9a-f]{64})$"
     },
     "kid": {
-     "description": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form (REC-G01)",
+     "description": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form",
      "type": "string"
     },
     "sig": {
-     "description": "base64url without «=» of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; anything else — function record step 5 (bad_signature), not the form (REC-G01)",
+     "description": "base64url without «=» of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; anything else — function record step 5 (bad_signature), not the form",
      "type": "string"
     }
    },

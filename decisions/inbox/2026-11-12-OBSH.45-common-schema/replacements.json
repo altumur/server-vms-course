@@ -1,0 +1,83 @@
+[
+  {
+    "pointer": "/$defs/common.domain_backup_doc/properties/raw/description",
+    "before": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26)",
+    "after": "`{<object key>: <base64>}` — the objects of the copy not in the form of their family — not JSON or JSON not by the form, as bytes (N1.5 raw)",
+    "source": "C08-BACKUP-JSON-99; Architect decision 2026-10-26",
+    "date": "2026-11-12",
+    "removed": [
+      "; C08-BACKUP-JSON-99, the Architect's decision of 2026-10-26"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.grants_line/properties/cap/description",
+    "before": "none < view < edit < admin; none — only at a role row (ADR-0099 §1): a rule of the row, not the form",
+    "after": "none < view < edit < admin; none — only at a role row: a rule of the row, not the form",
+    "source": "ADR-0099 §1",
+    "date": "2026-11-12",
+    "removed": [
+      "(ADR-0099 §1)"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.grants_line/properties/sub/description",
+    "before": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform (ADR-0097 §1)",
+    "after": "the manifest name (P/02.1 N1.2 name) or platform; no field — the row is in force in all subsystems and in platform",
+    "source": "ADR-0097 §1",
+    "date": "2026-11-12",
+    "removed": [
+      "(ADR-0097 §1)"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.person_name/description",
+    "before": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters (the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3); «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
+    "after": "the person's name (P/08.4 N1.1 name): 1–64 characters without whitespace, control characters (U+0000–U+001F, U+007F) and : | ( ) \" /; not exactly break-glass; whitespace — the White_Space property of Unicode 15.0.0, written out as characters; «not a subject of the name index» — a check of the door (chapter 8.5 N1.7), not the form",
+    "source": "Architect decision 2026-10-20, lesson 8 assembly questions, item 3",
+    "date": "2026-11-12",
+    "removed": [
+      "(the Architect's decision of 2026-10-20 on the questions of assembling lesson 8, item 3)"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.shared_doc/properties/domain/description",
+    "before": "the domain name (chapter 8.2, from M11/2 N1.1); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form (REC-G01)",
+    "after": "the domain name (chapter 8.2); another JSON type or ≠ the domain of the set — function record step 2 (another_domain), not the form",
+    "source": "former address M11/2 N1.1; REC-G01",
+    "date": "2026-11-12",
+    "removed": [
+      ", from M11/2 N1.1",
+      "(REC-G01)"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.shared_doc/properties/term/description",
+    "before": "the holder's term (chapter 8.8, from M11/10 N1.1); the order — (term, rev), term is senior",
+    "after": "the holder's term (chapter 8.8); the order — (term, rev), term is senior",
+    "source": "former address M11/10 N1.1",
+    "date": "2026-11-12",
+    "removed": [
+      ", from M11/10 N1.1"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.shared_doc/properties/kid/description",
+    "before": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form (REC-G01)",
+    "after": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form",
+    "source": "REC-G01",
+    "date": "2026-11-12",
+    "removed": [
+      "(REC-G01)"
+    ]
+  },
+  {
+    "pointer": "/$defs/common.shared_doc/properties/sig/description",
+    "before": "base64url without «=» of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; anything else — function record step 5 (bad_signature), not the form (REC-G01)",
+    "after": "base64url without «=» of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; anything else — function record step 5 (bad_signature), not the form",
+    "source": "REC-G01",
+    "date": "2026-11-12",
+    "removed": [
+      "(REC-G01)"
+    ]
+  }
+]
