@@ -63,6 +63,6 @@ Who executes it is the controller (`04-controller`: the shortage, `in_flight`, `
 ## What the vector does not cover
 
 The withdrawal by the deadline,
-a number above want and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (judge-only: checks P/04-R050, P/04-R051, P/04-R052, P/04-R053) (sc. 14–17).
+a number above want and the shrinking — by time, acceptance steps.
 
-The aggregate waiting/sets[].waiting keeps integer-by-value spellings, but has no common.uint53 ceiling or binary64/int64 conversion. Compute sums and ceil division exactly; individual weight/capacity and all other input domains remain unchanged. Individual named-input-to-result associations are in [judge-only case data](README.cases.md) (judge-only: checks P/04-R050, P/04-R051, P/04-R052, P/04-R053).
+The aggregate waiting/sets[].waiting keeps integer-by-value spellings, but has no common.uint53 ceiling or binary64/int64 conversion. Compute sums and ceil division exactly; individual weight/capacity and all other input domains remain unchanged.
