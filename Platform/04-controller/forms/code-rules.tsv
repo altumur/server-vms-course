@@ -1,5 +1,4 @@
-# The code checks of lesson P/04 (ADR-0133 addenda (28), (39) items 2, 5; audit P04.20, appendix B, and the answers of the Architect to its questions
-# 6, 7): rows of the kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the
+# The code checks of lesson P/04: rows of the kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the
 # checks; no expected answer. name: the name that the profile field code (of the profile of 04-controller) maps to a symbol of the candidate; the
 # names are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later
 # stage that holds code:*. norm: the norms of the subject. Cores: fate_core (the slot fate and its release), admission_core (the admission of a
@@ -37,7 +36,7 @@ C22	pure_core	decommission_core	{"forbid": ["os", "net", "time", "sync", "io/fs"
 C23	property_tests	decommission_batches	{}	cleanup	P/04 N3 decommission_server(s)
 C24	pure_core	snapshot_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	snapshots	P/04 N1.3a; P/04 N1.3b; P/04 N3 snapshot; P/04 N3 table snapshot
 C25	complexity	snapshot_core	{"max_branches": 15, "max_lines": 80}	snapshots	P/04 N1.3a
-C26	pure_core	growth_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	growth_shrink	P/04 N3 «shortage(), order(), withdraw the order, shrink()»; ADR-0084
+C26	pure_core	growth_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	growth_shrink	P/04 N3 «shortage(), order(), withdraw the order, shrink()»
 C27	property_tests	order_plan	{}	growth_shrink	P/04 N3 shortage(), order(); vectors/order
 C28	property_tests	shrink_victim	{}	growth_shrink	P/04 N3 shrink(); vectors/shrink-victim
 C29	property_tests	shrink_allowed	{}	growth_shrink	P/04 N3 shrink() — step 9a; vectors/shrink-allowed
