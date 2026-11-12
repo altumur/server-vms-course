@@ -176,3 +176,8 @@ req_id	file	source	date	removed
 -	data/placed-record.schema.json#/properties/at/description	finding G09-PLACEMENT-AT-COPY-01	2026-11-05	 (G09-PLACEMENT-AT-COPY-01)
 -	data/roles.schema.json#/properties/supervision/description	ADR-0119 addendum (4) item 1, addendum (6) item 2	2026-11-03	; ADR-0119 addendum (4) item 1, addendum (6) item 2
 -	data/roles.schema.json#/properties/unreadable/description	ADR-0119 addendum (6) item 2	2026-11-03	; ADR-0119 addendum (6) item 2
+-	spec/09-agent.api.openapi.yaml#/components/schemas/AgentRefusal/description	finding LTD-E02 of the local token door contract (refusal words)	2026-10-23	; LTD-E02
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	preserves all 22 original N4 rows as 24 projections, retaining cause/outcome/diagnostic/caller byte for byte
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	The original chapter/row addresses remain.
+-	acceptance/1/README.md#anywhere-copy-hash	ADR-0083 addendum (145)	2026-11-08	Existing
+-	acceptance/1/README.md#anywhere-copy-hash	ADR-0083 addendum (145)	2026-11-08	rebaselined 
