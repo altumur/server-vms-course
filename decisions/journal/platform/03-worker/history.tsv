@@ -110,3 +110,4 @@ req_id	file	source	date	removed
 -	data/heartbeats.schema.json#/properties/garbled_rows/description	RM-G01; P03.29 judge finding 9	2026-11-12	; RM-G01
 -	data/heartbeats.schema.json#/properties/stood_in/description	log of cammeta-go, lesson 5 № 2; P03.29 judge finding 9	2026-11-12	 (log of cammeta-go, lesson 5 № 2)
 -	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:51:38Z (B8, S1: the column role of the common routing header, a cell in every row of this lesson)	2026-11-12	-
+-	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T10:11:06Z (B8, S1, after the review of judge: role console for P/03.2–P/03.4/stand, testsubworker for P/03.6/stand)	2026-11-12	-
