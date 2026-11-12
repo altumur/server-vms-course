@@ -132,7 +132,6 @@ ADR_LATER = {
         "lifecycle.md": "outside the norms; not cleaned by P01.177",
         "spec/01-store.README.md": "outside the norms; not cleaned by P01.177",
         "spec/01-store.api.openapi.yaml": "outside the norms; not cleaned by P01.177",
-        "spec/production-acceptance.md": "outside the norms; not cleaned by P01.177",
         "acceptance/1/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/2/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/3/README.md": "outside the norms; not cleaned by P01.177",
