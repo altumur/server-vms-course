@@ -7,7 +7,7 @@ The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `rid
 (`POST /<sub>/requests`: the rid by the template `requests.key` or `r-<sha16(Idempotency-Key)>`; a refusal — 400 RequestError, N4) and
 the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) N1.5, `worker.requests`: a refusal —
 `RequestRefused`, the count `filings.refused`); the form of the element `rids` of the record `asked` ([the family `asked`](../../data/asked.schema.json)).
-The bytes are written by the Specification; the conformance of the product is by its acceptance against this table.
+The conformance of the product is by its acceptance against this table.
 
 The table follows [the contract of the request and its mark](../../../common/contracts/request-mark.md). The product copy is checked against these bytes. In the header of `rid.tsv` (judge-only: vector inputs and expectations), `M10/8 N1.5` is an internal judge label for P/06.4 N1.5 `rid`; the grammar is stated below.
 

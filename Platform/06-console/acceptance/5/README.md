@@ -15,7 +15,7 @@ Before each automatic scenario stop the processes of the previous one, create se
 
 Without workers there is no placement. The domain login, closed grants, CSP and a repeat of a logical action are checked by a separate stand/module test, not by this TSV.
 
-The published page/module bytes are compared with the P/07 canon: [console.html](../../../07-console-module/module/console.html), [console.js](../../../07-console-module/module/console.js) and [console.css](../../../07-console-module/module/console.css). Publication remains synchronous at the existing paths with `?v=1`; the existing refusal of `?v=2` stays unchanged. These file comparisons prove byte publication, not UI-language or date-format behaviour, which is checked independently by the module owner.
+The published page/module bytes are compared with the P/07 canon: [console.html](../../../07-console-module/module/console.html), [console.js](../../../07-console-module/module/console.js) and [console.css](../../../07-console-module/module/console.css). Publication is synchronous at the existing paths with `?v=1`; `?v=2` gets the existing refusal. These file comparisons prove byte publication, not UI-language or date-format behaviour, which is checked independently by the module owner.
 
 - **Processes.** Selected scenarios bring up processes by the directives of the «Stand» (`@start worker`, `@start resource`,
   `@start controller testsub2`); before `@start` there are no background processes. The worker is `w-1` of the subsystem `testsub` on `srv-a`.
@@ -59,7 +59,7 @@ This is a subject of a manual check of the specification and of a future check o
 
 ## Source catalogue until restart
 
-For `GET /manifest/<sub>/source`, admit a changed stored manifest after console startup. Before restart the source door retains the launch catalogue's rev, served, sha256, manifest and secret_defaults; a newly installed subsystem absent from that catalogue stays404. A differing current store-row rev does not create an own503 or a per-request store read. Restart, then compare the new launch catalogue and served value. Keep independent ordinary busy/trust failures; they are not a revision-mismatch response. Inspect actual store calls if proving the no-read obligation. The frozen platform module and thirteen raw asset witnesses are unchanged.
+For `GET /manifest/<sub>/source`, admit a changed stored manifest after console startup. Before restart the source door retains the launch catalogue's rev, served, sha256, manifest and secret_defaults; a newly installed subsystem absent from that catalogue stays404. A differing current store-row rev does not create an own503 or a per-request store read. Restart, then compare the new launch catalogue and served value. Keep independent ordinary busy/trust failures; they are not a revision-mismatch response. Inspect actual store calls if proving the no-read obligation. The platform module and the thirteen raw asset witnesses are frozen.
 
 
 Inspect ordinary GET /metrics for all five w2c_changes_resets_total reason series at zero: foreign, evicted, rights, labels, folders. A real folder-composition change or folder deletion already produces reset5; observe that reset and the folders counter on the same ordinary HTTP path. Manifest metrics[] vectors do not accept this global-counter state and are not relabelled as this check. HEAD controls at the six prescribed existing paths compare GET admission/status/headers and an empty body; execution needs the actual ordinary setup, not a canned response.

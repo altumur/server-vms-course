@@ -1,0 +1,24 @@
+loop_head en-p01-248 f8c99307cecc391d87a43b77da8568ac128f8ff8 (en-generic 231dfc7 + P01.248)
+specs_on_stand /srv/b11-isolation/model-specs/da04d237b656aafc8b30fb382c44406a80642cac/tree specs_sha da04d237b656aafc8b30fb382c44406a80642cac name p01-b-raft-da04d237b656
+prep_bool_keys []
+stages 11 ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'rights', 'daemon_doors', 'daemon_copy', 'durable', 'group']
+code_at ['model', 'launch', 'jcs', 'store_core', 'http', 'rights_eval', 'daemon_copy', 'durable', 'group']
+when_unevaluated ['group'] excluded []
+norm_trace 54 {'store_core': 11, 'http': 8, 'rights_eval': 1, 'rights': 8, 'daemon_doors': 1, 'daemon_copy': 3, 'durable': 6, 'group': 16}
+norm_trace_marks {'read': 54, 'not_by_test': ['P/01.1-15', 'P/01.1-18', 'P/01.1-19', 'P/01.1-20', 'P/01.1-21', 'P/01.1-22', 'P/01.1-27', 'P/01.1-32', 'P/01.3-09', 'P/01.3-10', 'P/01.3-12', 'P/01.3-13', 'P/01.3-14'], 'unread': {}}
+mode_stages {'group': {'when': "keys.store_build != 'box'", 'modules': ['github.com/hashicorp/raft']}}
+mode_items 16 not_by_test ['P/01.1-15', 'P/01.1-27', 'P/01.3-09', 'P/01.3-10', 'P/01.3-14']
+norm_trace_mutation True stage_tests True norm_trace_mode True
+profile_probe_on True
+context_window 200000 share 0.9 budget {'rule': 'ADR-0133 addendum (2)', 'max_input_tokens': 150000000, 'max_active_hours': 24, 'stall_rounds': 3, 'rounds_max': 3, 'judge_defect_stop': 2} ceilings (150000000, 200000000)
+round_caps {'miniswe_steps': 60, 'miniswe_round_max_input_tokens': 6000000, 'miniswe_plan_round': True, 'miniswe_plan_steps': 30, 'miniswe_plan_round_max_input_tokens': 6000000, 'miniswe_stable_prefix': True, 'miniswe_head': 'stage'}
+prep_violations 0 []
+m_passport_violations []
+control passport of attempt 6: ["stages.m_passport: the sha256 of /home/pilot/run-p01251-task-20261112/PASSPORT-M.json is not the task's ccd61598be4d50b3ed4ddc35088b458c10a34a3ba66d0be612b0d43de27a5ec2"]
+control norm_trace_mutation =1: ['stages.norm_trace_mutation is true or false (P01.179)']
+control norm_trace_mode =1: ['stages.norm_trace_mode is true or false (P01.216)']
+control stage_tests =1: ['stages.stage_tests is true or false (P01.179)']
+control norm_trace=false: ['stages.norm_trace_mutation needs stages.norm_trace true (P01.179)', 'stages.norm_trace_mode needs stages.norm_trace true (P01.216)']
+stand_environment_form 45 rows; reader {} None
+stand_environment_limit P01.252: stand_env returns before reading the form; README heading moved to stand.md; start not executed
+PREP PASS

@@ -98,6 +98,9 @@ req_id	file	source	date	removed
 -	acceptance/stand.md#stand-without-root	STAND-ROOTS-CLEAR-01, the Architect's decision of 2026-10-27	2026-10-27	(STAND-ROOTS-CLEAR-01, the Architect's decision of 2026-10-27);
 -	acceptance/tables.md#target-registry-and-export-lists-assembled-from-the-lessons	ADR-0135 addendum (14)	2026-11-11	the parts of the lessons (ADR-0135 addendum (14)).
 -	acceptance/command-tables.md#installation-sequences	P02.33, the P/02 dictionary of the common acceptance (the former P/02.2 stderr rule written by the word @stderr)	2026-11-11	The former rule of P/02.2 «with code `2` stderr names the key of the view, after `@rev-spoil` the key of the mark» is now written in the table by the word `@stderr`.
+-	data/catalog.tsv#row:door/keys	review analysis of stage B 3–5, V1	2026-11-06	 (review analysis of stage B 3–5, V1)
+-	data/catalog.tsv#row:<sub>/requests/<rid>	review analysis of stage B 3–5, V1	2026-11-06	 (review analysis of stage B 3–5, V1)
+-	data/catalog.tsv#row:objects/<sub>/commands/<rid>	review analysis of stage B 3–5, V1	2026-11-06	 (review analysis of stage B 3–5, V1)
 -	acceptance/command-tables.md#installation-sequences	the Gemini coverage audit of P/02 (rows @rev-delete, @rev-spoil)	2026-11-11	(the Gemini coverage audit of P/02)
 -	acceptance/command-tables.md#installation-sequences	the coverage audit of P/02, B02 (row @rev-max)	2026-11-11	(the coverage audit of P/02, B02)
 -	acceptance/command-tables.md#installation-sequences	task P02.33 (rows @row-spoil, @stderr)	2026-11-11	(P02.33)
