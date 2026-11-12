@@ -52,6 +52,14 @@ components:
         (self.acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
         self.scenarios = self.acceptance / "scenarios.tsv"
         self.scenarios.write_text('# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n')
+        # The common registry header and the common filters M and J are required in every Platform source tree since
+        # 422023b41 (P02.50) and 58020e558 (P02.54), ADR-0135 addendum (14): the fixture keeps them empty of rows.
+        forms = self.root / "Platform/common/acceptance/forms"
+        forms.mkdir(parents=True)
+        (forms / "targets.tsv").write_text("id\towner\n")
+        (forms / "targets.routing.tsv").write_text("id\tengine\n")
+        for name in ("Platform/common/export-model-filter.json", "Platform/common/acceptance/judge-input-filter.json"):
+            (self.root / name).write_text('{"version": 1, "files": []}\n')
 
     def check(self):
         result = Check(self.root)
@@ -59,9 +67,11 @@ components:
         return result
 
     def cli(self):
+        # The fixture is a Platform source tree without VMS/PLATFORM_PIN: since 1037a2290 the default scope all also runs
+        # the canonical VMS phase, which needs the Owner pin; the lesson under test is judged by the Platform phase.
         return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
                                "--root", str(self.root), "--cyrillic-debt", str(self.cyrillic_debt),
-                               str(self.lesson)], capture_output=True, text=True)
+                               "--scope", "platform", str(self.lesson)], capture_output=True, text=True)
 
     def assert_cli(self, code, message=None):
         result = self.cli()
@@ -958,7 +968,7 @@ properties:
 
     def test_directives_join_the_shared_platform_dictionary_and_the_modules_own(self):
         shared = self.root / "Platform/common/acceptance/README.md"
-        shared.parent.mkdir(parents=True)
+        shared.parent.mkdir(parents=True, exist_ok=True)  # setUp keeps the common forms there
         shared.write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@start` — запустить процесс.\n")
         (self.acceptance / "README.md").write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@cut` — разрыв.\n")
         self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\t@start x\t200 {}\n01-a\t2\t@cut m1\t200 {}\n")
@@ -980,11 +990,16 @@ properties:
         registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
         result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
                                  str(self.root), "--exceptions", str(registry),
-                                 "--cyrillic-debt", str(self.cyrillic_debt), str(self.lesson)],
+                                 "--cyrillic-debt", str(self.cyrillic_debt), "--scope", "platform", str(self.lesson)],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("EXCEPTION М12A_Example/01 no-openapi -: ADR", result.stdout)
-        self.assertIn("PASS with 1 exceptions", result.stdout)
+        # Since 1037a2290 the CLI reports per phase: the exception is named in the line of its phase, the phase passes
+        # with it, and the summary line no longer counts them («PASS with N exceptions» is gone).
+        lines = result.stdout.splitlines()
+        self.assertEqual([l for l in lines if l.startswith("EXCEPTION ")],
+                         ["EXCEPTION PLATFORM_CURRENT М12A_Example/01 no-openapi -: ADR"], result.stdout)
+        self.assertIn("PHASE PLATFORM_CURRENT PASS", lines)
+        self.assertTrue(lines[-1].startswith("PASS "), result.stdout)
 
 
 class CyrillicIntegrationTests(unittest.TestCase):
