@@ -91,7 +91,7 @@ mask_in: a value of ≥ 3 characters of the set «* ＊ ∗ ⁎ ✱ • ● ∙ 
 
 ## Vectors
 
-The package [`log-mask`](../vectors/log-mask/README.md) supplies test text and field declarations to the masking function. The concrete field-catalogue fixture is not part of the model input; the caller supplies it at vector execution. The field declaration form is `secretIn` of P/02.1; no fixture is required to implement the catalogue rule above. The store daemon and its CLI use the empty catalogue, not test field declarations. The value of a field `type: url` is the package
+The package [`log-mask`](../vectors/log-mask/README.md) supplies test text and field declarations to the masking function. The concrete field-catalogue fixture is not part of the model input; the caller supplies it at vector execution. The field declaration form is P/02.1 N1.2a; no fixture is required to implement the catalogue rule above. The store daemon and its CLI use the empty catalogue, not test field declarations. The value of a field `type: url` is the package
 [`secret-in`](../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
 (P/06.2-05).
 
