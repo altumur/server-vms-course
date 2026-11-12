@@ -1,6 +1,6 @@
 # State row-write bindings
 
-This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018, P/03.6-R124, P/03.6-R128, P/03.6-R129, P/03.6-R192.
+This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018, P/03.6-R128, P/03.6-R192.
 
 ## Grammar
 

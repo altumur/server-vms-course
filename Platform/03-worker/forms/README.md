@@ -89,7 +89,7 @@ place writer, or OS presence-lock race that they do not execute. The stage plan 
 
 ### worker-reconcile JSON
 
-The input is an object. The following fields are required unless marked optional. Partial unit objects complete the ordinary fixture described above; the named fields below retain their supplied values. Unit identity, revision, epoch and lease behavior follow P/03.2-R212 through P/03.2-R231 and P/03.3-R033 through P/03.3-R035.
+The input is an object. The following fields are required unless marked optional. Partial unit objects complete the ordinary fixture described above; the named fields below retain their supplied values. Unit identity, revision, epoch and lease behavior follow P/03.2-R212, P/03.2-R213, P/03.2-R214, P/03.2-R215, P/03.2-R216, P/03.2-R217, P/03.2-R218, P/03.2-R044, P/03.2-R220, P/03.2-R045, P/03.2-R224, P/03.2-R226, P/03.2-R227, P/03.2-R229, P/03.2-R230, P/03.2-R231 and P/03.3-R033 through P/03.3-R035.
 
 | Input field | JSON type and meaning |
 |---|---|
@@ -112,7 +112,7 @@ The result is an object with all fields below. The adapter records actual epoch-
 
 ### worker-retry JSON
 
-The input is an object with required `unit` (string), `failure_count` (nonnegative integer), `at_max` (boolean: the initial retry pause has reached RETRY_MAX) and `events` (an ordered array of strings). The closed event words are `assignment-unavailable` (the assignment read got no answer), `move` (the unit moved), `fence` (the unit was fenced), `name-change` (the worker changed its name) and `assignment-absent-confirmed` (a successful assignment read confirms that the unit is absent). These events exercise the count classification and reset of P/03.3-R025 through P/03.3-R028; they are not synthetic start failures.
+The input is an object with required `unit` (string), `failure_count` (nonnegative integer), `at_max` (boolean: the initial retry pause has reached RETRY_MAX) and `events` (an ordered array of strings). The closed event words are `assignment-unavailable` (the assignment read got no answer), `move` (the unit moved), `fence` (the unit was fenced), `name-change` (the worker changed its name) and `assignment-absent-confirmed` (a successful assignment read confirms that the unit is absent). These events exercise the count classification and reset of P/03.3-R025, P/03.3-R028; they are not synthetic start failures.
 
 The result is an object with required `counts_before_absence` (array of nonnegative integers), `failure_count` (nonnegative integer) and `stalled` (boolean). `counts_before_absence` records the count after each event preceding the first `assignment-absent-confirmed`, in event order; if no such event occurs it records the count after every event. It excludes that confirmed-absence event and all later events. `failure_count` and `stalled` are the final observed count and retry state after all events. The adapter reads these values from the real retry state, not from the event names alone.
 
@@ -128,7 +128,7 @@ The input is an object with required `group` (string) and `events` (an ordered a
 | `look` | Run the holder's ordinary look at the visible requests. This event has no colon or request suffix. |
 | `return:<request>` | Complete the named unfinished device callback. |
 
-The result is an object with required `calls_before_return` (array of strings: request identifiers of actual device calls dispatched before the first `return:<request>`), `calls_after_return` (array of strings: those dispatched after that event) and `max_unfinished` (nonnegative integer: maximum simultaneous unfinished device callbacks). Each array preserves dispatch order. A timeout leaves its callback unfinished until `return:<request>`; the adapter measures this actual overlap under P/03.6-R162 through P/03.6-R172.
+The result is an object with required `calls_before_return` (array of strings: request identifiers of actual device calls dispatched before the first `return:<request>`), `calls_after_return` (array of strings: those dispatched after that event) and `max_unfinished` (nonnegative integer: maximum simultaneous unfinished device callbacks). Each array preserves dispatch order. A timeout leaves its callback unfinished until `return:<request>`; the adapter measures this actual overlap under P/03.6-R162, P/03.6-R163, P/03.6-R164, P/03.6-R165, P/03.6-R167, P/03.6-R168, P/03.6-R169, P/03.6-R170, P/03.6-R171, P/03.6-R172.
 
 
 ## Additional seam boundaries
@@ -149,13 +149,13 @@ worker-token-cache distinguishes local now from verification.now at the receiver
 
 ## Row-write bindings
 
-[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018, P/03.6-R124, P/03.6-R128, P/03.6-R129, P/03.6-R192; IO/CAS/retry remain with P/03.6-R193 and P/03.6-R194.
+[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018, P/03.6-R128, P/03.6-R192; IO/CAS/retry remain with P/03.6-R193 and P/03.6-R194.
 
 ## Worker policy machines
 
 The existing machine class is used by [`contender-writer.machine.yaml`](contender-writer.machine.yaml) with
 [`contender-writer.traces.tsv`](contender-writer.traces.tsv) (judge-only: reference traces), and [`token-cache.machine.yaml`](token-cache.machine.yaml)
-with [`token-cache.traces.tsv`](token-cache.traces.tsv) (judge-only: reference traces). Their norm fields name P/03.2-R012, P/03.2-R121, P/03.2-R122, P/03.2-R123, P/03.2-R125, P/03.2-R128, P/03.2-R129, P/03.2-R233, P/03.2-R234 and
+with [`token-cache.traces.tsv`](token-cache.traces.tsv) (judge-only: reference traces). Their norm fields name P/03.2-R012, P/03.2-R121, P/03.2-R123, P/03.2-R125, P/03.2-R128, P/03.2-R233, P/03.2-R234 and
 P/03.7-R009, P/03.7-R055, P/03.7-R056, P/03.7-R057, P/03.7-R058, P/03.7-R059, P/03.7-R060, P/03.7-R106, P/03.7-R107. One ordered transition is one row of transitions; from/to refer only to states, initial is
 one state, terminal is an explicit subset with no outgoing transitions. There is no additional KIT_PART.
 

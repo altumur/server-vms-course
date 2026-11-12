@@ -1,6 +1,6 @@
 # Привязки записи строки состояния
 
-Текст производный от `forms/row-write-bindings.md`, руками не правится: источник — английский [forms/row-write-bindings.md](../../forms/row-write-bindings.md); русский пересобирается переводом, для людей, в выгрузку не входит. [row-write-bindings.tsv](../../forms/row-write-bindings.tsv) — нормативная таблица конструктора P/03.6-R018, P/03.6-R124, P/03.6-R128, P/03.6-R129, P/03.6-R192.
+Текст производный от `forms/row-write-bindings.md`, руками не правится: источник — английский [forms/row-write-bindings.md](../../forms/row-write-bindings.md); русский пересобирается переводом, для людей, в выгрузку не входит. [row-write-bindings.tsv](../../forms/row-write-bindings.tsv) — нормативная таблица конструктора P/03.6-R018, P/03.6-R128, P/03.6-R192.
 
 ## Грамматика
 
