@@ -76,3 +76,4 @@ P/08.5-R011	spec/08.5-domain.norms.md#N3	C08-BOOK-SECRET-UNOPENED-01	2026-11-11	
 -	acceptance/5/README.md#preparation	M11/03	2026-11-11	8.3](../3/README.md); before the move — the acceptance README of
 -	acceptance/5/README.md#preparation	M11/03	2026-11-11	M11/03, «Setup of each scenario 01–09»)
 -	acceptance/5/README.md#preparation	M11/09	2026-11-11	(the former stand of the acceptance of M11/09):
+P/08.5-R282	spec/08.5-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.

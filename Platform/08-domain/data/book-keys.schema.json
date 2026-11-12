@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "": {
-   "description": "write term of the row: one's own is read in the first round as well (P/08.5 N1.3 first_pass; ADR-0113 addendum (23) item 1), JSON text",
+   "description": "write term of the row: one's own is read in the first round as well (P/08.5 N1.3 first_pass), JSON text",
    "type": "object",
    "x-encoding": "json",
    "properties": {

@@ -3,55 +3,55 @@
 # Conditional camera formulas, report-period ownership and all dependent bounds stay in their owning norm.
 # MARK_REFRESH = LOST_AFTER/2 stays derived in prose; this integer table does not replace it or round it.
 name	value	unit	norm	meaning
-SHADOW_STALL	60	s	P/08.1-R010	s, for class camera — max(60, 3 × every of the mark) (P/08.3 N1.1a), by the holder's monotonic clock: the time of lag without a change of observed_revision of this pair
-SHADOW_CLEAN	3	count	P/08.1-R010	passes in a row without findings; any finding or unknown resets the count
-OLD_KEYS	3600	s	P/08.2-R008	s — until of the former current at the planned token key change (N3)
-KEEP_OLD	315360000	s	P/08.2-R008	s, 10 years — keep_until of the former current at the same change; a kind with keep: true and a lifetime greater than it is out of the manifest form (link P/02.1)
-REPORT_EVERY	5	s	P/08.3-R007	s — the agent pass; the holder's answer can assign every (N1.5), 1 … 3600
-BODY_LIMIT	16777216	bytes	P/08.3-R007	the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
-ROAD_QUIET	15	s	P/08.3-R008	s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY); longer — the former road is silent;
-PASSWORD_MIN	10	count	P/08.4-R003	characters: Unicode code points, not bytes (C08-PASSWORD-UNIT-01)
-TOKEN_LIFETIME	900	s	P/08.4-R004	s
-LOGIN_BODY	16384	bytes	P/08.4-R004	LOGIN_BODY
-GUARD_RETRIES	3	count	P/08.4-R006	GUARD_RETRIES
-ANYWHERE_MAX	262144	bytes	P/08.4-R006	bytes of JCS doc, its own row: the summary does not touch the grants copy; larger — the row stays the former one, the journal domain.anywhere.too_large once per pass
-GRANT_LIFETIME	86400	s	P/08.4-R006	s — a member's copy older than as_of + GRANT_LIFETIME gives no rights
-GROUP_TITLE_MAX	200	count	P/08.4-R007	characters; ROLE title — the same
-COMMENT_MAX	2000	count	P/08.4-R007	characters
-ROLES_TABLE_MAX	262144	bytes	P/08.4-R008	bytes of the JCS text of the table of one member; admin assignments (and the groups only from them) do not count (ADR-0100 §1), ADMIN_TABLE_MAX holds them (N1.3c)
-ADMIN_ASSIGNED_MAX	58	count	P/08.4-R009	elements of assigned of the role admin; beyond — 409 too many admins
-ADMIN_TABLE_MAX	131072	bytes	P/08.4-R009	bytes of the JCS text of the part of the table about admin: assigned.admin, the groups from it with members, admin_at, without the filter disabled: an upper bound, so
-GLASS_MIN	12	count	P/08.4-R012	characters: Unicode code points (C08-PASSWORD-UNIT-01)
-DOMAIN_FOLDERS_MAX	4000	count	P/08.5-R007	live folders; more — 409 too many folders. The whole tree goes only to a member whose copy is older than the ring domain/folder-log (carry.folders full): a limit, 4000 folders — about 500 KiB to such a member; to the others — the delta (ADR-0113 item 4; review of norms addendum (47) M1)
-KEPT_LIMIT	50	count	P/08.6-R008	waiting edits per member; the 51st — 409 {error: "kept_full", detail: "<member> has 50 edits waiting"}
-BACKUP_HOLDERS	2	count	P/08.8-R006	members of class server, ok (chapter 8.1), except the holder, by descending hex sha256(UTF-8 «<holder>/<member>»); a camera is never a keeper (ADR-0113 addendum (1) item 4)
-HANDOVER_WAIT	30	s	P/08.8-R009	s = 6 × REPORT_EVERY
-ENTRY_MAX	1240	bytes	P/08.10-R003	(was 820, a new calculation below) bytes of JCS Entry — the worst case of the profiles (the Architect's decision on R41-17 of run 41): by — the name
-IDEM_KEEP	86400	s	P/08.10-R003	s — the row lives at least this long, as P/06.1 N1.3 «Term of a done claim»: a new edit takes a new key
-IDEM_MAX	4096	count	P/08.10-R003	rows: an edit every 21 s around the clock; the count — the listing of the pass plus own writes after it; at the ceiling
-VIEW_EVERY	3	s	P/08.1-R006	Minimum interval between writes of the view head; part rows still write only on a difference.
-VIEW_MEMBERS	2000	count	P/08.1-R008	Members per second in the view-round budget. Measurement status: unmeasured; this is the declared budget, not measured throughput.
-KNOCKS	32	count	P/08.3-R008	Knocking strangers held in memory; the last knock of one name replaces the former one. Shared report-reception contract.
-BATCH_LIMIT	67108864	bytes	P/08.3-R008	Relay-batch body limit, equal to four BODY_LIMIT. Shared report-reception contract.
-REPORT_RATE	200	count	P/08.3-R004	Reports or re-signed member-list rows per second as specified by the owning procedure. Measurement status: unmeasured; no claim of measured throughput.
-SERVERS_MAX	500	count	P/08.10-R003	Admitted server members, including the holder; must equal MISSING_SHOWN.
-MISSING_SHOWN	500	count	P/08.5-R003	Visible missing/stale members in truncated book lists; server class first; must equal SERVERS_MAX.
-NEAR_CEILING	419430	bytes	P/08.5-R003	Book-key part row threshold for the near-ceiling alarm and admission refusal.
-BOOK_PARTS_SHOWN	64	count	P/08.5-R004	Requested all-recipient book parts shown by one round.
-BOOK_PARTS_PASS	8	count	P/08.5-R004	All-recipient book parts fetched per agent pass.
-BOOK_WANT_EVERY	86400	s	P/08.5-R004	Reader renewal interval for a still-needed book-part request.
-BOOK_WANT_TTL	259200	s	P/08.5-R004	Book-part request is removed only when now minus at is greater than this interval.
-UNITS_PAGE_CHECKS	200	count	P/08.5-R007	Per-unit permission checks per folder page when whole-page wide does not apply.
-OWN_MAX	1048576	bytes	P/08.5-R007	Maximum own folders/membership publication before joining the domain.
-BACKUP_EVERY_MIN	30	s	P/08.8-R006	Lower bound in derived BACKUP_EVERY; BACKUP_EVERY is max(BACKUP_EVERY_MIN, changed bytes / BACKUP_RATE), not a fixed interval.
-BACKUP_RATE	1048576	bytes	P/08.8-R006	Bytes per second in the backup interval calculation. Measurement status: unmeasured; no claim of measured throughput.
-BACKUP_FETCH	600	s	P/08.8-R007	A part remains live while referred to by retained backup heads or by a fetch not older than this interval.
-BACKUP_HEADS	5	count	P/08.8-R006	Newest backup head documents retained by the holder.
-PARTIAL_QUIET	10800	s	P/08.8-R011	No-merge interval before partial gathering closes; monotonic clock, reset at process start.
-OUTCOMES_LIMIT	50	count	P/08.6-R009	Newest kept-edit outcomes by descending (at,id).
-VIA_EDIT_MAX	20	count	P/08.3-R006	Member routes named by one topology via edit; excess is refused, the caller sends the rest again.
-REVOKED_WORDS_CAMERA	4	count	P/08.2-R010	Executed revoked words per camera member per day; REVOKED_WORDS selects the row by member class.
-REVOKED_WORDS_SERVER	256	count	P/08.2-R010	Executed revoked words per server member per day; REVOKED_WORDS selects the row by member class.
-PBKDF2_ITERATIONS	600000	count	P/08.4-R004	PBKDF2-HMAC-SHA256 iterations in the password hash and same-cost dummy check; hash encoding remains the password-hash contract.
-SHARED_OBJECTS_KEEP	5	count	P/08.9-R003	Newest signed shared-document objects retained by the holder.
-RELAY_MEMBERS_MAX	5000	count	P/08.3-R006	Maximum member names in one relay-members writer row; excess writer409 relay full, reader unavailable without truncation. P10 reads this owner limit.
+SHADOW_STALL	60	s	P/08.1-R201	s, for class camera — max(60, 3 × every of the mark) (P/08.3 N1.1a), by the holder's monotonic clock: the time of lag without a change of observed_revision of this pair
+SHADOW_CLEAN	3	count	P/08.1-R206	passes in a row without findings; any finding or unknown resets the count
+OLD_KEYS	3600	s	P/08.2-R126	s — until of the former current at the planned token key change (N3)
+KEEP_OLD	315360000	s	P/08.2-R126	s, 10 years — keep_until of the former current at the same change; a kind with keep: true and a lifetime greater than it is out of the manifest form (link P/02.1)
+REPORT_EVERY	5	s	P/08.3-R189	s — the agent pass; the holder's answer can assign every (N1.5), 1 … 3600
+BODY_LIMIT	16777216	bytes	P/08.3-R192	the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
+ROAD_QUIET	15	s	P/08.3-R206	s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY); longer — the former road is silent;
+PASSWORD_MIN	10	count	P/08.4-R389	characters: Unicode code points, not bytes
+TOKEN_LIFETIME	900	s	P/08.4-R107	s
+LOGIN_BODY	16384	bytes	P/08.4-R081	LOGIN_BODY
+GUARD_RETRIES	3	count	P/08.4-R163	GUARD_RETRIES
+ANYWHERE_MAX	262144	bytes	P/08.4-R190	bytes of JCS doc, its own row: the summary does not touch the grants copy; larger — the row stays the former one, the journal domain.anywhere.too_large once per pass
+GRANT_LIFETIME	86400	s	P/08.4-R191	s — a member's copy older than as_of + GRANT_LIFETIME gives no rights
+GROUP_TITLE_MAX	200	count	P/08.4-R203	characters; ROLE title — the same
+COMMENT_MAX	2000	count	P/08.4-R204	characters
+ROLES_TABLE_MAX	262144	bytes	P/08.4-R260	bytes of the JCS text of the table of one member; admin assignments (and the groups only from them) do not count, ADMIN_TABLE_MAX holds them (N1.3c)
+ADMIN_ASSIGNED_MAX	58	count	P/08.4-R277	elements of assigned of the role admin; beyond — 409 too many admins
+ADMIN_TABLE_MAX	131072	bytes	P/08.4-R279	bytes of the JCS text of the part of the table about admin: assigned.admin, the groups from it with members, admin_at, without the filter disabled: an upper bound, so
+GLASS_MIN	12	count	P/08.4-R317	characters: Unicode code points
+DOMAIN_FOLDERS_MAX	4000	count	P/08.5-R228	live folders; more — 409 too many folders. The whole tree goes only to a member whose copy is older than the ring domain/folder-log (carry.folders full): a limit, 4000 folders — about 500 KiB to such a member; to the others — the delta
+KEPT_LIMIT	50	count	P/08.6-R145	waiting edits per member; the 51st — 409 {error: "kept_full", detail: "<member> has 50 edits waiting"}
+BACKUP_HOLDERS	2	count	P/08.8-R097	members of class server, ok (chapter 8.1), except the holder, by descending hex sha256(UTF-8 «<holder>/<member>»); a camera is never a keeper
+HANDOVER_WAIT	30	s	P/08.8-R210	s = 6 × REPORT_EVERY
+ENTRY_MAX	1240	bytes	P/08.10-R025	bytes of JCS Entry — the worst case of the profiles: by — the name
+IDEM_KEEP	86400	s	P/08.10-R039	s — the row lives at least this long, as P/06.1 N1.3 «Term of a done claim»: a new edit takes a new key
+IDEM_MAX	4096	count	P/08.10-R045	rows: an edit every 21 s around the clock; the count — the listing of the pass plus own writes after it; at the ceiling
+VIEW_EVERY	3	s	P/08.1-R147	Minimum interval between writes of the view head; part rows still write only on a difference.
+VIEW_MEMBERS	2000	count	P/08.1-R156	Members per second in the view-round budget. Measurement status: unmeasured; this is the declared budget, not measured throughput.
+KNOCKS	32	count	P/08.3-R092	Knocking strangers held in memory; the last knock of one name replaces the former one. Shared report-reception contract.
+BATCH_LIMIT	67108864	bytes	P/08.3-R014	Relay-batch body limit, equal to four BODY_LIMIT. Shared report-reception contract.
+REPORT_RATE	200	count	P/08.3-R374	Reports or re-signed member-list rows per second as specified by the owning procedure. Measurement status: unmeasured; no claim of measured throughput.
+SERVERS_MAX	500	count	P/08.10-R029	Admitted server members, including the holder; must equal MISSING_SHOWN.
+MISSING_SHOWN	500	count	P/08.5-R045	Visible missing/stale members in truncated book lists; server class first; must equal SERVERS_MAX.
+NEAR_CEILING	419430	bytes	P/08.5-R107	Book-key part row threshold for the near-ceiling alarm and admission refusal.
+BOOK_PARTS_SHOWN	64	count	P/08.5-R121	Requested all-recipient book parts shown by one round.
+BOOK_PARTS_PASS	8	count	P/08.5-R122	All-recipient book parts fetched per agent pass.
+BOOK_WANT_EVERY	86400	s	P/08.5-R123	Reader renewal interval for a still-needed book-part request.
+BOOK_WANT_TTL	259200	s	P/08.5-R124	Book-part request is removed only when now minus at is greater than this interval.
+UNITS_PAGE_CHECKS	200	count	P/08.5-R211	Per-unit permission checks per folder page when whole-page wide does not apply.
+OWN_MAX	1048576	bytes	P/08.5-R248	Maximum own folders/membership publication before joining the domain.
+BACKUP_EVERY_MIN	30	s	P/08.8-R445	Lower bound in derived BACKUP_EVERY; BACKUP_EVERY is max(BACKUP_EVERY_MIN, changed bytes / BACKUP_RATE), not a fixed interval.
+BACKUP_RATE	1048576	bytes	P/08.8-R445	Bytes per second in the backup interval calculation. Measurement status: unmeasured; no claim of measured throughput.
+BACKUP_FETCH	600	s	P/08.8-R122	A part remains live while referred to by retained backup heads or by a fetch not older than this interval.
+BACKUP_HEADS	5	count	P/08.8-R091	Newest backup head documents retained by the holder.
+PARTIAL_QUIET	10800	s	P/08.8-R403	No-merge interval before partial gathering closes; monotonic clock, reset at process start.
+OUTCOMES_LIMIT	50	count	P/08.6-R234	Newest kept-edit outcomes by descending (at,id).
+VIA_EDIT_MAX	20	count	P/08.3-R147	Member routes named by one topology via edit; excess is refused, the caller sends the rest again.
+REVOKED_WORDS_CAMERA	4	count	P/08.2-R089	Executed revoked words per camera member per day; REVOKED_WORDS selects the row by member class.
+REVOKED_WORDS_SERVER	256	count	P/08.2-R089	Executed revoked words per server member per day; REVOKED_WORDS selects the row by member class.
+PBKDF2_ITERATIONS	600000	count	P/08.4-R088	PBKDF2-HMAC-SHA256 iterations in the password hash and same-cost dummy check; hash encoding remains the password-hash contract.
+SHARED_OBJECTS_KEEP	5	count	P/08.9-R044	Newest signed shared-document objects retained by the holder.
+RELAY_MEMBERS_MAX	5000	count	P/08.3-R136	Maximum member names in one relay-members writer row; excess writer409 relay full, reader unavailable without truncation. P10 reads this owner limit.

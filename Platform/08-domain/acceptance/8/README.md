@@ -27,4 +27,4 @@ In total 13 scenarios / 122 steps.
 
 ## Kit seams
 
-[CALL seams](seams.tsv) (judge-only: the seams of chapter 8.8; they check N1.5 `raw`, N1.6 `stranded`, N1.7 `order` steps 2 and 6 and the target restore exclusion of N1.7) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[CALL seams](seams.tsv) (judge-only: the seams of chapter 8.8; they check P/08.8-R070, P/08.8-R071, P/08.8-R175, P/08.8-R209, P/08.8-R218, P/08.8-R219, P/08.8-R237, P/08.8-R238, P/08.8-R239, P/08.8-R240, P/08.8-R241 and P/08.8-R323) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
