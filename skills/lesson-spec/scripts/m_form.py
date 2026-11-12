@@ -1,23 +1,39 @@
 """Checks of the reading form of M (ADR-0133 addendum (56); P01.175; decisions of the Architect 2026-11-11 on the
-lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228). Seven checks, each a FAIL with its file and line:
+lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228; the rollback of the format, ADR-0133 addenda (93), (94),
+OBSH.50). Nine checks, each a FAIL with its file and line:
 
 - `history_phrases` — no origin text in the files of M: a closed list of history phrases (both languages) and `ADR-0`
   outside tombstones, in the English sources and their translations of the lessons of `M_FORM_LESSONS` and of the
   common inputs of `M_FORM_COMMON`;
-- `index_refs` — the `## Index` table of every chapter: each requirement exists in the norms of the lesson, ascending,
-  once; each file address exists (`Platform/…` and `VMS/…` from the course root, any other path from the lesson root,
-  no fallback root; the words in parentheses and «…» are not addresses); the translation has the same rows;
+- `index_refs` — the `## Index` table of a chapter, where it has one (a topic whose rules stand in one place is in no
+  row; a chapter without such topics has no index): each requirement is live in the norms of the lesson (not removed,
+  not merged by the id map), ascending, once; each file address exists (`Platform/…` and `VMS/…` from the course root,
+  any other path from the lesson root, no fallback root; the words in parentheses and «…» are not addresses); the
+  translation has the same rows;
 - `see_also_refs` — no «See also» lines (navigation is the index alone, the Architect 2026-11-12); formerly: the union of the ids of all index rows of its
   topics over the chapters of the lesson without the id itself, ascending, once; a requirement in no row has none;
   the translation has the same lines in the same order;
-- `judge_only_refs` — a Markdown link or a path in backquotes from a Markdown file of M to a judge-only file (the
-  assembled export lists) has the marker «(judge-only: …)» in the same sentence (a heading, a quoted section name «…»
-  and the textual `sc. NN` are outside this check);
+- `judge_only_refs` — a Markdown link or a path in backquotes from a Markdown file of M to a file outside M — a
+  judge-only file of the assembled export lists or, for a lesson of `M_NARROW`, a file of another lesson that the
+  table «What this lesson takes from common» of its README does not name — has the marker «(judge-only: …)» in the
+  same sentence (a heading, a quoted section name «…» and the textual `sc. NN` are outside this check); a marker
+  without such a reference is not judged;
+- `req_refs` — every full id `P/NN.K-RNNN` of a lesson of the run in the text of the files of M and J (both
+  dispositions of the assembled filter M, translations included) is a live requirement: a removed or merged id is an
+  error (the writer readdresses it to the live id), and so is an id the lesson has not; a short `RNNN` of the English
+  norms of a chapter — of that chapter, or of the chapter «chapter N.K» named before it in the sentence — is an error
+  when it is removed or merged;
+- `req_map` — the id map `decisions/journal/<module>/<lesson>/req-id-map.tsv` of the ids merged into paragraphs
+  (ADR-0133 addendum (93)): the header `old new file source`; `old` — an id of the lesson, not live, not a tombstone
+  of the norms, once; `new` — a live requirement of the lesson (no chains, no cycles); `file` — the address of the
+  paragraph of `new` in its norms file, by the kinds of `history_rows`; nonempty source; a row of the history files
+  of the lesson with `req_id` = `old`;
 - `production_scoped` — the acting label «**Scope: production.**» opens the first paragraph after its req anchor or
   stands right after the id of a checklist item; a quoted label («**Scope: production.**», its definition in N0) does
   not act;
 - `history_rows` — the history files `decisions/journal/<module>/<lesson>/history[-K].tsv`: the header
-  `req_id file source date removed`, `req_id` `-` or a requirement of the lesson, `file#fragment` exists by its kind
+  `req_id file source date removed`, `req_id` `-` or a requirement of the lesson (live, a tombstone of the norms or an
+  `old` of the id map), `file#fragment` exists by its kind
   (`#intro`; `#N0`…`#N5` with subsections — the section of the norms by its number in any language; `#/…` in YAML or
   JSON — a JSON Pointer into the parsed document; `#header` — the comment lines of a TSV before its column header,
   `#row:<key>` — the one row of a TSV whose first column is the key, or `#row:<column>=<value>&…` — the one row
@@ -29,8 +45,13 @@ lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228). Seven checks, ea
   words (P/01.1-R151; the Architect on P01.176, P01.228).
 
 A lesson of `M_FORM_STAGE_A` is judged by stage A of its form only: `history_phrases` without its `forms/*.tsv` and
-`data/*.tsv`, `judge_only_refs` and `history_rows`. A lesson without `forms/export.json` takes its files of M from the
-common filter M (`export_lists`, ADR-0135 addendum (14)).
+`data/*.tsv`, `judge_only_refs`, `history_rows`, `req_map` and `req_refs`. A lesson without `forms/export.json` takes
+its files of M from the common filter M (`export_lists`, ADR-0135 addendum (14)).
+
+The granularity of a requirement is not judged here: an anchor `<!-- req: … -->` opens one paragraph, which carries one
+rule or several (the paragraph layout of ADR-0133 addendum (93), P/01; the other lessons keep one rule per item until
+their own task) — the review reads it. The checks hold what the layout changes: the merged ids (`req_map`, the
+reservation in check_forms.check_req_anchors, `history_rows`), the references to them (`req_refs`, `index_refs`).
 
 Built text: `data/*.schema.json` (v7.build from the dialect and `common.form.yaml`) is not read by `history_phrases`.
 The built blocks of the norms (`<!-- form|families|canonical:begin -->` … `:end -->`, v7/sections.py) are read as any
@@ -65,6 +86,21 @@ STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data
 # the sources and translations; the whole Platform/common: 1715 and 1454). They enter by the word of the Architect
 # after the common acceptance is cleaned; a prefix, e.g. "Platform/common/acceptance/".
 M_FORM_COMMON = ("Platform/common/acceptance/",)  # P01.230: общая приёмка в форме M после P01.229
+
+# Lessons whose M is the narrow M of their pair (ADR-0133 addendum (94); P01.280 §8): the files of the lesson, the common
+# inputs (Platform/common/), PAIR_ALWAYS and the files of other lessons that the table «What this lesson takes from
+# common» of its README.md names (links of its rows). The export filters cut whole files: a reference from M of the
+# lesson to a file of another lesson that the table does not name points outside M, as to a judge-only file
+# (judge_only_refs) — the writer removes the reference or adds the file to the table, which the export side follows.
+M_NARROW = {"P/01"}
+DEPENDENCIES = {"en": "## What this lesson takes from common", "ru": "## Что урок берёт из common"}
+PAIR_ALWAYS = ("Platform/README.md", "Platform/lessons.tsv")
+
+# The id map of a lesson whose requirements were merged into paragraphs (ADR-0133 addendum (93); P01.280 §3): a journal
+# beside the history files, outside M and J. A merged id keeps no tombstone in M: its row reserves it (no reuse) and
+# names the live id of its paragraph; the history file keeps the removed text under the old id.
+REQ_MAP = "req-id-map.tsv"
+REQ_MAP_HEADER = ["old", "new", "file", "source"]
 
 # Closed list of history phrases (ADR-0133 addendum (56) item 1). A paraphrase passes — the review by the checklist.
 HISTORY_PHRASES = re.compile("|".join([
@@ -139,6 +175,27 @@ def req_key(value):
     return (int(m[1]), int(m[2] or 0), int(m[3])) if m else (999, 999, 999)
 
 
+def req_map_lines(path):
+    """[(line, [cells])] of the data rows of an id map REQ_MAP (after its header line); [] — no map."""
+    try:
+        lines = Path(path).read_bytes().decode("utf-8").split("\n")
+    except (OSError, UnicodeError):
+        return []
+    if lines and lines[-1] == "":
+        lines.pop()
+    return [(n, line.split("\t")) for n, line in enumerate(lines[1:], 2)]
+
+
+def read_req_map(path):
+    """{old id: new id} of an id map (a missing or broken map gives what it can: req_map names its errors). Also read
+    by check_forms.check_req_anchors: a merged id is reserved as a tombstone is."""
+    out = {}
+    for _, cells in req_map_lines(path):
+        if cells and REQ_ID.fullmatch(cells[0]):
+            out.setdefault(cells[0], cells[1] if len(cells) > 1 else "")
+    return out
+
+
 def fenced_lines(text):
     """(line number, line, inside a code fence) for every line; a fence line itself counts as inside."""
     fence = None
@@ -168,6 +225,7 @@ class Lesson:
              if re.fullmatch(rf"{self.number}(?:\.(?:0|[1-9][0-9]?))?-[^.]+\.norms\.md", p.name)),
             key=lambda p: [int(x) if x.isdigit() else x for x in re.split(r"([0-9]+)", p.name)])
         self._req = None
+        self._merged = None
 
     def chapter_of(self, path):
         m = re.fullmatch(rf"{self.number}\.([0-9]+)-.*", path.name)
@@ -198,6 +256,20 @@ class Lesson:
             self._req = (live, removed)
         return self._req
 
+    def journal(self):
+        module = "vms" if self.key.startswith("V/") else "platform"
+        return self.check.root / "decisions/journal" / module / self.home.name
+
+    def merged(self):
+        """{old id: new id} of the id map (REQ_MAP) of the lesson: the rows whose old is an id; req_map judges the rest."""
+        if self._merged is None:
+            self._merged = read_req_map(self.journal() / REQ_MAP)
+        return self._merged
+
+    def retired(self):
+        """The ids that are no requirement any more and are not reused: the tombstones of the norms and the merged ids."""
+        return self.requirements()[1] | set(self.merged())
+
 
 def export_model(check):
     """{repository path: disposition} of the assembled M (common filter and the lesson lists)."""
@@ -223,6 +295,7 @@ def run(check, lessons=None):
     if not homes and not M_FORM_COMMON:
         return
     model = export_model(check)
+    checked = []
     for key, home in sorted(homes.items()):
         lesson = Lesson(check, key, home)
         if key in M_FORM_LESSONS and key in M_FORM_STAGE_A:
@@ -236,15 +309,18 @@ def run(check, lessons=None):
             check.error(home / "forms/export.json" if (home / "forms/export.json").is_file() else home,
                         f"{key} is in the form of M, and the assembled filter M names no file model_and_judge of it")
             continue
+        checked.append(lesson)
         history_phrases(check, lesson, files, STAGE_A_OUTSIDE if stage_a else ())
         judge_only_refs(check, lesson, files, model)
         history_rows(check, lesson)
+        req_map(check, lesson)
         if stage_a:
             continue
         index_refs(check, lesson)
         see_also_refs(check, lesson)
         production_scoped(check, lesson, files)
         checklist_marks(check, lesson)
+    req_refs(check, checked, model)
     common_history(check, model)
 
 
@@ -437,7 +513,11 @@ def resolve_address(check, lesson, address):
 
 
 def index_refs(check, lesson):
+    """A chapter may have no index and an index may be short: a topic is in a row only when its rules stand in more than
+    one place (one paragraph of several rules is one place) — completeness is judged by reading. Every row leads to
+    live requirements and existing files."""
     live, removed = lesson.requirements()
+    merged = lesson.merged()
     for norms in lesson.chapters:
         rows = index_rows(norms, "en")
         translation = lesson.translation(norms)
@@ -454,6 +534,9 @@ def index_refs(check, lesson):
                     check.error(norms, f"line {n}: index: «{token}» is not a requirement id P/NN.K-RNNN")
                 elif token in removed:
                     check.error(norms, f"line {n}: index: {token} is a removed requirement")
+                elif token in merged and token not in live:
+                    check.error(norms, f"line {n}: index: {token} is merged into {merged[token]} ({REQ_MAP}): the row "
+                                       "names the live id once")
                 elif token not in live:
                     check.error(norms, f"line {n}: index: {token} is not a requirement of {lesson.key}")
             good = [t for t in ids if REQ_ID.fullmatch(t)]
@@ -573,9 +656,58 @@ def platform_files(check):
     return names
 
 
+def dependencies(check, lesson):
+    """The repository paths that the table «What this lesson takes from common» of the README of the lesson names: the
+    link targets of its section and the backquoted paths `Platform/…`; None — the README has no such section."""
+    readme = lesson.home / "README.md"
+    if not readme.is_file():
+        return None
+    out, inside, seen = set(), False, False
+    for _, line, fence in fenced_lines(readme.read_text(encoding="utf-8")):
+        if fence:
+            continue
+        if line.startswith("## ") or line.startswith("# "):
+            inside = line.strip() == DEPENDENCIES["en"]
+            seen |= inside
+            continue
+        if not inside:
+            continue
+        for m in LINK_TARGET.finditer(line):
+            target = unquote(urlsplit(m[1]).path)
+            if target:
+                full = Path(posixpath.normpath((readme.parent / target).as_posix()))
+                if full.is_relative_to(check.root):
+                    out.add(full.relative_to(check.root).as_posix())
+        for m in CODE_SPAN.finditer(line):
+            if m[1].split("/", 1)[0] == "Platform":
+                out.add(posixpath.normpath(m[1]))
+    return out if seen else None
+
+
+def pair_m(check, lesson, model):
+    """The files of M of the pair of a lesson of M_NARROW: model_and_judge records of the lesson, of Platform/common/,
+    PAIR_ALWAYS and of the dependency table; None — the README has no dependency table."""
+    named = dependencies(check, lesson)
+    if named is None:
+        return None
+    return {p for p, d in model.items() if d == "model_and_judge" and (
+        p.startswith(lesson.rel + "/") or p.startswith("Platform/common/") or p in PAIR_ALWAYS or p in named)}
+
+
 def judge_only_refs(check, lesson, files, model):
     judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p}
     seen_model = {p for p, d in model.items() if d == "model_and_judge"}
+    outside = set()                                     # model_and_judge of the course, outside M of the pair
+    if lesson.key in M_NARROW:
+        pair = pair_m(check, lesson, model)
+        if pair is None:
+            check.error(lesson.home / "README.md", f"{lesson.key} is in m_form.M_NARROW, and its README.md has no "
+                                                   f"«{DEPENDENCIES['en'][3:]}»: the narrow M of the pair is the lesson, "
+                                                   "common and the files that table names")
+            pair = {p for p in seen_model if p.startswith(lesson.rel + "/") or p.startswith("Platform/common/")}
+        outside = {p for p in seen_model - pair if "/ru/" not in p}
+        seen_model = pair
+        judge |= outside
     own_judge = {posixpath.basename(p) for p in judge if p.startswith(lesson.rel + "/")} - platform_files(check)
     own_model = {posixpath.basename(p) for p in seen_model if p.startswith(lesson.rel + "/")}
     root = check.root
@@ -627,8 +759,16 @@ def judge_only_refs(check, lesson, files, model):
                     if target is None or quoted(sentence, at):
                         continue
                     check.stats["judge_only_refs"] += 1
-                    if not marked:
-                        n = first + sentence.count("\n", 0, at)
+                    if marked:
+                        continue
+                    n = first + sentence.count("\n", 0, at)
+                    if target in outside or "*" in target and any(fnmatch.fnmatchcase(o, target) for o in outside):
+                        check.error(path, f"line {n}: a reference to {target}, a file of another lesson outside M of "
+                                          f"the pair {lesson.key} (the export filters cut whole files; the table "
+                                          f"«{DEPENDENCIES['en'][3:]}» of README.md does not name it): add the file to "
+                                          "that table or remove the reference; a closed reference carries "
+                                          "«(judge-only: …)» in the same sentence")
+                    else:
                         check.error(path, f"line {n}: a reference to the judge-only file {target} without "
                                           "«(judge-only: …)» in the same sentence (the file is not in M)")
 
@@ -838,11 +978,11 @@ def _tsv_problem(target, fragment, parsed):
 
 
 def history_rows(check, lesson):
-    module = "vms" if lesson.key.startswith("V/") else "platform"
-    journal = check.root / "decisions/journal" / module / lesson.home.name
+    journal = lesson.journal()
     if not journal.is_dir():
         return
-    live, removed = lesson.requirements()
+    live, _ = lesson.requirements()
+    removed = lesson.retired()                         # a merged id keeps its history rows (the map, not M, keeps it)
     chapters = {lesson.chapter_of(p) for p in lesson.chapters}
     parsed = {}
     for path in sorted(journal.iterdir()):
@@ -867,7 +1007,8 @@ def history_rows(check, lesson):
             if req_id != "-" and not REQ_ID.fullmatch(req_id):
                 check.error(path, f"line {n}: req_id «{req_id}» is neither - nor a requirement id")
             elif req_id != "-" and req_id not in live and req_id not in removed:
-                check.error(path, f"line {n}: req_id {req_id} is not a requirement of {lesson.key}")
+                check.error(path, f"line {n}: req_id {req_id} is not a requirement of {lesson.key} (live, a tombstone "
+                                  f"of the norms or an old id of {REQ_MAP})")
             if not source.strip():
                 check.error(path, f"line {n}: an empty source")
             if not text.strip():
@@ -916,3 +1057,128 @@ def address_problem(check, lesson, address, parsed):
     if target.suffix != ".md":
         return "a heading anchor addresses Markdown"
     return None if fragment in check.anchors(target) else f"no heading anchor #{fragment}"
+
+
+# --- req_map -------------------------------------------------------------------------------------------------------
+
+def history_ids(lesson):
+    """The req_id values of the history files of the lesson."""
+    out = set()
+    journal = lesson.journal()
+    for path in sorted(journal.iterdir()) if journal.is_dir() else []:
+        if HISTORY_FILE.fullmatch(path.name):
+            for _, cells in req_map_lines(path):
+                if cells:
+                    out.add(cells[0])
+    return out
+
+
+def req_map(check, lesson):
+    """The id map of the merged ids (REQ_MAP): an old id of the lesson, not live and not a tombstone, once; the live id of
+    its paragraph; the address of that paragraph in the norms file of the live id; the source; a history row."""
+    path = lesson.journal() / REQ_MAP
+    if not path.is_file():
+        return
+    lines = path.read_bytes().decode("utf-8").split("\n")
+    if not lines or lines[0].split("\t") != REQ_MAP_HEADER:
+        check.error(path, f"line 1: the header is {' '.join(REQ_MAP_HEADER)} (TAB-separated)")
+        return
+    live, tombstones = lesson.requirements()
+    history = history_ids(lesson)
+    prefix, single = lesson.key + ".", lesson.key + "-"      # P/NN.K-RNNN; a lesson of one chapter: P/NN-RNNN
+    seen, parsed = {}, {}
+    for n, cells in req_map_lines(path):
+        check.stats["req_map"] += 1
+        if len(cells) != len(REQ_MAP_HEADER):
+            check.error(path, f"line {n}: {len(cells)} fields, expected {len(REQ_MAP_HEADER)}")
+            continue
+        old, new, address, source = cells
+        if not REQ_ID.fullmatch(old) or not (old.startswith(prefix) or old.startswith(single)):
+            check.error(path, f"line {n}: old «{old}» is not a requirement id of {lesson.key}")
+        elif old in seen:
+            check.error(path, f"line {n}: old {old} repeats (line {seen[old]}): one row per merged id")
+        elif old in live:
+            check.error(path, f"line {n}: old {old} is a live anchor of the norms: a merged id is not reused")
+        elif old in tombstones:
+            check.error(path, f"line {n}: old {old} has a tombstone in the norms: a retired id is kept in one place")
+        elif old not in history:
+            check.error(path, f"line {n}: old {old} has no row of the history files of {lesson.key} (req_id {old}): "
+                              "the removed text stays there")
+        seen.setdefault(old, n)
+        if new not in live:
+            why = "a merged id: no chains" if new in lesson.merged() else \
+                "a removed id" if new in tombstones else "not a requirement of the lesson"
+            check.error(path, f"line {n}: new «{new}» is not a live requirement of {lesson.key} ({why})")
+        else:
+            norms = live[new][0].relative_to(lesson.home).as_posix()
+            problem = address_problem(check, lesson, address, parsed)
+            if problem:
+                check.error(path, f"line {n}: file «{address}»: {problem}")
+            elif address.partition("#")[0] != norms:
+                check.error(path, f"line {n}: file «{address}»: the paragraph of {new} is in {norms}")
+        if not source.strip():
+            check.error(path, f"line {n}: an empty source")
+
+
+# --- req_refs ------------------------------------------------------------------------------------------------------
+
+SHORT_REQ = re.compile(r"(?<![\w/.-])R([0-9]{3})(?![0-9])")
+CHAPTER_WORD = re.compile(r"\bchapter ([0-9]{1,2})\.([0-9]+)\b")
+LESSON_OF = re.compile(r"P/[0-9]{2}")
+
+
+def retired_problem(lesson, value):
+    """None for an id that is not removed or merged; else why a reference to it is an error."""
+    live, tombstones = lesson.requirements()
+    merged = lesson.merged()
+    if value in merged and value not in live:
+        return f"{value}, merged into {merged[value]} ({REQ_MAP}): readdress it to {merged[value]}"
+    if value in tombstones:
+        return f"{value}, a removed requirement: the rule it named is gone or lives under another id"
+    return None
+
+
+def req_refs(check, lessons, model):
+    """Every full id of a lesson of the run in the text of M and J is live; a short id of the English norms is not
+    removed or merged. A tombstone of the norms names its own removed id and is not a reference."""
+    if not lessons:
+        return
+    by_key = {lesson.key: lesson for lesson in lessons}
+    for rel in sorted(model):
+        path = check.root / rel
+        if path.suffix not in TEXT_SUFFIXES or not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue                                    # the file's own checks name it
+        if "-R" not in text:
+            continue
+        for n, line in enumerate(text.split("\n"), 1):
+            if "-R" not in line:
+                continue
+            for m in REQ_ID.finditer(REMOVED_ANCHOR.sub("", line)):
+                lesson = by_key.get(LESSON_OF.match(m[0])[0])
+                if lesson is None:
+                    continue
+                check.stats["req_refs"] += 1
+                problem = retired_problem(lesson, m[0])
+                if problem is None and m[0] not in lesson.requirements()[0]:
+                    problem = f"{m[0]}, not a requirement of {lesson.key}"
+                if problem:
+                    check.error(path, f"line {n}: a reference to {problem}")
+    for lesson in lessons:
+        for norms in lesson.chapters:
+            chapter = lesson.chapter_of(norms)
+            for first, sentence in units(REMOVED_ANCHOR.sub("", norms.read_text(encoding="utf-8"))):
+                for m in SHORT_REQ.finditer(sentence):
+                    named = list(CHAPTER_WORD.finditer(sentence, 0, m.start()))
+                    if named and int(named[-1][1]) != int(lesson.number):
+                        continue                        # a short id of another lesson
+                    part = named[-1][2] if named else chapter
+                    value = f"{lesson.key}.{part}-R{m[1]}" if part is not None else f"{lesson.key}-R{m[1]}"
+                    check.stats["req_refs"] += 1
+                    problem = retired_problem(lesson, value)
+                    if problem:
+                        line = first + sentence.count("\n", 0, m.start())
+                        check.error(norms, f"line {line}: a short reference R{m[1]} to {problem}")

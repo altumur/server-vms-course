@@ -919,7 +919,9 @@ def req_lessons(root):
 
 def check_req_anchors(lesson):
     """Якоря требований урока: номер `P/NN.K-RNNN` по грамматике и главе файла, уникален в уроке, не из надгробий
-    `<!-- removed: … by ADR-NNNN -->`; русский перевод `ru/` якорей не несёт (их несёт только источник)."""
+    `<!-- removed: … by ADR-NNNN -->` и не из столбца old карты слитых id журнала урока (m_form.REQ_MAP); русский
+    перевод `ru/` якорей не несёт (их несёт только источник). Один якорь — один абзац; правил в нём может быть
+    несколько (ADR-0133 доп. (93)): гранулярность проверка не судит."""
     lesson = Path(lesson)
     errors, seen, removed, count = [], {}, set(), 0
     for norms in sorted((lesson / "spec").glob("*.norms.md")):
@@ -938,6 +940,13 @@ def check_req_anchors(lesson):
             seen.setdefault(number, norms.name)
     for number in sorted(removed & set(seen)):
         errors.append(f"{lesson.name}: anchor {number} reuses a removed number")
+    # An id merged into a paragraph (ADR-0133 addendum (93)) keeps no tombstone in M: the id map of the lesson journal
+    # reserves it (m_form.REQ_MAP), and a new anchor with its number is a reuse as well.
+    import m_form
+    merged = m_form.read_req_map(lesson.parent.parent / "decisions/journal/platform" / lesson.name / m_form.REQ_MAP)
+    for number in sorted(set(merged) & set(seen)):
+        errors.append(f"{lesson.name}: anchor {number} reuses a number merged into {merged[number] or '?'} "
+                      f"(decisions/journal/platform/{lesson.name}/{m_form.REQ_MAP})")
     for ru in sorted((lesson / "ru").rglob("*.md")) if (lesson / "ru").is_dir() else []:
         if ANCHOR.search(ru.read_text(encoding="utf-8")):
             errors.append(f"{ru.relative_to(lesson)}: a translation carries requirement anchors (only the source does)")

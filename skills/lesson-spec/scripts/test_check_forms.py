@@ -146,6 +146,21 @@ class Forms(unittest.TestCase):
         self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->", "<!-- removed: P/01.1-R002 by ADR-0122 -->\n<!-- req: P/01.1-R003 -->")
         self.assertTrue(any("reuses a removed" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
 
+    def test_req_merged_by_the_id_map(self):            # ADR-0133 доп. (93): слитый id резервирует карта журнала
+        journal = self.tmp / "decisions/journal/platform/01-store"
+        journal.mkdir(parents=True)
+        (journal / "req-id-map.tsv").write_text("old\tnew\tfile\tsource\nP/01.1-R998\tP/01.1-R002\t"
+                                                "spec/01.1-store.norms.md#N1\tP01.283\n", encoding="utf-8")
+        self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])     # the map alone reserves, no anchor
+        # a paragraph of several rules under one anchor is one requirement
+        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->",
+                  "<!-- req: P/01.1-R997 -->\nThe store MUST A. It MUST NOT B. If C, then it MUST D.\n\n"
+                  "<!-- req: P/01.1-R003 -->")
+        self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])
+        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R997 -->", "<!-- req: P/01.1-R998 -->")
+        errors = check_forms.check_req_anchors(self.lesson)[0]
+        self.assertTrue(any("anchor P/01.1-R998 reuses a number merged into P/01.1-R002" in e for e in errors), errors)
+
     def test_seams(self):                               # ADR-0126 доп. (7) п. 1: закрытая грамматика швов
         path = self.lesson / "acceptance/1/seams.tsv"
         self.assertEqual(check_forms.check_seams(path)[0], [])

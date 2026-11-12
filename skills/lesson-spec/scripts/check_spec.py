@@ -2832,9 +2832,10 @@ class Check:
         self.stats.update(stats)
 
     def m_form(self):
-        """The reading form of M (ADR-0133 addendum (56), P01.175; m_form.py): history_phrases, index_refs, see_also_refs,
-        judge_only_refs, production_scoped, history_rows, checklist_marks over the lessons of m_form.M_FORM_LESSONS this
-        run checks; stage A (history_phrases, judge_only_refs, history_rows) over those of m_form.M_FORM_STAGE_A."""
+        """The reading form of M (ADR-0133 addenda (56), (93), (94), P01.175; m_form.py): history_phrases, index_refs,
+        see_also_refs, judge_only_refs, production_scoped, history_rows, checklist_marks, req_map, req_refs over the
+        lessons of m_form.M_FORM_LESSONS this run checks; stage A (history_phrases, judge_only_refs, history_rows,
+        req_map, req_refs) over those of m_form.M_FORM_STAGE_A."""
         import m_form
         m_form.run(self, {f"{n}" for n in self.lessons_seen})
 

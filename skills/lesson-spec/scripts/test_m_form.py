@@ -1,5 +1,6 @@
-"""The seven checks of the reading form of M (m_form.py), its stage A and the lesson without a list on the accepted form
-of P/01 and on spoiled copies of it."""
+"""The nine checks of the reading form of M (m_form.py), its stage A and the lesson without a list on the accepted form
+of P/01 and on spoiled copies of it; the paragraph layout of the rollback (ADR-0133 addenda (93), (94)) on the copy
+with a synthetic paragraph and a merged id, so that the cases do not depend on the text the rollback rewrites."""
 
 import json
 import re
@@ -125,7 +126,7 @@ class AcceptedFormPasses(AcceptedForm):
         check = self.run_checks()
         self.assertEqual(check.errors, [])
         for name in ("history_phrases", "index_refs", "judge_only_refs", "production_scoped",
-                     "history_rows", "checklist_marks"):
+                     "history_rows", "checklist_marks", "req_refs"):
             self.assertGreater(check.stats[name], 0, name)
 
     def test_run_through_check_spec_method_only_for_checked_lessons(self):
@@ -631,6 +632,232 @@ class HistoryRows(AcceptedForm):
         shutil.copy(self.journal("history-1.tsv"), self.journal("history-9.tsv"))
         errors = self.run_checks().errors
         self.assertTrue(any("history-9.tsv: a history file of chapter 9" in e for e in errors), errors)
+
+
+class ParagraphLayout(AcceptedForm):
+    """ADR-0133 addendum (93): a paragraph of several rules keeps one R-id; a merged id leaves M for the id map of the
+    journal (req-id-map.tsv) and its history row, stays reserved, and a reference to it is an error (req_map, req_refs,
+    index_refs, history_rows; check_forms.check_req_anchors for the reuse)."""
+    NORMS = "spec/01.3-store.norms.md"
+    MAP = f"{JOURNAL}/{m_form.REQ_MAP}"
+
+    def lesson(self):
+        return m_form.Lesson(Check(self.root, scope="platform"), "P/01", self.home)
+
+    def free(self, chapter, count):
+        lesson = self.lesson()
+        live, removed = lesson.requirements()
+        taken = set(live) | removed | set(lesson.merged()) | m_form.history_ids(lesson)
+        out = [f"P/01.{chapter}-R{n:03d}" for n in range(999, 0, -1) if f"P/01.{chapter}-R{n:03d}" not in taken]
+        return out[:count]
+
+    def merge(self):
+        """A paragraph of several rules under a new live id at the first anchor of 01.3, an id merged into it: the row of
+        the map and the row of the history."""
+        self.new, self.old, self.spare = self.free(3, 3)
+        path = self.home / self.NORMS
+        text = path.read_text(encoding="utf-8")
+        at = text.index("<!-- req: P/01.3-")
+        self.section = re.findall(r"^#{2,6} (N[0-9](?:\.[0-9]+[a-z]?)*)\s", text[:at], flags=re.M)[-1]
+        block = (f"<!-- req: {self.new} -->\n- `paragraph` — The daemon MUST keep the row A. It MUST NOT drop the row B; "
+                 "if the row C is absent, then the request MUST get 400 `bad_request`. The limit of the rows is 3.\n\n")
+        path.write_text(text[:at] + block + text[at:], encoding="utf-8")
+        self.address = f"{self.NORMS}#{self.section}"
+        (self.root / self.MAP).write_text("old\tnew\tfile\tsource\n"
+                                          f"{self.old}\t{self.new}\t{self.address}\tP01.283: one paragraph\n",
+                                          encoding="utf-8")
+        self.history(self.old)
+
+    def history(self, value):
+        path = self.root / JOURNAL / "history-3.tsv"
+        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") +
+                        f"\n{value}\t{self.address}\tP01.283\t2026-11-12\tThe daemon MUST NOT drop the row B.\n",
+                        encoding="utf-8")
+
+    def map_rows(self, *rows):
+        path = self.root / self.MAP
+        path.write_text(path.read_text(encoding="utf-8") + "".join(row + "\n" for row in rows), encoding="utf-8")
+        return path.read_text(encoding="utf-8").count("\n")
+
+    def test_paragraph_with_one_id_and_a_merged_id_pass(self):
+        import check_forms
+        self.merge()
+        check = self.run_checks()
+        self.assertEqual(check.errors, [])
+        self.assertEqual(check.stats["req_map"], 1)
+        self.assertGreater(check.stats["req_refs"], 0)
+        self.assertEqual(check_forms.check_req_anchors(self.home)[0], [])
+
+    def test_reference_to_a_merged_a_removed_or_an_unknown_id_fails(self):
+        self.merge()
+        readme = "acceptance/1/README.md"
+        anchor = "The table `scenarios.tsv` of the chapter"
+        self.replace(readme, anchor, f"The rule {self.old} holds. The rule P/01.1-R014 holds. "
+                                     f"The rule {self.spare} holds. " + anchor)
+        self.replace("forms/runtime-constants.tsv", "\n", f"\n# the constant of {self.old}\n")
+        check = self.run_checks()
+        line = self.line_of(readme, f"The rule {self.old}")
+        self.assert_error(check, f"{HOME}/{readme}", line, f"a reference to {self.old}, merged into {self.new}")
+        self.assert_error(check, f"{HOME}/{readme}", line, "P/01.1-R014, a removed requirement")
+        self.assert_error(check, f"{HOME}/{readme}", line, f"{self.spare}, not a requirement of P/01")
+        self.assert_error(check, f"{HOME}/forms/runtime-constants.tsv", 2, f"merged into {self.new}")
+        self.assertEqual(len(check.errors), 4, check.errors)
+
+    def test_short_reference_in_the_norms_by_its_chapter(self):
+        self.merge()
+        short = self.old.split("-")[-1]
+        self.replace(self.NORMS, "The limit of the rows is 3.", f"The limit of the rows is 3 ({short}).")
+        check = self.run_checks()
+        self.assert_error(check, f"{HOME}/{self.NORMS}", self.line_of(self.NORMS, f"({short})"),
+                          f"a short reference {short} to {self.old}, merged into {self.new}")
+        self.setUp()
+        self.merge()
+        self.replace(self.NORMS, "The limit of the rows is 3.", f"The limit of the rows is 3 (chapter 1.1 {short}).")
+        self.assertEqual(self.run_checks().errors, [])     # P/01.1 of that number is not merged
+
+    def test_reuse_of_a_merged_id_fails(self):
+        import check_forms
+        self.merge()
+        self.replace(self.NORMS, f"<!-- req: {self.new} -->", f"<!-- req: {self.old} -->\n- `again` — The daemon MUST "
+                                                             f"do D.\n\n<!-- req: {self.new} -->")
+        errors = self.run_checks().errors
+        self.assertTrue(any(f"old {self.old} is a live anchor" in e for e in errors), errors)
+        errors = check_forms.check_req_anchors(self.home)[0]
+        self.assertTrue(any(f"anchor {self.old} reuses a number merged into {self.new}" in e for e in errors), errors)
+
+    def test_index_row_naming_a_merged_id_fails(self):
+        self.merge()
+        rel = "spec/01.1-store.norms.md"
+        n, _, cell, _ = m_form.index_rows(self.home / rel, "en")[0]
+        lines = (self.home / rel).read_text(encoding="utf-8").split("\n")
+        lines[n - 1] = lines[n - 1].replace(cell, f"{cell}, {self.old}", 1)
+        (self.home / rel).write_text("\n".join(lines), encoding="utf-8")
+        self.assert_error(self.run_checks(), f"{HOME}/{rel}", n, f"index: {self.old} is merged into {self.new}")
+
+    def test_rows_of_the_map_fail(self):
+        def cases():
+            unused = self.free(3, 2)[1]                      # neither live, merged nor in the history
+            return [
+                (f"{self.spare}\t{unused}\t{self.address}\tx", "is not a live requirement"),
+                (f"{self.spare}\t{self.old}\t{self.address}\tx", "a merged id: no chains"),
+                (f"{self.spare}\tP/01.1-R014\t{self.address}\tx", "a removed id"),
+                (f"{self.spare}\t{self.new}\tspec/01.1-store.norms.md#N1\tx", f"the paragraph of {self.new} is in"),
+                (f"{self.spare}\t{self.new}\t{self.NORMS}#N9\tx", "no section N9"),
+                (f"{self.spare}\t{self.new}\t{self.address}\tx", "has no row of the history files"),
+                (f"P/01.1-R014\t{self.new}\t{self.address}\tx", "has a tombstone in the norms"),
+                (f"{self.old}\t{self.new}\t{self.address}\tx", f"old {self.old} repeats"),
+                (f"P/02.1-R001\t{self.new}\t{self.address}\tx", "is not a requirement id of P/01"),
+                (f"{self.spare}\t{self.new}\t{self.address}\t ", "an empty source"),
+                (f"{self.spare}\t{self.new}\t{self.address}", "3 fields"),
+            ]
+        for i in range(11):
+            self.setUp()
+            self.merge()
+            row, words = cases()[i]
+            with self.subTest(words=words):
+                line = self.map_rows(row)
+                self.assert_error(self.run_checks(), self.MAP, line, words)
+        self.setUp()
+        self.merge()
+        path = self.root / self.MAP
+        path.write_text(path.read_text(encoding="utf-8").replace("old\tnew", "old\tlive", 1), encoding="utf-8")
+        self.assert_error(self.run_checks(), self.MAP, 1, "the header")
+
+    def test_history_row_of_a_merged_id_passes_and_of_an_unmapped_one_fails(self):
+        self.merge()
+        self.history(self.old)                               # a second row of the same merged id
+        self.assertEqual(self.run_checks().errors, [])
+        self.history(self.spare)
+        errors = self.run_checks().errors
+        self.assertTrue(any(f"req_id {self.spare} is not a requirement of P/01" in e for e in errors), errors)
+
+
+class ShortIndex(AcceptedForm):
+    """An index names only the topics whose rules stand in more than one place: a short index and none at all pass."""
+
+    def keep_rows(self, rel, language, count):
+        path = self.home / rel
+        drop = {n for n, *_ in m_form.index_rows(path, language)[count:]}
+        lines = path.read_text(encoding="utf-8").split("\n")
+        path.write_text("\n".join(line for n, line in enumerate(lines, 1) if n not in drop), encoding="utf-8")
+
+    def drop_index(self, rel, heading):
+        path = self.home / rel
+        text = path.read_text(encoding="utf-8")
+        start = text.index(heading + "\n")
+        end = text.index("\n## ", start + len(heading))
+        path.write_text(text[:start] + text[end + 1:], encoding="utf-8")
+
+    def test_short_index_and_no_index_pass(self):
+        rel = "spec/01.1-store.norms.md"
+        self.assertGreater(len(m_form.index_rows(self.home / rel, "en")), 1)
+        self.keep_rows(rel, "en", 1)
+        self.keep_rows("ru/" + rel, "ru", 1)
+        rel2 = "spec/01.2-store.norms.md"
+        self.drop_index(rel2, "## Index")
+        self.drop_index("ru/" + rel2, "## Указатель")
+        self.assertIsNone(m_form.index_rows(self.home / rel2, "en"))
+        # the history rows of the index go to the place that stays (an address resolves: history_rows)
+        path = self.root / JOURNAL / "history-2.tsv"
+        path.write_text(path.read_text(encoding="utf-8").replace(f"{rel2}#index\t", f"{rel2}#intro\t"),
+                        encoding="utf-8")
+        check = self.run_checks()
+        self.assertEqual(check.errors, [])
+        self.assertGreater(check.stats["index_refs"], 0)
+
+
+class JudgeOnlyByReference(AcceptedForm):
+    """A marker «(judge-only: …)» is needed only where M names a file outside M; for a lesson of M_NARROW a file of
+    another lesson that its dependency table does not name is outside M of the pair (the filters cut whole files)."""
+    REL = "acceptance/1/README.md"
+    ANCHOR = "The table `scenarios.tsv` of the chapter"
+
+    def add(self, sentence):
+        self.replace(self.REL, self.ANCHOR, sentence + " " + self.ANCHOR)
+        return self.line_of(self.REL, sentence)
+
+    def outside_file(self):
+        check = Check(self.root, scope="platform")
+        model = m_form.export_model(check)
+        pair = m_form.pair_m(check, m_form.Lesson(check, "P/01", self.home), model)
+        return next(p for p, d in sorted(model.items()) if d == "model_and_judge" and p not in pair and
+                    "/ru/" not in p and p.endswith(".md"))
+
+    def test_marker_without_a_reference_is_not_an_error(self):
+        self.add("The order of the refusals is fixed (judge-only: a scenario of the chapter checks it).")
+        self.assertEqual(self.run_checks().errors, [])
+
+    def test_reference_outside_the_pair_without_marker_fails(self):
+        other = self.outside_file()
+        line = self.add(f"The other side is in `{other}`.")
+        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", line, f"{other}, a file of another lesson outside M "
+                                                                         "of the pair P/01")
+        with patch.object(m_form, "M_NARROW", set()):
+            self.assertEqual(self.run_checks().errors, [])  # the global M has the file: the lesson is not narrowed
+
+    def test_link_outside_the_pair_from_the_readme_fails(self):
+        other = self.outside_file()
+        self.replace("README.md", "\n", f"\nThe other side is [there](../{other[len('Platform/'):]}).\n")
+        self.assert_error(self.run_checks(), f"{HOME}/README.md", 2, "outside M of the pair P/01")
+
+    def test_reference_outside_the_pair_marked_or_in_the_dependency_table_passes(self):
+        other = self.outside_file()
+        self.add(f"The other side is in `{other}` (judge-only: the other lesson).")
+        self.assertEqual(self.run_checks().errors, [])
+        self.setUp()
+        self.add(f"The other side is in `{other}`.")
+        text = (self.home / "README.md").read_text(encoding="utf-8")
+        head = text.index(m_form.DEPENDENCIES["en"])
+        rule = text.index("|---|", head)
+        end = text.index("\n", rule) + 1
+        row = f"| [`{other}`](../{other[len('Platform/'):]}) | the whole file | a test dependency |\n"
+        (self.home / "README.md").write_text(text[:end] + row + text[end:], encoding="utf-8")
+        self.assertEqual(self.run_checks().errors, [])
+
+    def test_narrow_lesson_without_the_dependency_table_fails(self):
+        self.replace("README.md", m_form.DEPENDENCIES["en"], "## What this lesson borrows")
+        errors = self.run_checks().errors
+        self.assertTrue(any("is in m_form.M_NARROW, and its README.md has no" in e for e in errors), errors)
 
 
 if __name__ == "__main__":
