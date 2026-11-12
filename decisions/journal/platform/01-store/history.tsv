@@ -90,3 +90,4 @@ P/01.3-R035	forms/refusals.tsv.schema.json#/fields/9	ADR-0130 addendum (15) item
 P/01.1-R156	spec/01-store.api.openapi.yaml#/components/schemas/Key/description	P01.257 G03; P01.256 B5; Architect decision 2026-11-12T09:39:53Z	2026-11-12	N1: a key is not empty, does not start with /, no segment between / equals ..; ..foo is admissible. The limit of 1024 UTF-8 bytes and a smaller file limit are checked separately; maxLength does not express a number of bytes.
 -	forms/export.json#/judge/129/disposition	P01.257 S5; P01.256 B9; Architect decision 2026-11-12T09:51:38Z	2026-11-12	exclude
 -	forms/export.json#/judge/129/basis	P01.257 S5; P01.256 B9; Architect decision 2026-11-12T09:51:38Z	2026-11-12	Outside the judge input: neither the common acceptance nor data of P/01.
+-	forms/targets.routing.tsv#header	P01.256, the Architect's decision of 2026-11-12T09:51:38Z (B8, S1: the column role of the common routing header, a cell in every row of this lesson)	2026-11-12	-

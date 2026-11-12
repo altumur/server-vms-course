@@ -5827,6 +5827,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/common/vectors/compare-scope.tsv",
+      "disposition": "include",
+      "basis": "Vector wire form: the scope of the comparison words of wire.tsv (wire.md «Turn comparison»)."
+    },
+    {
       "path": "Platform/common/vectors/consumers.tsv",
       "disposition": "include",
       "basis": "Vector wire form and consumer registry named by spec/acceptance.README.md."
