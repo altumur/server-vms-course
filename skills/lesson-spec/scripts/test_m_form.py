@@ -895,17 +895,24 @@ class JudgeOnlyByReference(AcceptedForm):
 class QualificationRefs(AcceptedForm):
     """The input Q (ADR-0130 addendum (20) item 1): a reference from M to a file `qualification/…` is a reference
     outside M — «(judge-only: …)» in the same sentence; Q never enters the files of M or the narrow M of the pair; a
-    tree without Q files is judged as before."""
+    tree without Q files is judged as before. The cases hold on the copy with or without the Q of the lesson (before
+    and after its split, P01.294): a stub Q is written only where the copy has none."""
     REL = "spec/production-acceptance.md"
     Q = f"{HOME}/qualification/README.md"
 
     def with_q(self):
         for rel, text in (("qualification/README.md", "# Qualification of the store\n\nThe case groups.\n"),
                           ("ru/qualification/README.md", "# Квалификация хранилища\n\nГруппы случаев.\n")):
-            (self.home / rel).parent.mkdir(parents=True, exist_ok=True)
-            (self.home / rel).write_text(text, encoding="utf-8")
+            if not (self.home / rel).is_file():
+                (self.home / rel).parent.mkdir(parents=True, exist_ok=True)
+                (self.home / rel).write_text(text, encoding="utf-8")
+
+    def q_errors(self, check, rel, line):
+        return [e for e in check.errors if "input Q" in e and e.startswith(f"{rel}: line {line}: ")]
 
     def test_without_q_files_a_reference_to_the_path_is_not_judged(self):
+        for rel in ("qualification", "ru/qualification"):
+            shutil.rmtree(self.home / rel, ignore_errors=True)
         self.add_sentence(self.REL, "The procedures are in `qualification/README.md` of the lesson.")
         check = self.run_checks()
         self.assertFalse([e for e in check.errors if "input Q" in e], check.errors)
@@ -939,11 +946,12 @@ class QualificationRefs(AcceptedForm):
 
     def test_marked_reference_passes(self):
         self.with_q()
-        self.add_sentence(self.REL, "The procedures are in `qualification/README.md` (judge-only: the qualifier "
-                                    "reads them) of the lesson.")
+        before = self.run_checks().stats["qualification_refs"]
+        line = self.add_sentence(self.REL, "The procedures are in `qualification/README.md` (judge-only: the "
+                                           "qualifier reads them) of the lesson.")
         check = self.run_checks()
-        self.assertEqual(check.errors, [])
-        self.assertEqual(check.stats["qualification_refs"], 1)
+        self.assertEqual(self.q_errors(check, f"{HOME}/{self.REL}", line), [])
+        self.assertEqual(check.stats["qualification_refs"], before + 1)
 
     def test_q_is_outside_the_files_of_m_and_the_pair(self):
         self.with_q()
