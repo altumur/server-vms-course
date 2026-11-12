@@ -10,7 +10,20 @@ from unittest.mock import patch
 
 import yaml
 
+import check_spec
 from check_spec import chapter_key, Check, UniqueLoader, pointer, references
+
+
+def without_stage_adoption(test, key):
+    """An old-layout fixture (Russian spec/ without ru/) of an adopted lesson: lift its stage table requirement.
+
+    Since 22ae12340 (P01.117, ADR-0133 (43)) and its extension to P/02–P/04 (7a3f84654, b542cf095, b645c57ca) a lesson of
+    STAGE_NORM_REQUIRED keeps forms/stages.tsv with every item of the English canonical «Readiness checklist». A fixture
+    whose canonical norms are Russian cannot hold that section, and its subject is another check; the stage rule itself is
+    judged by test_stage_norm_coverage and on a whole new-layout lesson by LayoutTests.test_stage_table_is_required."""
+    patcher = patch.object(check_spec, "STAGE_NORM_REQUIRED", check_spec.STAGE_NORM_REQUIRED - {key})
+    patcher.start()
+    test.addCleanup(patcher.stop)
 
 
 class CheckSpecTests(unittest.TestCase):
@@ -52,6 +65,14 @@ components:
         (self.acceptance / "corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
         self.scenarios = self.acceptance / "scenarios.tsv"
         self.scenarios.write_text('# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n')
+        # The common registry header and the common filters M and J are required in every Platform source tree since
+        # 422023b41 (P02.50) and 58020e558 (P02.54), ADR-0135 addendum (14): the fixture keeps them empty of rows.
+        forms = self.root / "Platform/common/acceptance/forms"
+        forms.mkdir(parents=True)
+        (forms / "targets.tsv").write_text("id\towner\n")
+        (forms / "targets.routing.tsv").write_text("id\tengine\n")
+        for name in ("Platform/common/export-model-filter.json", "Platform/common/acceptance/judge-input-filter.json"):
+            (self.root / name).write_text('{"version": 1, "files": []}\n')
 
     def check(self):
         result = Check(self.root)
@@ -59,9 +80,11 @@ components:
         return result
 
     def cli(self):
+        # The fixture is a Platform source tree without VMS/PLATFORM_PIN: since 1037a2290 the default scope all also runs
+        # the canonical VMS phase, which needs the Owner pin; the lesson under test is judged by the Platform phase.
         return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
                                "--root", str(self.root), "--cyrillic-debt", str(self.cyrillic_debt),
-                               str(self.lesson)], capture_output=True, text=True)
+                               "--scope", "platform", str(self.lesson)], capture_output=True, text=True)
 
     def assert_cli(self, code, message=None):
         result = self.cli()
@@ -958,7 +981,7 @@ properties:
 
     def test_directives_join_the_shared_platform_dictionary_and_the_modules_own(self):
         shared = self.root / "Platform/common/acceptance/README.md"
-        shared.parent.mkdir(parents=True)
+        shared.parent.mkdir(parents=True, exist_ok=True)  # setUp keeps the common forms there
         shared.write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@start` — запустить процесс.\n")
         (self.acceptance / "README.md").write_text("# Acceptance\n## Стенд\n### Словарь директив\n- `@cut` — разрыв.\n")
         self.scenarios.write_text("# scenario\tstep\trequest\texpect\n01-a\t1\t@start x\t200 {}\n01-a\t2\t@cut m1\t200 {}\n")
@@ -980,11 +1003,16 @@ properties:
         registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
         result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
                                  str(self.root), "--exceptions", str(registry),
-                                 "--cyrillic-debt", str(self.cyrillic_debt), str(self.lesson)],
+                                 "--cyrillic-debt", str(self.cyrillic_debt), "--scope", "platform", str(self.lesson)],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("EXCEPTION М12A_Example/01 no-openapi -: ADR", result.stdout)
-        self.assertIn("PASS with 1 exceptions", result.stdout)
+        # Since 1037a2290 the CLI reports per phase: the exception is named in the line of its phase, the phase passes
+        # with it, and the summary line no longer counts them («PASS with N exceptions» is gone).
+        lines = result.stdout.splitlines()
+        self.assertEqual([l for l in lines if l.startswith("EXCEPTION ")],
+                         ["EXCEPTION PLATFORM_CURRENT М12A_Example/01 no-openapi -: ADR"], result.stdout)
+        self.assertIn("PHASE PLATFORM_CURRENT PASS", lines)
+        self.assertTrue(lines[-1].startswith("PASS "), result.stdout)
 
 
 class CyrillicIntegrationTests(unittest.TestCase):
@@ -1082,6 +1110,8 @@ class PlatformLessonTests(unittest.TestCase):
         (history / "id-map.tsv").write_text(
             "old\tnew\tchapter\tsubject\tnote\n"
             "-\tP/01.1-01\t1.1\tx\t-\n-\tP/01.2-01\t1.2\tx\t-\n")
+        if not isinstance(self, LayoutTests):
+            without_stage_adoption(self, "P/01")
 
     API = '''openapi: 3.1.0
 info: {title: Store, version: "1"}
@@ -1373,6 +1403,7 @@ class FormSourceChapterTests(unittest.TestCase):
         history = self.root / "decisions/history/platform"
         history.mkdir(parents=True)
         (history / "id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n-\tP/02.1-01\t2.1\tx\t-\n")
+        without_stage_adoption(self, "P/02")
 
     def check(self):
         result = Check(self.root)
@@ -1455,6 +1486,7 @@ class FamiliesChapterTests(unittest.TestCase):
         (history / "id-map.tsv").write_text(
             "old\tnew\tchapter\tsubject\tnote\n"
             "-\tP/03.1-01\t3.1\tx\t-\n-\tP/03.2-01\t3.2\tx\t-\n")
+        without_stage_adoption(self, "P/03")
 
     def check(self):
         result = Check(self.root)
@@ -1758,6 +1790,7 @@ class PlatformCatalogTests(unittest.TestCase):
         self.write_norms(self.DATA, ["P/03-01", "P/03-02"])
         self.write_idmap([("М10/9-01", "P/03-01"), ("М10/9-02", "P/03-02")])
         self.write_catalog(self.ROWS)
+        without_stage_adoption(self, "P/03")
 
     def write_norms(self, data, ids):
         self.norms.write_text("## Н0 Section\n## Н1 Section\n**Данные** ([каталог](../../common/data/catalog.tsv)):\n" +
@@ -2185,7 +2218,18 @@ class LayoutTests(unittest.TestCase):
         self.journal.mkdir(parents=True)
         for chapter in ("1", "2"):
             (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.journal / f"corrections-{chapter}.tsv")
+            # The canonical source is English (ADR-0124) and P/01 places every item of its «Readiness checklist» on a
+            # stage of forms/stages.tsv (22ae12340, ADR-0133 (43)).
+            (self.dir / f"spec/01.{chapter}-store.norms.md").write_text(self.english_norms(chapter))
+        self.stages = self.dir / "forms/stages.tsv"
+        self.stages.parent.mkdir()
+        self.stages.write_text("n\tstage\tnorms\tgate\n1\ts1\tP/01.1-01; P/01.2-01\tbuild\n")
         self.lesson = ru / "01-store.md"
+
+    @staticmethod
+    def english_norms(chapter):
+        return ("\n".join(f"## Н{i} Section" for i in range(6)) + "\n## Implementation decides\n## Readiness checklist\n" +
+                f"- [ ] **P/01.{chapter}-01** Example — checked by reading\n")
 
     def check(self):
         result = Check(self.root)
@@ -2199,11 +2243,22 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(result.stats["lessons"], 1)
 
     def test_lesson_checks_read_the_translation(self):  # слова проверок русские: судится ru/X, не источник X
-        (self.dir / "spec/01.1-store.norms.md").write_text("# English source\n")
+        # The source keeps only its «Readiness checklist», which the stage table reads (22ae12340); no Н0–Н5, no
+        # «Чеклист готовности»: the Russian checks must not read it.
+        (self.dir / "spec/01.1-store.norms.md").write_text("# English source\n\n## Readiness checklist\n\n"
+                                                           "- [ ] **P/01.1-01** Example.\n")
         self.assertEqual(self.check().errors, [])
         (self.dir / "ru/spec/01.1-store.norms.md").write_text("# x\n")
         errors = self.check().errors
         self.assertTrue(errors and all("ru/spec/01.1-store.norms.md" in e or "P/01.1" in e for e in errors), errors)
+
+    def test_stage_table_is_required(self):  # ADR-0133 (43): an adopted lesson has the table and every item on a stage
+        self.stages.write_text("n\tstage\tnorms\tgate\n1\ts1\tP/01.1-01\tbuild\n")
+        self.assertEqual(self.check().errors,
+                         ["Platform/01-store/forms/stages.tsv: stage norms: checklist item P/01.2-01 is at no stage"])
+        self.stages.unlink()
+        self.assertEqual(self.check().errors,
+                         ["Platform/01-store/forms/stages.tsv: stage norms: expected an ordinary stages.tsv file"])
 
     def test_log_lives_in_journal(self):
         (self.dir / "journal").mkdir()
@@ -2264,16 +2319,20 @@ class LayoutTests(unittest.TestCase):
         result.acceptance(acceptance, "V/01", "1/")
         self.assertTrue(any("decisions/journal/vms/01-cam/corrections-1.tsv:" in e for e in result.errors), result.errors)
 
-    def test_excluded_v11_journal_keeps_its_original_path(self):
+    def test_v11_journal_is_judged_at_its_relocated_path(self):
+        # The V/11 exclusion is gone since 3e4bcdbc8 («read … all relocated journals without a V11 fallback»): V/11 is
+        # judged like any VMS lesson — the relocated copy under decisions/journal/vms, never its old journal/ path.
         acceptance, old, path = self.vms_journal_fixture("11-backend")
-        path.write_text("broken unaccepted relocated copy\n")
+        old.write_text("broken old copy\n")
         result = Check(self.root)
         result.acceptance(acceptance, "V/11", "1/")
         self.assertEqual(result.errors, [])
-        old.unlink()
+        path.write_text("broken relocated copy\n")
         result = Check(self.root)
         result.acceptance(acceptance, "V/11", "1/")
-        self.assertTrue(any("VMS/11-backend/journal/corrections-1.tsv:" in e for e in result.errors), result.errors)
+        self.assertTrue(any("decisions/journal/vms/11-backend/corrections-1.tsv: line 1" in e for e in result.errors),
+                        result.errors)
+        self.assertFalse(any("VMS/11-backend/journal/" in e for e in result.errors), result.errors)
 
     def test_source_does_not_link_ru_or_journal(self):
         (self.dir / "journal").mkdir()
@@ -2329,7 +2388,9 @@ class PlatformHistoryMapTests(unittest.TestCase):
         self.assertEqual([row for _, row in rows], expected)
         self.assertEqual([n for n, _ in rows], [n for n, _ in physical[1:]])
         ids = {row["new"] for _, row in rows if re.fullmatch(r"P/[0-9]{2}(?:\.[0-9]+)?-[0-9]+", row["new"])}
-        self.assertEqual(len(ids), 532)
+        # 532 at a46ae1e6a; new ids of the map since: ecb501b35 (+3), 34e8538aa (+1), P02.23 858ea017b (+7),
+        # P03.21 cac433612 (+7), P04.21 206e160f8 (+4), P01.176 6e2e26e4a (+1) and its attempt 2 ca50a3385 (−1).
+        self.assertEqual(len(ids), 554)
 
 
 @unittest.skipUnless(NUMERIC_TABLE.is_file(), "no numeric-loader witnesses of P/06 C3 in this tree")
