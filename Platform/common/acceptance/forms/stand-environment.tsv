@@ -1,0 +1,59 @@
+# The environment of the stand processes: the variables a stand process receives (stand.md «Environment of stand processes»).
+# A row admits a variable to the environment of a stand process; other variables of the environment of the runner are not inherited. A listed name is
+# admitted, not required. stand.md refers to this form and does not repeat its names and values.
+# name: the variable, by ^[A-Z_][A-Z0-9_]*$; once in the form.
+# value: the value the stand gives every process that receives the variable, on the stand of one server and without the words of a directive. A value
+# in braces is a substitution of «Stand» of the instance ({data}, {port}, {rport}, {manifest}); a part in angle brackets is named by norm. - — the form
+# sets no value: the runner, a directive, a lesson README or a topic of the common acceptance sets it, as norm names. The words of a directive (on <server>,
+# <NAME>=<value> of @start and the others of the dictionary) give their own value instead.
+# processes: every — every stand process; process-stands — the processes of the stands of processes and chapters (stand.md «Layout by processes (stage C)»,
+# testsub-stand.md, system/README.md, domain-stand.md).
+# Besides the rows, stand.md admits the variable named by slot.name_env of a stand manifest and the names of one launch (the assignments of @start,
+# W2C_TOKEN of the person's command of @move).
+# norm: the norms of the subject and the place of the common acceptance that sets or varies the value.
+name	value	processes	norm
+PATH	-	every	a system variable; the form sets no value
+HOME	-	every	a system variable; the form sets no value
+USER	-	every	a system variable; the form sets no value
+LOGNAME	-	every	a system variable; the form sets no value
+SHELL	-	every	a system variable; the form sets no value
+TMPDIR	-	every	a system variable; the form sets no value
+TMP	-	every	a system variable; the form sets no value
+TEMP	-	every	a system variable; the form sets no value
+LANG	-	every	a system variable; the form sets no value
+LC_ALL	-	every	a system variable; the form sets no value
+LC_CTYPE	-	every	a system variable; the form sets no value
+TZ	-	every	a system variable; the form sets no value
+PLATFORM_DIR	{data}	every	the environment file contract «Environment variables»; P/02.4 N1.2; stand.md «One data directory»; a server on <server> other than the server of the stand: {data}/servers/<server> (README.md, the dictionary, @start)
+PLATFORM_STORE	configstore://<role socket>	every	the environment file contract «Environment variables»; P/02.4 N1.2; stand.md «Role sockets»: the socket of the role of the process; a store group: the member of its own server (system/README.md)
+BOX_ID	stand-box	every	the environment file contract «Environment variables»; P/02.4 N1.2; on <server>: <stand box>-<server> (README.md, the dictionary, @start)
+SERVER_NAME	srv-a	every	the environment file contract «Environment variables»; P/02.4 N1.2; the stand of one server; on <server>: <server> (README.md, the dictionary, @start); system/README.md «Servers»; domain-stand.md @kit-start, console#<n>
+SECRETS_KEY	{data}/etc/secrets/platform.key	every	the environment file contract «Environment variables»; P/02.4 N1.1, N1.2; the ring of the ring command of stand.md, one per stand
+CONSOLE_ROOT	-	every	the environment file contract «Environment variables»; stand.md «Console root»: named by the lesson README
+CONSOLE_PORT	{port}	every	the environment file contract «Environment variables»; P/02.4 N1.2; stand.md «Launch command» {port}
+RESOURCE_PORT	{rport}	every	the environment file contract «Environment variables»; P/02.4 N1.2; stand.md «Resource» {rport}
+AGENT_TOKEN_DIR	-	every	the environment file contract «Environment variables»; PROFILE.md: the assignment AGENT_TOKEN_DIR={agent_tokens} of the worker and agent commands; domain-stand.md
+MANIFEST_DIR	{manifest}	every	the environment file contract «Environment variables»; P/02.3; stand.md «Launch command»: the processes that need it, not the store
+LABELS	-	every	the environment file contract «Environment variables»; README.md, the dictionary, @start labels=<labels>: the worker only, not inherited from the runner
+TIMEZONE	-	every	the environment file contract «Environment variables»; tls/README.md @kit-start
+W2C_ENV	{data}/etc/w2c/w2c.env	every	the environment file contract «Environment variables»; P/02.4 N1.2; on <server>: the same path in its PLATFORM_DIR
+W2C_TLS_DIR	-	every	the environment file contract «Environment variables»; tls/README.md; domain-stand.md @kit-start
+CONSOLE_CALL_PORT	-	every	the environment file contract «Environment variables»; pass/README.md: {cport} for a console with a kit
+CLUSTER	-	every	the environment file contract «Environment variables»; domain-stand.md @start agent
+CLUSTERS	-	every	the environment file contract «Environment variables», «CLUSTERS»; domain-stand.md
+DOMAIN_URL	-	every	the environment file contract «Environment variables»; domain-stand.md @start agent: the proxy of the runner
+RELAY_URL	-	every	the environment file contract «Environment variables»; domain-stand.md @start agent via <relay>
+RELAY	-	every	the environment file contract «Environment variables»; domain-stand.md: a relay cluster
+RELAY_HOST	-	every	the environment file contract «Environment variables»; domain-stand.md: the copies of a relay
+RELAY_PORT	-	every	the environment file contract «Environment variables»; domain-stand.md: {relay_port} of the copy
+RELAY_MEMBER	-	every	the environment file contract «Environment variables»; P/09.2
+W2C_WALL_OFFSET	-	every	the environment file contract «Environment variables»; domain-stand.md @clock
+DOMAIN_CA	-	every	the environment file contract «Environment variables»; tls/README.md; domain-stand.md
+RELAY_CA	-	every	the environment file contract «Environment variables»; P/09.1, P/09.2
+SIGNER_URL	-	every	the environment file contract «Environment variables»; tls/README.md; domain-stand.md
+DOMAIN_CONSOLE_URL	-	every	the environment file contract «Environment variables»; domain-stand.md
+LOGIN_URL	-	every	the environment file contract «Environment variables»; P/08.4
+W2C_SHRINK_AFTER	-	process-stands	the environment file contract «Environment variables»; README.md, the dictionary, @start controller shrink_after=<s>; P/04 N1.4
+W2C_ROLE	-	process-stands	the environment file contract «Environment variables»; P/02.4; the lifecycle of the lessons
+W2C_DEPLOYMENT	-	process-stands	the environment file contract «Environment variables»; P/02.4 N1.1; stand.md «Rights derivation command»
+W2C_MANIFEST_REV	-	process-stands	P/02.3, P/02.4

@@ -97,6 +97,11 @@ ADR_LATER = {
         "vectors/jcs/README.md": "outside the norms; not cleaned by P01.177",
         "vectors/rights-evaluator/README.md": "outside the norms; not cleaned by P01.177",
     },
+    # the debugTip runtime string carries «ADR-0050» byte for byte in module/console.js WORDS, whose canonical bytes the
+    # course pins (J-P07-01 SHA in the frozen Source tests); the number stays until the module is regenerated (P07.16)
+    "P/07": {
+        "data/localization.tsv": "pinned: debugTip = WORDS of the canonical module bytes (J-P07-01), the Architect on P07.16",
+    },
 }
 BUILT = ("data/*.schema.json",)                          # v7.build: judged at the dialect and common.form.yaml
 # The built blocks of the norms between their markers (v7/sections.py): the words of the builder and the values of the
