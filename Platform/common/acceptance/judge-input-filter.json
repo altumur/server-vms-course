@@ -5839,7 +5839,7 @@
     {
       "path": "Platform/common/vectors/compare-scope.tsv",
       "disposition": "include",
-      "basis": "Vector wire form: the scope of the comparison words of wire.tsv (wire.md «Turn comparison»)."
+      "basis": "Vector wire form: the scope of the comparison words of wire.tsv (wire.md \"Turn comparison\")."
     },
     {
       "path": "Platform/common/vectors/consumers.tsv",
@@ -6309,7 +6309,7 @@
     {
       "path": "Platform/common/vectors/probe-tables.tsv",
       "disposition": "include",
-      "basis": "Vector wire form: the envelope of the probe tables (wire.md «P/01 write-checks transport»)."
+      "basis": "Vector wire form: the envelope of the probe tables (wire.md \"P/01 write-checks transport\")."
     },
     {
       "path": "Platform/common/vectors/probe-tables.tsv.schema.json",
