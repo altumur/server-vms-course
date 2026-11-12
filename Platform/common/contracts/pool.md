@@ -79,7 +79,7 @@ capacity:  the capacity — the heartbeat field placement.capacity.from (default
            unit_mb/base_mb — the memory budget of the worker at start (P/03.4) (moved from P/04 N1.3 capacity; layout audit, the Architect's decision of 2026-10-25, A-12)
 ```
 
-Load and its active-intent reserve are exact nonnegative integer weight aggregates, not record counts. Sum and compare them without binary64/int64 narrowing, rounding or saturation, including keeper selection and the load subtracted for free capacity. Their JSON output uses integer notation without a common.uint53 ceiling. Individual weights, capacity and other counts keep their existing forms; serialized-object limits do not change (P/04-R007, R050).
+Load and its active-intent reserve are exact nonnegative integer weight aggregates, not record counts. Sum and compare them without binary64/int64 narrowing, rounding or saturation, including keeper selection and the load subtracted for free capacity. Their JSON output uses integer notation without a common.uint53 ceiling. Individual weights, capacity and other counts keep their existing forms; serialized-object limits do not change (P/04-R008, R050).
 
 ## `idle_by_policy` (answer (1))
 

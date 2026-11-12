@@ -472,7 +472,6 @@ P/04-R108	spec/04-controller.norms.md#N1.1	ADR-0133 addendum (98); P04.F1	2026-1
 P/04-R109	spec/04-controller.norms.md#N1.1	ADR-0133 addendum (98); P04.F1	2026-11-12	- **`<sub>/want/<host> — by`**: \\<controller instance\\> — diagnostics; the authority — cas and the guard placement_turn
 P/04-R110	spec/04-controller.norms.md#N1.1	ADR-0133 addendum (98); P04.F1	2026-11-12	- **`<sub>/want/<host> — why`**: \\<non-empty reason\\> — grammar N3 «shortage(), order()…»
 P/04-R112	spec/04-controller.norms.md#N1.2	ADR-0133 addendum (98); P04.F1	2026-11-12	- The pass report MUST contain the fields below; an implementation MAY add its own counters.
-P/04-R008	spec/04-controller.norms.md#N1.2	ADR-0133 addendum (98); P04.F1	2026-11-12	- The pass report uses all fields and field meanings specified below.
 P/04-R114	spec/04-controller.norms.md#N1.2	ADR-0133 addendum (98); P04.F1	2026-11-12	- **`pass — ok`** is boolean: true means the control part reached its end, all control inputs were read and no control write was refused; otherwise false.
 P/04-R542	spec/04-controller.norms.md#N1.2	ADR-0133 addendum (98); P04.F1	2026-11-12	- **`pass — error`** is the text of the last error or "".
 P/04-R543	spec/04-controller.norms.md#N1.2	ADR-0133 addendum (98); P04.F1	2026-11-12	- **`pass — failures`** is the number of failures.

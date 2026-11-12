@@ -181,7 +181,7 @@
       "minimum": 0,
       "x-integer": true,
       "x-whole": true,
-      "description": "Exact nonnegative sum of waiting unit weights, in integer JSON notation, without an upper common.uint53 bound. Preserve the whole serialized-report limit; never round or saturate through binary64/int64 (P/04-R007)."
+      "description": "Exact nonnegative sum of waiting unit weights, in integer JSON notation, without an upper common.uint53 bound. Preserve the whole serialized-report limit; never round or saturate through binary64/int64 (P/04-R008)."
      },
      "workers": {
       "$ref": "#/$defs/count",
