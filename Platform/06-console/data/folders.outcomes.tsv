@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row platform/folders/<id> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row platform/folders/<id>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	console	the whole row is unreadable: `GET /folders` gives out the element `{id, garbled: true}`, likewise — the folders under it; `GET /folders/<id>` of this folder and of the folders under it — 503 `unavailable`: the liveness of the chain is not confirmed; a write of this folder and of the folders under it — 503 `unavailable`, nothing is written; the reaper removes nothing («an unknown read does not allow row deletion»), the cause goes to the log	0	row	P/06.8 N3 «chain»

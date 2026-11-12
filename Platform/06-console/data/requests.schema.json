@@ -11,14 +11,14 @@
   },
   "valid_until": {
    "$ref": "#/$defs/common.time",
-   "description": "the term; when the manifest has valid_for or the client sent its own term; 0 and a past moment — a term already run out (expired), not «without a term»; the door writes a sent number truncated down to milliseconds, a negative one — 0 (P/06.4 N3 «file a request» step 1; C06-DEADLINE-PRECISION-33-01)",
+   "description": "the term; when the manifest has valid_for or the client sent its own term; 0 and a past moment — a term already run out (expired), not «without a term»; the door writes a sent number truncated down to milliseconds, a negative one — 0 (P/06.4 N3 «file a request» step 1)",
    "x-codec": [
     "time"
    ]
   },
   "digest": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "MUST for every executable request — for one filed by the door, JCS of the client's body without valid_until (kind client), for one filed by a worker, JCS of the row's body fields without unit, valid_until and the stamps (kind worker); for a target with requests.key — kind worker for both writers (vectors vectors/request-digest/, the third rule; ADR-0091 addendum (24) item 3)",
+   "description": "MUST for every executable request — for one filed by the door, JCS of the client's body without valid_until (kind client), for one filed by a worker, JCS of the row's body fields without unit, valid_until and the stamps (kind worker); for a target with requests.key — kind worker for both writers (vectors vectors/request-digest/, the third rule)",
    "x-codec": [
     "string"
    ]
@@ -71,7 +71,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "the body fields by the manifest's requests.schema and the field about of the stamp: a string — as is, any other value — canonical JSON (JCS, ADR-0072; vectors vectors/requests-body/); the name and the value are checked by the manifest's schema at the writer",
+  "description": "the body fields by the manifest's requests.schema and the field about of the stamp: a string — as is, any other value — canonical JSON (JCS; vectors vectors/requests-body/); the name and the value are checked by the manifest's schema at the writer",
   "type": "string",
   "x-codec": [
    "string"

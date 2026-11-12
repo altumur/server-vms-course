@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/key-familie
 
 The owner is chapter P/06.7 ([norms](../../spec/06.7-console.norms.md) N1.11 `families`). The participant is the cluster console (the door `GET /domain/keys`).
 The declaration `domain.keys` and its load refusals are [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md)
-(the cases `m59_keys_*`). The bytes are written by the Specification; the rows follow the text of the norm, the rule is there, not here.
+(the cases `m59_keys_*`). The rows follow the text of the norm, the rule is there, not here.
 
 ## `cases.tsv`
 

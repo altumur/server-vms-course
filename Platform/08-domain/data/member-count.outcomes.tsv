@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/member-count (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/member-count. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole row is unreadable: the field every does not go in the answer, the intake of class server — 503 unavailable; log without the value	1	row	P/08.3 N1.1a

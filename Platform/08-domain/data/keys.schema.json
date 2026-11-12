@@ -132,7 +132,7 @@
      "description": "count of changes after theft (P/08.2 N3 step 3); absent — 0; the theft mark for SET_GUARD (the key set contract «The follow set»)"
     },
     "book_seal": {
-     "description": "hex of the X25519 public book acceptance key (P/08.2 N1.4); mandatory; a small-order point — the set is not read (function keys step 6 — no_book_seal, not not_a_set; added by the reconciliation of M11, S1)",
+     "description": "hex of the X25519 public book acceptance key (P/08.2 N1.4); mandatory; a small-order point — the set is not read (function keys step 6 — no_book_seal, not not_a_set)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     },

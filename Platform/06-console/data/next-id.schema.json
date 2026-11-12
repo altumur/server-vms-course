@@ -4,7 +4,7 @@
  "properties": {
   "n": {
    "$ref": "#/$defs/common.pos53",
-   "description": "the counter of unit numbers at unit.id: numeric (N1.3 numeric): the last issued number, a decimal integer; the next one — n + 1 (analysis of review of stage B 6–7, № 38); no row — recover: without units and claims 1, with existing units — the greatest + 1 (the Architect's decision of 2026-10-20); a number is never reused; the reservation — a write of n + 1 with cas under the claim's guard (N3 «create» step 3); recover — the issued number = the greatest number among the rows and tombstones and the numbers of live claims + 1, the counter rewritten as a whole with n = this number",
+   "description": "the counter of unit numbers at unit.id: numeric (N1.3 numeric): the last issued number, a decimal integer; the next one — n + 1; no row — recover: without units and claims 1, with existing units — the greatest + 1; a number is never reused; the reservation — a write of n + 1 with cas under the claim's guard (N3 «create» step 3); recover — the issued number = the greatest number among the rows and tombstones and the numbers of live claims + 1, the counter rewritten as a whole with n = this number",
    "x-codec": [
     "integer"
    ]

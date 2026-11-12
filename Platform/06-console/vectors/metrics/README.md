@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/vectors/metrics/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «Manifest rows metrics[]»). The participant is the cluster console (`GET /metrics`). The bytes are written by
-the Specification. In `garbled-two-elements`, the common numeric field is counted separately for each of the two elements.
+The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «Manifest rows metrics[]»). The participant is the cluster console (`GET /metrics`).
+In `garbled-two-elements`, the common numeric field is counted separately for each of the two elements.
 
 ## `cases.tsv`
 
