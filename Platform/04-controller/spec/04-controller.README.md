@@ -12,7 +12,7 @@ the drain, the labels and the decommission of a server are the doors of the cons
 
 ## Inputs and their priority
 
-The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417) shows observable examples;
+The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541) shows observable examples;
 the lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
 The forms of a unit are set in [P/06.1](../../06-console/spec/06.1-console.norms.md), of the slot — in
 [P/03.2](../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../02-installer/spec/02.1-installer.norms.md),

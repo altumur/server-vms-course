@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/spec/04-controller.norms.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The canon of the lesson. Lecture (`ru/04-controller.md`, for people, not in the export), [instructions](04-controller.README.md), [life cycle](../lifecycle.md),
-[acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417), vectors [`order`](../vectors/order/README.md),
+[acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541), vectors [`order`](../vectors/order/README.md),
 [`shrink-victim`](../vectors/shrink-victim/README.md) and [`shrink-allowed`](../vectors/shrink-allowed/README.md). The lesson has no HTTP contract of its own (`P/04 no-openapi`): the doors through
 which the operator talks to the controller are the doors of the console ([P/06.6](../../06-console/spec/06.6-console.norms.md) N2; `/where` — [chapter 6.5](../../06-console/spec/06.5-console.norms.md)). Current source dependencies are the [observation contract](../../common/contracts/observation.md), the current data families below, and the linked console doors. Requirement and checklist identifiers are retained; the acceptance files define the full completion boundary.
 
@@ -236,7 +236,7 @@ See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04
 
 <!-- req: P/04-R093 -->
 
-- **`<sub>/decommissioned/<host> — slots, units, holds`**: lists by P/06.1 N1.2; "" means none. Elements are slot names (P/03.2 N1.4), unit ids (P/06.1 N1.3), and hold-place names (P/03.2 N1.3), respectively. These are names, not counts; "0" is not an element.
+- **`<sub>/decommissioned/<host> — slots, units, holds`**: names of the released slots, ids of the removed units, and places of the holds, by the list rule of P/06.1 N1.2; "" means none. Elements are slot names (P/03.2 N1.4), unit ids (P/06.1 N1.3), and hold-place names (P/03.2 N1.3), respectively. These are names, not counts; "0" is not an element.
 
 See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
@@ -2725,7 +2725,7 @@ See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04
 
 <!-- req: P/04-R336 -->
 
-- For the places.wanted trigger, an unreadable wanted row gives no reason to order; log without its value. Another empty place does not itself cause an order.
+- For the places.wanted trigger, an unreadable wanted row gives no reason to order; write a journal line without the value. Another empty place does not itself cause an order.
 
 See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
@@ -2773,7 +2773,7 @@ See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04
 
 <!-- req: P/04-R536 -->
 
-- For a manifest with non-empty door.pass.calls, the want(s) ceiling is 1 instead of WANT_NUM_MAX: a ticket is bound to the server sheet, and there is one sheet per role and server (gate-and-pass, Pass of the second kind). Withhold the remaining needed as for a lack of candidates.
+- For a manifest with non-empty door.pass.calls, the want(s) ceiling is 1 instead of WANT_NUM_MAX: a ticket is bound to the server sheet, and there is one sheet per role and server (gate-and-pass, Pass of the second kind).
 
 See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
@@ -2797,7 +2797,7 @@ See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04
 
 <!-- req: P/04-R540 -->
 
-- With no candidates, withhold the remaining needed: process count in workers_withheld{labels} (P/06.5), words in report short.withheld (N1.2), and alarm workers.no_server {server, labels, want, why}.
+- After all shares, any undistributed needed of the label set is withheld, as with a lack of candidates; with no candidates the entire needed remains. The withheld process count is in workers_withheld{labels} (P/06.5), words in report short.withheld (N1.2), and alarm workers.no_server {server, labels, want, why}.
 
 See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R541.
 
@@ -2991,13 +2991,13 @@ See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04
 
 <!-- req: P/04-R364 -->
 
-- In the cleaning phase of a pending decommission plan, slot_cursor < len(current) and from_cursor <= len(from).
+- Before mutation, validate that slot_cursor < len(current) and from_cursor <= len(from) when the pending decommission plan is in cleaning.
 
 See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R502 -->
 
-- Every from prefix of the pending plan belongs to this subsystem. The from list is frozen at plan acceptance from the declared owned books and is never rebuilt from a later manifest.
+- Before mutation, validate that every from prefix of the pending plan belongs to this subsystem. The from list is frozen at plan acceptance from the declared owned books and is never rebuilt from a later manifest.
 
 See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R503, P/04-R504.
 
@@ -3521,7 +3521,7 @@ See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04
 
 <!-- req: P/04-R428 -->
 
-- In this drill, controllers with already known heartbeats move units and take a new epoch after SLOT_TERM + LOST_AFTER, with all tolerances of N3 and free capacity.
+- In this drill, controllers with already known heartbeats move units after SLOT_TERM + LOST_AFTER, with all tolerances of N3 and free capacity; the new holder takes the next epoch.
 
 See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R427, P/04-R429, P/04-R430, P/04-R431, P/04-R432, P/04-R433.
 
@@ -3597,7 +3597,7 @@ See also: P/04-R067, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04
 
 <!-- req: P/04-R437 -->
 
-- The directory [`../acceptance/`](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417): a stand of the workers and the controller of `testsub` and `testsub2` of the implementation under
+- The directory [`../acceptance/`](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541): a stand of the workers and the controller of `testsub` and `testsub2` of the implementation under
 the control of the runner on a catalogue of two manifests ([the common README of the acceptance](../../common/acceptance/README.md), section «Stand»);
 sc. 12, 14–17 — with the resource P/05 on the server of the controller; the rows are read through the store door P/01.1, the console doors
 (`/where`, `/unplaceable`, `/servers`, `/metrics`) and the pass report object through the resource door.
@@ -3620,7 +3620,7 @@ sc. 12, 14–17 — with the resource P/05 on the server of the controller; the 
 
 <!-- req: P/04-R442 -->
 
-- Detailed case descriptions and their expected outcomes are recorded in [judge-only N5 coverage](04-controller.n5.cases.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417).
+- Detailed case descriptions and their expected outcomes are recorded in [judge-only N5 coverage](04-controller.n5.cases.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541).
 
 <!-- req: P/04-R443 -->
 
