@@ -250,14 +250,14 @@ class IndexRefs(AcceptedForm):
                            ("P/02.1-R001", "not a requirement of P/01")):
             with self.subTest(bad=bad):
                 self.setUp()
-                self.replace(self.REL, "| P/01.1-R019, P/01.1-R020, P/01.1-R073, P/01.1-R118 |",
-                             f"| P/01.1-R019, P/01.1-R020, P/01.1-R073, P/01.1-R118, {bad} |")
+                self.replace(self.REL, "P/01.3-R372, P/01.3-R373 | `forms/daemon-flags.tsv` (`-max-value`)",
+                             f"P/01.3-R372, P/01.3-R373, {bad} | `forms/daemon-flags.tsv` (`-max-value`)")
                 self.assert_error(self.run_checks(), f"{HOME}/{self.REL}",
                                   self.line_of(self.REL, "`row_ceiling`"), words)
 
     def test_order_and_repeat(self):
-        self.replace(self.REL, "| P/01.1-R019, P/01.1-R020, P/01.1-R073, P/01.1-R118 |",
-                     "| P/01.1-R020, P/01.1-R019, P/01.1-R073, P/01.1-R118 |")
+        self.replace(self.REL, "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,",
+                     "| P/01.1-R073, P/01.1-R019, P/01.1-R118, P/01.1-R131,")
         self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "`row_ceiling`"), "ascending")
 
     def test_file_addresses_two_roots_no_fallback(self):
@@ -280,7 +280,7 @@ class IndexRefs(AcceptedForm):
 
     def test_translation_row_differs(self):
         rel = "ru/" + self.REL
-        self.replace(rel, "P/01.1-R019, P/01.1-R020, P/01.1-R073, P/01.1-R118", "P/01.1-R019, P/01.1-R073, P/01.1-R118")
+        self.replace(rel, "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,", "| P/01.1-R019, P/01.1-R118, P/01.1-R131,")
         check = self.run_checks()
         self.assertTrue(any(e.startswith(f"{HOME}/{rel}: line ") and "index row differs" in e for e in check.errors),
                         check.errors)
@@ -408,8 +408,8 @@ class ProductionScoped(AcceptedForm):
                           self.line_of(self.REL, "fixed-size write **Scope"), "inside a paragraph")
 
     def test_label_opening_a_second_paragraph_of_a_requirement(self):
-        self.replace(self.REL, "\nSee also: P/01.1-R149, P/01.1-R150.",
-                     "\n**Scope: production.** A second paragraph.\n\nSee also: P/01.1-R149, P/01.1-R150.")
+        self.replace(self.REL, "\nSee also: P/01.1-R149, P/01.1-R150, P/01.1-R151, P/01.1-R302,",
+                     "\n**Scope: production.** A second paragraph.\n\nSee also: P/01.1-R149, P/01.1-R150, P/01.1-R151, P/01.1-R302,")
         self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "A second paragraph"),
                           "not the first after a req anchor")
 
@@ -500,7 +500,8 @@ class StageA(AcceptedForm):
 
     def test_stage_a_judges_only_its_three_checks(self):
         self.replace("spec/01.1-store.norms.md", "- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15**")
-        self.replace("spec/01.1-store.norms.md", "| P/01.1-R019, P/01.1-R020,", "| P/01.1-R020, P/01.1-R019,")
+        self.replace("spec/01.1-store.norms.md", "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,",
+                     "| P/01.1-R073, P/01.1-R019, P/01.1-R118, P/01.1-R131,")
         self.replace("forms/runtime-constants.tsv", "\n", "\n# the constants of ADR-0129\n")
         self.replace("data/epoch_floor.outcomes.tsv", "\n", "\n# reconciliation of python and go\n")
         check = self.run_stage_a()
