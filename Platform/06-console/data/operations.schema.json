@@ -25,7 +25,7 @@
   },
   "iat": {
    "type": "number",
-   "description": "iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2; ADR-0100 §3) Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.",
+   "description": "iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2) Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.",
    "x-codec": [
     "number"
    ]

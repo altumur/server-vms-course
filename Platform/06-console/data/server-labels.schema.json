@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "labels": {
-   "description": "the server's labels by the list rule (comma-separated, otherwise a JSON array; codec array); \"\" — none: the server reaches no label; the row wins over the node labels; without repeats (the label alphabet `set`; analysis of review of stage B 6–7, № 40)",
+   "description": "the server's labels by the list rule (comma-separated, otherwise a JSON array; codec array); \"\" — none: the server reaches no label; the row wins over the node labels; without repeats (the label alphabet `set`)",
    "type": "array",
    "items": {
     "description": "a label — 1–64 ASCII characters, the first a letter/digit, then a letter/digit, `_`, `.`, `:`, `-`; a line break is not allowed (the label alphabet, common/contracts/labels.md)",
@@ -17,7 +17,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»)",
    "x-whole": true,
    "x-codec": [
     "integer"

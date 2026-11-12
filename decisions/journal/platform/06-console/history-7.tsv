@@ -279,3 +279,4 @@ P/06.7-R025	spec/06.7-console.norms.md#N5	ADR-0119	2026-11-11	- [ ] **P/06.7-19*
 -	spec/06.7-console.norms.md#N5	coverage audit of P/06 (ru)	2026-11-11	 — второй проход аудита покрытия P/06
 P/06.7-R025	spec/06.7-console.norms.md#N5	the Architect's decision on the reconciliation of M11, X13	2026-11-11	(X13)
 -	spec/06.7-console.norms.md#N5	the Architect's decision on the reconciliation of M11, X13; ru	2026-11-11	(X13)
+P/06.7-R096	spec/06.7-console.norms.md#N1.9	GP-G05 (guess of stage C); the Architect's decision of 2026-10-23	2026-10-23	 (GP-G05)

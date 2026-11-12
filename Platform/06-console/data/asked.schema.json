@@ -6,7 +6,7 @@
    "description": "the person's reserved/unanswered rids — a list (P/06.1 N1.2 `list`; codec array; a rid with a comma — a JSON array); \"\" — none",
    "type": "array",
    "items": {
-    "description": "rid by the grammar of the contract of the request and its mark `rid` (vectors vectors/rid/; analysis of review of stage B 6–7, № 24)",
+    "description": "rid by the grammar of the contract of the request and its mark `rid` (vectors vectors/rid/)",
     "type": "string",
     "not": {
      "anyOf": [

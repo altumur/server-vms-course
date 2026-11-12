@@ -20,7 +20,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»)",
    "x-whole": true,
    "x-codec": [
     "integer"

@@ -52,7 +52,7 @@
    ]
   },
   "outcome": {
-   "description": "the outcome — a closed list (ADR-0054); gone — the addressee unit is absent, closed by the reaper (ADR-0091 addendum (11) item 4); no field — begun without an outcome (being executed)",
+   "description": "the outcome — a closed list; gone — the addressee unit is absent, closed by the reaper; no field — begun without an outcome (being executed)",
    "type": "string",
    "enum": [
     "performed",
@@ -66,7 +66,7 @@
    ]
   },
   "action": {
-   "description": "the value of the field action of the request body (the request contract «Request» action), not the handler name; for a body with action, mandatory at performed/refused after the call, optional at unknown; for a body without action, there is no field (analysis of review of stage B 6–7, № 16)",
+   "description": "the value of the field action of the request body (the request contract «Request» action), not the handler name; for a body with action, mandatory at performed/refused after the call, optional at unknown; for a body without action, there is no field",
    "type": "string",
    "x-codec": [
     "string"
