@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[3]
 LESSON = ROOT / "Platform/01-store"
 
 
-# Frozen prose witness from ec48a8949, before the form became the sole source.
+# Frozen prose witness from ec48a8949, before the form became the sole source. Two rows follow later form
+# changes: the flag -api-bind (9d0271662, P01.233, P/01.3-R409) and `import`, `restore` in the commands of
+# -max-value (c51d4d70e, P01.177); the meaning cells are those of the current P/01.3 «Daemon flags» list.
 LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, A8). A flag outside the table is a start refusal, code 2. The machine form of the table — [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv) (ADR-0125): type, default, required, commands; `check_spec` checks that it agrees with this table.
 
 | Flag | Type | Default | Meaning |
@@ -31,6 +33,7 @@ LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, 
 | `-raft` | `host:port` | none | the raft address that the daemon names to its partners |
 | `-raft-bind` | `host:port` | `-raft` | the address on which the daemon listens for raft, if it differs from the named one |
 | `-api` | `host:port` | none: without it there is no service HTTP door for partners | the address of the service doors of N2 for partners; the value of `members` and `leader` in `/v1/status`; without `-api` the member is not in `members` (the map can be `{}`; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26) |
+| `-api-bind` | `host:port` | `-api` | the address on which the daemon listens for the service doors of N2, if it differs from the declared `-api` (R409) |
 | `-bootstrap` | no value | off | the first server of the group (`join` above); with `-join` — a start refusal |
 | `-join` | `host:port` | none | the `-api` address of a group member through which the daemon joins (`join` above); always with `-tls` |
 | `-group-size` | `1` \| `3` \| `5` | `1` | the declared group size, the same on all servers |
@@ -42,7 +45,7 @@ LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, 
 | `-voters` | a comma-separated list `id@host:port` | none: required with `-door`, without it a start refusal, code 2 | the voters for a door without a vote: the id and the `-api` address |
 | `-tuning` | `default` \| `lan` \| `slow` | `default` | the raft timing profile (`tuning` above) |
 | `-leader-wait` | duration | `5s` | the leader wait (`leader_wait` above) |
-| `-max-value` | bytes, > 0 (`0` and not a number — a start refusal, code 2; reconciliation of python and go M10/6–11, B7) | `512KiB` | the row ceiling (chapter 1.1 N4, `{row_ceiling}` of «Stand») |
+| `-max-value` | bytes, > 0 (`0` and not a number — a start refusal, code 2; reconciliation of python and go M10/6–11, B7) | `512KiB` | the row ceiling (chapter 1.1 N4, `{row_ceiling}` of «Stand»); also of `import`, `restore`: the ceiling of the offline transfer on a box |
 | `-max-body` | bytes, > 0 (as `-max-value`) | `1MiB` | the read limit of the HTTP body of `POST /v1/write` (chapter 1.1 N2, `{body_limit}` of «Stand»), separately from the row ceiling `-max-value` (log of cammeta-python, lesson 11 № 24) |
 | `-max-conns`, `-api-conns`, `-api-per-address` | integer > 0 | 64, 32, 8 | connection limits (below) |
 | `-index-base` | integer ≥ 0 | 0 | for `import`: the version base (`import` above) |

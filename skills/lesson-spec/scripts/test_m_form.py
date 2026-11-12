@@ -519,6 +519,14 @@ class LessonWithoutList(AcceptedForm):
             common["files"] = sorted(common["files"] + [r for r in data[side] if r["path"] != f"{HOME}/forms/export.json"],
                                      key=lambda r: r["path"].encode("utf-8"))
             path.write_text(json.dumps(common, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # A lesson without its own list has no history of that list: the rows addressing forms/export.json
+        # (cece6f6ea P01.257, 4ae6c4271 P01.259) go with the file, every other row of the journal stays.
+        for path in (self.root / JOURNAL).glob("history*.tsv"):
+            lines = path.read_text(encoding="utf-8").split("\n")
+            kept = [line for line in lines if not line.split("\t")[1:2] or
+                    not line.split("\t")[1].startswith("forms/export.json")]
+            if kept != lines:
+                path.write_text("\n".join(kept), encoding="utf-8")
 
     def test_judged_by_the_common_filter(self):
         self.move_list_to_common()

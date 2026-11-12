@@ -179,6 +179,7 @@ class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one
     # The frozen English P/06 slice activates cell-json in the real seams table (spec, origin/spec/0121-p06-review-source
     # fb66713ba, parent 01c2ef539; decisions/inbox/2026-11-06-p06-full-english/seams8-four-cells.json). Exactly four
     # cells are marked: the request of the four data lines. The declaration shifts the former physical lines 3–6 to 4–7.
+    # Since d5e9ab4b4 the table has eight data lines, 4–11, each with its marked request cell (below).
     # Per cell: physical line, scenario, SHA-256 of the raw (JSON-encoded) source cell, SHA-256 of the decoded request
     # (= before_sha256 of the former raw cell = the proof row), SHA-256 of the unmarked expect cell.
     SEAMS_CELLS = (
@@ -194,6 +195,20 @@ class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one
         (7, 's04-membership-key-too-long', '88c608ca6e07f4ad021227850043bec1375700414c6d725f03d024a2424f552b',
          'b5c9a6cf771703e9d77dcaeb9305911009f7232d66435c3fee63fc1fcd24daa9',
          'c0cadec3604415fb97e9abcec72585c52cdb111c3c82af4ab5508af33507ceb9'),
+        # d5e9ab4b4 (ADR-0083 (145), the accepted P06 share) added four data lines, s05–s08, with their proof rows in
+        # cell-json-sha256.tsv; the first four cells above are unchanged byte for byte.
+        (8, 's05-delete-explicit-folder-conflict', 'e487ec2e4650d9031615bebab0d962bf98adecabcf5da2ee827b5d9f66996a4f',
+         'beb66902dcce4dcd3a57f3e7a5e58b6eea8dbfed94ec3fcafbac4b80c4aac10a',
+         '8e035287e9e22dbff3315f6080be0622340196af1023f9e3382e03e925726d9d'),
+        (9, 's06-delete-explicit-membership-conflict', 'da90ccad9c73f2e51312900aac857238b9f45ff2296d9b2f6111dbf52bc7cd41',
+         '0691ca93ff53255580e4d5c4f417ddce179932b31fe4769926e781698d119f6f',
+         '58b19b9ef020470ebcfb53c3c0f2eb1f8bfbb2503db193d987d8f61bf8833c80'),
+        (10, 's07-delete-explicit-consistent', 'c1f053826da5d0f0330daf2b2ceb0c88f6759185fa8abb561a8ef424cb7e3142',
+         '05caabf346d6b28c8c543ebec5bb1145bc7314121fefc57806032ea90f6c333b',
+         '0abed79b1b14b8201b0c6e7bd075cb2e2838a3a2cc232bf4a8234f642b7c2d75'),
+        (11, 's08-delete-explicit-folder-only', '30b028b3ba4a07026ce5d00747306e167ab04f09ff99fd8ba29aecd01c85e949',
+         '121137164c27d5f262d0a751cc7a095fd9579461c598f61bce59c517cf9fece5',
+         '0abed79b1b14b8201b0c6e7bd075cb2e2838a3a2cc232bf4a8234f642b7c2d75'),
     )
 
     def test_real_seams_four_marked_cells(self):
@@ -205,14 +220,14 @@ class SeamsBinding(unittest.TestCase):               # Architect 2026-11-06: one
         self.assertEqual((columns, positional), (['scenario', 'step', 'request', 'expect'], True))
         names, rows, errors = source_cells.table(text, columns, positional)
         self.assertEqual((names, errors), (('request',), []))
-        # one declaration first, the two former comment lines after it, then exactly the four data lines
+        # one declaration first, the two former comment lines after it, then exactly the data lines of SEAMS_CELLS
         self.assertEqual(lines[0], '# cell-json: request')
         self.assertEqual([n for n, line in enumerate(lines, 1) if line.startswith('#')], [1, 2, 3])
         self.assertEqual([n for n, line in enumerate(lines, 1) if line and not line.startswith('#')],
                          [cell[0] for cell in self.SEAMS_CELLS])
         self.assertEqual(lines[-1], '')
         self.assertEqual([line for line, _ in rows], [cell[0] for cell in self.SEAMS_CELLS])
-        # the proof rows of this table: exactly the four request cells, before = decoded
+        # the proof rows of this table: exactly the request cells of SEAMS_CELLS, before = decoded
         manifest = (ROOT / 'Platform/common/data/cell-json-sha256.tsv').read_bytes().decode('utf-8')
         proof = {}
         for line in manifest.split('\n'):

@@ -177,17 +177,22 @@ class RegisteredSharedLessonControls(unittest.TestCase):
         from types import SimpleNamespace
         from unittest.mock import patch
         import check_spec
+        # The other steps of the pipeline are replaced; target_registry (422023b41, P02.50) and export_lists
+        # (58020e558, P02.54) joined it with ADR-0135 addendum (14) and judge the common registry and filters,
+        # which this fixture of the shared lesson does not hold.
         methods = ("lesson", "vector_hashes", "outcome_readers", "family_read", "common_contracts",
                    "stub_text", "library_defects", "layer_words", "english_mirrors", "check_tables",
-                   "check_machines", "check_forms", "check_cyrillic")
+                   "check_machines", "check_forms", "target_registry", "export_lists", "check_cyrillic")
         args = SimpleNamespace(root=self.root, exceptions=None, strict_coverage=False,
                                cyrillic_debt=self.root / "debt.tsv")
         with ExitStack() as stack:
             stack.enter_context(patch.object(check_spec, "environment", return_value=[]))
             stack.enter_context(patch.object(Check, "lessons_table", return_value=(False, [])))
-            for method in methods:
-                stack.enter_context(patch.object(Check, method))
+            replaced = {method: stack.enter_context(patch.object(Check, method)) for method in methods}
             result = check_spec._platform_phase(args, ["Platform/01-store/01-store.md"])
+        for method, mock in replaced.items():
+            with self.subTest(method=method):
+                mock.assert_called_once()
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["registered_shared_lessons"], 1)
         self.assertEqual(result.stats["norm_ids"], 1)

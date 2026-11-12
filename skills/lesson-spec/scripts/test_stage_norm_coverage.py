@@ -170,13 +170,23 @@ class StageNormCoverageControls(unittest.TestCase):
         home = ROOT / "Platform/01-store"
         result = Check(ROOT, scope="platform")
         result.stage_norms(home, "P/01")
-        expected = [value for path in sorted((home / "spec").glob("*.norms.md"))
-                    for value in re.findall(r"(?m)^- \[ \] \*\*(P/01\.[0-9]+-[0-9]{2})\*\*",
-                                            path.read_text(encoding="utf-8"))]
+        texts = [path.read_text(encoding="utf-8") for path in sorted((home / "spec").glob("*.norms.md"))]
+        expected = [value for text in texts
+                    for value in re.findall(r"(?m)^- \[ \] \*\*(P/01\.[0-9]+-[0-9]{2})\*\*", text)]
+        # A withdrawn item («removed: `ADR-…`») keeps its id and needs no stage (P01.228, 408deb448); P01.257
+        # (af760f774) withdrew P/01.1-21 and the stage table dropped it. Every other item is placed exactly once.
+        withdrawn = [value for text in texts
+                     for value in re.findall(r"(?m)^- \[ \] \*\*(P/01\.[0-9]+-[0-9]{2})\*\* removed: `ADR-[0-9]{4}`", text)]
         self.assertTrue(expected)
+        self.assertTrue(set(withdrawn) < set(expected))
+        placed = [value.strip() for line in (home / "forms/stages.tsv").read_text(encoding="utf-8").split("\n")
+                  if line and not line.startswith("#") for value in line.split("\t")[3].split(";")
+                  if re.fullmatch(r"P/01\.[0-9]+-[0-9]{2}", value.strip())]
+        self.assertEqual(sorted(placed), sorted(value for value in expected if value not in withdrawn))
         self.assertEqual(result.errors, [])
         self.assertEqual(result.stats["stage_norm_items"], len(set(expected)))
-        self.assertEqual(result.stats["stage_norm_placements"], len(expected))
+        self.assertEqual(result.stats["stage_norm_withdrawn"], len(set(withdrawn)))
+        self.assertEqual(result.stats["stage_norm_placements"], len(expected) - len(withdrawn))
 
 
 if __name__ == "__main__":
