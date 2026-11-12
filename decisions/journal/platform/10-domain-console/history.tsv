@@ -228,3 +228,81 @@ P/10-R017	spec/10-domain-console.norms.md#implementation-decides	M11/11	2026-11-
 -	spec/10-domain-console.api.openapi.yaml#/components/schemas/SharedView/properties/delivery/description	C10-SHARED-OPAQUE-COPY-01	2026-11-11	(N1.2f, C10-SHARED-OPAQUE-COPY-01)
 -	acceptance/README.md#store-rows-on-the-stand	P/10 coverage audit, second pass (Gemini)	2026-11-11	## Coverage audit of P/10, the second pass (Gemini)
 -	vectors/alarms/README.md#intro	M11/11 acceptance, scenario 04, inputs/alarms-*.json	2026-11-11	`case` is the name of the input file
+-	forms/stages.tsv#header	ADR-0126	2026-11-12	 (ADR-0126)
+-	forms/stages.kit.tsv#header	ADR-0126	2026-11-12	 (ADR-0126)
+-	data/refusal-words.tsv#header	ADR-0094 B5	2026-11-12	 (ADR-0094 B5)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	C10-ROLE-NOKIT-01	2026-11-12	; C10-ROLE-NOKIT-01
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	M11 reconciliation	2026-11-12	 (reconciliation of M11)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_401	ADR-0083 addendum (19) item 2; ADR-0090 review 27	2026-11-12	 (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	C10-ROLE-NOKIT-01	2026-11-12	; C10-ROLE-NOKIT-01
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	M11 reconciliation	2026-11-12	 (reconciliation of M11)
+P/10-R015	forms/refusals.tsv#row:name=c10_001_403	ADR-0083 addendum (19) item 2; ADR-0090 review 27	2026-11-12	 (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 27)
+P/10-R015	forms/refusals.tsv#row:name=c10_002_404	M11 reconciliation D4	2026-11-12	; reconciliation of M11, D4
+P/10-R015	forms/refusals.tsv#row:name=c10_010_503	V7 item 3; Architect 2026-10-28 P1	2026-11-12	; V7 item 3, the Architect's decision of 2026-10-28, P1; lines 36, 42, 43, 50, 54 of the list
+P/10-R015	forms/refusals.tsv#row:name=c10_014_409	ADR-0091 addendum (15) item 4	2026-11-12	; ADR-0091 addendum (15) item 4
+-	spec/10-domain-console.norms.md#readiness-checklist	P10.10; readiness introduction	2026-11-12	the norm id `P/10-MM` is what the deltas of decisions,
+-	spec/10-domain-console.norms.md#readiness-checklist	P10.10; readiness introduction	2026-11-12	findings and window records refer to.
+-	forms/refusals.tsv#header	P10.10; final form of refusal catalogue	2026-11-12	Original three N4 cells are preserved as word/outcome/cause.
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	preserves all 16 original N4 rows as 25 code projections
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	word/outcome/cause contain the original three cells byte for byte
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	for those source rows
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	chapter=10 and row preserve the published addresses
+-	forms/README.md#refusal-catalogue	P10.10; final form of refusal catalogue	2026-11-12	The added names GateDenied
+P/10-R015	spec/10-domain-console.norms.md#N4	P10.10; final form of refusal catalogue	2026-11-12	row retains the former N4 row number.
+P/10-R015	spec/10-domain-console.norms.md#N4	P10.10; final form of refusal catalogue	2026-11-12	word/outcome/cause preserve the original three cells verbatim;
+P/10-R002	spec/10-domain-console.norms.md#N0	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	**Scope: production.** The [common production obligations](../../common/contracts/production-obligations.md) apply here.
+P/10-R342	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **silence_line** — a silent member — an alarm row {t: silent_since, kind: silent | not_reporting, class: alarm, member,
+P/10-R343	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **subsystem** — "domain", last_report, ongoing: true, alive_at?, alive_via?} — always, while it is silent
+P/10-R472	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- «accept by a console» and the role door
+P/10-R472	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	(N1.4) — until the TLS stand;
+P/10-R473	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the reader's side of the manifest row at start (N1.1) — the domain console has no step in acceptance;
+P/10-R474	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the deadline «Wait» of the passing (502 on
+P/10-R474	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	silence not earlier than the deadline) and `answer broke off` — acceptance does not measure the answer time and does not break the answer of the process (502 on
+P/10-R474	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	a break and on silence — sc. 08, 09);
+P/10-R475	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- `not in the directory` — the manifests of the stand have `domain.ref`;
+P/10-R476	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- that the domain console does not recompute `deposed`, `frozen`,
+P/10-R476	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	`standby` (N1.3) — the stands of chapters 8.8, 8.10 through `holder`;
+P/10-R477	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the role journal — acceptance does not compare the journal;
+P/10-R478	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the family of witnesses in
+P/10-R478	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	the report;
+P/10-R479	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- there is no row `domain/placement`  and there is no row `domain/keys` with a trace of the domain (`shut`) —
+P/10-R479	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	the door `admin.sock` cannot remove a row under `domain/` (P/01.2 N1.3 `never`);
+P/10-R480	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- a generation `reports/<rev>` not by the `sha256`
+P/10-R480	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	of the mark  — the key carries `rev` of the mark, the directive `@spoil object` takes the key as is;
+P/10-R481	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- `X-Operator: console` at
+P/10-R481	spec/10-domain-console.norms.md#N5	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	a proven role — until the TLS stand.
+P/10-R038	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
+P/10-R038	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	`domain/grants/<cluster>`, `domain/roles/<name>`, `domain/groups/<name>` — the gate (N1.5; the keys and the token — [the domain token contract](../../common/contracts/domain-token.md),
+P/10-R038	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	`may` — [the right contract](../../common/contracts/may.md));
+P/10-R039	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- `domain/member-rows/<part>` and the rows
+P/10-R039	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	`domain/members/<member>/ca-certs` — the role door (N1.4 `server.role`; the domain console does not read the copy `domain/member-list/<part>`);
+P/10-R040	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- `domain/<sub>/worker` and the heartbeat `domain/<sub>/heartbeat` —
+P/10-R040	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	`door.pass` on the domain (N1.6);
+P/10-R041	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the member's report, the mark `reported` (`received_at`, `sent_at`), the history and `domain/member-rows/<part>` — the alarm
+P/10-R041	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	list (N1.8);
+P/10-R042	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the manifest rows and `platform/schema` — the start (N1.1);
+P/10-R043	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the key of the server certificate of the role `domainconsole` — the role door
+P/10-R043	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	of TLS.
+P/10-R048	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- step 1 — the whole catalogue;
+P/10-R049	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- step 2 — only `sha256` of the row (there are no built-in bytes to compare with);
+P/10-R050	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- then the environment, the kit
+P/10-R050	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	of TLS, the port;
+P/10-R056	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- there are no deviations of its own.
+P/10-R223	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- here is the side
+P/10-R223	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	of the domain console.
+P/10-R236	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- here is the passing.
+P/10-R267	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the refusal is
+P/10-R267	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	401 `{error: denied, detail: "token refused: <word>"}` (the form of P/06.3), except `no_revocations` and a row `domain/keys` that exists
+P/10-R267	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	but does not read (there is nothing to check the token with): the rule «Unreadable row» of the gate-and-pass contract
+P/10-R267	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	(503 `{error: "unavailable"}`).
+P/10-R275	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- at the others its group is not counted in `may`.
+P/10-R084	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **Refusals** — other parameters are not read
+P/10-R110	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **Refusals** — other parameters are not read
+P/10-R099	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **Refusals** — never truncate
+P/10-R102	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **Success** — one member per request: the object is bounded by P/04 N1.3b, there is no list of all
+P/10-R186	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **Refusals** — there is no row `domain/topology` — not a refusal: 200 `{rev: 0, star: [], via: {}}` (P/08.3 N1.2: rev 0 — «never written», no row — the same);
+P/10-R227	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- **pass** — X-W2C-Client — the address of the client's TCP peer: the domain console sets it;
+P/10-R362	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- each row there is a door of the domain console, it has no other door `/domain/*`.
+P/10-R410	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- the native input's witness `ts` is already domain time.
+P/10-R122	spec/10-domain-console.norms.md#N1	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	- Select up to the remaining page budget, then continue inside this part on the next request if needed.
+-	forms/README.md#refusal-catalogue	P10.10 judge Н1–Н3, З1–З5; ADR-0133 (72)	2026-11-12	the preserved source cells and OpenAPI

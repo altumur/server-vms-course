@@ -1,4 +1,4 @@
-# A possible implementation order for P/10 (ADR-0126): a plan, not a norm or a reduction of the readiness checklist. Read all norms and imported contracts in full.
+# A possible implementation order for P/10: a plan, not a norm or a reduction of the readiness checklist. Read all norms and imported contracts in full.
 # Single-chapter address 10 maps to acceptance/scenarios.tsv and acceptance/seams.tsv, not acceptance/10/.
 # gate: checks separated by ;. tests:10:<cases>:seams is kit stagetests over CALL seams; vectors:alarms is the lesson vector; accept:10:* is the runner's process scenarios; build is the profile build. Former gates keep holding.
 # weight relative 1–5; kit closes a whole stage (none claimed: every stage is kit=-); parts lists reused kit pieces; depends lists earlier n; when=true applies always.
