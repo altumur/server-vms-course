@@ -6,9 +6,7 @@
 подсистемы с `requests.free` (отвечают полем пульса `freeing`, [P/03.4](../../../../03-worker/ru/spec/03.4-worker.norms.md) N1.1).
 Байты пишет «Спецификация».
 
-## `cases.tsv`
-
-Таблица только для судьи (judge-only: проверки P/05-R025 и P/05-R053).
+## Векторы просьбы
 
 UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются, первая непропущенная — заголовок `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, volume, sub, server, heartbeats}`: строка `platform/space` (`enabled`, `high`, `low`), том ресурса (`name`,
@@ -16,13 +14,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 поле пульса или его нет); `expect` — `{action: write, free}` (записать или переписать строку с `free`), `{action: delete}`
 (снять свою строку) или `{action: none}` (просьбы нет).
 
-## `short.tsv`
-
-Таблица только для судьи (judge-only: проверки P/05-R025 и P/05-R053).
+## Векторы дефицита
 
 Поле пульса ресурса `short` (P/05 N1.4). Те же правила файла; заголовок `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, server, volumes, subs, heartbeats}`: строка `platform/space`, сервер ресурса, тома (`name`, `used`, `total`),
-подсистемы с `requests.free`, пульсы воркеров (как в `cases.tsv`; judge-only: P/05-R025, P/05-R053); `expect` — `{short: <целое>}`: Σ по томам наибольшей `need`
+подсистемы с `requests.free`, пульсы воркеров (той же формы, что в векторах просьбы выше); `expect` — `{short: <целое>}`: Σ по томам наибольшей `need`
 (> 0) среди подсистем — у каждой подсистемы `need` тома по N3 `relieve` (`used − total·low − Σ freeing`, вверх до байта), только
 у тома выше `high`. 6 случаев: два тома и две подсистемы, том ниже `high`, всё освобождается, `space` выключен, нет подсистем,
 округление вверх.

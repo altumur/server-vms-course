@@ -19,9 +19,9 @@
 #var door_family bool — the key belongs to an admitted door family, not a row object
 #var key_exists bool — the admitted key exists among the answering servers
 n	id	procedure	when	outcome	flow	norm
-1	wait-replace	wait	named_identity && former_wait	replaced	next	P/05-R249
+1	wait-replace	wait	named_identity && former_wait	replaced	next	P/05-R152
 2	wait-full	wait	waiting >= waiter_limit	full	stop	P/05-R152
-3	wait-admit	wait	true	admit	stop	P/05-R249
+3	wait-admit	wait	true	admit	stop	P/05-R152
 4	retention-unknown	retention	term_unknown	unknown	stop	P/05-R234
 5	retention-garbled	retention	days_garbled	days_garbled	stop	P/05-R234
 6	retention-holds	retention	holds_unread	holds_unread	stop	P/05-R234
@@ -30,5 +30,5 @@ n	id	procedure	when	outcome	flow	norm
 9	presence-gone	presence	in_workers	gone	stop	P/05-R087
 10	presence-unlisted	presence	true	unlisted	stop	P/05-R087
 11	key-form	object-key	!key_form	400 ResourceError	stop	P/05-R109
-12	key-family	object-key	!door_family	403 ResourceError	stop	P/05-R253
-13	key-missing	object-key	!key_exists	404 ResourceError	stop	P/05-R254
+12	key-family	object-key	!door_family	403 ResourceError	stop	P/05-R109
+13	key-missing	object-key	!key_exists	404 ResourceError	stop	P/05-R109
