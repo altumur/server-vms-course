@@ -492,7 +492,7 @@ refusedStatus	refused {s}	отказ {s}
 takenAt	taken	принята
 noEdits	no edits	правок нет
 debugBadge	debug: no sign-in	отладка: вход без пароля
-debugTip	The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only). Your rights are this person's.	Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд). Права — этого человека.
+debugTip	The door let you in without a password: a request from this machine, W2C_DEBUG_PERSON is set (a stand only, ADR-0050). Your rights are this person's.	Дверь впустила без пароля: запрос с этой машины, задан W2C_DEBUG_PERSON (только стенд, ADR-0050). Права — этого человека.
 n.late	late: after the deadline	поздно: после срока
 n.performed	performed	выполнена
 n.refusedW	refused	отказ
