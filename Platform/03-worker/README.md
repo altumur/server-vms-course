@@ -28,13 +28,13 @@ These common files supply definitions used by the chapters, the implementation i
 | [Normative terms](../common/NORMATIVE-TERMS.md) | N0: the force of MUST, SHOULD and MAY |
 | [Store client](../common/contracts/store-client.md) | Address; Request; Answer; Outcomes and what the client does — SDK reads, CAS, guards and an ambiguous write |
 | [Object client](../common/contracts/object-client.md) | Address; Operations; Outcomes and what the client does — read unit and place objects without turning a non-answer into absence |
-| [Observation](../common/contracts/observation.md) | Observation of a version; Freshness; Hold of a place; Freshness of a contender mark — the reader clock and version age |
+| [Observation](../common/contracts/observation.md) | Observation of a version; Freshness; Hold of a place; Server decommissioned; Freshness of a contender mark — the reader clock, version age and server withdrawal |
 | [Slot](../common/contracts/slot.md) | Form; States; Terms — the shared meaning of a slot and its release states |
 | [Slot name](../common/contracts/slot-name.md) | Grammar and «by name»; Slot order; Next number — candidate names and their ordering |
 | [Instance](../common/contracts/instance.md) | Instance — process identity and the box part of the holder |
 | [Presence lock](../common/contracts/presence-lock.md) | Lock; Production obligations — ownership of the process name, inode retries, finite cancellation |
 | [Labels](../common/contracts/labels.md) | Label; Label list — the input alphabet and list grammar |
-| [Environment file](../common/contracts/env-file.md) | Grammar; Files and reading order; Environment variables — launcher inputs consumed by the SDK |
+| [Environment file](../common/contracts/env-file.md) | Grammar; Files and reading order; Environment variables; Constants and units — launcher inputs and timings consumed by the SDK |
 | [Schema](../common/contracts/schema.md) | Schema; Check at start — worker startup and the check after renewal |
 | [Sealing](../common/contracts/sealing.md) | Envelope; AAD path; Ring file — the recipient opening secrets before taking an epoch |
 | [Request and mark](../common/contracts/request-mark.md) | Request; Mark; States of an executed request and its mark; fetched — admission, the single call and an unknown outcome |
@@ -45,7 +45,7 @@ These common files supply definitions used by the chapters, the implementation i
 | [Domain keys](../common/contracts/keys.md) | The set `domain/keys`; Revocations `domain/revoked`; The function `keys` — accepted keys and revocations |
 | [Local token door](../common/contracts/local-token-door.md) | The role socket; The door; Refusals; The call in the process — domain-worker token access |
 | [Role certificate](../common/contracts/role-certificate.md) | The server side: the class `role`; The server side: the class `mixed` — process-door admission |
-| [Production obligations](../common/contracts/production-obligations.md) | Finite budgets and observable completion; Public acceptance and missing bindings — production qualification |
+| [Production obligations](../common/contracts/production-obligations.md) | Finite budgets and observable completion; Public acceptance and missing bindings — operation budgets and completion evidence |
 | [Data catalog](../common/data/catalog.tsv) | Owned files, keys and readers — the data-families sections of the chapters |
 | [Data codec](../common/data/codec.tsv) | Storage of family values — string row fields and object JSON values |
 | [Common acceptance](../common/acceptance/README.md) | Stand; Dictionary of directives and doors — the common process stand and scenario grammar |
@@ -55,11 +55,20 @@ These common files supply definitions used by the chapters, the implementation i
 | [Pass acceptance](../common/acceptance/pass/README.md) | Stand-in worker of the pass of the second kind — the boundary between the stand-in and a real worker door |
 | [TLS acceptance](../common/acceptance/tls/README.md) | Doors and clients of the probe; Outcome of a probe; Expectations — certificate and chain checks |
 | [System acceptance](../common/acceptance/system/README.md) | Stand; Scenarios; Scenario boundaries — recovery, host loss and the domain dependencies |
-| [Dependency versions](../common/versions/README.md) | Pinned modules — the data-family validator and other assigned dependencies |
+| [Dependency versions](../common/versions/README.md) | Pinned versions: the version table and module-cache rules before «Raft library and implementation boundary» — the data-family validator and SDK dependencies |
 | [Vector protocol](../common/vectors/wire.md) | Rows and sources; Input selection and groups; Comparison and assertions — assigned shared packages |
 | [Shared schema definitions](../common/data/common.schema.json) | `$defs` used by the owned families — common scalar and object shapes |
 | [Vector consumers](../common/vectors/consumers.tsv), [wire table](../common/vectors/wire.tsv) | Assigned shared packages of consumer `03-worker` and their input/output bindings |
-| [Sealing vectors](../common/vectors/sealing/README.md), [door-token vectors](../common/vectors/door-token/README.md), [domain-token vectors](../common/vectors/domain-token/README.md) | judge-only: package definitions and vector tables; checks of P/03.5-R005 (opening), P/03.4-R026 (door tokens) and P/03.7-R009 (domain tokens) |
+| [Sealing vectors](../common/vectors/sealing/README.md), [door-token vectors](../common/vectors/door-token/README.md), [domain-token vectors](../common/vectors/domain-token/README.md) | judge-only: package definitions and vector tables; checks of P/03.5-R005 (opening) and P/03.5-R020, P/03.5-R031 (ring-text parsing), P/03.4-R026 (door tokens) and P/03.7-R016, P/03.7-R064, P/03.7-R065, P/03.7-R066 (domain-token verification) |
+
+| [Row check](../common/contracts/row-check.md) | Unit row; The customer’s row: `made`; Unit state; Preparation of fields; Identifier and field constraints — row types, life ids, ordered rows and state guards |
+| [Pool](../common/contracts/pool.md) | Live worker; Pool; Keeper of a place with `distinct`; Server eligibility: `placeable`, `why` — capacity, weight, headroom and admission of places |
+| [Forwarding](../common/contracts/forwarding.md) | Client address; Domain worker pass hop policy — `X-W2C-Client` and the domain-worker forwarding boundary |
+| [Domain envelopes](../common/contracts/domain-envelopes.md) | Contribution; Content of `sealed` — the `entry` input and contribution envelope |
+| [Event merge](../common/contracts/events-merge.md) | The participant; The merge; Epochs; The answer — `worker.reads`, epoch failures and incomplete event output |
+| [Code-check dictionary](../common/acceptance/forms/code-rules.tsv) | Header and kind rows — the closed kinds, arguments and name types used by the lesson code rules |
+| [Common target registry](../common/acceptance/forms/targets.tsv) | Column header — the common target-row form used by the lesson target inventory |
+| [Pinned Go modules](../common/versions/go.mod) | Required modules — the module and version source of the `json_schema` code-check row |
 
 ### Other external files and exact sections
 
@@ -103,5 +112,9 @@ The external files and sections referenced by this lesson's M. A closed-file ent
 | `Platform/common/acceptance/seams.md` | [`#seam-adapter-protocol`](../common/acceptance/seams.md#seam-adapter-protocol) |
 | `Platform/common/contracts/sealing.md` | [file](../common/contracts/sealing.md), [`#aad-path`](../common/contracts/sealing.md#aad-path), [`#envelope`](../common/contracts/sealing.md#envelope), [`#ring-file`](../common/contracts/sealing.md#ring-file) |
 | `Platform/common/vectors/sealing/open.tsv` | [file](../common/vectors/sealing/open.tsv) (judge-only: checks of P/03.5-R005) |
-| `Platform/common/vectors/sealing/ring.tsv` | [file](../common/vectors/sealing/ring.tsv) (judge-only: checks of P/03.5-R005) |
+| `Platform/common/vectors/sealing/ring.tsv` | [file](../common/vectors/sealing/ring.tsv) (judge-only: ring-text parsing for P/03.5-R020 and P/03.5-R031) |
 | `Platform/common/vectors/values-by-type/README.md` | [file](../common/vectors/values-by-type/README.md) |
+| `Platform/01-store/spec/01.2-store.norms.md` | [file](../01-store/spec/01.2-store.norms.md) — Rights and roles used by the domain worker |
+| `Platform/04-controller/lifecycle.md` | [file](../04-controller/lifecycle.md) — Controller neighbour process contract |
+| `Platform/06-console/spec/06.3-console.norms.md` | [file](../06-console/spec/06.3-console.norms.md) — Console and pass-door owner |
+| `Platform/08-domain/spec/08.1-domain.norms.md` | [file](../08-domain/spec/08.1-domain.norms.md) — Claims, member reports and unreadable heartbeat readers |

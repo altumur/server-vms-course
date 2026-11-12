@@ -101,3 +101,11 @@ req_id	file	source	date	removed
 -	data/slots.schema.json#/properties/released/description	review provenance; P03.29 (removal)	2026-11-12	"true" | "false" | "taking" — the first write of a capture (N3 «capture» step 3); any «released» without a value — released ≠ "false"; no field — as released ≠ "false": not held, for a capture — as released (analysis of review of stage B 3–5, № 6)
 -	forms/refusals.tsv#row:chapter=3.6&name=holder_unreadable	review provenance; P03.29 (removal)	2026-11-12	the holder: the request row or the mark is unreadable by its form (RM-G01)
 -	data/holds.schema.json#/properties/released/description	review provenance; P03.29 (removal)	2026-11-12	as in the slot; to let go — "true" (only an orderly stop, under the guard of its own slot before giving it up — analysis of review of stage B 3–5, № 4)
+-	data/heartbeats.schema.json#/properties/status/items/properties/why/description	the second pilot, N-7; P03.29 judge finding 9	2026-11-12	 (the second pilot, N-7)
+-	data/heartbeats.schema.json#/properties/status/items/properties/lease/description	VMS request «heartbeat and a garbled row»; P03.29 judge finding 9	2026-11-12	 (VMS request «heartbeat and a garbled row»)
+-	data/heartbeats.schema.json#/properties/status/items/additionalProperties/description	the second pilot, N-7; P03.29 judge finding 9	2026-11-12	 (the second pilot, N-7)
+-	data/heartbeats.schema.json#/properties/previous_hb/description	log of cammeta-go, lesson 9 № 6:; P03.29 judge finding 9	2026-11-12	log of cammeta-go, lesson 9 № 6:
+-	data/heartbeats.schema.json#/properties/was_fenced/description	VMS request «heartbeat and a garbled row»; P03.29 judge finding 9	2026-11-12	 (VMS request «heartbeat and a garbled row»)
+-	data/heartbeats.schema.json#/properties/freeing/description	VMS request freeing; P03.29 judge finding 9	2026-11-12	 (VMS request freeing)
+-	data/heartbeats.schema.json#/properties/garbled_rows/description	RM-G01; P03.29 judge finding 9	2026-11-12	; RM-G01
+-	data/heartbeats.schema.json#/properties/stood_in/description	log of cammeta-go, lesson 5 № 2; P03.29 judge finding 9	2026-11-12	 (log of cammeta-go, lesson 5 № 2)

@@ -47,7 +47,7 @@
       "minimum": 0
      },
      "why": {
-      "description": "the platform's reason when the unit does not run (sealed — chapter 3.5 N3 «open»), like fates.why of P/04, not error (the second pilot, N-7)",
+      "description": "the platform's reason when the unit does not run (sealed — chapter 3.5 N3 «open»), like fates.why of P/04, not error",
       "type": "string"
      },
      "stalled": {
@@ -58,7 +58,7 @@
       ]
      },
      "lease": {
-      "description": "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field (VMS request «heartbeat and a garbled row»)",
+      "description": "the unit's lease is not confirmed (chapter 3.2 N1.6 silent); otherwise there is no field",
       "type": "string",
       "enum": [
        "unconfirmed"
@@ -91,7 +91,7 @@
      ]
     },
     "additionalProperties": {
-     "description": "words of the subsystem; the training handler testsub — one word n, the current value of the counter (the second pilot, N-7)"
+     "description": "words of the subsystem; the training handler testsub — one word n, the current value of the counter"
     },
     "required": [
      "id",
@@ -248,7 +248,7 @@
   },
   "previous_hb": {
    "$ref": "#/$defs/common.time",
-   "description": "the ts number of the heartbeat found in place under its own name at start, if there was one (log of cammeta-go, lesson 9 № 6: by it the console computes failover_seconds, P/06.5 N3)"
+   "description": "the ts number of the heartbeat found in place under its own name at start, if there was one (by it the console computes failover_seconds, P/06.5 N3)"
   },
   "previous_instance": {
    "description": "instance of the heartbeat found in place, if there was one",
@@ -266,7 +266,7 @@
    ]
   },
   "was_fenced": {
-   "description": "whether this instance has been fenced since its start (N3 «fenced»); P/06.5 series worker_fenced{worker} (VMS request «heartbeat and a garbled row»)",
+   "description": "whether this instance has been fenced since its start (N3 «fenced»); P/06.5 series worker_fenced{worker}",
    "type": "boolean"
   },
   "store_errors": {
@@ -296,7 +296,7 @@
    }
   },
   "freeing": {
-   "description": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet reflected in used; 0 — nothing; a platform field; what to free — the subsystem (VMS request freeing)",
+   "description": "the answer to the resource's request to free space (P/05 N1.4 free_ask): resource volume → bytes that the worker is freeing and that are not yet reflected in used; 0 — nothing; a platform field; what to free — the subsystem",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -308,7 +308,7 @@
   },
   "garbled_rows": {
    "$ref": "#/$defs/common.uint53",
-   "description": "reads of rows of its own units not read by their type (chapter 3.3 N3 step 2), and of request rows and marks not read by their form by the holder (chapter 3.6 «holder's look»; RM-G01), since the start of the instance"
+   "description": "reads of rows of its own units not read by their type (chapter 3.3 N3 step 2), and of request rows and marks not read by their form by the holder (chapter 3.6 «holder's look»), since the start of the instance"
   },
   "schema": {
    "description": "the build schema (P/06.6 N1.1a heartbeat): a JSON integer without a fraction or exponent, ≥ 1",
@@ -328,7 +328,7 @@
    "x-whole": true
   },
   "stood_in": {
-   "description": "only in a stand-in heartbeat (N3); ts of the heartbeat — the time of this repeat (log of cammeta-go, lesson 5 № 2)",
+   "description": "only in a stand-in heartbeat (N3); ts of the heartbeat — the time of this repeat",
    "type": "object",
    "properties": {
     "step": {
@@ -1343,7 +1343,7 @@
     },
     "behind": {
      "$ref": "#/$defs/common.uint53",
-     "description": "A filing timestamp earlier than the listing that did not see it is counted behind only when the difference is strictly greater than COMMAND_BEHIND_TOLERANCE (P/03.4-R006, forms/runtime-constants.tsv). The counter remains common.uint53."
+     "description": "A filing timestamp earlier than the listing that did not see it is counted behind only when the difference is strictly greater than COMMAND_BEHIND_TOLERANCE (P/03.4-R197, forms/runtime-constants.tsv). The counter remains common.uint53."
     }
    },
    "additionalProperties": false,

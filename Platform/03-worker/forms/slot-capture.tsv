@@ -35,17 +35,17 @@ n	state	condition	action	next	norm
 2	admit	true	noop()	search	P/03.2-R022
 3	search	!read_confirmed	reject("unconfirmed_read")	rejected	P/03.2-R022
 4	search	exists && !gen_readable	reject("unreadable_gen")	rejected	P/03.2-R022
-5	search	!exists	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+5	search	!exists	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R162
 6	search	!row_readable && age < TORN_STILL	reject("torn_young")	rejected	P/03.2-R022
-7	search	exists && gen_readable && !gen_incrementable && ((!row_readable && age >= TORN_STILL) || (row_readable && (row_free || permission_matches || (given && first_start_right && same_box))))	reject("generation_exhausted")	rejected	P/03.2-R011
-8	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-9	search	row_readable && row_free	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-10	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
-11	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R024
+7	search	exists && gen_readable && !gen_incrementable && ((!row_readable && age >= TORN_STILL) || (row_readable && (row_free || permission_matches || (given && first_start_right && same_box))))	reject("generation_exhausted")	rejected	P/03.2-R114
+8	search	!row_readable && age >= TORN_STILL	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R162
+9	search	row_readable && row_free	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R162
+10	search	row_readable && permission_matches	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R162
+11	search	row_readable && given && first_start_right && same_box	write(version, {"holder": me, "until": wall + SLOT_TERM, "released": "taking", "gen": gen + 1, "server": server})	first_write	P/03.2-R162
 12	search	true	reject(given && !same_box ? "NameOnAnotherBox" : "occupied")	rejected	P/03.2-R022
-13	first_write	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
+13	first_write	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R162
 14	first_write	reply == "unconfirmed"	wait()	first_write	P/03.2-R022
-15	first_write	reply == "ok"	-	cleanup	P/03.2-R024
-16	cleanup	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R024
+15	first_write	reply == "ok"	-	cleanup	P/03.2-R163
+16	cleanup	reply == "conflict" || reply == "guard" || reply == "badkey"	reject(reply)	rejected	P/03.2-R163
 17	cleanup	reply == "unconfirmed"	wait()	cleanup	P/03.2-R022
-18	cleanup	reply == "ok" && cleanup_complete	live()	live	P/03.2-R024
+18	cleanup	reply == "ok" && cleanup_complete	live()	live	P/03.2-R163
