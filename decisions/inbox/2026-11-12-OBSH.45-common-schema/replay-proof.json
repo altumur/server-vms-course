@@ -1,0 +1,25 @@
+{
+  "base": "4b679c0cfea14e94af282c15f372a5ff0ca20444",
+  "reproduced_files": 145,
+  "first_run": {
+    "changed_schemas": 144,
+    "by_directory": {
+      "01-store": 2,
+      "02-installer": 8,
+      "03-worker": 6,
+      "04-controller": 11,
+      "05-resource": 12,
+      "06-console": 21,
+      "08-domain": 58,
+      "09-agent": 25,
+      "common": 1
+    },
+    "history_rows_added": 9
+  },
+  "second_run": {
+    "changed_schemas": 0,
+    "by_directory": {},
+    "history_rows_added": 0
+  },
+  "matches_working_tree_bytes": true
+}
