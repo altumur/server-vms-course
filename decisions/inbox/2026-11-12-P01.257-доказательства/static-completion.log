@@ -1,0 +1,5 @@
+disk_full: only one appended catalogue row; code=503, kind=unavailable, fields/headers/log absent PASS
+disk_full: R257 linked, N4 English/Russian cause present; post-effect/unknown R330 unchanged PASS
+S5 export: one existing judge record changed, OpenAPI included, norms excluded, model exact PASS
+G03/G06: retired ids preserved, active stage/probe removed, wire wording matches P01.256 PASS
+PASS static completion checks; no implementation execution
