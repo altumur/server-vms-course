@@ -96,3 +96,32 @@ fixture=loader_reserved_name: точный manifest_yaml передать том
 - publication_cycles: сохранить один процесс между перечисленными cycles и выполнить его обычные passes. Для target_counter материализовать отдельную реальную порчу state/type поля snapshot либо реальную сериализацию сверх table ceiling. Следующий valid цикл исправляет именно источник. orphan_states создаёт настоящую осиротевшую state-строку для guarded sweep, не готовый счётчик. snapshot_read/put подменяют ответ клиента; commit_reply_lost сначала действительно сохраняет новый объект, затем теряет ответ. Внешний readback объекта — наблюдение persisted bytes, не заявление о подтверждении контроллером. Время/control ok/failures фиксируются при конце управления, turn отдаётся до снимков, единственный final report пишется после обеих попыток. Считать actual report writes и IO-порядок; не добавлять runtime counters/порты.
 
 Чистые seams не доказывают OS/process recovery или SUT. Неподдержанная binding остаётся явным пробелом до поставки адаптера/независимой проверки, не canned PASS и не excluded execution.
+
+## Проверки ухода
+
+Это упорядоченный выбор по P/04-R047. Строки идут по возрастанию `n`; первое истинное условие CEL возвращает прежнюю причину; строка 10 достижима и ничего не делает. Входы — местные предикаты прочитанного состояния, не новый API. `released` — слово слота, `age` — возраст неизменной версии, `SLOT_TERM` — срок владельца слота. `worker_live` и `resource_state` заданы договорами наблюдения/пула. `distinct` — действующая политика; `has_place` — воркер держит своё место. `place_admits` истинно, когда применимого ограничения места нет. `draining`, `decommissioned`, `fate` и его `why` сохраняют смысл N3. Слот `taking` моложе `SLOT_TERM` возвращает `none` до всех последующих причин: захват ещё может завершиться. Молчание ресурса/хранилища не выдумывает положительного предиката.
+
+| n | CEL | outcome | R-id |
+|---|---|---|---|
+| 1 | `released == "true"` | `slot <name> released` | P/04-R047 |
+| 2 | `released == "taking" && age < SLOT_TERM` | `none` | P/04-R047 |
+| 3 | `released == "taking" && age >= SLOT_TERM` | `slot <name> capture did not finish` | P/04-R047 |
+| 4 | `requires_resource && worker_live && resource_state == "silent"` | `resource on <s> silent` | P/04-R047 |
+| 5 | `distinct && !has_place` | `<w> holds no <place_by> now` | P/04-R047 |
+| 6 | `!place_admits` | `<w>'s <place_by> <place> admits no unit` | P/04-R047 |
+| 7 | `draining` | `server <s> draining` | P/04-R047 |
+| 8 | `decommissioned` | `server <s> decommissioned` | P/04-R047 |
+| 9 | `fate in ["move", "hung_moved", "unsure_moved"]` | `fate.why` | P/04-R047 |
+| 10 | `true` | `none` | P/04-R047 |
+## Проверки сокращения
+
+Это упорядоченный выбор по P/04-R051. Первая истинная строка возвращает `why`; только `ok` разрешает сокращение. `victim_exists` — пригодный живой верхний номер `n = want(s) > 1` по правилам жертвы/нужного места, никогда номер выше want. `waiting` берёт прежний набор placeable; `distinct` и `placeless` заданы политикой места из пульса. `no_shortage_for` — секунды от первого прохода без ждущих, null при нехватке; новый контроллер начинает наблюдение заново. `in_flight` — счёт отсутствующих по пульсам номеров `2…want`, без базового. `per` — прежняя положительная оценка ёмкости или null. `remaining_free_after_move` — свободная ёмкость пригодных живых после переноса единиц жертвы, без жертвы и номеров выше want; при distinct входят только хранители мест. Действуют прежние числовые формы и единицы; новой константы нет. Равенство `SHRINK_AFTER` даёт отказ; равенство `per` проходит.
+
+| n | CEL | outcome | R-id |
+|---|---|---|---|
+| 1 | `!victim_exists` | `no_victim` | P/04-R051 |
+| 2 | `distinct && waiting > 0 && placeless` | `placeless_with_waiting` | P/04-R051 |
+| 3 | `waiting > 0 \|\| no_shortage_for == null \|\| no_shortage_for <= SHRINK_AFTER` | `no_shortage_long_enough` | P/04-R051 |
+| 4 | `in_flight > 0` | `in_flight` | P/04-R051 |
+| 5 | `per == null \|\| remaining_free_after_move < per` | `hysteresis` | P/04-R051 |
+| 6 | `true` | `ok` | P/04-R051 |

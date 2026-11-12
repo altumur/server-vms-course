@@ -31,19 +31,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## Порядок причин
 
-Проверка идёт по порядку, `why` — первая сработавшая причина (P/04 N3 «shrink (step 9a)», `condition`):
-
-1. `no_victim` — нет живого верхнего `n = want(s) > 1` ни на одном сервере (только базовые; номер выше want не в пуле); `victim: null`;
-2. `placeless_with_waiting` — `distinct`, `waiting > 0` и есть живой без места: живые без места при ждущих не
-   сокращаются; без `distinct` `placeless` не читается;
-3. `no_shortage_long_enough` — `waiting > 0` («no shortage» — нет ждущих), или `no_shortage_for` `null`, или
-   `no_shortage_for ≤ shrink_after`: норма — «no shortage for **longer** than SHRINK_AFTER», равенство ещё не «longer»
- ;
-4. `in_flight` — у какого-либо сервера `|{2…want(s)} ∖ live(s)| > 0`: в пути — номерами по пульсам, не счётом;
-5. `hysteresis` — `per` `null` или `Σ free` воркеров без жертвы и без номеров выше want своего сервера `− load(victims) < per`:
-   после переноса единиц жертвы у оставшихся свободно меньше `per`; равенство `per` проходит; при `distinct` в `Σ free`
-   входят только хранители мест (`holder: true`) — как «free at suitable live workers» N3 «per label set»;
-6. `ok` — сократить, `victim` — жертва.
+Первая совпавшая строка [проверок сокращения](../../forms/README.md#проверки-сокращения) выбирает `why` (P/04-R051). Вектор использует те же условия; `victim: null` только при `no_victim`.
 
 **Жертва** — та же, что у [`shrink-victim`](../shrink-victim/README.md): наибольший номер `n` (целым, не по слотовому
 порядку), при равенстве номеров на разных серверах — меньшее имя сервера в байтах UTF-8. Здесь пул — номера

@@ -381,3 +381,70 @@ P/04-R050	spec/04-controller.norms.md#N3	ADR-0084 requirement reference	2026-11-
 P/04-R014	spec/04-controller.norms.md#N1.4	layout audit A-17; REACH_BUDGET	2026-10-25	; A-17
 P/04-R014	spec/04-controller.norms.md#N1.4	layout audit A-17; SHRINK_AFTER	2026-10-25	; A-17
 P/04-R030	spec/04-controller.norms.md#N3	layout audit A-11; P04.29 removal	2026-11-11	layout audit A-11
+-	data/controller-pass.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/controller-pass.outcomes.tsv#row:/names_given	P04.28: text provenance	2026-11-12	(layout audit, G-01; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/controller-pass.outcomes.tsv#row:/short	P04.28: text provenance	2026-11-12	(C06-GROUPS-WAITING-33-01)
+-	data/controller-pass.outcomes.tsv#row:/short	P04.28: text provenance	2026-11-12	(analysis of review of stage B 3–5, № 13)
+-	data/controller-pass.outcomes.tsv#row:/short	P04.28: text provenance	2026-11-12	(review analysis of stage B 6–7, № 24)
+-	data/controller-pass.outcomes.tsv#row:/hung_move_after	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-02)
+-	data/decommission-pending.outcomes.tsv#row:path=&reader=<s>controller	ADR-0127	2026-11-12	; ADR-0127 review P/04 C2
+-	data/decommissioned.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/decommissioned.outcomes.tsv#row:path=&reader=<s>controller	P04.28: text provenance	2026-11-12	(layout audit, G-03; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/decommissioned.outcomes.tsv#row:path=&reader=<s>controller	P04.28: text provenance	2026-11-12	(P1; V7 item 3, row 7)
+-	data/decommissioned.outcomes.tsv#row:path=&reader=console	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-03)
+-	data/placement-intent.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/placement-turn.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/placement.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/placement.outcomes.tsv#row:path=&reader=<s>controller	P04.28: text provenance	2026-11-12	(layout audit, G-04; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/placement.outcomes.tsv#row:path=&reader=console	P04.28: text provenance	2026-11-12	(layout audit, G-04)
+-	data/snapshot-tables.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/snapshot-unplaced.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/snapshot-unplaced.outcomes.tsv#row:path=&reader=console	P04.28: text provenance	2026-11-12	; the Architect's answer of 2026-10-25 to the questions of stage 3, G-05
+-	data/snapshot-unplaced.outcomes.tsv#row:path=&reader=domainagent	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-06)
+-	data/snapshot.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/snapshot.outcomes.tsv#row:path=&reader=console	P04.28: text provenance	2026-11-12	; the Architect's answer of 2026-10-25 to the questions of stage 3, G-05
+-	data/snapshot.outcomes.tsv#row:path=&reader=domainagent	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-06)
+-	data/want.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/want.outcomes.tsv#row:path=&reader=<s>controller	P04.28: text provenance	2026-11-12	(layout audit, G-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/workers.outcomes.tsv#header	ADR-0088	2026-11-12	(ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/workers.outcomes.tsv#row:path=&reader=<s>controller	P04.28: text provenance	2026-11-12	; the Architect's answer of 2026-10-25 to the questions of stage 3, G-08
+-	data/workers.outcomes.tsv#header	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-08)
+-	data/workers.outcomes.tsv#header	P04.28: text provenance	2026-11-12	(the Architect's answer of 2026-10-25 to the questions of stage 3, G-08)
+-	forms/code-rules.tsv#header	ADR-0133	2026-11-12	# The code checks of lesson P/04 (ADR-0133 addenda (28), (39) items 2, 5; audit P04.20, appendix B, and the answers of the Architect to its questions
+-	forms/code-rules.tsv#header	ADR-0133	2026-11-12	# 6, 7): rows of the kinds of the closed dictionary
+-	forms/code-rules.tsv#row:C26	ADR-0084	2026-11-12	; ADR-0084
+-	forms/daemon-flags.tsv#header	P04.28: text provenance	2026-11-12	 accepted by the Architect/Generators
+-	forms/refusals.tsv#row:chapter=4&name=growth_probe_limit	P04.28: text provenance	2026-11-12	(N3 «shortage()», R16‴)
+-	forms/refusals.tsv#row:chapter=4&name=growth_probe_limit	ADR-0084	2026-11-12	(ADR-0084 addendum (3) R16′; review of stage A 3–5, № 12)
+-	forms/refusals.tsv#row:chapter=4&name=growth_raise_timeout	P04.28: text provenance	2026-11-12	(N3 «withdraw on deadline», R27; review of stage B 6–7, № 43)
+-	forms/refusals.tsv#row:chapter=4&name=server_absent	P04.28: text provenance	2026-11-12	(N1.4a; from M10/11 N4)
+-	forms/runtime-constants.tsv#row:WRITE_CONFLICT_LIMIT	P04.28: text provenance	2026-11-12	; moved out of implementation choice under accepted sectionE
+-	forms/stages.kit.tsv#header	ADR-0126	2026-11-12	(ADR-0126)
+-	forms/stages.kit.tsv#header	ADR-0133	2026-11-12	(ADR-0133 addendum (39))
+-	forms/stages.kit.tsv#header	P04.28: text provenance	2026-11-12	(the Architect's answer on P04.21, question 1)
+-	forms/stages.kit.tsv#header	ADR-0133	2026-11-12	(ADR-0133 addendum (43))
+-	forms/stages.kit.tsv#header	ADR-0130	2026-11-12	(ADR-0130 Addendum (19) item 6)
+-	forms/stages.tsv#header	ADR-0126	2026-11-12	(ADR-0126)
+-	forms/stages.tsv#header	ADR-0133	2026-11-12	(ADR-0133 addendum (39))
+-	forms/stages.tsv#header	P04.28: text provenance	2026-11-12	(the Architect's answer on P04.21, question 1)
+-	forms/stages.tsv#header	ADR-0133	2026-11-12	(ADR-0133 addendum (43))
+-	forms/stages.tsv#header	ADR-0130	2026-11-12	(ADR-0130 Addendum (19) item 6)
+P/04-R010	spec/04-controller.norms.md#N1.3	P04.28: text provenance	2026-11-12	(journal of cammeta-go, lesson 8 № 2)
+P/04-R033	spec/04-controller.norms.md#N3	P04.28: text provenance	2026-11-12	(journal of cammeta-go, lesson 4 № 4)
+P/04-R010	spec/04-controller.norms.md#N1.3	P04.28: text provenance	2026-11-12	(журнал cammeta-go, урок 8 № 2)
+P/04-R033	spec/04-controller.norms.md#N3	P04.28: text provenance	2026-11-12	(журнал cammeta-go, урок 4 № 4)
+P/04-R008	data/controller-pass.schema.json#/properties/short/items/properties/groups/description	review of stage B 3–5, № 13	2026-11-12	 (analysis of review of stage B 3–5, № 13)
+P/04-R008	data/controller-pass.schema.json#/properties/near_waiting/description	ADR-0091 addendum (27)	2026-11-12	; ADR-0091 addendum (27) item 6
+P/04-R036	spec/04-controller.norms.md#N3	P04.28: text provenance	2026-11-12	This replaces the former guard of a separate placement.
+P/04-R018	spec/04-controller.norms.md#N1.5	P04.28: text provenance	2026-11-12	The new service rows
+P/04-R044	spec/04-controller.norms.md#N3	P04.28: text provenance	2026-11-12	The five original witnesses
+P/04-R018	spec/04-controller.norms.md#N1.5	P04.28: text provenance	2026-11-12	Новые служебные строки
+P/04-R036	spec/04-controller.norms.md#N3	P04.28: text provenance	2026-11-12	Это заменяет прежний guard отдельного placement.
+P/04-R014	spec/04-controller.norms.md#N1.4	P04.28: text provenance	2026-11-12	(as W2C_WALL_OFFSET M11/3)
+P/04-R014	spec/04-controller.norms.md#N1.4	P04.28: text provenance	2026-11-12	(как W2C_WALL_OFFSET M11/3)
+-	forms/README.md#inputs-and-refusals	P04.28: text provenance	2026-11-12	the four final cells preserve all former N4 cells in source order
+-	forms/README.md#seams	P04.28: text provenance	2026-11-12	The five former release witnesses
+-	data/want.outcomes.tsv#row:path=&reader=console	layout audit G-07	2026-11-12	; layout audit, G-07
+-	data/decommissioned.outcomes.tsv#row:path=&reader=<s>domain	V7 item 3, row 6	2026-11-12	(P1; V7 item 3, row 6)
+-	data/decommissioned.outcomes.tsv#row:path=&reader=<s>worker	V7 item 3, row 6	2026-11-12	(P1; V7 item 3, row 6)
+-	data/decommissioned.schema.json#/properties/slots/description	P04.28: former finding D7	2026-11-12	(D7)

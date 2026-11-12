@@ -1,6 +1,6 @@
 # Process inputs of the controller, P/04. Literal TAB; no CSV quoting. No CLI options are introduced.
 # $NAME is environment, <sub> is the runner route's subsystem argument. The launcher selects that subsystem's controller program.
-# Eight P/01 columns, with string and number accepted by the Architect/Generators. f keys retain $ and angle brackets.
+# Eight P/01 columns, with string and number. f keys retain $ and angle brackets.
 # default is a literal or -; default_text may preserve an external/default rule, resolved by the linked norm, never copied as a literal.
 # No additional lexical/range refusal is inferred for a numeric setting whose norm only names its meaning/default.
 # Environment files are parsed by the launcher, not again by the controller. Shared paired names are checked before applying defaults.

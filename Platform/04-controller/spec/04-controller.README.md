@@ -20,13 +20,38 @@ the heartbeat — in [P/03.4](../../03-worker/spec/03.4-worker.norms.md). The fo
 (the data catalogue). On a discrepancy, record the places and a counterexample, do not choose the behaviour by a guess; the order
 of escalation is in the section «On a discrepancy». Internal functions, types and libraries are chosen by the implementation.
 
+## Glossary
+
+These terms point to their governing requirements; this table adds no rules.
+
+| Term | Meaning and owner |
+|---|---|
+| `row` | A store key with textual items, not an HTTP response or an object. P/04-R003. |
+| `object` | A JSON report or snapshot read through the resource object door. P/04-R007, P/04-R011, P/04-R013. |
+| `placement` | The decision; an active intent supplies the effective decision for its members. P/04-R021. |
+| `assignment` | The derived workers row, listing the units assigned to that worker. P/04-R078, P/04-R079, P/04-R036. |
+| `version`, `index` | The exact opaque store version for CAS/guard, distinct from the counters below. P/04-R026, P/04-R096, P/04-R103. |
+| `rev` | The lesson counter in a placement/assignment; its increment rule depends on that row. P/04-R076, P/04-R080. |
+| `manifest_rev` | The revision of the manifest under which a decision was taken. P/04-R077, P/04-R116, P/04-R405. |
+| `turn holder` | The unique capture-attempt mark in placement_turn; its version fences store mutations. P/04-R209, P/04-R212, P/04-R242. |
+| `slot holder` | The process occupying a slot; it is not the holder of the placement turn. P/03.2 N1.4; P/04-R041. |
+| `place keeper` | The worker selected for a non-empty place under distinct policy. P/04-R152, P/04-R153. |
+| `resource_state`, `presence`, `fate` | Resource freshness, the resource word about a process, and this controller’s slot judgement are separate. P/04-R196, P/04-R197, P/04-R198, P/04-R040. |
+| `at`, `ts`, `age` | at and ts are wall timestamps with the field-specific meanings of N1; age and policy deadlines use the specified local observation. P/04-R002, P/04-R039. |
+| `live(s)`, `live.<sub>` | Heartbeat process presence for shortage versus door lock numbers for the order share. P/04-R329, P/04-R332. |
+| `free`, `free(s)` | Worker capacity after conservative reserves versus server process room after in-flight orders. P/04-R022, P/04-R332. |
+| `home`, `near`, `affinity` | Preferences and place constraints have different admission effects. P/04-R157, P/04-R158, P/04-R159, P/04-R290. |
+| `want`, `pending`, `decommission-pending` | Absolute process target, in-flight count in a report, and durable server-removal progress respectively. P/04-R094, P/04-R107, P/04-R330. |
+| `release`, `names_given` | A confirmed release write and the exact version permitting capture are separate results. P/04-R041, P/04-R310, P/04-R311, P/04-R042. |
+| `pass`, `control part`, `cycle` | The control part ends before snapshot attempts and the cycle’s final report. P/04-R142, P/04-R143, P/04-R146. |
+
 ## What to create
 
 - The check of the store schema as the first step of the start (N3 «controller start — schema check»).
 - The reading of the picture of the world, of the effective labels and the observation of freshness by its own clock; the states of the resource and the fates of the slot.
 - The pass of N3 with separate attempts of the steps, the choice of candidates and the write of decisions through cas.
 - The reconciliation of assignments, the move, the departure, the order of workers by servers and the shrinking, the decommission of a server and the protection of manifest_rev.
-- The report of N1.2, the snapshot of N1.3a after the pass and the evidence of the fulfilment of the 28 checklist items, including the admission of N1.5.
+- The report of N1.2, the snapshot of N1.3a after the pass and the evidence of the fulfilment of all checklist items, including the admission of N1.5.
 - The description of all eleven choices of the implementation. Internal functions, types and libraries are chosen by the implementation.
 
 ## Order of work
@@ -91,7 +116,7 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
 
 ## Done when
 
-P/04-01…28 are fulfilled, the choices of the implementation are described, the acceptance has passed with the declared initial state,
+All readiness and system checklist items are fulfilled, the choices of the implementation are described, the acceptance has passed with the declared initial state,
 and the remaining guarantees have evidence per N5.
 State the slice, the commands/stand, the observations and the limitations. A check of the documents does not mean
 the passing of an implementation. A discrepancy of a norm and a form is to be drawn up with a counterexample by the rules of the project;
