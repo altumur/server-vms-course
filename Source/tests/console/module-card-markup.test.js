@@ -5,7 +5,7 @@
 // <h2> первым в своём блоке — сам блок карточкой; то же у нарисованного позже (после запроса страницы). Своё обзорное
 // «<h1> + p.pc-hdsub» модуль пишет так же. Аудит покрытия P/07 (90661897f).
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-cards-"+process.pid+".html");
 fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en"});</script>`);
 process.env.CONSOLE_FILE=TMP;

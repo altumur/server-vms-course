@@ -3,7 +3,8 @@
 // ни при выборе и правках; порядок `order` при монтировании и на каждом опросе (каждые poll_s), `/events?unit=`
 // выбранной единицы — каждые 5 с. Дверь держателя из where() модуль не зовёт: она только оболочке.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
+const CURRENT=process.env.PC_MODULE_SOURCE==="canonical";
 const TMP=path.join(require("os").tmpdir(),"pc-calls-"+process.pid+".html");
 const page=opts=>fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),${opts});window.pc.retryWaits=[10,10,10];</script>`);
 process.env.CONSOLE_FILE=TMP;
@@ -18,6 +19,7 @@ function cluster(){
   b.FIX["/things"]={configured:[{id:1,name:"one",labels:["a"]}],rows:[{id:1,worker:"w-1",server:"s-1",phase:"running"}]};
   b.FIX["/sub/parts"]={configured:[{id:"p1",size:1}],rows:[]};
   b.FIX["/servers"]={servers:{"s-1":{resource:"live",workers:[{worker:"w-1",load:1,capacity:5,labels:[],state:"live",idle_by_policy:false,hung:false,name_conflict:null}]}},policy:{}};
+  b.FIX["/sub/servers"]={servers:{},policy:{}};
   b.FIX["/unplaceable"]=[];b.FIX["/sub/unplaceable"]=[];
   b.FIX["/domain/shared/testsub"]={fields:{labels:{groups:[]}},rev:1};
   b.FIX["/drain"]={draining:"",safe:true,subsystems:{}};b.FIX["/schema"]={};
@@ -36,6 +38,8 @@ function allowed(method,url,loginUrl){
   const rows=SUBS.some(s=>p===s.base+"/"+s.rows),row=SUBS.some(s=>p.startsWith(s.base+"/"+s.rows+"/")&&p.slice((s.base+"/"+s.rows+"/").length).indexOf("/")<0);
   if(method==="GET"){
     if(["/session","/manifest","/mounts","/changes","/servers","/unplaceable","/policy","/drain","/schema","/events","/metrics","/api/held"].includes(p))return true;
+    // Нынешний R035: профили воркеров читаются по всему подтверждённому каталогу.
+    if(CURRENT&&SUBS.some(s=>s.base&&p===s.base+"/servers"))return true;
     if(SUBS.some(s=>s.base&&(p===s.base+"/manifest"||p===s.base+"/unplaceable"||p.startsWith(s.base+"/where/"))))return true;
     if(rows||p.startsWith("/where/"))return true;
     if(SUBS.some(s=>s.show.some(t=>p==="/"+s.name+"/"+t)))return true;   // /<sub>/<table> только из servers.show
@@ -56,7 +60,7 @@ function allowed(method,url,loginUrl){
 }
 const never=url=>{const p=new URL(url,"http://localhost/").pathname;return /^\/[^/]+\/requests(\/|$)/.test(p)||p==="/api/backup"||p.startsWith("/resources")||/^\/testsub\/(?!places$)[^/]+$/.test(p)||!url.startsWith("/")&&!url.startsWith("http://localhost/");};
 const gets=(log,from)=>log.slice(from||0).filter(x=>x.method==="GET").map(x=>new URL(x.url,"http://localhost/").pathname);
-const ORDER=["/things","/sub/parts","/servers","/unplaceable","/sub/unplaceable","/domain/shared/testsub","/drain","/schema","/domain","/domain/alarms","/api/held","/metrics"];
+const ORDER=["/things","/sub/parts","/servers",...(CURRENT?["/sub/servers"]:[]),"/unplaceable","/sub/unplaceable","/domain/shared/testsub","/drain","/schema","/domain","/domain/alarms","/api/held","/metrics"];
 (async()=>{
 const out={};
 // --- кластер: монтирование и опрос (poll_s 0.3 с)
