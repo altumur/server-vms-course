@@ -1,0 +1,13 @@
+{
+  "source_C": "e7b04900c7ca9fcde3dd1b7821d547e75f0531f3",
+  "cwd": "/home/pilot/P01.304-evidence/archive-C",
+  "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-B",
+    "skills/lesson-spec/scripts/check_spec.py",
+    "--scope",
+    "platform"
+  ],
+  "exit": 0,
+  "seconds": 72.87636435008608
+}

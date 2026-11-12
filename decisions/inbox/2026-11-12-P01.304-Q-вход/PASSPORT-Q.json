@@ -1,0 +1,27 @@
+{
+  "files_in_q_input": 27,
+  "files_in_source_platform": 3570,
+  "filter_blob": "2283e37dad8f4fc22a04183a70beb1fee2481d61",
+  "filter_file": "FILTER-Q.json",
+  "filter_path": "Platform/common/qualification-input-filter.json",
+  "filter_sha256": "d5105b71ed749653c2a1e5b69c635b7523eb712be46ec83f581f43f6a533bb9d",
+  "operator_functions": [
+    "git",
+    "read_tree",
+    "load_json",
+    "sorted_records",
+    "parse_filter",
+    "mktree",
+    "sha256_file"
+  ],
+  "operator_sha256": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+  "q_input_commit": "1a6a67b47cb11a89bf1a360d6002cd11138f29bd",
+  "q_input_tree": "732603414cf8d20be09ff75de0cb969fb6c89c7c",
+  "ref": "refs/heads/qualification-input",
+  "source_C": "e7b04900c7ca9fcde3dd1b7821d547e75f0531f3",
+  "source_platform_tree": "ee24593ff2a01d73c96177a72b8ef937a74a9ca9",
+  "source_tree": "c041b28eca4a2f988841f879f6c57be32c366dc4",
+  "transport_marker": null,
+  "version": 1,
+  "wrapper_sha256": "9e45798a30e79e95607bedbfaeefa69298719ea30a1e90879c6df4a32f123868"
+}

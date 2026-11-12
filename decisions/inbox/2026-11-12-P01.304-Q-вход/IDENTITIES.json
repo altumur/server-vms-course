@@ -1,0 +1,55 @@
+{
+  "C": "e7b04900c7ca9fcde3dd1b7821d547e75f0531f3",
+  "Q": "1a6a67b47cb11a89bf1a360d6002cd11138f29bd",
+  "Q_directory": "/home/pilot/P01.304-evidence/q-e7b04900c7ca",
+  "Q_git": "/home/pilot/P01.304-evidence/q-e7b04900c7ca/Q.git",
+  "Q_ref": "refs/heads/qualification-input",
+  "Q_tree": "732603414cf8d20be09ff75de0cb969fb6c89c7c",
+  "branch": "task/P01.304",
+  "check_spec_C_log_sha256": "d00e2c806258ccd985941e82491833cc8ad89bce5e9feccd2551016e8ecc88bc",
+  "check_spec_worktree_log_sha256": "d00e2c806258ccd985941e82491833cc8ad89bce5e9feccd2551016e8ecc88bc",
+  "check_spec_worktree_run_sha256": "7a96ac902f362a90f5f2ad3c7ed2290a38dcfee81d610c686a43c984bd3720a2",
+  "evidence_directory": "/home/pilot/P01.304-evidence",
+  "filter_blob": "2283e37dad8f4fc22a04183a70beb1fee2481d61",
+  "filter_path": "Platform/common/qualification-input-filter.json",
+  "filter_sha256": "d5105b71ed749653c2a1e5b69c635b7523eb712be46ec83f581f43f6a533bb9d",
+  "operator_copy": "/home/pilot/P01.304-evidence/operator/judge_input_export.py",
+  "operator_sha256": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+  "operator_source": "/home/pilot/run-p01254-pair-20261112-r3/operator/judge_input_export.py",
+  "passport_sha256": "b7526e9aaa13ea80830c56e2a2bde973a3b2b2901646fad1e55c8448ced0464e",
+  "pre_delivery_origin_main": "07c3ae8692b802f4a66532ef8cfd0fa2c495325f",
+  "rebuild_sha256": "9029fc077066833b86ec0bc252167bb944a53ca1a44c53b50734d6ecd6f8f134",
+  "source_archive": "/home/pilot/P01.304-evidence/archive-C",
+  "source_files": {
+    "decisions/0130-боевая-пригодность-сгенерированного-кода.md": {
+      "blob": "78328f25da2b0713335a28b8fcfdf43e2360e770",
+      "sha256": "56c037a78416a43d51047bc4b27842be7395e89124f68889790edf38873139aa"
+    },
+    "skills/lesson-spec/SKILL.md": {
+      "blob": "8751b5c1c807e1f6186b435c07294cd6b66d0c09",
+      "sha256": "bc8ac1c83327f7f7ee7a76ddb8275a80de7a7b560219a126f4635ecdfde7da43"
+    },
+    "skills/lesson-spec/references/validation.md": {
+      "blob": "0ae5936dd31c02fd5812e184ae1149f7c5ff086e",
+      "sha256": "29b652775aecc051fc01d98b7a6eac1f6aabf44f022332306191b17a52281298"
+    },
+    "skills/lesson-spec/references/variant-b.md": {
+      "blob": "4f25fa649007b2809b70a109e4d3c5fed974483e",
+      "sha256": "49f2c47e3bd6978f78c94f589ff254f7c6995712943fc0c3f0aac1754c97bc2c"
+    },
+    "skills/lesson-spec/scripts/export_lists.py": {
+      "blob": "fbdaf6228e6d35a3f4b7b31865de39cc73d0e20c",
+      "sha256": "77f39e10c7e341860edb5314ab9b5db437a4f0da9389a8573baeb59da8b0ff64"
+    },
+    "skills/lesson-spec/scripts/m_form.py": {
+      "blob": "b36808140541c0b840309ea4e00cd6643abdb87f",
+      "sha256": "21ad4519c63d8ffbbfb21deb02583956852bb0b391d73e4e1fd08b2ffdd3658d"
+    }
+  },
+  "task": "P01.304",
+  "task_file_sha256": "0a1a7488cb4f6a75319da218f711c9ddd1d9b9a6f5354d83a08e92fe9676c29c",
+  "upstream_Q_inputs_and_rules_unchanged": true,
+  "verify_sha256": "113e0cca39cc9ff08e6597cb8ebc149957da364ab0f32b0404bfc05ce676976b",
+  "worktree": "/home/pilot/wt-task-P01.304",
+  "wrapper_sha256": "9e45798a30e79e95607bedbfaeefa69298719ea30a1e90879c6df4a32f123868"
+}
