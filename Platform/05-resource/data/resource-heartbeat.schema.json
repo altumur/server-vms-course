@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "server": {
-   "description": "its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 N2)",
+   "description": "its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock; not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 N2)",
    "type": "string",
    "pattern": "^(?:[a-z0-9]+(-[a-z0-9]+)*)$"
   },
@@ -25,7 +25,7 @@
    "x-whole": true
   },
   "build": {
-   "description": "the build word (BUILD); not a string — the field is unknown: null in the console's answers (V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list)",
+   "description": "the build word (BUILD); not a string — the field is unknown: null in the console's answers",
    "type": "string"
   },
   "usage": {
@@ -41,7 +41,7 @@
    "description": "the volume of the event tree"
   },
   "volumes": {
-   "description": "the same per volume (log of cammeta-go, lesson 9 № 1)",
+   "description": "the same per volume",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -51,7 +51,7 @@
    }
   },
   "units": {
-   "description": "`{<sub>: [<id>…]}`; none such — {}; in every heartbeat (E39)",
+   "description": "`{<sub>: [<id>…]}`; none such — {}; in every heartbeat",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"
@@ -90,10 +90,10 @@
   },
   "short": {
    "$ref": "#/$defs/common.uint53",
-   "description": "how many bytes the mark asked to free and could not (P/06.5 N3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by N3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value (stage C guess R05-G03, the Architect's decision of 2026-10-23)"
+   "description": "how many bytes the mark asked to free and could not (P/06.5 N3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by N3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value"
   },
   "waits": {
-   "description": "counters of the /events/wait waits (N1.6); in every heartbeat (E39)",
+   "description": "counters of the /events/wait waits (N1.6); in every heartbeat",
    "type": "object",
    "properties": {
     "waiting": {
@@ -151,7 +151,7 @@
    }
   },
   "door": {
-   "description": "the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 N1.4; ADR-0075 addendum (3); analysis of review of stage B 3–5, № 28)",
+   "description": "the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 N1.4)",
    "type": "object",
    "properties": {
     "addr": {
@@ -159,7 +159,7 @@
      "type": "string"
     },
     "mode": {
-     "description": "loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS (ADR-0075)",
+     "description": "loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS",
      "type": "string",
      "enum": [
       "loopback",
@@ -203,7 +203,7 @@
    }
   },
   "retention_garbled": {
-   "description": "subsystems where any term (`<sub>/retention` or `<sub>/alarms_retention`) has a wrong days (P/05 N1.3 retention rule), regardless of retention_withheld (R05-RETENTION-MIXED-51-01), in ascending byte order; none such — the field is absent (P/05 N3 retain, N4; stage C guess C05-RETENTION-PULSE-33, the Architect's decision of 2026-10-25)",
+   "description": "subsystems where any term (`<sub>/retention` or `<sub>/alarms_retention`) has a wrong days (P/05 N1.3 retention rule), regardless of retention_withheld, in ascending byte order; none such — the field is absent (P/05 N3 retain, N4)",
    "type": "array",
    "items": {
     "type": "string",
@@ -213,7 +213,7 @@
    "uniqueItems": true
   },
   "retention_withheld": {
-   "description": "why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term (R05-G08, R05-RETENTION-MIXED-51-01); no cause — the field is absent (P/05 N3 retain, N4; C05-RETENTION-PULSE-33)",
+   "description": "why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term; no cause — the field is absent (P/05 N3 retain, N4)",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -229,7 +229,7 @@
    }
   },
   "settings_unread": {
-   "description": "the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 N1.4 mirror, space, N3; V7 item 3, the Architect's decision of 2026-10-28, P1; rows 20, 21 of the list)",
+   "description": "the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 N1.4 mirror, space, N3)",
    "type": "array",
    "items": {
     "enum": [
@@ -241,7 +241,7 @@
    "uniqueItems": true
   },
   "restore": {
-   "description": "`{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Bucket restore»); in every heartbeat (E39)",
+   "description": "`{<neighbour>: …}` — restoring buckets from copies of neighbours (N1.4 «Bucket restore»); in every heartbeat",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -291,7 +291,7 @@
    }
   },
   "mirror": {
-   "description": "mirror counters (N1.4 mirror; skipped — buckets larger than the resource door limit (OpenAPI Content-Length.maximum, P/05-R014)); in every heartbeat (E39)",
+   "description": "mirror counters (N1.4 mirror; skipped — buckets larger than the resource door limit (OpenAPI Content-Length.maximum, P/05-R014)); in every heartbeat",
    "type": "object",
    "properties": {
     "skipped": {

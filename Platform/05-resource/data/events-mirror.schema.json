@@ -4,7 +4,7 @@
  "properties": {
   "t": {
    "$ref": "#/$defs/common.time",
-   "description": "the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06)"
+   "description": "the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999)"
   },
   "kind": {
    "description": "the event kind",
@@ -30,7 +30,7 @@
    "description": "when it happened; optional"
   },
   "v": {
-   "description": "the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04)",
+   "description": "the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line)",
    "type": "integer",
    "x-integer": true,
    "minimum": 1
@@ -55,7 +55,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10)"
+  "description": "the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form"
  },
  "required": [
   "t",
