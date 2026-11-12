@@ -9,7 +9,7 @@
 #input /name string
 #input /value dyn
 write	key	field	source	value	guard_key	guard_version	norm
-state	{start:/sub}/state/{input:/name}/{start:/unit}	/born	start	/born	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R124,P/03.6-R129,P/03.6-R192
-state	{start:/sub}/state/{input:/name}/{start:/unit}	/revision	start	/revision	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R124,P/03.6-R129,P/03.6-R192
-state	{start:/sub}/state/{input:/name}/{start:/unit}	/epoch	start	/epoch	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R124,P/03.6-R128,P/03.6-R192
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/born	start	/born	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R128,P/03.6-R192
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/revision	start	/revision	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R128,P/03.6-R192
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/epoch	start	/epoch	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R128,P/03.6-R192
 state	{start:/sub}/state/{input:/name}/{start:/unit}	/value	input	/value	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R029,P/03.6-R192
