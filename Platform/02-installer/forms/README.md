@@ -50,7 +50,7 @@ The metadata encoding, the byte proofs and the skeleton sizes of the judge's own
 ## Stage gates
 
 [`stages.tsv`](stages.tsv) is a plan, not a behavior norm. `verdicts:2.1:*` selects the first column of `verdicts.tsv`;
-`puts:2.2:*` and `puts:2.3:*` select `puts.tsv`; `accept` selects only `scenarios.tsv` (judge-only: the corpus and acceptance tables of the chapters; they check the checklist items that name their cases). Comma-separated names select exact rows;
+`puts:2.2:*` and `puts:2.3:*` select `puts.tsv`; `accept` selects only `scenarios.tsv` (judge-only: the corpus and acceptance tables of the chapters; the requirements each table checks are named by R-id where the table is named — N5 of chapters 2.1, 2.2, 2.3, 2.5 and the acceptance READMEs). Comma-separated names select exact rows;
 `*` selects the full target, including its other published variants. A generated projection does not claim execution of excluded steps.
 `seams:2.K:<scenario,...>` selects the seams below ([`stages.kit.tsv`](stages.kit.tsv) writes the same selection
 `tests:2.K:<scenario,...>:seams`; judge-only: the kit projection of the stage plan, not a norm). The `norms` column places each item of the readiness checklists of `spec/*.norms.md` at exactly one
@@ -108,7 +108,7 @@ same scenario. An absent directory of the path is a refusal of the command (`ref
   `{verdict:"refused", class:<text|form|relations|catalogue>}`, without names or a partial catalogue. No implicit stand manifest is added.
 * `rollout-poll`: input `{input:<machine input>, events:[{t:<seconds>,event:<trace event string>},…]}`. The names, event syntax, timer
   ordering and optional `input.const` overrides are those of [`rollout-poll.machine.yaml`](rollout-poll.machine.yaml) and its
-  [`rollout-poll.traces.tsv`](rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine; they check P/02.4-22). A fresh poll starts at t=0. Advance the virtual clock through each event (timers
+  [`rollout-poll.traces.tsv`](rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine; they check P/02.4-R321). A fresh poll starts at t=0. Advance the virtual clock through each event (timers
   first at equality), then deliver that event; `advance` only advances timers. Observe the final state and refusal:
   `{state:<polling|passed|refused>, result:null|{code:<integer>,word:<string>}}`. Extra observations may be returned. The adapter calls the
   implementation’s poll, not the course interpreter as a substitute. Events contain no expected state, verdict, assertion or output.
