@@ -1,0 +1,15 @@
+--- /home/pilot/owner-receipts/P01.184-control-task-20261112/TASK.md
++++ P01.254/CONTROL-TASK-attempt7.md
+@@ -2,2 +2,2 @@
+-This is generation only. Nobody checks your code while you write it: there is no loop, no check command and no gate. Build it, vet it and run your own Go tests yourself; they do not establish conformance to the specification. No acceptance judge, judge feedback, stand gate or judge profile is used during generation. The finished candidate is judged separately after generation. Do not replace required product behavior with adapter answers or hard-coded examples. All implementation, auxiliary code and tests are your work. SPEC_VERSION identifies the immutable M input.
+-For each learning stage, implement its stated goal and norms. The source stage names/goals/norm references define the progression; acceptance/scenario/seam gates are not executed in this generation run. Keep the full implementation and tests coherent across all eleven stages. Use the public pinned Go dependencies with the supplied offline module cache. Produce a buildable complete candidate and tests exercising its behavior; tests that only check a stub are insufficient for your implementation goal.
++This is generation only. Write and run your own build, tests and checks inside your working tree. The finished candidate is judged separately after generation. Do not replace required product behavior with adapter answers or hard-coded examples. All implementation, auxiliary code and tests are your work. SPEC_VERSION identifies the immutable M input.
++For each learning stage, implement its stated goal and norms. The source stage names/goals/norm references define the progression. Keep the full implementation and tests coherent across all eleven stages. Use the public pinned Go dependencies with the supplied offline module cache. Produce a buildable complete candidate and tests exercising its behavior; tests that only check a stub are insufficient for your implementation goal.
+@@ -16,0 +17 @@
++- If M is silent or ambiguous, record the place, question and your choice in work/GUESSES.md, then continue.
+@@ -18 +19 @@
+-- The stages are the rows of "$SPECS/Platform/01-store/forms/stages.tsv". Start reading from Platform/01-store/README.md; the norms are navigated by the Index of each norms file. A reading list:
++- The stages are the rows of "$SPECS/Platform/01-store/forms/stages.tsv". Read these files in M; read each norms file by its Index:
+@@ -31 +32 @@
+-> Write code early and in small steps, check it with your own tests. Do not fit the code to a test around the norm: if a test and the norm disagree, write a guess to GUESSES.md.
++> Write code early and in small steps, check it [...]. Do not fit the code to a test around the norm: if a test and the norm disagree, write a guess to GUESSES.md.

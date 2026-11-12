@@ -1,0 +1,19 @@
+{
+ "prepared_only": true,
+ "executed": false,
+ "C": "298e28fda4b91df25357e3a83d5e70045bea7bb2",
+ "M": "847ac9d1fb36bd1153450f99ddc4805c2609877e",
+ "M_tree": "ebb5e05f2afc373a6e85b56ffd747f2d1b5d04dc",
+ "JI": "2fc272022ff073aaa75ce6dac1b953286c0d8b3d",
+ "JI_tree": "519b33a006a188dbd80af4ebdc95f92e521aa6aa",
+ "M_passport_sha256": "6bd5488d483ac38d848cbe21eed7099b91729dec3efa2234b766bd872cf96c8f",
+ "JI_passport_sha256": "f148e74fde90d8c0d748156869e603cddd7fb4e7087ea87ac8bbbff74fe996ed",
+ "bash_n_exit": 0,
+ "python_ast_parse": true,
+ "embedded_parameters_match_source": true,
+ "setup_sha256": "a7c4c75e21b2f75be4d4b51aeb8463031008e400fd6fd5d01963744456cf709a",
+ "verify_sha256": "1a5048aa1ac8ff65deed9859b9927ac8a40f973b2585e98c5b5ab3acc580b927",
+ "procedure_source": "/home/pilot/wt-task-P01.254/decisions/inbox/2026-11-12-P01.180-пара/scripts/delivery/setup.sh",
+ "procedure_source_sha256": "076ea4fc29658d8b38be9cf45e498efbbb4d57babe93cefdf1434b65605ac37e",
+ "scope": "syntax and immutable parameter preparation only; stand paths, ACLs and canary not checked"
+}
