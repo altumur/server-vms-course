@@ -51,13 +51,13 @@ import yaml
 
 # Lessons whose M is in the reading form (P01.175, P01.177). A lesson enters when its form is brought in by its own
 # task: the checks run on a lesson only after its norms carry no history, their index and «See also» lines.
-M_FORM_LESSONS = {"P/01"}
+M_FORM_LESSONS = {"P/01", "P/02", "P/03", "P/04", "P/05", "P/06", "P/07", "P/08", "P/09", "P/10"}  # форма M приведена у всех уроков Платформы (OBSH.41, этап Б принят 2026-11-12)
 
 # Lessons whose stage A of the form is accepted (OBSH.41; the Architect on P04.29, P01.228): history out of the text and
 # the judge-only markers, before their norms get the index, «See also», the marks of the checklist (stage B). Only
 # history_phrases (outside STAGE_A_OUTSIDE), judge_only_refs and history_rows run on them. A lesson leaves the set when
 # it enters M_FORM_LESSONS: a lesson in both is an error.
-M_FORM_STAGE_A = {"P/02", "P/03", "P/04", "P/05", "P/06", "P/07", "P/08", "P/09", "P/10"}  # этап А принят (OBSH.41); P/02, P/05, P/06, P/08–P/10 — с построенными блоками без номеров ADR (OBSH.42)
+M_FORM_STAGE_A = set()  # все уроки прошли этап Б (OBSH.41)
 STAGE_A_OUTSIDE = ("forms/*.tsv", "data/*.tsv")         # the forms and the data are cleaned at stage B
 
 # The common inputs (paths under Platform/common/ that the common filter gives to M) read by `history_phrases`. Empty:

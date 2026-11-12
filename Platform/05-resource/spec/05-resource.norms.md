@@ -55,8 +55,6 @@ Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow
 
 The [common production obligations](../../common/contracts/production-obligations.md) apply to this owner. Q1/Q5/Q6 and MB1: distinguish pre-effect refusal from unknown publication durability; retain required tombstones, defer unsafe pruning and copy bodies only from their owner. A neighbour copy is never a source for retransmission after `404`.
 
-See also: P/05-R010, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056.
-
 ## N1 Form
 
 The positive integer settings owned by this lesson are [runtime-constants.tsv](../forms/runtime-constants.tsv); it is their numeric source. HTTP bounds/defaults stay in the [OpenAPI](05-resource.api.openapi.yaml), and high/low in the existing P/02 space form. ALIVE_EVERY/LOST_AFTER belong to the observation contract; JSON_DEPTH belongs to P/01. Equal values do not merge distinct budgets. WAIT_OBSERVE_MS / 1000 is the existing observation period in seconds. A pending ms reader/validator is a delivery dependency, not a waiver or a changed physical duration.
@@ -65,8 +63,6 @@ The positive integer settings owned by this lesson are [runtime-constants.tsv](.
 
 **Time.** The time fields of the rows and objects of the lesson are time by [the canon of N0 of P/01.1](../../01-store/spec/01.1-store.norms.md#time-in-a-row): the event line — `t` ([the event log contract](../../common/contracts/event-journal.md)); the resource heartbeat object `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; the door row `platform/doors/<host>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; the tombstone `.gone/<object-key>` — `written` (written by the console, [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.5).
 
-See also: P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252.
-
 <!-- req: P/05-R003 -->
 
 **Data** ([catalogue](../../common/data/catalog.tsv)):
@@ -74,19 +70,13 @@ See also: P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05
 - writes: `<sub>/blobs/sha256-<hex>` (put);
 - reads: `platform/manifest/<sub>`, `platform/manifest/<sub>/rev`, `platform/schema`, `<sub>/heartbeats/<name>`, `platform/decommission/<host>`, `platform/doors/<host>`, `platform/resources/<server>/heartbeat`, `<sub>/retention`, `<sub>/alarms_retention`, `platform/space`, `platform/mirror`, `<sub>/<manifest:tables>/<name>`, `<sub>/<manifest:unit.rows>/<id>` (the unit rows of the manifest with about — the addressee of a hold, the holds contract; P/02.5 N1.4), `/etc/w2c/tls/<role>/server.key`.
 
-See also: P/05-R018, P/05-R025, P/05-R026.
-
 <!-- req: P/05-R004 -->
 
 The resource reads the key of its own kit with `RESOURCE_TLS=1` (N1.4 `door.mode` `mtls`, `cert_until`; «Admission to the resource doors»; [the role certificate contract](../../common/contracts/role-certificate.md) `kit`).
 
-See also: P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
-
 <!-- req: P/05-R005 -->
 
 The resource puts body copies to a neighbour (put) and deletes its own copy older than the tombstone (delete); it confirms tombstones (cas) and removes them (delete) — N1.1 «Bodies at the resource», «Tombstones».
-
-See also: P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
 ### N1.1 Object
 
@@ -94,265 +84,177 @@ See also: P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05
 
 The `object` form is defined by its separately identified rules: P/05-R059, P/05-R060, P/05-R061, P/05-R062, P/05-R063, P/05-R064, P/05-R065, P/05-R066.
 
-See also: P/05-R007, P/05-R009, P/05-R010, P/05-R061, P/05-R064, P/05-R066, P/05-R104, P/05-R256, P/05-R257, P/05-R258.
-
 <!-- req: P/05-R059 -->
 
 **`client`.** The address OBJECTS, the operations (rule, api, ops), the reading of cluster objects, the outcomes and the action of the client — the object store client contract common/contracts/object-client.md.
-
-See also: P/05-R027, P/05-R039, P/05-R040, P/05-R062, P/05-R105.
 
 <!-- req: P/05-R060 -->
 
 **`key`.** `<family>`/… ; the families of the platform: heartbeats, contenders (P/03.4, P/03.2), controller (P/04), snapshot, blobs, commands (the contract of the request and its mark, «Mark» mark) — the manifest does not name them.
 
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R254, P/05-R255.
-
 <!-- req: P/05-R061 -->
 
 **`writer`.** One directory — one writer: worker → `<s>`/heartbeats/*, `<s>`/contenders/*; controller → `<s>`/snapshot/*, `<s>`/snapshot-tables/*, `<s>`/controller/*; console → `<s>`/blobs/*; resource → platform/resources/*.
-
-See also: P/05-R006, P/05-R009, P/05-R010, P/05-R066, P/05-R256, P/05-R257, P/05-R258.
 
 <!-- req: P/05-R062 -->
 
 **`cluster`.** A file on the server of the writer; on reading the fresh copy (written) wins; a server that did not answer is missing.
 
-See also: P/05-R027, P/05-R039, P/05-R040, P/05-R059, P/05-R105.
-
 <!-- req: P/05-R063 -->
 
 **`written`.** The mark of the keeper resource at the write of the key (X-Written of the door, written of the listing), not a time field of the body.
-
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252.
 
 <!-- req: P/05-R183 -->
 
 **Object written and tombstones.** Every write of the key sets written strictly greater than the former written of the same key: the clock has not moved forward — the former + 0.001 s.
 
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252.
-
 <!-- req: P/05-R184 -->
 
 **Object written and tombstones.** A new write of the same bytes is a new version, the same (server, written) is the same version (the observation contract «changed»).
-
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252.
 
 <!-- req: P/05-R185 -->
 
 **Object written and tombstones.** A body copy (PUT .../blobs/`<digest>` with X-Written, the mirror) keeps the written of the source copy, not its own: otherwise a copy that lay before the delete would be newer than the tombstone.
 
-See also: P/05-R002, P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R017, P/05-R036, P/05-R063, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R183, P/05-R184, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R191, P/05-R193, P/05-R252.
-
 <!-- req: P/05-R186 -->
 
 **Object written and tombstones.** For a copy of the same key already lying there written does not decrease (the greater of the two).
-
-See also: P/05-R002, P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R017, P/05-R036, P/05-R063, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R183, P/05-R184, P/05-R185, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R191, P/05-R193, P/05-R252.
 
 <!-- req: P/05-R187 -->
 
 **Object written and tombstones.** For a key deleted here the former written is the written of its tombstone `.gone/<object-key>` while it lies: a new write is strictly greater than it (otherwise the neighbours would count it older than the delete, the tombstone contract `drop`, `rewrite`).
 
-See also: P/05-R002, P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R017, P/05-R036, P/05-R063, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R188, P/05-R189, P/05-R190, P/05-R191, P/05-R193, P/05-R252.
-
 <!-- req: P/05-R188 -->
 
 **Object written and tombstones.** There is no separate memory — the tombstone is the mark.
-
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R189, P/05-R190, P/05-R252.
 
 <!-- req: P/05-R252 -->
 
 **Object written and tombstones.** A write after written removes the tombstone by the same action, before the answer of the write (the tombstone contract `rewrite`).
 
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190.
-
 <!-- req: P/05-R189 -->
 
 **Object written and tombstones.** The tombstone is removed — the bound is only the former rules.
-
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R190, P/05-R252.
 
 <!-- req: P/05-R190 -->
 
 **Object written and tombstones.** The tombstone is unreadable (garbled) — the bound is not known, the write is not refused: written by the former rules, the tombstone stays (it is not removed: a write after written is not proven), the next delete of the body rewrites it.
 
-See also: P/05-R002, P/05-R015, P/05-R017, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R252.
-
 <!-- req: P/05-R064 -->
 
 **`row_object`.** Keys whose next writer can be on another server are store rows objects/`<key>` (objects.rows of the manifest; commands/* — always, for a manifest with requests); put_new = a write with cas "".
-
-See also: P/05-R006, P/05-R007, P/05-R104.
 
 <!-- req: P/05-R065 -->
 
 **`door`.** Only the families PLATFORM_DOOR (platform/resources/*, domain/* (M11), */heartbeats/*, */contenders/*, */snapshot/*, */snapshot-tables/*, */controller/*, */blobs/*) and objects.door of the manifest; anything else — 403.
 
-See also: P/05-R008, P/05-R036, P/05-R040, P/05-R167, P/05-R191, P/05-R192, P/05-R193.
-
 <!-- req: P/05-R191 -->
 
 **Object door admission.** Tombstones .gone/`<object-key>` — read only: the listing prefix=.gone/ and GET of the body (the tombstone contract).
-
-See also: P/05-R005, P/05-R008, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R040, P/05-R065, P/05-R110, P/05-R111, P/05-R112, P/05-R167, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R192, P/05-R193.
 
 <!-- req: P/05-R192 -->
 
 **Object door admission.** `*` of the first part is a subsystem of the manifest catalogue: `other/heartbeats/x` without a manifest other — 403.
 
-See also: P/05-R008, P/05-R036, P/05-R040, P/05-R065, P/05-R167, P/05-R191, P/05-R193.
-
 <!-- req: P/05-R193 -->
 
 **Object door admission.** The resource does not parse the bodies of door objects: an object unreadable by its family (a worker heartbeat, a mark) it gives as it is, the judgement is with the reader.
-
-See also: P/05-R005, P/05-R008, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R040, P/05-R065, P/05-R110, P/05-R111, P/05-R112, P/05-R167, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R192.
 
 <!-- req: P/05-R066 -->
 
 **`disk`.** `<PLATFORM_DIR>`/objects/`<key>`.
 
-See also: P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R256, P/05-R257, P/05-R258.
-
 <!-- req: P/05-R256 -->
 
 **Local objects.** Directory 0775, file 0644.
-
-See also: P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R066, P/05-R257, P/05-R258.
 
 <!-- req: P/05-R257 -->
 
 **Local objects.** The write — temp + rename under the directory lock `<dir>/~lock`, flock(LOCK_EX), the file is not deleted.
 
-See also: P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R066, P/05-R256, P/05-R258.
-
 <!-- req: P/05-R258 -->
 
 **Local objects.** Service names (the lock, the temporary name) — the event log contract «File names».
-
-See also: P/05-R006, P/05-R009, P/05-R010, P/05-R061, P/05-R066, P/05-R256, P/05-R257.
 
 <!-- req: P/05-R007 -->
 
 An object key is a non-empty relative path: non-empty segments, without exact `.`/`..`, backslash and control characters.
 
-See also: P/05-R006, P/05-R041, P/05-R057, P/05-R060, P/05-R064, P/05-R103, P/05-R104, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R254, P/05-R255.
-
 <!-- req: P/05-R103 -->
 
 **Keys and prefixes.** `prefix` is the beginning of such a key, also emptiness or an ending `/`; it is not a full key.
-
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R254, P/05-R255.
 
 <!-- req: P/05-R104 -->
 
 **Row objects and file objects.** The objects door does not give row objects even from an allowed prefix.
 
-See also: P/05-R006, P/05-R007, P/05-R064.
-
 <!-- req: P/05-R105 -->
 
 **Cluster reads and missing answers.** With equal `written` the server with the lexicographically greater name is chosen; the absence of an answer is called `missing`, not the absence of the object.
-
-See also: P/05-R027, P/05-R039, P/05-R040, P/05-R059, P/05-R062.
 
 <!-- req: P/05-R106 -->
 
 **Object listing.** A listing returns the closed form ObjectListing of N2; deleted objects are tombstones `.gone/<object-key>` (below, «Tombstones»): an ordinary listing does not show them, `prefix=.gone/` is a read-only listing of tombstones.
 
-See also: P/05-R008, P/05-R038, P/05-R040.
-
 <!-- req: P/05-R008 -->
 
 A listing gives only the keys of the door families under `prefix` — a filter, not a refusal: `prefix=testsub/`, `prefix=t`, an empty `prefix` — 200 with the keys of the door families that start with it; keys outside the door families do not enter the listing.
-
-See also: P/05-R036, P/05-R038, P/05-R040, P/05-R065, P/05-R106, P/05-R167, P/05-R191, P/05-R192, P/05-R193.
 
 <!-- req: P/05-R107 -->
 
 **Keys and prefixes.** A `prefix` with which no possible key of the door families starts (`other/`) — 403.
 
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R108, P/05-R109, P/05-R253, P/05-R254, P/05-R255.
-
 <!-- req: P/05-R108 -->
 
 **Keys and prefixes.** A `prefix` not in UTF-8 (`%FF`) — 400.
-
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R109, P/05-R253, P/05-R254, P/05-R255.
 
 <!-- req: P/05-R109 -->
 
 **Keys and prefixes.** Reading a key: a key not by the grammar (not UTF-8, Cc, Zl, Zp — including U+2028, `.`/`..`, an empty segment) — 400.
 
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R253, P/05-R254, P/05-R255.
-
 <!-- req: P/05-R253 -->
 
 **Keys and prefixes.** A key outside the door families, including the directory `testsub/heartbeats` of two parts, — 403.
-
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R254, P/05-R255.
 
 <!-- req: P/05-R254 -->
 
 **Keys and prefixes.** A key of a family that does not exist (including a directory inside a family, `testsub/heartbeats/sub`), — 404.
 
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R255.
-
 <!-- req: P/05-R255 -->
 
 **Keys and prefixes.** A key that differs from the written one only by case or normalization (`W-1` with `w-1`), is its own key: 404, not another's object.
-
-See also: P/05-R007, P/05-R041, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R253, P/05-R254.
 
 <!-- req: P/05-R009 -->
 
 **File names in shared trees** — one encoding for all implementations: [the event log contract](../../common/contracts/event-journal.md#file-names-in-shared-trees).
 
-See also: P/05-R006, P/05-R010, P/05-R061, P/05-R066, P/05-R256, P/05-R257, P/05-R258.
-
 <!-- req: P/05-R010 -->
 
 A file system error after admission is a refusal of the write, not a success and not «there is no file».
-
-See also: P/05-R006, P/05-R009, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R058, P/05-R061, P/05-R066, P/05-R256, P/05-R257, P/05-R258.
 
 <!-- req: P/05-R011 -->
 
 **Bodies at the resource** (the field `blob`, the digest, the bytes door of the console, the cleanup of bodies — [chapter 6.1](../../06-console/spec/06.1-console.norms.md) N1.5):
 
-See also: P/05-R005, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
-
 <!-- req: P/05-R012 -->
 
 **`mirror`.** Every owner-originated local body (a received copy is not a source) — to the next copies live neighbours of the ring (N1.4 mirror), always, regardless of mirror.enabled.
-
-See also: P/05-R005, P/05-R011, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
 <!-- req: P/05-R110 -->
 
 **Body copies.** `copies` — from the row platform/mirror (an integer ≥ 0), no row or no field copies — 1.
 
-See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R111, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
-
 <!-- req: P/05-R111 -->
 
 **Body copies.** The row does not read — bodies are not copied in this pass, the reason is in the heartbeat (settings_unread: mirror).
-
-See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R112, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
 <!-- req: P/05-R112 -->
 
 **Body copies.** `reception`: hash while reading; PEER_FAILS; the copy door exists only for the key `<sub>/blobs/sha256-<64 lowercase hex>` of a subsystem with a blob field; another key (uppercase hex, without `sha256-`, a subsystem without a blob field) — an ordinary object, its owner writes it: 405.
 
-See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R176, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
-
 <!-- req: P/05-R013 -->
 
 Resource ceilings (the shared ceilings — [P/06.1](../../06-console/spec/06.1-console.norms.md) N1.4; checked at the door before reading the body where possible; a refusal, not a truncation):
-
-See also: P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R163, P/05-R164.
 
 <!-- req: P/05-R014 -->
 
@@ -363,13 +265,9 @@ See also: P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R163, P/05-R164.
 | retention term | a finite number > 0 | the resource (N1.3 `retention`) | «not known», remove nothing |
 | the object store | `max_bytes` (0 — no ceiling); the store says it itself | `put` | `TooLarge` «over this store's limit» |
 
-See also: P/05-R013, P/05-R028, P/05-R035, P/05-R045, P/05-R163, P/05-R164.
-
 <!-- req: P/05-R015 -->
 
 Body cleanup ([P/06.1](../../06-console/spec/06.1-console.norms.md) N3 «body sweep»): in the exclusive window the operator also closes the incoming mirror copies; a copy than which the tombstone of the deleter is newer is not accepted (N4, «deleted later» — 409).
-
-See also: P/05-R002, P/05-R005, P/05-R011, P/05-R012, P/05-R017, P/05-R036, P/05-R063, P/05-R110, P/05-R111, P/05-R112, P/05-R176, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R191, P/05-R193, P/05-R252.
 
 <!-- req: P/05-R016 -->
 
@@ -379,39 +277,27 @@ See also: P/05-R002, P/05-R005, P/05-R011, P/05-R012, P/05-R017, P/05-R036, P/05
 
 **`delete`.** The tombstone .gone/`<object-key>` {written, peers, acked}, the neighbours peers, the reading by a neighbour, the confirmation 404 and the removal — [the tombstone contract](../../common/contracts/tombstone.md); the objects door has no DELETE.
 
-See also: P/05-R002, P/05-R015, P/05-R063, P/05-R183, P/05-R184, P/05-R185, P/05-R186, P/05-R187, P/05-R188, P/05-R189, P/05-R190, P/05-R252.
-
 ### N1.2 Event
 
 <!-- req: P/05-R018 -->
 
 The form of the event line (`line`), the bucket and its path (`bucket`), the class (`class`), the journal `audit` (`journal`), the writers of the file (`writer`), the event id and the writer instance — [the event log contract](../../common/contracts/event-journal.md). The lesson is its owner: the resource reads buckets (N1.3), copies the closed ones (N1.4 `mirror`), removes them by term (N3 «resource pass»). Repeat suppression (`suppress`) — [chapter 3.6 N1.2](../../03-worker/spec/03.6-worker.norms.md); `older_epochs` and the operator marks (`marks`) — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N1.2 (the console).
 
-See also: P/05-R003, P/05-R021, P/05-R025, P/05-R026, P/05-R037, P/05-R049, P/05-R055, P/05-R117, P/05-R162, P/05-R259, P/05-R260.
-
 <!-- req: P/05-R019 -->
 
 `subsystem` of an index line is the name of the manifest, for the lines of the alarm tree too (`testsub`, not `testsub.alarms`).
-
-See also: P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R276 -->
 
 **Event query and merge.** `unit` in the answer of the index is the full reference `<tree>/<unit>`.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R277 -->
 
 **Event query and merge.** for the journal it is `audit/<role>`, for a mark — `console/<instance>`, and its `of` is the addressee.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R278 -->
 
 **Event query and merge.** The reference is logical: the tree is without the suffix `.alarms`, which is the layout of the writer ([the event log contract](../../common/contracts/event-journal.md) `class`); a line from `audit.alarms/<role>` answers and is selected by a query as `audit/<role>`, from `<sub>.alarms/<unit>` — as `<sub>/<unit>`, together with the observations (N3 «query» step 2).
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R299.
 
 ### N1.3 Index and term
 
@@ -419,253 +305,169 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 The `index` form is defined by its separately identified rules: P/05-R067, P/05-R068, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R073, P/05-R074, P/05-R075, P/05-R076.
 
-See also: P/05-R024, P/05-R050, P/05-R053, P/05-R067, P/05-R068, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R067 -->
 
 **`index.one_per_resource`.** Over its own tree and the .mirror/`<server>`/ copies; the state is always live; there is no rebuild.
-
-See also: P/05-R020, P/05-R050, P/05-R068.
 
 <!-- req: P/05-R068 -->
 
 **`index.cache`.** Bounded (INDEX_CACHE_BYTES), dropped without loss of correctness; a file is reread by size/mtime/inode from the place.
 
-See also: P/05-R020, P/05-R050, P/05-R067.
-
 <!-- req: P/05-R069 -->
 
 **`index.query`.** The query rules that the merge needs (parameters, defaults, by) — the event log merge contract «The resource query and answer»; the grammar of the parameters and the refusals — below this block.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R070 -->
 
 **`index.row`.** {id, subsystem, unit, of, epoch, t, kind, server, bucket, class, epoch_is, fenced, …fields}.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R259 -->
 
 **Event line and writing.** `server` — the owner of the bucket.
-
-See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R049, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R260 -->
 
 **Event line and writing.** A line with its own field server (a line about a server: drain.*, server.decommission_*, workers.no_server) keeps it — in such a row server is the server the line is about, the index does not overwrite it, as class.
 
-See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R049, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R261 -->
 
 **Event query and merge.** `epoch_is` and fenced are set by the merger — the console or the worker by the event log merge contract; at the resource the lines are without them.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R071 -->
 
 **`index.epoch_is`.** `current` | `fenced` | `earlier-run` | `unknown`   — by current_epochs from `<sub>`/epoch/* and the policy of the manifest; unknown — only at the worker for an epoch that it did not declare in worker.reads; the needed epoch is not read — a line without epoch_is, incomplete[`<sub>`/epoch] (the event log merge contract «Epochs»).
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R072 -->
 
 **`index.cut, answer`.** The cut, the mirror copies, truncated, partial — the event log merge contract «The resource query and answer»; the answer of the merger (the console, the worker: + complete, incomplete) — in the same place, «The answer».
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R073 -->
 
 **`retention.<sub>/retention`.** {days}      — the default — the event log contract «Retention of a tree»; the form of the row — P/02.4 N1.9.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R074 -->
 
 **`retention.<sub>/alarms_retention`.** {days}      — the default — the event log contract «Retention of a tree»; the form of the row — P/02.4 N1.9.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R075 -->
 
 **`retention.writer`.** Of both rows — admin by the operator command w2cctl retention (P/02.4 N1.9); the resource and the console only read them (P/02.5 N1.4).
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R076 -->
 
 **`retention.rule`.** Per subsystem, not per unit.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R262 -->
 
 **Retention and holds.** `days` — a finite number > 0, anything else — «not known», remove nothing.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R263 -->
 
 **Retention and holds.** The console marks live no less than the longest tree.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R264 -->
 
 **Retention and holds.** The holds (holds) keep buckets (the holds contract).
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R265 -->
 
 **Retention and holds.** Mirror copies — an hour longer.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R266.
 
 <!-- req: P/05-R266 -->
 
 **Retention and holds.** What is removed — the journal events.removed.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265.
-
 <!-- req: P/05-R092 -->
 
 **Retention deadline.** Use the bucket's own persisted logical `written` from the event-journal contract “Bucket write time”.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R226 -->
 
 **Retention and holds.** First resolve term reads and holds conservatively; a hold or unknown dependency keeps the bucket.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R227 -->
 
 **Retention and holds.** For a closed, unheld bucket with readable `written`, delete exactly when `now >= written + seconds`: normal `<sub>` uses `seconds = retention.days * 86400`; `<sub>.alarms` uses `alarms_retention.days * 86400`; `audit`/`audit.alarms` use their journal term; `console`/`console.alarms` use their term with the longest-tree floor.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R228 -->
 
 **Retention and holds.** A mirror copy uses the corresponding tree's term plus `MIRROR_RETENTION_EXTRA`, measured from its own copy `written`.
 
-See also: P/05-R020, P/05-R024, P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R053, P/05-R054, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R086, P/05-R092, P/05-R122, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R194, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R226, P/05-R227, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R274.
-
 <!-- req: P/05-R229 -->
 
 **Retention and holds.** Equality deletes; a time below the deadline keeps it.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R230 -->
 
 **Retention and holds.** Neither window start/end nor filesystem `mtime` substitutes for `written`.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R231 -->
 
 **Retention and holds.** `restore` preserves the copy's `written`; it does not restart the retention clock.
-
-See also: P/05-R020, P/05-R024, P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R053, P/05-R054, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R086, P/05-R092, P/05-R122, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R142, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R194, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R274.
 
 <!-- req: P/05-R232 -->
 
 **Retention and holds.** All usual conservative holds and read outcomes precede this predicate.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R021 -->
 
 The merge of the resource answers by the console (`merge`) — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N1.3 and N3 «merge» (the console); the form of the console answer (`answer` above, `ConsoleEvents` of the contract) is common with the resource.
-
-See also: P/05-R018, P/05-R019, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R055, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R162, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R022 -->
 
 A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer within the HTTP form bounds: - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with digits on at least one side, an optional exponent `e`/`E` with a sign; `1_0`, `.5`, `5.`, `1e3` are numbers, `1e-400` is 0; `+1`, a space (`%201`, `1%20`), non-ASCII digits (`١`), `0x10`, an overflow — 400.
 
-See also: P/05-R019, P/05-R021, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R113 -->
 
 **Event query and merge.** `limit` — only ASCII digits (leading zeros are allowed: `01`), otherwise 400; `since` of the hint — by N1.6.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R114 -->
 
 **Event query and merge.** `unit` — UnitRef `<sub>/<id>`: a bare id, empty, `testsub/`, `/c1` — 400.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R115 -->
 
 **Event query and merge.** `late` — an integer ≥ 0 in decimal notation, only together with `by=occurred`: anything else — 400.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R116 -->
 
 **Event query and merge.** An empty or repeated parameter — 400 (N2); an unknown non-empty parameter is not read (for `/events/wait` — 400, N1.6).
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R023 -->
 
 **Unreadable bucket line** (P/01.1 N0 «Stability of output»). A line that is not JSON, not an object, with a BOM, with a number outside JSON (`NaN`), without `kind`, `t` or `id`, with `id` not a string, and also a file not in its place (a bucket path not by N1.2, for example `e01`) is skipped: it does not enter `events` and `truncated`, the answer is 200, and the number of such lines is `lines_garbled` of the answer (the field is present only when it is greater than 0).
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R117 -->
 
 **Event line and writing.** A torn last line is still `partial`, not `lines_garbled`.
 
-See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R049, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R118 -->
 
 **Event query and merge.** The console adds up the `lines_garbled` of the answering resources and itself skips a line of a resource answer not in the form EventRow, adding it to its own `lines_garbled`.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R119 -->
 
 **Event query and merge.** `events` in BucketInfo is the number of whole readable lines of the bucket; 500 of a listing — only an unreadable directory or metadata.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R024 -->
 
 Another query form — 400, including NaN/Infinity, a fractional limit and a bare unit. `by`, the defaults, `truncated` of the resource and of the merger — the event log merge contract «The resource query and answer».
-
-See also: P/05-R019, P/05-R020, P/05-R021, P/05-R022, P/05-R023, P/05-R037, P/05-R050, P/05-R051, P/05-R053, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R122, P/05-R123, P/05-R177, P/05-R178, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R259, P/05-R260, P/05-R261, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R120 -->
 
 **Event query and merge.** `fenced=true` if and only if `epoch_is=fenced`; earlier-run is not fenced.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R121 -->
 
 **Event query and merge.** This lesson does not promise an atomic snapshot of several files or resources.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R122 -->
 
 **Retention and holds.** An unknown read of the term or of the holds does not equal absence: a dependent tree is not deleted until a reliable read. An absent retention row gives the default, a read error does not.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R123 -->
 
 **Event query and merge.** `complete`, `partial` of the merger — the event log merge contract «The answer», «The resource query and answer».
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 ### N1.4 Resource
 
@@ -673,505 +475,337 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 The `resource` form is defined by its separately identified rules: P/05-R077, P/05-R078, P/05-R079, P/05-R080, P/05-R081, P/05-R082, P/05-R083, P/05-R084, P/05-R085, P/05-R086, P/05-R087, P/05-R088, P/05-R089. There is one resource process per server, without a controller.
 
-See also: P/05-R003, P/05-R018, P/05-R026, P/05-R027, P/05-R053, P/05-R054, P/05-R077, P/05-R078, P/05-R079, P/05-R080, P/05-R081, P/05-R082, P/05-R084, P/05-R085, P/05-R087, P/05-R088, P/05-R089, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R182, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R267, P/05-R268, P/05-R269, P/05-R270, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R077 -->
 
 **`heartbeat`.** The object platform/resources/`<server>`/heartbeat every HEARTBEAT_EVERY {server, ts, url, schema, build, usage, usage_at, space: {total, free, used, full}, volumes, units: {sub: [id]}, workers, running, short, waits, mirrors: {server: n}, pass_started, pass_stalled, restore, mirror, door, retention_garbled?: [`<sub>`…], retention_withheld?: {`<sub>`: days_garbled | unknown | holds_unread}, …}.
-
-See also: P/05-R025, P/05-R026, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R194 -->
 
 **Resource heartbeat.** `retention_garbled`, retention_withheld — the reasons of the retention pass (N3 retain, N4; no reason — no fields).
 
-See also: P/05-R020, P/05-R024, P/05-R025, P/05-R026, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R077, P/05-R092, P/05-R122, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R195 -->
 
 **Resource heartbeat.** `settings_unread`?: [mirror | space] — the setting rows of the pass that did not read: the step mirror (and the body copies of N1.1) or relieve is not executed in this pass; in ascending order of bytes; none — no field.
-
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R196 -->
 
 **Resource heartbeat.** `door`: {addr, mode: loopback | mtls, cert_until} — in every heartbeat, written by the resource: addr — RESOURCE_HOST:RESOURCE_PORT.
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R267 -->
 
 **Resource door row and freshness.** `mode` — loopback without RESOURCE_TLS (loopback only), mtls with RESOURCE_TLS=1.
-
-See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05-R077, P/05-R080, P/05-R082, P/05-R089, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R268, P/05-R269, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R268 -->
 
 **Resource door row and freshness.** `cert_until` — the wall seconds of the end of the term of the server certificate of its own kit, with mtls.
 
-See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05-R077, P/05-R080, P/05-R082, P/05-R089, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R267, P/05-R269, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
-
 <!-- req: P/05-R269 -->
 
 **Resource door row and freshness.** With mtls the server presents the leaf, then its authority (the role certificate contract server; the client — own_client, the object client contract tls); read by w2cctl tls status (P/02.4 N1.9).
-
-See also: P/05-R004, P/05-R025, P/05-R026, P/05-R027, P/05-R043, P/05-R044, P/05-R077, P/05-R080, P/05-R082, P/05-R089, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R202, P/05-R267, P/05-R268, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R197 -->
 
 **Resource heartbeat.** `waits`, restore, mirror, units — in every heartbeat: units — {`<sub>`: [`<id>`…]} of the units that the heartbeats of the workers of this box from running name in status, ids in ascending order of bytes; none — {}.
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R270 -->
 
 **Resource heartbeat.** A worker heartbeat is unreadable (the family heartbeats P/03.4: the whole object, for the resource also an element status[] not in form) — its units do not enter units: the unreadable does not widen.
-
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269.
 
 <!-- req: P/05-R078 -->
 
 **`workers`.** [`<sub>`/`<slot name>`…] — all the slots that the resource knows about on its box.
 
-See also: P/05-R025, P/05-R026, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R198 -->
 
 **Worker presence and room.** `running`: [`<sub>`/`<slot name>`…] — with a live process (it holds the presence lock, the content in form with a non-empty worker).
-
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R199, P/05-R200, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R199 -->
 
 **Worker presence and room.** `unknown`: [`<sub>`/`<slot name>`…] — the presence did not read and the slot is known from current readable content (otherwise the whole-role unknown snapshot below): the lock file does not read or flock/stat of the lock gave an error, except «busy» and ENOENT of stat (the presence lock contract).
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R200, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R200 -->
 
 **Worker presence and room.** `instances`: {`<sub>`/`<slot name>`: `<instance>`}; the key is with the subsystem: a slot name is unique only within its own subsystem (P/03.2 `<sub>/slots/<name>`), two subsystems with one `slot.prefix` have the same names.
-
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R201 -->
 
 **Resource heartbeat.** `pass_stalled`: `<seconds>`, only while the pass hangs (PULSE_LIMIT). One heartbeat form: the console gives it as ResourceRow P/06.5 (a derived output), the controller derives the presence from it (below, P/04 «fate»).
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R079 -->
 
 **`usage`.** An integer — the bytes of the bucket files of the trees of this server and of the copies in .mirror/.
-
-See also: P/05-R025, P/05-R053, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R271 -->
 
 **Volume usage.** `usage_at` — the wall seconds of the measurement.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R272 -->
 
 **Volume usage.** `space` — the volume of the event tree: total, free, used — bytes (statfs), full — the share used/total from 0 to 1 (not a flag).
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R273.
 
 <!-- req: P/05-R273 -->
 
 **Volume usage.** `volumes` — the same per volume.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R079, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272.
-
 <!-- req: P/05-R080 -->
 
 **`door_row`.** `platform/doors/<host>` {url, since, at, room.`<sub>`…, live.`<sub>`…}; at — every ALIVE_EVERY (the observation contract «Resource state»).
-
-See also: P/05-R025, P/05-R027, P/05-R082, P/05-R089, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
 
 <!-- req: P/05-R081 -->
 
 **`room`.** The elements room.`<sub>` and live.`<sub>` — by the presence lock contract «Count room» (presence-lock.md).
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R202 -->
 
 **Resource door row and freshness.** Do not write the door while platform/decommission/`<my server>` stands (the observation contract «Server decommissioned» narrower; the console deleted it).
-
-See also: P/05-R025, P/05-R027, P/05-R080, P/05-R082, P/05-R089, P/05-R267, P/05-R268, P/05-R269.
 
 <!-- req: P/05-R082 -->
 
 **`lost_after`.** LOST_AFTER                      — the observation contract «Freshness»; by a change on the clock of the reader.
 
-See also: P/05-R025, P/05-R027, P/05-R080, P/05-R089, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
-
 <!-- req: P/05-R083 -->
 
 **`pass`.** The first — at start, right after readiness (the door row is written); then every PASS_EVERY from the end of the pass: retain → usage → relieve → mirror; each step in its own attempt; pass_stalled on a hang.
-
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R242.
 
 <!-- req: P/05-R084 -->
 
 **`space`.** `platform/space` {enabled, high, low}   — shares; the typed form and defaults — P/02.4 N1.9, data/space.schema.json; enabled until switched off:
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R203 -->
 
 **Space and free requests.** No row — enabled with high/low defaults of that space form.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R204 -->
 
 **Space and free requests.** `enabled`: false — the resource removes its own row free-*.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R205 -->
 
 **Space and free requests.** The row does not read — the step relieve is not executed: the high/low defaults of the space form are not substituted, its own row free-* is neither written nor removed, the reason is in the heartbeat settings_unread: space the form of the row — P/02.4 N1.9 (written by admin, w2cctl space).
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R085 -->
 
 **`free_ask`.** `<sub>`/requests/free-`<server>`-`<volume>` {free, volume, server, at}   — its own form: written and rewritten with cas only by the resource, not create-once, without unit/digest/family schema; for manifests with requests.free, while the volume > high.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R206 -->
 
 **Space and free requests.** For requests.free volume — a non-empty name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen (a box has one volume — the file system of the event tree, the name events).
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R207 -->
 
 **Space and free requests.** `server` — a non-empty key segment of P/01.1, hyphens are allowed. The split at the last hyphen is unambiguous.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R208 -->
 
 **Space and free requests.** Another volume is out of profile: diagnose the configuration, do not create/change the request of this volume.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R209 -->
 
 **Space and free requests.** `free` = used − total·low − Σ freeing from the heartbeats (only the freeing not yet reflected in used).
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R210 -->
 
 **Space and free requests.** With free ≤ 0 (and under the mark low) the row is removed.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R211 -->
 
 **Space and free requests.** Nobody executes or marks it.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R212 -->
 
 **Space and free requests.** The addressee — all the workers of the subsystem `<sub>` on the server `<server>`; `<volume>` — the volume of the resource, not a place of the subsystem.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R213 -->
 
 **Space and free requests.** Σ freeing — the sum of freeing.`<volume>` (P/03.4 N1.1) over the live heartbeats of the workers `<sub>` on this server, no field — 0 (vectors 05-resource/vectors/relieve; the VMS request freeing).
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R214 -->
 
 **Space and free requests.** Between low and high, while need > 0, its own row stands as it is — it is neither removed nor rewritten.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R086 -->
 
 **`mirror`.** `platform/mirror` {enabled, copies}; no row or no field enabled — enabled: false, buckets are not copied until enabled: true.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R215 -->
 
 **Bucket mirroring.** The row does not read — the step mirror is not executed, the reason is in the heartbeat settings_unread: mirror, `copies 1, enabled false` are not substituted; bodies — N1.1 mirror.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R216 -->
 
 **Bucket mirroring.** The neighbours — the next copies live servers by name; liveness — by the door row platform/doors/`<host>`, as in the merge contract «Live resources» (the version changed within the last LOST_AFTER on the clock of this resource, the first look — as fresh), the heartbeat of the neighbour does not judge here.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R217 -->
 
 **Bucket mirroring.** Only closed buckets.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R218 -->
 
 **Bucket mirroring.** The copy in .mirror/`<server>`/….
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R219 -->
 
 **Bucket mirroring.** A copy is never a source while the owner answers; PEER_FAILS, a bucket within the resource door byte limit (OpenAPI Content-Length.maximum) as a whole,.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R274 -->
 
 **Bucket mirroring.** A copy adds MIRROR_RETENTION_EXTRA to its term.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231.
-
 <!-- req: P/05-R220 -->
 
 **Bucket mirroring.** A closed bucket larger than that door limit (the mirror reception limit) is not copied: there is no assembly from pieces and no partial copy, it enters mirror.skipped of the heartbeat on every pass, the other buckets are copied. The form of the row platform/mirror — P/02.4 N1.9 (written by admin, w2cctl mirror).
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R087 -->
 
 **`presence`.** `runs` | `gone` | `unlisted` | `unknown`   — about the worker process of its own box — a conclusion from the heartbeat fields above: the key `<sub>`/`<name>` of the worker slot of the subsystem `<sub>`: in running — runs; in unknown — unknown; in workers, but not in running and not in unknown, — gone (the resource knew the process, it is dead); not named in workers — unlisted (not registered at the resource); a heartbeat without these fields — nothing about the worker (P/04 «fate»); an absent one of the three fields is an empty list, not unreadability: the selection is [decision-order.tsv](../forms/decision-order.tsv), procedure `presence`.
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R221 -->
 
 **Worker presence and room.** The listing `<events root>`/.workers/`<sub>`/ is not obtained (an error, except ENOENT of a directory not yet created — that one is empty): the heartbeat has none of the three fields — nothing about the workers (P/04 wait), the former names are not carried over, there is no partial set; the rest of the heartbeat — as usual. How the resource learns the presence — the presence lock contract.
-
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
 
 <!-- req: P/05-R222 -->
 
 **Worker presence and room.** `silent` is a state of the resource itself (the observation contract), not a value of the presence.
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R223, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R088 -->
 
 **`presence_lock`.** `<events root>`/.workers/`<sub>`/`<instance>`.lock — the presence lock contract (presence-lock.md); after flock the resource compares fstat(fd) and stat(path); if they do not match (ENOENT of stat too), it does not touch the file; the flock of the worker is blocking.
-
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
 
 <!-- req: P/05-R223 -->
 
 **Worker presence and room.** The content — the family presence-lock (data/presence-lock.schema.json, presence-lock.outcomes.tsv; below): {instance, sub, worker, server, pid}, worker "" before the name is captured; a busy lock with empty or out-of-form content — a live process without a number (in room, not in workers, running, live); unknown — only an unreadable file and an error of flock or stat, except «busy» and ENOENT.
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R089 -->
 
 **`requires`.** `placement.requires`: resource — the worker is outside the pool while the resource of its server is silent (P/04).
-
-See also: P/05-R025, P/05-R027, P/05-R080, P/05-R082, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
 
 <!-- req: P/05-R026 -->
 
 **Writer and reader heartbeat forms.** The current writer and reader MUST include `door`, `waits`, `restore`, `mirror` and `units`.
 
-See also: P/05-R003, P/05-R018, P/05-R025, P/05-R077, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R124, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R124 -->
 
 **Resource heartbeat.** At initialization before any operations: `units = {}`, `restore = {}` if there are no necessary neighbours, `waits = {waiting:0, held:0, full:0, replaced:0, max:LONG_POLL_WAITERS}`, and the mirror counters `skipped`, `failed`, `peer_errors`, `lines_garbled` are zero.
-
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R125, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
 
 <!-- req: P/05-R125 -->
 
 **Resource heartbeat.** Existing necessary neighbours still have their actual restore entries, including incomplete ones; neutral values do not erase an error or a pending attempt.
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R126, P/05-R127, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R126 -->
 
 **Resource heartbeat.** `door` always has its actual `addr` and `mode`; `mtls` additionally requires the actual server-certificate `cert_until`.
-
-See also: P/05-R004, P/05-R025, P/05-R026, P/05-R043, P/05-R044, P/05-R077, P/05-R124, P/05-R125, P/05-R127, P/05-R172, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R127 -->
 
 **Resource heartbeat.** The ordinary root schema requires those current fields and the mtls condition in both modes. A violation has the existing unreadable-heartbeat outcome; a reader does not synthesize successful operation or TLS state from an absent field.
 
-See also: P/05-R025, P/05-R026, P/05-R077, P/05-R124, P/05-R125, P/05-R126, P/05-R194, P/05-R195, P/05-R196, P/05-R197, P/05-R198, P/05-R199, P/05-R200, P/05-R201, P/05-R267, P/05-R268, P/05-R269, P/05-R270.
-
 <!-- req: P/05-R090 -->
 
 **Unnamed presence uncertainty.** A current lock error without a readable slot name makes the whole role snapshot unknown, even after a successful listing and at cold start.
-
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
 
 <!-- req: P/05-R224 -->
 
 **Worker presence and room.** Apply the presence-lock contract's “An unknown role snapshot”: omit `workers`, `running`, `unknown` and snapshot-derived `instances`, set the affected `room.<sub>` to `"unknown"`, omit its `live.<sub>`, keep independently complete room/live of other roles.
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R225.
-
 <!-- req: P/05-R225 -->
 
 **Worker presence and room.** Do not infer a slot from the filename, prior memory, or another lock; do not interpret the omission as `unlisted` or `gone`.
-
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224.
 
 <!-- req: P/05-R091 -->
 
 **Worker presence and room.** The content of the presence lock is the family `presence-lock` of the lesson: [schema](../data/presence-lock.schema.json), [outcomes](../data/presence-lock.outcomes.tsv) (layers — [LAYERS](../../common/LAYERS.md)): an instance is `{key, file}`, the text of the file with `x-encoding: json` at the root (LAYERS § 6), the column `schema` of the catalogue row names the family, the section is «Data families» below; the meaning is [the presence lock contract](../../common/contracts/presence-lock.md).
 
-See also: P/05-R025, P/05-R026, P/05-R078, P/05-R081, P/05-R087, P/05-R088, P/05-R090, P/05-R198, P/05-R199, P/05-R200, P/05-R221, P/05-R222, P/05-R223, P/05-R224, P/05-R225.
-
 <!-- req: P/05-R027 -->
 
 **Cluster objects — through the resource of its own server.** A process of the platform reads the objects of other servers (the heartbeats of workers and resources, the pass reports) through the objects door of the resource of its own server (N2, `scope`); without a resource on its own server with `cluster://` — «not known», not «no» ([the object store client contract](../../common/contracts/object-client.md) `door`). A stand that needs the heartbeats of workers puts a resource on the server of the reader ([P/04](../../04-controller/spec/04-controller.norms.md) N3 «pass()» step 0).
-
-See also: P/05-R025, P/05-R039, P/05-R040, P/05-R059, P/05-R062, P/05-R080, P/05-R082, P/05-R089, P/05-R105, P/05-R202, P/05-R267, P/05-R268, P/05-R269.
 
 <!-- req: P/05-R028 -->
 
 PULSE_LIMIT is a finite positive limit of the duration of one step of the resource in seconds, chosen and declared by the implementation before the start. The duration is measured by the local monotonic clock, not by t/at of the writer; while a step runs beyond the limit, every heartbeat carries pass_stalled; it is cleared when the step ends, including before the next heartbeat. It is a diagnostic threshold, not a promise to stop a hung call or to wait for an answer.
 
-See also: P/05-R013, P/05-R014, P/05-R035, P/05-R045, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R163, P/05-R164, P/05-R242.
-
 <!-- req: P/05-R029 -->
 
 **Bucket restore** (a server failure and `power_pull` — [P/04](../../04-controller/spec/04-controller.norms.md) N1.4a, the drill — [system acceptance](../../common/acceptance/system/README.md) (judge-only: restore drill for P/05-R030)):
-
-See also: P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R142, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R030 -->
 
 **`restore`.** At start the resource pulls its closed buckets from the neighbours whose heartbeats mirrors name it: GET /mirrored/`<me>`, each bucket by its sum, tmp + rename.
 
-See also: P/05-R029, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R142, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R128 -->
 
 **Restore and peer attempts.** PEER_FAILS consecutive failures — the neighbour is skipped until the end of this restore attempt.
-
-See also: P/05-R029, P/05-R030, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R129 -->
 
 **Restore and peer attempts.** RESTORE_RETRY, doubling up to RESTORE_RETRY_MAX.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R130 -->
 
 **Restore and peer attempts.** `done` when the full lists are received and the copies are checked from all known necessary neighbours.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R131 -->
 
 **Restore and peer attempts.** The necessary neighbours — those whose readable heartbeats mirrors name this server.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R132 -->
 
 **Restore and peer attempts.** The local events are lost, and the heartbeats of the neighbours do not read or there is no heartbeat of a neighbour — all known server doors are necessary (platform/doors, door_row above), except its own: each is to answer with a full listing GET /mirrored/`<me>` (a full empty listing and 404 — there are no copies, so that neighbour is complete).
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R133 -->
 
 **Restore and peer attempts.** 404 of GET of an already listed bucket is a missing copy, not an empty listing: the attempt stays incomplete.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R134 -->
 
 **Restore and peer attempts.** A restored bucket keeps the listed copy's written as its own retention stamp, not the receive time or filesystem mtime.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R135 -->
 
 **Restore and peer attempts.** An unknown or unreadable door leaves the restore incomplete.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R136 -->
 
 **Restore and peer attempts.** A skipped/unreadable neighbour leaves the restore incomplete; 500 of a listing and a broken answer by N2, N4 do not count as an empty full list.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R137 -->
 
 **Restore and peer attempts.** If there were never any neighbours, there is no remote restore.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R138 -->
 
 **Restore and peer attempts.** `restored` of the heartbeat — only the buckets actually pulled from this neighbour; a bucket already lying on the volume does not count.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R139 -->
 
 **Restore and peer attempts.** Then — the reindexing of the subsystem; a copy is never a source while the owner answers (mirror above).
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R140 -->
 
 **Restore and peer attempts.** The local consecutive PEER_FAILS sequence resets after a successful peer operation and at the start of the next restore attempt or mirror pass.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R141 -->
 
 **Restore and peer attempts.** A skipped necessary peer leaves the current restore incomplete; the next attempt considers it again.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R143, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R142 -->
 
 **Bucket mirroring.** A mirror peer is considered again next pass.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R143 -->
 
 **Restore and peer attempts.** These are separate procedure-local sequences; cumulative diagnostic counters are not reset by either boundary.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R144, P/05-R145, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R144 -->
 
 **Restore and peer attempts.** A failure in such a sequence is a transport error, an expired call deadline or a failure of a dependency; a per-row refusal 400/409/422 does not extend the sequence: only that row fails and the other rows continue.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R145, P/05-R146, P/05-R231.
 
 <!-- req: P/05-R145 -->
 
 **Restore and peer attempts.** A 404 at the GET of a bucket that the peer listed is such a failure: the peer declared the copy and did not give it.
 
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R146, P/05-R231.
-
 <!-- req: P/05-R146 -->
 
 **Restore and peer attempts.** The order of buckets between passes is not a contract.
-
-See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05-R132, P/05-R133, P/05-R134, P/05-R135, P/05-R136, P/05-R137, P/05-R138, P/05-R139, P/05-R140, P/05-R141, P/05-R143, P/05-R144, P/05-R145, P/05-R231.
 
 ### N1.6 Hint and HTTP representations
 
@@ -1179,181 +813,121 @@ See also: P/05-R029, P/05-R030, P/05-R128, P/05-R129, P/05-R130, P/05-R131, P/05
 
 `GET /events/wait` of the resource is a hint, not a delivery of events. The profile of the lesson: `want` — a non-empty comma-separated list `<sub>/<kind>[/<unit>]`; each part of ASCII letters, digits, `_`, `-`, `.`, 1…64 characters, not starting with a dot.
 
-See also: P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R243 -->
 
 **Event hint and long poll.** `client`, if given, — 1…128 printable ASCII characters without a space.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R147 -->
 
 **Event hint and long poll.** `since` — a decimal uint64 without a sign/leading zeros, 0 by default.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R244 -->
 
 **Event hint and long poll.** `timeout` — finite seconds with the bounds and default of `GET /events/wait` in the [HTTP form](05-resource.api.openapi.yaml).
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R245 -->
 
 **Event hint and long poll.** Empty/repeated parameters, unknown parameters (`&foo=1`), other forms and values out of range — 400; `since` and `timeout` — only ASCII digits (and a dot for `timeout`), non-ASCII digits — 400.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R148 -->
 
 **Event hint and long poll.** `since=0` — the client has no position: the answer at once is `{changed: true, seq, touched}` if under want there are lines in the buckets of the resource of any age; seq is an opaque monotonic number of the resource process, the client only compares it and passes it back.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R149 -->
 
 **Event hint and long poll.** With `since` equal to the `seq` last returned by this resource process and no line under `want` written after that `seq`, the wait ends at its term with `{changed: false, seq}`; a line under `want` written after that `seq` answers `{changed: true, seq, touched}`.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R246 -->
 
 **Event hint and long poll.** The hint is given by the subsystem trees of the catalogue (`<sub>`, `<sub>.alarms`); the trees `console` and `audit` give no hint.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R247 -->
 
 **Event hint and long poll.** This bounded profile does not require accepting any internal unit names: the periodic pass of the client stays mandatory and works without the hint.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R032 -->
 
 The answer is one of the closed forms WaitAnswer: `{changed:true, seq, touched:[…]}`, `{changed:false, seq}`, `{changed:false, seq, full:true}` or `{changed:false, seq, replaced:true}`.
-
-See also: P/05-R031, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R150 -->
 
 **Event hint and long poll.** In touched — the sorted unique `<sub>/<kind>/<unit>` that match want; the events themselves are not there.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R248 -->
 
 **Event hint and long poll.** `seq` belongs to one process of the resource; after a restart/an unknown sequence the client makes an ordinary pass.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R151 -->
 
 **Event hint and long poll.** With full/replaced the client does not advance its cursor by seq, but returns to the ordinary pass.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R152 -->
 
 **Event hint and long poll.** By default up to LONG_POLL_WAITERS_DEFAULT waits (the deployment parameter LONG_POLL_WAITERS); a new wait when full is answered 200/full.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R249 -->
 
 **Event hint and long poll.** Apply [decision-order.tsv](../forms/decision-order.tsv), procedure `wait`, for replacement and capacity. Thus at a full effective LONG_POLL_WAITERS a replacement is admitted and the same number remain; a different CN cannot free that place.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R250, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R153 -->
 
 **Event hint and long poll.** A wait does not take the /events computation lane of P/06.4 N3 merge (N3 «query»); it holds its connection of the door until the answer (changed, term, full, replaced) or until the noticed departure of the client (within WAIT_DISCONNECT_WITHIN) — the «common lane» of N2 is the connection limit of the resource door («Implementation decides» item 10).
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R250 -->
 
 **Event hint and long poll.** In TLS the identity is the CN of the certificate plus client; another CN does not displace a wait.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R251, P/05-R299.
-
 <!-- req: P/05-R154 -->
 
 **Event hint and long poll.** Without client the deployment uses a separate wait per client address; a repeat with a busy address — full.
-
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R299.
 
 <!-- req: P/05-R251 -->
 
 **Event hint and long poll.** The current buckets are observed every WAIT_OBSERVE_MS / 1000 seconds while there are waiting ones; a missed hint or a write to an old bucket is made up for by the ordinary pass, not by a promise of delivery.
 
-See also: P/05-R031, P/05-R032, P/05-R036, P/05-R050, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R299.
-
 <!-- req: P/05-R033 -->
 
 Paths `/mirror/{server}/{path}`, `/mirrored/{server}[/{path}]`, `/events/{path}`: `{server}` — one segment by the grammar of a server name (P/02.4 N1.2 `SERVER_NAME`); `{path}` — a bucket path of N1.2 (`<tree>/<unit>/e<epoch>/<start>Z.events.jsonl`), no segment is empty or `.`/`..`, `%2F` is not a separator, `.tmp` is not a bucket. Otherwise: `GET /mirrored/…` and `GET /events/…` — 404 without a body, `PUT /mirror/…` — 400 without a body.
-
-See also: P/05-R029, P/05-R030, P/05-R034, P/05-R036, P/05-R041, P/05-R042, P/05-R045, P/05-R054, P/05-R057, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R275 -->
 
 **Raw paths and route matching.** The resource never reads or writes a file outside its tree (`.mirror/<server>/` for copies).
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R155 -->
 
 **Bucket mirroring.** `PUT /mirror` of a bucket whose end by name is later than the clock of the receiver — 400: the mirror accepts only closed buckets.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R156 -->
 
 **Bucket mirroring.** `PUT /mirror/<own server>/…` (a copy from itself) — accept or refuse — «Implementation decides» item 11.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R157 -->
 
 **Representations and stream failures.** The value of `X-Sum` is an HTTP field: the spaces at the edges (OWS) are dropped before the check of the form.
-
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R283, P/05-R298.
 
 <!-- req: P/05-R034 -->
 
 The HTTP representations are in the schemas of N2. `BucketInfo` is the description of one bucket, not an event; `/buckets` gives UTF-8 JSON Lines: one object per LF, without an array.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R157, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274, P/05-R283, P/05-R298.
-
 <!-- req: P/05-R158 -->
 
 **Bucket mirroring.** `/mirrored/<server>` by the canon of this lesson gives `{copies:[{path,written,size,sum}]}`.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R159 -->
 
 **Bucket mirroring.** `written` of a copy is the wall seconds (N0) when the receiver published this copy at itself (the time of the copy file or its own record): `PUT /mirror` does not carry the time of the source bucket, only `X-Sum`; the bytes of the bucket do not change; a repeated reception of the same bucket with the same sum does not shift `written`.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R160 -->
 
 **Bucket mirroring.** The bytes of a copy are a separate GET.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R161 -->
 
 **Bucket mirroring.** The field `sum` and the header X-Sum are 64 lowercase hex digits of the SHA-256 of the whole body.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R162 -->
 
 **Console-owned operations.** The form `answered` (the mark row of a request, AnsweredMark) — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N1.6 (the console door).
-
-See also: P/05-R018, P/05-R021, P/05-R037, P/05-R055.
 
 <!-- families:begin -->
 ### Data families (built from the standard files)
@@ -1699,25 +1273,17 @@ Outcomes of an unreadable object (the reader is a role; `*` — all readers of t
 
 The full contract: [OpenAPI](05-resource.api.openapi.yaml).
 
-See also: P/05-R013, P/05-R014, P/05-R028, P/05-R034, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R163, P/05-R164, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R283, P/05-R298.
-
 <!-- req: P/05-R163 -->
 
 **Independent size and time limits.** GET of an object is limited to the resource door byte limit (OpenAPI Content-Length.maximum) by the bytes actually read: exactly the limit is allowed, +1 byte — 413 ResourceError before the success headers; until the size is confirmed the body is buffered within bounds or checked against an immutable object with a reliable size.
-
-See also: P/05-R013, P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R164.
 
 <!-- req: P/05-R164 -->
 
 **Independent size and time limits.** The ceiling of the store itself can be higher and does not cancel this limit of the door. It distinguishes the resource and the console, JSON answers, a byte stream and the absence of a body.
 
-See also: P/05-R013, P/05-R014, P/05-R028, P/05-R035, P/05-R045, P/05-R163.
-
 <!-- req: P/05-R165 -->
 
 **Representations and stream failures.** The schemas set the required fields and the allowed extensions; the checks of existence, rights, UTF-8 size and state are performed separately. An outer array does not replace JSON Lines.
-
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R166, P/05-R173, P/05-R174, P/05-R283, P/05-R298.
 
 <!-- req: P/05-R036 -->
 
@@ -1735,253 +1301,169 @@ See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05
 | resource GET /mirrored/{server}/{path} | 200 bytes + X-Sum | 404/500 without a body |
 | resource `PUT /v1/objects/<sub>/blobs/<digest>` | 204 without a body. Required are a length ≤the resource door byte limit (OpenAPI Content-Length.maximum), `X-Written` — a non-negative time of the source copy (absent or not a number — 400), a sha256 name with 64 lowercase hex; bytes of another digest — 422; a key not of the blob form or a subsystem without a blob field — 405, as for any object (N1.1 «Bodies at the resource» `mirror`). On reading the actual limit/sum are checked | 400/404/405/408/409/411/413/422/503 — `ResourceError`, 403 — it or `ResourceDenied`. The common refusals of the console do not apply here |
 
-See also: P/05-R005, P/05-R008, P/05-R011, P/05-R012, P/05-R015, P/05-R029, P/05-R030, P/05-R031, P/05-R032, P/05-R033, P/05-R034, P/05-R035, P/05-R038, P/05-R040, P/05-R045, P/05-R050, P/05-R051, P/05-R054, P/05-R065, P/05-R086, P/05-R110, P/05-R111, P/05-R112, P/05-R142, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R155, P/05-R156, P/05-R157, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R165, P/05-R166, P/05-R167, P/05-R173, P/05-R174, P/05-R175, P/05-R176, P/05-R179, P/05-R180, P/05-R181, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R192, P/05-R193, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R274, P/05-R283, P/05-R298, P/05-R299.
-
 <!-- req: P/05-R037 -->
 
 `GET /events` of the console (the merge, ConsoleEvents, `HEAD`) and the console doors `POST /marks`, `POST /{sub}/requests`, `DELETE /{sub}/asked/{sha16}` — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N2; the schemas of the answer of `/events` common to both doors (`EventRow`, `UnitRef` and below) are in the contract of this lesson.
-
-See also: P/05-R018, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R050, P/05-R051, P/05-R055, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R162, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R038 -->
 
 For both listings (`/buckets/{sub}/{unit}` and `/mirrored/{server}`) all the necessary reads of the directory/metadata complete before the success headers: unknownness/an error — 500 without a body, not 404 and not an empty 200. It is an observed listing, not a snapshot of several files.
 
-See also: P/05-R008, P/05-R010, P/05-R034, P/05-R035, P/05-R036, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R058, P/05-R106, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R283, P/05-R298.
-
 <!-- req: P/05-R166 -->
 
 **Representations and stream failures.** A break of an already started transfer of a listing is not a full answer; a new HTTP status is not sent after the headers.
-
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R173, P/05-R174, P/05-R283, P/05-R298.
 
 <!-- req: P/05-R039 -->
 
 **`scope`** Of `/v1/objects` and `/v1/objects/{key}`: `local` (the default) — only the objects directory of this server; `cluster` — the cluster objects by N1.1 `cluster` (the fresh copy by `written` wins, a server that did not answer is `missing`); another value — 400 (N4). The resource is the read door of the cluster objects for the processes of its own server (N1.4 «Cluster objects — through the resource of its own server»).
 
-See also: P/05-R027, P/05-R040, P/05-R059, P/05-R062, P/05-R105.
-
 <!-- req: P/05-R040 -->
 
 ResourceError is only `{error: text}`.
-
-See also: P/05-R008, P/05-R010, P/05-R027, P/05-R036, P/05-R038, P/05-R039, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R058, P/05-R059, P/05-R062, P/05-R065, P/05-R105, P/05-R106, P/05-R167, P/05-R191, P/05-R192, P/05-R193.
 
 <!-- req: P/05-R167 -->
 
 **Object door admission.** A refusal 404 on reading an object means «not among those who answered»; with an incomplete poll X-Missing is required, completeness is not derived from the code 404 itself.
 
-See also: P/05-R008, P/05-R036, P/05-R040, P/05-R065, P/05-R191, P/05-R192, P/05-R193.
-
 <!-- req: P/05-R041 -->
 
 **Query parsing.** The resource door — by P/01.1 N2.1 (query, the path byte for byte, HTTP by RFC 9112, an early refusal) with deviations: a refusal of query parsing — 400 ResourceError `{error}`.
-
-See also: P/05-R007, P/05-R033, P/05-R042, P/05-R057, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R253, P/05-R254, P/05-R255, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R279 -->
 
 **Raw paths and route matching.** an empty or repeated parameter — 400, except an empty `prefix` of the object listing (200).
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R280 -->
 
 **Raw paths and route matching.** no path and an unsupported method — 404/405 without a body, including `OPTIONS`, `POST /events`, `PUT /v1/objects` (the listing), `GET`/`POST`/`DELETE` on `/mirror/…`.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R281 -->
 
 **Raw paths and route matching.** `PUT /v1/objects/{non-blob}` — the application 405 ResourceError (N4).
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R282 -->
 
 **Raw paths and route matching.** `/buckets/{sub}/{unit}` — exactly two non-empty segments, `/buckets/testsub/`, `/buckets/../objects`, `/buckets/testsub%2Fc1` — 404 without a body.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R283 -->
 
 **Representations and stream failures.** the bodies of `PUT` are bytes, JSON is not parsed.
 
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R298.
-
 <!-- req: P/05-R168 -->
 
 **Raw paths and route matching.** The shared P/01.1 R050 drain counts raw HTTP-stream bytes and its absolute monotonic interval starts after the complete refusal has been sent; chunked discard does not wait for a terminal chunk. This parsing reference does not replace the resource's own timeout outcomes or budgets with P/01 input-phase refusals, and adds no common response deadline to resource streams.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R042 -->
 
 ResourceDenied (`error=refused`, detail, role on a refusal of the role) — 403 of the resource gateway, before the route handler.
 
-See also: P/05-R010, P/05-R033, P/05-R038, P/05-R040, P/05-R041, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R057, P/05-R058, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R169 -->
 
 **Raw paths and route matching.** A TLS refusal before HTTP does not get an invented HTTP body. Every applicable common answer is entered in the OpenAPI.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R170 -->
 
 **Raw paths and route matching.** With busy — Retry-After: 1.
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R171 -->
 
 **Raw paths and route matching.** On an unknown path — 404; on an unsupported method of a known path — 405; at the resource both are without a body. This common rule is enough: it does not create a separate OpenAPI method for every impossible operation.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R057 -->
 
 **Route matching form.** The OpenAPI path item has a unique integer `x-route-priority`: smaller is earlier.
 
-See also: P/05-R007, P/05-R033, P/05-R041, P/05-R042, P/05-R060, P/05-R103, P/05-R107, P/05-R108, P/05-R109, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R253, P/05-R254, P/05-R255, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R288 -->
 
 **Raw paths and route matching.** Match the raw path exactly, with no percent-decoding of literals, path normalization or implicit trailing slash.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R289 -->
 
 **Raw paths and route matching.** A path parameter declares `x-path-capture` (`segment` or `remainder`, only at the end) and `x-path-decode: percent-segment`.
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R290 -->
 
 **Raw paths and route matching.** Capture the raw remainder including an empty tail and empty inner segments; decode each captured segment separately.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R291 -->
 
 **Raw paths and route matching.** A decoded slash does not create a separator and is invalid.
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R292 -->
 
 **Raw paths and route matching.** Empty or other out-of-form values are parameter errors of the selected operation, not a fallback to another route.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R293, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R293 -->
 
 **Raw paths and route matching.** First filter the structurally matching templates by the HTTP method, then select their lowest priority; only when no such method exists is the answer the common bodyless 405 (no matching template: bodyless 404).
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R294, P/05-R295, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R294 -->
 
 **Raw paths and route matching.** The parameter’s `x-path-error` maps each applicable HTTP method to `{status, response_schema}`: the existing OpenAPI component name or `-` for no body.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R295, P/05-R296, P/05-R297.
 
 <!-- req: P/05-R295 -->
 
 **Raw paths and route matching.** In particular the generic objects GET remains available for a blob-shaped key when the specific blob route has only PUT.
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R296, P/05-R297.
-
 <!-- req: P/05-R296 -->
 
 **Raw paths and route matching.** The exact priorities, capture mode and refusal projections are the OpenAPI form, not a second route list in prose.
-
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R297.
 
 <!-- req: P/05-R297 -->
 
 **Raw paths and route matching.** Schema refusal and decoding refusal do not normalize a foreign or invalid key into a file path.
 
-See also: P/05-R033, P/05-R041, P/05-R042, P/05-R057, P/05-R168, P/05-R169, P/05-R170, P/05-R171, P/05-R275, P/05-R279, P/05-R280, P/05-R281, P/05-R282, P/05-R288, P/05-R289, P/05-R290, P/05-R291, P/05-R292, P/05-R293, P/05-R294, P/05-R295, P/05-R296.
-
 <!-- req: P/05-R298 -->
 
 **Representations and stream failures.** Error text inside ResourceError remains a non-empty diagnostic, not a new fixed error word.
-
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R283.
 
 <!-- req: P/05-R043 -->
 
 **Admission to the resource doors**. The resource with TLS checks the client: the chain up to the authority, the serial number not in `revoked` ([the role certificate contract](../../common/contracts/role-certificate.md) `revoke`), exactly one role of the route row, CN = `<role>.<SAN DNS>`; otherwise a refusal of the handshake or 403 `ResourceDenied` with the role and the route.
 
-See also: P/05-R004, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
-
 <!-- req: P/05-R172 -->
 
 **TLS and role admission.** The client checks the role `resource` and the SAN DNS of the server against the host of the address; an IP with TLS — a refusal of the client.
-
-See also: P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R044 -->
 
 For door mode `mtls`, the per-operation role table is [forms/door-roles.tsv](../forms/door-roles.tsv), with the paths and methods of the OpenAPI.
 
-See also: P/05-R004, P/05-R043, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286, P/05-R287.
-
 <!-- req: P/05-R284 -->
 
 **TLS and role admission.** `<sub>worker` expands only over the loaded manifest catalogue; `*` means any authenticated kit role.
-
-See also: P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R285, P/05-R286, P/05-R287.
 
 <!-- req: P/05-R285 -->
 
 **TLS and role admission.** The role check precedes the matched operation handler; the TLS checks above remain mandatory.
 
-See also: P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R286, P/05-R287.
-
 <!-- req: P/05-R286 -->
 
 **TLS and role admission.** The loopback mode keeps the admission of the role certificate contract.
-
-See also: P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R287.
 
 <!-- req: P/05-R287 -->
 
 **TLS and role admission.** This does not admit unknown paths or methods.
 
-See also: P/05-R004, P/05-R043, P/05-R044, P/05-R126, P/05-R172, P/05-R267, P/05-R268, P/05-R269, P/05-R284, P/05-R285, P/05-R286.
-
 <!-- req: P/05-R045 -->
 
 **Profile limits.** A bucket file is read whole or by one Range; multiple Ranges and conditional HTTP requests are not part of the lesson.
-
-See also: P/05-R010, P/05-R013, P/05-R014, P/05-R028, P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R040, P/05-R042, P/05-R051, P/05-R054, P/05-R055, P/05-R056, P/05-R058, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R157, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R163, P/05-R164, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274, P/05-R283, P/05-R298.
 
 <!-- req: P/05-R173 -->
 
 **Representations and stream failures.** The size of the answer is fixed before reading; the answer does not promise a snapshot of the whole tree.
 
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R166, P/05-R174, P/05-R283, P/05-R298.
-
 <!-- req: P/05-R174 -->
 
 **Representations and stream failures.** After the output has started, a break of the stream does not turn into a second HTTP status: the caller does not accept incomplete bytes as a whole copy.
-
-See also: P/05-R034, P/05-R035, P/05-R036, P/05-R038, P/05-R045, P/05-R051, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R283, P/05-R298.
 
 <!-- req: P/05-R175 -->
 
 **Bucket mirroring.** The mirror reception is limited by the resource door byte limit (OpenAPI Content-Length.maximum) and by the read term declared by the deployment; exceeding the size — 413, the term — 408.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R179, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R176 -->
 
 **Body copies.** `PUT /v1/objects/<sub>/blobs/<digest>` is the body copy of a neighbour (the table above; N1.1 «Bodies at the resource»); `PUT /<rows>/<id>/<blob_field>` belongs wholly to [P/06.1](../../06-console/spec/06.1-console.norms.md) N2 (the bytes door of the console); other objects the resource door does not write — a refusal of the write of a non-blob, there is no partial copy of the blobs contract.
-
-See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05-R111, P/05-R112, P/05-R185, P/05-R186, P/05-R187, P/05-R191, P/05-R193.
 
 ---
 
@@ -1993,19 +1475,13 @@ See also: P/05-R005, P/05-R011, P/05-R012, P/05-R015, P/05-R036, P/05-R110, P/05
 
 The process input inventory is [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); derived defaults and imported validation remain the linked rules. It introduces no CLI flags.
 
-See also: P/05-R047, P/05-R048, P/05-R052.
-
 <!-- req: P/05-R047 -->
 
 The resource side of the common block [P/06.6](../../06-console/spec/06.6-console.norms.md) N3 «console start — schema check»; the row `platform/schema` and its raising — P/06.6 N1.1a; the other processes — P/06.6, P/03.2, P/04. The order of the resource start — [life cycle](../lifecycle.md).
 
-See also: P/05-R046, P/05-R048, P/05-R052.
-
 <!-- req: P/05-R048 -->
 
 As its first startup step, before reading the manifest (P/02.3), the resource performs «Check at start» of [the schema contract](../../common/contracts/schema.md).
-
-See also: P/05-R046, P/05-R047, P/05-R052.
 
 ### write an event (the platform, by observe of the subsystem)
 
@@ -2013,75 +1489,51 @@ See also: P/05-R046, P/05-R047, P/05-R052.
 
 The steps of writing a line (the class, `of`, suppression, the bucket by `t`, appending and `fsync`) and their «Races» — [the event log contract](../../common/contracts/event-journal.md) «Writing a line» (the lesson is the owner of the contract). The refusals of the write — N4.
 
-See also: P/05-R018, P/05-R117, P/05-R259, P/05-R260.
-
 ### query (resource) → {events, state, truncated}
 
 <!-- req: P/05-R050 -->
 
 Execute the following steps in their listed order: P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098.
 
-See also: P/05-R019, P/05-R020, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R031, P/05-R032, P/05-R036, P/05-R037, P/05-R051, P/05-R067, P/05-R068, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R177, P/05-R178, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R093 -->
 
 **Step 1.** Check the parameters (N1.3)                                         → 400 (ResourceError at the resource, ConsoleRefusal at the console).
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R094 -->
 
 **Step 2.** Candidates: a window ≤ QUERY_NAMED_BUCKET_LIMIT buckets — names by time; wider — a listing of the directory; if a bound cannot be represented by a calendar name — a listing, without an overflow; the threshold only selects candidate search, never a query horizon or a result cap; both trees of the subsystem (and .alarms); the copies .mirror/*: the same bucket is a duplicate, it answers under the name of the owner.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R095 -->
 
 **Step 3.** Read the files from the place of the last read (a cache by size/mtime/inode); a torn line — skip it (partial); an unreadable line or a file not in its place — skip it and count it in lines_garbled (N1.3), the answer is not 503.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R096 -->
 
 **Step 4.** Filter: kind, subsystem, unit — the logical reference `<tree>`/`<unit>`, for a line of the tree .alarms — without the suffix (and the lines with of = unit; a parameter with the suffix .alarms — the form UnitRef allows it — is not normalized and matches no line: 200 without matches), class, the window from ≤ t < to (or likewise by occurred: buckets up to to + late, the event log merge contract `by`).
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R097 -->
 
 **Step 5.** `epoch_is` and fenced the resource does not set: they are set by the merger (the event log merge contract); the resource needs no rights to `<sub>`/epoch/*.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 <!-- req: P/05-R098 -->
 
 **Step 6.** Remove the id duplicates, order and take the first limit by cut (the event log merge contract); truncated = the number of candidates after deduplication minus the number given → the lines of N1.3.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R299 -->
 
 **Event query and merge.** The resource answers `503 busy` with `Retry-After: 1` when the number of simultaneously computed `/events` requests exceeds the P/06.4 N3 merge lane bound. Only requests being computed now count; a held `/events/wait` does not take this lane.
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R031, P/05-R032, P/05-R036, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R147, P/05-R148, P/05-R149, P/05-R150, P/05-R151, P/05-R152, P/05-R153, P/05-R154, P/05-R177, P/05-R178, P/05-R243, P/05-R244, P/05-R245, P/05-R246, P/05-R247, P/05-R248, P/05-R249, P/05-R250, P/05-R251, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278.
 
 <!-- req: P/05-R051 -->
 
 **Races.** Reading an open bucket during appending: only whole lines are given, a torn one is not given and the answer carries `partial: true` (`truncated` is a number, N1); a listing does not fix the content of the files: a file that has vanished does not confirm an empty bucket.
 
-See also: P/05-R010, P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R034, P/05-R035, P/05-R036, P/05-R037, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R050, P/05-R054, P/05-R055, P/05-R056, P/05-R058, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R157, P/05-R165, P/05-R166, P/05-R173, P/05-R174, P/05-R177, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R283, P/05-R298, P/05-R299.
-
 <!-- req: P/05-R177 -->
 
 **Event query and merge.** A read error of a file or a directory is not given as a full answer; after the HTTP stream has started — a break, before it — 503 ResourceError.
 
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R178, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
-
 <!-- req: P/05-R178 -->
 
 **Event query and merge.** An unreadable line is not a read error: it is skipped and counted (N1.3, P/01.1 N0 «Stability of output»).
-
-See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05-R050, P/05-R051, P/05-R069, P/05-R070, P/05-R071, P/05-R072, P/05-R093, P/05-R094, P/05-R095, P/05-R096, P/05-R097, P/05-R098, P/05-R113, P/05-R114, P/05-R115, P/05-R116, P/05-R117, P/05-R118, P/05-R119, P/05-R120, P/05-R121, P/05-R123, P/05-R177, P/05-R259, P/05-R260, P/05-R261, P/05-R276, P/05-R277, P/05-R278, P/05-R299.
 
 ### resource pass — at start, then every PASS_EVERY from the end of the pass
 
@@ -2089,127 +1541,85 @@ See also: P/05-R019, P/05-R021, P/05-R022, P/05-R023, P/05-R024, P/05-R037, P/05
 
 The first pass is right after readiness (the door row is written), not after PASS_EVERY: the reconciliation after a restart and the edges of `free_ask` do not wait for PASS_EVERY; the next one is PASS_EVERY after the end of the previous one.
 
-See also: P/05-R028, P/05-R046, P/05-R047, P/05-R048, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R242.
-
 <!-- req: P/05-R053 -->
 
 Execute the following steps in their listed order: P/05-R099, P/05-R100, P/05-R101, P/05-R102.
-
-See also: P/05-R020, P/05-R024, P/05-R025, P/05-R028, P/05-R052, P/05-R054, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R079, P/05-R083, P/05-R084, P/05-R085, P/05-R092, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R122, P/05-R182, P/05-R194, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R235, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R242, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R099 -->
 
 **`retain`.** For each tree: days = `<sub>`/retention | the default (tree.alarms — alarms_retention | the default; audit, console — the default; the defaults — the event log contract «Retention of a tree»).
 
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R100, P/05-R101, P/05-R102, P/05-R242.
-
 <!-- req: P/05-R233 -->
 
 **Retention and holds.** `days` is not a number or ≤ 0 or the row did not answer → not known: remove nothing, name it in the heartbeat — a wrong days: `<sub>` in retention_garbled and retention_withheld[`<sub>`] = days_garbled; the row did not answer — retention_withheld[`<sub>`] = unknown; the holds are not read (the holds contract) — retention_withheld[`<sub>`] = holds_unread.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R234, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R234 -->
 
 **Retention and holds.** Each tree is kept by its own term (`<sub>` — retention, `<sub>`.alarms — alarms_retention); retention_withheld[`<sub>`] — one reason selected by [decision-order.tsv](../forms/decision-order.tsv), procedure `retention`; retention_garbled — a `<sub>` for which any term (retention or alarms_retention) is wrong, regardless of retention_withheld.
 
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R235, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
-
 <!-- req: P/05-R235 -->
 
 **Retention and holds.** Apply the inclusive deadline now >= written + seconds of N1.3 retention, only to closed buckets (the console marks — not earlier than the longest; holds keep — also the buckets of the units of other subsystems whose about names the held one, and the buckets of unknown units; what a row holds, the window, an incomplete declaration and unreadable rows — the holds contract common/contracts/holds.md, P/06.4 N1.5; the mirror copies — the tree term plus MIRROR_RETENTION_EXTRA); the journal events.removed; index.forget.
-
-See also: P/05-R020, P/05-R024, P/05-R053, P/05-R073, P/05-R074, P/05-R075, P/05-R076, P/05-R092, P/05-R122, P/05-R194, P/05-R226, P/05-R227, P/05-R228, P/05-R229, P/05-R230, P/05-R231, P/05-R232, P/05-R233, P/05-R234, P/05-R262, P/05-R263, P/05-R264, P/05-R265, P/05-R266.
 
 <!-- req: P/05-R100 -->
 
 **`usage`.** Measure the volumes (a probe ≤ VOLUME_PROBE_WITHIN); the heartbeat space/volumes.
 
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R101, P/05-R102, P/05-R242.
-
 <!-- req: P/05-R101 -->
 
 **`relieve`.** `platform/space.enabled` ∧ used/total > high → for manifests with requests.free: need = used − total·low − Σ freeing (Σ — over the live heartbeats of the workers of this subsystem on this server, freeing.`<volume>` of this volume; N1.4 free_ask).
-
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R102, P/05-R242.
 
 <!-- req: P/05-R236 -->
 
 **Space and free requests.** `platform/space` does not read — the step is not executed (N1.4 space).
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R237 -->
 
 **Space and free requests.** A heartbeat of a worker of this subsystem on this server does not read — the need of this subsystem is not computed, the step neither writes nor removes its row free-*, the reason goes to the journal.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R238 -->
 
 **Space and free requests.** `need` > 0 → write free-`<server>`-`<volume>` {free: need, volume, server, at}: cas "" or cas by the version of a row of ITS OWN form (without unit AND with the exact server/volume of the current volume); before the write check the grammar of N1.4 `free_ask`.
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R239 -->
 
 **Space and free requests.** Under this key a row with unit, another's server/volume or a spoiled form → do not touch it, the journal free_ask.key_taken, skip.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R240 -->
 
 **Space and free requests.** `need` ≤ 0 (all that is needed is already being freed) or below low → delete the row of its own form if there is one: delete with cas of the version on which the absence of unit AND the exact match of server/volume were checked (P/01.1).
 
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
-
 <!-- req: P/05-R241 -->
 
 **Space and free requests.** `conflict` — under the key there is already another row (an ordinary request or a new own one) → do not touch it, the journal free_ask.key_taken.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R271, P/05-R272, P/05-R273.
 
 <!-- req: P/05-R102 -->
 
 **`mirror`.** `platform/mirror` does not read → the step is not executed, settings_unread: mirror (N1.4 mirror); platform/mirror.enabled → the neighbours = the next copies live ones by name (liveness — the door row, N1.4 mirror); the closed buckets that the neighbour does not have (the sum) → PUT /mirror/`<me>`/`<path>` with X-Sum = SHA-256 of the bucket; PEER_FAILS consecutive failures → the neighbour is skipped until the end of this mirror pass.
 
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R242.
-
 <!-- req: P/05-R242 -->
 
 **Resource pass and stalled steps.** Each step is its own attempt; a step running longer than PULSE_LIMIT → pass_stalled in every heartbeat while it runs.
-
-See also: P/05-R028, P/05-R052, P/05-R053, P/05-R054, P/05-R083, P/05-R099, P/05-R100, P/05-R101, P/05-R102.
 
 <!-- req: P/05-R054 -->
 
 **Races.** In one pass retain precedes mirror; this is not a lock against another read/cleanup.
 
-See also: P/05-R010, P/05-R025, P/05-R028, P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R052, P/05-R053, P/05-R055, P/05-R056, P/05-R058, P/05-R083, P/05-R084, P/05-R085, P/05-R086, P/05-R099, P/05-R100, P/05-R101, P/05-R102, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R181, P/05-R182, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R242, P/05-R271, P/05-R272, P/05-R273, P/05-R274.
-
 <!-- req: P/05-R179 -->
 
 **Bucket mirroring.** Only a whole closed bucket with a checked sum is copied; a disappearance/an incomplete read gives a failed attempt, without the publication of a partial copy.
-
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R180, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
 
 <!-- req: P/05-R180 -->
 
 **Bucket mirroring.** The next pass lists the available buckets anew.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R181, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R181 -->
 
 **Bucket mirroring.** The owner and the copy: a copy is never a source while the owner answers; `restore` (N1.4 «Bucket restore») pulls copies back only at the word of the owner.
 
-See also: P/05-R029, P/05-R030, P/05-R033, P/05-R034, P/05-R036, P/05-R045, P/05-R054, P/05-R086, P/05-R142, P/05-R155, P/05-R156, P/05-R158, P/05-R159, P/05-R160, P/05-R161, P/05-R175, P/05-R179, P/05-R180, P/05-R215, P/05-R216, P/05-R217, P/05-R218, P/05-R219, P/05-R220, P/05-R228, P/05-R231, P/05-R274.
-
 <!-- req: P/05-R182 -->
 
 **Space and free requests.** The removal of `free_ask` and an ordinary request under the same key: the resource checked the form at the version v and stopped; the reaper removed its old row by ttl, the console accepted an ordinary request with the same rid — the key has the version v′; `delete` with cas v answers conflict, the accepted request is intact; without cas it would have been deleted without an outcome.
-
-See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R203, P/05-R204, P/05-R205, P/05-R206, P/05-R207, P/05-R208, P/05-R209, P/05-R210, P/05-R211, P/05-R212, P/05-R213, P/05-R214, P/05-R236, P/05-R237, P/05-R238, P/05-R239, P/05-R240, P/05-R241, P/05-R271, P/05-R272, P/05-R273.
 
 ---
 
@@ -2219,13 +1629,9 @@ See also: P/05-R025, P/05-R053, P/05-R054, P/05-R084, P/05-R085, P/05-R203, P/05
 
 The refusals of the console doors, of requests, marks and the reaper — [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N4 (the holder side — chapter 3.6); the refusals of loading `suppress` — chapter 3.6, `older_epochs` — chapter 6.4.
 
-See also: P/05-R010, P/05-R018, P/05-R021, P/05-R037, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R056, P/05-R058, P/05-R162.
-
 <!-- req: P/05-R056 -->
 
 The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 5`. It preserves the four original cells in `cause`, `outcome`, `diagnostic`, `caller`; multiple fixed HTTP projections keep the same source `row`. `response_schema` is the OpenAPI component or `-` for a bodyless/text result; no error discriminator is invented. The original Range/hint/skipped-line success outcomes remain success outcomes.
-
-See also: P/05-R010, P/05-R038, P/05-R040, P/05-R042, P/05-R045, P/05-R051, P/05-R054, P/05-R055, P/05-R058.
 
 ---
 
