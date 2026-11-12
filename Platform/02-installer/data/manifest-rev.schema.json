@@ -32,7 +32,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (P/02.3 N1.5 rules; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b)",
+  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (P/02.3 N1.5 rules)",
   "x-codec": [
    "any"
   ]

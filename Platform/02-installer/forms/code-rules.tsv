@@ -1,11 +1,11 @@
-# The code checks of lesson P/02 (ADR-0133 addenda (28), (39) items 2, 5; audit P02.20, appendix B, and the answer of the Architect on it): rows of the
+# The code checks of lesson P/02: rows of the
 # kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the checks; no expected
 # answer. name: the name that the profile field code (of the profile of 02-installer) maps to a symbol of the candidate; the names are not code paths.
 # stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later stage that holds code:*. norm:
 # the norms of the subject. Cores: manifest_load (the loader by text, form and relations), canonical (the projection), rights_core (the derivation of
 # rights), order_core (the installation order), rollout_core (the voter poll); the machine of the poll in the form Step(State, Event) -> (State,
 # []Effect) is rollout_step. The pinned libraries of the loader are requires_module rows of stage manifest-load; as packages of pinned modules they are
-# leaves of the walk of its pure_core row (P02.36, task P02.38). The seams s1–s4 of acceptance/1/seams.tsv judge the loading by its behavior.
+# leaves of the walk of its pure_core row. The seams s1–s4 of acceptance/1/seams.tsv judge the loading by its behavior.
 id	kind	name	args	stage	norm
 C01	complexity	manifest_load	{"max_branches": 15, "max_lines": 80}	manifest-load	P/02.1 N3 load
 C02	requires_module	yaml	{"module": "go.yaml.in/yaml/v3", "from": "Platform/common/versions/go.mod"}	manifest-load	P/02.1 N1.1; P/02.1 N3 load; P/02.1 «Implementation decides»; Platform/common/versions/README.md

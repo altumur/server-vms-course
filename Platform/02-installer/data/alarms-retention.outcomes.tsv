@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row <sub>/alarms_retention (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/alarms_retention. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	resource	term «unknown»: the resource removes nothing in the dependent tree, the cause goes to the heartbeat, retention_garbled for a wrong days; the default is not substituted (an absent row gives the default, a read error does not)	0	row	P/05 N1.3 retention, N3 retain, N4

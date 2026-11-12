@@ -1,11 +1,11 @@
-# P/02 implementation stages (ADR-0126; ADR-0125 addendum (5)): one possible plan, not a behavior norm.
+# P/02 implementation stages: one possible plan, not a behavior norm.
 # The installer is one-shot, with no HTTP door: no door or launch stage. The prior P/01 stand is available for puts and rights.
 # gate is a semicolon-separated conjunction: verdicts:<chapter>:<case,...|*>, puts:<chapter>:<case,...|*>,
 # accept:<chapter>:<scenario,...|*>, seams:<chapter>:<scenario,...|*>, vectors:<package>, code:*, build.
 # verdicts/puts/accept select their own published table and judge; * is the full target including its published variants.
 # seams selects scenarios of the seams.tsv of the chapter, run through the seam adapter (common acceptance README); the other checks keep their own judge.
 # code:* — the rows of forms/code-rules.tsv whose stage is this stage or a stage of a smaller n hold, under the closed dictionary of the code
-# checks Platform/common/acceptance/forms/code-rules.tsv (ADR-0133 addendum (39)); the generation cycle checks them, not the acceptance; * is
+# checks Platform/common/acceptance/forms/code-rules.tsv; the generation cycle checks them, not the acceptance; * is
 # the only argument; a row is a data error when neither its stage nor a stage of a larger n has code:* in its gate.
 # n is consecutive; depends names earlier n; weight is 1..5.
 # - means none. Empty when means always applicable.
@@ -13,8 +13,8 @@
 # build confirms build only; the pure poll seams do not execute a rollout. Domain references in loader/rights remain whole inputs.
 # norms — elements separated by «; »: the sections of the norms, the forms and the packages the stage builds on, and the items of the readiness
 # checklists of spec/*.norms.md (the lines - [ ] **P/02.K-MM**), written P/02.K-MM; each item stands in the norms of exactly one stage, the stage at
-# which every subject of the item exists (ADR-0133 addendum (43)); an item at no stage or at two stages is a data error. The items of the system
-# checklists of spec/*.norms.md stand at no stage: they need the OS, a host or several lessons (ADR-0130 Addendum (19) item 6).
+# which every subject of the item exists; an item at no stage or at two stages is a data error. The items of the system
+# checklists of spec/*.norms.md stand at no stage: they need the OS, a host or several lessons.
 n	stage	goal	norms	gate	weight	depends	when
 1	manifest-load	Strict regular loading by text, form and relations; pure core isolation	P/02.1 N1; P/02.1 N3 load; P/02.1-01; P/02.1-02; P/02.1-03; P/02.1-04; P/02.1-05; P/02.1-06; P/02.1-07; P/02.1-08; P/02.1-09; P/02.1-10; P/02.1-13; P/02.1-14; P/02.1-15; P/02.1-16; P/02.1-17; P/02.1-18; P/02.1-19; P/02.1-21; P/02.1-22; P/02.1-23; P/02.1-24; P/02.1-25; P/02.1-26; P/02.1-27; P/02.1-28; P/02.1-29; P/02.1-31; P/02.1-33; P/02.1-34; P/02.1-37; P/02.1-39	verdicts:2.1:*;vectors:exec;seams:2.1:s1-load-isolation,s2-catalogue-isolation,s3-load-parallel,s4-load-layer-order;code:*	4	-	
 2	canonical	The canonical projection and JCS bytes of an accepted manifest	P/02.2 N1.1; P/02.2 N3 build view; P/02.2-01; P/02.2-02; P/02.2-03; P/02.2-05	vectors:canonical;code:*	2	1	
