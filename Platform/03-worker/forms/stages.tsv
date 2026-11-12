@@ -1,9 +1,9 @@
-# A possible implementation order for P/03 (ADR-0126): a plan, not a norm or a reduction of the lesson checklist.
+# A possible implementation order for P/03: a plan, not a norm or a reduction of the lesson checklist.
 # Read every chapter and imported contract in full. Existing chapter reading dependencies on P/04, P/05 and P/08–P/10 remain.
 # gate uses the P/01 grammar: seams:<chapter>:<cases|*>, accept:<chapter>:<cases|*>, vectors:<own package>, vectors:<owner>/<package> (a package of another owner with a consumers.tsv row whose consumer is 03-worker), code:*, build; checks separated by ;.
-# seams runs the seams.tsv of the chapter through the seam adapter over the real implementation code. accept selects only the scenarios.tsv of the chapter, which the judge runs on the process stand; never seams.tsv. Former gates keep holding.
+# seams runs the seams.tsv of the chapter through the seam adapter over the real implementation code. accept selects only the scenarios.tsv of the chapter, which the judge runs on the process stand; never seams.tsv. Earlier stage gates keep holding.
 # code:* — the rows of forms/code-rules.tsv whose stage is this stage or a stage of a smaller n hold, under the closed dictionary of the code
-# checks Platform/common/acceptance/forms/code-rules.tsv (ADR-0133 addendum (39)); the generation cycle checks them, not the acceptance; * is
+# checks Platform/common/acceptance/forms/code-rules.tsv; the generation cycle checks them, not the acceptance; * is
 # the only argument; a row is a data error when neither its stage nor a stage of a larger n has code:* in its gate.
 # weight: relative 1–5. forms/slot-capture.tsv names the capture transitions.
 # A green build or a cache seam does not close the domain stand. Common vectors use consumers.tsv and the package README selections; run all assigned tables, not just the local creates-key package.
@@ -13,11 +13,11 @@
 # The accept scenarios of chapters 3.2, 3.3, 3.4 and 3.6 start the controller, the resource or the console (P/04–P/06): their gates stand at worker_stand,
 # which waits for these lessons. An item stands at the stage of its subject, and its full-stand scenarios remain evidence in its text;
 # worker_stand holds no lesson items: the subject of every item is the worker itself, only its gates need the neighbours
-# (the Architect's correction on P03.21, question 1, and the answer on P03.28; one rule for P/03 and P/04).
+# This stage rule also applies to P/04.
 # norms — elements separated by «; »: the sections of the norms, the forms and the packages the stage builds on (read in full, above), and the items of the readiness
 # checklists of spec/*.norms.md (the lines - [ ] **P/03.K-MM**), written P/03.K-MM; each item stands in the norms of exactly one stage, the stage at
-# which every subject of the item exists (ADR-0133 addendum (43)); an item at no stage or at two stages is a data error. The items of the system
-# checklists of spec/*.norms.md stand at no stage: they need the OS, a host or several lessons (ADR-0130 Addendum (19) item 6).
+# which every subject of the item exists; an item at no stage or at two stages is a data error. The items of the system
+# checklists of spec/*.norms.md stand at no stage: they need the OS, a host or several lessons.
 n	stage	goal	norms	gate	weight	depends	when
 1	sdk_model	The SDK frame, process inputs and the owned data families; no new executable or HTTP door	P/03.1 N2; forms/daemon-flags.tsv; forms/refusals.tsv; forms/runtime-constants.tsv; data/; P/03.2-16	build;code:*	2	-	true
 2	slot_capture	A confirmed capture, exact permissions, first-start right, guarded cleanup and no live slot on an unknown result	P/03.2 N1.4; P/03.2 N3 capture; forms/slot-capture.tsv; P/03.2-01; P/03.2-02; P/03.2-03; P/03.2-13; P/03.2-14	seams:3.2:s1-capture-unknown,s2-capture-gen-unreadable,s3-capture-lapsed-foreign,s4-capture-permission-stale,s5-capture-taking,s6-capture-first-own-box,s7-capture-rejoin-no-exception,s8-capture-torn-boundary,s9-capture-torn-young,s10-cleanup-guard-refusal,s11-capture-replay,s19-capture-gen-below-max,s20-capture-gen-max,s21-capture-gen-above-max,s22-capture-gen-beyond-int64;code:*	3	1	true

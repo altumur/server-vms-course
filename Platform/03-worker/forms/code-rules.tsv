@@ -1,5 +1,5 @@
-# The code checks of lesson P/03 (ADR-0133 addenda (28), (39) items 2, 5; audit P03.20, appendix B, and the answers of the Architect to its questions
-# 6–8): rows of the kinds of the closed dictionary Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the
+# The code checks of lesson P/03: rows of the kinds of the closed dictionary
+# Platform/common/acceptance/forms/code-rules.tsv, which defines the columns, the outcome and the
 # checks; no expected answer. name: the name that the profile field code (of the profile of 03-worker) maps to a symbol of the candidate; the names
 # are not code paths. stage: the stage of forms/stages.tsv from which the row holds, under the gate code:* of that stage and of every later stage that
 # holds code:*. norm: the norms of the subject. Cores: capture_core (the capture of a slot), lease_core (epoch issue and lease confirmation),
