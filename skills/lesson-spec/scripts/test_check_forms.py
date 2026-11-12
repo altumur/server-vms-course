@@ -288,6 +288,78 @@ class Forms(unittest.TestCase):
         path.write_text(yaml.safe_dump(doc))
         self.assertTrue(any("412 guard is not in the OpenAPI responses" in e for e in self.refusals()))
 
+    def test_check_row_code_differs_from_its_refusal(self):   # OBSH.49: дубль code/kind сверяет check_refusals
+        self.edit("forms/write-checks.tsv", "\tfloor_socket\tsock != \"admin\"\t403\t", "\tfloor_socket\tsock != \"admin\"\t401\t")
+        errors = self.refusals()
+        self.assertTrue(any("write-checks.tsv:" in e and "check floor_socket" in e and "'401'" in e and "'403'" in e
+                            for e in errors), errors)
+
+
+class RefusalLinks(unittest.TestCase):
+    """OBSH.49 (ADR-0133 доп. (90), (91)): `check` строки формы проверок — имя отказа `refusals.tsv`; code и kind равны."""
+    HEAD = "n\tid\top\tgroup\teach\tcheck\twhen\tcode\tkind\tfault\tnorm"
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.forms = Path(temp.name) / "Platform/99-fixture/forms"
+        self.forms.mkdir(parents=True)
+        self.refusals = self.forms / "refusals.tsv"
+        self.write_refusals([("key_rules", "400", "badkey"), ("rights", "403", "forbidden")])
+
+    def write_refusals(self, rows):
+        lines = ["# comment", "\t".join(check_forms.REF_COLUMNS)]
+        lines += [f"9\t{i}\t{name}\thttp\t{code}\t{kind}\t-\t-\t-\tP/99 N4" for i, (name, code, kind) in enumerate(rows, 1)]
+        self.refusals.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def write_checks(self, rows, name="write-checks.tsv"):
+        lines = ["# comment one", "# comment two", self.HEAD]
+        lines += [f"{i}\twc-{i}\t*\t\t\t{check}\ttrue\t{code}\t{kind}\t\tP/99 N2" for i, (check, code, kind) in enumerate(rows, 1)]
+        (self.forms / name).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def errors(self):
+        return check_forms.check_refusal_links(self.refusals)
+
+    def test_match(self):
+        self.write_checks([("key_rules", "400", "badkey"), ("rights", "403", "forbidden")])
+        self.write_checks([("rights", "403", "forbidden")], name="read-checks.tsv")
+        self.assertEqual(self.errors(), [])
+
+    def test_code_differs(self):
+        self.write_checks([("key_rules", "400", "badkey"), ("rights", "401", "forbidden")])
+        errors = self.errors()
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("write-checks.tsv:5 (wc-2) check rights: code '401' differs from code '403' of refusals.tsv:4 rights",
+                      errors[0])
+
+    def test_kind_differs(self):
+        self.write_checks([("key_rules", "400", "badrequest")], name="service-checks.tsv")
+        errors = self.errors()
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("service-checks.tsv:4 (wc-1) check key_rules: kind 'badrequest' differs from kind 'badkey' "
+                      "of refusals.tsv:3 key_rules", errors[0])
+
+    def test_no_link_is_not_checked(self):            # имя не из каталога — не отказ; пара code/kind из каталога
+        self.write_checks([("not_a_refusal", "403", "forbidden")], name="rights-checks.tsv")
+        self.assertEqual(self.errors(), [])
+
+    def test_ambiguous_link(self):
+        self.write_refusals([("key_rules", "400", "badkey"), ("rights", "403", "forbidden"), ("rights", "403", "forbidden")])
+        self.write_checks([("rights", "403", "forbidden")])
+        errors = self.errors()
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("write-checks.tsv:4 (wc-1) check rights: ambiguous link", errors[0])
+        self.assertIn("refusals.tsv:4, refusals.tsv:5", errors[0])
+
+    def test_course_data_has_no_divergence(self):     # нынешние данные курса: ноль расхождений, связи есть
+        linked = 0
+        for path in check_forms.refusal_forms(ROOT):
+            self.assertEqual(check_forms.check_refusal_links(path), [], path)
+            names = {r["name"] for _, r in check_forms._tsv_lines(path)[1]}
+            for table in path.parent.glob("*-checks.tsv"):
+                linked += sum(r.get("check") in names for _, r in check_forms._tsv_lines(table)[1])
+        self.assertGreater(linked, 0)
+
 
 class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01
     def setUp(self):

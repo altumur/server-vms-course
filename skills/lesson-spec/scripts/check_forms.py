@@ -6,8 +6,9 @@
 `commands` ≠ `daemon` ⇔ команды названы в «Meaning».
 
 Отказы: форма (колонки, имена, `surface`, `code`, `kind`) и согласие трёх мест (ADR-0125 доп. (1) п. 5): строки таблиц Н4
-глав (число строк, код, вид, поля), `kind` и поля — в `*Fault` OpenAPI урока, код и вид каждой проверки `write-checks.tsv`
-есть в каталоге, а строка с именем проверки — с тем же кодом и видом.
+глав (число строк, код, вид, поля), `kind` и поля — в `*Fault` OpenAPI урока; строка формы проверок `forms/*-checks.tsv`,
+чей `check` — имя отказа каталога, несёт его код и вид (дубль ADR-0133 доп. (90), (91), `check_refusal_links`), иная —
+пару кода и вида из каталога.
 """
 import hashlib
 import json
@@ -786,24 +787,65 @@ def check_refusals(path, *, validated=None):
             missing = set.intersection(*required) - declared if required else set()
             if missing:
                 errors.append(f"{where}: required OpenAPI fields {sorted(missing)} are not required in the catalogue")
-    catalogue = {(r["code"], r["kind"]) for r in rows}
-    by_name = {r["name"]: r for r in rows}
-    for table in sorted((lesson / "forms").glob("*-checks.tsv")):
-        lines = [line.split("\t") for line in table.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
-        head = lines[0] if lines else []
-        if not {"check", "code", "kind"} <= set(head):
-            continue
-        for line in lines[1:]:
-            w = dict(zip(head, line))
-            if (w["code"], w["kind"]) not in catalogue:
-                errors.append(f"{path.name}: {table.name} check {w['check']}: {w['code']} {w['kind']} is not in the catalogue")
-            r = by_name.get(w["check"])
-            if r and (r["code"], r["kind"]) != (w["code"], w["kind"]):
-                errors.append(f"{path.name}: {r['name']}: {r['code']} {r['kind']}, {table.name} says {w['code']} {w['kind']}")
+    errors.extend(check_refusal_links(path))
     stats["refusal_chapters"] = len({r["chapter"] for r in rows})
     if typed_names:
         stats["refusal_cause_names"] = len(typed_names)
     return errors, stats
+
+
+def _tsv_lines(path):
+    """Строки TSV без комментариев и пустых → (заголовок, [(номер строки файла с 1, {колонка: ячейка})])."""
+    head, rows = None, []
+    for no, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+        if not line or line.startswith("#"):
+            continue
+        if head is None:
+            head = line.split("\t")
+        else:
+            rows.append((no, dict(zip(head, line.split("\t")))))
+    return head or [], rows
+
+
+def check_refusal_links(path):
+    """Дубль code/kind формы проверок и каталога отказов (ADR-0133 доп. (90), (91); OBSH.49).
+
+    Строка `forms/*-checks.tsv` урока связана с отказом, когда её `check` — имя (`name`) строки `forms/refusals.tsv`
+    того же урока: тогда её `code` и `kind` равны `code` и `kind` той строки. Имя, которого в каталоге нет, — не отказ,
+    правило его не проверяет (остаётся лишь наличие пары code/kind в каталоге); имя, данное каталогом дважды и более, —
+    неоднозначная связь."""
+    path = Path(path)
+    errors = []
+    head, rows = _tsv_lines(path)
+    if not {"name", "code", "kind"} <= set(head):
+        return errors
+    by_name = {}
+    for no, r in rows:
+        by_name.setdefault(r.get("name", ""), []).append((no, r))
+    catalogue = {(r.get("code"), r.get("kind")) for _, r in rows}
+    for table in sorted((path.parent).glob("*-checks.tsv")):
+        t_head, t_rows = _tsv_lines(table)
+        if not {"check", "code", "kind"} <= set(t_head):
+            continue
+        for no, w in t_rows:
+            name, code, kind = w.get("check", ""), w.get("code", ""), w.get("kind", "")
+            where = f"{path.name}: {table.name}:{no} ({w.get('id') or w.get('n', '')}) check {name}"
+            linked = by_name.get(name, [])
+            if not linked:
+                if (code, kind) not in catalogue:
+                    errors.append(f"{where}: {code} {kind} is not in the catalogue")
+                continue
+            if len(linked) > 1:
+                lines = ", ".join(f"{path.name}:{n}" for n, _ in linked)
+                errors.append(f"{where}: ambiguous link: the name {name} is {len(linked)} rows "
+                              f"of the catalogue ({lines})")
+                continue
+            r_no, r = linked[0]
+            for column, mine in (("code", code), ("kind", kind)):
+                if mine != r.get(column, ""):
+                    errors.append(f"{where}: {column} {mine!r} differs from {column} {r.get(column, '')!r} "
+                                  f"of {path.name}:{r_no} {name}")
+    return errors
 
 
 KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch",   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
