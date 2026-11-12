@@ -31,6 +31,22 @@ the doors of units — by [lesson P/06](../../06-console/spec/06-console.api.ope
 [lesson P/05](../../05-resource/spec/05-resource.norms.md#n2-doors). The forms of the rows and objects of the lesson are
 the family schemas `../data/*.schema.json` (the sections «Data families» of chapters 3.2 and 3.4).
 
+## Glossary
+
+These distinctions explain the chapter terms; they add no rule to the norms.
+
+| Word | Meaning in this lesson |
+|---|---|
+| worker, `<sub>worker` | The SDK implements the worker loop; the subsystem supplies the work through the calls of chapter 3.1. A worker process runs one instance of that loop. `<sub>worker` is its store role, not the unit holder id. |
+| holder, `holder` | A slot holder is an instance, identified together with `gen`. A unit holder acts under its `epoch`. The request holder observes and executes requests under that unit epoch. The domain holder belongs to the domain protocol; a slot holder alone does not acquire it. |
+| name, slot, `instance`, `BOX_ID`, `SERVER_NAME` | The worker name selects the slot. `instance` names one process incarnation, `BOX_ID` the box and `SERVER_NAME` the server. None substitutes for another. The state `nobody` has no owned worker name. |
+| `gen`, `epoch`, `revision`, `born` | `gen` fences slot ownership. `epoch` fences a unit holder. `revision` identifies the unit row version; `born` distinguishes a new unit with a reused id. A restart caused by revision alone keeps the epoch. |
+| lease, hold, `may_act`, `may_write` | The unit lease controls its actions and data; a place hold controls the place writer. `may_act` and `may_write` have the distinct windows of chapter 3.2. A place hold and a unit lease are checked jointly; neither replaces the other. |
+| confirmation, freshness, `until`, `ts` | Confirmation uses the send time of the confirmed request on the worker monotonic clock. Freshness uses the reader observation of a version. `until` and `ts` are wall-clock display values; they do not measure the age of a foreign version. |
+| stop, fencing, `before_stop_all`, `after_stop` | Fencing closes admission and stops work whose ownership was lost. An orderly process stop makes the ordered calls `before_stop_all` and `after_stop` of chapters 3.1 and 3.4. A crash does not publish an orderly release. |
+| request, mark, order, `begun`, `fetched` | An ordinary request has a mark and requires a confirmed `begun` before the external call. The append profile `fetched` has no mark. An order creates a row of another subsystem; its outcome is distinct from executing an ordinary request. |
+| door, handler, door token, domain token | The process door calls a subsystem handler after route admission. A door token authorizes the request checked by the holder. A domain token carries a kind and audience, checked by the recipient. These token checks do not replace the process-door route admission. |
+
 ## What to create
 
 - The loop of the worker process with the ownership gates, the state «nobody», the assignments and the leases of units (3.2, 3.3).

@@ -12,13 +12,38 @@ the drain, the labels and the decommission of a server are the doors of the cons
 
 ## Inputs and their priority
 
-The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066) shows observable examples;
+The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066, P/04-R241–P/04-R299, P/04-R301–P/04-R359, P/04-R361–P/04-R369, P/04-R371–P/04-R376, P/04-R378–P/04-R388, P/04-R390–P/04-R393, P/04-R395–P/04-R399, P/04-R401–P/04-R413, P/04-R415–P/04-R417, P/04-R419–P/04-R433, P/04-R490–P/04-R498, P/04-R501–P/04-R541) shows observable examples;
 the lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
 The forms of a unit are set in [P/06.1](../../06-console/spec/06.1-console.norms.md), of the slot — in
 [P/03.2](../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../02-installer/spec/02.1-installer.norms.md),
 the heartbeat — in [P/03.4](../../03-worker/spec/03.4-worker.norms.md). The forms of the rows and objects of the lesson are the family schemas `data/*.schema.json`
 (the data catalogue). On a discrepancy, record the places and a counterexample, do not choose the behaviour by a guess; the order
 of escalation is in the section «On a discrepancy». Internal functions, types and libraries are chosen by the implementation.
+
+## Glossary
+
+These terms point to their governing requirements; this table adds no rules.
+
+| Term | Meaning and owner |
+|---|---|
+| `row` | A store key with textual items, not an HTTP response or an object. P/04-R003. |
+| `object` | A JSON report or snapshot read through the resource object door. P/04-R007, P/04-R011, P/04-R013. |
+| `placement` | The decision; an active intent supplies the effective decision for its members. P/04-R021. |
+| `assignment` | The derived workers row, listing the units assigned to that worker. P/04-R078, P/04-R079, P/04-R036. |
+| `version`, `index` | The exact opaque store version for CAS/guard, distinct from the counters below. P/04-R026, P/04-R096, P/04-R103. |
+| `rev` | The lesson counter in a placement/assignment; its increment rule depends on that row. P/04-R076, P/04-R080. |
+| `manifest_rev` | The revision of the manifest under which a decision was taken. P/04-R077, P/04-R116, P/04-R405. |
+| `turn holder` | The unique capture-attempt mark in placement_turn; its version fences store mutations. P/04-R209, P/04-R212, P/04-R242. |
+| `slot holder` | The process occupying a slot; it is not the holder of the placement turn. P/03.2 N1.4; P/04-R041. |
+| `place keeper` | The worker selected for a non-empty place under distinct policy. P/04-R152, P/04-R153. |
+| `resource_state`, `presence`, `fate` | Resource freshness, the resource word about a process, and this controller’s slot judgement are separate. P/04-R196, P/04-R197, P/04-R198, P/04-R040. |
+| `at`, `ts`, `age` | at and ts are wall timestamps with the field-specific meanings of N1; age and policy deadlines use the specified local observation. P/04-R002, P/04-R039. |
+| `live(s)`, `live.<sub>` | Heartbeat process presence for shortage versus door lock numbers for the order share. P/04-R329, P/04-R332. |
+| `free`, `free(s)` | Worker capacity after conservative reserves versus server process room after in-flight orders. P/04-R022, P/04-R332. |
+| `home`, `near`, `affinity` | Preferences and place constraints have different admission effects. P/04-R157, P/04-R158, P/04-R159, P/04-R290. |
+| `want`, `pending`, `decommission-pending` | Absolute process target, in-flight count in a report, and durable server-removal progress respectively. P/04-R094, P/04-R107, P/04-R330. |
+| `release`, `names_given` | A confirmed release write and the exact version permitting capture are separate results. P/04-R041, P/04-R310, P/04-R311, P/04-R042. |
+| `pass`, `control part`, `cycle` | The control part ends before snapshot attempts and the cycle’s final report. P/04-R142, P/04-R143, P/04-R146. |
 
 ## What to create
 

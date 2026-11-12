@@ -32,6 +32,7 @@ RESOURCES = {
     "metrics_p01": "01-store/forms/metrics.tsv",
     "group_p01": "01-store/forms/group.tsv",
     "engine_code_rules": "common/acceptance/forms/engine-code-rules.tsv",
+    "stand_environment": "common/acceptance/forms/stand-environment.tsv",  # P01.250
 }
 
 

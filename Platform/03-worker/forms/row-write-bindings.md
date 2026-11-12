@@ -1,6 +1,6 @@
 # State row-write bindings
 
-This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018/R029.
+This English text is the source; ru/forms/row-write-bindings.md is its Russian translation for people, not in the export. [row-write-bindings.tsv](row-write-bindings.tsv) is the normative constructor table for P/03.6-R018, P/03.6-R124, P/03.6-R128, P/03.6-R129, P/03.6-R192.
 
 ## Grammar
 
@@ -18,6 +18,6 @@ guard_version is start:/pointer or input:/pointer to a declared exact P/01 strin
 
 [The four rows](row-write-bindings.tsv) choose family `<sub>/state/<name>/<unit>`. start carries the accepted unit start: sub/unit, its born (the current 32 lowercase hex life, required at the accepted start), revision, holder epoch and the exact index of the epoch row confirmed when taking it. input carries one declared state name and its value. born/revision/epoch and both guard references must come from start. value alone comes from input and is encoded as JCS by the state-family codec, after validation against `unit.state.<name>`. The name and unit also retain their manifest/key grammar.
 
-The result is key/items/guard. Reading the former state row, its CAS version, may_write, CAS/retry, guard refusal, synchronization and confirmation remain the ordinary IO procedure P/03.6-R029. The constructor performs none of them and reads no store. Capturing epoch_index from a newer read would break the binding even if its string is valid.
+The result is key/items/guard. Reading the former state row, its CAS version, may_write, CAS/retry, guard refusal, synchronization and confirmation remain the ordinary IO rules P/03.6-R193 and P/03.6-R194. The constructor performs none of them and reads no store. Capturing epoch_index from a newer read would break the binding even if its string is valid.
 
 The independent seam s5-state-start-born changes the unit row after start: the result must retain the start born/revision/epoch and epoch_index while taking the new input.value. A guard version outside binary64 is copied exactly. Required negative checks include start replaced by a re-read, epoch_index replaced by a current version, a foreign key/property and a missing required property. A subsystem-value error remains an error without a write.

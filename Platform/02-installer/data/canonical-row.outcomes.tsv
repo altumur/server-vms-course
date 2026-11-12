@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row platform/manifest/<sub>/canonical/<form> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row platform/manifest/<sub>/canonical/<form>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
 /rev	*	as the whole view: the reader — does not start, code 2 (a running one — stops, code 2); manifest put — the view is rewritten (not «no changes»)	0	row	P/02.2 N3 «Reader», «manifest put»
 /sha256	*	as the whole view: the reader — does not start, code 2; manifest put — the view is rewritten	0	row	P/02.2 N3 «Reader», «manifest put»

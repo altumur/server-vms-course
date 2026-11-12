@@ -72,3 +72,30 @@ req_id	file	source	date	removed
 -	acceptance/3/README.md#catalogue-properties	coverage audit P/02, second pass (Gemini), branch gemini/audit-coverage, c698f3291	2026-10-30	The report the coverage audit Gemini P02 (for people) (branch gemini/audit-coverage, c698f3291): catalogue checks that were formerly done by reading.
 -	acceptance/3/README.md#catalogue-properties	Architect's decision (directives of chapter 2.2)	2026-10-30	the Architect's decision, 
 -	spec/02.3-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
+-	spec/02.3-installer.n5.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.3-installer.n5.cases.md#case-block-1	ADR-0091	2026-10-22	ADR-0091: 
+-	spec/02.3-installer.n5.cases.md#case-block-1	ADR-0091 addendum (14), (17), (18) item 6	2026-10-23	 (ADR-0091 addendum (14), (17), (18) item 6)
+-	spec/02.3-installer.n5.cases.md#case-block-1	ADR-0091 addendum (26) item 2	2026-10-23	 (ADR-0091 addendum (26) item 2)
+-	spec/02.3-installer.n5.cases.md#case-block-2	coverage audit Gemini P/02; Architect's forms	2026-10-30	; Gemini audit of P/02, the Architect's forms
+-	spec/02.3-installer.n5.cases.md#case-block-2	analysis of review of stage A 6–7, B2	2026-10-20	; analysis of review of stage A 6–7, B2
+-	spec/02.3-installer.n5.cases.md#case-block-3	ADR-0094 B7	2026-10-29	 (ADR-0094 B7)
+-	spec/02.3-installer.n5.cases.md#case-block-4	coverage audit of P/02, B02	2026-10-30	; coverage audit of P/02, B02
+-	spec/02.3-installer.n5.cases.md#case-block-4	coverage audit of P/02, B01	2026-10-30	 (B01)
+-	spec/02.3-installer.n5.cases.md#case-block-4	coverage audit of P/02, B03	2026-10-30	; B03
+-	spec/02.3-installer.n5.cases.md#case-block-5	coverage audit Gemini P/02, the second pass	2026-10-30	Coverage audit of P/02, the second pass (Gemini; the acceptance README of the chapter): 
+-	acceptance/3/README.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/3/README.cases.md#original-passage-1	coverage audit Gemini P/02 of 2026-10-30 and its second pass (replaced by the subjects of the rows, as in README.md)	2026-10-30	the coverage audit P/02 of 2026-10-30, the next 16 — its second pass
+-	acceptance/3/README.cases.md#original-passage-1	ADR-0094 B7 (replaced by the subject of the rows, as in README.md)	2026-10-29	ADR-0094 B7
+-	acceptance/3/README.cases.md#original-passage-1	ADR-0094 B1	2026-10-29	, ADR-0094 B1
+-	acceptance/3/README.cases.md#original-passage-1	review of lesson P/02, S5	2026-11-05	 (review of lesson P/02, S5)
+-	acceptance/3/README.cases.md#original-passage-1	ADR-0112 addendum (3) item 2 (replaced by the rule in words, as in README.md)	2026-11-02	ADR-0112 addendum (3) item 2
+-	acceptance/3/README.cases.md#original-passage-2	ADR-0091	2026-10-22	 (ADR-0091)
+-	acceptance/3/README.cases.md#original-passage-2	ADR-0091 addendum (14), (17), (18) item 6	2026-10-23	 (ADR-0091 addendum (14), (17), (18) item 6)
+-	acceptance/3/README.cases.md#original-passage-2	ADR-0094 B7	2026-10-29	 (ADR-0094 B7)
+-	acceptance/3/README.cases.md#original-passage-2	ADR-0091 addendum (26) item 2	2026-10-23	 (ADR-0091 addendum (26) item 2)
+-	acceptance/3/README.cases.md#original-passage-3	coverage audit of P/02, B01	2026-10-30	 (B01)
+-	acceptance/3/README.cases.md#original-passage-3	coverage audit of P/02, B04	2026-10-30	 (B04)
+-	acceptance/3/README.cases.md#original-passage-3	coverage audit of P/02, B02	2026-10-30	 (B02)
+-	acceptance/3/README.cases.md#original-passage-3	C02-SHELL-TAG-01	2026-11-01	 (C02-SHELL-TAG-01)
+-	acceptance/3/README.cases.md#original-passage-3	coverage audit of P/02, B03	2026-10-30	 (B03)
+-	acceptance/3/README.cases.md#original-passage-3	check_spec 0021baa83, the Architect	2026-10-30	 The form of the check — check_spec 0021baa83 (the Architect).

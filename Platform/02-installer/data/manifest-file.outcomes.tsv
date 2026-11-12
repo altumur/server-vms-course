@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row platform/manifest/<sub>/files/<sha256>/<n> (ADR-0094 B7; the form of outcomes — ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row platform/manifest/<sub>/files/<sha256>/<n>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 /data	admin	the part is out of form: as other bytes — manifest put writes its own part with cas on the version read	0	row	P/02.3 N3 «Manifest change»

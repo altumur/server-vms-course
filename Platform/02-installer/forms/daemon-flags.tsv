@@ -1,4 +1,4 @@
-# Command options of P/02, ADR-0125 addendum (5). The installer has no daemon or HTTP door of its own.
+# Command options of P/02. The installer has no daemon or HTTP door of its own.
 # Same columns as P/01: commands are the command ids in operator-commands.tsv, not HTTP routes or daemon roles.
 # This table is the source of the option names, value types, defaults and conditions. Positional arguments are in operator-commands.tsv.
 # type: string (a string), number (a finite decimal number), file (a file path), bool (no value).
