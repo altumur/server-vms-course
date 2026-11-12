@@ -16,7 +16,7 @@ The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_
 
 ## First approved budgets
 
-ADR-0130 Addendum (9) approves these values as the first P/01 budgets. They are reviewed after the first real candidate on a new export. This section is their only source; other text uses the names.
+ADR-0130 Addendum (9) approves these values as the first P/01 budgets. They are reviewed after the first real candidate on a new export. The bounds on declared input-phase intervals come from [P/01.1-R147 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing). This section is the source of the other thresholds; other text uses their names.
 
 They are acceptance thresholds for the envelope below. They are not implementation constants, flags, profile fields or protocol values. Each is an upper bound on the observed result; this contract sets no lower bound. The implementation still declares its own finite positive intervals under P/01.1-R147. Basis `norm` means the value already exists in the canon; `judgement` means it was chosen from product goals and approved by that Addendum.
 
@@ -33,10 +33,10 @@ The largest row is the `-max-value` default and the connection limits are the `-
 | Name | Upper bound | Observed result | Case | Basis |
 |---|---|---|---|---|
 | `BUDGET_OVERFLOW_REFUSAL` | 1 s | Complete `503` with `Retry-After: 1` to a connection above a connection limit | probe `01-connections` | form `norm`; time `judgement` |
-| `BUDGET_IDLE` | 60 s | Wait for the first request byte | RUN-T03 | `judgement` |
-| `BUDGET_HEADERS` | 10 s | Absolute header phase | RUN-T03 | `judgement` |
-| `BUDGET_BODY` | 30 s | Absolute body phase | RUN-T03 | `judgement` |
-| `BUDGET_DRAIN` | 5 s and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |
+| `BUDGET_IDLE` | [The upper bound for the declared idle interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Wait for the first request byte | RUN-T03 | `judgement` |
+| `BUDGET_HEADERS` | [The upper bound for the declared header interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Absolute header phase | RUN-T03 | `judgement` |
+| `BUDGET_BODY` | [The upper bound for the declared body interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Absolute body phase | RUN-T03 | `judgement` |
+| `BUDGET_DRAIN` | [The upper bound for the declared refusal-drain interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |
 | lock wait | the `-leader-wait` value, then `unavailable` | Wait for the mutation lock | RUN-L02, probe `03-lock-wait` | `norm` |
 | `BUDGET_WRITE_P99` | 250 ms | Write latency p99 at `REPORT_RATE` | RUN-W01 | `judgement` |
 | `BUDGET_WRITE_GROWTH` | factor 2 | Write cost at `WORKLOAD_WORST` against `WORKLOAD_ORDINARY` | RUN-W01 | `judgement` |

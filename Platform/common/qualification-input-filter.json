@@ -82,6 +82,11 @@
       "basis": "The public HTTP contract referenced by the qualification procedures."
     },
     {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "disposition": "include",
+      "basis": "P/01.1-R147 owns the required input-phase interval bounds used by the qualification measurements."
+    },
+    {
       "path": "Platform/08-domain/forms/runtime-constants.tsv",
       "disposition": "include",
       "basis": "The REPORT_RATE workload definition referenced by the first approved budgets."
