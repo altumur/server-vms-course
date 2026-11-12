@@ -12,6 +12,7 @@ P/02	scenarios-format	5/own	@as/@header, ожидание кода без тел
 P/02	acceptance-entry	5/variants	варианты манифестов и ожидаемые эффективные права «роль действие ключ → allow|deny» для вывода прав (глава 2.5 из М10/06); проверяется по README приёмки
 P/02	no-openapi	-	своих HTTP-дверей у установщика нет; GET /manifest — у консоли (P/06, глава 6.5)
 P/01	acceptance-entry	2/inputs	готовый файл прав стенда глав 1.2 и 1.3 (форма P/01.2 Н1.2); проверяется по README приёмки
+P/01	acceptance-entry	1/inputs	файл прав стенда главы 1.1 (литерал Role sockets, форма P/01.2 Н1.2; P01.259); проверяется по README приёмки
 P/03	no-openapi	-	своей HTTP-двери у воркера нет (глава 3.1 Н2; план переноса урока 3, п. 8)
 P/03	scenarios-format	2/own	двери store/console и директивы процессов @start/@sig*, ожидания @not (сценарии главы 3.2 из М10/05); проверяется по README приёмки
 P/03	scenarios-format	3/own	двери store/console и директивы процессов @start/@sleep/@until (сценарии главы 3.3 из М10/05); проверяется по README приёмки
