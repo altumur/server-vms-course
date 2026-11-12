@@ -87,3 +87,99 @@ req_id	file	source	date	removed
 -	spec/09-agent.api.openapi.yaml#/paths/~1api~1topology~1{member}/get/responses/503/description	Codex review of lesson P/09 (decisions/inbox/ревью/РЕВЬЮ-УРОКА-P09-Codex.md), М1	2026-11-06	; review M1
 -	spec/09-agent.api.openapi.yaml#/components/schemas/UnavailableBody/description	review analysis of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 22 (Claude M-4)	2026-10-20	; analysis of review of stage B 8–10, № 22, Claude M-4
 -	spec/09-agent.api.openapi.yaml#/components/schemas/RelayCarry/description	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding C1	2026-11-06	; review C1
+-	data/join.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/agent.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/member-list.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/shared-copy.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/backup-refused.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/alarms.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/member-want.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/backup.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/book-want.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/backup-taken.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/member-topology.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/outcomes.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/placed.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/shared-refused.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/member.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/book-copy.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/placed-record.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/grants.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/relay-for.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/member-key.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/edit-ids.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/agent-turn.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/folders-state.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/servers.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/reaches.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/reached.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-10-19	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/roles.outcomes.tsv#header	ADR-0098 §5; ADR-0100	2026-10-30	 (ADR-0098 §5, ADR-0100)
+-	data/agent.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-45	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-45)
+-	data/agent.outcomes.tsv#row:path=&reader=domainagent	analysis of review of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 16	2026-10-20	 (the reader domainconsole is removed by the catalogue — analysis of review of stage B 8–10, № 16)
+-	data/alarms.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-46	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-46)
+-	data/backup-refused.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-47	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-47)
+-	data/backup-refused.outcomes.tsv#row:path=&reader=domainagent	analysis of review of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 16	2026-10-20	 (the reader domainconsole is removed by the catalogue — analysis of review of stage B 8–10, № 16)
+-	data/backup-taken.outcomes.tsv#row:path=&reader=console	layout audit, G-48; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-48; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/backup-taken.outcomes.tsv#row:path=&reader=domain	V7 item 3: the Architect's decisions on the gaps of outcomes by readers (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), row 17	2026-10-28	 (V7 item 3, row 17)
+-	data/backup-taken.outcomes.tsv#row:path=&reader=domainagent	finding C09-RETAIN99	2026-10-26	; C09-RETAIN99
+-	data/backup-taken.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-48; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-48; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/backup-taken.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-48	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-48)
+-	data/backup.outcomes.tsv#row:path=&reader=console	layout audit, G-49; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-49; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/backup.outcomes.tsv#row:path=&reader=domain	the Architect's answer to the questions of stage 3 (2026-10-25), G-49	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-49)
+-	data/backup.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-49; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-49; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/book-copy.outcomes.tsv#row:path=&reader=<s>worker	layout audit, G-50; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-50; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/book-copy.outcomes.tsv#row:path=&reader=console	layout audit, G-50; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-50; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/book-copy.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-50	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-50)
+-	data/grants.outcomes.tsv#row:path=&reader=console	finding C06-GLASS-UNREADABLE-01, the Architect's decision	2026-10-28	 — C06-GLASS-UNREADABLE-01, the Architect's decision of 2026-10-28
+-	data/grants.outcomes.tsv#row:path=&reader=console	the Architect's decision on the check ddc9bee1e	2026-10-28	; the Architect's decision of 2026-10-28 on the check ddc9bee1e
+-	data/grants.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-51	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-51)
+-	data/member-key.outcomes.tsv#row:path=&reader=admin	V7 item 3: the Architect's decisions on the gaps of outcomes by readers (decisions/inbox/2026-10-28-В7-пробелы-исходов-по-читателям-решения.md), P4	2026-10-28	 (V7 item 3, P4)
+-	data/member-key.outcomes.tsv#row:path=&reader=domain	finding C09-MEMBER-KEY-PAIR-01	2026-10-29	, C09-MEMBER-KEY-PAIR-01
+-	data/member-key.outcomes.tsv#row:path=&reader=domain	layout audit, G-52; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-52; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member-key.outcomes.tsv#row:path=&reader=domainagent	finding C09-MEMBER-KEY-PAIR-01	2026-10-29	, C09-MEMBER-KEY-PAIR-01
+-	data/member-list.outcomes.tsv#row:path=&reader=<s>worker	ADR-0091 addendum (18) item 2	2026-10-23	, ADR-0091 addendum 18 item 2
+-	data/member-list.outcomes.tsv#row:path=&reader=<s>worker	layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member-list.outcomes.tsv#row:path=&reader=console	layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member-list.outcomes.tsv#row:path=&reader=domain	layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member-list.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-53; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member-list.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-53	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-53)
+-	data/member-topology.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-54	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-54)
+-	data/member-topology.outcomes.tsv#row:path=&reader=<s>worker	finding C08-CATALOG-TOPOLOGY-READERS-01, the Architect's decision, analysis of the VMS pass	2026-11-01	 (C08-CATALOG-TOPOLOGY-READERS-01, the Architect's decision of 2026-11-01, analysis of the VMS pass)
+-	data/member.outcomes.tsv#row:path=&reader=<s>worker	layout audit, G-55; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-55; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/member.outcomes.tsv#row:path=&reader=console	finding C06-BREAKGLASS-MEMBER-UNREADABLE-01, the Architect's decision	2026-10-28	; C06-BREAKGLASS-MEMBER-UNREADABLE-01, the Architect's decision of 2026-10-28
+-	data/member.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-55; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-55; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/outcomes.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-56; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-56; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/outcomes.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-56	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-56)
+-	data/outcomes.outcomes.tsv#row:path=&reader=domainagent	analysis of review of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 16	2026-10-20	 (the reader domainconsole is removed by the catalogue — analysis of review of stage B 8–10, № 16)
+-	data/placed-record.outcomes.tsv#row:path=&reader=<s>worker	layout audit, G-57; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-57; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/placed-record.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-57	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-57)
+-	data/placed.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-58	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-58)
+-	data/placed.outcomes.tsv#row:path=&reader=domainagent	analysis of review of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 16	2026-10-20	 (the reader domainconsole is removed by the catalogue — analysis of review of stage B 8–10, № 16)
+-	data/reached.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-59	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-59)
+-	data/reaches.outcomes.tsv#row:path=&reader=domainagent	finding C09-RETAIN99	2026-10-26	; C09-RETAIN99
+-	data/reaches.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-60; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-60; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/reaches.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-60	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-60)
+-	data/servers.outcomes.tsv#row:path=&reader=domainagent	finding C09-RETAIN99	2026-10-26	; C09-RETAIN99
+-	data/servers.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-60; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-60; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/servers.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-60	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-60)
+-	data/roles.outcomes.tsv#row:path=&reader=console	ADR-0119 addendum (5) item 3, addendum (7) item 1	2026-11-03	 (ADR-0119 addendum (5) item 3, addendum (7) item 1)
+-	data/shared-copy.outcomes.tsv#row:path=&reader=console	layout audit, G-61; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-61; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/shared-copy.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-61	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-61)
+-	data/shared-copy.outcomes.tsv#row:path=&reader=<s>worker	finding C08-CATALOG-SHARED-WORKER-01, the Architect's decision, analysis of the VMS pass	2026-11-01	 (C08-CATALOG-SHARED-WORKER-01, the Architect's decision of 2026-11-01, analysis of the VMS pass)
+-	data/shared-refused.outcomes.tsv#row:path=&reader=domainagent	finding C09-RETAIN99	2026-10-26	; C09-RETAIN99
+-	data/shared-refused.outcomes.tsv#row:path=&reader=domainagent	layout audit, G-62; rule DF-OUTCOMES-109, the Architect's decision	2026-10-25	 (layout audit, G-62; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/shared-refused.outcomes.tsv#row:path=&reader=domainagent	the Architect's answer to the questions of stage 3 (2026-10-25), G-62	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-62)
+-	data/shared-refused.outcomes.tsv#row:path=&reader=domainagent	analysis of review of stage B 8–10 (decisions/inbox/2026-10-20-ревью-стадии-b-8-10-разбор.md), № 16	2026-10-20	 (the reader domainconsole is removed by the catalogue — analysis of review of stage B 8–10, № 16)
+-	data/member-key.schema.json#/properties/pub/description	review C4	2026-11-06	, review C4
+-	data/member.schema.json#/properties/pub/description	review C4	2026-11-06	, review C4
+-	data/placed-record.schema.json#/description	finding G09-PLACEMENT-AT-COPY-01	2026-11-05	 G09-PLACEMENT-AT-COPY-01
+-	data/placed-record.schema.json#/properties/at/description	finding G09-PLACEMENT-AT-COPY-01	2026-11-05	 (G09-PLACEMENT-AT-COPY-01)
+-	data/roles.schema.json#/properties/supervision/description	ADR-0119 addendum (4) item 1, addendum (6) item 2	2026-11-03	; ADR-0119 addendum (4) item 1, addendum (6) item 2
+-	data/roles.schema.json#/properties/unreadable/description	ADR-0119 addendum (6) item 2	2026-11-03	; ADR-0119 addendum (6) item 2
+-	spec/09-agent.api.openapi.yaml#/components/schemas/AgentRefusal/description	finding LTD-E02 of the local token door contract (refusal words)	2026-10-23	; LTD-E02
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	preserves all
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	original 
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	, retaining cause/outcome/diagnostic/caller byte for byte
+-	forms/README.md#refusal-catalogue	ADR-0125 addendum (5) item 5	2026-11-05	The original chapter/row addresses remain.
+-	acceptance/1/README.md#anywhere-copy-hash	ADR-0083 addendum (145)	2026-11-08	Existing
+-	acceptance/1/README.md#anywhere-copy-hash	ADR-0083 addendum (145)	2026-11-08	rebaselined 

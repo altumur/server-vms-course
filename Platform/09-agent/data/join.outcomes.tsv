@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/join (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/join. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domainagent	the whole row is unreadable: the agent — does not send the fields class and batch of the publication, the knock is ordinary, the log without the value; the row is not repaired: the command join writes it	0	row	P/09.1 N1.1 join

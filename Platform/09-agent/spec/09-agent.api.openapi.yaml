@@ -807,7 +807,7 @@ components:
       type: object
       required: [error]
       additionalProperties: false
-      description: 'A refusal of the agent itself at the local door (the contract «Refusals»; LTD-E02): 400 bad request, 401 unauthorized, 404 not
+      description: 'A refusal of the agent itself at the local door (the contract «Refusals»): 400 bad request, 401 unauthorized, 404 not
         found, 413 refused (P/08.7 N4), 502 invalid token reply, 503 unavailable; the code and error are normative, detail — the words of the implementation'
       properties:
         error: {type: string, enum: [bad request, unauthorized, not found, refused, invalid token reply, unavailable]}

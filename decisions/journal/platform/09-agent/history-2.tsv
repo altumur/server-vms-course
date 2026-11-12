@@ -50,3 +50,5 @@ P/09.2-R010	spec/09.2-agent.norms.md#N5	ADR-0083 addendum (9)	2026-10-20	 (ADR-0
 -	spec/09.2-agent.norms.md#readiness-checklist	the reference of the witnesses and the Architect's decision	2026-10-23	; the reference of the witnesses and the Architect's decision of 2026-10-23
 -	spec/09.2-agent.norms.md#readiness-checklist	ADR-0113	2026-11-01	 (ADR-0113)
 -	spec/09.2-agent.norms.md#readiness-checklist	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding M1	2026-11-06	M1
+P/09.2-R154	spec/09.2-agent.norms.md#N4	ADR-0125 addendum (5) item 5	2026-11-05	preserves
+P/09.2-R154	spec/09.2-agent.norms.md#N4	ADR-0125 addendum (5) item 5	2026-11-05	original 
