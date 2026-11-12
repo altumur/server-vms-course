@@ -4928,8 +4928,8 @@
     },
     {
       "path": "Platform/common/contracts/role-certificate.md",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "Public certificate and kit contract used by the TLS and store group stands; included whole, without case companions."
     },
     {
       "path": "Platform/common/contracts/row-check.md",
