@@ -1,6 +1,6 @@
 # Process inputs of the worker SDK, P/03; not a new executable or CLI. UTF-8, LF, literal TAB, no CSV quoting.
 # Names: $NAME is an environment value, <name> is the optional ordinary worker slot-name argument. commands: worker,domainworker.
-# Types are the P/01 vocabulary plus string (Architect d20d4a30a; Generators accepted 2026-11-05).
+# Types are the P/01 vocabulary plus string.
 # default holds only a literal default. With default=- and default_text!=- the default is a rule of the linked norm, to be resolved by the adapter, not a literal word.
 # No row makes the optional library argument compulsory. A manifest-defined slot.name_env is dynamic: the adapter reads that declared name only when <name> is absent.
 # The adapter resolves external/default inputs and validates the referenced contracts: instance/box, label-list, store/object address, capacity, role, manifest rev, paths.

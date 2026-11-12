@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "the holder's instance `<box>:<pid>:<6 hex of randomness>` or \"\"; the holder's box — the part before the first «:»; no field — as \"\" (analysis of review of stage B 3–5, № 6)",
+   "description": "the holder's instance `<box>:<pid>:<6 hex of randomness>` or \"\"; the holder's box — the part before the first «:»; no field — as \"\"",
    "type": "string",
    "x-codec": [
     "string"
@@ -17,7 +17,7 @@
    ]
   },
   "released": {
-   "description": "\"true\" | \"false\" | \"taking\" — the first write of a capture (N3 «capture» step 3); any «released» without a value — released ≠ \"false\"; no field — as released ≠ \"false\": not held, for a capture — as released (analysis of review of stage B 3–5, № 6)",
+   "description": "\"true\" | \"false\" | \"taking\" — the first write of a capture (N3 «capture» step 3); any «released» without a value — released ≠ \"false\"; no field — as released ≠ \"false\": not held, for a capture — as released",
    "type": "string",
    "x-codec": [
     "string"

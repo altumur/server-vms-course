@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row <sub>/state/<name>/<id> (P/03.6 N1.7; ADR-0091 item 3). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/state/<name>/<id> (P/03.6 N1.7). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
 	<s>controller	the whole row is unreadable: the unit is in the snapshot shard without this state, the count snapshot_state_garbled, retire_when does not fire by it; the cleanup of the orphaned removes the row by its own rule	0	row	P/04 N1.3a, N3; P/03.6 N1.7 unreadable
 	<s>worker	the whole row is unreadable: the state does not take effect, as if absent; the holder writes it anew by the version read	0	row	P/03.6 N1.7 unreadable
