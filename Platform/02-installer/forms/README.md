@@ -23,14 +23,14 @@ chapter row name surface code kind fields headers log norm word cause outcome di
 ```
 
 The separator is a literal TAB. Lines starting with `#` are comments; the first other line is the header. Every row has 15 cells.
-`name` is unique snake_case; `chapter` is `2.K`; `row` is the original 1-based row of that chapter’s N4 catalogue, not a new normative id.
+`name` is unique snake_case; `chapter` is `2.K`; `row` is the 1-based number of the row within its chapter (the address «N4 row N» of the column `norm`), not a normative id.
 `surface` is one of `call` (a pure procedure), `cli`, `start`, `process` (a running process), `peer` (a check whose owner is another lesson).
 `code` is a three-digit HTTP status for a `peer` outcome, `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
 `kind`, `fields`, `headers` are `-`: P/02 has no HTTP response body schema. In particular, a `peer` row does not invent a P/02 HTTP door.
 `word` is a fixed refusal/diagnostic token delimited by backticks, or the unquoted `-`; delimiters are not part of the token. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in
 `«…»`; `-` means no requirement here. Neither `word` nor `log` defines an otherwise unspecified stdout/stderr representation.
 
-The four last cells retain the former normative prose table, whole: condition, outcome, diagnostic rule, caller action. Generators use the
+The four last cells carry the normative prose of the refusal, whole: condition, outcome, diagnostic rule, caller action. Generators use the
 closed columns; they MUST NOT infer branches, fields or additional validation from these four prose cells. The N4 text links to this form
 and does not keep a second catalogue. No OpenAPI lookup is required for a lesson without HTTP. Validation checks that every chapter links
 this catalogue, `(chapter,row)` addresses are consecutive in their chapter, names are unique, and the closed cells agree with their
@@ -41,11 +41,11 @@ Examples (TABs in the actual TSV): ``2.1 / 1 / load_text / call / - / word `refu
 
 ## Internal finite deletion profile
 
-`finite-profile.schema.json` is the exact approved1f00 internal typed record, not manifest keys, flags or acceptance.yaml. P02.3 N3 checks it after installation step6 before step7/all writes (including unchanged), and at Process start before doors. Missing/unreadable limits retain the existing refusal; an insufficient profile is `refused:form`.
+`finite-profile.schema.json` is the exact internal typed record, not manifest keys, flags or acceptance.yaml. P/02.3 N3 checks it after installation step6 before step7/all writes (including unchanged), and at Process start before doors. Missing/unreadable limits retain the existing refusal; an insufficient profile is `refused:form`.
 
-`finite-profile.cases.json` (judge-only: the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile», «Process start» step 3a and «Manifest change» step 6a) binds witnesses to those existing entries. Its owned_context is an independent finite synthetic universe of packet shapes and metadata skeleton proofs; it does not attest completeness of production procedures. The source judge must reject missing/duplicate packets, short H/multiplicities, unknown provenance and wrong effective limits. Schema acceptance and free strings do not prove this. Actual descriptors must additionally cover every emitted packet, mixed batches and other auxiliary families. Expected answers/bounds never enter the implementation input. The Architect authors the shared judge by exact source hash; source/form/codec checks are not installer/native/SUT execution or a pin update. The witness count, the bound of the universe and the codec boundaries are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile»).
+`finite-profile.cases.json` (judge-only: the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile», «Process start» step 3a and «Manifest change» step 6a — P/02.3-R048 to P/02.3-R053, P/02.3-R094 to P/02.3-R097, P/02.3-R141 to P/02.3-R164) binds witnesses to those existing entries. Its owned_context is an independent finite synthetic universe of packet shapes and metadata skeleton proofs; it does not attest completeness of production procedures. The source judge must reject missing/duplicate packets, short H/multiplicities, unknown provenance and wrong effective limits. Schema acceptance and free strings do not prove this. Actual descriptors must additionally cover every emitted packet, mixed batches and other auxiliary families. Expected answers/bounds never enter the implementation input. Source/form/codec checks are not installer/native/SUT execution or a pin update. The witness count, the bound of the universe and the codec boundaries are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile» — P/02.3-R141 to P/02.3-R164).
 
-The metadata encoding, the byte proofs and the skeleton sizes of the judge's owned context are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile»).
+The metadata encoding, the byte proofs and the skeleton sizes of the judge's owned context are in [judge-only case data](README.cases.md) (judge-only: the case data of the profile witnesses; they check P/02.3 N3 «Internal finite deletion profile» — P/02.3-R141 to P/02.3-R164).
 
 ## Stage gates
 
