@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "names": {
-   "description": "JCS text of an array of the names of the disabled in ascending order in UTF-8 bytes, without repetitions; absent — \"[]\"; an array, not a string separated by «,»: a name may carry a comma (the Architect's decision on R41-11); order — the writer's rule, not the form",
+   "description": "JCS text of an array of the names of the disabled in ascending order in UTF-8 bytes, without repetitions; absent — \"[]\"; an array, not a string separated by «,»: a name may carry a comma; order — the writer's rule, not the form",
    "type": "array",
    "items": {
     "description": "name of the disabled person (the key of their row domain/users/<name>)",

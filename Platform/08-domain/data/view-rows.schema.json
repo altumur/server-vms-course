@@ -209,12 +209,12 @@
    }
   },
   "pending": {
-   "description": "field of chapter 8.6 (M11/6 N1.6 view.pending)",
+   "description": "field of chapter 8.6 (N1.6 view.pending)",
    "type": "object",
    "x-opaque": true
   },
   "outcomes": {
-   "description": "field of chapter 8.6 (M11/6 N1.6 view.outcomes)",
+   "description": "field of chapter 8.6 (N1.6 view.outcomes)",
    "type": "object",
    "x-opaque": true
   },
@@ -1040,12 +1040,12 @@
    "maximum": 9007199254740991
   },
   "fingerprint": {
-   "description": "key fingerprint — hex(sha256(public key)[:8]), 16 characters (chapter 8.2, M11/2 N1.1 fingerprint)",
+   "description": "key fingerprint — hex(sha256(public key)[:8]), 16 characters (chapter 8.2, N1.1 fingerprint)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{16})$"
   },
   "knock": {
-    "description": "the knocker (chapter 8.3, M11/3 N1.1 knock)",
+    "description": "the knocker (chapter 8.3, N1.1 knock)",
     "type": "object",
     "properties": {
       "name": {

@@ -10,7 +10,7 @@ KEEP_OLD	315360000	s	P/08.2-R008	s, 10 years — keep_until of the former curren
 REPORT_EVERY	5	s	P/08.3-R007	s — the agent pass; the holder's answer can assign every (N1.5), 1 … 3600
 BODY_LIMIT	16777216	bytes	P/08.3-R007	the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
 ROAD_QUIET	15	s	P/08.3-R008	s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY); longer — the former road is silent;
-PASSWORD_MIN	10	count	P/08.4-R003	characters: Unicode code points, not bytes (C08-PASSWORD-UNIT-01)
+PASSWORD_MIN	10	count	P/08.4-R003	characters: Unicode code points, not bytes
 TOKEN_LIFETIME	900	s	P/08.4-R004	s
 LOGIN_BODY	16384	bytes	P/08.4-R004	LOGIN_BODY
 GUARD_RETRIES	3	count	P/08.4-R006	GUARD_RETRIES
@@ -18,15 +18,15 @@ ANYWHERE_MAX	262144	bytes	P/08.4-R006	bytes of JCS doc, its own row: the summary
 GRANT_LIFETIME	86400	s	P/08.4-R006	s — a member's copy older than as_of + GRANT_LIFETIME gives no rights
 GROUP_TITLE_MAX	200	count	P/08.4-R007	characters; ROLE title — the same
 COMMENT_MAX	2000	count	P/08.4-R007	characters
-ROLES_TABLE_MAX	262144	bytes	P/08.4-R008	bytes of the JCS text of the table of one member; admin assignments (and the groups only from them) do not count (ADR-0100 §1), ADMIN_TABLE_MAX holds them (N1.3c)
+ROLES_TABLE_MAX	262144	bytes	P/08.4-R008	bytes of the JCS text of the table of one member; admin assignments (and the groups only from them) do not count, ADMIN_TABLE_MAX holds them (N1.3c)
 ADMIN_ASSIGNED_MAX	58	count	P/08.4-R009	elements of assigned of the role admin; beyond — 409 too many admins
 ADMIN_TABLE_MAX	131072	bytes	P/08.4-R009	bytes of the JCS text of the part of the table about admin: assigned.admin, the groups from it with members, admin_at, without the filter disabled: an upper bound, so
-GLASS_MIN	12	count	P/08.4-R012	characters: Unicode code points (C08-PASSWORD-UNIT-01)
-DOMAIN_FOLDERS_MAX	4000	count	P/08.5-R007	live folders; more — 409 too many folders. The whole tree goes only to a member whose copy is older than the ring domain/folder-log (carry.folders full): a limit, 4000 folders — about 500 KiB to such a member; to the others — the delta (ADR-0113 item 4; review of norms addendum (47) M1)
+GLASS_MIN	12	count	P/08.4-R012	characters: Unicode code points
+DOMAIN_FOLDERS_MAX	4000	count	P/08.5-R007	live folders; more — 409 too many folders. The whole tree goes only to a member whose copy is older than the ring domain/folder-log (carry.folders full): a limit, 4000 folders — about 500 KiB to such a member; to the others — the delta
 KEPT_LIMIT	50	count	P/08.6-R008	waiting edits per member; the 51st — 409 {error: "kept_full", detail: "<member> has 50 edits waiting"}
-BACKUP_HOLDERS	2	count	P/08.8-R006	members of class server, ok (chapter 8.1), except the holder, by descending hex sha256(UTF-8 «<holder>/<member>»); a camera is never a keeper (ADR-0113 addendum (1) item 4)
+BACKUP_HOLDERS	2	count	P/08.8-R006	members of class server, ok (chapter 8.1), except the holder, by descending hex sha256(UTF-8 «<holder>/<member>»); a camera is never a keeper
 HANDOVER_WAIT	30	s	P/08.8-R009	s = 6 × REPORT_EVERY
-ENTRY_MAX	1240	bytes	P/08.10-R003	(was 820, a new calculation below) bytes of JCS Entry — the worst case of the profiles (the Architect's decision on R41-17 of run 41): by — the name
+ENTRY_MAX	1240	bytes	P/08.10-R003	bytes of JCS Entry — the worst case of the profiles: by — the name
 IDEM_KEEP	86400	s	P/08.10-R003	s — the row lives at least this long, as P/06.1 N1.3 «Term of a done claim»: a new edit takes a new key
 IDEM_MAX	4096	count	P/08.10-R003	rows: an edit every 21 s around the clock; the count — the listing of the pass plus own writes after it; at the ceiling
 VIEW_EVERY	3	s	P/08.1-R006	Minimum interval between writes of the view head; part rows still write only on a difference.

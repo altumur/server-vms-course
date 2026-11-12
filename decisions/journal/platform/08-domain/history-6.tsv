@@ -73,3 +73,4 @@ P/08.6-R015	spec/08.6-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5).
 -	acceptance/6/README.md#preparation	M11/03	2026-11-11	formerly the acceptance README of M11/03):
 -	acceptance/6/README.md#scenariostsv	ADR-0083 addendum (13)	2026-11-11	(ADR-0083 addendum (13)).
 -	acceptance/6/README.md#placement-counter-after-the-start	C08-PLACEMENT-BUMP-TURN-01	2026-11-11	N3, C08-PLACEMENT-BUMP-TURN-01)
+P/08.6-R023	spec/08.6-domain.norms.md#N1	Specification work log (debt of placement by the domain)	2026-11-12	: placement of units by the domain by reachability is a debt in the Specification work log (for people).

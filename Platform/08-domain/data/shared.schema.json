@@ -8,7 +8,7 @@
    "properties": {
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "term of the holder of the document (chapter 8.8, from M11/10 N1.1); order — (term, rev), term is senior"
+     "description": "term of the holder of the document (chapter 8.8, N1.1); order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
@@ -19,7 +19,7 @@
      "description": "hex sha256 of the text of the document object"
     },
     "object": {
-     "description": "key of the document object — the string `domain/shared-docs/rev-<rev>` with the rev of the pointer; only at the holder's pointer, the member's copy row has no field (N1.2 pointer; review analysis of stage A 8–10, № 26)",
+     "description": "key of the document object — the string `domain/shared-docs/rev-<rev>` with the rev of the pointer; only at the holder's pointer, the member's copy row has no field (N1.2 pointer)",
      "type": "string",
      "pattern": "^(?:domain/shared-docs/rev-[1-9][0-9]*)$"
     }

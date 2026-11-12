@@ -80,7 +80,7 @@
   },
   "cut_before": {
    "$ref": "#/$defs/common.time",
-   "description": "from which moment the member is held whole: a number (domain clock), at the creation of the history — 0, not null; does not decrease (the alarm history contract history, cut; reconciliation of M11, A13, A14)"
+   "description": "from which moment the member is held whole: a number (domain clock), at the creation of the history — 0, not null; does not decrease (the alarm history contract history, cut)"
   }
  },
  "additionalProperties": false,

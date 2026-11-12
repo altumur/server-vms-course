@@ -1,4 +1,4 @@
-# The closed list of error words of the doors of the domain process: chapters 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). The rules — chapter 8.0 N4; the format of field — P/06.1 N2.
+# The closed list of error words of the doors of the domain process: chapters 8.3, 8.4, 8.6–8.10. The rules — chapter 8.0 N4; the format of field — P/06.1 N2.
 # door — the doors: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; verify /api/verify; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch; batches /domain/batches…;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
@@ -83,7 +83,7 @@ versions	400	Idempotency-Key required	-	8.0 N1.9 «Repeat memory»
 versions	409	in flight	-	8.0 N1.9 «Repeat memory»
 versions	412	revision moved	/revision	8.0 N1.9 «Versions»
 versions	413	row too large	-	8.0 N1.9 «Repeat memory»
-versions	422	key reused	-	8.0 N1.9 «Repeat memory»; ADR-0094 addendum (14)
+versions	422	key reused	-	8.0 N1.9 «Repeat memory»
 shared	400	refused	/base_rev /shared /shared/<sub> /shared/<sub>/<name>	8.9 N1.3
 shared	409	refused	/base_rev	8.9 N1.3
 shared	413	refused	-	8.9 N1.3

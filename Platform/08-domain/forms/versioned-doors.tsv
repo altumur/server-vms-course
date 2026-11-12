@@ -1,4 +1,4 @@
-# P/08.0 versioned-door metadata, source under ADR-0125 and ADR-0127; literal TAB.
+# P/08.0 versioned-door metadata; literal TAB.
 # Full grammar: forms/README.md. The ordinary core resolves rows and supplies result indexes.
 # ETag is the quoted result index, never revision. if_match base-rev preserves the existing priority/refusal rules.
 # absent_revision=0 applies only to a confirmed absent selected row; it never converts an unknown read to absence.
