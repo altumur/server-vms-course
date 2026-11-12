@@ -1,0 +1,42 @@
+{
+  "description": "Frictionless Table Schema of Platform/common/acceptance/forms/stand-manifests.tsv. Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; what the installation does stays with stand.md and the norms of P/02.3.",
+  "fields": [
+    {
+      "name": "n",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "^[1-9][0-9]*$"
+      }
+    },
+    {
+      "name": "manifest",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "^[a-z][a-z0-9]*$"
+      }
+    },
+    {
+      "name": "file",
+      "type": "string",
+      "description": "A repository-relative path of the manifest file.",
+      "constraints": {
+        "required": true,
+        "pattern": "^Platform/[^\\s]+\\.subsystem\\.yaml$"
+      }
+    },
+    {
+      "name": "beside",
+      "type": "string",
+      "description": "A repository-relative directory put next to the copy of the manifest; - — nothing.",
+      "constraints": {
+        "required": true,
+        "pattern": "^(-|Platform/[^\\s]+)$"
+      }
+    }
+  ],
+  "primaryKey": [
+    "n"
+  ]
+}

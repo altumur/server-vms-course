@@ -76,8 +76,7 @@ A profile describes those interfaces; it does not change their scenarios or expe
 - **Launch command** — a template with substitutions: `{data}` — a new empty data directory of the instance; `{socket}` — the
   socket path of the store door (P/01.1); `{port}` — the HTTP port of the console on the loopback (lesson P/06 and the acceptances with the console stand); `{manifest}` — the directory
   of the stand manifests for the processes that need it (`MANIFEST_DIR`, P/02.3); the store command does not receive it and puts no manifests; `{body_limit}` and `{row_ceiling}` — the body limit and the row ceiling (N5 P/01.1);
-  `{rights}` — the path of the rights file which the runner puts before the store starts (P/01.2 N1.2): in P/01.1 — the file below
-  («Role sockets»), in the chapters P/01.2 and P/01.3 — the ready input [`01-store/acceptance/2/inputs/rights.json`](../../01-store/acceptance/2/inputs/rights.json) (judge-only: an input of the stand), in the acceptances whose stand sets up the stand manifests — the rights derived from the stand manifests by the rights derivation command below (`{manifests}` — the directory of the stand
+  `{rights}` — the path of the rights file which the runner puts before the store starts (P/01.2 N1.2); the column `rights` of the routing row of the target names it (judge-only: the routing of the judge, [`forms/targets.routing.tsv`](forms/targets.routing.tsv)): in P/01.1 — the file of «Role sockets» below, in the chapters P/01.2 and P/01.3 — the ready input [`01-store/acceptance/2/inputs/rights.json`](../../01-store/acceptance/2/inputs/rights.json) (judge-only: an input of the stand), in the acceptances whose stand sets up the stand manifests — the rights derived from the stand manifests by the rights derivation command below (`{manifests}` — the directory of the stand
   manifests, `{deployment}` = `dep`); the store command receives `{rights}`, not `{manifest}`. The implementation names which substitutions each of its processes needs.
 - **Manifest install command** `manifest-put` (P/02.3 N3 «Manifest change») — a template with `{socket}` and `{file}`: puts one manifest
   through the `admin.sock` of the store (`{socket}`); code 0 — put, another — a refusal. With it the runner sets up the stand manifests one by one
@@ -99,8 +98,8 @@ A profile describes those interfaces; it does not change their scenarios or expe
 - **Role sockets** (P/01.2, P/01.3 N1.3 `sockets`): on a box too the store opens a socket per role (`<role>.sock`, `admin.sock`) per the rights
   file; the runner calls through the socket of the role of the scenario. `{socket}` is the path of `admin.sock`; the role sockets lie next to it, in the same directory, flat (P/01.3 N1.3 `sockets`).
   `{socket}` is a door with full rights (preparation). Lesson 1 runs the scenarios with the role `acc` — read and write rights only on
-  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner puts exactly this file into `{rights}` (the form — P/01.2 N1.2):
-  `{"roles": {"acc": {"group": "acc", "read": ["acc/*"], "write": ["acc/*"], "delete": ["acc/*"]}}}`.
+  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner puts exactly the file [`01-store/acceptance/1/inputs/rights.json`](../../01-store/acceptance/1/inputs/rights.json) into `{rights}` (the form — P/01.2 N1.2):
+  the role `acc` with the group `acc` and the patterns `acc/*` for `read`, `write` and `delete`.
   Deletion is a separate action (P/01.2 N1.3 `allowed`); in the file it is named explicitly.
   The store is ready when `admin.sock` and the socket `<role>.sock` of every role of its rights file accept a connection, within the term of «Terms of the stand» (15 s from the start by default; `@store-start` and `@server-start` are exceptions, their rows name their own terms); without a rights file only `admin.sock` is awaited. An instance that exits earlier or is not ready by then is a failed start; a rights file that cannot be read or has no object `roles` is a failure of the stand.
   The stand of P/01.2 is the store with its ready rights input above: it has no installer and no manifest is laid.
@@ -113,11 +112,11 @@ A profile describes those interfaces; it does not change their scenarios or expe
   The server settings file is `W2C_ENV` of the form (P/02.4 N1.2: the directory `roles/` is next to `w2c.env`,
   there is no other place), the role files are `{data}/etc/w2c/roles/<role>.env`; for a server `on <server>` — the same paths in its
   `PLATFORM_DIR` `{data}/servers/<server>`.
-- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in the order of dependencies: `testsub`, then `testsub2` (it references `testsub`: `about`,
-  `near`, `worker.requests`); loading the directory (P/02.1 N3) sees both.
+- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in the order of the form [`forms/stand-manifests.tsv`](forms/stand-manifests.tsv): `testsub`, then `testsub2` (it references `testsub`: `about`,
+  `near`, `worker.requests`; the manifests reference each other, so their files do not give the order); loading the directory (P/02.1 N3) sees both.
   The manifest `testsub2` declares `console.shell` and `console.files`: the installation reads these files next to the manifest file (P/02.3 N3
-  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of
-  [`06-console/acceptance/5/inputs/testsub2/`](../../06-console/acceptance/5/inputs/testsub2) under the same paths — on every stand where
+  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of the directory of the column `beside` of its row,
+  [`06-console/acceptance/5/inputs/testsub2/`](../../06-console/acceptance/5/inputs/testsub2), under the same paths — on every stand where
   `testsub2` is set up, not only in acceptance 6.5.
 - **Console root** (`CONSOLE_ROOT`) is named by the lesson README: chapter 6.2 — `testsub2` (the short paths `/tallies`),
   the others — `testsub`, the second subsystem is mounted under `/testsub2`.

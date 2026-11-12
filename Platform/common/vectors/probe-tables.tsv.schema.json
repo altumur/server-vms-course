@@ -1,0 +1,60 @@
+{
+  "description": "Frictionless Table Schema of Platform/common/vectors/probe-tables.tsv. Every field is a raw string: no type coercion. Lexical constraints only where the header of the form states them; the JSON of case and cells, the CEL of skip and the meaning of native stay with wire.md «P/01 write-checks transport».",
+  "fields": [
+    {
+      "name": "package",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "^(common|[0-9]{2}-[a-z]+)/[a-z0-9-]+$"
+      }
+    },
+    {
+      "name": "table",
+      "type": "string",
+      "description": "A repository-relative path of the probe table.",
+      "constraints": {
+        "required": true,
+        "pattern": "^Platform/[^\\s]+\\.tsv$"
+      }
+    },
+    {
+      "name": "case",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "{\"line\":true}"
+        ]
+      }
+    },
+    {
+      "name": "cells",
+      "type": "string",
+      "description": "A JSON object from the wire cell names to column or lines sources.",
+      "constraints": {
+        "required": true,
+        "pattern": "^\\{.*\\}$"
+      }
+    },
+    {
+      "name": "skip",
+      "type": "string",
+      "description": "CEL over row: map<string,string>; false — every row is executed.",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "native",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "^check-row:Platform/[^\\s]+\\.tsv$"
+      }
+    }
+  ],
+  "primaryKey": [
+    "package"
+  ]
+}

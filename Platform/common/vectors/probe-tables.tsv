@@ -1,0 +1,13 @@
+# Probe tables run as vector packages (wire.md «P/01 write-checks transport»): a probe table that lies in the forms of a lesson, not under vectors/, and some of whose cells
+# come from the parameter lines of the table, so that it has no row in wire.tsv. One row per package; the package is called through the unified vector command of PROFILE.md.
+# package: the package of the vectors entry of the profile, unique in this form and in wire.tsv. table: the probe table, a repository-relative path; its header and the lines
+# that begin with # are not rows. case: {"line":true} — the case of a row is line-<the physical source line>. The variant is "" and files is {}.
+# cells: JSON object from the wire cell names to their sources; every value is a string. {"column":"<name>"} — the raw cell of the row. {"lines":"<#word>","as":"object"}
+# — one JSON object text for every row: one member per line «<#word> <NAME> <integer>» of the table, NAME to the integer. {"lines":"<#word>","as":"array"} — one JSON array
+# text for every row: each element is one JSON string, the text of one line of the word after the word and one space, in the order of the lines. A line of a word is a # line
+# that begins with the word and one space.
+# skip: CEL over row: map<string,string>; a row for which it is true is not executed (its body is prose); false — every row is executed.
+# native: the native output, compared by value, closed words: check-row:<check table> — one JSON object, {"n": 0} when the cell n is 0, otherwise {"n": <n>, "code": <code>,
+# "kind": "<kind>"} with the code and the kind of the row n of the check table, a repository-relative path.
+package	table	case	cells	skip	native
+01-store/write-checks	Platform/01-store/forms/write-checks.probes.tsv	{"line":true}	{"sock":{"column":"sock"},"body":{"column":"body"},"lim":{"lines":"#lim","as":"object"},"allow":{"lines":"#allow","as":"array"}}	row["case"] == "nopair"	check-row:Platform/01-store/forms/write-checks.tsv
