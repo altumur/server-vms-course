@@ -89,8 +89,8 @@ These distinctions explain the chapter terms; they add no rule to the norms.
    also checked are non-numeric suffixes, equal numbers of different names and the next number after a long digit
    suffix. After 412 re-read the ownership: one's own renewal keeps the name, a foreign holder/gen fences off. Taking away on
    one's own box is available only to the first start; NameOnAnotherBox leaves the process nobody with the mark `refused` in the object
-   `<sub>/contenders/<name>/<box>` (chapter 3.2 N1.4a) and the alarm `worker.name_taken`
-   (chapter 3.2 N3 «nobody and getting the name back») per N4, without a change of the name. With a torn gen the candidate is not rewritten; with a torn until and a readable gen,
+   `<sub>/contenders/<name>/<box>` (chapter 3.2 N1.4a), without a change of the name. A first refusal of a foreign name writes only the mark,
+   without `worker.name_taken`; that alarm is written only when a previously captured name is lost (P/03.2-R233). With a torn gen the candidate is not rewritten; with a torn until and a readable gen,
    after TORN_STILL the generation is increased. Count the UTF-8 bytes of the full key together with the prefix and the separators;
    handle a definite badkey per chapter 3.2 N3 «Full keys and store refusal».
 8. Check the epoch and the lease at the boundaries of the window: confirmation from the moment of the request, another number,

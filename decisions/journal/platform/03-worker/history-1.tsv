@@ -6,3 +6,4 @@ P/03.1-R007	spec/03.1-worker.norms.md#N2	C03-RESTART-WORD-01; Architect's decisi
 P/03.1-R008	spec/03.1-worker.norms.md#N2	ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md §1.1 (course note, for people)	2026-10-17	 (the boundary §1.1)
 -	spec/03.1-worker.norms.md#implementation-decides	ADR-0033 (item 1; the helper named in words)	2026-10-05	and the reconciliation helper (ADR-0033).
 -	spec/03.1-worker.norms.md#readiness-checklist	ADR-0080 addendum 6	2026-10-14	 (ADR-0080 addendum 6)
+-	spec/03.1-worker.norms.md#readiness-checklist	P03.31 M1; P03.33; P/03.1-01	2026-11-12	`start_unit`, `stop_unit`, `status`, `reconcile_once` — six calls

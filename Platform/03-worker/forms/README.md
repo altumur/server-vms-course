@@ -64,19 +64,19 @@ Scripted store replies (`first_write_replies`, `final_write_replies`, `cleanup_r
 
 | CALL port | Input and observation |
 |---|---|
-| `worker-stop` | signal, units, place, optional errors from the ordered stop calls, optional `stop_unit_seconds` (unit → seconds of the scripted clock that its `stop_unit` takes; default 0) and `confirmed_age` (the age at the signal of the send moment of the last confirmed request of the lease and the slot renewal; default 0). Observe stop effects and exit. `release_within_budget` is true when the write that gives away the slot is sent no later than `WRITE_WINDOW` − `RENEW_EVERY` (P/03.2 N1.2, N1.4) after the send moment of the last confirmed request before it, including a renewal sent during the stop. `order` is the declared list of happens-before edges, each included only if it held in the recorded trace; it does not order units against one another. `stopped` is a sorted set for comparison, not a required stop order. SIGKILL makes no ordered stop calls or writes. |
+| `worker-stop` | signal, units, place, optional errors from the ordered stop calls, optional `stop_unit_seconds` (unit → seconds of the scripted clock that its `stop_unit` takes; default 0) and `confirmed_age` (the age at the signal of the send moment of the last confirmed request of the lease and the slot renewal; default 0). Observe stop effects and exit. `release_within_budget` is true when the write that gives away the slot is sent no later than `WRITE_WINDOW` (P/03.2 N1.2, N1.4) after the send moment of the last confirmed request before it, including a renewal sent during the stop. `order` is the declared list of happens-before edges, each included only if it held in the recorded trace; it does not order units against one another. `stopped` is a sorted set for comparison, not a required stop order. SIGKILL makes no ordered stop calls or writes. |
 | `worker-capture` | name, prefix, instance, server, given/first_start, slot, names_given, optional observed_for, contributions and scripted write/cleanup replies. The store returns fresh versions on successful writes. A final-write or cleanup reply belongs to that operation, not the first CAS. Observe live/nobody, writes, contender and events, and whether the first-start right was spent. `live_returns` counts live slots handed out; `final_slot_writes` counts sent final writes. The name is used as given, with no shortening: the slot key is the full key of P/03.2 N3 «Full keys and store refusal». `slot_writes` preserves write order and wire items; `logical_slot_writes` excludes network replays. `again` confirms the original write, retaining its id and send clock. |
 | `worker-grant` | epoch/floor or floor_reads, issue send/answer moments, optional `issue_replies`, confirm send moment, answered assignment and silence policy. Queue the answer at its declared time and recheck all gates before start. Observe issued epoch, lease, launch and rollback writes, and requirement of a fresh assignment read. `confirmation_after_issue` records causal order even at an equal clock reading. |
 | `worker-start-gate` | a controlled interleaving: block issue/start at begin, deliver answers, fence, rejoin and read assignment as named. Observe accepted calls, cancellation/stopping and published units. Returning the old start must not register a live unit. No store request or blocked start holds a lock that prevents fence. |
 | `worker-confirm` | lease, epoch/read_epoch, floor, last, send/answer times (`answered: null` — the request got no answer), optional `reply` of the confirmation read, optional `unconfirmed_max` (the manifest word or seconds; default off) and `at` (the moment at which the predicates are read; default the answer moment). The own slot term is open in the background. Observe lease, last and predicates `may_act`, `may_write`. `last` is monotonic over confirmed send times, not wall time. |
 | `worker-slot-write` | consecutive slot_reads, write_replies and own_term_open. Record each target write's guard version; a 412 must trigger a fresh ownership read before retry. Observe `guards`, `name_lost`, `confirmed_writes` and `replay_same_id`: ownership loss and definite success, not only the count of calls. |
-| `worker-reconcile` | current and desired unit, lease and answered assignment. Observe epoch issues, stop's restarting word, start epochs, observed_revision and continued lease. A born change is a new unit; an edit under the same born restarts with the same epoch. |
-| `worker-retry` | failure count, at_max and events. Observe the count after each event and final stalled. A non-answer is not confirmed absence; a move/fence/name change is not a failed start. |
+| `worker-reconcile` | Current and desired unit, lease and answered assignment; the exact [JSON normalization](#worker-reconcile-json) is below. A born change is a new unit; an edit under the same born restarts with the same epoch. |
+| `worker-retry` | Failure count, at_max and ordered events; the exact [JSON normalization](#worker-retry-json) is below. A non-answer is not confirmed absence; a move/fence/name change is not a failed start. |
 | `worker-stand-in` | step age, ownership, write permission, last loop heartbeat and wall clock. Observe renewal/confirmation order, absence of epoch writes and watchdog calls, and repeated heartbeat with unchanged as_of. |
 | `worker-memory` | launcher command, manifest and environment. Read unit_mb/base_mb from placement.capacity. Missing unit_mb, capacity or WORKER_MEMORY_MB skips the check; domainworker receives no invented role-file values. Observe checked/refused and the fixed refusal word, no invented exact exit code. |
 | `worker-open-unit` | id, row key, row and ring (null means no ring). Run the real opening path before epoch issue. Observe recipient values, no epoch/start on Sealed, status and absence of forbidden status fields; the adapter scans recorded heartbeat/log values for an opened plaintext. The envelope is the published synthetic common sealing vector. |
 | `worker-holder-look` | request, mark, now, optional put_new reply; normal profile, one live unit, most_valid above the requested deadline unless overridden. Observe action calls and outcome writes. A foreign begun with an expired request still waits until the foreign call's timeout; an unknown put_new never admits the action. |
-| `worker-holder-group` | ordered begin/timeout/observe/look/return events for two requests of one group. Observe calls before/after the first return and maximum unfinished calls. Timeout does not stand in for completion of the device call. |
+| `worker-holder-group` | Ordered events for two requests of one group; the exact [JSON normalization](#worker-holder-group-json) is below. Timeout does not stand in for completion of the device call. |
 | `worker-state-write` | start identity, re-read unit row, state name/value, may_write, optional `write_replies`. Observe wire items, epoch-row guard, `confirmed_writes` (the logical state writes confirmed by a definite `ok` or `again`) and `replay_same_id`. The fixture declares result as an object schema. Identity stamps remain those of the start, not the newer unit row. |
 | `worker-token-cache` | kind, current token identity, ordered refusal/issue events, same-local-day and a verification fixture. The agent transport is controlled; token bytes, keys, revocations and time come from the input of the case. No validation path is bypassed. Observe requests, revoked word, waiting, files/rows/logs. Recipient crypto also passes the common domain-token vectors. |
 | `worker-base-heartbeat` | Ordinary base heartbeat without subsystem overrides; report decoded schema/build/pending_writes from SCHEMA/BUILD/defaults. |
@@ -86,6 +86,49 @@ Scripted store replies (`first_write_replies`, `final_write_replies`, `cleanup_r
 
 These seams supplement reading witnesses. They do not remove the checklist or close a process scenario, domain stand, keyless opening case,
 place writer, or OS presence-lock race that they do not execute. The stage plan lists them as kit tests; the process scenarios of the lesson remain the judge's work.
+
+### worker-reconcile JSON
+
+The input is an object. The following fields are required unless marked optional. Partial unit objects complete the ordinary fixture described above; the named fields below retain their supplied values. Unit identity, revision, epoch and lease behavior follow P/03.2-R212 through P/03.2-R231 and P/03.3-R033 through P/03.3-R035.
+
+| Input field | JSON type and meaning |
+|---|---|
+| `current` | Object with `id` (string), `born` (string), `revision` (integer) and `epoch` (integer): the running unit and its accepted start identity. |
+| `desired` | Object with `id` (string), `born` (string) and `revision` (integer): the desired unit row. |
+| `lease` | String, `confirmed` or `silent`: the prepared lease state. |
+| `assignment_confirmed` | Boolean: whether the desired assignment was confirmed by a successful read. |
+| `may_write`, `may_act` | Optional booleans overriding the corresponding scripted lease predicates; when absent the prepared lease supplies them. |
+
+The result is an object with all fields below. The adapter records actual epoch-issue writes and subsystem calls; it reads the final accepted revision and lease state from the implementation. Array order is call order.
+
+| Result field | JSON type and meaning |
+|---|---|
+| `epoch_issues` | Nonnegative integer: number of new epoch issues. |
+| `stop_calls` | Nonnegative integer: number of `stop_unit` calls. |
+| `stop_restarting` | Array of booleans, one per `stop_unit` call: whether the subsystem's `restarting(id)` word holds for that call. |
+| `start_epochs` | Array of integers: the epoch passed to each accepted `start_unit` call. |
+| `observed_revision` | Integer: the accepted revision after reconciliation. |
+| `lease` | String, `confirmed` or `silent`: the resulting lease state. |
+
+### worker-retry JSON
+
+The input is an object with required `unit` (string), `failure_count` (nonnegative integer), `at_max` (boolean: the initial retry pause has reached RETRY_MAX) and `events` (an ordered array of strings). The closed event words are `assignment-unavailable` (the assignment read got no answer), `move` (the unit moved), `fence` (the unit was fenced), `name-change` (the worker changed its name) and `assignment-absent-confirmed` (a successful assignment read confirms that the unit is absent). These events exercise the count classification and reset of P/03.3-R025 through P/03.3-R028; they are not synthetic start failures.
+
+The result is an object with required `counts_before_absence` (array of nonnegative integers), `failure_count` (nonnegative integer) and `stalled` (boolean). `counts_before_absence` records the count after each event preceding the first `assignment-absent-confirmed`, in event order; if no such event occurs it records the count after every event. It excludes that confirmed-absence event and all later events. `failure_count` and `stalled` are the final observed count and retry state after all events. The adapter reads these values from the real retry state, not from the event names alone.
+
+### worker-holder-group JSON
+
+The input is an object with required `group` (string) and `events` (an ordered array of strings). The fixture prepares two otherwise eligible requests of that group in one holder process epoch. A request identifier is the nonempty suffix following the first colon; the same string denotes the same request throughout the trace. The closed event forms are:
+
+| Event form | Intervention |
+|---|---|
+| `begin:<request>` | Admit the named request through the real holder path and keep its device callback unfinished. |
+| `timeout:<request>` | Deliver the named call's timeout while its device callback remains unfinished. |
+| `observe:<request>` | Make the named eligible request visible to the holder. |
+| `look` | Run the holder's ordinary look at the visible requests. This event has no colon or request suffix. |
+| `return:<request>` | Complete the named unfinished device callback. |
+
+The result is an object with required `calls_before_return` (array of strings: request identifiers of actual device calls dispatched before the first `return:<request>`), `calls_after_return` (array of strings: those dispatched after that event) and `max_unfinished` (nonnegative integer: maximum simultaneous unfinished device callbacks). Each array preserves dispatch order. A timeout leaves its callback unfinished until `return:<request>`; the adapter measures this actual overlap under P/03.6-R162 through P/03.6-R172.
 
 
 ## Additional seam boundaries
