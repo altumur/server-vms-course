@@ -796,7 +796,7 @@ def qualification_refs(check, model, homes=None):
     model_and_judge Markdown source of Platform and its translation are read — of the lessons `homes` (repository paths;
     None — all), of Platform/common/ and of the Platform root; without Q files the check reads nothing."""
     root = check.root
-    q = {p for p in qualification_files(root) | set(model) if q_kind(p) == "source"}
+    q = {p for p in qualification_files(root) if q_kind(p) == "source"}
     if not q:
         return
 
