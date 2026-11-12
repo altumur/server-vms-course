@@ -22,7 +22,7 @@ def rec(path, disposition):
     return {"path": path, "disposition": disposition, "basis": "test"}
 
 
-class ExportLists(unittest.TestCase):
+class Tree(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.root)
@@ -51,6 +51,8 @@ class ExportLists(unittest.TestCase):
             obj.update(extra)
         self.dump(f"Platform/{LESSON}/forms/export.json", obj)
 
+
+class ExportLists(Tree):
     def test_assembly_of_common_and_lesson_records(self):
         filters, errors, stats = el.assemble(self.root)
         self.assertEqual(errors, [])
@@ -107,6 +109,90 @@ class ExportLists(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertGreaterEqual(stats["export_lessons_with_lists"], 2)
         self.assertEqual(len(filters["model"]), len(filters["judge"]))
+
+
+Q_SOURCE, Q_RU = "qualification/README.md", "ru/qualification/README.md"
+
+
+class QualificationInput(Tree):
+    """The third input Q (ADR-0130 addendum (20) item 1): Q files outside M, their translations outside the exports,
+    the filter Platform/common/qualification-input-filter.json by the form of the judge filter, file by file."""
+
+    def with_q(self, model=None, judge=None, files=None):
+        """The lesson with a Q file and its translation in its list; the filter of Q with `files` (None — the Q file
+        and a common file); returns the errors of the assembly."""
+        self.write(f"Platform/{LESSON}/{Q_SOURCE}", "procedures")
+        self.write(f"Platform/{LESSON}/{Q_RU}", "процедуры")
+        self.lesson_list({**M, Q_SOURCE: "judge_only", Q_RU: "judge_only", **(model or {})},
+                         {**J, Q_SOURCE: "exclude", Q_RU: "exclude", **(judge or {})})
+        if files is None:
+            files = [rec(f"Platform/{LESSON}/{Q_SOURCE}", "include"), rec("Platform/common/README.md", "include")]
+        if files is False:
+            (self.root / el.QUALIFICATION).unlink(missing_ok=True)
+        else:
+            self.dump(el.QUALIFICATION, {"version": 1, "files": files})
+        return [m for _, m in el.assemble(self.root)[1]]
+
+    def assert_one(self, errors, words):
+        self.assertTrue(any(words in m for m in errors), errors)
+
+    def test_without_q_files_and_filter_as_before(self):
+        filters, errors, stats = el.assemble(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["qualification_files"], 0)
+        self.assertNotIn("qualification_records", stats)
+
+    def test_accepted_q_passes(self):
+        self.assertEqual(self.with_q(), [])
+        stats = el.assemble(self.root)[2]
+        self.assertEqual((stats["qualification_files"], stats["qualification_records"]), (1, 2))
+        self.assertEqual(el.qualification_files(self.root), {f"Platform/{LESSON}/{Q_SOURCE}", f"Platform/{LESSON}/{Q_RU}"})
+
+    def test_q_file_in_m_is_an_error(self):
+        errors = self.with_q(model={Q_SOURCE: "model_and_judge"})
+        self.assert_one(errors, f"{Q_SOURCE} is model_and_judge — a file of the input Q")
+        errors = self.with_q(model={Q_RU: "model_and_judge"})
+        self.assert_one(errors, f"{Q_RU} is model_and_judge — a file of the input Q")
+
+    def test_q_filter_in_m_and_translation_of_q_in_j_are_errors(self):
+        self.dump(el.COMMON["model"], {"version": 1, "own_export_markers": [], "files": [
+            rec("Platform/common/README.md", "model_and_judge"),
+            rec(el.QUALIFICATION.as_posix(), "model_and_judge")]})
+        self.dump(el.COMMON["judge"], {"version": 1, "files": [rec("Platform/common/README.md", "include"),
+                                                               rec(el.QUALIFICATION.as_posix(), "exclude")]})
+        self.assert_one(self.with_q(), "qualification-input-filter.json is model_and_judge — the filter of Q is outside M")
+        self.assert_one(self.with_q(judge={Q_RU: "include"}), "a Russian mirror of Q is outside the exports")
+
+    def test_filter_with_a_missing_path_a_mask_and_a_mirror(self):
+        errors = self.with_q(files=[rec(f"Platform/{LESSON}/{Q_SOURCE}", "include"),
+                                    rec("Platform/common/ghost.md", "include")])
+        self.assert_one(errors, "files: Platform/common/ghost.md is not a file of the tree")
+        errors = self.with_q(files=[rec(f"Platform/{LESSON}/q*/README.md", "include"),
+                                    rec(f"Platform/{LESSON}/{Q_SOURCE}", "include")])
+        self.assert_one(errors, "q*/README.md is not a file of the tree")
+        errors = self.with_q(files=[rec(f"Platform/{LESSON}/{Q_SOURCE}", "include"),
+                                    rec(f"Platform/{LESSON}/{Q_RU}", "include")])
+        self.assert_one(errors, f"{Q_RU} is a Russian mirror — the input Q is English only")
+        errors = self.with_q(files=[rec(f"Platform/{LESSON}/{Q_SOURCE}", "include"),
+                                    rec(el.COMMON["judge"].as_posix(), "include")])
+        self.assert_one(errors, "judge-input-filter.json is a filter of the export")
+
+    def test_filter_without_a_q_file_and_q_without_filter(self):
+        self.assert_one(self.with_q(files=[rec("Platform/common/README.md", "include")]),
+                        f"the Q file Platform/{LESSON}/{Q_SOURCE} has no record")
+        self.assert_one(self.with_q(files=False), "the filter of the input Q is missing, and the tree has Q files")
+
+    def test_form_of_the_filter(self):
+        q = rec(f"Platform/{LESSON}/{Q_SOURCE}", "include")
+        self.assert_one(self.with_q(files=[rec("Platform/common/README.md", "include"), q]), "not sorted by path")
+        self.assert_one(self.with_q(files=[q, rec("Platform/common/README.md", "exclude")]),
+                        "disposition exclude is not one of include")
+        self.assert_one(self.with_q(files=[q, q]), f"{Q_SOURCE} is named more than once")
+        self.assert_one(self.with_q(files=[{"path": q["path"], "disposition": "include"}]),
+                        "exactly the fields path, disposition, basis")
+        self.with_q()
+        self.dump(el.QUALIFICATION, {"version": 2, "files": [q]})
+        self.assert_one([m for _, m in el.assemble(self.root)[1]], "exactly version (1) and files")
 
 
 if __name__ == "__main__":
