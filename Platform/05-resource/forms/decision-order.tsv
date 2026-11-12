@@ -1,0 +1,34 @@
+# Ordered decisions of the resource. Choose only rows of the named procedure and evaluate in increasing n.
+# The first true row with flow=stop ends the decision; no match means ordinary continuation. A next row performs its effect and continues.
+# when is CEL over the observations below. No variable or outcome is an implementation API or a new public response word.
+# wait: replaced sends 200/replaced to the former wait and frees its place before the capacity check; full sends 200/full to the new wait; admit continues to the remaining admission rules, including P/05-R154 for a busy address without client; it does not promise admission by itself.
+#var named_identity bool — the new wait has client and the same verified CN/client as its former wait
+#var former_wait bool — that former wait is currently pending
+#var waiting int — pending waits after any preceding effect
+#var waiter_limit int — the effective LONG_POLL_WAITERS
+# retention: all facts describe the subsystem being diagnosed. term_unknown means any required term read did not answer; days_garbled means a required days is not a finite positive number; holds_unread means the holds were not read.
+#var term_unknown bool — an unavailable required term read
+#var days_garbled bool — an invalid required retention or alarms_retention days
+#var holds_unread bool — the holds read is unavailable
+# presence: use a complete readable role snapshot, with absent individual lists treated as empty; an unknown whole snapshot is governed separately by P/05-R090.
+#var in_unknown bool — the slot key is in unknown
+#var in_running bool — the slot key is in running
+#var in_workers bool — the slot key is in workers
+# object-key: run after query parsing and route selection; the facts describe the decoded key under the existing object-key grammar and loaded catalogue.
+#var key_form bool — the key is UTF-8 and satisfies P/05-R007 and P/05-R109
+#var door_family bool — the key belongs to an admitted door family, not a row object
+#var key_exists bool — the admitted key exists among the answering servers
+n	id	procedure	when	outcome	flow	norm
+1	wait-replace	wait	named_identity && former_wait	replaced	next	P/05-R249
+2	wait-full	wait	waiting >= waiter_limit	full	stop	P/05-R152
+3	wait-admit	wait	true	admit	stop	P/05-R249
+4	retention-unknown	retention	term_unknown	unknown	stop	P/05-R234
+5	retention-garbled	retention	days_garbled	days_garbled	stop	P/05-R234
+6	retention-holds	retention	holds_unread	holds_unread	stop	P/05-R234
+7	presence-unknown	presence	in_unknown	unknown	stop	P/05-R087
+8	presence-runs	presence	in_running	runs	stop	P/05-R087
+9	presence-gone	presence	in_workers	gone	stop	P/05-R087
+10	presence-unlisted	presence	true	unlisted	stop	P/05-R087
+11	key-form	object-key	!key_form	400 ResourceError	stop	P/05-R109
+12	key-family	object-key	!door_family	403 ResourceError	stop	P/05-R253
+13	key-missing	object-key	!key_exists	404 ResourceError	stop	P/05-R254

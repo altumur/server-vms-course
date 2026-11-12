@@ -1,0 +1,70 @@
+{
+  "description": "Ordered resource decisions; all cells are raw strings. CEL and the observation meanings are declared in the table header.",
+  "fields": [
+    {
+      "name": "n",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "pattern": "[1-9][0-9]*",
+        "unique": true
+      }
+    },
+    {
+      "name": "id",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "unique": true
+      }
+    },
+    {
+      "name": "procedure",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "wait",
+          "retention",
+          "presence",
+          "object-key"
+        ]
+      }
+    },
+    {
+      "name": "when",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "outcome",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    },
+    {
+      "name": "flow",
+      "type": "string",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "next",
+          "stop"
+        ]
+      }
+    },
+    {
+      "name": "norm",
+      "type": "string",
+      "constraints": {
+        "required": true
+      }
+    }
+  ],
+  "primaryKey": [
+    "id"
+  ]
+}
