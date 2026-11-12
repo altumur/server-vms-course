@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-B",
+    "/home/pilot/wt-task-P01.304/decisions/inbox/2026-11-12-P01.304-Q-\u0432\u0445\u043e\u0434/export_q.py",
+    "--source-git-dir",
+    "/home/pilot/server-vms-course/.git/worktrees/wt-task-P01.304",
+    "--course-commit",
+    "e7b04900c7ca9fcde3dd1b7821d547e75f0531f3",
+    "--operator",
+    "/home/pilot/P01.304-evidence/operator/judge_input_export.py",
+    "--filter-path",
+    "Platform/common/qualification-input-filter.json",
+    "--output",
+    "/home/pilot/P01.304-evidence/q-e7b04900c7ca"
+  ],
+  "cwd": "/home/pilot/wt-task-P01.304",
+  "exit": 0,
+  "seconds": 0.14102112699765712
+}

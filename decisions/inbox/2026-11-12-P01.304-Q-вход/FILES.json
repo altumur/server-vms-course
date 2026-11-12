@@ -1,0 +1,191 @@
+[
+  {
+    "blob": "2b635652cff5e9c6a3d3116338f7366d78519adf",
+    "bytes": 4927,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/daemon-flags.tsv",
+    "sha256": "f0d7d0479e6763155326fb9e0da67257ec92596a8dabf66d66183147ffc177c7"
+  },
+  {
+    "blob": "f4d168322d6e24060c583a4ba061135041a02271",
+    "bytes": 2450,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/production-input.schema.json",
+    "sha256": "274774ddf4621d838d68ca808519e36f53867fbff4aef18628ce029010a5517d"
+  },
+  {
+    "blob": "48e58d5d6ecec6bb6c538eb4fc45882c98499fbc",
+    "bytes": 4985,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/production.tsv",
+    "sha256": "97ffd412614a39bffb323ba7d211db29f91e6ec96bc6d0bc584b9d31e3f4af6c"
+  },
+  {
+    "blob": "78f8fdbbce48947d86bf47bad0b702feb732d87b",
+    "bytes": 2553,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/production/README.md",
+    "sha256": "453295489f1a652a78fa513686a6239217836c88e59361e9fa42e40dfe27b498"
+  },
+  {
+    "blob": "a725ff2120f1a81637170057539afbe5506a1678",
+    "bytes": 7924,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/production/bindings.tsv",
+    "sha256": "ab7ad6cd11dd08adce18a9e770fccc5e730ea1fb161849e702cfdeb48c6fd48b"
+  },
+  {
+    "blob": "00517d70de6db1e19725caa81a52566a6f9011a8",
+    "bytes": 18,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/production/input.json",
+    "sha256": "4ae3f0c00241cb6269312ab8e0c5a39ef219ff0c9df43821a958cb78ea5d5287"
+  },
+  {
+    "blob": "a4ae54f0f809f0410e8e070554cc10f2779d9064",
+    "bytes": 6726,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/refusals.tsv",
+    "sha256": "50d8f98785b003d749cf859914e247049191e606428406f55f1bafc7bc61e0f5"
+  },
+  {
+    "blob": "9fef8781a10a7eb827e0458900bab5b08fc26de4",
+    "bytes": 2029,
+    "mode": "100644",
+    "path": "Platform/01-store/forms/runtime-constants.tsv",
+    "sha256": "c2bcbfa9b382b17480c569cb91baba85d5b9c31e01b4a1177b0daf0e6abff913"
+  },
+  {
+    "blob": "2690cf3dcdfc33dd3b64d1b73b6a8fac6e64517a",
+    "bytes": 1967,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/README.cases.md",
+    "sha256": "22b25f3f376af143609fa26c257317a2da6cfde37f893f0a6ef82604e847f874"
+  },
+  {
+    "blob": "9e2f6b731871d05fda18d3d6d6a560587c19a8e1",
+    "bytes": 2158,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/README.md",
+    "sha256": "baacfdcb30cf375f5539071f43f6f0f13f7a535802329b921b19d852584d1802"
+  },
+  {
+    "blob": "4f053c0b323fd29f443d0ff4bd46f3715fec2f92",
+    "bytes": 11373,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/copy_stream.py",
+    "sha256": "c041e7468f2d8e0432783876095edb489482f7c129402034b6e31081e9e5f45e"
+  },
+  {
+    "blob": "332a6364714e882f45348c8d38211fc496ded274",
+    "bytes": 18300,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/store_fitness.py",
+    "sha256": "f507960ef50ecd09c1aa61633263d627ccebd5c04743f93caff4ecbeb8a9f1c5"
+  },
+  {
+    "blob": "0bfb9da11c4bb18af59ee77271f67fae663ce6b7",
+    "bytes": 8680,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/store_probe_http.py",
+    "sha256": "b4cf8cb36496c7bdb9c83ac3f7e7272ce8df46a93337573ead7a3c28d5c9f438"
+  },
+  {
+    "blob": "bdccfb5efee3118cc20b6216fda8b67bcfb782ad",
+    "bytes": 48145,
+    "mode": "100644",
+    "path": "Platform/01-store/probes/store_probes.py",
+    "sha256": "953996fe5ff5a3dad2f3c5f437b8416a607991f1ce6b70c60732a45919078571"
+  },
+  {
+    "blob": "5b79c15cbe5e2d81bccd69c65861a15a4eb43240",
+    "bytes": 22883,
+    "mode": "100644",
+    "path": "Platform/01-store/qualification/README.md",
+    "sha256": "cfa4294f4ce8a260a2b0a366b3e9bfadd1577c235887fc3eaf54b13c47be445e"
+  },
+  {
+    "blob": "9ec9965fe73fd63e9ed12cf4465a3c6928a9f7b6",
+    "bytes": 37484,
+    "mode": "100644",
+    "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+    "sha256": "d9a48ced7a5010398d1b338cabae4f72fa272b3aaf5bca37f95765703e271e3c"
+  },
+  {
+    "blob": "7a914215a54bc4ed5d11c39da9c4661af6c39302",
+    "bytes": 100694,
+    "mode": "100644",
+    "path": "Platform/01-store/spec/01.1-store.norms.md",
+    "sha256": "68da4b35ba3e22e8166428e30daaa13684614df81208f35dea8e97ff86c95666"
+  },
+  {
+    "blob": "4c42725eecb321ae943309df5bb1e11b16435454",
+    "bytes": 7085,
+    "mode": "100644",
+    "path": "Platform/08-domain/forms/runtime-constants.tsv",
+    "sha256": "96d5b088a7aacecb35f117c495d01794f9885afe7f2fd1e282288926acea73fe"
+  },
+  {
+    "blob": "5c69cd640026e61fd002a9452718dd119483c369",
+    "bytes": 36004,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/PROFILE.md",
+    "sha256": "03657e140656d451187be675f417a2bd59d5f1e57ba1714b5968f80750490403"
+  },
+  {
+    "blob": "5503468d038407f3412ddb53f505336fe4500e44",
+    "bytes": 11060,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+    "sha256": "ba25d5120e6196bd51050fc1489c66b006691cde359d1f4a19f0747b3e2d9bcf"
+  },
+  {
+    "blob": "a23905769c3a12edfa25e7c1f6ea9fc0259c1fea",
+    "bytes": 3480,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/forms/d7.schema.json",
+    "sha256": "e1e69a630114dfe28a1169188562259265f4dbe21eac2409c2c3ec8ba5e9d641"
+  },
+  {
+    "blob": "0ea90d1980af4b852b03522e0edbd8cdccbf9173",
+    "bytes": 2944,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+    "sha256": "7e1939644d38fb14d581ccbe4936b8b13083b506007522b50ec46a5628a56f40"
+  },
+  {
+    "blob": "1e9b14053f5d034dd14363acd02390cc0fc41d7d",
+    "bytes": 23625,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/seams.md",
+    "sha256": "32861ec4797412df59d827d8157699c853514cf9161539c2ff877f651ad9b38b"
+  },
+  {
+    "blob": "143e4e56dfc98c56f65a69836e9a62a60aeef4d2",
+    "bytes": 40184,
+    "mode": "100644",
+    "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+    "sha256": "08a7419665a9d707b22ab97cf884b6f28f8f2e11f3a2d7ed80f3302a1efa1171"
+  },
+  {
+    "blob": "231ac57650f5f38ff3cde2807c249164371ef690",
+    "bytes": 83576,
+    "mode": "100644",
+    "path": "Platform/common/contracts/gate-and-pass.md",
+    "sha256": "eeca1da110705505399c2d557241ffd90e57707ba51c6bc78be480fbb1dd5bd7"
+  },
+  {
+    "blob": "a98d718b62a98a26c323b432ac7e44bb90d75a66",
+    "bytes": 3522,
+    "mode": "100644",
+    "path": "Platform/common/contracts/production-obligations.md",
+    "sha256": "29284f4e8d9ca58f0526d7b6d75b841baa5d14b7c70d7b57f8104bbeb37ec247"
+  },
+  {
+    "blob": "b479f5ef887abe91b5fca13a5ac76b80969293b2",
+    "bytes": 7845,
+    "mode": "100644",
+    "path": "Platform/common/vectors/production-obligations/README.md",
+    "sha256": "7118252cc4757f7ca8dabdd8fed3325797c87c277cf0b2ac3400169248e2949d"
+  }
+]
