@@ -14,7 +14,7 @@
     {
       "name": "id",
       "type": "string",
-      "description": "rc-<check>, stable, not renumbered.",
+      "description": "The stable address of the row: rc-<check> (rc-forwarded_admin is the second row of the check forwarding_untrusted), apart from the order n; not renumbered.",
       "constraints": {
         "required": true,
         "pattern": "(?:rc-[a-z][a-z0-9_]*)"

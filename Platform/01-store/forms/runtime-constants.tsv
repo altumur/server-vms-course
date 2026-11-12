@@ -5,7 +5,7 @@ HEADER_BYTES	65536	bytes	P/01.1-R242	Sum of header field-line bytes without CRLF
 BATCH_WRITES	64	count	P/01.1-R193	Maximum writes under the owning caller exemptions; exact limit passes, one more is out of form.
 BATCH_GUARDS	64	count	P/01.1-R313	Maximum guards under the owning caller exemptions; exact limit passes, one more is out of form.
 CLOCK_SKEW	60	s	P/01.1-R013	Maximum wall-clock difference assumed between cluster writers; deployment premise, not a store clock check.
-KEY_BYTES	1024	bytes	P/01.1-R156	Maximum UTF-8 length of a key at the door; a file-based implementation may declare a smaller local limit.
+KEY_BYTES	1024	bytes	P/01.1-R156	Maximum UTF-8 length of a key at the door in every implementation.
 ID_REPLAY_MIN_AGE	120	s	P/01.1-R141	Strict age threshold since first application; forgetting also requires ID_REPLAY_MIN_RECORDS.
 ID_REPLAY_MIN_RECORDS	50000	count	P/01.1-R141	Applied records with an identifier after the first application; forgetting also requires the strict age threshold.
 DOOR_REQUEST_TIMEOUT	2	s	P/01.3-R075	Attempt budget of a door forwarding to a voter.

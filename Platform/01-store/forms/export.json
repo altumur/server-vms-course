@@ -1365,8 +1365,8 @@
     },
     {
       "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
-      "disposition": "exclude",
-      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+      "disposition": "include",
+      "basis": "HTTP response schemas by operation and status for full-form checking of store doors."
     },
     {
       "path": "Platform/01-store/spec/01.1-store.n5.cases.md",

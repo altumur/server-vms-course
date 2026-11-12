@@ -72,8 +72,9 @@ P01_CONSTANT_BINDINGS = (
     (P01_API, "/components/schemas/Status/properties/admission_ahead/exclusiveMinimum", "CLOCK_SKEW", "s", None),
     (P01_API, "/components/schemas/Key/description", "KEY_BYTES", "bytes",
      r"N1: a key is not empty, does not start with /, no segment between / equals \.\.; "
-     r"\.\.foo is admissible\. The limit of (?P<value>[1-9][0-9]*) UTF-8 bytes and a smaller file limit "
-     r"are checked separately; maxLength does not express a number of bytes\."),
+     r"\.\.foo is admissible\. The limit of (?P<value>[1-9][0-9]*) UTF-8 bytes "
+     r"(?:applies to every implementation and is checked separately|and a smaller file limit are checked separately)"
+     r"; maxLength does not express a number of bytes\."),  # the second form until P01.257 (R021 withdrawn) is merged
     ("Platform/01-store/data/configstore-doors.schema.json", "/properties/seen_at/description", "DOOR_SEEN_EVERY", "s",
      r"the wall time of the last confirmation of the door \(every (?P<value>[1-9][0-9]*) s\)"),
 )

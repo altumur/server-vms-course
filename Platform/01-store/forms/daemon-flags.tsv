@@ -20,11 +20,11 @@ flag	type	default	default_text	required	commands	bad	norm
 -id	id	$SERVER_NAME	SERVER_NAME	"-join" in f || "-door" in f || ("-group-size" in f && f["-group-size"] in [3, 5])	daemon,recover		P/01.3 N1.3; P/01.3 N2; no -id and no SERVER_NAME — a start refusal (P/01.3 N1.3 daemon refuse_start)
 -sockets	dir	/run/configstore	/run/configstore	false	daemon,status,join,leave,admit,backup,restore,import,rights		P/01.3 N1.3 sockets
 -rights	file	-	-	false	daemon		P/01.2 N1.2; without it — only admin.sock, not a refusal (P/01.2 N4)
--tls	dir	-	-	"-join" in f || ("-api" in f && !loopback(f["-api"])) || ("-raft" in f && !loopback(f["-raft"]))	daemon		P/01.3 N1.6
+-tls	dir	-	-	"-join" in f || ("-api" in f && !loopback(f["-api"])) || ("-raft" in f && !loopback(f["-raft"])) || ("-api-bind" in f && !loopback(f["-api-bind"])) || ("-raft-bind" in f && !loopback(f["-raft-bind"]))	daemon		P/01.3 N1.6
 -raft	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-raft"])	P/01.3 N1.3 group
--raft-bind	addr	=-raft	-raft	false	daemon		P/01.3 N1.3 group
+-raft-bind	addr	=-raft	-raft	false	daemon	!("-tls" in f) && !loopback(f["-raft-bind"])	P/01.3 N1.3 group
 -api	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-api"])	P/01.3 N2
--api-bind	addr	=-api	-api	false	daemon		P/01.3 N1.3 «Daemon flags»
+-api-bind	addr	=-api	-api	false	daemon	!("-tls" in f) && !loopback(f["-api-bind"])	P/01.3 N1.3 «Daemon flags»
 -bootstrap	bool	false	off	false	daemon	"-join" in f	P/01.3 N1.3 join
 -join	addr	-	-	false	daemon	!("-tls" in f)	P/01.3 N1.3 join
 -group-size	enum:1|3|5	1	1	false	daemon		P/01.3 N1.3 group

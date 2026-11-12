@@ -110,7 +110,7 @@ The norms are P/01.3 N1.3 (`group`, `door`, `floor`, `import`, `leader_wait`, `r
 - **Kits** — the description `inputs/group.json` (judge-only: the kits of the group stand) of the acceptance of chapter 1.3: one CA of the group, a leaf for each member; the layout — the contract
   `kit` (`ca.pem`, `<role>/server.pem`, `<role>/server.key`), `revoked` is empty, there is no `ca.next.pem`.
 - **Store build — the feature of the implementation profile `keys.store_build`**: `raft` — a build with a group, the scenarios of the stand
-  are executed; `box` — the store of a box without raft, lawful per P/01.3 N1.3 `box` (one voter; `-group-size 3`/`5`,
+  are executed; `box` — the store of a box without raft, lawful per P/01.3 N1.3 `box` (one voter; `-raft`, `-bootstrap`, `-group-size 3`/`5`,
   `-join`, `-door` — a start refusal, code 2): the scenarios of the group stand are not_applicable, they do not enter the result and are not red, the lesson
   is credited without them; there is no feature or another value — the scenarios are not executed (not_executed, as without `keys.tls_stand`; not
   GREEN). The refusals of the build `box` are checked by sc. 04/16 of the stand store and by reading (P/01.3-01); the group stand does not judge it.

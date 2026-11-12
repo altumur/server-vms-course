@@ -1,0 +1,55 @@
+{
+  "task": "P01.258",
+  "analysis_source_commit": "3213d6c1a9f4f4e6dd16cc93cfb191d1d0158fe5",
+  "inventory_source_commit": "93dbedf1b",
+  "mode": "reading_only_no_candidate_or_engine_execution",
+  "external_sources": [
+    {
+      "path": "/home/pilot/owner-receipts/spec-gaps-20261112.md",
+      "bytes": 28873,
+      "sha256": "9f439b57691cbbea513cbba029386c96b2864d100dafdeac9a994afcd6b0fa85"
+    },
+    {
+      "path": "/home/pilot/owner-receipts/ENGINE2-retro-summary-20261112.md",
+      "bytes": 10517,
+      "sha256": "2db2827d307c0fa702990029dbd0c78c299b7cda84d5bcd479382708d638bac1"
+    },
+    {
+      "path": "/home/pilot/owner-receipts/P01.222-kimi-src-20261111/Kfinal/GUESSES.md",
+      "bytes": 14696,
+      "sha256": "02f2adc659ea15244db1be01a828a67331f4e127201b5c07ad277a3cc418b905"
+    },
+    {
+      "path": "/home/pilot/owner-receipts/P01.245-engine2-src-20261111/GUESSES.md",
+      "bytes": 13059,
+      "sha256": "644134d2a99966f0fa8a941ef90e18ad5a463eadb3cd5221b10591c5ffd0d41d"
+    },
+    {
+      "path": "/home/pilot/owner-receipts/P01.158-attempt6-loop-20261111/RESULT.md",
+      "bytes": 1700,
+      "sha256": "efab8c5d09b1279c39c9f8f3f3d6b5d43c81fa1b07d4e2e54d5cdff1b607c9a9"
+    },
+    {
+      "path": "/home/pilot/owner-receipts/P01.225-head-notjudged-vectors-20261111/RESULT.md",
+      "bytes": 35651,
+      "sha256": "4b2900f6d327b6afde727d41d782ee753327ed7db769b293579fe7fd4a67300f"
+    },
+    {
+      "path": "/home/pilot/cammeta-sessions/tasks/P01.258.yaml",
+      "bytes": 2395,
+      "sha256": "8d582327cdffdff3164aaa1151b08a6a44b668938c2a196e628669d5958dcfe8"
+    }
+  ],
+  "source_change_check": {
+    "command": "git diff --name-only 93dbedf1b..3213d6c1a9f4f4e6dd16cc93cfb191d1d0158fe5 -- Platform/01-store Platform/common/acceptance Platform/common/vectors",
+    "output": ""
+  },
+  "minimax_original_guesses": "not_available_in_provided_receipts; P12 text comes from inventory",
+  "check_spec_command": "/home/pilot/venv-spec/bin/python skills/lesson-spec/scripts/check_spec.py --scope platform",
+  "check_spec_result": {
+    "exit_code": 0,
+    "log": "check-spec-platform.log",
+    "sha256": "38bc36de91ad21f8fe7283266e17203c8d68665863604d51981e8e704da2c5ed",
+    "limitation": "structural course checks; no candidate execution"
+  }
+}

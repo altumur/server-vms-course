@@ -50,15 +50,15 @@ Only the acceptance of P/01 uses the words below; the [dictionary of the common 
 |---|---|
 | `<code> @close …` | `@close` right after the code: after its response the implementation closes the connection, within the term of `@noreply`; the rest of the cell is judged as the expectation without `@close` |
 | `@noreply` | the whole expectation: no byte of a response arrives until the implementation closes the connection or the term of `@noreply` in «Terms of the stand» ends; a response is a mismatch |
-| `… @by(<seconds>)` | the last word of an expectation: the response, the close of `@close` or `@noreply`, or the exit after `@sigterm store` comes no later than that many seconds after the start of the step, instead of the term of `@noreply`; with `@noreply` the implementation must also close the connection within it. It is an upper bound: the judge records the resolution of its clock and of its scheduling separately and does not widen the bound |
+| `… @by(<seconds>)` | the last word of the expectation: the answer, closure `@close` or `@noreply`, or exit after `@sigterm store` arrives no later than that many seconds, instead of the `@noreply` term; for a request the interval starts at the first request byte written by the judge, or at connection establishment if it writes no request bytes; for `@sigterm store` it starts when the judge sends the signal. With `@noreply` the implementation also closes the connection within that interval. This is an upper bound: the judge records its clock and scheduler resolution separately and does not widen the bound |
 
 ## The instance of the chapter
 
 An additional check of the full key (P/01.1-16,22) runs beyond the scenario TSV on a separate instance
 with rights on acc/: the keys of this prefix at the boundary lengths in UTF-8 bytes, including Cyrillic and four-byte
 characters, and the same set in a non-empty guard.key. For an existing guard use its actual version, for an absent one —
-index="", so as not to fall into the version comparison refusal. For a file implementation separately check its
-declared limit: an earlier badkey is admissible, but the threshold 200 by itself is not a norm of the platform.
+index="", so as not to fall into the version comparison refusal. Every implementation accepts the full key up to
+KEY_BYTES; one byte more is badkey.
 Test the full UTF-8 representation, not the number of characters.
 
 The scenarios are run through the store door (the lesson, N2) of any implementation; the path to the door (the unix socket of a role or a stand with the same door) is a parameter of the stand. The role of the run is `acc` («Stand» of the common README): full rights on the prefix `acc/` and on nothing else. For **each scenario, including on a repeated run**, the runner creates a new isolated instance
