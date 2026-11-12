@@ -129,7 +129,7 @@ The checks distinguish the form from the key rules (P/01.1-R030, P/01.1-R031): a
 
 ## Admission time conditions (P/01.1-25; ADR-0091 item 1)
 
-The admission-time checks cover only the edges of the admission time (P/01.1-R079, P/01.1-R079, P/01.1-R088,
+The admission-time checks cover only the edges of the admission time (P/01.1-R079, P/01.1-R088,
 P/01.1-R090): a `not_after` that has already passed, `not_after` and `not_before` that
 have not yet come under any clock of the stand. `expired` and `early` write nothing; the order is
 «time conditions → guard → CAS»; `not_after` is in the replay fingerprint (a numerically equal spelling is the same value, a different number and absence — `400`);
@@ -173,7 +173,7 @@ Probes of the framing and of the request line (N2.1), each on raw bytes:
 
 ## ADR-0129 core clarification witnesses
 
-Six seam scenarios (judge-only: `s7-admitted-single-refusals` to `s12-zero-version-not-absence` of `seams.tsv`) use only the existing HTTP, @clock and @reopen grammar; they check P/01.1-R088, P/01.1-R132, P/01.1-R070, P/01.1-R090, P/01.1-R355 and P/01.1-R132. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
+Six seam scenarios (judge-only: `s7-admitted-single-refusals` to `s12-zero-version-not-absence` of `seams.tsv`) use only the existing HTTP, @clock and @reopen grammar; they check P/01.1-R088, P/01.1-R132, P/01.1-R070, P/01.1-R090, P/01.1-R355. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
 
 The admission bounds compare as binary64 values: for a bound that equals the clock in binary64 not_after admits equality and not_before refuses it, for put/delete/batch. On applied put/delete/batch replays bound spellings that round to the same binary64 value are the same fingerprint, and values that differ in binary64 give different fingerprints and badrequest. The request bytes must not be normalized before the actual store parses them. The CALL engine's exact-number comparison is not a replacement store fingerprint. A nonempty string version differs from the absent marker "" in single/batch CAS and guards.
 
@@ -183,7 +183,7 @@ Opaque versions do not expose the allocator's count. The new HTTP probes observe
 
 ## Replay and last admission metadata
 
-A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R078, P/01.1-R105, P/01.1-R105 and P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.
+A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.
 
 ## Admitted mismatches and admission-number domain (ADR-0129 addendum (10), item 3)
 
@@ -191,7 +191,7 @@ A put/delete/batch with an already-applied identifier and different content is a
 
 The assigned fractional binary64 admission value survives an ordinary reopen. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.
 
-All four cases check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070, P/01.1-R105 and P/01.1-R105; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
+All four cases check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
 
 ## Production qualification coverage
 

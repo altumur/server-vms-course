@@ -34,12 +34,12 @@
   },
   "global_M_after": {
     "files": 787,
-    "bytes": 13747126
+    "bytes": 13746200
   },
   "proposed_pair_M": {
     "files": 178,
-    "bytes": 4227553,
-    "sha256_of_sorted_path_and_file_hash_manifest": "f34fee22f4c2f8fa11c5e55cf5c33f86715f88df337a9bb30464d337762a5dab",
+    "bytes": 4226627,
+    "sha256_of_sorted_path_and_file_hash_manifest": "ecb16a1a6417dcac400ed55aa10e1e9eb60bb37456f5fa8228bfc34b7b204e21",
     "files_manifest": [
       {
         "path": "Platform/01-store/README.md",
@@ -48,18 +48,18 @@
       },
       {
         "path": "Platform/01-store/acceptance/1/README.md",
-        "bytes": 27877,
-        "sha256": "f3ed3a6eb6d77be6902a01679088b8a13d7717aefddb581231a588a6e22e531c"
+        "bytes": 27764,
+        "sha256": "c21000aa9606dc004a785586e2037ba059de98bfbf48654d4050e90873ab4a48"
       },
       {
         "path": "Platform/01-store/acceptance/2/README.md",
-        "bytes": 8383,
-        "sha256": "bd8c17d100ce15dad2a158471e2033ab78312aa002d19010ea22370eb96640f9"
+        "bytes": 8305,
+        "sha256": "ce64609844b03a65190a82800df0eb3e3176cbac23e4c3fd6b7a6ba9e6af6492"
       },
       {
         "path": "Platform/01-store/acceptance/3/README.md",
-        "bytes": 41372,
-        "sha256": "46df5316cbe35efa945147fa5d1a175b4ca11287cfd259a6e6b7c08c420ffab2"
+        "bytes": 41346,
+        "sha256": "3aa30594089b022034329a807a5d2ae06a728e1b7c8d063de51dc151ac872e49"
       },
       {
         "path": "Platform/01-store/data/configstore-doors.layers.tsv",
@@ -163,8 +163,8 @@
       },
       {
         "path": "Platform/01-store/spec/01-store.README.md",
-        "bytes": 26993,
-        "sha256": "5632f16f7d4394d1b95350becb444b624127ee710e34bd52ee3faa80b3db694d"
+        "bytes": 26967,
+        "sha256": "7861466d5d9bbcad51ed45893daf17db53e8ee8c529dbaeb3bc00c61c16b222a"
       },
       {
         "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
@@ -173,18 +173,18 @@
       },
       {
         "path": "Platform/01-store/spec/01.1-store.norms.md",
-        "bytes": 100423,
-        "sha256": "0474c7d57301026471247fb758314c39fb740e1630ef5faaebb661c7cb53dd21"
+        "bytes": 100354,
+        "sha256": "28fc161c0c7aa94911b7d6aa4967683f32cc0997805f0f5f5184d4857872beba"
       },
       {
         "path": "Platform/01-store/spec/01.2-store.norms.md",
-        "bytes": 32211,
-        "sha256": "7c417cbb8357cda29611aaa41c0c239981ee76d8ad280ac4a6c751eda0dfdfbe"
+        "bytes": 32179,
+        "sha256": "da9a0074835f1c23f93a00e5bdcc112f78f4dca6a96d5a333a7c25794665aa92"
       },
       {
         "path": "Platform/01-store/spec/01.3-store.norms.md",
-        "bytes": 104789,
-        "sha256": "144de8412aab7cca25ed1f6afd7645dcd457040a665965a439f5b4036583eaa9"
+        "bytes": 104350,
+        "sha256": "5c7ec3d53d5c1e8b062bb0ee31faa8f71ac1f1fb8f7de702840f6da4170879fa"
       },
       {
         "path": "Platform/01-store/spec/production-acceptance.md",
@@ -363,8 +363,8 @@
       },
       {
         "path": "Platform/common/acceptance/forms/code-rules.tsv",
-        "bytes": 6734,
-        "sha256": "68404d7133349ecfa7ff7ede9b5ded43f8fc8dd8b6b454772dc172e16bf5eaed"
+        "bytes": 6604,
+        "sha256": "df2a538fe885e5b1dbbc20cb2a70cce96221c7a8a033176b8baf40ba96025ac1"
       },
       {
         "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
@@ -893,8 +893,8 @@
       },
       {
         "path": "Platform/common/vectors/wire.md",
-        "bytes": 23794,
-        "sha256": "fe80bfab5b4b024de2c2000ed77419b911d0e170326692f2a2dbc877d552cb2d"
+        "bytes": 23781,
+        "sha256": "2002d6f46a166adf1a282dae8290659446acc8b26e5a1d55b27ae7ddd23d081c"
       },
       {
         "path": "Platform/common/vectors/wire.tsv",
@@ -939,8 +939,8 @@
   "JI_changed_explanatory_or_authorized_code_dictionary_files": [
     {
       "path": "Platform/common/acceptance/forms/code-rules.tsv",
-      "bytes": 6734,
-      "sha256": "68404d7133349ecfa7ff7ede9b5ded43f8fc8dd8b6b454772dc172e16bf5eaed"
+      "bytes": 6604,
+      "sha256": "df2a538fe885e5b1dbbc20cb2a70cce96221c7a8a033176b8baf40ba96025ac1"
     },
     {
       "path": "Platform/common/acceptance/forms/engine-code-rules.tsv",
@@ -959,23 +959,23 @@
     },
     {
       "path": "Platform/common/vectors/wire.md",
-      "bytes": 23794,
-      "sha256": "fe80bfab5b4b024de2c2000ed77419b911d0e170326692f2a2dbc877d552cb2d"
+      "bytes": 23781,
+      "sha256": "2002d6f46a166adf1a282dae8290659446acc8b26e5a1d55b27ae7ddd23d081c"
     },
     {
       "path": "Platform/01-store/acceptance/1/README.md",
-      "bytes": 27877,
-      "sha256": "f3ed3a6eb6d77be6902a01679088b8a13d7717aefddb581231a588a6e22e531c"
+      "bytes": 27764,
+      "sha256": "c21000aa9606dc004a785586e2037ba059de98bfbf48654d4050e90873ab4a48"
     },
     {
       "path": "Platform/01-store/acceptance/2/README.md",
-      "bytes": 8383,
-      "sha256": "bd8c17d100ce15dad2a158471e2033ab78312aa002d19010ea22370eb96640f9"
+      "bytes": 8305,
+      "sha256": "ce64609844b03a65190a82800df0eb3e3176cbac23e4c3fd6b7a6ba9e6af6492"
     },
     {
       "path": "Platform/01-store/acceptance/3/README.md",
-      "bytes": 41372,
-      "sha256": "46df5316cbe35efa945147fa5d1a175b4ca11287cfd259a6e6b7c08c420ffab2"
+      "bytes": 41346,
+      "sha256": "3aa30594089b022034329a807a5d2ae06a728e1b7c8d063de51dc151ac872e49"
     },
     {
       "path": "Platform/01-store/forms/group.tsv",
@@ -1024,7 +1024,7 @@
     }
   ],
   "norms_before_bytes": 267780,
-  "norms_after_bytes": 237423,
+  "norms_after_bytes": 236883,
   "live_R_ids_by_chapter": {
     "1": 160,
     "2": 64,
@@ -1051,11 +1051,13 @@
     }
   ],
   "checks": {
-    "stage3_checklist_exact": true,
     "stages_exact_from_C": true,
     "code-rules_retained_rows_exact": true,
     "engine-code-rules_retained_rows_exact": true,
-    "JI_paths_exact_from_C": true
+    "JI_paths_exact_from_C": true,
+    "retry1_checklist_from_C_with_map_and_local_created_alias_collisions_only": true,
+    "retry1_no_duplicate_P01_ids_inside_prose_enumerations": true,
+    "retry1_public_code_dictionary_no_J_engine_link_or_gates": true
   },
   "not_run": [
     "candidate, generation or behavioural probes",
@@ -1065,5 +1067,6 @@
   ],
   "initial_stage3_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0",
   "accepted_dependency_row_source_commit": "06062133ec6297ad4965f5b52da3003f7f72ec37",
-  "final_snapshot_note": "Includes only the subsequent P01.285 accepted dependency-row concordance; the pair path set and all other source files remain as at initial_stage3_commit. Evidence: P01.283-reconciliation.json."
+  "final_snapshot_note": "Current snapshot after C1/M2/M3 correction of rejected attempt 1. Historical stage3 composition/preservation and P01.285 concordance proofs retain their earlier commit scope; current checklist is rebuilt from source C and covered by P01.283-retry1-proof.json.",
+  "retry1_source_commit": "2ef28f82a8d7a73aecc627eeeabaabb7d8d394c2"
 }

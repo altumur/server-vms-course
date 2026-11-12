@@ -148,7 +148,7 @@ The runner starts no next joining voter until this barrier succeeds. It polls st
 
 ## The store group (sc. 07, 17, 18, 25–29, 31)
 
-The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the stand supplies kits by P/01.3-R009, P/01.3-R009, P/01.3-R009 (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
+The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the stand supplies kits by P/01.3-R009 (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The stand group has three voters and uses mTLS between members. The box store build
 (`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–34 are not_applicable for it, not red; without
 the marker they are not executed («Store group stand» above).
