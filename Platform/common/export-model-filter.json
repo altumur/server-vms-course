@@ -4562,6 +4562,16 @@
       "basis": "P01.86: machine form of the public test-side descriptors of README.md."
     },
     {
+      "path": "Platform/common/acceptance/forms/stand-environment.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P01.250: the machine form of stand.md «Environment of stand processes», the public stand interface."
+    },
+    {
+      "path": "Platform/common/acceptance/forms/stand-environment.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P01.250: Frictionless Table Schema data of check_spec (ADR-0125 addenda (12) item 2, (13)); course tooling, not a model input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.README.md",
       "disposition": "model_and_judge",
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 generic public target form/flags/profile semantics, wholefile."
