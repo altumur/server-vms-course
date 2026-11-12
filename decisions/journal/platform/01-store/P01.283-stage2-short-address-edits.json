@@ -1,0 +1,22 @@
+{
+  "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
+  "changes": [
+    {
+      "file": "Platform/01-store/forms/rights-checks.tsv",
+      "before": "R217 of P/01.1",
+      "after": "P/01.1-R034"
+    },
+    {
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "before": "P/01.1 R013, R070, R264",
+      "after": "P/01.1 R013, R070",
+      "reason": "R264 maps to the same liveR070 already listed"
+    },
+    {
+      "file": "Platform/common/ru/acceptance/spec/acceptance.norms.md",
+      "before": "P/01.1 R013, R070, R264",
+      "after": "P/01.1 R013, R070",
+      "reason": "R264 maps to the same liveR070 already listed"
+    }
+  ]
+}

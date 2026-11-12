@@ -1,0 +1,800 @@
+{
+  "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
+  "stage2_commit": "799405c9c1e19bada972b4aad31c4281766d519d",
+  "scope": "Actual English source diff of stage3 at target_commit; translations are mirrored, not independent changes. Intermediate clean drafts are not evidence. Subsequent accepted dependency-row concordance is recorded separately in P01.283-reconciliation.json.",
+  "fragments": [
+    {
+      "file": "Platform/01-store/README.md",
+      "source_address": "README.md#intro",
+      "req_id": "-",
+      "before": "A micromodule: a process; roles are sockets. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people), the table «Lessons».\n",
+      "after": "A micromodule: a process; roles are sockets.\n",
+      "before_sha256": "390275fcc184469ce7b59386501bc36ec3c07bf9d2c9dfbcd96277e84d7770ab",
+      "after_sha256": "e88e9e5773517212518cb11feee1b5ae75e8e8db10dc031b8201688dc8c99f7c"
+    },
+    {
+      "file": "Platform/01-store/README.md",
+      "source_address": "README.md#what-this-lesson-takes-from-common",
+      "req_id": "-",
+      "before": "| `Platform/module-design.md` (judge-only: the module design note, for people) | «Lessons», «Vectors» | this page and `vectors/jcs`: what the lesson norms; no requirement is taken from it |\n",
+      "after": "| [`02-installer/spec/02.1-installer.norms.md`](../02-installer/spec/02.1-installer.norms.md), [`02-installer/spec/02.1-installer.schema.json`](../02-installer/spec/02.1-installer.schema.json) | N1.3a Secret in the manifest; `secretIn` and address-field declarations in the schema | the address and log-mask contracts; the definitions read by P/01, without the installer implementation |\n| [`03-worker/data/epoch.schema.json`](../03-worker/data/epoch.schema.json), [`03-worker/data/epoch.layers.tsv`](../03-worker/data/epoch.layers.tsv), [`03-worker/data/epoch.outcomes.tsv`](../03-worker/data/epoch.outcomes.tsv) | the epoch family form, integer/codec/whole layers and unreadable outcomes | upper and the complete input check of import/restore/recover |\n| [`06-console/spec/06.2-console.norms.md`](../06-console/spec/06.2-console.norms.md) | N1.1a The address; N1.4 Where a secret is not | address credentials and the log mask |\n",
+      "before_sha256": "525efa498aa73b36250b0ee2a9db1bbc305b90b6314fd776a8691db965c6ce35",
+      "after_sha256": "2b0db12701a0dc76cce605295429e77dc34b942f797bf0f285e481734ecc991c"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#scenariostsv",
+      "req_id": "-",
+      "before": "The table `scenarios.tsv` of the chapter (judge-only: `acceptance/1/scenarios.tsv`) checks the requirements that the\nreadiness checklist of the chapter norms names next to each scenario. The format is the dictionary of directives and\ndoors of the common acceptance README. Specific to chapter 1.1:\n",
+      "after": "The chapter checks the requirements named by its readiness checklist. Its scenario format is the common dictionary of directives and doors, with these chapter-specific rules:\n",
+      "before_sha256": "549e13fb34ca644c8d9f1be642b90985879e9d16fa36d1d3cec37d0f0ea7f8d1",
+      "after_sha256": "c537e79f6e391fe8598058c3bb2fc78889b967003abd0feb4241695f1174cd31"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#scenariostsv",
+      "req_id": "-",
+      "before": "- `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch. The targets of the chapter admit the unnamed fields `error` and `size` by the column `free` of their routing rows (judge-only: the routing of the judge, `forms/targets.routing.tsv`); the two items here state what that column admits.\n",
+      "after": "- `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch. The targets of the chapter admit only the unnamed root fields `error` and `size` under these two rules.\n",
+      "before_sha256": "560fdc22851fd699dc4c47d7368168f03f0a053c3402df04798fdb025988c25f",
+      "after_sha256": "bb84cc4fad922bbf54fe0558a6d14c0dafdd23bd203d32bd1d4be7108f8731e1"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#scenariostsv",
+      "req_id": "-",
+      "before": "- An unnamed `size` is admitted only in the root of the body of a body refusal (the row `body_limit` of `forms/refusals.tsv`: `413` with the kind `toolarge` and the body limit as `limit`): it is checked to be an integer JSON number equal to the known full entity-body size in bytes, not a string and not a boolean, and is then excluded from the comparison with `expect`. A valid, representable `Content-Length` defines that full size even for an early answer after only a prefix of the body has been sent. With `Transfer-Encoding: chunked`, `Content-Length` is ignored: the full size of a completed chunked body is the sum of the decoded chunk-data bytes, excluding chunk framing and trailers; for an incomplete chunked body the full size is unknown and `size` is absent. A refusal for an unrepresentable framing length has no `size`. The absence of `size` remains admissible when the full size is known; other unnamed fields, `key` included, are not admitted (the column `free` above). A weight refusal names `key` and `size` in `expect`, and they are compared as named fields.\n",
+      "after": "- An unnamed `size` is admitted only in the root of the body of a body refusal (the row `body_limit` of `forms/refusals.tsv`: `413` with the kind `toolarge` and the body limit as `limit`): it is checked to be an integer JSON number equal to the known full entity-body size in bytes, not a string and not a boolean, and is then excluded from the comparison with `expect`. A valid, representable `Content-Length` defines that full size even for an early answer after only a prefix of the body has been sent. With `Transfer-Encoding: chunked`, `Content-Length` is ignored: the full size of a completed chunked body is the sum of the decoded chunk-data bytes, excluding chunk framing and trailers; for an incomplete chunked body the full size is unknown and `size` is absent. A refusal for an unrepresentable framing length has no `size`. The absence of `size` remains admissible when the full size is known; other unnamed fields, `key` included, are not admitted. A weight refusal names `key` and `size` in `expect`, and they are compared as named fields.\n",
+      "before_sha256": "ea440905ca1f488396d4091f3e5d49c58c6136b9cba76732822b70c10bf4b8b0",
+      "after_sha256": "85c348442b91b01fcab9108e5fb883e8c1cf5c14d9b604d16186952c2bd6b77a"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#seam-normalization",
+      "req_id": "-",
+      "before": "P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/seams.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.\n",
+      "after": "The review seams of P/01.1 have no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/seams.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.\n",
+      "before_sha256": "2ba34f4055c8617236d50bf11be9fcdd14d7435c67f3b7bd3b18c707ee88f401",
+      "after_sha256": "6223ffc6f359c9462e015185b1baa6d23cdaeb1c263b6905ec6b1cd5b0a70cc7"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#additional-check-of-the-class-of-errors",
+      "req_id": "-",
+      "before": "A replay of delete with the same id and different items (none/null/number/object/array) must match by op/key/cas/guard. A change of key/cas/guard is a different fingerprint. Compare versions only for equality: uniqueness does not mean a numeric order. (judge-only: sc. 17) also sends arbitrary bytes or no body by the common grammar of POST — it checks P/01.1-R048 and\nP/01.1-R144 (`body_form`).\n",
+      "after": "A replay of delete with the same id and different items (none/null/number/object/array) matches by op/key/cas/guard. Changing key, cas, guard, not_after or not_before gives a different fingerprint (P/01.1-R105). Versions are compared only for equality: uniqueness does not imply numeric order. The POST checks also send arbitrary bytes or no body under the common grammar, checking P/01.1-R048 and P/01.1-R144 (`body_form`).\n",
+      "before_sha256": "8b151f17d9f7922718ce2c85b62fb9e0535cb0228b29daa38c3f0b0f4308c31e",
+      "after_sha256": "175ae6f54f95e6f56d9112cd86f579d64a7e720df8cd9c91e94bfe7ffb1ce439"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#additional-check-of-the-class-of-errors",
+      "req_id": "-",
+      "before": "This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.\nA change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `delete` is now scenario 30 (judge-only:\nsc. 30) — it checks P/01.1-R105.\n",
+      "after": "These are subjects of a manual specification check and a future implementation check. Prepared requests, reading and the author's finite models are not a performed stand test.\n",
+      "before_sha256": "7582a7a94b34f6d4ff7cf4c2fa10334611ed99b79cd397ef99fe6de91a37c90e",
+      "after_sha256": "f033b9cc4f8a9788caa6381857e935ae2972755b5103e743d54a01fdd5fb1c28"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#extra-fields-of-a-command",
+      "req_id": "-",
+      "before": "Scenario 23 (judge-only: sc. 23) checks put/delete and their replays with different unknown top-level\nfields: they change neither the data nor the fingerprint — P/01.1-R040, P/01.1-R090, P/01.1-R040. The nested object zzz does not become a guard\nor a new command. The closedness of a real guard is checked separately by (judge-only: sc. 20) — P/01.1-R032; a wrong\nitems of put — (judge-only: sc. 16) — P/01.1-R019 (`items`); ignoring items of delete — (judge-only: sc. 06 and 23) —\nP/01.1-R099. The limit of the full body holds, ignored fields included ((judge-only: sc. 22) and reading of the size\ncheck before parsing) — P/01.1-R034, P/01.1-R040, P/01.1-R034, P/01.1-R040.\nA prepared scenario does not mean a performed HTTP run of an implementation.\n",
+      "after": "Put/delete and their replays accept different unknown top-level fields without changing data or the fingerprint (P/01.1-R040, P/01.1-R090). The nested object zzz does not become a guard or a new command. A real guard stays closed under P/01.1-R032; put checks the `items` form of P/01.1-R019; delete ignores `items` under P/01.1-R099. The full-body limit still applies, ignored fields included, before parsing (P/01.1-R034). A prepared scenario is not a performed HTTP implementation run.\n",
+      "before_sha256": "c3dfced38a2ce5f3b6101fc94d0f53174628a1773c0621fb65aa841c09ca5304",
+      "after_sha256": "24cc87e9d6f8f7e8de85e275e251f90c11f06647449d447d1792199b01857f10"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#extra-fields-of-a-command",
+      "req_id": "-",
+      "before": "The check outside the TSV: on a role socket the request GET /v1/list with a role forwarding header gets 403 forbidden before listing; an untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without the read right gets 200 with names/versions without values. Scenario 21 (judge-only: sc. 21) checks the latter — P/01.1-R066 — not all identity refusals; the former require a sockets/trust profile from acceptance 06 ((judge-only: sc. 08 of acceptance 06) — a header with a foreign role on a role socket; it checks P/01.1-R066 and P/01.1-R144 (`identity`)).\n",
+      "after": "Outside the TSV, check a valid GET /v1/list on a role socket with a role-forwarding header: it gets 403 forbidden before listing. Untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without read rights gets 200 with names and versions, without values. Identity refusals need a sockets/trust profile, including a foreign-role header on a role socket, under P/01.1-R066 and P/01.1-R144 (`identity`).\n",
+      "before_sha256": "98fde31933e0f700a614f5cd2ef9fe343bb5c94619c9169af9e3ce2105d3e8a8",
+      "after_sha256": "cf3ddf68c3685684b47125d9134899d6562121554eadd620dc13ac5483be7a1a"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#a-key-that-is-absent-or-not-a-string",
+      "req_id": "-",
+      "before": "Scenario 24 (judge-only: sc. 24) separates the form from the rules of the key (P/01.1-R030, P/01.1-R031): an absent or non-string `key` of a command,\n`guard.key` and the read parameter `key` — `400 badrequest`; a string that breaks the rules of N1 — `badkey`\n((judge-only: sc. 13 and 20) — P/01.1-R031, P/01.1-R032). The last step reads the row and sees that nothing is written.\n",
+      "after": "The checks distinguish the form from the key rules (P/01.1-R030, P/01.1-R031): an absent or non-string command key, guard.key or read parameter key gives `400 badrequest`; a string that breaks N1 gives `badkey` under P/01.1-R031 and P/01.1-R032. The final read confirms that nothing was written.\n",
+      "before_sha256": "4459e6de48b8cf57222b020f0a1ad463f17235c537d7e8591fe0c86a631245a0",
+      "after_sha256": "f6d0e8d7775598244754d0e7a3adc59e1bcc45884ee46b653974dbd5ca3afd9f"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#admission-time-conditions-p011-25-adr-0091-item-1",
+      "req_id": "-",
+      "before": "Scenario 28 (judge-only: sc. 28) takes only the edges of the admission time (P/01.1-R079, P/01.1-R079, P/01.1-R088,\n",
+      "after": "The admission-time checks cover only the edges of the admission time (P/01.1-R079, P/01.1-R079, P/01.1-R088,\n",
+      "before_sha256": "0a7cc129418811ce30af2a837f8c3d34e42306ea29bc35cb47f566bedaedf9f3",
+      "after_sha256": "339aa70d3beb0208f8441c2823837ece44993d4fc345d65bcc8b465559d9dc38"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#adr-0129-core-clarification-witnesses",
+      "req_id": "-",
+      "before": "Already covered and unchanged: scenario 35 steps 8–9 (judge-only: sc. 35) choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS — P/01.1-R125, P/01.1-R125; scenario 36 step 3 (judge-only: sc. 36) reorders guards on a successful replay without changing its fingerprint — P/01.1-R134. R116 and scenario 31 steps 1–4 (judge-only: sc. 31) already prove that a successful absent delete leaves read index \"\" and admits a later create-once; scenario 34 steps 7–8 (judge-only: sc. 34) covers batch deletion of an absent row — P/01.1-R128, P/01.1-R133. No duplicate witnesses are added for these obligations.\n",
+      "after": "Guard and CAS checks choose the first failure in both source-list orders (P/01.1-R125). Reordering guards on a successful replay does not change its fingerprint (P/01.1-R134). A successful absent delete leaves read index \"\" and admits a later create-once (R116); batch deletion of an absent row follows P/01.1-R128 and P/01.1-R133. These obligations need no duplicate witnesses.\n",
+      "before_sha256": "2fae6fe10bc3945ed6cbfe7d59db8c24a53005b22b3613773fc74b384bffc95e",
+      "after_sha256": "3670028524ac033f38141d4cae8480daffe7a39b41e5915d7570c538ad9bb3fe"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#replay-and-last-admission-metadata",
+      "req_id": "-",
+      "before": "A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases (judge-only: seams `s13-replay-put-admission`, `s14-replay-delete-admission`, `s15-replay-batch-admission`) check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R078, P/01.1-R105, P/01.1-R105 and P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.\n",
+      "after": "A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R078, P/01.1-R105, P/01.1-R105 and P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.\n",
+      "before_sha256": "3b27bfe3262bc1f9bbb731c192aabafe62c7cbee404e401625f8b38398630881",
+      "after_sha256": "49a9cfe90be16eae3f04604ef73bd28c2b8fe2f43e12a8b66ad270bec5c34500"
+    },
+    {
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "source_address": "acceptance/1/README.md#admitted-mismatches-and-admission-number-domain-adr-0129-addendum-10-item-3",
+      "req_id": "-",
+      "before": "All four cases (judge-only: seams `s16-mismatched-put-admission` to `s19-admission-binary64-fraction`) check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070, P/01.1-R105 and P/01.1-R105; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.\n",
+      "after": "All four cases check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070, P/01.1-R105 and P/01.1-R105; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.\n",
+      "before_sha256": "50feaf886880ac3b6b6b41b9696e0a01fde3d34e18d442d7b19f155a24a4b920",
+      "after_sha256": "316a09da260f6c3f3303621134bd3b1fae1b4f229b3d35b5d64eaa678e8ea358"
+    },
+    {
+      "file": "Platform/01-store/acceptance/2/README.md",
+      "source_address": "acceptance/2/README.md#profile-interface",
+      "req_id": "-",
+      "before": "Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the ready rights fixture below (judge-only: `inputs/rights.json`; its form is P/01.2-R007 and P/01.2-R008); it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.\n",
+      "after": "Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the prepared stand rights file in the form of P/01.2-R007 and P/01.2-R008; it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.\n",
+      "before_sha256": "c38cc2d9597973708af15b333efd44c2c83dbeba7d980767c8f4d8a0e552548e",
+      "after_sha256": "e441fc1747d81b830ff9dc8518f18c057b2a7bf325597f5a6e8c6b62ba622f59"
+    },
+    {
+      "file": "Platform/01-store/acceptance/2/README.md",
+      "source_address": "acceptance/2/README.md#isolation",
+      "req_id": "-",
+      "before": "is prepared by the runner with the file `inputs/rights.json` (judge-only: the rights fixture of the stand; its form is P/01.2-R007 and P/01.2-R008) and the instance setup, and each step is performed only by\n",
+      "after": "is prepared by the runner with the stand rights file in the form of P/01.2-R007 and P/01.2-R008 and the instance setup, and each step is performed only by\n",
+      "before_sha256": "2b86ba55483387a7eee3e42724670b2638654abe4041b1cb5135a61bf6503d8f",
+      "after_sha256": "c211cbff1491be7f188814b12fd69fa907cdc09728eb55226fd5c1219f5047f7"
+    },
+    {
+      "file": "Platform/01-store/acceptance/2/README.md",
+      "source_address": "acceptance/2/README.md#checks-outside-the-scenario-file",
+      "req_id": "-",
+      "before": "The name X-Configstore-Role in the scenarios (judge-only: `scenarios.tsv`, sc. 08 and 12; they check P/01.2-R019 and P/01.2-R017) is a designation of the header of trusted role forwarding.\n",
+      "after": "The name X-Configstore-Role in the scenarios (judge-only: `scenarios.tsv`, sc. 08 and 12) is a designation of the header of trusted role forwarding.\n",
+      "before_sha256": "41a6f25c288fe0a1fa2529970c7da4acd7c6b26774e46e512cc57be322496f19",
+      "after_sha256": "0623cc8592f8592dcc6887edbcefc7ac1d31aa1bf000ab0436d7a6b92405bf51"
+    },
+    {
+      "file": "Platform/01-store/acceptance/2/README.md",
+      "source_address": "acceptance/2/README.md#properties-of-sc-1113",
+      "req_id": "-",
+      "before": "Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`; they check P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021, P/01.2-R030 and P/01.2-R017):\n",
+      "after": "Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`):\n",
+      "before_sha256": "1ebcb795a3bbf6f41e084fb8c424f2507eb36eb719fa4bff2baa0230461446a7",
+      "after_sha256": "0aa3cde16e427ff98ae0d990cad2612cf7ef9a422aca873b9ad06363ce00065c"
+    },
+    {
+      "file": "Platform/01-store/acceptance/2/README.md",
+      "source_address": "acceptance/2/README.md#properties-of-sc-1415",
+      "req_id": "-",
+      "before": "Properties checked by sc. 14–15 (judge-only: sc. 14–15 of `scenarios.tsv`; they check P/01.2-R007, P/01.2-R010, P/01.2-R014, P/01.2-R007, P/01.2-R122 and P/01.2-R124):\n",
+      "after": "Properties checked by sc. 14–15 (judge-only: sc. 14–15 of `scenarios.tsv`):\n",
+      "before_sha256": "a1212942d19746f6a3490142d2a9d08486d66136d0a70805deeb333b6e8fc053",
+      "after_sha256": "3484988952dab89c077f5011a2ccb9917ec2d2201c9ee986d9422d9b1e64ab42"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#intro",
+      "req_id": "-",
+      "before": "Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store` (sc. 10), `@backup store`,\n`@import store` and the door `restored` (sc. 11, 12, 14); the store group stand — `@group-setup`, `@store-start`,\n",
+      "after": "Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store`, `@backup store`,\n`@import store` and the door `restored`; the store group stand — `@group-setup`, `@store-start`,\n",
+      "before_sha256": "cf2e24af4d3a61c15fcba556d43eee41f46c93644d58d49c163d0aa31bdc0d00",
+      "after_sha256": "d924c7f2842b974cb6080e06f563ad54a0115370551dbc86d4ad4e14d272da47"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#intro",
+      "req_id": "-",
+      "before": "a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description (judge-only: sc. 07, 08, 10, 11, 12, 14, 17, 18, 25–29, 31–34; checks P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R026, P/01.3-R032).\n",
+      "after": "a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description.\n",
+      "before_sha256": "afb6420dfec47dee0ad6f16b970402dd196b1cc83135901f3aa93a855c353818",
+      "after_sha256": "754644288add3a4b9254cac951bff37d532454951f67c7ddb5a19e11897509fa"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#stand",
+      "req_id": "-",
+      "before": "a single member of a box without `-api` (N1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this (judge-only: sc. 08 step 8, sc. 15 steps 1–2, sc. 11 steps 9–10, sc. 16; checks P/01.3-R006, P/01.3-R016, P/01.3-R017).\n",
+      "after": "a single member of a box without `-api` (N1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this.\n",
+      "before_sha256": "de3abb3f99b38339f9c0836e45c9fcf6c29bc328f2fe7eb4ee1303a18b92739f",
+      "after_sha256": "19c7eeea67c462e6c6fb6804774286622ed1cf02fffc97b0c6fa47995d216275"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#batch-and-restart-sc-30",
+      "req_id": "-",
+      "before": "(P/01.1-31) (judge-only: sc. 30; checks P/01.3-R006, P/01.1-R134, P/01.1-R135).\n",
+      "after": "(P/01.1-31).\n",
+      "before_sha256": "2995fe0426ecb85adaa706e3ebfbc81f124c3af55e5fe9c27b27cc9c50c568f8",
+      "after_sha256": "f1e3e59869455e68a75af3bb8d5008d8fd61240fa87924e0a4335f142d509123"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#a-foreign-directory-sc-10",
+      "req_id": "-",
+      "before": "touch the stand store. The first write of the mark into an empty directory and a start on one's own directory — every start of the stand and `@restart store` of sc. 08 (judge-only: sc. 10, sc. 08; checks P/01.3-R006).\n",
+      "after": "touch the stand store. The first write of the mark into an empty directory and a start on one's own directory — every start of the stand and `@restart store` of sc. 08.\n",
+      "before_sha256": "1fd9d8ce30ea4d2f9d3128fd9b7079e7ad907f262ec06c02567ab0e8628aaed7",
+      "after_sha256": "602c619196dfdfd0e565de5238504e1d89733f32e039503ae19b57fccf77b7e5"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#a-foreign-directory-sc-10",
+      "req_id": "-",
+      "before": "The separate executable probe `05-data-ownership` uses a healthy completed directory state, not scenario 10's foreign/missing `FORMAT` mark (judge-only: sc. 10; checks P/01.3-R006). It checks `start_data_dir_owned` and `local_data_dir_owned`: refusal of the second daemon before readiness/any write, unchanged first owner/data/ownership; refusal of offline box import/restore and local recover. A separate simultaneous-start race, including an empty directory, yields exactly one owner; ownership checking precedes other directory-dependent reasons. After orderly exit and `SIGKILL`, lawful start without manual cleanup is checked on a healthy completed state. This does not cancel `start_format` or refusal of unfinished `import`/`restore`: unfinished transfer is a separate negative case after the owner dies. Only owned isolated processes and directories are used. Independent live-owner confirmation, check-order observation and write attribution are required; lawful background work of the first daemon is not attributed to the second attempt. Missing native binding is `NotExecuted`, not a successful refusal.\n",
+      "after": "The separate executable probe `05-data-ownership` uses a healthy completed directory state, not scenario 10's foreign/missing `FORMAT` mark. It checks `start_data_dir_owned` and `local_data_dir_owned`: refusal of the second daemon before readiness/any write, unchanged first owner/data/ownership; refusal of offline box import/restore and local recover. A separate simultaneous-start race, including an empty directory, yields exactly one owner; ownership checking precedes other directory-dependent reasons. After orderly exit and `SIGKILL`, lawful start without manual cleanup is checked on a healthy completed state. This does not cancel `start_format` or refusal of unfinished `import`/`restore`: unfinished transfer is a separate negative case after the owner dies. Only owned isolated processes and directories are used. Independent live-owner confirmation, check-order observation and write attribution are required; lawful background work of the first daemon is not attributed to the second attempt. Missing native binding is `NotExecuted`, not a successful refusal.\n",
+      "before_sha256": "2cca54e472897c8d878c427d7857ca38c4b369bf5f136f7cf43c9380325aaf7d",
+      "after_sha256": "74f360fbd53875a04ac95734c82c69e550c0f4bdcbc2dc8fb648f41bd0cc0581"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-copy-sc-11-12",
+      "req_id": "-",
+      "before": "nothing is transferred (judge-only: sc. 11, 12; checks P/01.3-R006, P/01.3-R018, P/01.3-R026).\n",
+      "after": "nothing is transferred.\n",
+      "before_sha256": "11a39c9bc7ed299b6d31020c38547915716664dc3ae3eaa3b60e934200197ce8",
+      "after_sha256": "38e8fcd8d310ceaa8cf93468f2d359f0206aa66895b8a1bb3438946c47b16185"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#actual-body-ceiling-in-status-adr-0127-p06-c2",
+      "req_id": "-",
+      "before": "The independent schema witnesses in `inputs/status-body-limits.json` (judge-only: `acceptance/3/inputs/status-body-limits.json`; checks P/01.3-R016) use complete Status responses: positive body ceilings1/1048576/2097152, and missing/zero/negative/nonintegral/bool/string/null negatives. Apply the existing Status schema to the whole response. max_body counts entity bytes, including an actual LF; HTTP request/header/chunk framing does not enter it. The static P06 profile gate uses the value from this result, not a new flag or a replacement for max_value.\n",
+      "after": "The independent schema checks use complete Status responses: positive body ceilings1/1048576/2097152, and missing/zero/negative/nonintegral/bool/string/null negatives. Apply the existing Status schema to the whole response. max_body counts entity bytes, including an actual LF; HTTP request/header/chunk framing does not enter it. The static P06 profile gate uses the value from this result, not a new flag or a replacement for max_value.\n",
+      "before_sha256": "81b33909a37c0f9e896d1bfbd562deb2750ccb2e413bc8562c84740a25f84497",
+      "after_sha256": "18d50e0d4631bd62ef8513be82fa7ac08603d220282237ad6831371c59f5b987"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#a-member-without--api-sc-16",
+      "req_id": "-",
+      "before": "(`minLength: 1`), and the step does not pass (judge-only: sc. 16; checks P/01.3-R006, P/01.3-R007, P/01.3-R016).\n",
+      "after": "(`minLength: 1`), and the step does not pass.\n",
+      "before_sha256": "ef14cdaaceae4d4b7b1cb8eb84892d40a871993877105c0548822db83b184e66",
+      "after_sha256": "3cb57dad0d42e0b12ae20fb3e934f5a0d8ede7d5abc01678e7558e3ffdcf5dad"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#store-group-stand",
+      "req_id": "-",
+      "before": "(sc. 07, 17, 18, 25–29, 31–34). The properties of the group — the composition, the elections, a restart, a door without a vote, `recover`, `import` into the group — the stand\n",
+      "after": ". The properties of the group — the composition, the elections, a restart, a door without a vote, `recover`, `import` into the group — the stand\n",
+      "before_sha256": "8be53666fae8c7bf89feb0cac8e9eb09b68400d4c2a74d59ab6078fc4c98304f",
+      "after_sha256": "635b592e968c19dd6bb336e72f68a6e0a646d19220ed8cd933202c0753e4f349"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#store-group-stand",
+      "req_id": "-",
+      "before": "- **Members** — by the name `<id>`: the voters `s1`…`s5`, the doors without a vote `d1`, `d2`. The size of the group and the transport of its traffic are the keys `stand_size` and `transport` of [`forms/group.tsv`](../../forms/group.tsv) of P/01. The server name of the leaf of a member is its `<id>`\n",
+      "after": "- **Members** — by the name `<id>`: the voters `s1`…`s5`, the doors without a vote `d1`, `d2`. The acceptance group has three voters and uses mTLS between members. The server name of the leaf of a member is its `<id>`\n",
+      "before_sha256": "d610b52fcac01cfc39d087a2c0e341c6cb2926272989011005f6fca643638b12",
+      "after_sha256": "27e4b6b7aa68dcf5b4a9cbb65e93e79842f9bab16d607f6b2d18dfef87d507c0"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#store-group-stand",
+      "req_id": "-",
+      "before": "- **Kits** — the description `inputs/group.json` (judge-only: the kits of the group stand) of the acceptance of chapter 1.3: one CA of the group, a leaf for each member; the layout — the [role certificate contract](../../../common/contracts/role-certificate.md),\n",
+      "after": "- **Kits** — the kit setup of the acceptance of chapter 1.3: one CA of the group, a leaf for each member; the layout — the [role certificate contract](../../../common/contracts/role-certificate.md),\n",
+      "before_sha256": "a4f2b35b134a1537d8c605c53929ceed2b59929d0789bc4704a97442a92ac04f",
+      "after_sha256": "99284a577a6e039d3dd249acfa5c0d868b7cb836663f48230a81d899bfe6030f"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#store-group-stand",
+      "req_id": "-",
+      "before": "| `@tls <probe path>` with the door `api@<id>` | a probe to the own port of the member (`-api-bind`, not the API proxy): the input `{door: \"api@<id>\", client: \"<id2>\", request}` — the client presents the leaf of the member `<id2>` of the description `group.json` (judge-only: the kits of the group stand), checks the server by the CA of the group and `<id>`; the outcome — the closed form of the README of the [TLS stand](../../../common/acceptance/tls/README.md); the role forwarding header in `request` is a designation, the name is substituted from the description of the implementation by the same profile key as `X-Configstore-Role` in the acceptance of chapter 1.2 sc. 08 | P/01.3 |\n",
+      "after": "| `@tls <probe path>` with the door `api@<id>` | a probe to the own port of the member (`-api-bind`, not the API proxy): the input `{door: \"api@<id>\", client: \"<id2>\", request}` — the client presents the leaf of the member `<id2>` of the stand kit setup, checks the server by the CA of the group and `<id>`; the outcome — the closed form of the README of the [TLS stand](../../../common/acceptance/tls/README.md); the role forwarding header in `request` is a designation, the name is substituted from the description of the implementation by the same profile key as `X-Configstore-Role` in the acceptance of chapter 1.2 sc. 08 | P/01.3 |\n",
+      "before_sha256": "d281274836b2a3df64fad9f6697d02854f05a5ce422f576a634bd41fb6195415",
+      "after_sha256": "d8b7f63791ab93651a85476f586b11b0ec7e57ce00edd760e1d79672740370eb"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31",
+      "req_id": "-",
+      "before": "(the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The size of the stand group and the transport of its traffic are the keys `stand_size` and `transport` of [`forms/group.tsv`](../../forms/group.tsv). The box store build\n",
+      "after": "(the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The stand group has three voters and uses mTLS between members. The box store build\n",
+      "before_sha256": "ce7220f55083b1e4da347d8c945f824ac9ecef267f91f5f8e679336734379f1e",
+      "after_sha256": "b3f2cf8b87d2dc6275204431235e86795baaaaaab0ba224261f8f80a3dd468df"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31",
+      "req_id": "-",
+      "before": "the marker they are not executed («Store group stand» above) (judge-only: sc. 07, 17, 18, 25–29, 31–34; checks P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R022, P/01.3-R032, P/01.2-R025, P/01.1-R062).\n",
+      "after": "the marker they are not executed («Store group stand» above).\n",
+      "before_sha256": "44883bd77f85885d1af356bb64d3ad8cad2ccc1d7d278359551bcd791e6143a6",
+      "after_sha256": "8f05cd2b50c0f54cacb55aa4c0a210bbd324a5e4bb8f0a7baf122983fd4e0e3c"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31",
+      "req_id": "-",
+      "before": "- **A batch in the group (ADR-0094 B9).** A door forwards a batch whole: the followers read both rows with one version; a replay by `id` goes through a voter and through a door; a stale `cas` of a row means the others are not written. The door's own row by a batch — 403 (N1.3 `door`). After `@sigkill` of the leader the new leader gives both rows (judge-only: sc. 31; checks P/01.3-R006, P/01.1-R135).\n- **Size and the door without a vote.** A join beyond the declared size — 409 `refused` both without `force` and with `force` (`-force` does not take beyond the declared size; N1.3 `join`). A door (`-door -voters`): `state` `Door`, a write through it — by the same rights file (forwarding to the leader, visible at a follower), the row `platform/configstore-doors/<id>` with a fresh `seen_at`, the metrics row `configstore_doors` at the leader. A door whose `-id` is not the server of its leaf — a start refusal. The leaf of a door writes at the leader a foreign row of the family `platform/configstore-doors/` — 403, its own — 200 (N1.3 `door` «own»); the role forwarding header in a probe is a designation, the name is from the implementation description (judge-only: sc. 07, 26; checks P/01.3-R006, P/01.3-R016).\n- **Membership, restart, leader change, quorum.** A size outside `sizes` of N1.3 — a start refusal; `leave` of a stopped member, its `join` before `admit` — 403, `admit` is repeatable (code 0), after it `join` with the same address — 200, with another Raft address — 409, `leave` of an unknown member — 409 (N1.3 `leave`, `repeat`); a restarted member is a follower again. After a restart of a follower and of the whole group the versions are the same at all members, and a write with `cas` of that version passes (the log is not applied again). After a leader change a read at the remaining members sees the version of a write, a returned member too (the read is linearizable, P/01.1 N3). A write through a door and through a voter without a quorum — 503 `unavailable` after the effective `-leader-wait` interval: the door is not part of the quorum (judge-only: sc. 17; checks P/01.3-R006, P/01.1-R062).\n- **`import` into a group and `recover`.** `import` of a copy into a fresh group at the leader; a repeat of a completed one — a refusal (N1.3 `admin_ops`). The transferred rows keep the versions of the copy, and `cas` by them passes (P/01.3 N1.3 `import`, N3 «the copy is replayed into exactly those rows and versions»): an implementation that rewrites the transfer by ordinary `put` with new small versions fails here. That the new versions after the transfer are above `-index-base`, the scenario does not judge by numbers (the strings are compared only by `==`/`!=`) — by reading. With the majority lost, `recover` without `-isolated` and with `-upper` below the computed one — a refusal before any changes; with `-isolated` — the floor by the upper of the epoch rows, the rows and the epochs are kept (upper is from all epoch rows). The former members with old directories do not return (N3 step 0); new members join from empty directories (`-force` at a transitional parity); the floor is visible at a new follower (judge-only: sc. 18; checks P/01.3-R006, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R022, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R022).\n- **A door leaf on `-raft`**: the leaf of a door on the raft port of a member — `handshake: alert` (P/01.3 N1.6 `raft`) (judge-only: sc. 07; checks P/01.3-R009).\n- **Forwarding, metrics and a cut raft port**: the leaf of a voter with the role forwarding header `admin` at the leader with a loaded rights file — 403 (P/01.2 N3); the `/metrics` rows of the leader and of a follower (the names of N1.3 `metrics`, the state in lowercase per ADR-0070); a proxy on the raft port of a member cuts incoming connections (the outgoing connections of the member go directly): after a write a read at the cut member — the new version or 503, not the earlier one, after `@mend` — the new one (the steps do not assume who the leader is) (judge-only: sc. 07, 17; checks P/01.2-R025, P/01.3-R006, P/01.3-R032, P/01.1-R062).\n- **Door status, door rows, import and recover edges**: `/v1/status` of a door whole by N2: `Door`, `role` `door`, `term`, `commit`, `applied` — 0; the leaf of a door at the leader: its own row with `cas: \"\"`, with an extra element and its deletion — 403, its own row by the form — 200 (N1.3 `door`: only `put` without `cas` and `guard`, the single `seen_at`); a live door has written its row: `import` of a copy with `-index-base` below the versions of the copy — a refusal, no rows; with `-index-base` not below them — transferred, the version of the copy is kept (a door row does not cancel freshness); with the majority lost `recover -peers` without its own member, without an `api` address, with a repeat of a member — a refusal; a `-upper` above the computed one raises the floor; `import` of a copy with a future `generation_at` of the floor without `-force` — a refusal, nothing is transferred, with `-force` — transferred, the floor is raised (N1.3 `floor` `when`, «Daemon flags» `-force`) (judge-only: sc. 25–29; checks P/01.3-R006, P/01.3-R007, P/01.3-R016, P/01.3-R020, P/01.3-R021).\n- **A lost answer of a forwarded write (sc. 32–34)**: `@cut store@s1 answer` at the leader `s1`, then a write. The leader executes and commits it, its answer does not reach the caller. A door with `id` (sc. 32), a follower with `id` (sc. 33) and a door without `id` (sc. 34) answer 503 `ambiguous`, not `unavailable`: the write went to the leader without an answer. A door with `id` may retry at other voters; they forward to the leader through the same proxy, their answer is `ambiguous` too, so the outcome of the door stays `ambiguous` within its attempts. A commit through another member, after a change of the leader, does not change this outcome either: the proxy holds the answer, not the commit. Before `@mend` a read at the leader already gives the version of the write; after `@mend` a replay with the same `id` through the door and through a voter gives `again` with that version; the same `cas: \"\"` write without `id` gives 409 `conflict` with that version, not a second write. That a door does not retry a write without `id` stays by reading: a retry of a `cas` write leaves no second effect to observe (judge-only: sc. 32, 33, 34; checks P/01.3-R064, P/01.3-R252, P/01.3-R320, P/01.3-R326, P/01.3-R252, P/01.3-R007, P/01.1-R144).\n",
+      "after": "- **A batch in the group (ADR-0094 B9).** A door forwards a batch whole: the followers read both rows with one version; a replay by `id` goes through a voter and through a door; a stale `cas` of a row means the others are not written. The door's own row by a batch — 403 (N1.3 `door`). After `@sigkill` of the leader the new leader gives both rows.\n- **Size and the door without a vote.** A join beyond the declared size — 409 `refused` both without `force` and with `force` (`-force` does not take beyond the declared size; N1.3 `join`). A door (`-door -voters`): `state` `Door`, a write through it — by the same rights file (forwarding to the leader, visible at a follower), the row `platform/configstore-doors/<id>` with a fresh `seen_at`, the metrics row `configstore_doors` at the leader. A door whose `-id` is not the server of its leaf — a start refusal. The leaf of a door writes at the leader a foreign row of the family `platform/configstore-doors/` — 403, its own — 200 (N1.3 `door` «own»); the role forwarding header in a probe is a designation, the name is from the implementation description.\n- **Membership, restart, leader change, quorum.** A size outside `sizes` of N1.3 — a start refusal; `leave` of a stopped member, its `join` before `admit` — 403, `admit` is repeatable (code 0), after it `join` with the same address — 200, with another Raft address — 409, `leave` of an unknown member — 409 (N1.3 `leave`, `repeat`); a restarted member is a follower again. After a restart of a follower and of the whole group the versions are the same at all members, and a write with `cas` of that version passes (the log is not applied again). After a leader change a read at the remaining members sees the version of a write, a returned member too (the read is linearizable, P/01.1 N3). A write through a door and through a voter without a quorum — 503 `unavailable` after the effective `-leader-wait` interval: the door is not part of the quorum.\n- **`import` into a group and `recover`.** `import` of a copy into a fresh group at the leader; a repeat of a completed one — a refusal (N1.3 `admin_ops`). The transferred rows keep the versions of the copy, and `cas` by them passes (P/01.3 N1.3 `import`, N3 «the copy is replayed into exactly those rows and versions»): an implementation that rewrites the transfer by ordinary `put` with new small versions fails here. That the new versions after the transfer are above `-index-base`, the scenario does not judge by numbers (the strings are compared only by `==`/`!=`) — by reading. With the majority lost, `recover` without `-isolated` and with `-upper` below the computed one — a refusal before any changes; with `-isolated` — the floor by the upper of the epoch rows, the rows and the epochs are kept (upper is from all epoch rows). The former members with old directories do not return (N3 step 0); new members join from empty directories (`-force` at a transitional parity); the floor is visible at a new follower.\n- **A door leaf on `-raft`**: the leaf of a door on the raft port of a member — `handshake: alert` (P/01.3 N1.6 `raft`).\n- **Forwarding, metrics and a cut raft port**: the leaf of a voter with the role forwarding header `admin` at the leader with a loaded rights file — 403 (P/01.2 N3); the `/metrics` rows of the leader and of a follower (the names of N1.3 `metrics`, the state in lowercase per ADR-0070); a proxy on the raft port of a member cuts incoming connections (the outgoing connections of the member go directly): after a write a read at the cut member — the new version or 503, not the earlier one, after `@mend` — the new one (the steps do not assume who the leader is).\n- **Door status, door rows, import and recover edges**: `/v1/status` of a door whole by N2: `Door`, `role` `door`, `term`, `commit`, `applied` — 0; the leaf of a door at the leader: its own row with `cas: \"\"`, with an extra element and its deletion — 403, its own row by the form — 200 (N1.3 `door`: only `put` without `cas` and `guard`, the single `seen_at`); a live door has written its row: `import` of a copy with `-index-base` below the versions of the copy — a refusal, no rows; with `-index-base` not below them — transferred, the version of the copy is kept (a door row does not cancel freshness); with the majority lost `recover -peers` without its own member, without an `api` address, with a repeat of a member — a refusal; a `-upper` above the computed one raises the floor; `import` of a copy with a future `generation_at` of the floor without `-force` — a refusal, nothing is transferred, with `-force` — transferred, the floor is raised (N1.3 `floor` `when`, «Daemon flags» `-force`).\n- **A lost answer of a forwarded write**: `@cut store@s1 answer` at the leader `s1`, then a write. The leader executes and commits it, its answer does not reach the caller. A door with `id`, a follower with `id` and a door without `id` answer 503 `ambiguous`, not `unavailable`: the write went to the leader without an answer. A door with `id` may retry at other voters; they forward to the leader through the same proxy, their answer is `ambiguous` too, so the outcome of the door stays `ambiguous` within its attempts. A commit through another member, after a change of the leader, does not change this outcome either: the proxy holds the answer, not the commit. Before `@mend` a read at the leader already gives the version of the write; after `@mend` a replay with the same `id` through the door and through a voter gives `again` with that version; the same `cas: \"\"` write without `id` gives 409 `conflict` with that version, not a second write. That a door does not retry a write without `id` stays by reading: a retry of a `cas` write leaves no second effect to observe.\n",
+      "before_sha256": "b713c804c1efa250241937beaa5b970b7785539072e6997771fae25733a05911",
+      "after_sha256": "a6daa8c56f1a867b7ae3ea97f194bf164347bc14fde480f15e7de32dd5d320b8"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31",
+      "req_id": "-",
+      "before": "  on `-raft` is now not by reading: sc. 07, the last step, above (judge-only: sc. 07; checks P/01.3-R009); an unreadable door row outside `configstore_doors` (N1.3\n",
+      "after": "  on `-raft` is now not by reading: sc. 07, the last step, above; an unreadable door row outside `configstore_doors` (N1.3\n",
+      "before_sha256": "3a3ea3c64a2a7365604715f27a0d475054f9a3ff50c754cca5a6ed54db4625df",
+      "after_sha256": "818547a835782e8309bc8e15e54a5622246c933c766017d3e0494d40821bdc57"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924",
+      "req_id": "-",
+      "before": "- An `import` of an input with an epoch row or a floor row that is not decimal — upper is not reliable, a refusal of the whole input, nothing is transferred (N1.3 `import`) (judge-only: sc. 12; checks P/01.3-R006).\n",
+      "after": "- An `import` of an input with an epoch row or a floor row that is not decimal — upper is not reliable, a refusal of the whole input, nothing is transferred (N1.3 `import`).\n",
+      "before_sha256": "1988f77779a452fcb62ef51ba59c15f4f34640cb6743c26286083727dd523ad6",
+      "after_sha256": "a4180e8ff3b51390293b0b15dde53feb701f5aead749752c02e521d46428c817"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924",
+      "req_id": "-",
+      "before": "  differ from it (P/01.1 N1 `index`); a non-durable training store does not run this check (judge-only: sc. 19; checks P/01.1-R084).\n",
+      "after": "  differ from it (P/01.1 N1 `index`); a non-durable training store does not run this check.\n",
+      "before_sha256": "0410a56021366d3538d9d7f05dc674a4aba253382a1d00097da809639f91b735",
+      "after_sha256": "987cf10ed335e0da58b5eb1057380c14c0a07b0d58bbe100c57bb22d4f195ca1"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#the-stand-store-restart-a-copy-with-an-epoch-row-spoiling-replay-memory-service-doors-sc-12-1924",
+      "req_id": "-",
+      "before": "  not_executed (judge-only: sc. 20; checks P/01.1-R028, P/01.1-R028, P/01.1-R212).\n- The `id` replay memory (P/01.1 N3) is held for no less than two minutes; the right to forget after 2 min and 50 000 writes — by reading (judge-only: sc. 21; checks P/01.1-R141).\n- A row key with `..`, the `generation_at` of the floor not a time, the stand clock earlier than the `generation_at` of the floor of the input (without `-force` of the directive `@import store`) — a refusal of the whole input (N1.3 `import`, `floor`; the outcomes of the family `epoch_floor`). A damaged row exists for a guard and for a deletion (P/01.1 N2): the guard `\"\"` — 412 with its version, by the version — holds; deletion with `cas: \"\"` — 409, with `cas` by the version — the row is gone; without the profile command `spoil-row` — not_executed. Service doors (N2): an extra field in `join`, `leave` and `op: floor` and a bad member `id` — 400; a refused floor is not written. 405 for `POST /metrics`, `GET /v1/join`, `GET /v1/leave` (N4) (judge-only: sc. 12, 22, 23, 24; checks P/01.3-R006, P/01.3-R016, P/01.3-R017, P/01.3-R029, P/01.1-R028).\n",
+      "after": "  not_executed.\n- The `id` replay memory (P/01.1 N3) is held for no less than two minutes; the right to forget after 2 min and 50 000 writes — by reading.\n- A row key with `..`, the `generation_at` of the floor not a time, the stand clock earlier than the `generation_at` of the floor of the input (without `-force` of the directive `@import store`) — a refusal of the whole input (N1.3 `import`, `floor`; the outcomes of the family `epoch_floor`). A damaged row exists for a guard and for a deletion (P/01.1 N2): the guard `\"\"` — 412 with its version, by the version — holds; deletion with `cas: \"\"` — 409, with `cas` by the version — the row is gone; without the profile command `spoil-row` — not_executed. Service doors (N2): an extra field in `join`, `leave` and `op: floor` and a bad member `id` — 400; a refused floor is not written. 405 for `POST /metrics`, `GET /v1/join`, `GET /v1/leave` (N4).\n",
+      "before_sha256": "3bba3a64e13984d274666f5300edcd44f820480e82b4a1a791629959a27318e6",
+      "after_sha256": "ee8f18ed8446ee47e8e7221a3889bfb1b49c7a04aa7b8dc366204477813ee6f9"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#full-form-and-reproducibility",
+      "req_id": "-",
+      "before": "that keeps it in process memory answers 409 «only upwards» after a restart, and the scenario does not pass (judge-only: sc. 08; checks P/01.3-R016).\n",
+      "after": "that keeps it in process memory answers 409 «only upwards» after a restart, and the scenario does not pass.\n",
+      "before_sha256": "ccd8df9f0c383fd1472d7fadb1c9a4373c293b7197b50ac735ebc5b8bd7518c4",
+      "after_sha256": "863552dd2a31f0d6735513488b9bbc82dd59d7d49e5ed33e27fe27902de85639"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#additional-check-by-reading",
+      "req_id": "-",
+      "before": "By reading: 503 unavailable after the effective -leader-wait interval without a leader, ambiguous after an unknown outcome (a lost answer of a forwarded write — sc. 32–34) and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches (judge-only: sc. 05 of the system acceptance; checks P/01.3-R006). A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 (judge-only: sc. 04; checks P/01.3-R006) is configstore_raft_voters_expected. The launcher values follow P/02.4 and the daemon defaults belong only to forms/daemon-flags.tsv; an override of the profile is declared before acceptance.\n",
+      "after": "By reading: 503 unavailable after the effective -leader-wait interval without a leader, ambiguous after an unknown outcome (a lost answer of a forwarded write — sc. 32–34) and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The launcher values follow P/02.4 and the daemon defaults belong only to forms/daemon-flags.tsv; an override of the profile is declared before acceptance.\n",
+      "before_sha256": "02354822a5f93f8e3a2d7c75a19f0c95f26c3548fffa00f4906971c21e9c1d48",
+      "after_sha256": "931ffef46c25abdeac44b47562112fc28443404a44bec5a85de16cb15bd640da"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#review-seams",
+      "req_id": "-",
+      "before": "The kit seams checking P/01.3-R006 and P/01.3-R026 use the CALL/JSON grammar of [P/02](../../../02-installer/forms/README.md). These four kit seams assist the existing acceptance and reading; they are not new public runner targets. The existing chapter 1.1 s2 seam repeats the **same id** after early and a clock advance (judge-only: seam s2 of `acceptance/1/seams.tsv`; checks P/01.1-R079, P/01.1-R132).\n",
+      "after": "The kit seams checking P/01.3-R006 and P/01.3-R026 use the CALL/JSON grammar of [P/02](../../../02-installer/forms/README.md). These four kit seams assist the existing acceptance and reading; they are not new public runner targets. The existing chapter 1.1 s2 seam repeats the **same id** after early and a clock advance (judge-only: seam s2 of `acceptance/1/seams.tsv`).\n",
+      "before_sha256": "8b1d1dd4aef10578a619e3f6dd4388860f34a236b9247817123c6c4ff25934c3",
+      "after_sha256": "f17b4aecbd9215c9a8e2c5dae15564f3801ba4cee702f990fcac3d23b22f07de"
+    },
+    {
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "source_address": "acceptance/3/README.md#non-default-service-body-limit",
+      "req_id": "-",
+      "before": "Use the existing fresh-stand body_limit parameter (the daemon -max-body), for example2097152 from the status-limit witness above (judge-only: `acceptance/3/inputs/status-body-limits.json`; checks P/01.3-R016, P/01.3-R017). Let B be that actual limit reported by max_body. Send POST /metrics with one JSON object padded by JSON whitespace to exactly B entity bytes: the frame passes and the existing method outcome is405. At B+1 entity bytes the answer is413 before the method outcome, with BodyTooLargeFault.limit equal to B, not the row ceiling or the default of the flag. Repeat the oversized body at a service POST route: it is refused before JSON/body or membership work. Compare membership before/after; it is unchanged. Preserve the ordinary full Fault/header checks and the independent max_value observation. No new profile key, command spelling or request grammar is needed. These are raw HTTP probe obligations on the actual daemon, not a source/schema execution result.\n",
+      "after": "Use the existing fresh-stand body_limit parameter (the daemon -max-body), for example2097152 from the status-limit witness above (judge-only: `acceptance/3/inputs/status-body-limits.json`). Let B be that actual limit reported by max_body. Send POST /metrics with one JSON object padded by JSON whitespace to exactly B entity bytes: the frame passes and the existing method outcome is405. At B+1 entity bytes the answer is413 before the method outcome, with BodyTooLargeFault.limit equal to B, not the row ceiling or the default of the flag. Repeat the oversized body at a service POST route: it is refused before JSON/body or membership work. Compare membership before/after; it is unchanged. Preserve the ordinary full Fault/header checks and the independent max_value observation. No new profile key, command spelling or request grammar is needed. These are raw HTTP probe obligations on the actual daemon, not a source/schema execution result.\n",
+      "before_sha256": "cab4635493b361db50418e9725b66645e7a5ff6e33a4e836e24e234eec9ec17d",
+      "after_sha256": "20cb96d61811f957dffc90a527866af6f23e4116af6917ae7b67939f855e04c7"
+    },
+    {
+      "file": "Platform/01-store/forms/export.json",
+      "before_sha256": "258762593ba8bb47ab8b02abce35dc67ff9cf959992af1705514f66f011fcdfb",
+      "after_sha256": "6b45ba4ff2ca12af5d0ea9272798ab9d41c5cf1edc9c521aabfa094581df46ca",
+      "changes": [
+        {
+          "pointer": "/model/3/disposition",
+          "before": "model_and_judge",
+          "after": "judge_only"
+        },
+        {
+          "pointer": "/model/3/basis",
+          "before": "The rights file of the stand of chapter 1.1 (the role acc of «Role sockets» of the common stand); public like that paragraph.",
+          "after": "Judge stand data; the public norms and stand description state the implementation duties without this file."
+        },
+        {
+          "pointer": "/model/60/disposition",
+          "before": "model_and_judge",
+          "after": "judge_only"
+        },
+        {
+          "pointer": "/model/60/basis",
+          "before": "A form of the lesson: an order of checks or a data table the norms refer to.",
+          "after": "Judge stand data; the public norms and stand description state the implementation duties without this file."
+        }
+      ],
+      "kind": "existing filter/headerRows metadata; no new form/resource/field"
+    },
+    {
+      "file": "Platform/01-store/spec/01-store.README.md",
+      "source_address": "spec/01-store.README.md#intro",
+      "req_id": "-",
+      "before": "",
+      "after": "\nScenarios, fixtures and reference outputs are supplied only to the judge. The visible norms and public contracts state every implementation duty; a judge-only annotation identifies a specific closed file that this text still needs to name.\n",
+      "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after_sha256": "f6b2f4dfa1cc90c3f83d9961da3b7be125f6e7ab96a98dca083fb8fc143b4538"
+    },
+    {
+      "file": "Platform/01-store/spec/01-store.README.md",
+      "source_address": "spec/01-store.README.md#inputs-and-their-priority",
+      "req_id": "-",
+      "before": "| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`README.md`; judge-only: `scenarios.tsv` of each chapter, which checks the items of the readiness checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 that name its scenarios); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |\n",
+      "after": "| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`README.md`); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |\n",
+      "before_sha256": "cc511f5dc5bf0cb84c67d5be13a9d228d069610fe1cb562d9fb8f3a829536811",
+      "after_sha256": "0c3e4a8e75fc4ed88daf419f13d0fb9b27a5c2b89689b36608ea726e44a500a2"
+    },
+    {
+      "file": "Platform/01-store/spec/01-store.README.md",
+      "source_address": "spec/01-store.README.md#shared-vector-packages",
+      "req_id": "-",
+      "before": "The tables of the column «Table» are outside the model input (judge-only: `cases.tsv` and `01.tsv` of these packages). They check the functions of the column «What runs in this lesson»: `revoked` and `crl.pem` — P/01.3-R009, P/01.3-R009, P/01.3-R009; the store answer to the CLI — `admin_ops` of P/01.3-R006; the families owned by this lesson — P/01.3-R003, P/01.3-R003; the log mask — P/06.2 N1.4 `never.log` and the log mask contract, which the README of the package names (the norms of P/01 have no requirement of their own for it).\n",
+      "after": "The packages check the functions named in the table: peer checks for `revoked` and `crl.pem` under P/01.3-R009; the store answer to the CLI under `admin_ops` of P/01.3-R006; the owned families under P/01.3-R003. The log mask follows P/06.2 N1.4 `never.log` and the log-mask contract named by its package README; P/01 adds no separate rule for it.\n",
+      "before_sha256": "ba49d74aa7035f375093d12c9cffed01b27b071c925d0a7617d089a643be5857",
+      "after_sha256": "79ddf4ad647c3c0c28226209ddba2cf578eda18234b9bfcbca06e84955433c57"
+    },
+    {
+      "file": "Platform/01-store/spec/01-store.README.md",
+      "source_address": "spec/01-store.README.md#chapter-13--the-store-daemon",
+      "req_id": "-",
+      "before": "3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–34 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input (judge-only: the scenarios of this item, chapter 1.3); they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.\n",
+      "after": "3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–34 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input; they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.\n",
+      "before_sha256": "dceab8c7520ff12c779e709430b2ceb4bf11e6e26eefe6f1fd415cbcd10265c8",
+      "after_sha256": "e3e7cf05e168ef9d4fdd10f2e57b976c96dd95fc111b34bb29cf56abe7c7e3f0"
+    },
+    {
+      "file": "Platform/01-store/spec/01-store.README.md",
+      "source_address": "spec/01-store.README.md#language-dependent-pitfalls",
+      "req_id": "-",
+      "before": "| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03 (judge-only: sc. 03 of chapter 1.1) does not observe shared memory |\n",
+      "after": "| items is a copy (N3) | returning a reference to the internal map | an independent copy on input and output; checked by reading per N5 and P/01.1-03: HTTP scenario 03  does not observe shared memory |\n",
+      "before_sha256": "1ba9eef931fe13f3d255571b4d776d9c4c6d5ed71c1ba77f24218ca268141738",
+      "after_sha256": "fc8906aa7e9f6009c9508db6838ef68c8001724987cf5bf08d59c4a7f17d9239"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#index",
+      "req_id": "-",
+      "before": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306 | `forms/group.tsv` (`transport`, `plain`, `stand_size`), `acceptance/3/README.md` «Store group stand», «The store group (sc. 07, 17, 18, 25–29, 31)» |\n",
+      "after": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306 | `acceptance/3/README.md` «Store group stand», «The store group» |\n",
+      "before_sha256": "764fd58d2684cebcf6cacbaf8ef7b76cf29282f0034612f9f7bad51d1b9cc102",
+      "after_sha256": "0cc8e700bfd6aab52bf474cd6791db4e4182b97d119c233baf79e1d534d0cc02"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#N0",
+      "req_id": "P/01.1-R301",
+      "before": "Markers of this text. «(judge-only: …)» names a file, or a row or case of it, that is not in the export the implementation reads (M); the requirement it checks is named in M by id in the same place. `sc. NN` (`sc. NN of chapter K`) is scenario NN — the rows `NN-…` of `acceptance/K/scenarios.tsv` of the chapter (chapter 1.1 when K is not named) — and is judge-only; a seam is a scenario of `acceptance/K/seams.tsv`, judge-only too.\n",
+      "after": "The annotation «(judge-only: …)» identifies a specific file, row or case outside the implementation input M. All implementation duties are stated in the visible norms.\n",
+      "before_sha256": "dc163025993c2330e784110212f360dc21a82bf1031ec7b8946323612b9e48b4",
+      "after_sha256": "30ba28e0c861d7f058b9014502f261147872a3520e947cb509e8e4cab0bcaa7c"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#N5",
+      "req_id": "-",
+      "before": "Scenario 15 checks the weight of `items` after the body is parsed, scenario 22 — a refusal before the body is parsed by N2\n(judge-only: sc. 15, sc. 22) — they check P/01.1-R072 and P/01.1-R034.\n",
+      "after": "The weight of `items` is checked after body parsing (P/01.1-R072); the body limit refuses before parsing by N2 (P/01.1-R034).\n",
+      "before_sha256": "b19c7fed341f11bd53604cd942b89403a36c74f7544208dbd0ad515ebc34f171",
+      "after_sha256": "d74bc48b819aae09e44b3bd3a24dbba95ed7a52be29e225de9a843d9790762cf"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#N5",
+      "req_id": "-",
+      "before": "A power cut in the middle of a batch is checked by reading item 3 of «Implementation decides» and the code: the stand does not cut power; a restart after\na batch and a replay — (judge-only: sc. 30 of chapter 1.3) checks P/01.1-R135, P/01.1-R135 and P/01.1-R135, one log record in a group and forwarding by a door\nwithout a vote — (judge-only: sc. 31 of chapter 1.3) checks P/01.1-R135 and P/01.1-R135. A body refusal of a batch over the limit is the\ncommon body refusal before JSON parsing ((judge-only: sc. 22) checks P/01.1-R034). The row-count limit of the role\n`console` — (judge-only: sc. 16 of chapter 1.2) checks P/01.1-R315.\n",
+      "after": "A power cut in the middle of a batch is checked by reading item 3 of «Implementation decides» and the code: the stand does not cut power. A restart after a batch and its replay, one group log record and forwarding by a door without a vote check P/01.1-R135. A batch body above the limit is the common body refusal before JSON parsing (P/01.1-R034). The row-count exception for `console` is checked under P/01.1-R315.\n",
+      "before_sha256": "5341aba659bc22b1200020d2df40734db030a2c419f479dacd7900e36677104f",
+      "after_sha256": "c04c116f21ee2ecf83fdcddca2e0fc87b3d06a80c3d83c51037161e3a80ff223"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#N5",
+      "req_id": "-",
+      "before": "Checked by reading (doors do not reproduce them deterministically): `ambiguous` at the leader's death — the branch of P/01.3 N1.3 `leader_wait` (`unavailable` without a quorum — (judge-only: sc. 17 of chapter 1.3) checks P/01.1-R144, the group stand); `unavailable` when the wait time of the local lock expires — the refusal branch before the write, also the [probe](../probes/README.md) `03-lock-wait`; the replay memory by time; linearizability of the read. `ambiguous` of a forwarded write whose answer the leader could not give — (judge-only: sc. 32–34 of chapter 1.3) checks P/01.1-R144, the group stand. `ambiguous` at the leader's death stays by reading until its probe appears: a debt of the [probe debt table](production-acceptance.md#probe-debt).\n",
+      "after": "The following require reading because doors do not reproduce them deterministically: `ambiguous` at the leader's death under P/01.3 N1.3 `leader_wait`; `unavailable` when the local lock wait expires before a write, also the [probe](../probes/README.md) `03-lock-wait`; replay memory by time; linearizability of reads. On the group stand, lack of a quorum gives `unavailable`, and a forwarded write whose answer the leader could not give is `ambiguous` under P/01.1-R144. Leader-death ambiguity stays by reading until its probe appears, as recorded in the [probe debt table](production-acceptance.md#probe-debt).\n",
+      "before_sha256": "a6317955e95ffd44dabbb54d416376c3967b15a235b406624c5d6a85825c3d27",
+      "after_sha256": "a1eeb2b8f3d06f570f3a6393265abc268190c5bd64ffb47c00c50bd11544226f"
+    },
+    {
+      "file": "Platform/01-store/spec/01.1-store.norms.md",
+      "source_address": "spec/01.1-store.norms.md#N5",
+      "req_id": "-",
+      "before": "The independence of the memory of `items` on input and output is checked by reading the implementation of the operations: the dictionary\npassed by the caller and the dictionary returned by a read do not share mutable memory with the store. The reason: HTTP serialization\nhides shared memory, and (judge-only: sc. 03) only writes and reads a value — it checks P/01.1-R057 and P/01.1-R084. A run of the same two steps through the in-process API\nwithout a later change of the passed or returned dictionary does not check copying either.\n",
+      "after": "The independence of `items` memory on input and output is checked by reading the implementation: the caller's input dictionary and a returned dictionary do not share mutable memory with the store. HTTP serialization hides shared memory: writing and reading a value under P/01.1-R057 and P/01.1-R084 does not prove copying. Running the same two steps through the in-process API without subsequently changing the passed or returned dictionary does not prove copying either.\n",
+      "before_sha256": "6e45757c5727e5bcbccbf0e838585c0ebba7ed46c28d1dc0cb7d7fc3a59abe59",
+      "after_sha256": "0411737e4fcd269b52d2ef82722bc8604e2768fc057ddb858048ce7958d8a895"
+    },
+    {
+      "file": "Platform/01-store/spec/01.2-store.norms.md",
+      "source_address": "spec/01.2-store.norms.md#index",
+      "req_id": "-",
+      "before": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306 | `forms/group.tsv` (`transport`, `plain`, `stand_size`), `acceptance/3/README.md` «Store group stand», «The store group (sc. 07, 17, 18, 25–29, 31)» |\n",
+      "after": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306 | `acceptance/3/README.md` «Store group stand», «The store group» |\n",
+      "before_sha256": "764fd58d2684cebcf6cacbaf8ef7b76cf29282f0034612f9f7bad51d1b9cc102",
+      "after_sha256": "0cc8e700bfd6aab52bf474cd6791db4e4182b97d119c233baf79e1d534d0cc02"
+    },
+    {
+      "file": "Platform/01-store/spec/01.2-store.norms.md",
+      "source_address": "spec/01.2-store.norms.md#N5",
+      "req_id": "-",
+      "before": "The catalogue `Platform/01-store/acceptance/2/` ([README](../acceptance/2/README.md)): the store door of chapter 1.1 under the **roles** of the deployment `testsub` (the ready rights file of the stand `inputs/rights.json` (judge-only: the rights fixture of the stand; its form is P/01.2-R007 and P/01.2-R008) is a subset of the derivation of P/02.5 N1.4 from the manifests `testsub` and `testsub2`): a step goes from the named role (`@as <role>`), the runner calls through the socket of this role or by the writer's name.\n",
+      "after": "The catalogue `Platform/01-store/acceptance/2/` ([README](../acceptance/2/README.md)): the store door of chapter 1.1 under the **roles** of the deployment `testsub` (the prepared stand rights file in the form of P/01.2-R007 and P/01.2-R008 is a subset of the derivation of P/02.5 N1.4 from the manifests `testsub` and `testsub2`): a step goes from the named role (`@as <role>`), the runner calls through the socket of this role or by the writer's name.\n",
+      "before_sha256": "5c82459dcd2df858d7942d87cbbfae2a866f0b8c91298e7c02cea3a0cc25b8cc",
+      "after_sha256": "8abd346947410572335d77e2061f486e64936e19dd63dd5e8437f7e77de8fca6"
+    },
+    {
+      "file": "Platform/01-store/spec/01.2-store.norms.md",
+      "source_address": "spec/01.2-store.norms.md#N5",
+      "req_id": "-",
+      "before": "The scenarios of the derivation of rights from the manifest (judge-only: sc. 01–04, 09, 11, 12 of P/02.5) and the variants of manifests (judge-only: `variants/` of P/02.5) are in the acceptance\n",
+      "after": "The scenarios of the derivation of rights from the manifest and the variants of manifests are in the acceptance\n",
+      "before_sha256": "d58338aea9f71f817e1506b36af9a1444c1b4a292bb543801775836a2a040858",
+      "after_sha256": "fb24da7e22b2eb311985d9261aaf0e5f5ba16488de0012107c4b0b69c53bc207"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#index",
+      "req_id": "-",
+      "before": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306, P/01.3-R413, P/01.3-R416, P/01.3-R417 | `forms/group.tsv` (`transport`, `plain`, `stand_size`), `acceptance/3/README.md` «Store group stand», «The store group (sc. 07, 17, 18, 25–29, 31)» |\n",
+      "after": "| `group_stand` store group stand | P/01.1-R144, P/01.1-R151, P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R017, P/01.3-R021, P/01.3-R022, P/01.3-R023, P/01.3-R029, P/01.3-R038, P/01.3-R053, P/01.3-R054, P/01.3-R058, P/01.3-R059, P/01.3-R116, P/01.3-R118, P/01.3-R119, P/01.3-R120, P/01.3-R164, P/01.3-R165, P/01.3-R167, P/01.3-R168, P/01.3-R169, P/01.3-R177, P/01.3-R178, P/01.3-R194, P/01.3-R208, P/01.3-R212, P/01.3-R213, P/01.3-R214, P/01.3-R221, P/01.3-R228, P/01.3-R234, P/01.3-R235, P/01.3-R272, P/01.3-R283, P/01.3-R306, P/01.3-R413, P/01.3-R416, P/01.3-R417 | `acceptance/3/README.md` «Store group stand», «The store group» |\n",
+      "before_sha256": "4d682939545be832f4e7bf76df01d6a7e665b31c914f42798dcc264377c81f5a",
+      "after_sha256": "3d405684f0511cc8487b7bcde867fd2161ed4b1817374d9e13c34da0e62c8421"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#N1.3",
+      "req_id": "P/01.3-R059",
+      "before": "`group.identity` — Daemons MUST verify each other by mTLS with certificates of the CA (CN `configstore.<server>`, SAN DNS `<server>`, URI `urn:w2c:role:configstore`). The transport of the group is the key `transport` of [forms/group.tsv](../forms/group.tsv). A certificate of a daemon of the group carries one role. The declared and listening addresses (`-api`, `-raft`, `-api-bind`, `-raft-bind`) MAY run without `-tls` only when all are on the loopback (the local box); any address off the loopback requires `-tls` (P/01.3-R038). `-join` MUST always come with `-tls` (group traffic). An additional transport secret is decided by the implementation («Implementation decides» item 1).\n",
+      "after": "`group.identity` — Daemons MUST verify each other by mTLS with certificates of the CA (CN `configstore.<server>`, SAN DNS `<server>`, URI `urn:w2c:role:configstore`). A certificate of a daemon of the group carries one role. The declared and listening addresses (`-api`, `-raft`, `-api-bind`, `-raft-bind`) MAY run without `-tls` only when all are on the loopback (the local box); any address off the loopback requires `-tls` (P/01.3-R038). `-join` MUST always come with `-tls` (group traffic). An additional transport secret is decided by the implementation («Implementation decides» item 1).\n",
+      "before_sha256": "7426640a6647e20126d159e99dcd1e0397070f6e80794eed7088cfa05f1e7349",
+      "after_sha256": "d154d3a42f836b77584148cd682a0fb1977bcca5f5925fa13a3c42e7c6ce4335"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#N1.3",
+      "req_id": "P/01.3-R032",
+      "before": "**Metric presentation.** The label `state` of `configstore_raft_state` is lowercase (`leader`, `follower`, `candidate`, `shutdown`), as in sc. 17 (judge-only: sc. 17; checks P/01.3-R032). `Status.state` keeps its separate Leader/Follower/Candidate/Shutdown/Door spelling. The values of the series are the column `value_rule` of [forms/metrics.tsv](../forms/metrics.tsv). An implementation MAY emit only the current-state sample of `configstore_raft_state` or also zero-valued other states. `# TYPE` metadata is optional; when present, it MUST be the column `type` of [forms/metrics.tsv](../forms/metrics.tsv). The existing series names, label escaping and required observations remain unchanged.\n",
+      "after": "**Metric presentation.** The label `state` of `configstore_raft_state` is lowercase (`leader`, `follower`, `candidate`, `shutdown`), as in sc. 17. `Status.state` keeps its separate Leader/Follower/Candidate/Shutdown/Door spelling. The values of the series are the column `value_rule` of [forms/metrics.tsv](../forms/metrics.tsv). An implementation MAY emit only the current-state sample of `configstore_raft_state` or also zero-valued other states. `# TYPE` metadata is optional; when present, it MUST be the column `type` of [forms/metrics.tsv](../forms/metrics.tsv). The existing series names, label escaping and required observations remain unchanged.\n",
+      "before_sha256": "4465864889d111daf452bfc71691d4b78322488a1af9a307df7a3b071c4d5353",
+      "after_sha256": "c5a27c13d092224c20a127d8ad8d82c85f8be3d023c07bf36cc6bd4f946c538e"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#N5",
+      "req_id": "-",
+      "before": "The directory [`../acceptance/3/`](../acceptance/3/README.md): the stand store ([the common acceptance README](../../common/acceptance/README.md)) with the stand's rights file, its service doors, a copy and a foreign directory; sc. 07, 17, 18, 25–29, 31–34 — the store group stand (several daemons on the loopback, the common acceptance README «Store group stand») (judge-only: sc. 07, 17, 18, 25–29, 31–34; checks P/01.3-R006, P/01.3-R007, P/01.3-R009, P/01.3-R016, P/01.3-R018, P/01.3-R020, P/01.3-R021, P/01.3-R022, P/01.3-R032, P/01.2-R025).\n",
+      "after": "The directory [`../acceptance/3/`](../acceptance/3/README.md): the stand store ([the common acceptance README](../../common/acceptance/README.md)) with the stand's rights file, its service doors, a copy and a foreign directory; sc. 07, 17, 18, 25–29, 31–34 — the store group stand (several daemons on the loopback, the common acceptance README «Store group stand»).\n",
+      "before_sha256": "503d0d5f9d457ae1f89b5e04804b4a5ab77c1c748dc7d3c9b700b8d5d8741676",
+      "after_sha256": "eea9479bd920d75c23d9440f303efb58738a58ff6e47612319d6ff3396213fac"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#N5",
+      "req_id": "-",
+      "before": "The inputs of sc. 11–12 are `inputs/*.jsonl` (JSON Lines copies in the form of N1.3 `copy`) (judge-only: sc. 11–12, `acceptance/3/inputs/*.jsonl`; checks P/01.3-R006, P/01.3-R018, P/01.3-R026). A copy of one implementation restored by another is the compatibility matrix (runs of mixed builds: a module of one implementation among neighbours of another) on the same directives, outside the acceptance of one implementation.\n",
+      "after": "The copy inputs are JSON Lines in the form of N1.3 `copy`. A copy of one implementation restored by another is the compatibility matrix (runs of mixed builds: a module of one implementation among neighbours of another) on the same directives, outside the acceptance of one implementation.\n",
+      "before_sha256": "80327b0eded86f43c65584711d6529f698fc3805a7d654d62721db0221389c14",
+      "after_sha256": "944a829bfd89c71afd07f930b1a325983931f4bd0964a0147b6f41b1d2651698"
+    },
+    {
+      "file": "Platform/01-store/spec/01.3-store.norms.md",
+      "source_address": "spec/01.3-store.norms.md#N5",
+      "req_id": "-",
+      "before": "`recover` — sc. 18 (the group stand), `door.pass` — step 1 of sc. 15 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) (judge-only: sc. 18; sc. 15 of chapter 6.5; checks P/01.3-R020, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R021, P/01.3-R022, P/01.3-R022, P/01.3-R023 and P/06.5-R006): they need writers and the issue of epochs (P/03.2) and the console.\n",
+      "after": "`recover` — sc. 18 (the group stand), `door.pass` — step 1 of sc. 15 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) : they need writers and the issue of epochs (P/03.2) and the console.\n",
+      "before_sha256": "f2e018ce8c92a403ffeec267651e294119985b5b53f68c6b001841789423c5df",
+      "after_sha256": "03c8859605092f0b7b189c7a00d5b4b6b054f700424070c1b33e96b06e01c802"
+    },
+    {
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "source_address": "spec/production-acceptance.md#probe-debt",
+      "req_id": "-",
+      "before": "| Loss of the leader after sending (the death of the leader; a held answer of a forwarded write — (judge-only: sc. 32–34 of chapter 1.3; checks P/01.3-R064)); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |\n",
+      "after": "| Loss of the leader after sending (the death of the leader; a held answer of a forwarded write); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |\n",
+      "before_sha256": "46afe1c08c5c190b13804e185a3d43d4bb7e98ac63f05ee7736471fa9f910bec",
+      "after_sha256": "df7f026f9db2582f2a6886ae202ea61836afb8143c4675ca6fcecb51f5f6a0f6"
+    },
+    {
+      "file": "Platform/01-store/vectors/jcs/README.md",
+      "source_address": "vectors/jcs/README.md#intro",
+      "req_id": "-",
+      "before": "The owner is lesson P/01 (the module design note (judge-only: `Platform/module-design.md`), «Vectors»: the first contract that writes a JSON text is the store); the norm is ADR-0072\n",
+      "after": "The owner is lesson P/01: the store introduces the first contract that writes a JSON text; the norm is ADR-0072\n",
+      "before_sha256": "8f22bf166a22fcf3467410258491bc7c01c2ebd76e4403b461fa12c1a9b02c1e",
+      "after_sha256": "946ba2743c49cedf9e9fc7a2f294276437a2a5e053ec1319f46f6f608a8febb8"
+    },
+    {
+      "file": "Platform/01-store/vectors/jcs/README.md",
+      "source_address": "vectors/jcs/README.md#vector-wire",
+      "req_id": "-",
+      "before": "The wire of `canonical_json.tsv` (judge-only: the table itself) is set by the `01-store/jcs` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.\n",
+      "after": "The vector wire is set by the `01-store/jcs` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.\n",
+      "before_sha256": "9ce6dcd10c564887b68cdf9f3a17cce3aaccecec504edb29185c71066f5289b1",
+      "after_sha256": "da0cc5b88ed9f5caa464bf10863d97ad0e2ced8ff2b7e6d989cdd7ccca336646"
+    },
+    {
+      "file": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "source_address": "vectors/rights-evaluator/README.md#intro",
+      "req_id": "-",
+      "before": "The owner is lesson P/01, chapter 1.2 (the norm is P/01.2 N1.2 `pattern`, N1.3 «Evaluator»). The input is the rights file\n`rights.json`, the output is `expect.tsv` (judge-only: `rights.json`, `expect.tsv`; they check P/01.2-R008 and P/01.2-R010): a row `role action key expect`, `expect` — `allow` or `deny`.\n",
+      "after": "The owner is lesson P/01, chapter 1.2: P/01.2 N1.2 `pattern`, N1.3 «Evaluator». The input fixture is `rights.json` (judge-only: fixture bytes). The case columns are `role action key expect`, where `expect` is `allow` or `deny`.\n",
+      "before_sha256": "ba41de8dc2a3e3c2a755b5776543ebb315f5ff14200aa2612d0304758139d344",
+      "after_sha256": "4ab786aec2fcf7d2660e0ea606fce1bad2493414bac0897667e36afc521d1f55"
+    },
+    {
+      "file": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "source_address": "vectors/rights-evaluator/README.md#intro",
+      "req_id": "-",
+      "before": "**Run.** The runner starts a fresh store with `rights.json` (judge-only: the file itself) as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md)) and\n",
+      "after": "**Run.** The runner starts a fresh store with `rights.json` (judge-only: fixture bytes) as `{rights}` («Stand» of the [common acceptance README](../../../common/acceptance/README.md)) and\n",
+      "before_sha256": "57db7244e75b566a1c8fcfc4a16ab4c7b88856259005cd930c3b70de86e0df3f",
+      "after_sha256": "6246863c5e0d3811847c1468a3ca3562402e13cebdef2ffce1f42ed8f0723ada"
+    },
+    {
+      "file": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "source_address": "vectors/rights-evaluator/README.md#vector-wire",
+      "req_id": "-",
+      "before": "The wire of `expect.tsv` (judge-only: the table itself) is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.\n",
+      "after": "The vector wire is set by the `01-store/rights-evaluator` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.\n",
+      "before_sha256": "5725da6da567d9de2d28196a249d7d727be0788719c5839aff4faf6d06122c6d",
+      "after_sha256": "a2ddba2a8bec018bfb7038152b26db3498285926241de01cbd9e18cb40ff2d14"
+    },
+    {
+      "file": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "source_address": "vectors/rights-evaluator/README.md#vector-wire",
+      "req_id": "-",
+      "before": "`{rights}` in «Run» above is the substitution of the command `stand.store` of that stand run ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)), not a name of the vector command. The vector target of the package is separate: the profile entry `vectors` `01-store/rights-evaluator` receives only `{input}`, and the rights file reaches its native function as the fixture `rights.json` (judge-only: the file itself) in `files` of the envelope ([unified vector command](../../../common/acceptance/PROFILE.md#unified-vector-command)). Its native output is one JSON string, `allow` or `deny`.\n",
+      "after": "`{rights}` in «Run» above is the substitution of the command `stand.store` of that stand run ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)), not a name of the vector command. The vector target of the package is separate: the profile entry `vectors` `01-store/rights-evaluator` receives only `{input}`, and the rights file reaches its native function as the fixture `rights.json` (judge-only: fixture bytes) in `files` of the envelope ([unified vector command](../../../common/acceptance/PROFILE.md#unified-vector-command)). Its native output is one JSON string, `allow` or `deny`.\n",
+      "before_sha256": "0ffbe3642e7d48c7cb5110e142ff6c6b19592be5490dd74a04548ee981d17bf5",
+      "after_sha256": "29802ad965685eef97c733b202b492a743eb4d78adb86f3cd4d922bf2c66ca52"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/code-rules.tsv",
+      "source_address": "acceptance/forms/code-rules.tsv#header",
+      "req_id": "-",
+      "before": "# answer. The rows of the judge engine are forms/engine-code-rules.tsv with the same columns, in the J input only; its header gives its map, names and\n# stages. The generation cycle checks the rows by one common interpreter that holds no literal of a lesson; the acceptance does not read them. This\n",
+      "after": "# answer. The product generation cycle checks the lesson rows by one common interpreter that holds no literal of a lesson; the acceptance does not\n# read them. The separate J-only engine rows are described by forms/engine-code-rules.tsv; engine generation has no external code-check gates. This\n",
+      "before_sha256": "efded637b2a0dfc6719c31da29ed953cd9feadd0fecf1be6ddea6b127aeddce0",
+      "after_sha256": "6c3d083d36c3763f6e9a9b8c2fdfeb2a3722b7460cff3170d885f34e5e573742"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/code-rules.tsv",
+      "source_address": "acceptance/forms/code-rules.tsv#header",
+      "req_id": "-",
+      "before": "# part (listed_words, no_literals): the words of a part of a TSV form. Data lines: the lines other than the empty lines and the lines that begin with #; the\n# header line is the first data line; cells are separated by TAB and taken without surrounding spaces. header — the nonempty cells of the header line.\n# column:<name> — the distinct nonempty cells of the column <name> of the header in the data lines after the header line. comment:<label>, <label> of the form\n# [a-z][a-z0-9_]* — the first line that begins with #, optional spaces and <label>:; its text after that colon splits at ; into clauses; a clause that holds\n# « — » gives the comma-separated entries of its text before the first « — », after the last colon of that text, when each entry, without surrounding\n# spaces, is a word of the form [A-Za-z_][A-Za-z0-9_./-]*. The words of a row are the words of its part of at least min_chars characters (Unicode code\n# points). A string literal: an interpreted or raw string literal of Go, compared by its value.\n# Outcome of a row: holds, or fails with a mechanical message — the id of the row, the symbol and the clause of check that does not hold; a message of\n# listed_words or no_literals names the form, the part and the file and line of the code, not the words. A kind outside this dictionary, args outside the\n",
+      "after": "# A string literal is an interpreted or raw string literal of Go, compared by its value.\n# Outcome of a row: holds, or fails with a mechanical message — the id of the row, the symbol and the clause of check that does not hold. A kind outside this dictionary, args outside the\n",
+      "before_sha256": "22eb19fb3e0c56f21cec6a4d23bee6e595beb2a1e2549bdb39b531cba845b4c3",
+      "after_sha256": "269ba84adf786c96a2de11489fe252191d63763d741966b4c1f9abb5b5bd783a"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/code-rules.tsv",
+      "source_address": "acceptance/forms/code-rules.tsv#header",
+      "req_id": "-",
+      "before": "# (prep_failed), not a skip; so are a part outside the three forms, a form without the comment line of the label or without the column, and a part without\n# a word of min_chars characters. A name without a mapping in the field code, or a mapping that does not resolve to a symbol of the name type,\n",
+      "after": "# (prep_failed), not a skip. A name without a mapping in the field code, or a mapping that does not resolve to a symbol of the name type,\n",
+      "before_sha256": "e57d511c6b2c0c4fd45070dab52eb6906561f38672de3c693648213803e5e565",
+      "after_sha256": "7a48d4d7c5be024740745acd56f590ae526eaa91fff34a56f27285ba1a43efc2"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/code-rules.tsv",
+      "source_address": "acceptance/forms/code-rules.tsv#header",
+      "req_id": "-",
+      "before": "listed_words\tpackage\t{\"form\": <path>, \"part\": <part>, \"min_chars\": <integer from 1>}\tNo composite literal and no case clause of a switch of the nontest files of the package lists two or more distinct words of the row: the string literals among the elements of a composite literal (for a key-value element its key) and among the expressions of a case clause are taken at each such place apart, and the place fails when their values hold two or more distinct words. One word at one place, a lookup by name, is not a list.\nno_literals\tpackage\t{\"form\": <path>, \"part\": <part>, \"min_chars\": <integer from 1>[, \"prefixes\": [<nonempty text>, ...]]}\tNo string literal of the nontest files of the package, other than the import paths of its import declarations, has a value that equals a word of the row or begins with an entry of prefixes.\n",
+      "after": "",
+      "before_sha256": "2de7cf9765f4466ce92a4160b74f3a7cae77b0b456f1d73e4476dcdb6d6a032d",
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/engine-code-rules.tsv",
+      "source_address": "acceptance/forms/engine-code-rules.tsv#header",
+      "req_id": "-",
+      "before": "# The code checks of the judge engine (ADR-0135 addendum (2) item 7, addendum (13) item 4; task P02.48, the decisions of the Architect on it and on the\n# question of task P02.49): rows of the kinds of the closed dictionary forms/code-rules.tsv, which defines the columns, the outcome and the checks; no\n# expected answer. Judge only: in the J input, not in the model input of a product. The generation cycle of the engine checks the rows on the code of the\n# engine by the interpreter of the dictionary; the acceptance does not read them. A path of args names a file of the J input, relative to its root.\n# The map: the file code-map.json in the directory from which the generation cycle runs the engine command, one JSON object. Its keys are the adapter\n# names, each optional: stand (start and stop of the stand processes), transport (sockets and HTTP to the stand and the stub), files (reading the files\n# of the J input, writing the report). A value is the import path of a package of the main module of the engine, as go list prints it. A missing map,\n# another key or a value that is not such a package fails every row as no mapping.\n# name: a set of packages of the main module of the engine, its nontest packages that go list names for the default build context; not a key of the map.\n# module — every package of the main module, the adapters and the packages named main included. core — every package of module other than the packages\n# that the map names and the packages named main; the package main joins the core and the adapters, imports both and stays out of the core. A row holds\n# when its check holds on each package of the set; an empty set fails the row; a failing row names the package. The name type of both names is package.\n# Paths: the engine opens a file of the J input only by a path that a cell of a form of the J input gives, joined to the root that the engine command\n# receives (--spec); no string literal of module begins with Platform/ (the prefix of the rows of no_literals). The words of the forms are data of the J\n# input: no case clause and no composite literal of module lists them, and no literal of module is the id or the owner of a target.\n# stage: the stage of the generation cycle of the engine from which the row holds (tables, plan, own_tests, run_form); another word is a data error.\n# norm: the norms of the subject.\n",
+      "after": "# Code requirements for the judge engine, in J only. Rows use the kinds, columns and outcomes of forms/code-rules.tsv; no expected answer is carried.\n# Engine generation has no external code-check gates. The retained row states a code requirement; it does not promise execution by the generation cycle.\n# The map is code-map.json in the engine command's working directory: one JSON object with optional adapter names stand (starting and stopping stand\n# processes), transport (sockets and HTTP to the stand and the stub), files (reading J input and writing the report). Each value is an import path of a package of the engine's\n# main module, as go list prints it. A missing map, another key or a value outside those packages fails the row as no mapping.\n# name denotes a set of nontest packages of the engine's main module for the default build context, rather than a map key. module is every package,\n# including adapters and packages named main. core is module except the packages named by the map and packages named main; main joins core and adapters.\n# A row holds when its check holds on every package of its set; an empty set fails, and a failure names the package. Both name types are package.\n# Paths: the engine opens a file of the J input only by a path that a cell of a form of the J input gives, joined to the root that the engine command receives (--spec).\n# stage is the retained applicability label of the row, not an executable gate of engine generation. norm names its governing requirement.\n",
+      "before_sha256": "9b0584cfc8e5769dc09e594e43ace744d09b8d5701299ab42d7f86c6cfcd481b",
+      "after_sha256": "7fbb613fc8148b725b6d971153a4d29ebb73cdb598a2031a2a409465f7d6680b"
+    },
+    {
+      "file": "Platform/common/acceptance/forms/engine-code-rules.tsv",
+      "source_address": "acceptance/forms/engine-code-rules.tsv#header",
+      "req_id": "-",
+      "before": "E02\tlisted_words\tmodule\t{\"form\": \"Platform/common/acceptance/forms/targets.routing.tsv\", \"part\": \"comment:engine\", \"min_chars\": 3}\ttables\tP/AC N1.3; ADR-0135 addendum (2) item 7\nE03\tlisted_words\tmodule\t{\"form\": \"Platform/common/acceptance/forms/targets.routing.tsv\", \"part\": \"header\", \"min_chars\": 2}\ttables\tP/AC N1.3; ADR-0135 addendum (13) item 4\nE04\tlisted_words\tmodule\t{\"form\": \"Platform/common/acceptance/forms/targets.tsv\", \"part\": \"header\", \"min_chars\": 2}\ttables\tP/AC N1.3; ADR-0135 addendum (13) item 4\nE05\tno_literals\tmodule\t{\"form\": \"Platform/common/acceptance/forms/targets.tsv\", \"part\": \"column:id\", \"min_chars\": 3, \"prefixes\": [\"Platform/\"]}\ttables\tP/AC N1.3; ADR-0135 addendum (2) item 7\nE06\tno_literals\tmodule\t{\"form\": \"Platform/common/acceptance/forms/targets.tsv\", \"part\": \"column:owner\", \"min_chars\": 3}\ttables\tP/AC N1.3; ADR-0135 addendum (2) item 7\n",
+      "after": "",
+      "before_sha256": "bee9326c7d345fc5759eda2b21f6c09bd7f9e7903503824dcf8a1301ada45fbe",
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "Platform/common/acceptance/stand.md",
+      "source_address": "acceptance/stand.md#layout-by-processes-stage-c",
+      "req_id": "-",
+      "before": "  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner puts exactly the file [`01-store/acceptance/1/inputs/rights.json`](../../01-store/acceptance/1/inputs/rights.json) into `{rights}` (the form — P/01.2 N1.2):\n",
+      "after": "  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner supplies `{rights}` in the form of P/01.2 N1.2:\n",
+      "before_sha256": "33282cef31500962f2d8294dd444f7fad65a4299354e7eceeff23548783c6653",
+      "after_sha256": "368e413b0fd63e9b1706821dbc04a35fb7a1dbca827ef152dacf37fc4e9e1ad3"
+    },
+    {
+      "file": "Platform/common/acceptance/stand.md",
+      "source_address": "acceptance/stand.md#layout-by-processes-stage-c",
+      "req_id": "-",
+      "before": "- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in the order of the form [`forms/stand-manifests.tsv`](forms/stand-manifests.tsv): `testsub`, then `testsub2` (it references `testsub`: `about`,\n",
+      "after": "- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in this order: `testsub`, then `testsub2` (it references `testsub`: `about`,\n",
+      "before_sha256": "a2acaa08e98be218e38615c35d12325780ab2f5551cc69bf42913decaa375bdd",
+      "after_sha256": "4b7b180cc4dc8e563fdad70e103f57e4d291b3dfde96387b1a243cd1cb27f353"
+    },
+    {
+      "file": "Platform/common/acceptance/stand.md",
+      "source_address": "acceptance/stand.md#layout-by-processes-stage-c",
+      "req_id": "-",
+      "before": "  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of the directory of the column `beside` of its row,\n",
+      "after": "  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of the directory\n",
+      "before_sha256": "81240e31e718d009cbb115c148530d3c1a467baf8dd1a51d03912eccf107e9f4",
+      "after_sha256": "ae8d0df129a851362d2225bcc73d085657e4ff8a4261f97d681ff507b4f712e4"
+    },
+    {
+      "file": "Platform/common/export-model-filter.json",
+      "before_sha256": "674acad59f58cb49a574857b2b5e39fcc3ebad2691452316b800a7bdf9a113c9",
+      "after_sha256": "4723d317ff34a4b2f008c22c0c904742dd913a5a8bd30817c51f7d9fa2c5e3b0",
+      "changes": [
+        {
+          "pointer": "/files/916/disposition",
+          "before": "model_and_judge",
+          "after": "judge_only"
+        },
+        {
+          "pointer": "/files/916/basis",
+          "before": "The stand manifests and their order (stand.md «Manifests»); public like that paragraph.",
+          "after": "Manifest preparation order and beside paths are judge stand inputs; public stand duties remain in acceptance/stand.md."
+        }
+      ],
+      "kind": "existing filter/headerRows metadata; no new form/resource/field"
+    },
+    {
+      "file": "Platform/forms.datapackage.json",
+      "before_sha256": "685e2ef710983f99e958d3e477401d8b15662eca2a6a0ccb58004fb50d5395c2",
+      "after_sha256": "635c16b121ba26151966e1eaa984355962b89cc43cb2b3700fd9fa0844a104ad",
+      "changes": [
+        {
+          "pointer": "/resources/3/dialect/headerRows/0",
+          "before": 27,
+          "after": 19
+        },
+        {
+          "pointer": "/resources/18/dialect/headerRows/0",
+          "before": 18,
+          "after": 11
+        }
+      ],
+      "kind": "existing filter/headerRows metadata; no new form/resource/field"
+    }
+  ],
+  "conditions_review": "Removed concrete closed addresses and repeated metadata; conditional paragraphs were rewritten as public conditions, retaining functional/production, durable/teaching, box/group, before/after-send and body/item distinctions. Checklist prose is exactly stage2.",
+  "retained_residue": [
+    "Protected norm checklist rows, except the already recorded stage2 address-only exception.",
+    "Necessary closed fixture-key references such as rights.json in the public vector envelope; their byte-visibility annotations stay.",
+    "Whole shared contracts and machine-read Full form by door table.",
+    "Contextual dependency files of other owners: their prose is not rewritten by this task."
+  ],
+  "history_rows_added": 79,
+  "target_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0"
+}

@@ -10,11 +10,11 @@ into `{rights}` before the store starts; the chapter needs no rights generator: 
 
 ## Profile interface
 
-Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the ready rights fixture below (judge-only: `inputs/rights.json`; its form is P/01.2-R007 and P/01.2-R008); it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.
+Use the same `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the store with the prepared `{rights}` file and the administrative and per-role sockets assigned by the common stand. `keys.role_header` names the role-forwarding header used by the chapter's header probes. This chapter consumes the prepared stand rights file in the form of P/01.2-R007 and P/01.2-R008; it requires no rights-generation command from `02-installer`. The store's own command and flags must expose these existing interfaces rather than a fixed prestarted door.
 
 ## scenarios.tsv
 
-The scenario file (judge-only: `scenarios.tsv` of this catalogue, sc. 05–08, 10–16) checks P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R015, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021, P/01.2-R022, P/01.2-R023, P/01.2-R024, P/01.2-R030, P/01.2-R112, P/01.2-R122, P/01.2-R123, P/01.2-R124, P/01.2-R127, P/01.2-R128, P/01.2-R130, P/01.2-R131, P/01.2-R134, P/01.2-R138, P/01.1-R020 and P/01.1-R315. The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
+The scenario file (judge-only: `scenarios.tsv` of this catalogue, sc. 05–08, 10–16) checks P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R015, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021, P/01.2-R022, P/01.2-R023, P/01.2-R024, P/01.2-R030, P/01.2-R122, P/01.2-R124, P/01.2-R127, P/01.2-R130, P/01.1-R020 and P/01.1-R315. The format is the dictionary of directives and doors of the common acceptance README: a door without a prefix is the store, `@as <role>`, `@header` before
 the method, `$name`, `ASSERT`; the expectation is a subset of fields, `index` may be omitted. Specific to the chapter:
 
 - `expect` without a body for code `403` is the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key; in a batch the pair is any action and key of its writes or guards; for an operation with a guard the refusal may instead name `read` and the key of the guard. At `/v1/rights` error names the role and also a reason or the route: the role alone is not enough. For an identity refusal — the socket role and the reason why the role header is prohibited (naming the route is admissible); the key of the row is not required, and the imposed role does not replace the socket role.
@@ -37,7 +37,7 @@ memory. The runner variables are reset, the role is set by the first `@as`; the 
 in all scenarios. Parallel runs do not share an instance.
 
 Background consoles, controllers, workers and the resource do not write into these rows. The permission data
-is prepared by the runner with the file `inputs/rights.json` (judge-only: the rights fixture of the stand; its form is P/01.2-R007 and P/01.2-R008) and the instance setup, and each step is performed only by
+is prepared by the runner with the stand rights file in the form of P/01.2-R007 and P/01.2-R008 and the instance setup, and each step is performed only by
 the named role.
 
 ## Checks outside the scenario file
@@ -61,7 +61,7 @@ the named role.
 These are subjects of a separate reading/structural test, not additional performed
 scenarios. Socket modes, forwarding and the certificate require the corresponding stand.
 
-The name X-Configstore-Role in the scenarios (judge-only: `scenarios.tsv`, sc. 08 and 12; they check P/01.2-R019 and P/01.2-R134) is a designation of the header of trusted role forwarding.
+The name X-Configstore-Role in the scenarios (judge-only: `scenarios.tsv`, sc. 08 and 12) is a designation of the header of trusted role forwarding.
 Before the run substitute the name from the implementation description (N3/«Implementation decides», item 3);
 do not change the header value and the socket role. This is not a normative header name. Without
 such a setting the preparation of the run is not complete. Count the forbidden identity spoofing,
@@ -69,7 +69,7 @@ not the subsequent refusal of the key write.
 
 ## Properties of sc. 11–13
 
-Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`; they check P/01.2-R006, P/01.2-R007, P/01.2-R008, P/01.2-R010, P/01.2-R014, P/01.2-R017, P/01.2-R019, P/01.2-R020, P/01.2-R021, P/01.2-R030 and P/01.2-R134):
+Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`):
 - `never` (N1.3): for the console a 403 is indistinguishable from a refusal by rights, so the distinguishing role is admin: its rights are
   «everything except never», and without `never` these writes would pass. Reading the floor by admin — 200: the refusal concerns the action.
 - The role forwarding header at `GET /v1/list` (N3 «check»): the header name is a designation.
@@ -80,7 +80,7 @@ Properties checked by sc. 11–13 (judge-only: sc. 11–13 of `scenarios.tsv`; t
 
 ## Properties of sc. 14–15
 
-Properties checked by sc. 14–15 (judge-only: sc. 14–15 of `scenarios.tsv`; they check P/01.2-R007, P/01.2-R010, P/01.2-R014, P/01.2-R112, P/01.2-R123 and P/01.2-R124):
+Properties checked by sc. 14–15 (judge-only: sc. 14–15 of `scenarios.tsv`):
 - The edges of `never` (N1.3) for admin (rights «everything except `never`»): `platform/epoch/<y>`, two segments after `epoch/`
   and `<x>/epoch` without `/` after `epoch` are not epoch rows, their
   deletion — 200; an implementation whose `never` is wider than the norm refuses here. For the domain roles `domain`, `domainagent` and `<sub>domain` (its own family

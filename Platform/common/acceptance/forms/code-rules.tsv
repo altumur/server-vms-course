@@ -1,8 +1,8 @@
 # The closed dictionary of the kinds of code checks.
 # Public, in the model input. The rows of a lesson are
 # Platform/<lesson>/forms/code-rules.tsv with the columns id, kind, name, args, stage, norm; a row names a kind of this dictionary and carries no expected
-# answer. The rows of the judge engine are forms/engine-code-rules.tsv with the same columns, in the J input only; its header gives its map, names and
-# stages. The generation cycle checks the rows by one common interpreter that holds no literal of a lesson; the acceptance does not read them. This
+# answer. The product generation cycle checks the lesson rows by one common interpreter that holds no literal of a lesson; the acceptance does not
+# read them. This
 # dictionary is not the closed dictionary of the judge engine (spec/acceptance.norms.md): the names do not mix (addendum (39) item 7).
 # name: what the profile field code (PROFILE.md) maps the name of a row to — package: the import path of a package of the main module of the candidate, as
 # go list prints it; function, type: <import path>#<identifier>, a top-level function or type of that package (# because an import path may hold dots).
@@ -10,18 +10,10 @@
 # file of the specification export, relative to its root (the directory that holds Platform/). The interpreter reads the candidate by go list, go/parser,
 # go/ast and go/types and neither builds nor runs it. The files of a package are those go list names for the default build context of the stand: GoFiles
 # and CgoFiles are its nontest files, TestGoFiles and XTestGoFiles its test files. The stand also runs the tests of the candidate; that run is not a code check.
-# part (listed_words, no_literals): the words of a part of a TSV form. Data lines: the lines other than the empty lines and the lines that begin with #; the
-# header line is the first data line; cells are separated by TAB and taken without surrounding spaces. header — the nonempty cells of the header line.
-# column:<name> — the distinct nonempty cells of the column <name> of the header in the data lines after the header line. comment:<label>, <label> of the form
-# [a-z][a-z0-9_]* — the first line that begins with #, optional spaces and <label>:; its text after that colon splits at ; into clauses; a clause that holds
-# « — » gives the comma-separated entries of its text before the first « — », after the last colon of that text, when each entry, without surrounding
-# spaces, is a word of the form [A-Za-z_][A-Za-z0-9_./-]*. The words of a row are the words of its part of at least min_chars characters (Unicode code
-# points). A string literal: an interpreted or raw string literal of Go, compared by its value.
-# Outcome of a row: holds, or fails with a mechanical message — the id of the row, the symbol and the clause of check that does not hold; a message of
-# listed_words or no_literals names the form, the part and the file and line of the code, not the words. A kind outside this dictionary, args outside the
+# A string literal is an interpreted or raw string literal of Go, compared by its value.
+# Outcome of a row: holds, or fails with a mechanical message — the id of the row, the symbol and the clause of check that does not hold. A kind outside this dictionary, args outside the
 # fields of the kind, a path that is not a file of the export, a stage outside stages.tsv or two name types for one name is a data error of the lesson
-# (prep_failed), not a skip; so are a part outside the three forms, a form without the comment line of the label or without the column, and a part without
-# a word of min_chars characters. A name without a mapping in the field code, or a mapping that does not resolve to a symbol of the name type,
+# (prep_failed), not a skip. A name without a mapping in the field code, or a mapping that does not resolve to a symbol of the name type,
 # fails the row as no mapping. Which rows a stage requires: the gate code:* of forms/stages.tsv of the lesson.
 # check: the clauses all hold.
 kind	name	args	check
@@ -32,5 +24,3 @@ property_tests	function	{}	A test file of the package of the function has a top-
 exhaustive	type	{"form": <path>, "column": <column name>}	The symbol is a defined type whose underlying type is an integer or string basic type. The number of package-level constants of exactly that type equals the number of distinct values of the column in the form: the lines after the header line, other than the lines that begin with #; a cell - is not a value. Every expression switch of the nontest files of the packages of the main module whose tag has that type lists all those constants in its case clauses, or has a default clause whose body calls panic.
 requires_module	package	{"module": <module path>, "from": <path of a go.mod>}	The go.mod of the main module of the candidate has a require directive of the module with exactly the version that the go.mod at from requires, and no replace directive of the module; the root of the main module holds no go.work and no vendor directory. The imports of the package without its tests (go list -deps) hold a package of the module that a package of the main module among them imports under a name other than _ and uses by at least one qualified identifier.
 complexity	package or function	{"max_branches": <integer from 1>, "max_lines": <integer from 1>}	Each function of the symbol — the function itself, or every function declaration and function literal of the nontest files of the package — has at most max_branches branches and at most max_lines lines. Branches: the nodes of its body of kind if, for and range, each case clause of a switch or type switch and each communication clause of a select other than the default clause, and each binary && and ||; the nodes of a nested function literal count to that literal, not to the enclosing function. Lines: the physical lines of its body from the line of the opening brace to the line of the closing brace, both included. See [Requirements of the course to code](../PROFILE.md#requirements-of-the-course-to-code).
-listed_words	package	{"form": <path>, "part": <part>, "min_chars": <integer from 1>}	No composite literal and no case clause of a switch of the nontest files of the package lists two or more distinct words of the row: the string literals among the elements of a composite literal (for a key-value element its key) and among the expressions of a case clause are taken at each such place apart, and the place fails when their values hold two or more distinct words. One word at one place, a lookup by name, is not a list.
-no_literals	package	{"form": <path>, "part": <part>, "min_chars": <integer from 1>[, "prefixes": [<nonempty text>, ...]]}	No string literal of the nontest files of the package, other than the import paths of its import declarations, has a value that equals a word of the row or begins with an entry of prefixes.

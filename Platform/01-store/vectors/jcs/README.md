@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/jcs/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/01 (the module design note (judge-only: `Platform/module-design.md`), «Vectors»: the first contract that writes a JSON text is the store); the norm is ADR-0072
+The owner is lesson P/01: the store introduces the first contract that writes a JSON text; the norm is ADR-0072
 (the canon of a signed document is RFC 8785 in full). It is read by everyone who signs or compares a JSON text by bytes: the body
 of a request and the digest ([P/06.4](../../../06-console/spec/06.4-console.norms.md) N1.5), the door token, the signatures of the domain (lessons M11).
 
@@ -23,4 +23,4 @@ a change of object, P/09.1). All rows — for each of these roles.
 
 ## Vector wire
 
-The wire of `canonical_json.tsv` (judge-only: the table itself) is set by the `01-store/jcs` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The vector wire is set by the `01-store/jcs` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

@@ -1,0 +1,1072 @@
+{
+  "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
+  "stage2_commit": "799405c9c1e19bada972b4aad31c4281766d519d",
+  "prepared_pair_only": true,
+  "export_not_run": true,
+  "pair_only_exclusions": [
+    "Platform/common/acceptance/testsub-stand.md",
+    "Platform/common/vectors/slot/README.md",
+    "Platform/03-worker/vectors/creates-key/README.md"
+  ],
+  "actual_global_model_changes": [
+    {
+      "carrier": "Platform/01-store/forms/export.json",
+      "path": "Platform/01-store/acceptance/1/inputs/rights.json",
+      "before": "model_and_judge",
+      "after": "judge_only"
+    },
+    {
+      "carrier": "Platform/01-store/forms/export.json",
+      "path": "Platform/01-store/forms/group.tsv",
+      "before": "model_and_judge",
+      "after": "judge_only"
+    },
+    {
+      "carrier": "Platform/common/export-model-filter.json",
+      "path": "Platform/common/acceptance/forms/stand-manifests.tsv",
+      "before": "model_and_judge",
+      "after": "judge_only"
+    }
+  ],
+  "global_M_before": {
+    "files": 790,
+    "bytes": 13785561
+  },
+  "global_M_after": {
+    "files": 787,
+    "bytes": 13746200
+  },
+  "proposed_pair_M": {
+    "files": 178,
+    "bytes": 4226627,
+    "sha256_of_sorted_path_and_file_hash_manifest": "ecb16a1a6417dcac400ed55aa10e1e9eb60bb37456f5fa8228bfc34b7b204e21",
+    "files_manifest": [
+      {
+        "path": "Platform/01-store/README.md",
+        "bytes": 15671,
+        "sha256": "b9d7d71b6253b5556d0a38c558ac513ea9440d40e3e5de6dcec8166f2fade2c4"
+      },
+      {
+        "path": "Platform/01-store/acceptance/1/README.md",
+        "bytes": 27764,
+        "sha256": "c21000aa9606dc004a785586e2037ba059de98bfbf48654d4050e90873ab4a48"
+      },
+      {
+        "path": "Platform/01-store/acceptance/2/README.md",
+        "bytes": 8305,
+        "sha256": "ce64609844b03a65190a82800df0eb3e3176cbac23e4c3fd6b7a6ba9e6af6492"
+      },
+      {
+        "path": "Platform/01-store/acceptance/3/README.md",
+        "bytes": 41346,
+        "sha256": "3aa30594089b022034329a807a5d2ae06a728e1b7c8d063de51dc151ac872e49"
+      },
+      {
+        "path": "Platform/01-store/data/configstore-doors.layers.tsv",
+        "bytes": 794,
+        "sha256": "f9fc249e4ff9938120810c2109cc3c6225bb4281538641e895779be236fbc88c"
+      },
+      {
+        "path": "Platform/01-store/data/configstore-doors.outcomes.tsv",
+        "bytes": 383,
+        "sha256": "fae39d5b42ec062f19d9480b61d927c5289118466093072e41b01467b34e626d"
+      },
+      {
+        "path": "Platform/01-store/data/configstore-doors.schema.json",
+        "bytes": 28343,
+        "sha256": "f0253715a58b4e2c3ff7811beeb3afc9a301fca30250563c756d571a6f40729b"
+      },
+      {
+        "path": "Platform/01-store/data/epoch_floor.layers.tsv",
+        "bytes": 873,
+        "sha256": "59dc184bb582a9ab1ac2629d84eb50cca25fb8a98c8d3bfccc0d3f95138b9dcf"
+      },
+      {
+        "path": "Platform/01-store/data/epoch_floor.outcomes.tsv",
+        "bytes": 1172,
+        "sha256": "46123f6de2f6e80257e427153bf55062251fd143c7c260b3ba1b4ffecf167db9"
+      },
+      {
+        "path": "Platform/01-store/data/epoch_floor.schema.json",
+        "bytes": 28669,
+        "sha256": "c32e9909d4bb7a8c1227c783c21683379848280d7e73318310e2a7fda053a3ee"
+      },
+      {
+        "path": "Platform/01-store/forms/code-rules.tsv",
+        "bytes": 3222,
+        "sha256": "51218083eca49905b9e7a98defd0410250a09c5a3f7fe8a93ae6b39f80a89c27"
+      },
+      {
+        "path": "Platform/01-store/forms/daemon-flags.tsv",
+        "bytes": 4927,
+        "sha256": "f0d7d0479e6763155326fb9e0da67257ec92596a8dabf66d66183147ffc177c7"
+      },
+      {
+        "path": "Platform/01-store/forms/metrics.tsv",
+        "bytes": 2492,
+        "sha256": "d369a082db11a8002acb6d3b28bf556cae6e0ed52a38701d2c9f76db361f8818"
+      },
+      {
+        "path": "Platform/01-store/forms/read-checks.tsv",
+        "bytes": 3637,
+        "sha256": "0b64688dc0df6d4eccfae6f01db4d7d5870640ebbb1a878d8880b0bd90efa05b"
+      },
+      {
+        "path": "Platform/01-store/forms/refusals.tsv",
+        "bytes": 6726,
+        "sha256": "50d8f98785b003d749cf859914e247049191e606428406f55f1bafc7bc61e0f5"
+      },
+      {
+        "path": "Platform/01-store/forms/rights-checks.tsv",
+        "bytes": 4533,
+        "sha256": "09a117ebaf7d8562b2264e9314901d9f7cdc6a3862a35b30d5d81c52e21fb0bc"
+      },
+      {
+        "path": "Platform/01-store/forms/runtime-constants.tsv",
+        "bytes": 2029,
+        "sha256": "c2bcbfa9b382b17480c569cb91baba85d5b9c31e01b4a1177b0daf0e6abff913"
+      },
+      {
+        "path": "Platform/01-store/forms/service-checks.tsv",
+        "bytes": 3918,
+        "sha256": "509822a781c09802f75428fc877d59b0f0b311756cb3e8fee307468f5fa0f50b"
+      },
+      {
+        "path": "Platform/01-store/forms/stages.tsv",
+        "bytes": 6852,
+        "sha256": "e5a8b049337e5447c99b4ea861bb386278c8f913b0dc3c83e666fc1cd53e55d5"
+      },
+      {
+        "path": "Platform/01-store/forms/status-fields.tsv",
+        "bytes": 3795,
+        "sha256": "9ad3154ccb51c081014b07dd7fc27e73869935b36f06c573a0e24d689bcd2dd4"
+      },
+      {
+        "path": "Platform/01-store/forms/targets.tsv",
+        "bytes": 7334,
+        "sha256": "160f8d413bac010a91e68cdd8cd297c0704a2dc6bce37350674c783c245dd197"
+      },
+      {
+        "path": "Platform/01-store/forms/write-checks.tsv",
+        "bytes": 8519,
+        "sha256": "4e880c92b6e6e30f903349f5a62fd10e23bb1bbe23e1377b5a9c776d40686317"
+      },
+      {
+        "path": "Platform/01-store/lifecycle.md",
+        "bytes": 9338,
+        "sha256": "d74a68752d4f6264374c8a9cd9a58530557eaa4527889280fd8b5ed28bbc137c"
+      },
+      {
+        "path": "Platform/01-store/probes/README.md",
+        "bytes": 2092,
+        "sha256": "e6a96f80433c8346b2c7393142cd651626e8f938b2c7ffbe1c2601989672ac1f"
+      },
+      {
+        "path": "Platform/01-store/spec/01-store.README.md",
+        "bytes": 26967,
+        "sha256": "7861466d5d9bbcad51ed45893daf17db53e8ee8c529dbaeb3bc00c61c16b222a"
+      },
+      {
+        "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+        "bytes": 37484,
+        "sha256": "d9a48ced7a5010398d1b338cabae4f72fa272b3aaf5bca37f95765703e271e3c"
+      },
+      {
+        "path": "Platform/01-store/spec/01.1-store.norms.md",
+        "bytes": 100354,
+        "sha256": "28fc161c0c7aa94911b7d6aa4967683f32cc0997805f0f5f5184d4857872beba"
+      },
+      {
+        "path": "Platform/01-store/spec/01.2-store.norms.md",
+        "bytes": 32179,
+        "sha256": "da9a0074835f1c23f93a00e5bdcc112f78f4dca6a96d5a333a7c25794665aa92"
+      },
+      {
+        "path": "Platform/01-store/spec/01.3-store.norms.md",
+        "bytes": 104350,
+        "sha256": "5c7ec3d53d5c1e8b062bb0ee31faa8f71ac1f1fb8f7de702840f6da4170879fa"
+      },
+      {
+        "path": "Platform/01-store/spec/production-acceptance.md",
+        "bytes": 21920,
+        "sha256": "d43846e150391ada95b701fe52d869ca63d26c6f34fc39de0764085a2b4efca7"
+      },
+      {
+        "path": "Platform/01-store/vectors/jcs/README.md",
+        "bytes": 2188,
+        "sha256": "df52fc0092c76c5c5990d799f7170d9a7291825b30e6d1533c5d352af6b60069"
+      },
+      {
+        "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+        "bytes": 3431,
+        "sha256": "968284a83f9c7798383e0259479ec789009d5d249250f3ec90d75cf92f74e1b5"
+      },
+      {
+        "path": "Platform/02-installer/acceptance/5/README.md",
+        "bytes": 12328,
+        "sha256": "85bf241f2a750bf0b1544acf2f2fe485550d1deeed9825c657de378d59a7639b"
+      },
+      {
+        "path": "Platform/02-installer/forms/README.md",
+        "bytes": 14489,
+        "sha256": "cebc7b5a34908dade64b513552019e633acc99da333b72aa0698e5e5df0cfd1b"
+      },
+      {
+        "path": "Platform/02-installer/lifecycle.md",
+        "bytes": 9293,
+        "sha256": "0aaee759b6f5600599d5d7f0a03a54c99264f64cd2bed6a6ed330d5203262a39"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+        "bytes": 182223,
+        "sha256": "14e810b3eac1f49f68c44562007f23567a8592cf41b3ebb3988c20798215e21d"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+        "bytes": 111347,
+        "sha256": "e56706e28eb2ee8cd8db25b331446af7a141577e1d09adc20624a5e405150a2c"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+        "bytes": 156349,
+        "sha256": "b962f5d1b5b6a9c8d5f679578e913bcf1fe0fb617ec19cba06eaf45e6d2f3b3f"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+        "bytes": 56775,
+        "sha256": "92ef81594ad458a355a3b08e057a96411f31488fbacdb99a7c74a5ab12364c9f"
+      },
+      {
+        "path": "Platform/03-worker/data/epoch.layers.tsv",
+        "bytes": 863,
+        "sha256": "e0069bfc568b74dac723006f5b93513c138585c1b972413eaa8a3283f0763810"
+      },
+      {
+        "path": "Platform/03-worker/data/epoch.outcomes.tsv",
+        "bytes": 1956,
+        "sha256": "b9842bb45a516b3cf9fa5b5fad74142b1aa82f9743965d3e2b74c7d8532d80ee"
+      },
+      {
+        "path": "Platform/03-worker/data/epoch.schema.json",
+        "bytes": 28772,
+        "sha256": "65e537d9be2f8aa019b442cd0bf66dcaeded21e00d195b9f0266346dd83428bc"
+      },
+      {
+        "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+        "bytes": 111904,
+        "sha256": "435c409045253ee497951b1e5914306446660c109b4bf55f34a29276711d5cd1"
+      },
+      {
+        "path": "Platform/03-worker/spec/03.4-worker.norms.md",
+        "bytes": 88894,
+        "sha256": "125d310ca67168385ce48fcd7ab4829f5b86cb2d96f843ff42b0d91c7fb414d7"
+      },
+      {
+        "path": "Platform/03-worker/spec/03.6-worker.norms.md",
+        "bytes": 70611,
+        "sha256": "34eb348b2ea73d2e0d3e2e9102cb0facdc59ad608ecf27f41c0f552960ed3c4c"
+      },
+      {
+        "path": "Platform/04-controller/spec/04-controller.norms.md",
+        "bytes": 207138,
+        "sha256": "224f18194282ecf010805b067cfa720f846697b88b19db9852eb5db2e4276c7d"
+      },
+      {
+        "path": "Platform/06-console/acceptance/5/README.md",
+        "bytes": 8851,
+        "sha256": "d1e11edc35b8e659671c2f8bc97444426f93783825004a027124dc37bb6e8366"
+      },
+      {
+        "path": "Platform/06-console/spec/06.1-console.norms.md",
+        "bytes": 206081,
+        "sha256": "6b8e83f16035d0d369291512c3c3a024df1df0ce53cf1dc91ff6efbabc58d4a4"
+      },
+      {
+        "path": "Platform/06-console/spec/06.2-console.norms.md",
+        "bytes": 51702,
+        "sha256": "c67944c840b1a732a8644d8cf3d780e56c964012676673146a61de6515a8cf23"
+      },
+      {
+        "path": "Platform/06-console/spec/06.3-console.norms.md",
+        "bytes": 64763,
+        "sha256": "e3d12113eacce03fe6572707562f2e2d878d6d573bff0159b5708e6727ebfa3f"
+      },
+      {
+        "path": "Platform/06-console/spec/06.4-console.norms.md",
+        "bytes": 84895,
+        "sha256": "d21b0f13ea97211ec768dd5e8403b4be99ee5f40d7d40637dccf777b5be52991"
+      },
+      {
+        "path": "Platform/06-console/spec/06.5-console.norms.md",
+        "bytes": 154582,
+        "sha256": "6748842987c5d5036ea7fc269742a7b5261f8a2e391ad1bb34a532ad8ce14c3c"
+      },
+      {
+        "path": "Platform/08-domain/forms/runtime-constants.tsv",
+        "bytes": 7085,
+        "sha256": "96d5b088a7aacecb35f117c495d01794f9885afe7f2fd1e282288926acea73fe"
+      },
+      {
+        "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+        "bytes": 99024,
+        "sha256": "0ab55ab33e47a869da763537f827d6403e19353fbb1553c6c9b04964f19301be"
+      },
+      {
+        "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+        "bytes": 185595,
+        "sha256": "8e3d9bbe0c76244e7be37bdc0954a26886888a8ce3cf6763eb1914ad7cb5bb2d"
+      },
+      {
+        "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+        "bytes": 175001,
+        "sha256": "444e7492b02eb4dd6fc598ecb9fab85d1331eee6d512376eb63c26f36211bcff"
+      },
+      {
+        "path": "Platform/README.md",
+        "bytes": 1477,
+        "sha256": "03c5acbcfbce778533d746c8367613da96abc122abfc2d959bfcc0722e91d3ed"
+      },
+      {
+        "path": "Platform/common/LAYERS.md",
+        "bytes": 18900,
+        "sha256": "bf9fd6881c08ec27512e8d29c5d8f86d467727ef8fc076e68c422acd1428903b"
+      },
+      {
+        "path": "Platform/common/NORMATIVE-TERMS.md",
+        "bytes": 1322,
+        "sha256": "e0a11be8c3dac88ef90a0e2f9bff0271706fbef49e0754e9b76bdaf43b7bbffc"
+      },
+      {
+        "path": "Platform/common/README.md",
+        "bytes": 4680,
+        "sha256": "b20d705504648c3a77da205bf2c211971deadff7b5ee9b26ed57a0f0cb9efcb2"
+      },
+      {
+        "path": "Platform/common/acceptance/PROFILE.md",
+        "bytes": 36004,
+        "sha256": "03657e140656d451187be675f417a2bd59d5f1e57ba1714b5968f80750490403"
+      },
+      {
+        "path": "Platform/common/acceptance/README.md",
+        "bytes": 36967,
+        "sha256": "cf110a1aa5c956d4f0bce9c4814e94cb74eed6b344a7c121bf12f3ed16ae3053"
+      },
+      {
+        "path": "Platform/common/acceptance/command-tables.md",
+        "bytes": 14329,
+        "sha256": "24199dcb3d903c03eb1139cd16f24044b4f1f054e05256e6bc30342c8d97f6d9"
+      },
+      {
+        "path": "Platform/common/acceptance/domain-stand.md",
+        "bytes": 22654,
+        "sha256": "3035c542f36b81ff15bfc9003ebcb9e8166a39756b0d810e087468031ec95867"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/code-rules.tsv",
+        "bytes": 6604,
+        "sha256": "df2a538fe885e5b1dbbc20cb2a70cce96221c7a8a033176b8baf40ba96025ac1"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+        "bytes": 11060,
+        "sha256": "ba25d5120e6196bd51050fc1489c66b006691cde359d1f4a19f0747b3e2d9bcf"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/d7.schema.json",
+        "bytes": 3480,
+        "sha256": "e1e69a630114dfe28a1169188562259265f4dbe21eac2409c2c3ec8ba5e9d641"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/profile-keys.tsv",
+        "bytes": 1295,
+        "sha256": "b5a483f6e348e8203f3e7691c922aaf95341ebf2086915121cd67944bdd637a8"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+        "bytes": 7401,
+        "sha256": "c2159e93b211d6abea235d7b0f68677cc0f8433f09f631eaa909fdc57ddc4daa"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+        "bytes": 2944,
+        "sha256": "7e1939644d38fb14d581ccbe4936b8b13083b506007522b50ec46a5628a56f40"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/stand-environment.tsv",
+        "bytes": 6646,
+        "sha256": "74ccff80d0b074e1e0acbb0a9f93487282cbe0c55f6add22ca858f5293f3091e"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/targets.README.md",
+        "bytes": 4185,
+        "sha256": "be28cb245ac6ad86e63ac2c1e259714abe6ed5c40924db9b8b3baa2e7bcd23cc"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/targets.tsv",
+        "bytes": 77,
+        "sha256": "812c2bc876681b83955bf9a34e491f287502d5eb3e1a8a88cffc506dc0cfd845"
+      },
+      {
+        "path": "Platform/common/acceptance/ops/README.md",
+        "bytes": 5776,
+        "sha256": "9461d693ce30810581e2d1a3c244060649da3213e8636d9465ab5cbc038d5c6e"
+      },
+      {
+        "path": "Platform/common/acceptance/pass/README.md",
+        "bytes": 10109,
+        "sha256": "ee753e274a8577b83f4d67205f907433cb044334d94fd486fb220e1fe24ce96b"
+      },
+      {
+        "path": "Platform/common/acceptance/runner-targets.README.md",
+        "bytes": 5150,
+        "sha256": "ba0c03fbe551ae9edde9f5546e19d54b07c3a907a9838f8d110222678e1cefb9"
+      },
+      {
+        "path": "Platform/common/acceptance/runner-targets.tsv",
+        "bytes": 106316,
+        "sha256": "60b6628fcf4d2d99858cfde4069e629cee3deb34a6aac4de1fcf7f5786d5c7df"
+      },
+      {
+        "path": "Platform/common/acceptance/seams.md",
+        "bytes": 23592,
+        "sha256": "b1bcfcd738bf9e96addf595a65b06a382d4df073e27ae960092c219dbd1437dc"
+      },
+      {
+        "path": "Platform/common/acceptance/stand.md",
+        "bytes": 22645,
+        "sha256": "f7409ca1abb0b4868b6f55555304379114eb289e0d1b1552e7d184a45cdf69aa"
+      },
+      {
+        "path": "Platform/common/acceptance/system/README.md",
+        "bytes": 11753,
+        "sha256": "01b2f3ceace2c8836aff485b96dd7b02c661610b8bb5880e27f611d8a0bcc835"
+      },
+      {
+        "path": "Platform/common/acceptance/tables.md",
+        "bytes": 6209,
+        "sha256": "089c402c73a4af82fcec6300e87e5a6796e3d696b92f13f9a02cea8da1cea4e3"
+      },
+      {
+        "path": "Platform/common/acceptance/tls/README.md",
+        "bytes": 23565,
+        "sha256": "987aa2d8bc011270473648b684e632ece6f9bc03bb686b5004f877348216ad0c"
+      },
+      {
+        "path": "Platform/common/contracts/accept.md",
+        "bytes": 44054,
+        "sha256": "a3d5c7e54824fa3f8031cc2d64bfc5c6ac4f850a62bfbb739a8a9801ab7faf63"
+      },
+      {
+        "path": "Platform/common/contracts/agent-signature.md",
+        "bytes": 8048,
+        "sha256": "ce96044c51188d186d1de6735b7d7fa6a48ee9a4efa03caaa4a9366f77b4fe90"
+      },
+      {
+        "path": "Platform/common/contracts/alarm-history.md",
+        "bytes": 6276,
+        "sha256": "2e22a9102c2d8fd2fd73b75de2300375caadf944b626d6460337f4472778cde6"
+      },
+      {
+        "path": "Platform/common/contracts/ask-sig.md",
+        "bytes": 7201,
+        "sha256": "7d7327ca4bc20f5defab28ce1d1eb51beddf9e737450f68b8faf98e3afc3fdf4"
+      },
+      {
+        "path": "Platform/common/contracts/domain-backup-key.md",
+        "bytes": 2678,
+        "sha256": "e20a9c149133fe989ba7b1e7d3b5c2620190c3b58fc9a0871620a797d4ce6965"
+      },
+      {
+        "path": "Platform/common/contracts/domain-envelopes.md",
+        "bytes": 13737,
+        "sha256": "bb5a6e09ab460042636c2fed44cc3cb86366c79fa1c5247d4c873652ca384a2f"
+      },
+      {
+        "path": "Platform/common/contracts/domain-founding.md",
+        "bytes": 11953,
+        "sha256": "8fd4977d394a4dfe703de48e7528595fc13c5b387645ba8cd0f90e961cd9fce9"
+      },
+      {
+        "path": "Platform/common/contracts/domain-token.md",
+        "bytes": 15391,
+        "sha256": "f3b7d4bce6ed8af1bc67bd70c504c8f23e3ab791d0072f7dafc82ce1ffb586c7"
+      },
+      {
+        "path": "Platform/common/contracts/door-token.md",
+        "bytes": 16473,
+        "sha256": "0e8266fdd69deb75e018ccf7d3296b3be84a0bd9ef6a9dd7a71342930ba25c20"
+      },
+      {
+        "path": "Platform/common/contracts/env-file.md",
+        "bytes": 21363,
+        "sha256": "f4f2eb597bb94c6efeb1a4547fc14ba12af1740d1cd929cd555574b01bb49bfc"
+      },
+      {
+        "path": "Platform/common/contracts/event-journal.md",
+        "bytes": 25513,
+        "sha256": "17f2d9041bf5ecec8e6f20de75120777b6320dd83cb38f6d16bd1f4df442da4a"
+      },
+      {
+        "path": "Platform/common/contracts/events-merge.md",
+        "bytes": 14773,
+        "sha256": "a22f02fefba66ab1597d3ac39c9c3b70fe2e03911c418f49a84507037ac300e1"
+      },
+      {
+        "path": "Platform/common/contracts/forwarding.md",
+        "bytes": 33996,
+        "sha256": "6a75f94060147ccb1fc99295f122f644cfa74a61a46eca21870a231cff39c753"
+      },
+      {
+        "path": "Platform/common/contracts/gate-and-pass.api.openapi.yaml",
+        "bytes": 2260,
+        "sha256": "fc7a681e70ba1401e21ce88121836dbd4905306dab33db53d81e353368cc6c38"
+      },
+      {
+        "path": "Platform/common/contracts/gate-and-pass.md",
+        "bytes": 83576,
+        "sha256": "eeca1da110705505399c2d557241ffd90e57707ba51c6bc78be480fbb1dd5bd7"
+      },
+      {
+        "path": "Platform/common/contracts/group-of.md",
+        "bytes": 4226,
+        "sha256": "d1fc85d7697f1a2a12d3cd2b9c3a0f8d17f7094306acceb2f476c9f7db2c6e5c"
+      },
+      {
+        "path": "Platform/common/contracts/holds.md",
+        "bytes": 7347,
+        "sha256": "46f18f8d62613cac114b18c7332f7783bc5d617f34d37bdd4e9652b9836fede2"
+      },
+      {
+        "path": "Platform/common/contracts/instance.md",
+        "bytes": 5413,
+        "sha256": "16f751547388af1b51b6137ec43c8fc7c0e940035786197414760f6b12356b54"
+      },
+      {
+        "path": "Platform/common/contracts/keys.md",
+        "bytes": 24142,
+        "sha256": "d818adc3f5080d409ade915242145121fe0a65cc905997cadbab33fa039d71d2"
+      },
+      {
+        "path": "Platform/common/contracts/labels.md",
+        "bytes": 5327,
+        "sha256": "de410b775dfe8268ba997c9b28246368e609c1f4194551c701872ee3af5f0cfd"
+      },
+      {
+        "path": "Platform/common/contracts/local-token-door.md",
+        "bytes": 14037,
+        "sha256": "71c0ce4517f53f6418f3b78ef82bb64edfda5a6f536752c163036f899b4e4857"
+      },
+      {
+        "path": "Platform/common/contracts/log-mask.md",
+        "bytes": 7666,
+        "sha256": "9f2a1c2b9f3b8fef2339b59e4d5df520b0cb86f9a646a256f3333e7e3c801b72"
+      },
+      {
+        "path": "Platform/common/contracts/may-input.md",
+        "bytes": 5371,
+        "sha256": "b64e70a6be4d971636a8e63f523720919f560b6b88260ec0b2838a07c4c4319a"
+      },
+      {
+        "path": "Platform/common/contracts/may.md",
+        "bytes": 21745,
+        "sha256": "b7b8cea92f9869c18d50d8c69338dc09a1e491bddee277d323352ffbeede0b9e"
+      },
+      {
+        "path": "Platform/common/contracts/object-client.md",
+        "bytes": 11254,
+        "sha256": "f8b038e830871d30e347239d6de2356e08d366ffa669d1fd8f8bad58094344d1"
+      },
+      {
+        "path": "Platform/common/contracts/observation.md",
+        "bytes": 21904,
+        "sha256": "875c0b97b417f43b8eac44ff5ca7c64c798abf9d1874008effab0d00464c7ae5"
+      },
+      {
+        "path": "Platform/common/contracts/password-hash.md",
+        "bytes": 2776,
+        "sha256": "6f898d5bea614a54a65d4bcc24238c8d871106f71c0b60598a3792d96a9d40b0"
+      },
+      {
+        "path": "Platform/common/contracts/peer.md",
+        "bytes": 10548,
+        "sha256": "3bc5233af7efcca1e88d238f2469868f54a64963c7cd0ed20a5a41632d895848"
+      },
+      {
+        "path": "Platform/common/contracts/person-name.md",
+        "bytes": 3148,
+        "sha256": "e8227bc2e547c228231d42312df6f41e30d18d01c3b50be2a8bf974433698f52"
+      },
+      {
+        "path": "Platform/common/contracts/pool.md",
+        "bytes": 11585,
+        "sha256": "123237a18ee06625792620186c1c037d484a462ceb6863a96a87dc2cd7507f5a"
+      },
+      {
+        "path": "Platform/common/contracts/presence-lock.md",
+        "bytes": 15029,
+        "sha256": "93b3a9c05ba8b0e9b4b468691978e658e397c8fe998cc7b6a3b779d6cc4cbe97"
+      },
+      {
+        "path": "Platform/common/contracts/production-obligations.md",
+        "bytes": 3522,
+        "sha256": "29284f4e8d9ca58f0526d7b6d75b841baa5d14b7c70d7b57f8104bbeb37ec247"
+      },
+      {
+        "path": "Platform/common/contracts/record.md",
+        "bytes": 18295,
+        "sha256": "e7c8249783e490a9e4e0eda252d2d431a26785270cb50a73721197a1ce29afcf"
+      },
+      {
+        "path": "Platform/common/contracts/request-mark.md",
+        "bytes": 33025,
+        "sha256": "a2cd82f94de812ed92e65d0b74930b5f8853dc10680e5be998002693ff6ad2e0"
+      },
+      {
+        "path": "Platform/common/contracts/role-certificate.md",
+        "bytes": 42804,
+        "sha256": "3b2d5cd986484918c5e0cb7c9a761d16e72c6f406548f61f0a789754cf98c091"
+      },
+      {
+        "path": "Platform/common/contracts/row-check.md",
+        "bytes": 32297,
+        "sha256": "01aa6415955c95e447c15594c9a6c08c902985d367766fb146fe644aaa296841"
+      },
+      {
+        "path": "Platform/common/contracts/schema.md",
+        "bytes": 6470,
+        "sha256": "0fe4ed70c93648a53196b31e203dda8e910d657536cd831179ca1be9ac0cc2eb"
+      },
+      {
+        "path": "Platform/common/contracts/sealing.md",
+        "bytes": 12856,
+        "sha256": "fb2115c88280cb0bb886d31f6700bcbe2e49e078cf8d966e666c446a1be2eb3f"
+      },
+      {
+        "path": "Platform/common/contracts/secret-files.md",
+        "bytes": 5936,
+        "sha256": "e84a87ef9f6b427d614389daf70a16f32e9368965a824aa6aee10074699f9be9"
+      },
+      {
+        "path": "Platform/common/contracts/slot-name.md",
+        "bytes": 4926,
+        "sha256": "a986f21638fdbe56c74249dae9495bff0fe695c3934536d1fe5a93e134a1293b"
+      },
+      {
+        "path": "Platform/common/contracts/slot.md",
+        "bytes": 4008,
+        "sha256": "064475c1cacfbd8e0afc0dbeb094667e1088b13db881e4dc3b78675a0780fffc"
+      },
+      {
+        "path": "Platform/common/contracts/source-cells.md",
+        "bytes": 4085,
+        "sha256": "a292f59d74f24a3caf32c756aae1270cb76e0c49b73626305f6cb4c5781e9549"
+      },
+      {
+        "path": "Platform/common/contracts/store-client.md",
+        "bytes": 10968,
+        "sha256": "870100a078af7fd7d5d1ce115d70f8cbbb3a054157f0763de8dd8b9168c01d63"
+      },
+      {
+        "path": "Platform/common/contracts/tombstone.md",
+        "bytes": 9825,
+        "sha256": "a041cc4c12427987e91bc8d1eff82896768c333059552364d36dc1028d81f8ea"
+      },
+      {
+        "path": "Platform/common/contracts/turn.md",
+        "bytes": 14099,
+        "sha256": "d7503b600aa043185ac0c84beb8d7d83b396a5286f88e43c338e90dfc53cc5eb"
+      },
+      {
+        "path": "Platform/common/contracts/url-credentials.md",
+        "bytes": 25438,
+        "sha256": "bf71efe193820a1e34d92626eaf15c5a71120b0041c8793890af827eda6d1a43"
+      },
+      {
+        "path": "Platform/common/contracts/vector-adapter.protocol.json",
+        "bytes": 49689,
+        "sha256": "69f739c4e4b9a1657800d738eee67a6decf7cdb2e0b62aa344d97aaef97d4aae"
+      },
+      {
+        "path": "Platform/common/data/README.md",
+        "bytes": 21751,
+        "sha256": "cda009edbe65c15e163ebc64665f842188f127e4b001b7885030ef253acd6f91"
+      },
+      {
+        "path": "Platform/common/data/catalog.tsv",
+        "bytes": 64942,
+        "sha256": "97e3085e88fe7e699983242364efc8c6c2c8135f187e728e535a14e3f0964283"
+      },
+      {
+        "path": "Platform/common/data/codec.tsv",
+        "bytes": 2758,
+        "sha256": "fc8f59027628a14ed0b18495989ea5c45a45a558f6fc6d8fe8f61fc9fd2808dd"
+      },
+      {
+        "path": "Platform/common/data/common.layers.tsv",
+        "bytes": 755,
+        "sha256": "4b20d7ba91a0e212fea90f357b5dc7aca96b5a4ccbb043c1e4934f3b5140f7ed"
+      },
+      {
+        "path": "Platform/common/data/common.schema.json",
+        "bytes": 28148,
+        "sha256": "1553b02e22cd99751fa277b3a53907bce178d79b31bff3c2dc705004383b9b5b"
+      },
+      {
+        "path": "Platform/common/data/key-placeholders.tsv",
+        "bytes": 4549,
+        "sha256": "432ecdafbd78569eb820e24ba2d21862497e310ba5d81467ae19a993c9638ee4"
+      },
+      {
+        "path": "Platform/common/data/outcome-units.tsv",
+        "bytes": 421,
+        "sha256": "85fc5d9b1e6ed227cd21149e7511f41ac6e29bc1a2e289df6d26462eb9a30f0a"
+      },
+      {
+        "path": "Platform/common/data/testsub/testsub.subsystem.yaml",
+        "bytes": 4269,
+        "sha256": "fc3bf70585646b078a8812edd0c92cd5c7d0c2e364b689273c5fd229aed7355b"
+      },
+      {
+        "path": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+        "bytes": 15141,
+        "sha256": "e4bfd9e0035dba5839018625bba20f7214176004fc2d0cb4f8d640015d915dbb"
+      },
+      {
+        "path": "Platform/common/vectors/README.md",
+        "bytes": 19956,
+        "sha256": "a0a7fabc0c5de105209e27aa3069188be340a4e2b4dd17a1bb535447681416fc"
+      },
+      {
+        "path": "Platform/common/vectors/alarm-history/README.md",
+        "bytes": 2307,
+        "sha256": "ab06a1dd5bd4b584bc22ebcd88c013b7f95710b28367431f92c89978c9cfc0b7"
+      },
+      {
+        "path": "Platform/common/vectors/consumers.tsv",
+        "bytes": 29374,
+        "sha256": "ba7987d2750f43805dd9d31d79e27f938745dd8e7bba666e1288d935925cb486"
+      },
+      {
+        "path": "Platform/common/vectors/crl/README.md",
+        "bytes": 3477,
+        "sha256": "50aa53d378f49f6246404e2c6c86a60e47025eb087c8e0598782046b7feb2557"
+      },
+      {
+        "path": "Platform/common/vectors/domain-backup-key/README.md",
+        "bytes": 2421,
+        "sha256": "1e54c88108c5ca806ba4cd1e4cc6a014196a8ade85e2614c48d2a1f72bfd6210"
+      },
+      {
+        "path": "Platform/common/vectors/env-file/README.md",
+        "bytes": 4032,
+        "sha256": "9c7fca4cdc3129acf0522789f610e0fde6b18f0d3aca332bc1552c7d61ab0718"
+      },
+      {
+        "path": "Platform/common/vectors/events-merge/README.md",
+        "bytes": 6514,
+        "sha256": "d1281e285560225c4a1e0102b3bd5cdeaa0c50560d96bf5f4f7774ed0045df9c"
+      },
+      {
+        "path": "Platform/common/vectors/family-read/README.md",
+        "bytes": 3651,
+        "sha256": "5aa196fa112423f766ddc2420f2b4b1bd132a514124bdf9d238812b9823e9380"
+      },
+      {
+        "path": "Platform/common/vectors/fault/README.md",
+        "bytes": 5585,
+        "sha256": "599f564fd70f4dab29b555f316a383636094067c6fda4382d581cba0253c06c9"
+      },
+      {
+        "path": "Platform/common/vectors/fresh-age/README.md",
+        "bytes": 6132,
+        "sha256": "936a4afe3992834cf79c1cd72cc7d9bcd534c750e37d28411da1f344cd93facd"
+      },
+      {
+        "path": "Platform/common/vectors/group-of/README.md",
+        "bytes": 4260,
+        "sha256": "b6872a3f56be049407d68a9cf44258a14b0bf51cb09808c805ec9c93bab4c29e"
+      },
+      {
+        "path": "Platform/common/vectors/heartbeat-read/README.md",
+        "bytes": 4334,
+        "sha256": "bea36615c6386ac9a2d64b9b51e025185b5dfc481f8dee73ec9748d6726d1740"
+      },
+      {
+        "path": "Platform/common/vectors/hold-state/README.md",
+        "bytes": 2776,
+        "sha256": "cfe8aa12d618d5a205f8749913c286466e8f10cf1c2c9272eaefb634c339b2ac"
+      },
+      {
+        "path": "Platform/common/vectors/holds/README.md",
+        "bytes": 3763,
+        "sha256": "e656c8db067b8e1563b2a9b6b2502fb388479bd080ac1c8eff90931fa1bfcf80"
+      },
+      {
+        "path": "Platform/common/vectors/instance/README.md",
+        "bytes": 3903,
+        "sha256": "306208aedd19950ae1ba54bc77544077fa18aa000931a3f76f97aeca1d1d1693"
+      },
+      {
+        "path": "Platform/common/vectors/journal/README.md",
+        "bytes": 6752,
+        "sha256": "2f55511814dbf9b3f9851f3594f37c2db820f00c7e8a2fed2500b5313410ce14"
+      },
+      {
+        "path": "Platform/common/vectors/labels/README.md",
+        "bytes": 4124,
+        "sha256": "f4259332866b01ab206ecb1a2fd285ffb2f45bc64e62524297b106130740ae35"
+      },
+      {
+        "path": "Platform/common/vectors/log-mask/README.md",
+        "bytes": 5733,
+        "sha256": "1377e503abbfc453b16eae962cff0ade77c45e8966c25d0a4062a3b41ef24805"
+      },
+      {
+        "path": "Platform/common/vectors/loopback/README.md",
+        "bytes": 3500,
+        "sha256": "e3bfdd5ab7051e3343ecc401e4b35c822b2a4c9723350432369eaf6af0384708"
+      },
+      {
+        "path": "Platform/common/vectors/object-client/README.md",
+        "bytes": 3949,
+        "sha256": "e509c9f2fd7fc48301af7d1ec4eae3dbc43cb491ed4a89afc33e5eef5c1b7668"
+      },
+      {
+        "path": "Platform/common/vectors/password-hash/README.md",
+        "bytes": 2901,
+        "sha256": "34c8ff0de2061ded7d294ba9483dea9b8afe27a017a3366914023f68b8f38faa"
+      },
+      {
+        "path": "Platform/common/vectors/probe-tables.tsv",
+        "bytes": 2451,
+        "sha256": "782167d72a0f24e86379713ba7eeec94e234ff4db9aa3c6640dd6f427f934870"
+      },
+      {
+        "path": "Platform/common/vectors/production-obligations/README.md",
+        "bytes": 7845,
+        "sha256": "7118252cc4757f7ca8dabdd8fed3325797c87c277cf0b2ac3400169248e2949d"
+      },
+      {
+        "path": "Platform/common/vectors/resource-state/README.md",
+        "bytes": 3949,
+        "sha256": "368c1e4fdd2aac356e578b27adb3ab752b2a2a741a1ea009fe539854c01aec4c"
+      },
+      {
+        "path": "Platform/common/vectors/revoked/README.md",
+        "bytes": 3202,
+        "sha256": "a7b615714547fece9b200a06e8759064d6eedfd7f1837d65a831a90497a5101a"
+      },
+      {
+        "path": "Platform/common/vectors/said-id/README.md",
+        "bytes": 5048,
+        "sha256": "aa46612fdbb93a8ad9a7f314035c6ab92832944e9e538e862810758eea8ebdc9"
+      },
+      {
+        "path": "Platform/common/vectors/schema/README.md",
+        "bytes": 3027,
+        "sha256": "4d8e24d250078bca894f93c8645d3cc8b819a9359834bd78bc14562908976d7f"
+      },
+      {
+        "path": "Platform/common/vectors/secret-in/README.md",
+        "bytes": 7462,
+        "sha256": "f8c9815233e4bfe904dcccd2a65dd091bff41a0fb1df759b28894f7ae79e4590"
+      },
+      {
+        "path": "Platform/common/vectors/slot-name/README.md",
+        "bytes": 2391,
+        "sha256": "f110efc7681ed068929ee59d6e20d506c775271a7e76a72b4f985ecaef6ea3a0"
+      },
+      {
+        "path": "Platform/common/vectors/store-client/README.md",
+        "bytes": 3230,
+        "sha256": "bd1338fef120136ea9ebdfd91f9b8cc426c78bf5d11f86f5021c048414e44255"
+      },
+      {
+        "path": "Platform/common/vectors/tombstone/README.md",
+        "bytes": 3329,
+        "sha256": "c915b9fb31f572a27a02447a50ccd4d1779f8ea421379494d2a7bb09e6a47624"
+      },
+      {
+        "path": "Platform/common/vectors/values-by-type/README.md",
+        "bytes": 9956,
+        "sha256": "0c1773b7b7e39875ebd3a1525c692df82ac3ce2dd3e9346491b44c8ad7e5d07a"
+      },
+      {
+        "path": "Platform/common/vectors/wire.md",
+        "bytes": 23781,
+        "sha256": "2002d6f46a166adf1a282dae8290659446acc8b26e5a1d55b27ae7ddd23d081c"
+      },
+      {
+        "path": "Platform/common/vectors/wire.tsv",
+        "bytes": 48343,
+        "sha256": "0b6e7a7a89f365155b9cb1de3188e9d8d0546818f6aa056bd8a62e29b5437ccb"
+      },
+      {
+        "path": "Platform/common/versions/DEFECTS.md",
+        "bytes": 7959,
+        "sha256": "3ae3526f040d43a965529a6516c6f8c528af0111b0c7f8a02b78248880c22b16"
+      },
+      {
+        "path": "Platform/common/versions/README.md",
+        "bytes": 4132,
+        "sha256": "20f1e749b2e8772ecb4b7ea58c93167b83dc46daa91c744e746c10eec8c58f9c"
+      },
+      {
+        "path": "Platform/common/versions/go.mod",
+        "bytes": 1183,
+        "sha256": "3c3ef9ce63e26c50b61523e0afcfaf65648b3b8bd51b4d79af7463a7b0c93e70"
+      },
+      {
+        "path": "Platform/common/versions/go.sum",
+        "bytes": 19881,
+        "sha256": "e07c2c4008f94f4d2437bb07a180ead019cb45b48d1f0a538424975724c22ba8"
+      },
+      {
+        "path": "Platform/common/versions/requirements.txt",
+        "bytes": 1920,
+        "sha256": "79ef274a10c246765ff40d5671b5187b856d8bae945a8626c2117b94009fc321"
+      },
+      {
+        "path": "Platform/lessons.tsv",
+        "bytes": 1039,
+        "sha256": "6988f8a65bfec32661d18be5cf6f5fdd1ad55a1f56b69fb77d43e8024e7e98aa"
+      }
+    ]
+  },
+  "same_pair_paths_at_source_C_bytes": 4263947,
+  "JI_files": 2123,
+  "JI_unchanged_files": 2106,
+  "JI_changed_explanatory_or_authorized_code_dictionary_files": [
+    {
+      "path": "Platform/common/acceptance/forms/code-rules.tsv",
+      "bytes": 6604,
+      "sha256": "df2a538fe885e5b1dbbc20cb2a70cce96221c7a8a033176b8baf40ba96025ac1"
+    },
+    {
+      "path": "Platform/common/acceptance/forms/engine-code-rules.tsv",
+      "bytes": 1668,
+      "sha256": "185502ea576785f8815c4e10038768f2f5f3fa0586d909cf89fd03c8e79eb345"
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "bytes": 40019,
+      "sha256": "9ab23a835136bef22c13536f7adaa598a65f2392b9b1878123c60ca78fc7dd8c"
+    },
+    {
+      "path": "Platform/common/acceptance/stand.md",
+      "bytes": 22645,
+      "sha256": "f7409ca1abb0b4868b6f55555304379114eb289e0d1b1552e7d184a45cdf69aa"
+    },
+    {
+      "path": "Platform/common/vectors/wire.md",
+      "bytes": 23781,
+      "sha256": "2002d6f46a166adf1a282dae8290659446acc8b26e5a1d55b27ae7ddd23d081c"
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "bytes": 27764,
+      "sha256": "c21000aa9606dc004a785586e2037ba059de98bfbf48654d4050e90873ab4a48"
+    },
+    {
+      "path": "Platform/01-store/acceptance/2/README.md",
+      "bytes": 8305,
+      "sha256": "ce64609844b03a65190a82800df0eb3e3176cbac23e4c3fd6b7a6ba9e6af6492"
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "bytes": 41346,
+      "sha256": "3aa30594089b022034329a807a5d2ae06a728e1b7c8d063de51dc151ac872e49"
+    },
+    {
+      "path": "Platform/01-store/forms/group.tsv",
+      "bytes": 1033,
+      "sha256": "c50c169b3cdf99e4f02ba63aa8f0e4d3920e1a43608d9896224faca12d175d69"
+    },
+    {
+      "path": "Platform/01-store/forms/metrics.tsv",
+      "bytes": 2492,
+      "sha256": "d369a082db11a8002acb6d3b28bf556cae6e0ed52a38701d2c9f76db361f8818"
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "bytes": 6726,
+      "sha256": "50d8f98785b003d749cf859914e247049191e606428406f55f1bafc7bc61e0f5"
+    },
+    {
+      "path": "Platform/01-store/forms/rights-checks.tsv",
+      "bytes": 4533,
+      "sha256": "09a117ebaf7d8562b2264e9314901d9f7cdc6a3862a35b30d5d81c52e21fb0bc"
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "bytes": 2029,
+      "sha256": "c2bcbfa9b382b17480c569cb91baba85d5b9c31e01b4a1177b0daf0e6abff913"
+    },
+    {
+      "path": "Platform/01-store/forms/service-checks.tsv",
+      "bytes": 3918,
+      "sha256": "509822a781c09802f75428fc877d59b0f0b311756cb3e8fee307468f5fa0f50b"
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "bytes": 21920,
+      "sha256": "d43846e150391ada95b701fe52d869ca63d26c6f34fc39de0764085a2b4efca7"
+    },
+    {
+      "path": "Platform/01-store/vectors/jcs/README.md",
+      "bytes": 2188,
+      "sha256": "df52fc0092c76c5c5990d799f7170d9a7291825b30e6d1533c5d352af6b60069"
+    },
+    {
+      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+      "bytes": 3431,
+      "sha256": "968284a83f9c7798383e0259479ec789009d5d249250f3ec90d75cf92f74e1b5"
+    }
+  ],
+  "norms_before_bytes": 267780,
+  "norms_after_bytes": 236883,
+  "live_R_ids_by_chapter": {
+    "1": 160,
+    "2": 64,
+    "3": 182
+  },
+  "Index": [
+    {
+      "chapter": 1,
+      "topics": 23,
+      "bytes": 10148,
+      "minimum_distinct_requirement_places": 3
+    },
+    {
+      "chapter": 2,
+      "topics": 20,
+      "bytes": 7373,
+      "minimum_distinct_requirement_places": 3
+    },
+    {
+      "chapter": 3,
+      "topics": 23,
+      "bytes": 10665,
+      "minimum_distinct_requirement_places": 3
+    }
+  ],
+  "checks": {
+    "stages_exact_from_C": true,
+    "code-rules_retained_rows_exact": true,
+    "engine-code-rules_retained_rows_exact": true,
+    "JI_paths_exact_from_C": true,
+    "retry1_checklist_from_C_with_map_and_local_created_alias_collisions_only": true,
+    "retry1_no_duplicate_P01_ids_inside_prose_enumerations": true,
+    "retry1_public_code_dictionary_no_J_engine_link_or_gates": true
+  },
+  "not_run": [
+    "candidate, generation or behavioural probes",
+    "engine dry/parse; its runner and export operator are separate owners",
+    "pair publication and M subset of an actual full-J export byte comparison",
+    "P01.284 m-invariance over the changed checklist rows and stage_head with hidden group.tsv"
+  ],
+  "initial_stage3_commit": "e803351fc06dc961b82dfb8c2551e84c9883adf0",
+  "accepted_dependency_row_source_commit": "06062133ec6297ad4965f5b52da3003f7f72ec37",
+  "final_snapshot_note": "Current snapshot after C1/M2/M3 correction of rejected attempt 1. Historical stage3 composition/preservation and P01.285 concordance proofs retain their earlier commit scope; current checklist is rebuilt from source C and covered by P01.283-retry1-proof.json.",
+  "retry1_source_commit": "2ef28f82a8d7a73aecc627eeeabaabb7d8d394c2"
+}

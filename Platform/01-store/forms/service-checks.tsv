@@ -24,4 +24,4 @@ n	id	op	group	each	check	when	code	kind	fault	norm
 5	sc-copy_method	*			copy_method	body.path == "/v1/copy" && body.method != "GET"	405	badrequest		P/01.3-R033; P/01.3-R240
 6	sc-identity	*			identity	body.path in ["/v1/status", "/v1/join", "/v1/leave", "/metrics", "/v1/copy"] && body.role_header != null && !(sock in ["admin", "peer:configstore", "peer:configstore-door"])	403	forbidden		P/01.3-R072; P/01.2 N3 «check» steps 1–2
 7	sc-join_role_socket	*			join_role_socket	body.path in ["/v1/join", "/v1/leave"] && !(sock in ["admin", "peer:configstore"])	403	forbidden		P/01.3-R283
-8	sc-copy_admin_only	*			copy_admin_only	body.path == "/v1/copy" && sock != "admin"	403	forbidden		P/01.3-R033; P/01.3-R237
+8	sc-copy_admin_only	*			copy_admin_only	body.path == "/v1/copy" && sock != "admin"	403	forbidden		P/01.3-R033; P/01.3-R033
