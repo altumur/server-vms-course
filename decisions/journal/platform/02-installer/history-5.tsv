@@ -120,3 +120,58 @@ req_id	file	source	date	removed
 -	spec/02.5-installer.norms.md#N5	the note of the Architect on P01.229 2026-11-11T21:14:31Z (reconciliation P01.191): one value of {deployment} by J — dep (stand.md, command-tables.md, lifecycle.md of P/02, check.tsv and check/*.rights of v12, groups dep-…)	2026-11-11	under the **roles** of the deployment `testsub` (the rights file generated from the manifests `testsub` and `testsub2`)
 -	acceptance/5/README.md#profile-interface	the Architect's decision of 2026-10-30 on the norm questions of the Gemini audit, P/02 item 3; C02-RIGHTS-CHECK-STAND-01	2026-10-30	 (the Architect's decision of 2026-10-30, the norm questions of the Gemini audit, P/02 item 3; C02-RIGHTS-CHECK-STAND-01)
 -	acceptance/5/README.md#intro	the note of the Architect on P01.229 2026-11-11T21:14:31Z (reconciliation P01.191): one value of {deployment} by J — dep (stand.md, command-tables.md, lifecycle.md of P/02, check.tsv and check/*.rights of v12, groups dep-…)	2026-11-11	with the deployment name `testsub`.
+-	spec/02.5-installer.n5.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	spec/02.5-installer.n5.cases.md#case-block-1	ADR-0091	2026-10-22	, ADR-0091
+-	spec/02.5-installer.n5.cases.md#case-block-1	ADR-0091 (the outcome of step 8 before the change)	2026-10-22	, formerly 403
+-	spec/02.5-installer.n5.cases.md#case-block-1	ADR-0067	2026-10-07	, ADR-0067
+-	spec/02.5-installer.n5.cases.md#case-block-1	the second pilot, N-6; comparison of python and go M10/6–11, R9	2026-10-19	 (the second pilot, «N-6»; comparison M10/6–11 R9)
+-	spec/02.5-installer.n5.cases.md#case-block-1	ADR-0091 items 1, 3	2026-10-22	 (ADR-0091 items 1, 3)
+-	spec/02.5-installer.n5.cases.md#case-block-2	cammeta-python 06 № 14	2026-10-19	; cammeta-python 06 № 14
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, R8, R12, R2, R5, R7	2026-10-19	 (R8, R12, R2, R5, R7)
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, R8	2026-10-19	 (R8)
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, R10	2026-10-19	 (R10)
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, R4, R3	2026-10-19	 (R4, R3)
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, R6	2026-10-19	 (R6)
+-	spec/02.5-installer.n5.cases.md#case-block-3	comparison of python and go M10/6–11, the reconciliation itself	2026-10-19	 (comparison of python and go M10/6–11)
+-	spec/02.5-installer.n5.cases.md#case-block-3	Architect's decision 2026-10-27; coverage audit Gemini P/02	2026-10-27	`v6`, `v7` — the Architect's decision of 2026-10-27 and the coverage audit of P/02; 
+-	spec/02.5-installer.n5.cases.md#case-block-3	coverage audit Gemini P/02, second pass	2026-10-30	 — its second pass
+-	spec/02.5-installer.n5.cases.md#case-block-3	C02-RIGHTS-CHECK-STAND-01; Architect's forms; coverage audit Gemini P/02	2026-10-30	; C02-RIGHTS-CHECK-STAND-01) — the Architect's forms, the Gemini audit of P/02
+-	acceptance/5/README.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/5/README.cases.md#original-passage-1	C02-LOCAL-BINDING240-ROOT	2026-10-30	, C02-LOCAL-BINDING240-ROOT
+-	acceptance/5/README.cases.md#original-passage-1	mutation check 7cecaf2 № 29, 49	2026-10-30	the mutation check 7cecaf2 № 29, 49: 
+-	acceptance/5/README.cases.md#original-passage-1	ADR-0091	2026-10-22	, ADR-0091
+-	acceptance/5/README.cases.md#original-passage-1	ADR-0091 (the outcome of step 8 changed)	2026-10-22	now 
+-	acceptance/5/README.cases.md#original-passage-2	reconciliation of python and go M10/6–11, R1–R5, R7	2026-10-19	The reconciliation of python and go M10/6–11 (R1–R5, R7): 
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R8	2026-10-19	 (R8)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R12	2026-10-19	 (R12)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R2	2026-10-19	 (R2)
+-	acceptance/5/README.cases.md#original-passage-4	analysis of review of stage A 8–10, plan 8 V7	2026-10-20	; review analysis of stage A 8–10, plan 8 V7, a behaviour change
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R5	2026-10-19	 (R5)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R7	2026-10-19	 (R7)
+-	acceptance/5/README.cases.md#original-passage-4	analysis of review of stage B 6–7, № 36	2026-10-20	 (review analysis of stage B 6–7, № 36)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R8, R9	2026-10-19	 (R8, R9)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R10	2026-10-19	 (R10)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R4, R3	2026-10-19	 (R4, R3)
+-	acceptance/5/README.cases.md#original-passage-4	Architect's decision 2026-10-27; P/03 Go 084a3ee9	2026-10-27	the Architect's decision of 2026-10-27; P/03 Go 084a3ee9, 
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, B07	2026-10-30	 (the coverage audit P/02, B07)
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, second pass	2026-10-30	 (the coverage audit P/02, second pass)
+-	acceptance/5/README.cases.md#original-passage-4	C02-RESOURCE-HOLDS-TABLE-01; coverage audit Gemini P/02, second pass	2026-10-30	; C02-RESOURCE-HOLDS-TABLE-01) (ibid.
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, second pass	2026-10-30	 (ibid.)
+-	acceptance/5/README.cases.md#original-passage-4	C02-OWN-BOOK-HOLDER-01	2026-10-30	 (C02-OWN-BOOK-HOLDER-01)
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, second pass	2026-10-30	 (ibid.)
+-	acceptance/5/README.cases.md#original-passage-4	Architect's decision 2026-10-27	2026-10-27	 (the Architect's decision of 2026-10-27)
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, property 24; Architect's decisions 2026-10-30, P/02 items 1, 2	2026-10-30	 (the Gemini audit P/02, property 24; `same` — the Architect's decisions of 2026-10-30, P/02 items 1, 2)
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, property 25	2026-10-30	 (property 25)
+-	acceptance/5/README.cases.md#original-passage-4	C02-IDEM-ASKED-EXPLICIT-READ-01	2026-10-30	 (C02-IDEM-ASKED-EXPLICIT-READ-01)
+-	acceptance/5/README.cases.md#original-passage-4	coverage audit Gemini P/02, property 25	2026-10-30	 (property 25)
+-	acceptance/5/README.cases.md#original-passage-4	C02-SECRETS-READS-INTERSECTION-01	2026-10-30	 (C02-SECRETS-READS-INTERSECTION-01)
+-	acceptance/5/README.cases.md#original-passage-4	comparison of python and go M10/6–11, R6	2026-10-19	 (R6)
+-	acceptance/5/README.cases.md#original-passage-4	C02-NAME32-ROLES-01	2026-10-30	; C02-NAME32-ROLES-01
+-	acceptance/5/README.cases.md#original-passage-5	check R36-05 of 2026-10-30	2026-10-30	The check R36-05 (since 2026-10-30 — the
+-	acceptance/5/README.cases.md#original-passage-5	coverage audit Gemini P/02, B06	2026-10-30	; the coverage audit P/02, B06)
+-	acceptance/5/README.cases.md#original-passage-6	log of cammeta-go, lesson 8 № 4	2026-10-19	; the log of cammeta-go, lesson 8 № 4
+-	acceptance/5/README.cases.md#original-passage-7	Architect's forms	2026-10-30	the Architect's 
+-	acceptance/5/README.cases.md#original-passage-7	Architect's decisions 2026-10-30, norm questions of the Gemini audit, P/02	2026-10-30	 after the Architect's decisions of 2026-10-30 (the norm questions of the Gemini audit, P/02)
+-	acceptance/5/README.cases.md#original-passage-7	C02-RESOURCE-HOLDS-TABLE-01; Architect's decision 2026-10-30 item 1	2026-10-30	 (item 1, C02-RESOURCE-HOLDS-TABLE-01)
+-	acceptance/5/README.cases.md#original-passage-7	C02-NONREADER-DENY-AFTER-01; Architect's decision 2026-10-30 item 2	2026-10-30	 (item 2, C02-NONREADER-DENY-AFTER-01)
+-	acceptance/5/README.cases.md#original-passage-9	reconciliation of python and go M10/6–11; Architect's decision 2026-10-27; coverage audit P/02 (audit-kimi 82f4da9fc) and its second pass (Gemini, c698f3291)	2026-10-30	The manifests of the variants `v1`–`v5` are byte for byte those on which the reconciliation generated the rights of both implementations — both load them; `v6-near-about-ref` — the Architect's decision of 2026-10-27; `v7-must-match` — the coverage audit P/02 (audit-kimi 2026-10-30, commit 82f4da9fc). `v8`–`v14` — the coverage audit P/02, second pass (Gemini, c698f3291; below).
