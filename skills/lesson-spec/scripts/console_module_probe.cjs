@@ -14,6 +14,17 @@ const hashes = {
   css: "049db5be822fd7e8a01f2345a9d787dcad136a941ed41c255763c05a1cdc7989",
   html: "639676470e26202738b14bc0bd8b8500ab8612e8ec85aad099578df7edf46968",
 };
+// After the bounded migration the accepted common Source slice ADR-0083 addendum (145) item 4 (change
+// 0083-common-source145, commit d5e9ab4b4) changed the canonical module itself: three top-level captions and code
+// outside the four localization blocks. They are pinned here exactly; any other change stays red.
+const ACCEPTED_ADDITIONS = ["notIntegerField", "domainReadIncomplete", "domainViewIncomplete"];
+const WITNESS_KEYS = 519, TSV_KEYS = WITNESS_KEYS + ACCEPTED_ADDITIONS.length;
+// SHA-256 of the cleaned AST and of the token stream of module/console.js outside the four approved blocks
+// (WORDS, W, fmt, fmtDay) at the accepted blob 322cfe7b3 of change 0083-common-source145.
+const acceptedOutside = {
+  ast: "9b32222e796bee98fe4da9bf50c9c3fbf814698f3017117a20f5339d06589af2",
+  tokens: "3eec046609e8044fedf670f5de8d25b9fb5fe3f794f301598a4a2d21055a2a2b",
+};
 const read = name => fs.readFileSync(path.join(ROOT, name), "utf8");
 const parse = text => acorn.parse(text, {ecmaVersion: 2022, sourceType: "script"});
 function clean(x) {
@@ -136,19 +147,21 @@ function audit(input) {
   const errors = [], need = (yes, label) => {if (!yes) errors.push(label);};
   const old = parts(input.old.js), current = parts(input.fresh.js);
   const witness = object(old.init.WORDS, true), actual = object(current.init.WORDS, false), rows = table(input.tsv);
-  need(rows.size === 519, "519 TSV keys");
+  need(rows.size === TSV_KEYS, TSV_KEYS + " TSV keys");
+  need(ACCEPTED_ADDITIONS.every(k => rows.has(k)), "accepted additions present in TSV");
   need(Object.keys(actual).sort().join() === "en,ru", "only EN/RU WORDS");
+  const witnessRows = [...rows.keys()].filter(k => !ACCEPTED_ADDITIONS.includes(k)).sort().join("\0");
   for (const lang of ["en", "ru"]) {
     const before = leaves(witness[lang]), after = leaves(actual[lang]);
-    need(before.size === 519 && after.size === 519, "519 WORDS leaves " + lang);
-    need([...before.keys()].sort().join("\0") === [...rows.keys()].sort().join("\0"), "witness TSV roster " + lang);
+    need(before.size === WITNESS_KEYS && after.size === TSV_KEYS, TSV_KEYS + " WORDS leaves " + lang);
+    need([...before.keys()].sort().join("\0") === witnessRows, "witness TSV roster without accepted additions " + lang);
     need([...after.keys()].sort().join("\0") === [...rows.keys()].sort().join("\0"), "actual TSV roster " + lang);
     for (const [key, row] of rows) {
-      const a = after.get(key), b = before.get(key);
-      need(a && b && same(a.at, b.at), "property path " + lang + ":" + key);
+      const a = after.get(key), b = before.get(key), added = ACCEPTED_ADDITIONS.includes(key);
+      need(a && (added ? !b && same(a.at, [key]) : b && same(a.at, b.at)), "property path " + lang + ":" + key);
       need(a && a.value === row[lang], "decoded WORDS TSV " + lang + ":" + key);
-      need(b && b.value === row[lang], "witness TSV value " + lang + ":" + key);
-      need(a && b && same(params(a.value), params(b.value)), "parameters " + lang + ":" + key);
+      need(added || (b && b.value === row[lang]), "witness TSV value " + lang + ":" + key);
+      need(a && (added || (b && same(params(a.value), params(b.value)))), "parameters " + lang + ":" + key);
       need(same(params(row.en), params(row.ru)), "EN/RU parameters " + key);
     }
     need(actual[lang].glass === witness[lang].glass, "effective glass " + lang);
@@ -161,8 +174,9 @@ function audit(input) {
   need(same(current.init.fmtDay, expression('t => t ? new Date(t * 1000).toLocaleString(W === WORDS.ru ? "ru-RU" : "en-US", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}) : "—"')), "exact fmtDay shape");
   const body = current.mount.body.body, at = body.indexOf(current.decl.W);
   need(at >= 0 && body[at + 1] === current.decl.fmt, "fmt immediately after per-mount W");
-  need(same(protectedTree(old), protectedTree(current)), "AST outside four approved blocks");
-  need(same(tokens(input.old.js, ranges(old)), tokens(input.fresh.js, ranges(current))), "tokens outside four approved blocks");
+  need(digest(JSON.stringify(protectedTree(current))) === acceptedOutside.ast, "AST outside four approved blocks");
+  need(digest(tokens(input.fresh.js, ranges(current)).join("\0")) === acceptedOutside.tokens,
+    "tokens outside four approved blocks");
   need(cssWithoutComments(input.old.css) === cssWithoutComments(input.fresh.css), "CSS outside comments");
   need(same(htmlProtected(input.old.html), htmlProtected(input.fresh.html)), "HTML markup/inline JS outside comments");
   for (const ext of ["js", "css", "html"]) {
@@ -198,7 +212,13 @@ function mutants(input) {
     const p = parts(x.fresh.js), value = object(p.init.WORDS, false), raw = JSON.stringify(value);
     x.fresh.js = x.fresh.js.slice(0, p.init.WORDS.start) + raw.slice(0, -1) + ',"en":' + JSON.stringify(value.en) + '}' + x.fresh.js.slice(p.init.WORDS.end);
   }, "duplicate WORDS property");
-  test("missing TSV key", x => {x.tsv = x.tsv.split("\n").filter(l => !l.startsWith("unsaved\t")).join("\n");}, "519 TSV keys");
+  test("missing TSV key", x => {x.tsv = x.tsv.split("\n").filter(l => !l.startsWith("unsaved\t")).join("\n");}, TSV_KEYS + " TSV keys");
+  test("unaccepted TSV key", x => {
+    x.tsv += "judgeExtra\textra\textra\n"; words(x, w => {w.en.judgeExtra = "extra"; w.ru.judgeExtra = "extra";});
+  }, "witness TSV roster without accepted additions");
+  test("nested accepted key", x => words(x, w => {
+    w.en.n.notIntegerField = w.en.notIntegerField; delete w.en.notIntegerField;
+  }), "property path en:notIntegerField");
   test("duplicate TSV key", x => {x.tsv += x.tsv.split("\n")[1] + "\n";}, "TSV duplicate");
   test("changed substitution", x => words(x, w => {w.en.newGroupIn = w.en.newGroupIn.replace("{p}", "{wrong}");}), "parameters en:newGroupIn");
   test("trimmed loginAt", x => words(x, w => {w.ru.loginAt = w.ru.loginAt.trimEnd();}), "terminal U+0020 loginAt");

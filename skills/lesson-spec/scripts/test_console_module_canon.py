@@ -3,7 +3,9 @@
 NODE_PATH=<owned acorn8.15.0+jsdom26.1.0>/node_modules python -B -m unittest test_console_module_canon
 Copy console_module_probe.package.json to an owned temporary environment's
 package.json, then npm install --prefix <that environment> --ignore-scripts.
-The Node probe parses actual JS and runs owned DOM/Date/fetch fixtures. It changes
+The Node probe parses actual JS and runs owned DOM/Date/fetch fixtures. The frozen Source witness bounds the 519
+migrated captions, CSS and HTML; the code outside the four localization blocks and the three later captions are
+pinned to the accepted common slice ADR-0083 (145) (change 0083-common-source145). It changes
 only an in-memory return epilogue to expose the selected closure for observations.
 It does not rewrite a module, run a server, or prove C6/A1/runtime acceptance.
 """
@@ -36,19 +38,25 @@ class ConsoleModuleCanon(unittest.TestCase):
     def probe(self, mode):
         done = subprocess.run(["node", str(PROBE), mode, str(ROOT)], capture_output=True, text=True,
                               env=os.environ.copy(), timeout=45)
+        if "Cannot find module 'acorn'" in done.stderr or "Cannot find module 'jsdom'" in done.stderr:
+            self.fail("judge environment missing: NODE_PATH=%r must hold acorn 8.15.0 and jsdom 26.1.0 "
+                      "(see the module docstring)" % os.environ.get("NODE_PATH"))
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         result = json.loads(done.stdout)
         self.assertEqual(result["errors"], [])
         return result
 
-    def test_actual_519_values_paths_parameters_and_four_block_identity(self):
-        self.assertEqual(len(self.rows), 519)
+    def test_actual_522_values_paths_parameters_and_four_block_identity(self):
+        # 519 captions of the frozen witness + 3 top-level captions of the accepted common slice ADR-0083 (145)
+        # (change 0083-common-source145, d5e9ab4b4); the probe pins both rosters and the code outside the four blocks.
+        self.assertEqual(len(self.rows), 522)
         result = self.probe("audit")
-        self.assertEqual(result["counts"], {"tsv": 519, "languages": 2, "witnesses": 3, "approvedBlocks": 4})
+        self.assertEqual(result["counts"], {"tsv": 522, "languages": 2, "witnesses": 3, "approvedBlocks": 4})
 
     def test_each_owned_mutant_reaches_its_own_rule(self):
         result = self.probe("mutants")
         expected = {"missing WORDS key", "missing TSV key", "duplicate TSV key", "changed substitution",
+                    "unaccepted TSV key", "nested accepted key",
                     "trimmed loginAt", "wrong effective glass", "split dotted event key", "browser fallback",
                     "wrong milliseconds", "extra timezone", "extra public API", "Cyrillic comment",
                     "duplicate WORDS property", "CSS token change", "HTML inline code change", "HTML markup change",

@@ -49,7 +49,9 @@ P09_C4_MEANING_COORDS = (
     ("Platform/09-agent/spec/09.1-agent.norms.md", "`domain/member` — строка", "`pub`", "desc"),
 )
 # Exact two headerless rows approved by coord103; Source e778 C4, not a generic allowance.
-P09_C4_MEANING_SHA256 = "795d6d527d2fe596d859c1480084f24fb6ea6871c2f7f3a0418ac61b6f659124"
+# Was 795d6d52…; 2026-11-12 OBSH.40: only «new» follows the current cell after form M (P09.9 19f9be22a dropped
+# ", review C4" from the text, meaning unchanged), and the basis cell records that; the approved «old» is unchanged.
+P09_C4_MEANING_SHA256 = "50915ff10904cacfa6dbbf034ad8e3eee53fd7933c80ed70fcd44846a2d7bebf"
 
 
 def closed_meaning_description(root, place, text):
@@ -320,7 +322,9 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 947)                 # случаи P/02 на 2026-11-06 (+ свой calls requests, ревью P/02 С5)
+        # случаи P/02: 947 на 2026-11-06 (+ свой calls requests, ревью P/02 С5); 951 — P02.35 ee2f38df2 (+4 r32_secrets_readers_*,
+        # корпус 951 в 02.1 N5, ответ Архитектора 2026-11-11T01:33)
+        self.assertEqual(stats["form_cases"], 951)
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):  # noqa: C901
@@ -442,7 +446,15 @@ class TestTree(unittest.TestCase):
     def test_family_read_key(self):
         """Ключ по шаблону каталога (V7-FAMILY-KEY-PLACEHOLDER-01): строки `key:` есть у каждой семьи с плейсхолдером,
         отказ — `[""]`; ключ base не по шаблону — красное; плейсхолдер без строки таблицы — красное; построитель
-        повторяется байт в байт."""
+        повторяется байт в байт на своём выходе, а строки ключа пакета — ровно его строки.
+
+        Строки ключа пакета ведёт «Спецификация» после построителя (d5e9ab4b4: основания ADR0129(14), (15) хвостом
+        заметки; 060dceb2b, 733dc76b7: правки текста и записи JSON; строки add_rows, review127 и Z10 — между строками
+        ключа и после них). Поэтому с выходом построителя сверяется смысл строки: порядок и байты прочих строк, места
+        строк ключа, case, family, key, kind,
+        mode, who, verdict, paths, outcome как JSON, заметка — заметка построителя или она же с хвостом «; <основание>».
+        Не сверяется только text: у ключа не по шаблону значение не судят (README пакета family-read, `key`)."""
+        import json
         from v7 import transition
         rows = [ln.split("\t") for p in sorted((TREE / spec.FAMILY_READ).glob("*.tsv"))
                 for ln in p.read_text(encoding="utf-8").split("\n")[1:] if ln]
@@ -454,7 +466,25 @@ class TestTree(unittest.TestCase):
         root = self.copy()
         before = {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")}
         transition.family_keys(root)
-        self.assertEqual(before, {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")})
+        built = {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")}
+        self.assertEqual(sorted(before), sorted(built))
+        transition.family_keys(root)
+        self.assertEqual(built, {p.name: p.read_bytes() for p in (root / spec.FAMILY_READ).glob("*.tsv")})
+        note = len(spec.FR_HEADER) - 1
+        for name in sorted(before):
+            have = before[name].decode("utf-8").split("\n")
+            want = built[name].decode("utf-8").split("\n")
+            self.assertEqual(len(have), len(want), name)
+            for a, b in zip(have, want):
+                if a == b:
+                    continue
+                with self.subTest(table=name, case=a.split("\t")[0]):
+                    x, y = a.split("\t"), b.split("\t")
+                    self.assertEqual(len(x), len(y))
+                    self.assertTrue(y[note].startswith(transition.KEY_NOTE), "only key rows may differ: " + a[:120])
+                    self.assertEqual(x[:6] + x[7:9], y[:6] + y[7:9])
+                    self.assertEqual(json.loads(x[9]), json.loads(y[9]))
+                    self.assertTrue(x[note] == y[note] or x[note].startswith(y[note] + "; "), (x[note], y[note]))
         p = root / spec.FAMILY_READ / "02.tsv"
         lines = p.read_text(encoding="utf-8").split("\n")
         i = next(i for i, ln in enumerate(lines) if "\tbase" in ln and ln.split("\t")[1].startswith("platform/manifest/<sub>"))
