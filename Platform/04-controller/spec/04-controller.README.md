@@ -12,7 +12,7 @@ the drain, the labels and the decommission of a server are the doors of the cons
 
 ## Inputs and their priority
 
-The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066) shows observable examples;
+The canon is the [norms](04-controller.norms.md), including N0. The [acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417) shows observable examples;
 the lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
 The forms of a unit are set in [P/06.1](../../06-console/spec/06.1-console.norms.md), of the slot — in
 [P/03.2](../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../02-installer/spec/02.1-installer.norms.md),
@@ -51,7 +51,7 @@ These terms point to their governing requirements; this table adds no rules.
 - The reading of the picture of the world, of the effective labels and the observation of freshness by its own clock; the states of the resource and the fates of the slot.
 - The pass of N3 with separate attempts of the steps, the choice of candidates and the write of decisions through cas.
 - The reconciliation of assignments, the move, the departure, the order of workers by servers and the shrinking, the decommission of a server and the protection of manifest_rev.
-- The report of N1.2, the snapshot of N1.3a after the pass and the evidence of the fulfilment of all checklist items, including the admission of N1.5.
+- The report of N1.2, the snapshot of N1.3a after the pass and the evidence of the fulfilment of the 28 checklist items, including the admission of N1.5.
 - The description of all eleven choices of the implementation. Internal functions, types and libraries are chosen by the implementation.
 
 ## Order of work
@@ -116,7 +116,7 @@ These terms point to their governing requirements; this table adds no rules.
 
 ## Done when
 
-All readiness and system checklist items are fulfilled, the choices of the implementation are described, the acceptance has passed with the declared initial state,
+P/04-01…28 are fulfilled, the choices of the implementation are described, the acceptance has passed with the declared initial state,
 and the remaining guarantees have evidence per N5.
 State the slice, the commands/stand, the observations and the limitations. A check of the documents does not mean
 the passing of an implementation. A discrepancy of a norm and a form is to be drawn up with a counterexample by the rules of the project;

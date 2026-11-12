@@ -29,6 +29,23 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`. There are 53 r
 **Output** — `{shrink, why, victim}`: `shrink` — `true` only with `why: "ok"`; `victim` — the name of the victim, named also on
 a refusal (who would be the victim), `null` — only with `no_victim`. Comparison — JSON by value.
 
+## Binding the vector to the shrink form
+
+The vector uses its declared input and victim selection below; it adds no runtime field or check. Bind the variables of [the shrink checks](../../forms/README.md#shrink-checks) as follows (P/04-R342):
+
+| Form variable | Vector input or computation |
+|---|---|
+| `victim_exists` | The victim selected by the existing `shrink-victim` rules is not null; only live tops `n = want(s) > 1` qualify. |
+| `distinct` | Input `distinct`: servers: distinct and a place from the heartbeat. |
+| `waiting` | Input `waiting`, with a group as one piece. |
+| `placeless` | There is a live input worker with `placeless: true`; read this only with `distinct`. |
+| `no_shortage_for`, `SHRINK_AFTER` | Inputs `no_shortage_for`, `shrink_after`; null means a shortage; equality is not longer than the hold time. |
+| `in_flight` | Sum over servers of the missing live numbers in `2…want(s)`; the base is excluded. |
+| `per` | Input `per`, including null for no estimate. |
+| `remaining_free_after_move` | `Σ free − load(victims)`: sum free over suitable live workers without the selected victim and without numbers above their server's want, then subtract the victim load. With `distinct`, only workers with `holder: true` contribute to the sum. |
+
+The last row is the original hysteresis test: `Σ free − load(victims) < per` refuses; equality passes. The vector’s existing consistency assumptions still hold. This binding does not add a wanted-place field to its closed input; the existing victim/protection cases and composed process seams retain their scopes.
+
 ## Order of the reasons
 
 The first matching row of [the shrink checks](../../forms/README.md#shrink-checks) selects `why` (P/04-R051). The vector uses the same conditions; `victim: null` only for `no_victim`.

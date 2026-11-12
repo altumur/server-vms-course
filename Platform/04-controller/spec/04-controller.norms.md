@@ -3,9 +3,9 @@
 This English text is the source; the Russian translation `ru/spec/04-controller.norms.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
 The canon of the lesson. Lecture (`ru/04-controller.md`, for people, not in the export), [instructions](04-controller.README.md), [life cycle](../lifecycle.md),
-[acceptance](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066), vectors [`order`](../vectors/order/README.md),
+[acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417), vectors [`order`](../vectors/order/README.md),
 [`shrink-victim`](../vectors/shrink-victim/README.md) and [`shrink-allowed`](../vectors/shrink-allowed/README.md). The lesson has no HTTP contract of its own (`P/04 no-openapi`): the doors through
-which the operator talks to the controller are the doors of the console ([P/06.6](../../06-console/spec/06.6-console.norms.md) N2; `/where` — [chapter 6.5](../../06-console/spec/06.5-console.norms.md)). Current source dependencies are the [observation contract](../../common/contracts/observation.md), the current data families below, and the linked console doors. The full completion boundary is the readiness and system checklists in this chapter; the judge-only acceptance files provide their witnesses.
+which the operator talks to the controller are the doors of the console ([P/06.6](../../06-console/spec/06.6-console.norms.md) N2; `/where` — [chapter 6.5](../../06-console/spec/06.5-console.norms.md)). Current source dependencies are the [observation contract](../../common/contracts/observation.md), the current data families below, and the linked console doors. Requirement and checklist identifiers are retained; the acceptance files define the full completion boundary.
 
 ## Index
 
@@ -14,35 +14,35 @@ which the operator talks to the controller are the doors of the console ([P/06.6
 | `input_owners` | P/04-R003, P/04-R004, P/04-R005, P/04-R006, P/04-R024, P/04-R240, P/04-R459, P/04-R460, P/04-R485 | `forms/README.md`, `lifecycle.md`, `Platform/common/data/catalog.tsv` |
 | `time_fields` | P/04-R002, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R113, P/04-R174, P/04-R220 | `Platform/common/contracts/env-file.md`, `Platform/common/contracts/observation.md` |
 | `turn_fence` | P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R209, P/04-R212, P/04-R222, P/04-R242, P/04-R283, P/04-R299, P/04-R302, P/04-R489 | `Platform/common/contracts/turn.md`, `data/placement-turn.schema.json` |
-| `intent_read` | P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484 | `Platform/common/contracts/observation.md`, `data/placement-intent.schema.json` |
-| `admission_reserve` | P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289 | `data/placement-intent.schema.json`, `Platform/common/contracts/pool.md` |
-| `intent_commit` | P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490 | `Platform/common/contracts/turn.md`, `data/workers.schema.json` |
+| `intent_read` | P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500 | `Platform/common/contracts/observation.md`, `data/placement-intent.schema.json` |
+| `admission_reserve` | P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521 | `data/placement-intent.schema.json`, `Platform/common/contracts/pool.md` |
+| `intent_commit` | P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521 | `Platform/common/contracts/turn.md`, `data/workers.schema.json` |
 | `group_atomicity` | P/04-R023, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261 | `Platform/common/contracts/group-of.md`, `data/placement-intent.schema.json` |
 | `placement_key_size` | P/04-R028, P/04-R031, P/04-R249, P/04-R250, P/04-R251, P/04-R252, P/04-R280 | `data/placement-intent.schema.json`, `forms/refusals.tsv` |
-| `manifest_revision` | P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496 | `data/placement.schema.json`, `data/placement-turn.schema.json`, `data/placement-intent.schema.json` |
+| `manifest_revision` | P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545 | `data/placement.schema.json`, `data/placement-turn.schema.json`, `data/placement-intent.schema.json` |
 | `pool_labels` | P/04-R005, P/04-R034, P/04-R082, P/04-R084, P/04-R150, P/04-R153, P/04-R160, P/04-R287, P/04-R288, P/04-R337 | `Platform/common/contracts/labels.md`, `Platform/common/contracts/pool.md` |
-| `home_preference` | P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472 | `Platform/common/contracts/pool.md` |
+| `home_preference` | P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471 | `Platform/common/contracts/pool.md` |
 | `near_preference` | P/04-R034, P/04-R133, P/04-R157, P/04-R262, P/04-R461, P/04-R462, P/04-R463, P/04-R464 | `vectors/near-of/README.md`, `Platform/common/contracts/pool.md` |
-| `affinity_places` | P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477 | `Platform/common/contracts/pool.md` |
+| `affinity_places` | P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531 | `Platform/common/contracts/pool.md` |
 | `choice_ranks` | P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R492 | `Platform/common/contracts/pool.md`, `data/placement.schema.json` |
 | `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04-R197, P/04-R208, P/04-R307, P/04-R308, P/04-R313, P/04-R314, P/04-R320, P/04-R321 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
-| `release_permission` | P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493 | `forms/slot-fate.tsv`, `forms/slot-release.tsv`, `data/controller-pass.schema.json` |
+| `release_permission` | P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546 | `forms/slot-fate.tsv`, `forms/slot-release.tsv`, `data/controller-pass.schema.json` |
 | `leaving` | P/04-R047, P/04-R048, P/04-R267, P/04-R287, P/04-R293, P/04-R322, P/04-R323, P/04-R324 | `forms/README.md`, `Platform/common/contracts/pool.md` |
 | `placeable_set` | P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R479, P/04-R480, P/04-R481 | `vectors/order/README.md`, `vectors/shrink-allowed/README.md` |
 | `unit_cleanup` | P/04-R025, P/04-R123, P/04-R125, P/04-R134, P/04-R136, P/04-R241, P/04-R269, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
-| `order_absolute` | P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494 | `vectors/order/README.md`, `data/want.schema.json` |
+| `order_absolute` | P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541 | `vectors/order/README.md`, `data/want.schema.json` |
 | `growth_room` | P/04-R085, P/04-R086, P/04-R330, P/04-R331, P/04-R332, P/04-R333, P/04-R337, P/04-R338, P/04-R357 | `vectors/order/README.md`, `Platform/common/contracts/presence-lock.md` |
-| `shortage_estimate` | P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358 | `vectors/order/README.md`, `data/controller-pass.schema.json` |
+| `shortage_estimate` | P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535 | `vectors/order/README.md`, `data/controller-pass.schema.json` |
 | `want_deadline` | P/04-R108, P/04-R132, P/04-R191, P/04-R192, P/04-R193, P/04-R329, P/04-R330, P/04-R331, P/04-R340, P/04-R356, P/04-R483 | `forms/runtime-constants.tsv`, `data/want.schema.json` |
-| `shrink` | P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482 | `forms/README.md`, `vectors/shrink-victim/README.md`, `vectors/shrink-allowed/README.md` |
-| `decommission_plan` | P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495 | `data/decommission-pending.schema.json`, `data/decommissioned.schema.json` |
-| `decommission_release` | P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
-| `decommission_cleanup` | P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
-| `decommission_finish` | P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495 | `data/decommissioned.schema.json`, `data/decommission-pending.schema.json` |
-| `snapshot_fields` | P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
-| `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R421, P/04-R422 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
-| `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
-| `report_cycle` | P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279 | `data/controller-pass.schema.json`, `forms/README.md` |
+| `shrink` | P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499 | `forms/README.md`, `vectors/shrink-victim/README.md`, `vectors/shrink-allowed/README.md` |
+| `decommission_plan` | P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504 | `data/decommission-pending.schema.json`, `data/decommissioned.schema.json` |
+| `decommission_release` | P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
+| `decommission_cleanup` | P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
+| `decommission_finish` | P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495 | `data/decommissioned.schema.json`, `data/decommission-pending.schema.json` |
+| `snapshot_fields` | P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
+| `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R552, P/04-R553, P/04-R554 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
+| `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
+| `report_cycle` | P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544 | `data/controller-pass.schema.json`, `forms/README.md` |
 | `startup_schema` | P/04-R059, P/04-R060, P/04-R061, P/04-R407, P/04-R408 | `forms/daemon-flags.tsv`, `lifecycle.md`, `Platform/common/contracts/schema.md` |
 | `power_pull` | P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R427, P/04-R428, P/04-R429, P/04-R430, P/04-R431, P/04-R432, P/04-R433 | `Platform/common/contracts/observation.md`, `lifecycle.md` |
 | `refusals` | P/04-R067, P/04-R068, P/04-R434 | `forms/refusals.tsv` |
@@ -98,16 +98,13 @@ See also: P/04-R003, P/04-R005, P/04-R006, P/04-R024, P/04-R240, P/04-R459, P/04
 
 <!-- req: P/04-R459 -->
 
-- the journal `unit.unplaced_deleted` (N3 «pass()», step 8) and the alarms (`workers.raise_failed` — N1.4, hung/unsure — step 3) it writes to
-`audit/<role>` and `audit.alarms/<role>`, the file `%h<sha256>.name` — by the [event journal
-contract](../../common/contracts/event-journal.md) (`journal`, `writer`, «File names»).
+- The controller writes the journal `unit.unplaced_deleted` (N3 pass step 8) and alarms (`workers.raise_failed` in N1.4; hung/unsure in step 3) to `audit/<role>` and `audit.alarms/<role>`; it writes `%h<sha256>.name` by the [event journal contract](../../common/contracts/event-journal.md), `journal`, `writer`, «File names».
 
 See also: P/04-R003, P/04-R004, P/04-R005, P/04-R006, P/04-R024, P/04-R240, P/04-R460, P/04-R485.
 
 <!-- req: P/04-R460 -->
 
-- the key of its own kit is for
-the resource doors over HTTPS ([P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) `roles`).
+- The controller uses the key of its own kit for resource doors over HTTPS ([P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md), `roles`).
 
 See also: P/04-R003, P/04-R004, P/04-R005, P/04-R006, P/04-R024, P/04-R240, P/04-R459, P/04-R485.
 
@@ -137,7 +134,7 @@ See also: P/04-R003, P/04-R004, P/04-R005, P/04-R006, P/04-R024, P/04-R240, P/04
 
 - **`<sub>/placement/<id> — worker`**: \<worker name\> | "" — "" — not placed; with an active intent the common decision of N1.5 applies
 
-See also: P/04-R020, P/04-R021, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R074 -->
 
@@ -157,7 +154,7 @@ See also: P/04-R002, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04
 
 - **`<sub>/placement/<id> — manifest_rev`**: \<revision of the manifest under which the decision was taken\> — required for the current decision; a missing value is unreadable, never stamped (P/02.3)
 
-See also: P/04-R057, P/04-R058, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
+See also: P/04-R057, P/04-R058, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545.
 
 <!-- req: P/04-R078 -->
 
@@ -217,115 +214,115 @@ See also: P/04-R002, P/04-R075, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04
 
 - **`platform/decommission/<host>`**: — the writer is the console
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R090 -->
 
 - **`platform/decommission/<host> — by`**: `<who>`; at: `<moment>`; why: `<words>`; gone: "true"? — gone — the confirmation «there is no server» when the resource was never heard
 
-See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R091 -->
 
 - **`<sub>/decommissioned/<host>`**: — the writer is the controller; removed when the request is withdrawn
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R092 -->
 
 - **`<sub>/decommissioned/<host> — asked_at, at`**: \<wall seconds of the console request and of the controller mark\>
 
-See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R090, P/04-R091, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R090, P/04-R091, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R093 -->
 
-- **`<sub>/decommissioned/<host> — slots, units, holds`**: \<names of the released slots, ids of the removed units, places of the holds — by the list rule of P/06.1 N1.2; "" — none\> an element: slots — a slot name P/03.2 N1.4, units — a unit id P/06.1 N1.3, holds — a place name P/03.2 N1.3; a count («0») is not an element names, not numbers
+- **`<sub>/decommissioned/<host> — slots, units, holds`**: lists by P/06.1 N1.2; "" means none. Elements are slot names (P/03.2 N1.4), unit ids (P/06.1 N1.3), and hold-place names (P/03.2 N1.3), respectively. These are names, not counts; "0" is not an element.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R094 -->
 
 - **`<sub>/decommission-pending/<host>`**: — unfinished controller progress, never the final decommission mark
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R095 -->
 
 - **`<sub>/decommission-pending/<host> — state`**: prepared | cleaning | finalizing
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R096 -->
 
 - **`<sub>/decommission-pending/<host> — request_index`**: `<version>` — exact fixed platform/decommission/`<host>` index
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R097 -->
 
 - **`<sub>/decommission-pending/<host> — asked_at, at`**: `<time>` — request at and plan acceptance time
 
-See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R098, P/04-R099, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R002, P/04-R054, P/04-R055, P/04-R056, P/04-R075, P/04-R088, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R098, P/04-R099, P/04-R108, P/04-R113, P/04-R174, P/04-R220, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R098 -->
 
 - **`<sub>/decommission-pending/<host> — manifest_rev`**: `<revision>`
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R057, P/04-R058, P/04-R077, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R099, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R405, P/04-R406, P/04-R495, P/04-R496.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R057, P/04-R058, P/04-R077, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R099, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R405, P/04-R406, P/04-R495, P/04-R496, P/04-R502, P/04-R503, P/04-R504, P/04-R545.
 
 <!-- req: P/04-R099 -->
 
 - **`<sub>/decommission-pending/<host> — remaining`**: [{name: \<slot name\>, index: `<version>`}, ...] — JSON; original versions, no later substitution
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R101, P/04-R102, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R101, P/04-R102, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R100 -->
 
 - **`<sub>/decommission-pending/<host> — from`**: [\<owned from prefix\>, ...] — fixed full prefixes, each ending in /
 
-See also: P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R101 -->
 
 - **`<sub>/decommission-pending/<host> — released, skipped`**: [\<slot name\>, ...]
 
-See also: P/04-R099, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R102 -->
 
 - **`<sub>/decommission-pending/<host> — current`**: [\<slot name\>, ...] — at most BATCH_WRITES - 1, the confirmed release chunk
 
-See also: P/04-R099, P/04-R101, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R103 -->
 
 - **`<sub>/decommission-pending/<host> — cleanup_index`**: "" | `<version>` — empty means the progress row's own index, before its first cleanup rewrite
 
-See also: P/04-R100, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R104 -->
 
 - **`<sub>/decommission-pending/<host> — slot_cursor, from_cursor`**: `<count>` — next current slot and its next from prefix
 
-See also: P/04-R100, P/04-R103, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R105 -->
 
 - **`<sub>/decommission-pending/<host> — units, holds`**: `<lists>` — fixed final-mark metadata, same form as decommissioned
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R106 -->
 
 - **`<sub>/want/<host>`**: — the writer is the controller, cas with the guard placement_turn (N1.5)
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R107 -->
 
 - **`<sub>/want/<host> — want`**: \<decimal 1…WANT_NUM_MAX\> — the absolute target of the number of role processes on the server, the base `<prefix>`-`<server>`-1 is included
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R108 -->
 
@@ -337,19 +334,25 @@ See also: P/04-R002, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04
 
 - **`<sub>/want/<host> — by`**: \<controller instance\> — diagnostics; the authority — cas and the guard placement_turn
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R110 -->
 
 - **`<sub>/want/<host> — why`**: \<non-empty reason\> — grammar N3 «shortage(), order()…»
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R111 -->
 
-- **`<sub>/want/<host> — retiring?`**: \<worker name\> — chosen for shrinking (N3 «shrink») the row exists, except while pending/finally decommissioned, for an installed role on a server of a manifest with grows: true (N3 «order row»); only the decommission of the server and the removal of the role delete it; shrinking writes want 1, does not delete; the controller and the console read it (series workers_wanted P/06.5 N3 «/metrics — text»)
+- **`<sub>/want/<host> — retiring?`**: optional worker name chosen for shrinking (N3 «shrink»).
 
-See also: P/04-R051, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
+
+<!-- req: P/04-R499 -->
+
+- The row `<sub>/want/<host>` exists, except while pending/finally decommissioned, for an installed role on a server of a manifest with `grows: true` (N3 «order row»). Only decommission of the server or removal of the role deletes this row; shrinking writes want 1. The controller and console read the row (`workers_wanted`, P/06.5).
+
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
 
 ### N1.2 Pass report
 
@@ -357,49 +360,73 @@ See also: P/04-R051, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04
 
 - The object `<sub>/controller/pass` is written at the end of every pass; it is read by the console (the series `<sub>_reconcile_last_pass_age_seconds`, `<sub>_reconcile_pass_seconds`, `<sub>_reconcile_failures`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 N3 «/metrics — text») and by the workers (`names_given`, `hung_move_after` — P/03.2).
 
-See also: P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R112 -->
 
 - The pass report MUST contain the fields below; an implementation MAY add its own counters.
 
-See also: P/04-R007, P/04-R008, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R008 -->
 
 - The pass report uses all fields and field meanings specified below.
 
-See also: P/04-R007, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R113 -->
 
 - **`pass — at`**: \<moment the control part ends, before snapshot publication\>
 
-See also: P/04-R002, P/04-R007, P/04-R008, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R112, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R174, P/04-R220, P/04-R279.
+See also: P/04-R002, P/04-R007, P/04-R008, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R112, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R174, P/04-R220, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R114 -->
 
-- **`pass — ok`**: bool; error: \<text of the last error or ""\>; failures: `<number>`; last_success: `<moment>` ok: true — the control part reached its end, all its inputs were read and no control write was refused; otherwise false
+- **`pass — ok`** is boolean: true means the control part reached its end, all control inputs were read and no control write was refused; otherwise false.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
+
+<!-- req: P/04-R542 -->
+
+- **`pass — error`** is the text of the last error or "".
+
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R543, P/04-R544.
+
+<!-- req: P/04-R543 -->
+
+- **`pass — failures`** is the number of failures.
+
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R544.
+
+<!-- req: P/04-R544 -->
+
+- **`pass — last_success`** is the moment of the last successful control part.
+
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543.
 
 <!-- req: P/04-R115 -->
 
 - **`pass — seconds`**: \<duration of the control part, excluding later snapshot/report publication\>
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R116 -->
 
-- **`pass — manifest_rev`**: \<manifest revision of the controller\>; manifest_behind: \<rows of this pass whose write is postponed because of a lagging manifest; a row — once per pass\>
+- **`pass — manifest_rev`** is the manifest revision of this controller.
 
-See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545.
+
+<!-- req: P/04-R545 -->
+
+- **`pass — manifest_behind`** counts rows whose writes this pass postpones because the manifest lags; count each row once per pass.
+
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
 
 <!-- req: P/04-R117 -->
 
 - **`pass — names_given`**: {\<slot name\>: \<version of the slot row at which the name is given\>}
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R118 -->
 
@@ -407,9 +434,15 @@ See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04
 
 <!-- req: P/04-R119 -->
 
-- **`pass — fates`**: {`<name>`: {fate, server, why, rev, since}} — only occupied slots not released: holder non-empty, released false (not true and not taking — the slot contract «States»); since — the moment the slot entered this fate on the clock of the controller (a change of fate — a new since), not the first look at the slot
+- **`pass — fates`** is `{<name>: {fate, server, why, rev, since}}` for occupied, unreleased slots only: holder is nonempty and released is false, neither true nor taking (slot contract, States).
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
+
+<!-- req: P/04-R546 -->
+
+- In each `pass.fates` entry, `since` is the moment the slot entered this fate on this controller’s clock: fate change resets since; first sight of the slot is not this moment.
+
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
 
 <!-- req: P/04-R120 -->
 
@@ -433,25 +466,25 @@ See also: P/04-R025, P/04-R125, P/04-R134, P/04-R136, P/04-R241, P/04-R269, P/04
 
 - **`pass — snapshot_state_garbled`**: \<unit states not included in the snapshot shard of this cycle: the state row does not read by its type (N1.3a; P/03.6 N1.7 unreadable)\>
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R125 -->
 
 - **`pass — state_swept_total`**: \<state rows removed by the sweep of the orphaned and after the delete of the unit row (N3 step 8a)\>
 
-See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R126 -->
 
 - **`pass — snapshot_tables_refused`**: \<tables of N1.3b that this cycle replaced with a stub: the object is larger than SNAPSHOT_TABLE_MAX\>
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R127 -->
 
 - **`pass — snapshot_rows_garbled`**: \<unit rows not included in the snapshot shard of this cycle: a field of snapshot does not read by its type (N1.3a garbled)\> — P/01.1 N0 «Stability of output»
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R128 -->
 
@@ -465,7 +498,7 @@ See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04
 
 - **`pass — short`**: — only with placement.grows: true; an element for each label set with waiting ones - {labels: [`<labels>`], units: \<exact nonnegative integer sum of waiting unit weights\>, workers: \<processes needed beyond the live ones and the capacity in flight\>, groups: \<waiting groups\>, ordered: \<ordered by this pass\>, withheld?: \<words why it is not ordered\>} labels — the canonical notation: unique labels ascending, a repeat collapses; groups — always, 0 too (required in the form); own counters of the element MAY be added by the existing count form; standard fields keep their forms; acceptance compares the named fields; an empty set in the words of why is any labels; a set without a computable per is the same element: workers 0, ordered 0, withheld «no positive capacity estimate»; the series `<sub>`_workers_withheld{labels} (P/06.5 /metrics) — for each set of the pass report, zero too
 
-See also: P/04-R053, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R053, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R131 -->
 
@@ -487,79 +520,79 @@ See also: P/04-R034, P/04-R157, P/04-R262, P/04-R461, P/04-R462, P/04-R463, P/04
 
 - The current reader and writer both require expired_kept, snapshot_state_garbled and state_swept_total as nonnegative count values.
 
-See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R135 -->
 
-- Missing or invalid fields use the existing unreadable outcome.
+- If `expired_kept`, `snapshot_state_garbled` or `state_swept_total` is missing or invalid in the current pass report, use the existing unreadable outcome for those required counters.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R136 -->
 
-- The first two belong to this cycle; state_swept_total accumulates confirmed deletions from zero in this process.
+- In the pass report, `expired_kept` and `snapshot_state_garbled` belong to the current cycle; `state_swept_total` accumulates confirmed deletions from zero in this process.
 
-See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R025, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R123, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R241, P/04-R269, P/04-R276, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R137 -->
 
 - The current snapshot reader and writer both require exactly one admissible unit.rows array, including an empty array; missing or multiple arrays are unreadable.
 
-See also: P/04-R007, P/04-R008, P/04-R011, P/04-R063, P/04-R064, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R279, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R007, P/04-R008, P/04-R011, P/04-R063, P/04-R064, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R279, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R542, P/04-R543, P/04-R544, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R138 -->
 
-- Absence before the first object publication is separate.
+- Absence of the snapshot object before its first publication is separate from an unreadable current snapshot object.
 
-See also: P/04-R007, P/04-R008, P/04-R011, P/04-R063, P/04-R064, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R279, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R007, P/04-R008, P/04-R011, P/04-R063, P/04-R064, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R279, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R542, P/04-R543, P/04-R544, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R139 -->
 
 - Weight aggregates short[].units, waiting and load are exact nonnegative integers without a common.uint53 ceiling; their JSON output has integer notation and never rounds or saturates through binary64/int64.
 
-See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R140 -->
 
 - Individual weights/capacities and other count fields keep their forms.
 
-See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R141 -->
 
 - Custom short counters keep count; widening the aggregate changes no full serialized-object write limit.
 
-See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R007, P/04-R008, P/04-R053, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R130, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R149, P/04-R279, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R142 -->
 
 - A cycle ends its control part and releases the placement turn, then attempts the unit snapshots and table snapshots, and finally writes one pass report containing the snapshot counters of that same cycle.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R143 -->
 
 - At, seconds, last_success, ok and failures describe only the control part.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R144, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R144, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R144 -->
 
 - Snapshot errors keep their own existing outcomes/logs/counters and do not become control failures.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R145, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R145, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R145 -->
 
 - The three snapshot counters start at zero for each cycle; the next cycle cannot reset or absorb an unfinished prior cycle.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R146, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R146, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R146 -->
 
 - After publication attempts return their confirmed, refused, failed or unconfirmed outcomes, write the final report once, without later patching it. state_swept_total is not reset.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R279.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R279, P/04-R542, P/04-R543, P/04-R544.
 
 ### N1.3 Placement keys and their meaning
 
@@ -577,59 +610,59 @@ See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04
 
 <!-- req: P/04-R486 -->
 
-- **`capacity: {from, default, unit_mb, base_mb}`.** capacity — [the pool contract](../../common/contracts/pool.md) `capacity`; the reason — the field `fates.<worker>.why` of the pass report (N1.2) Default: `from: capacity`; `default` is required.
+- **`capacity: {from, default, unit_mb, base_mb}`.** capacity — [the pool contract](../../common/contracts/pool.md) `capacity`; the reason — the field `fates.<worker>.why` of the pass report (N1.2). Default: `from: capacity`; `default` is required.
 
 <!-- req: P/04-R148 -->
 
-- **`headroom: {from}`.** headroom — a heartbeat field that the subsystem names; the controller does not read it (neither the choice, nor the slot fate, nor the pass report); the console shows it — the series `worker_headroom{worker,server}` and `headroom` ([P/06.5](../../06-console/spec/06.5-console.norms.md) N3 «/metrics — text») Default: `from: headroom`.
+- **`headroom: {from}`.** headroom — a heartbeat field that the subsystem names; the controller does not read it (neither the choice, nor the slot fate, nor the pass report); the console shows it — the series `worker_headroom{worker,server}` and `headroom` ([P/06.5](../../06-console/spec/06.5-console.norms.md) N3 «/metrics — text»). Default: `from: headroom`.
 
 <!-- req: P/04-R149 -->
 
-- **`weight: {field, default}`.** the weight of a unit — an `int` field of the row ≥ 1, when the field is absent — weight.default ≥ 1; a wrong present value is not replaced with default: the unit row is unreadable (`garbled` of the pass report), the unit is neither placed nor removed, the reason is in `unplaceable`; the load = Σ of the weights Default: without the key — weight 1 for all.
+- **`weight: {field, default}`.** the weight of a unit — an `int` field of the row ≥ 1, when the field is absent — weight.default ≥ 1; a wrong present value is not replaced with default: the unit row is unreadable (`garbled` of the pass report), the unit is neither placed nor removed, the reason is in `unplaceable`; the load = Σ of the weights. Default: without the key — weight 1 for all.
 
-See also: P/04-R022, P/04-R023, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R022, P/04-R023, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R150 -->
 
-- **`constraint`.** `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<host>` or the node labels Default: `none`.
+- **`constraint`.** `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<host>` or the node labels. Default: `none`.
 
 See also: P/04-R005, P/04-R034, P/04-R082, P/04-R084, P/04-R153, P/04-R160, P/04-R287, P/04-R288, P/04-R337.
 
 <!-- req: P/04-R151 -->
 
-- **`tie_break`.** `most-free-capacity` — the only word Default: the same.
+- **`tie_break`.** `most-free-capacity` — the only word. Default: the same.
 
 See also: P/04-R033, P/04-R035, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R492.
 
 <!-- req: P/04-R152 -->
 
-- **`servers`.** `shared` \| `distinct`: with `distinct` only one worker can carry the units on one place — the one with the largest load, on equality the first in the slot order of P/03.2 N1.4; the others stay idle Default: `shared`; the row `policy` overrides.
+- **`servers`.** `shared` \| `distinct`: with `distinct` only one worker can carry the units on one place — the one with the largest load, on equality the first in the slot order of P/03.2 N1.4; the others stay idle. Default: `shared`; the row `policy` overrides.
 
 <!-- req: P/04-R153 -->
 
-- **`place_by`.** what counts as a place with `distinct` — [the pool contract](../../common/contracts/pool.md) `place`, the keeper — `keeper`; `distinct` units are given only to the keeper of a non-empty place Default: `server`.
+- **`place_by`.** what counts as a place with `distinct` — [the pool contract](../../common/contracts/pool.md) `place`, the keeper — `keeper`; `distinct` units are given only to the keeper of a non-empty place. Default: `server`.
 
 See also: P/04-R005, P/04-R034, P/04-R082, P/04-R084, P/04-R150, P/04-R160, P/04-R287, P/04-R288, P/04-R337.
 
 <!-- req: P/04-R154 -->
 
-- **`places: {table, where, server_field, lease, wanted}`.** the table of places and the hold row `<sub>/holds/<place>` (P/03.2 N1.3); `lease: strict` — a strict place; `wanted` — a table of the subsystem: a row with the name of a place says that the place needs a holder, the reason is known to the subsystem (N3 «shortage()») Default: —.
+- **`places: {table, where, server_field, lease, wanted}`.** the table of places and the hold row `<sub>/holds/<place>` (P/03.2 N1.3); `lease: strict` — a strict place; `wanted` — a table of the subsystem: a row with the name of a place says that the place needs a holder, the reason is known to the subsystem (N3 «shortage()»). Default: —.
 
 <!-- req: P/04-R155 -->
 
-- **`spread_by`.** a field: two units with one value are not on one server; an absent or empty value does not take part in the spreading — a unit without a value neither constrains nor is constrained (a pair to `group_by`: empty is not a group) Default: —.
+- **`spread_by`.** a field: two units with one value are not on one server; an absent or empty value does not take part in the spreading — a unit without a value neither constrains nor is constrained (a pair to `group_by`: empty is not a group). Default: —.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R156 -->
 
-- **`group_by: {field, cut_at}`.** a group — one value of the field (for `url` — the host by `cut_at: host`); it is placed only whole on one worker. What a group is, the host in one spelling, `none`, an unreadable host, «not in a group» and the refusal — [the contract of the group by host](../../common/contracts/group-of.md) (vector [`group-of`](../../common/vectors/group-of/README.md)) Default: —.
+- **`group_by: {field, cut_at}`.** a group — one value of the field (for `url` — the host by `cut_at: host`); it is placed only whole on one worker. What a group is, the host in one spelling, `none`, an unreadable host, «not in a group» and the refusal — [the contract of the group by host](../../common/contracts/group-of.md) (vector [`group-of`](../../common/vectors/group-of/README.md)). Default: —.
 
 See also: P/04-R023, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261.
 
 <!-- req: P/04-R157 -->
 
-- **`near: {sub, by, of, prefer}`.** a preference: beside the holder of a neighbour — the units of the subsystem `sub` (the manifest catalogue).
+- **`near: {sub, by, of, prefer}`.** a preference: beside the holder of a neighbour — the units of the subsystem `sub` (the manifest catalogue). Default: `none`.
 
 See also: P/04-R034, P/04-R133, P/04-R262, P/04-R461, P/04-R462, P/04-R463, P/04-R464.
 
@@ -653,113 +686,109 @@ See also: P/04-R034, P/04-R133, P/04-R157, P/04-R262, P/04-R461, P/04-R462, P/04
 
 <!-- req: P/04-R464 -->
 
-- **`near: {sub, by, of, prefer}`.** The manifest `sub` is not in the catalogue — the affinity does not apply, the unit is placed without it, the controller does not need the rows of `sub`; the subsystem is in `near_waiting` of the pass report (N1.2); the affinity is switched on from the pass at which the manifest `sub` appeared in the catalogue (N3 «pass()» step 1) Default: `none`.
+- **`near: {sub, by, of, prefer}`.** The manifest `sub` is not in the catalogue — the affinity does not apply, the unit is placed without it, the controller does not need the rows of `sub`; the subsystem is in `near_waiting` of the pass report (N1.2); the affinity is switched on from the pass at which the manifest `sub` appeared in the catalogue (N3 «pass()» step 1)
 
 See also: P/04-R034, P/04-R133, P/04-R157, P/04-R262, P/04-R461, P/04-R462, P/04-R463.
 
 <!-- req: P/04-R158 -->
 
-- **`home`.** a preference, not a filter: a field of the row naming the home (the value — of the first member in UTF-8 order; no value — no home), or `near` — the home is at the neighbour; only one side of a pair can follow.
+- **`home`.** a preference, not a filter: a field of the row naming the home (the value — of the first member in UTF-8 order; no value — no home), or `near` — the home is at the neighbour; only one side of a pair can follow. Default: —.
 
-See also: P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R465 -->
 
 - **`home`.** The field is a reference `ref` to the table of places `places.table`: the home is the holder of the named place, the worker whose place (`place_by`, the pool contract `place`) is the name of this row; there is no holder among the eligible (N3 «choose») — the workers of the server from the field `places.server_field` of this row, if the field is non-empty; otherwise there is no home.
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R466 -->
 
 - **`home`.** An empty server field does not hinder the home when there is a holder: the home is the holder (a volume without a server).
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R467 -->
 
 - **`home`.** Another worker of the same server, when there is a holder, is not the home: a unit at it moves to the holder (N3 «pass()», step 7).
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R468 -->
 
 - **`home`.** The reason: `place_by` names where the data of the unit lie; a comparison with the server would give it to the holder of another place of this server, and step 7 would not bring it back.
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R469 -->
 
 - **`home`.** No row or it does not read — no home.
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R470 -->
 
 - **`home`.** A field without `ref` — its value is the server itself: the home is the workers whose `server` equals the value.
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R471.
 
 <!-- req: P/04-R471 -->
 
 - **`home`.** A `ref` to another table (or the manifest has no `places`) — no home: the value is the id of a foreign row, not a server, and `places.server_field` is not named for it.
 
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R472.
+See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470.
 
-<!-- req: P/04-R472 -->
-
-- **`home`.** Default: —.
-
-See also: P/04-R158, P/04-R268, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
+<!-- removed: P/04-R472 by ADR-0133 -->
 
 <!-- req: P/04-R159 -->
 
-- **`affinity: {field, table, server_field, strict, exclusive}`.** a filter: a place from the table that admits the unit; `admits: false` takes nobody; a binding row leads the unit only to its own place.
+- **`affinity: {field, table, server_field, strict, exclusive}`.** a filter: a place from the table that admits the unit; `admits: false` takes nobody; a binding row leads the unit only to its own place. Default: —.
 
-See also: P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477.
+See also: P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R473 -->
 
 - **`affinity: {field, table, server_field, strict, exclusive}`.** The place of the unit is the row of `table` named by its `field` (no value or no row — affinity does not apply).
 
-See also: P/04-R159, P/04-R288, P/04-R334, P/04-R474, P/04-R475, P/04-R476, P/04-R477.
+See also: P/04-R159, P/04-R288, P/04-R334, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R474 -->
 
 - **`affinity: {field, table, server_field, strict, exclusive}`.** `strict` is a predicate that selects the binding rows: a row is binding when each field of `strict` equals the value or is in the list of values (AND over the fields, OR over a list); no `strict` or `{}` — all rows of the table bind, there are no non-binding ones.
 
-See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R475, P/04-R476, P/04-R477.
+See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R475 -->
 
 - **`affinity: {field, table, server_field, strict, exclusive}`.** A binding row leads the unit only to the holder of its place — the worker whose place (`place_by`, P/03.2 N1.3) is the name of the row; with a non-empty `server_field` of the row — also only if the server of the worker is that one (both conditions; another worker of the same server with another place does not fit); a non-binding one is a preference for the server `server_field`, not a filter.
 
-See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R476, P/04-R477.
+See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R476 -->
 
 - **`affinity: {field, table, server_field, strict, exclusive}`.** `admits` is checked at the actual place of the unit.
 
-See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R477.
+See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R477 -->
 
-- **`affinity: {field, table, server_field, strict, exclusive}`.** `exclusive: true` (only with `strict`, P/02.1) — the binding place is exclusive: its holder admits only the units bound to this place, the others are not placed on it (as `admits` for strangers); a worker with such a place takes no other places (P/03.2 N3 «place: take, hold, let go»); a binding row with an empty `server_field` — strictness by the holder of the place without a check of the server Default: —.
+- **`affinity: {field, table, server_field, strict, exclusive}`.** `exclusive: true` (only with `strict`, P/02.1) — the binding place is exclusive: its holder admits only the units bound to this place, the others are not placed on it (as `admits` for strangers); a worker with such a place takes no other places (P/03.2 N3 «place: take, hold, let go»); a binding row with an empty `server_field` — strictness by the holder of the place without a check of the server
 
-See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476.
+See also: P/04-R159, P/04-R288, P/04-R334, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R160 -->
 
-- **`requires`.** `none` \| `resource`: with `resource` a worker is eligible only while the resource of its server is not silent Default: `none`.
+- **`requires`.** `none` \| `resource`: with `resource` a worker is eligible only while the resource of its server is not silent. Default: `none`.
 
 See also: P/04-R005, P/04-R034, P/04-R082, P/04-R084, P/04-R150, P/04-R153, P/04-R287, P/04-R288, P/04-R337.
 
 <!-- req: P/04-R161 -->
 
-- **`grows`.** `true` — the role grows on demand: the controller counts the shortage and orders processes of the role per server with the row `<sub>/want/<host>` (N3 «shortage(), order()…») Default: `false`.
+- **`grows`.** `true` — the role grows on demand: the controller counts the shortage and orders processes of the role per server with the row `<sub>/want/<host>` (N3 «shortage(), order()…»). Default: `false`.
 
 <!-- req: P/04-R162 -->
 
-- **`retire_when: {state?, field, in, delete_after?}`.** a unit with a value of the field from `in` is not placed and is removed with the value as the reason.
+- **`retire_when: {state?, field, in, delete_after?}`.** a unit with a value of the field from `in` is not placed and is removed with the value as the reason. Default: —.
 
 See also: P/04-R025, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R479, P/04-R480, P/04-R481.
 
@@ -771,23 +800,23 @@ See also: P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04
 
 <!-- req: P/04-R479 -->
 
-- **`retire_when: {state?, field, in, delete_after?}`.** `delete_after` — N s after the removal by `retire_when`, by the clock of the controller, delete the row (N3 step 8): the count starts from the first pass at which the controller saw the unit removed by `retire_when`; a pass at which it is no longer removed (an operator edit removed the value or the acting state) clears the count, a new removal counts anew; after a restart of the controller the count starts anew, as for `unplaced.delete_after` Default: —.
+- **`retire_when: {state?, field, in, delete_after?}`.** `delete_after` — N s after the removal by `retire_when`, by the clock of the controller, delete the row (N3 step 8): the count starts from the first pass at which the controller saw the unit removed by `retire_when`; a pass at which it is no longer removed (an operator edit removed the value or the acting state) clears the count, a new removal counts anew; after a restart of the controller the count starts anew, as for `unplaced.delete_after`
 
 See also: P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R480, P/04-R481.
 
 <!-- req: P/04-R163 -->
 
-- **`ends: {field, never}`.** the deadline of a unit: the field `field` of the row (Unix seconds) ≠ `never` and not later than the clock of the controller — the unit is not placed, is removed with the reason `ends`, the row is deleted (N3 step 8); `never` — no deadline Default: without the key — no deadline; `never: 0`.
+- **`ends: {field, never}`.** the deadline of a unit: the field `field` of the row (Unix seconds) ≠ `never` and not later than the clock of the controller — the unit is not placed, is removed with the reason `ends`, the row is deleted (N3 step 8); `never` — no deadline. Default: without the key — no deadline; `never: 0`.
 
 See also: P/04-R025, P/04-R162, P/04-R165, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R479, P/04-R480, P/04-R481.
 
 <!-- req: P/04-R164 -->
 
-- **`rebalance: {dead_band}`.** rebalancing on request: while the spread of the load is smaller — do not move Default: `0.10`.
+- **`rebalance: {dead_band}`.** rebalancing on request: while the spread of the load is smaller — do not move. Default: `0.10`.
 
 <!-- req: P/04-R165 -->
 
-- **`unplaced: {delete_after}`.** a unit row that nobody holds for longer than N s by the clock of the controller is deleted by the controller; one removed by `retire_when` too: nobody holds it.
+- **`unplaced: {delete_after}`.** a unit row that nobody holds for longer than N s by the clock of the controller is deleted by the controller; one removed by `retire_when` too: nobody holds it. Default: without the key — never.
 
 See also: P/04-R025, P/04-R162, P/04-R163, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R479, P/04-R480, P/04-R481.
 
@@ -799,7 +828,7 @@ See also: P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04
 
 <!-- req: P/04-R481 -->
 
-- **`unplaced: {delete_after}`.** The worker of the subsystem MAY also delete its own unit rows by the key `worker.deletes` — a delete with `cas` without the write right Default: without the key — never.
+- **`unplaced: {delete_after}`.** The worker of the subsystem MAY also delete its own unit rows by the key `worker.deletes` — a delete with `cas` without the write right
 
 See also: P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R478, P/04-R479, P/04-R480.
 
@@ -809,49 +838,97 @@ See also: P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R326, P/04
 
 - Unit snapshot objects use the envelope, content and publication rules below.
 
-See also: P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R487 -->
 
 - **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced`**: — objects; the writer is the controller; the worker name unplaced is a refusal {cluster, worker: `<name>` | null, ts, `<rows>`: [{id, revision, \<fields of snapshot:\>, state?, worker, server}]} worker: the worker name of the shard; null — for the shard unplaced and for the shard of a gone worker
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R166 -->
 
 - **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — cluster`**: the installation name — CLUSTER of the environment (the environment file contract «Environment variables»; the name of a domain member, [P/08.1](../../08-domain/spec/08.1-domain.norms.md) N1.1); not set — "local" (outside a domain)
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R167 -->
 
-- **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — fields`**: snapshot: of the manifest (P/02.1): no key — all fields except *_secret and blob; [] — no field (id, revision, worker, server remain); an author field server is also excluded by default; a secret, blob or server in an explicit list — the manifest does not load; addresses — with the mask P/06.2 N1.1a, the same as in the console output (password → ***) the declared fields of a unit do not include platform_fields P/06.1 N1.2, including deleted/worker: a load refusal P/02.1; unit.rows not cluster/worker/ts: a collision with the envelope — the load refusal refused:form (P/02.1)
+- **Unit snapshot fields.** The manifest snapshot list chooses fields: without that key include all fields except *_secret, blob and an author field server; [] includes none of those fields, while id, revision, worker and server remain.
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
+
+<!-- req: P/04-R547 -->
+
+- A secret, blob or server named explicitly in the snapshot list makes the manifest fail to load.
+
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
+
+<!-- req: P/04-R548 -->
+
+- Unit snapshot addresses use the P/06.2 N1.1a output mask, the same as the console: password → ***.
+
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R549, P/04-R550, P/04-R551.
+
+<!-- req: P/04-R549 -->
+
+- Declared unit fields cannot include platform_fields of P/06.1 N1.2, including deleted/worker: the P/02.1 loader refuses such a manifest.
+
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R550, P/04-R551.
+
+<!-- req: P/04-R550 -->
+
+- unit.rows must differ from cluster, worker and ts; collision with the snapshot envelope is the P/02.1 load refusal refused:form.
+
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R551.
 
 <!-- req: P/04-R168 -->
 
-- **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — state`**: with a declared unit.state — an object {`<name>`: \<value of the acting state\>} (the row-check contract «Unit state» acts, the same rule as at the console P/06.1 N2 «State in the answer»): the names — state.`<name>` of the snapshot list of the manifest; without the key snapshot — all states except cursor; [] — none; no acting one — no name, none at all — no state. A state row that does not read by its type — the unit is in the shard without this state, the counter snapshot_state_garbled of the pass report (N1.2)
+- **Unit snapshot state.** With declared unit.state, state maps names to acting state values under the row-check contract, Unit state, as P/06.1 N2 State in the answer. Use state.\<name\> from the manifest snapshot list; without snapshot include all states except cursor, [] includes none; no acting value means no name, and no names means no state field.
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
+
+<!-- req: P/04-R551 -->
+
+- If a state row does not read by its type, include the unit in the snapshot without that state and increment snapshot_state_garbled of the pass report.
+
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550.
 
 <!-- req: P/04-R169 -->
 
 - **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — publish`**: after the control part releases turn and before this cycle's one final report (N3 «pass()»); the shards of gone workers — empty; without units — an empty unplaced an empty shard has one form for all: {cluster, worker: null, ts, `<rows>`: []} — the field `<rows>` is present, the list is empty (as the witness)
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R170 -->
 
 - **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — garbled`**: a unit row whose snapshot field does not read by its type by values_by_type P/06.1 N1.2 is not included in the shard; the shard is published with the other units, a log line once per series and the counter `snapshot_rows_garbled` of the pass report N1.2 (P/01.1 N0 «Stability of output»)
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R171 -->
 
-- **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — ceiling`**: before the write the controller judges the resource door limit L owned by P/05; max_bytes of the store is held by the store itself on put ([P/05](../../05-resource/spec/05-resource.norms.md) «object store» — `TooLarge`), the controller does not count it itself; TooLarge of the store gives the same outcome of N4 — the shard is not written, the former one is kept. The size is the number of bytes of the full serialized object, including the envelope and the empty shards, with the actual notation of ts (its length is part of the size). Exactly L is allowed; more than L → TooLarge before put_durable, do not replace the former shard. Diagnostics: «N units on `<shard>`; snapshot is B bytes, limit is L bytes»; raising OBJECTS does not lift the door limit
+- Before a unit-shard write, the controller checks the P/05 resource door limit L. It does not calculate the store max_bytes: the store enforces that limit on put; a store TooLarge has the same N4 outcome, leaving the former shard.
 
-See also: P/04-R068, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R421, P/04-R422.
+See also: P/04-R068, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R552, P/04-R553, P/04-R554.
+
+<!-- req: P/04-R552 -->
+
+- Unit-shard size is the byte count of its complete serialized object, including the envelope, empty shards and the actual ts notation, whose length counts.
+
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R553, P/04-R554.
+
+<!-- req: P/04-R553 -->
+
+- Exactly L bytes is allowed; above L return TooLarge before put_durable, without replacing the former shard.
+
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R552, P/04-R554.
+
+<!-- req: P/04-R554 -->
+
+- For this size refusal, diagnostics are "N units on \<shard\>; snapshot is B bytes, limit is L bytes"; raising OBJECTS does not lift the resource door limit.
+
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R552, P/04-R553.
 
 ### N1.3b Table snapshot
 
@@ -859,97 +936,115 @@ See also: P/04-R068, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R421, P/04
 
 - The domain view shows the units with `domain.ref`; the other unit rows and the console tables of a foreign cluster are not visible to the domain without this object.
 
-See also: P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R172 -->
 
 - A manifest without `domain.ref` and a unit without a value of `ref` are visible here.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R013 -->
 
 - Table snapshot objects use the envelope, content and publication rules below.
 
-See also: P/04-R012, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R488 -->
 
 - **`<sub>/snapshot-tables/<table>`**: — an object; the writer is the controller; `<table>` — a key of domain.view_tables of the manifest (P/02.1, P/08.1 N1.4a): a table of tables or unit.rows {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, worker?, server?, phase?, status?}]}
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R173 -->
 
 - **`<sub>/snapshot-tables/<table> — cluster`**: as for a shard, N1.3a
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R174 -->
 
 - **`<sub>/snapshot-tables/<table> — ts`**: the moment of the object write; rows did not change — the object is not written, ts is the former one: liveness is not ts but members[].state of the view
 
-See also: P/04-R002, P/04-R012, P/04-R013, P/04-R062, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R113, P/04-R172, P/04-R173, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R220, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R002, P/04-R012, P/04-R013, P/04-R062, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R113, P/04-R172, P/04-R173, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R220, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R175 -->
 
 - **`<sub>/snapshot-tables/<table> — rows`**: store rows, the order — key in UTF-8 bytes; key — the row name (P/06.1 N1.6) or the unit id, revision — the row version (P/06.1 N2 «Row revision»); a removed row and a tombstone are not in rows
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R176 -->
 
-- **`<sub>/snapshot-tables/<table> — fields`**: only the fields of the list domain.view_tables of the manifest; the value — by its type by values_by_type P/06.1 N1.2; a field absent from the row — in fields it is absent, no default is substituted; held_by of a table of places — as P/06.1 N1.6 held_by; addresses — with the mask P/06.2 N1.1a; the keys *_secret inside json values are cut at any depth (P/06.2 N1.4); the list does not name the *_secret fields themselves (P/02.1)
+- **`<sub>/snapshot-tables/<table> — fields`** contains only the manifest domain.view_tables list; values use their own type by values_by_type P/06.1 N1.2. An absent source field stays absent, without a default.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
+
+<!-- req: P/04-R555 -->
+
+- In a table snapshot, held_by of a places table follows P/06.1 N1.6 held_by.
+
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R556, P/04-R557.
+
+<!-- req: P/04-R556 -->
+
+- Table snapshot addresses use the mask of P/06.2 N1.1a.
+
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R557.
+
+<!-- req: P/04-R557 -->
+
+- Cut *_secret keys from JSON field values at every depth (P/06.2 N1.4); the manifest list itself does not name *_secret fields (P/02.1).
+
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556.
 
 <!-- req: P/04-R177 -->
 
 - **`<sub>/snapshot-tables/<table> — secrets`**: the names of the *_secret fields of the row with a non-empty value, ascending in UTF-8 bytes; none such — no field; no values: the domain needs to know whether a secret is set
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R178 -->
 
 - **`<sub>/snapshot-tables/<table> — labels, about`**: only for unit rows — the field labels and the value of the field about.field of the manifest, whether the list names them or not: the right judges by them (the right contract «Judgement by target»); no value — no field
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R179 -->
 
 - **`<sub>/snapshot-tables/<table> — worker, server`**: only for unit rows — from the assignment; no assignment — no fields
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R180 -->
 
 - **`<sub>/snapshot-tables/<table> — phase, status`**: only for unit rows — phase and the fields domain.view_status of the manifest from the element status[] of the heartbeat of this unit (P/08.1 N1.4 status); no element — no fields
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R181 -->
 
 - **`<sub>/snapshot-tables/<table> — garbled`**: a row whose field from the list does not read by its type is not included in rows; the counter snapshot_rows_garbled, as N1.3a garbled
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R182 -->
 
 - **`<sub>/snapshot-tables/<table> — ceiling`**: SNAPSHOT_TABLE_MAX from forms/runtime-constants.tsv of the full serialized object; more — instead of the object a stub {cluster, ts, refused: "too_large", rows: []} and snapshot_tables_refused of the pass report (N1.2). A stub, not the former object: an old snapshot would look alive. The agent owns per-member and combined table budgets (P/09.1 N1.2 tables_budget and its linked P/08 admission bounds); this controller introduces no second member count, camera count or measured domain-wide byte ceiling.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R068, P/04-R171, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R418, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R068, P/04-R171, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R488, P/04-R497, P/04-R552, P/04-R553, P/04-R554, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R183 -->
 
 - **`<sub>/snapshot-tables/<table> — scope`**: the object exists for a manifest with domain.view_tables; domain.ref is not needed for it; the key removed from the manifest — the object is not removed, the agent no longer carries it (the report intake contract member_objects)
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R184 -->
 
 - **`<sub>/snapshot-tables/<table> — reader`**: only the domain agent (P/09.1 N1.2); the cluster console reads its own tables as rows
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 ### N1.4 Terms and states of the judge
 
@@ -1009,19 +1104,19 @@ See also: P/04-R108, P/04-R132, P/04-R191, P/04-R192, P/04-R329, P/04-R330, P/04
 
 - **`constants — SHRINK_AFTER`**: the environment file contract «Constants and units» (the value is there) — s; without a shortage — shrinking (N3 «shrink»); only on the stand — W2C_SHRINK_AFTER=`<seconds>` of the environment of the controller: with the variable set, the controller writes a loud journal line at start; outside the stand the variable is not set
 
-See also: P/04-R051, P/04-R111, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R195 -->
 
 - **`constants — SHRINK_BUDGET`**: forms/runtime-constants.tsv — unit per pass for a move from the worker being shrunk (as HOME_BUDGET)
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R482 -->
 
 - the terms of the order and of shrinking are starting values of the policy; the count is by the local monotonic clock of the controller from the first observation of the order row version (for SHRINK_AFTER — from the first pass without a shortage), a new controller starts from 0, a repeated write of the same target does not extend the term, at is diagnostics.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R499.
 
 <!-- req: P/04-R483 -->
 
@@ -1031,33 +1126,33 @@ See also: P/04-R108, P/04-R132, P/04-R191, P/04-R192, P/04-R193, P/04-R329, P/04
 
 <!-- req: P/04-R196 -->
 
-- **`constants — resource_state`**: — the resource of a server — live | unreachable | unknown | silent: one definition for all observers (the controller, the console) by their monotonic clocks, the rules in order — the observation contract (common/contracts/observation.md «Resource state»); only silent excludes and moves
+- **`resource_state`**: — the resource of a server — live | unreachable | unknown | silent: one definition for all observers (the controller, the console) by their monotonic clocks, the rules in order — the observation contract (common/contracts/observation.md «Resource state»); only silent excludes and moves
 
 See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R197, P/04-R208, P/04-R307, P/04-R308, P/04-R313, P/04-R314, P/04-R320, P/04-R321.
 
 <!-- req: P/04-R197 -->
 
-- **`constants — process_presence`**: — what the resource says about the process of a worker: the output of [P/05 N1.4](../../05-resource/spec/05-resource.norms.md) `presence` by the key `<sub>`/\<slot name\> of its subsystem; only from the heartbeat of a resource in the state live: a stale heartbeat with the word runs gives no presence, and the slot is judged by resource_state; an absent one of the fields workers, running, unknown is an empty list (a partial set: running without workers — runs, workers without running — gone) runs | gone | unlisted | unknown — unknown — an unconfirmed read; silent — only the resource state above
+- **`process_presence`**: — what the resource says about the process of a worker: the output of [P/05 N1.4](../../05-resource/spec/05-resource.norms.md) `presence` by the key `<sub>`/\<slot name\> of its subsystem; only from the heartbeat of a resource in the state live: a stale heartbeat with the word runs gives no presence, and the slot is judged by resource_state; an absent one of the fields workers, running, unknown is an empty list (a partial set: running without workers — runs, workers without running — gone) runs | gone | unlisted | unknown — unknown — an unconfirmed read; silent — only the resource state above
 
 See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04-R208, P/04-R307, P/04-R308, P/04-R313, P/04-R314, P/04-R320, P/04-R321.
 
 <!-- req: P/04-R198 -->
 
-- **`constants — fate`**: alive | wait | hung | hung_moved | unsure | unsure_moved | move | release
+- **`fate`**: alive | wait | hung | hung_moved | unsure | unsure_moved | move | release
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R199 -->
 
-- **`constants — NAME_FATES`**: [move, hung_moved, unsure_moved, release] — + wait beyond the limit HUNG_MOVE_AFTER
+- **`NAME_FATES`**: [move, hung_moved, unsure_moved, release] — + wait beyond the limit HUNG_MOVE_AFTER
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R200 -->
 
-- **`constants — MOVED_FATES`**: [move, hung_moved, unsure_moved]
+- **`MOVED_FATES`**: [move, hung_moved, unsure_moved]
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R015 -->
 
@@ -1119,7 +1214,7 @@ See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04
 
 <!-- req: P/04-R208 -->
 
-- **`power_pull — fresh_controller`**: what is seen for the first time has just changed; it moves nothing for the first LOST_AFTER (N3 «pass()», step 0). This limits judgements by silence and by terms; a confirmed gone from a live resource is positive evidence and takes precedence, the race is closed by CAS
+- **`fresh_controller`**: what is seen for the first time has just changed; it moves nothing for the first LOST_AFTER (N3 «pass()», step 0). This limits judgements by silence and by terms; a confirmed gone from a live resource is positive evidence and takes precedence, the race is closed by CAS
 
 See also: P/04-R014, P/04-R015, P/04-R016, P/04-R017, P/04-R039, P/04-R065, P/04-R066, P/04-R185, P/04-R186, P/04-R196, P/04-R197, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R307, P/04-R308, P/04-R313, P/04-R314, P/04-R320, P/04-R321, P/04-R427, P/04-R428, P/04-R429, P/04-R430, P/04-R431, P/04-R432, P/04-R433.
 
@@ -1146,7 +1241,7 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R212, P/04-R222, P/04
 
 <!-- req: P/04-R210 -->
 
-- The service rows belong to the controller role; the placement readers also read them.
+- The two service rows `<sub>/controller/placement_turn` and `<sub>/controller/placement_intent` belong to the controller role; placement readers also read these two rows.
 
 <!-- req: P/04-R211 -->
 
@@ -1174,55 +1269,55 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R209, P/04-R222, P/04
 
 - **`<sub>/controller/placement_turn — manifest_rev`**: \<manifest revision\> — does not decrease; an old controller does not capture a new revision
 
-See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545.
 
 <!-- req: P/04-R214 -->
 
 - **`<sub>/controller/placement_intent`**: — a row; it is not deleted after creation
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R215 -->
 
 - **`<sub>/controller/placement_intent — state`**: active | idle
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R216 -->
 
 - **`<sub>/controller/placement_intent — manifest_rev`**: \<revision of the accepted decision\>
 
-See also: P/04-R020, P/04-R021, P/04-R057, P/04-R058, P/04-R073, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R214, P/04-R215, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R262, P/04-R405, P/04-R406, P/04-R484, P/04-R496.
+See also: P/04-R020, P/04-R021, P/04-R057, P/04-R058, P/04-R073, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R214, P/04-R215, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R262, P/04-R405, P/04-R406, P/04-R484, P/04-R496, P/04-R500, P/04-R545.
 
 <!-- req: P/04-R484 -->
 
 - The fields `members`, `target`, `reason` and `at` below belong to an active `placement_intent`; `manifest_rev` is required in both states.
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R500.
 
 <!-- req: P/04-R217 -->
 
 - **`<sub>/controller/placement_intent — members`**: \<JSON array of all ids of the decision; unique, sorted\>
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R218 -->
 
 - **`<sub>/controller/placement_intent — target`**: \<worker name\> | "" — one target of the whole group; "" — remove the placement
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R219 -->
 
 - **`<sub>/controller/placement_intent — reason`**: \<non-empty reason\>
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R220 -->
 
 - **`<sub>/controller/placement_intent — at`**: \<wall seconds of taking the decision\>
 
-See also: P/04-R002, P/04-R020, P/04-R021, P/04-R073, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R113, P/04-R174, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R002, P/04-R020, P/04-R021, P/04-R073, P/04-R075, P/04-R088, P/04-R090, P/04-R092, P/04-R097, P/04-R108, P/04-R113, P/04-R174, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R222 -->
 
@@ -1234,16 +1329,19 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R209, P/04-R212, P/04
 
 - An unreadable turn/intent row is a refusal of the placement change with failures, not an empty row.
 
-See also: P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R223 -->
 
-- An intent row out of form
-(`state` is not `active`/`idle`; an active one has no `members`, `target`, `reason`, `at`, or they are not in the form above) is unreadable:
-the controller — a refusal with failures, the readers (`/where`, `/unplaceable`, label forecasts) — 503 `unavailable`, not idle
-Their initial absence is admissible; after creation neither row is deleted.
+- An intent row out of form (`state` is not `active`/`idle`; an active row lacks `members`, `target`, `reason`, `at`, or their values are out of form) is unreadable: placement change is refused with failures at the controller; the readers (`/where`, `/unplaceable`, label forecasts) return 503 `unavailable`, not idle.
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
+
+<!-- req: P/04-R500 -->
+
+- Initial absence of the turn and intent rows is admissible; after creation neither of these two rows is deleted.
+
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
 
 <!-- req: P/04-R224 -->
 
@@ -1251,88 +1349,88 @@ See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04
 the lower bound of manifest_rev, idle is kept so that the version of intent does not return to
 the version of absence between two reads; the readers below need this.
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R021 -->
 
 - An active intent is an accepted common decision for members while the individual placement and workers
 are being brought to it.
 
-See also: P/04-R020, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R225 -->
 
 - For each of its ids the target/reason/at/manifest_rev of the intent decide; the other ids
 are decided by their own placement.
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R226, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R226, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R226 -->
 
 - A reader (/where, unplaceable, forecasts and the controller) reads the decision by
 [the observation contract](../../common/contracts/observation.md) «Reading the decision: intent → placement → intent».
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R227, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R227, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R227 -->
 
 - With idle, all rows of the completed decision have already been brought to it.
 
-See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R484.
+See also: P/04-R020, P/04-R021, P/04-R073, P/04-R214, P/04-R215, P/04-R216, P/04-R217, P/04-R218, P/04-R219, P/04-R220, P/04-R223, P/04-R224, P/04-R225, P/04-R226, P/04-R484, P/04-R500.
 
 <!-- req: P/04-R022 -->
 
 - For admission the load of a target is counted conservatively: the sum of the weights of the unique ids already assigned
 to it **or** directed there by the effective decision.
 
-See also: P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R228 -->
 
 - Double counting of one id at one worker
 is excluded; an old assignment not yet removed keeps the room at the former worker.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R229 -->
 
 - The same aggregate
 is counted for spread_by.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R230 -->
 
 - An active intent reserves all members at target even before workers.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R231 -->
 
 - The indicators of the actual assignment are still counted by workers; the reserve is a condition of admission,
 not a statement that the unit already runs.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R232, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R232 -->
 
 - Before a new admission an unfinished intent is completed.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R233, P/04-R243, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R233, P/04-R243, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R023 -->
 
 - A group is admitted by one intent with all its members from a fresh look and one common target;
 the preferences are chosen by the first id in UTF-8 order, the constraints and the weight — by all members.
 
-See also: P/04-R022, P/04-R149, P/04-R155, P/04-R156, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R149, P/04-R155, P/04-R156, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R233 -->
 
 - The workers never get the assignments of the members of this operation at different targets at the same time:
 first all former assignments of all members are removed, then the members are added to one target.
 
-See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R156, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261, P/04-R288, P/04-R289.
+See also: P/04-R022, P/04-R023, P/04-R149, P/04-R155, P/04-R156, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R258, P/04-R261, P/04-R288, P/04-R289, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R234 -->
 
@@ -1808,49 +1906,85 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R209, P/04-R212, P/04
 
 - Accepting and completing a decision follows steps 0–6 below, in order.
 
-See also: P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R490 -->
 
 - 0. the turn is mine; an active intent → first complete it, do not accept new decisions yet; manifest_rev of the intent > mine → do not change it and the placements; the rows of its members — into manifest_behind (N1.2)
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R243 -->
 
-- 1. for a new decision: freshly read the units, the effective decisions, the assignments and the properties of the candidates; at least one placement of members has manifest_rev > mine → do not accept the intent; the rows of members — into manifest_behind (N1.2); check the whole group/unit, the free capacity with the reserves of N1.5, spread_by and the other constraints; for the estimate of a move the own former reserves of members are not counted as a second copy at the target; the final set is checked: the former ids without members + ALL members, including spread_by between the members of the group itself and over all workers of the target server; no common target → no new admission (the removal uses target "") the full key `<sub>`/placement/`<id>` of at least one of the members is longer than the key limit of the store (P/01.1 N1) → there is no decision, the intent is not written; these members — into unplaceable with why
+- 1. Before a new decision, freshly read the units, effective decisions, assignments and candidate properties.
 
-See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
+
+<!-- req: P/04-R516 -->
+
+- If any member placement has manifest_rev greater than this controller’s revision, accept no new intent and count members’ rows in manifest_behind (N1.2).
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
+
+<!-- req: P/04-R517 -->
+
+- Check the whole group or unit against free capacity with the reserves of N1.5, spread_by and every other constraint before accepting a decision.
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
+
+<!-- req: P/04-R518 -->
+
+- For a move estimate, do not count the members’ own old reserves as a second copy at the target.
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R519, P/04-R520, P/04-R521.
+
+<!-- req: P/04-R519 -->
+
+- Admission checks the final set: old ids excluding members plus ALL members, including spread_by inside the group and across every worker of the target server.
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R520, P/04-R521.
+
+<!-- req: P/04-R520 -->
+
+- No common target means no new admission; removal uses target "".
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R521.
+
+<!-- req: P/04-R521 -->
+
+- If any full `<sub>/placement/<id>` key of the members exceeds the P/01.1 key limit, there is no decision or intent write; those members enter unplaceable with why.
+
+See also: P/04-R022, P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R149, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R288, P/04-R289, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520.
 
 <!-- req: P/04-R244 -->
 
 - 2. write the active intent with cas of the read idle (or cas "" on the initial absence) and guard turn; toolarge before a confirmed active → a refusal of the step, do not change placement/workers, do not split the group
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R245 -->
 
 - 3. after a confirmed intent freshly list/read ALL workers; remove ALL members from ALL assignments, including target, each by a write cas + guard turn; only the confirmed completion of all removals allows going on
 
-See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R246 -->
 
 - 4. assign to each placement of members target/reason/at/manifest_rev of the intent with cas + guard turn, rev + 1; the row already contains these fields → do not rewrite it; an absent one starts with rev 1
 
-See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R245, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R245, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R247 -->
 
 - 5. target non-empty → add ALL members to its assignment by one write cas + guard turn; target empty → no addition; while 3–4 are not complete, step 5 is forbidden
 
-See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R023, P/04-R027, P/04-R036, P/04-R037, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R258, P/04-R259, P/04-R260, P/04-R261, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R248 -->
 
 - 6. only after the confirmation of 3–5 write the intent {state: idle, manifest_rev} with cas + guard turn
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R028 -->
 
@@ -1893,27 +2027,27 @@ See also: P/04-R028, P/04-R031, P/04-R249, P/04-R250, P/04-R251, P/04-R280.
 
 - An incomplete read also forbids admission.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R254 -->
 
 - On a change of holder an active intent is recovered **from step 3**; a new decision and another direction
 for its members are forbidden until completion.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R255 -->
 
 - The composition, the target and the rule are fixed in the intent;
 changes of the inputs after its acceptance are processed by the next decision after the recovery.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R256 -->
 
 - After completion all new calculations take a fresh look, so the reserve of the previous decision is already visible.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R029 -->
 
@@ -1922,8 +2056,7 @@ the decision/assignment of A or its active intent, which B is obliged to complet
 
 <!-- req: P/04-R257 -->
 
-- With capacity=1
-the second weight 1 does not pass; with spread_by the occupied value is already visible.
+- In two admissions by different controllers with capacity=1, the second weight 1 does not pass; with spread_by the value occupied by the first admission is already visible.
 
 <!-- req: P/04-R258 -->
 
@@ -1938,19 +2071,17 @@ See also: P/04-R023, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04
 in the middle of the removals the additions do not start; after a break in the middle of placement the new holder
 repeats the removals and completes the same target.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R260 -->
 
-- Until the addition to the new target the old ones have not a single
-assignment of members.
+- Before members are added to the new target, their old worker assignments contain none of those members.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R261 -->
 
-- This is a guarantee of rows/assignments, while stopping the actions of old processes
-is ensured by their reconciliation and leases (P/03.3, P/03.2), not by one change of the placement map.
+- The transfer guarantee is about rows and assignments; old process actions stop through reconciliation and leases (P/03.3, P/03.2), not through the placement map change alone.
 
 See also: P/04-R023, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04-R237, P/04-R238, P/04-R239, P/04-R245, P/04-R246, P/04-R247, P/04-R258.
 
@@ -1960,15 +2091,31 @@ See also: P/04-R023, P/04-R156, P/04-R233, P/04-R234, P/04-R235, P/04-R236, P/04
 
 - Each pass follows the ordered steps below every PASS_EVERY, with the independent-step error handling specified there.
 
+<!-- req: P/04-R501 -->
+
+- Each step of the pass runs in its own attempt: an error of a step increments failures by 1, and the other steps go on.
+
 <!-- req: P/04-R491 -->
 
-- 0. observation: update the memory of the seen heartbeats, slots and resources on the own clock; the objects of the cluster (heartbeats of workers and resources, reports) are read through the resource of the own server (the objects door of P/05, `scope`); without a resource on the own server with `cluster://` — «unknown», not «absent» ([the object store client contract](../../common/contracts/object-client.md) `door`); seen for the first time = has just changed; get the placement turn by N3 above; busy → no changing pass, a retry after TURN_BUSY_RETRY; mine → first complete an active intent; then a fresh look: the units, the placements, the assignments and the properties of the candidates; before every new decision the look is refreshed, the results of the previous decision are taken into account
+- 0. Update the memory of observed heartbeats, slots and resources on this controller’s own clock; first sight of a version means it has just changed.
+
+<!-- req: P/04-R522 -->
+
+- Read cluster objects (worker/resource heartbeats and reports) through the resource of this server. Without its resource, `cluster://` gives unknown, not absent ([object client](../../common/contracts/object-client.md), door).
+
+<!-- req: P/04-R523 -->
+
+- Get the placement turn before a changing pass: busy means no changing pass and retry after TURN_BUSY_RETRY; when the turn is mine, first complete an active intent.
+
+<!-- req: P/04-R524 -->
+
+- After turn admission and intent completion, take a fresh view of units, placements, assignments and candidate properties. Refresh that view before every new decision, including effects of the preceding decision.
 
 <!-- req: P/04-R262 -->
 
 - 1. revision: read the manifest revision; a placement without its required manifest_rev is unreadable; do not stamp or repair it; read the manifest catalogue (platform/manifest/*) — on every pass: the manifest near.sub has appeared — the affinity (N1.3 near) applies from this pass; it is absent — no affinity, near_waiting
 
-See also: P/04-R034, P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R133, P/04-R157, P/04-R213, P/04-R216, P/04-R405, P/04-R406, P/04-R461, P/04-R462, P/04-R463, P/04-R464, P/04-R496.
+See also: P/04-R034, P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R133, P/04-R157, P/04-R213, P/04-R216, P/04-R405, P/04-R406, P/04-R461, P/04-R462, P/04-R463, P/04-R464, P/04-R496, P/04-R545.
 
 <!-- req: P/04-R263 -->
 
@@ -1996,7 +2143,7 @@ See also: P/04-R047, P/04-R048, P/04-R287, P/04-R293, P/04-R322, P/04-R323, P/04
 
 - 7. home: no more than HOME_BUDGET units — home, if there is room there; the home is judged as in «choose» (N1.3 home): the holder of the named place is eligible — it alone is the home, a unit at another worker, including one of the same server, moves to it; there is no holder — the home is the server of the place, and a unit on this server is already home; no home, it has no free room or is not eligible — the unit stays: a preference does not become a filter
 
-See also: P/04-R158, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472.
+See also: P/04-R158, P/04-R290, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471.
 
 <!-- req: P/04-R269 -->
 
@@ -2010,7 +2157,11 @@ See also: P/04-R025, P/04-R123, P/04-R125, P/04-R134, P/04-R136, P/04-R241, P/04
 
 <!-- req: P/04-R271 -->
 
-- Likewise — one removed by retire_when now, for longer than retire_when.delete_after (from the first pass that saw it removed; a pass at which it is no longer removed clears the count, N1.3; after a restart — anew): the condition is checked on the fresh row and, with retire_when.state, on its acting state, no longer removed — do not delete: an operator edit is not lost — and one removed by ends: ends deletes right after the removal.
+- Physical deletion under step 8 also applies when the unit is still removed by retire_when for longer than retire_when.delete_after, counted from the first observed removal and reset when removal ceases or the controller restarts. Recheck the fresh row and, with retire_when.state, its acting state; if no longer removed, do not delete, so an operator edit is preserved.
+
+<!-- req: P/04-R525 -->
+
+- A unit removed by ends is physically deleted immediately after removal, under the same step-8 deletion rules and manual-row exception.
 
 <!-- req: P/04-R272 -->
 
@@ -2022,7 +2173,7 @@ See also: P/04-R025, P/04-R123, P/04-R125, P/04-R134, P/04-R136, P/04-R241, P/04
 
 <!-- req: P/04-R274 -->
 
-- It never authorizes deletion before keep.
+- The made.keep check never authorizes deletion before keep.
 
 <!-- req: P/04-R275 -->
 
@@ -2044,9 +2195,9 @@ See also: P/04-R025, P/04-R123, P/04-R125, P/04-R134, P/04-R136, P/04-R241, P/04
 
 <!-- req: P/04-R279 -->
 
-- 10. finish the control part and its ok/failures/at/seconds/last_success; release the turn; then attempt unit snapshots and table snapshots outside turn, and write this cycle's one final `<sub>`/controller/pass each step — in its own attempt: an error of a step — failures + 1, the other steps go on
+- 10. Finish the control part and its ok/failures/at/seconds/last_success; release the turn; then attempt unit snapshots and table snapshots outside turn, and write this cycle’s one final `<sub>/controller/pass`.
 
-See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146.
+See also: P/04-R007, P/04-R008, P/04-R112, P/04-R113, P/04-R114, P/04-R115, P/04-R124, P/04-R125, P/04-R126, P/04-R127, P/04-R134, P/04-R135, P/04-R136, P/04-R137, P/04-R138, P/04-R139, P/04-R140, P/04-R141, P/04-R142, P/04-R143, P/04-R144, P/04-R145, P/04-R146, P/04-R542, P/04-R543, P/04-R544.
 
 <!-- req: P/04-R031 -->
 
@@ -2122,19 +2273,19 @@ See also: P/04-R005, P/04-R033, P/04-R034, P/04-R035, P/04-R047, P/04-R048, P/04
 
 - eligible = pool ∩ constraint ∩ spread_by ∩ affinity ∩ (the group is already at a worker → only it) ∩ (the worker holds an exclusive place → only the units bound to it; N1.3 affinity.exclusive)
 
-See also: P/04-R005, P/04-R022, P/04-R023, P/04-R033, P/04-R034, P/04-R035, P/04-R082, P/04-R084, P/04-R149, P/04-R150, P/04-R151, P/04-R153, P/04-R155, P/04-R159, P/04-R160, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R286, P/04-R287, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R334, P/04-R337, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R492.
+See also: P/04-R005, P/04-R022, P/04-R023, P/04-R033, P/04-R034, P/04-R035, P/04-R082, P/04-R084, P/04-R149, P/04-R150, P/04-R151, P/04-R153, P/04-R155, P/04-R159, P/04-R160, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R286, P/04-R287, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R334, P/04-R337, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R492, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531.
 
 <!-- req: P/04-R289 -->
 
 - a group of several waiting: eligible ∩ {admits all ∧ free ≥ Σ of the weights}; empty → wait, tell
 
-See also: P/04-R022, P/04-R023, P/04-R033, P/04-R035, P/04-R149, P/04-R151, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R492.
+See also: P/04-R022, P/04-R023, P/04-R033, P/04-R035, P/04-R149, P/04-R151, P/04-R155, P/04-R228, P/04-R229, P/04-R230, P/04-R231, P/04-R232, P/04-R233, P/04-R243, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R492, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R290 -->
 
 - order: home → preference → all; home — among the eligible (N1.3 home): the holder of the named place, no holder — the workers of the server of this place; the holder lacks free room — the rank is empty, the server of the home does not replace it; preference — one rank: a worker beside the neighbour (near) or on the server of a non-binding affinity row (N1.3) — either of the two, both at once do not raise the rank; inside a rank — free = capacity − load with the reserves of N1.5, free ≥ the weight of the unit ∧ strictly more than the former best; equality — the first by name (ASCII, P/03.2 N1.4)
 
-See also: P/04-R033, P/04-R035, P/04-R151, P/04-R158, P/04-R268, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R472, P/04-R492.
+See also: P/04-R033, P/04-R035, P/04-R151, P/04-R158, P/04-R268, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R296, P/04-R465, P/04-R466, P/04-R467, P/04-R468, P/04-R469, P/04-R470, P/04-R471, P/04-R492.
 
 <!-- req: P/04-R291 -->
 
@@ -2164,25 +2315,25 @@ See also: P/04-R033, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04
 
 <!-- req: P/04-R293 -->
 
-- Leaving: `slot <name> released`, `slot <name> capture did not finish`, `resource on <s> silent`, `server <s> draining`, `server <s> decommissioned`, `<w> holds no <place_by> now`, `<w>'s <place_by> <place> admits no unit` (`<place_by>` is the name of the field `placement.place_by`, `<place>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`).
+- For the human-readable reason, which MUST be non-empty and SHOULD follow this grammar (P/04-R035), Leaving: `slot <name> released`, `slot <name> capture did not finish`, `resource on <s> silent`, `server <s> draining`, `server <s> decommissioned`, `<w> holds no <place_by> now`, `<w>'s <place_by> <place> admits no unit` (`<place_by>` is the name of the field `placement.place_by`, `<place>` is the id of the place of the worker: `w-1 holds no shard now`, `w-1's shard s3 admits no unit`).
 
 See also: P/04-R033, P/04-R035, P/04-R047, P/04-R048, P/04-R151, P/04-R267, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R294, P/04-R295, P/04-R296, P/04-R322, P/04-R323, P/04-R324, P/04-R492.
 
 <!-- req: P/04-R294 -->
 
-- Reachability: `<s> no longer reaches <label>; …` / `; nothing live reaches it`.
+- For the human-readable reason, which MUST be non-empty and SHOULD follow this grammar (P/04-R035), Reachability: `<s> no longer reaches <label>; …` / `; nothing live reaches it`.
 
 See also: P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R295, P/04-R296, P/04-R492.
 
 <!-- req: P/04-R295 -->
 
-- Group: `with <id>, one <group_by>: <why>; on <s>`.
+- For the human-readable reason, which MUST be non-empty and SHOULD follow this grammar (P/04-R035), Group: `with <id>, one <group_by>: <why>; on <s>`.
 
 See also: P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R296, P/04-R492.
 
 <!-- req: P/04-R296 -->
 
-- Deleted: `deleted`.
+- For the human-readable reason, which MUST be non-empty and SHOULD follow this grammar (P/04-R035), Deleted: `deleted`.
 
 See also: P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R289, P/04-R290, P/04-R291, P/04-R292, P/04-R293, P/04-R294, P/04-R295, P/04-R492.
 
@@ -2190,7 +2341,7 @@ See also: P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04
 
 - **Materialization and sync.** They use the same intent and turn.
 
-See also: P/04-R027, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R297 -->
 
@@ -2198,13 +2349,13 @@ See also: P/04-R027, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04
 already exists, the repair first fixes it for the unit/group, removes the former assignments and completes
 one target.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R298 -->
 
 - There is no partial addition by the snapshot of the start of the pass.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R299 -->
 
@@ -2212,7 +2363,7 @@ See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04
 write is the turn version; the stability of the decision is ensured by the exclusive ownership of the turn,
 the fresh check and the intent that is unchangeable until completion.
 
-See also: P/04-R018, P/04-R019, P/04-R026, P/04-R027, P/04-R036, P/04-R037, P/04-R071, P/04-R209, P/04-R212, P/04-R222, P/04-R242, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R283, P/04-R297, P/04-R298, P/04-R301, P/04-R302, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R489, P/04-R490.
+See also: P/04-R018, P/04-R019, P/04-R026, P/04-R027, P/04-R036, P/04-R037, P/04-R071, P/04-R209, P/04-R212, P/04-R222, P/04-R242, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R283, P/04-R297, P/04-R298, P/04-R301, P/04-R302, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R489, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 ### move(unit, from, to) → ok | already moved
 
@@ -2220,13 +2371,13 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R027, P/04-R036, P/04-R037, P/04
 
 - 1. the turn of the current pass is mine and confirmed; outside a pass first get it; re-capturing an already held turn is not needed; complete the former active intent; freshly read the effective placement; worker != from → Moved, do not touch; for a group check all members and the common target
 
-See also: P/04-R027, P/04-R036, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R301 -->
 
 - 2. check to by all constraints and the free capacity with the reserves; accept an intent for the whole unit/group and complete it by steps 2–6 above
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R303, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R038 -->
 
@@ -2240,29 +2391,28 @@ See also: P/04-R018, P/04-R019, P/04-R026, P/04-R071, P/04-R209, P/04-R212, P/04
 
 <!-- req: P/04-R303 -->
 
-- It can neither add to w-2
-nor remove from the already new w-3.
+- The late writer A can neither add to w-2 nor remove from the already new w-3.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R304, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R304, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R304 -->
 
 - If A managed to add before the capture by B, B sees the assignment at the fresh
 removal.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R305, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R305, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R305 -->
 
 - One unit never gets two assignments; for a group all old assignments are removed before the addition of the new target.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R306, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R306, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R306 -->
 
 - A moment without an assignment and a lag of directory remain admissible.
 
-See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R490.
+See also: P/04-R027, P/04-R036, P/04-R037, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R255, P/04-R256, P/04-R259, P/04-R260, P/04-R297, P/04-R298, P/04-R299, P/04-R301, P/04-R303, P/04-R304, P/04-R305, P/04-R490, P/04-R516, P/04-R517, P/04-R518, P/04-R519, P/04-R520, P/04-R521.
 
 <!-- req: P/04-R039 -->
 
@@ -2290,51 +2440,51 @@ See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04
 
 - The ordered decision machine is [forms/slot-fate.tsv](../forms/slot-fate.tsv). Its typed inputs are the observations of this judge, not the writer's `until`. The first matching rule wins. It returns the fate and, when allowed, the exact judgement version for `names_given`. The release branch calls [forms/slot-release.tsv](../forms/slot-release.tsv): only its confirmed CAS answer can publish the post-release version. A `-` action is YOURS at its anchor; it must not be skipped. The write, abandoned-capture cleanup and permission rules remain below.
 
-See also: P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R041 -->
 
 - Release writes, abandoned-capture cleanup and capture permissions follow the rules below.
 
-See also: P/04-R040, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R493 -->
 
 - write release: write the slot released (cas), keep holder/until/gen/server; a torn one — wholly released and nobody's, keeping a readable gen and writing until as zero Time in the existing writer notation, never now; keep server only if readable by the current slot field schema; otherwise omit the field, with no empty substitute.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R546.
 
 <!-- req: P/04-R309 -->
 
-- No liveness or registry check; if gen does not read — do not change the row, do not issue a permission for the capture (P/03.2 N1.4)
+- When preserving or omitting server during a release, use no liveness or registry check. If gen is unreadable in the existing slot, do not change the row or grant capture permission (P/03.2 N1.4).
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R310 -->
 
 - abandoned capture: released = "taking", the version unchanged ≥ SLOT_TERM on the clock of the controller (the capturer died between the writes of P/03.2 N3 «capture» steps 3 and 4) → remove the rows under the slot: the contributions `<sub>`/`<from>`/`<slot>` of each book of the manifest with a from family (P/03.7 N1.2) by a batch with guards by `<sub>`/slots/`<slot>` with the version of this judgement, do not write the slot; no row — skip; a guard refusal (412 guard, 409 conflict) — a live capture changed the version: do not repeat; with a server decommission and without: an abandoned capture carries the server of the capturer, step 2 of «decommission_server» by server = s does not recognise it, and an orphan under taking would keep the contribution stale forever
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R311 -->
 
 - names_given[name] = the version of the slot row at which the name is taken: for move, hung_moved, unsure_moved and wait ≥ HUNG_MOVE_AFTER — the version at the moment of the judgement (the controller does not write the row); for release — the version AFTER the write of the release (the answer of this write): the released slot is taken by it, and as a «free» one it is also a candidate (P/03.2 N3 «capture» step 2c)
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R042 -->
 
 - An unreadable gen of an existing slot is not replaced with zero on release;
 such a row is kept and is not included in names_given until the generation is recovered.
 
-See also: P/04-R040, P/04-R041, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R312 -->
 
 - A reassignment
 of units by fate does not mean a permission to rewrite a damaged generation of the slot.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R043 -->
 
@@ -2342,7 +2492,7 @@ See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04
 a live resource tells about a process with one of `runs`, `gone`, `unlisted`, `unknown` (P/05 N1.4; `silent` is a state of the resource,
 not a presence), and the higher-priority rules still run first.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R313 -->
 
@@ -2354,8 +2504,7 @@ See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04
 
 <!-- req: P/04-R314 -->
 
-- This uses the existing closing-row policy, not the
-unreachable-resource delay of the effective HUNG_MOVE_AFTER; unknown is not evidence of either silence or unreachability.
+- The two closing rows of the fate selector use their existing closing-row policy, not the unreachable-resource delay of HUNG_MOVE_AFTER; resource_state unknown is evidence of neither silence nor unreachability.
 
 See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04-R197, P/04-R208, P/04-R307, P/04-R308, P/04-R313, P/04-R320, P/04-R321.
 
@@ -2363,49 +2512,49 @@ See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04
 
 - The transition selector is [forms/slot-release.tsv](../forms/slot-release.tsv).
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R315 -->
 
-- It receives the fate selected above; the CAS action is YOURS, then a confirmed reply or conflict is delivered to the machine.
+- The slot-release transition selector receives the selected fate; after its YOURS CAS action, deliver the confirmed reply or conflict to that machine.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R316 -->
 
 - The five witnesses remain covered: gone without units, a competing renewal, gone with units, unlisted without units and runs without units.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R317 -->
 
 - A competing renewal refuses the release, and the next pass judges the changed version as `alive`.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R045 -->
 
 - The order of the rules is normative: more definite knowledge before less definite; the margin before the judgements.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R318 -->
 
 - The controller does not write the slot at any outcome except `release` and the server decommission, and it removes the rows under an abandoned capture (above).
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R046 -->
 
 - **Races.** The holder renewed the slot between the judgement and the capture of the name by a new process: `names_given` is bound to the version, a capture with `cas` by it will not pass — the name stays.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R319, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R319 -->
 
 - Two controllers can have different observation histories and therefore different judgements; each uses its own version age by P/03.2 N1.4.
 
-See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R493.
+See also: P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R199, P/04-R200, P/04-R309, P/04-R310, P/04-R311, P/04-R312, P/04-R315, P/04-R316, P/04-R317, P/04-R318, P/04-R493, P/04-R546.
 
 <!-- req: P/04-R320 -->
 
@@ -2423,7 +2572,7 @@ See also: P/04-R014, P/04-R015, P/04-R039, P/04-R185, P/04-R186, P/04-R196, P/04
 
 <!-- req: P/04-R047 -->
 
-- The first matching row of the [leaving checks](../forms/README.md#leaving-checks) selects the existing leaving reason; no matching reason returns `none`.
+- The first of: the slot is released (released = true — at once); an abandoned capture (released = taking, the version unchanged for SLOT_TERM on the clock of the controller — the capturer died between the writes; earlier — not leaving, the capture will finish); the resource of the server is silent — only with `requires: resource` and a live worker (the pool contract): it works, but its units need a resource that is absent; it does not hold a place (`distinct`); the place does not admit; the server is draining; the server is decommissioned; an outcome from MOVED_FATES — its `why`.
 
 See also: P/04-R048, P/04-R267, P/04-R287, P/04-R293, P/04-R322, P/04-R323, P/04-R324.
 
@@ -2458,43 +2607,43 @@ See also: P/04-R047, P/04-R267, P/04-R287, P/04-R293, P/04-R322, P/04-R323, P/04
 - The role grows on demand: the controller orders the number of processes of the role on a specific server with the row
 `<sub>/want/<host>`, the server script brings the number of processes to it (P/02.4 N1.5); the controller does not start processes
 
-See also: P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R050 -->
 
 - Shortage, order creation, order distribution and withdrawal follow the rules below.
 
-See also: P/04-R049, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R494 -->
 
 - order row: on every server where the role is installed and neither pending nor finally decommissioned (the door row has room.`<sub>`, N1.1) — the row `<sub>`/want/`<host>`; none — create want 1 by a write with cas "" and guard of the own version of placement_turn
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R325 -->
 
 - placeable = readable live unit rows, excluding deleted/tombstoned rows and every unit removed by ends or retire_when in step 4; a manual expired row may remain in the store, but it is outside this set.
 
-See also: P/04-R025, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481.
+See also: P/04-R025, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R326 -->
 
-- Apply this same set before grouping or weighing.
+- Use the placeable set of readable live units (excluding deleted/tombstoned, ends and retire_when) before either grouping or weighing.
 
-See also: P/04-R025, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481.
+See also: P/04-R025, P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R327 -->
 
 - waiting = placeable ∩ (units without a placement ∪ units of the leaving ∪ out of reach); a group is one piece.
 
-See also: P/04-R025, P/04-R051, P/04-R053, P/04-R111, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R194, P/04-R195, P/04-R325, P/04-R326, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R482.
+See also: P/04-R025, P/04-R051, P/04-R053, P/04-R111, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R194, P/04-R195, P/04-R325, P/04-R326, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R482, P/04-R499, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R328 -->
 
 - Only these waiting units feed shortage, growth, the no-shortage timer and shrinking; retained expired rows and garbled rows neither cause an order nor delay shrinking.
 
-See also: P/04-R025, P/04-R051, P/04-R053, P/04-R111, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R194, P/04-R195, P/04-R325, P/04-R326, P/04-R327, P/04-R334, P/04-R335, P/04-R336, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R482.
+See also: P/04-R025, P/04-R051, P/04-R053, P/04-R111, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R162, P/04-R163, P/04-R165, P/04-R194, P/04-R195, P/04-R325, P/04-R326, P/04-R327, P/04-R334, P/04-R335, P/04-R336, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R358, P/04-R478, P/04-R479, P/04-R480, P/04-R481, P/04-R482, P/04-R499, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R329 -->
 
@@ -2528,21 +2677,81 @@ See also: P/04-R085, P/04-R086, P/04-R330, P/04-R331, P/04-R332, P/04-R337, P/04
 
 <!-- req: P/04-R334 -->
 
-- per label set: the capacity of a worker without a named one — placement.capacity.default (N1.3); a named 0 is not replaced with default; per = the smallest positive capacity over all suitable live workers, named or default; none such → placement.capacity.default, if it is > 0; no positive default either → no order for the set, withheld: "no positive capacity estimate"; the element of the set of the vector `order` has the same fields as a computed one: per: null, processes, in flight, needed, withheld — zeros, plus why; in the pass report — an element short[] of N1.2 (workers: 0, withheld — words) (still show the shortage of weight and of groups, workers: 0; with this withheld, zero means the absence of a computable estimate, not the absence of a shortage; this is not an error of the step) otherwise needed = max(0, processes − Σ in flight(s) of the suitable servers), where processes = ceil(max(0, Σ of the weights of the waiting − free at the suitable live) / per) + one per group that has no room anywhere: the capacity in flight is subtracted from the growth by groups too, otherwise the same growth would be ordered by every pass an exclusive place (N1.3 affinity.exclusive): the capacity of the worker holding it does not enter free for the other units; waiting units bound to a place without a holder — an order for the place: the server of the place (server_field of the row) is a candidate out of order, share 1; an empty server_field — no order, the place waits for a holder; a place whose secret did not open — no order, withheld «`<place_by>` `<place>` is sealed»: the controller learns Sealed from place_error.`<place>` = sealed in the heartbeats of the live workers of the role on the server of the place (P/03.4 N1.1); there are no live workers there — one ordinary order a place without a holder: for a manifest with places.wanted the row of the table of places passes places.where, its hold does not act, and the row `<sub>`/`<wanted>`/`<place>` exists and reads — an order for the place, a waiting piece of weight 1: the place may wait for neither a record nor a unit, and without a holder nobody reads its archive.
+- For a label set, a worker with no named capacity uses placement.capacity.default; a named 0 is not replaced by default. per is the smallest positive capacity among suitable live workers, named or default; with none, use placement.capacity.default only if it is positive.
 
-See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477.
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R526 -->
+
+- With no positive estimate or default, order nothing for the set and use withheld "no positive capacity estimate". The order vector still returns its usual fields: per null and processes/in flight/needed/withheld zero, plus why; the pass report still shows short[] with workers 0 and withheld words, including shortage weight and groups. That zero means no computable estimate, not no shortage; it is not a step error.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R527 -->
+
+- Otherwise processes = ceil(max(0, sum of waiting weights − free at suitable live workers) / per) plus one per group with no room anywhere; needed = max(0, processes − sum of in flight(s) at suitable servers). In-flight capacity is subtracted for groups too, so the next pass does not order the same growth again.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R528 -->
+
+- A worker holding an exclusive place (N1.3 affinity.exclusive) contributes no free capacity for other units.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R529 -->
+
+- Waiting units bound to an exclusive place without a holder trigger an order for that place: its server_field server is considered out of order with share 1; empty server_field gives no order and the place waits for a holder.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R530 -->
+
+- If that place’s secret did not open, give no order and withheld "\<place_by\> \<place\> is sealed". Sealed comes from place_error.\<place\> = sealed in heartbeats of live role workers on the place’s server (P/03.4 N1.1); with no live workers there, give one ordinary order.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R531 -->
+
+- For a manifest with places.wanted, an unheld place triggers a waiting piece of weight 1 when its place row passes places.where, its hold is inactive, and `<sub>/<wanted>/<place>` exists and reads. It need not wait for a record or unit: without a holder nobody reads its archive.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R159, P/04-R288, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R473, P/04-R474, P/04-R475, P/04-R476, P/04-R477, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R335 -->
 
-- The server is from the row of the place, as for an exclusive place: server_field non-empty — this server is a candidate out of order, share 1, on top of the general check of the candidate; not fit — no order, the place waits; Sealed — withheld, as there. server_field empty — the place is on any server: the piece goes with the empty label set as an ordinary probe; a limit: a new process will take the first free place, not necessarily this one, a superfluous process lives until shrinking.
+- For the places.wanted trigger, The server is from the row of the place, as for an exclusive place: server_field non-empty — this server is a candidate out of order, share 1, on top of the general check of the candidate; not fit — no order, the place waits; Sealed — withheld, as there. server_field empty — the place is on any server: the piece goes with the empty label set as an ordinary probe; a limit: a new process will take the first free place, not necessarily this one, a superfluous process lives until shrinking.
 
-See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R336, P/04-R358.
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R336 -->
 
-- The row does not read — there is no reason, a journal line without the value; another empty place gives no order servers: distinct and the place from the heartbeat (place_by is a heartbeat field): free at the suitable live — only at the keepers of places; a candidate for the set — a server on which in flight(s) = 0 (no probe: ordered and not raised) and there is no live suitable process without a place; the growth of the set — no more than one probe process per pass: the place of a new process is unknown before its start; on a server no more than one unfinished probe; no candidate or the growth is exhausted — the remainder of needed is withheld with the reason «no free `<place_by>`» (N4); a probe on one server does not stop the growth on another
+- For the places.wanted trigger, an unreadable wanted row gives no reason to order; log without its value. Another empty place does not itself cause an order.
 
-See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R358.
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R532 -->
+
+- With servers: distinct and a heartbeat-derived place_by, free at suitable live workers includes only place keepers.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R533, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R533 -->
+
+- For that distinct heartbeat-place set, a candidate server has in flight(s) = 0 and no live suitable process without a place.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R534, P/04-R535.
+
+<!-- req: P/04-R534 -->
+
+- For that distinct heartbeat-place set, order at most one probe process per pass, and at most one unfinished probe per server: its place is unknown before start.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R535.
+
+<!-- req: P/04-R535 -->
+
+- For that distinct heartbeat-place set, no candidate or exhausted growth leaves the rest of needed withheld with "no free \<place_by\>" (N4). A probe on one server does not prevent growth on another.
+
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534.
 
 <!-- req: P/04-R337 -->
 
@@ -2558,9 +2767,45 @@ See also: P/04-R085, P/04-R086, P/04-R330, P/04-R331, P/04-R332, P/04-R333, P/04
 
 <!-- req: P/04-R339 -->
 
-- order: distribute needed of the set over the candidates in order, to each — no more than min(free(s), WANT_NUM_MAX − want(s)); for a manifest with a non-empty door.pass.calls the ceiling of want(s) is 1, not WANT_NUM_MAX: a ticket is bound to the sheet of the server, there is one sheet per role and server (the warden and hand-over contract «Pass of the second kind»); the remainder of needed — withheld, as with a lack of candidates; after a share free(s) −= share; want(s) := want(s) + share — a write of the order row with cas by the read version and guard of the own version of placement_turn, why — the reason «`<n>` more for `<labels>` on `<s>`: `<waiting>` waiting» (`<labels>` — the canonical notation of the set; the empty set — any labels); want is the absolute target: a repeated pass and a new holder of the turn recompute needed with the capacity in flight and do not repeat the growth — one acting logical order per piece of shortage (label set); no candidates — the remainder of needed of the set is withheld: the number of processes in the series workers_withheld{labels} (P/06.5), the words — in short.withheld of the report (N1.2), the alarm workers.no_server {server, labels, want, why} the competition of subsystems for the last room of a server (room of different roles) is an admissible delay; the common memory ceiling of a server over all roles is a limit of the scheme
+- Distribute needed for the label set over candidates in their order; a share is at most min(free(s), WANT_NUM_MAX − want(s)).
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
+
+<!-- req: P/04-R536 -->
+
+- For a manifest with non-empty door.pass.calls, the want(s) ceiling is 1 instead of WANT_NUM_MAX: a ticket is bound to the server sheet, and there is one sheet per role and server (gate-and-pass, Pass of the second kind). Withhold the remaining needed as for a lack of candidates.
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
+
+<!-- req: P/04-R537 -->
+
+- After each order share, subtract that share from the pass’s free(s).
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
+
+<!-- req: P/04-R538 -->
+
+- Increase want(s) by the share through an order-row write with CAS of its read version and guard of the own placement_turn version; why uses "\<n\> more for \<labels\> on \<s\>: \<waiting\> waiting", with the canonical label set and "any labels" for the empty set.
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R539, P/04-R540, P/04-R541.
+
+<!-- req: P/04-R539 -->
+
+- want is an absolute target: a repeat pass or new turn holder recomputes needed with in-flight capacity, without repeating growth; one logical order acts per shortage piece (label set).
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R540, P/04-R541.
+
+<!-- req: P/04-R540 -->
+
+- With no candidates, withhold the remaining needed: process count in workers_withheld{labels} (P/06.5), words in report short.withheld (N1.2), and alarm workers.no_server {server, labels, want, why}.
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R541.
+
+<!-- req: P/04-R541 -->
+
+- Subsystem competition for the last room of a server across roles is an admissible delay; the common server memory ceiling over all roles remains a scheme limit.
+
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540.
 
 <!-- req: P/04-R340 -->
 
@@ -2572,92 +2817,92 @@ See also: P/04-R108, P/04-R132, P/04-R191, P/04-R192, P/04-R193, P/04-R329, P/04
 
 - number above want: a live role process of the server s (the name and the number N — the slot name contract, «Role process name and its number»; not a role process — the rule does not apply) with a number greater than want(s) (raised after the withdrawal of the order, a shrink victim before its stop, a remainder of a door race) — not in the pool (as retiring) and gets no units; the server script stops it (P/02.4 N1.5 rules 3); the controller does not raise want(s)
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R051 -->
 
 - Shrink step 9a follows the condition, victim and transition rules below.
 
-See also: P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R342 -->
 
 - The [shrink checks](../forms/README.md#shrink-checks) select the first existing refusal reason; only `ok` permits shrinking. The victim, wanted-place protection, move and completion rules below still apply.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R343 -->
 
 - victim: only a live worker with n = want(s) > 1 of its server s is a candidate; select the largest eligible n (as an integer); a live number above want(s) is not a victim: the script stops it, the end of shrinking does not extinguish it; on equal numbers on different servers — the smaller name of the server in UTF-8 bytes first, as the order of candidates; each of its units (a group — whole) passes choose(unit) on the pool without the victim; otherwise do not shrink, the reason is in the report
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R344 -->
 
 - wanted: only the top ordered number n = want(s) of a server may be a victim.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R345 -->
 
 - If that worker holds a place with a readable row of places.wanted, skip the entire server and consider the top candidate of another server, with the same number/server ordering.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R346 -->
 
 - Never fall back to a lower number on that server: reducing want would stop its protected top process.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R347 -->
 
 - A removed wanted place would at once order a process.
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R348 -->
 
 - retiring: write retiring = `<victim>` into the order row of its server (cas, guard turn); the victim is outside the pool of all steps (choose, move, home, reachability), and at a new holder of the turn — by the row; one victim per role at a time; in live(s) for «in flight» and «failed to raise» it stays while it is alive
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R349 -->
 
 - move: no more than SHRINK_BUDGET units per pass, the reason «`<w>` is retiring: the role shrinks on `<s>`»; the first indivisible group goes even beyond the budget (as reachability, step 5)
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R350 -->
 
 - end: the assignment of the victim is empty → want := want − 1 (not below 1) and retiring removed — by one write; the server script stops the process with the largest n (P/02.4 N1.5) — this is the victim: there is no in flight (the condition), the numbers 2…want(s) are alive, and the victim is the number want(s)
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R351, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R351 -->
 
 - cancel: the shortage returned before the end → retiring removed, the victim is in the pool again
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R352, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R352, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R352 -->
 
 - drain: a server in platform/drain gets no new orders; its additional processes are shrunk one by one without the hold time and hysteresis (the units leave anyway, «server `<s>` draining»), want − 1 with an empty assignment of the victim, down to 1
 
-See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R353, P/04-R482.
+See also: P/04-R051, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R353, P/04-R482, P/04-R499.
 
 <!-- req: P/04-R353 -->
 
 - decommission: step 2 — accepting pending deletes the order row with cas and turn/request guards; pending/final servers get no new orders
 
-See also: P/04-R051, P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R482, P/04-R495.
+See also: P/04-R051, P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R111, P/04-R194, P/04-R195, P/04-R327, P/04-R328, P/04-R341, P/04-R342, P/04-R343, P/04-R344, P/04-R345, P/04-R346, P/04-R347, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R482, P/04-R495, P/04-R499.
 
 <!-- req: P/04-R052 -->
 
 - **Races.** Two controllers write one order row: cas by the version and the guard `placement_turn` let one pass, the second
 re-reads and recomputes from the absolute target.
 
-See also: P/04-R049, P/04-R050, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R354 -->
 
@@ -2665,7 +2910,7 @@ See also: P/04-R049, P/04-R050, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04
 target under cas with the guard `placement_turn` and the capacity in flight close a repeat of the growth — a repeated pass and a new
 controller complete the target, they do not add to it.
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R355, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R355, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R355 -->
 
@@ -2674,14 +2919,14 @@ lags — a process raised after the withdrawal of the order, with a number above
 stopped by the script with a non-empty assignment (a desync) releases the slot in the regular way (P/03.4 N3 «stop by SIGTERM») —
 this is a move, not a loss of units.
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R356, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R109, P/04-R110, P/04-R339, P/04-R354, P/04-R356, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R356 -->
 
 - Shrinking and a change of the turn holder: `retiring` is in the row, the new holder continues
 the move and does not choose a new victim.
 
-See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R108, P/04-R109, P/04-R110, P/04-R132, P/04-R191, P/04-R192, P/04-R193, P/04-R329, P/04-R330, P/04-R331, P/04-R339, P/04-R340, P/04-R354, P/04-R355, P/04-R483, P/04-R494.
+See also: P/04-R049, P/04-R050, P/04-R052, P/04-R106, P/04-R107, P/04-R108, P/04-R109, P/04-R110, P/04-R132, P/04-R191, P/04-R192, P/04-R193, P/04-R329, P/04-R330, P/04-R331, P/04-R339, P/04-R340, P/04-R354, P/04-R355, P/04-R483, P/04-R494, P/04-R536, P/04-R537, P/04-R538, P/04-R539, P/04-R540, P/04-R541.
 
 <!-- req: P/04-R357 -->
 
@@ -2696,16 +2941,13 @@ See also: P/04-R085, P/04-R086, P/04-R330, P/04-R331, P/04-R332, P/04-R333, P/04
 - **The probe process with `distinct`.** A worker without a place carries no units and does not leave for another server: a place on its
 server is freed only by the leaving of the keeper, until then it stays idle.
 
-See also: P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358.
+See also: P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R358, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 <!-- req: P/04-R358 -->
 
-- A new process, until its first heartbeat
-with a taken place, carries the place `""` and in this window is a live one without a place: its server is not a candidate in this window; while it is ordered and not
-raised — too (a probe in flight); a delayed start does not give the server a second probe; the other servers of the set are candidates, with
-one probe process per pass.
+- With servers: distinct and a heartbeat-derived place, a new probe process has place "" until its first heartbeat with a held place. In this window its server is not a candidate; it is also not a candidate while the probe is ordered but not raised. A delayed start gives that server no second probe; other servers remain candidates, with one probe process per pass.
 
-See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336.
+See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04-R325, P/04-R326, P/04-R327, P/04-R328, P/04-R334, P/04-R335, P/04-R336, P/04-R526, P/04-R527, P/04-R528, P/04-R529, P/04-R530, P/04-R531, P/04-R532, P/04-R533, P/04-R534, P/04-R535.
 
 ### decommission_server(s) — a console request, executed by the controller
 
@@ -2713,289 +2955,349 @@ See also: P/04-R053, P/04-R130, P/04-R139, P/04-R140, P/04-R141, P/04-R149, P/04
 
 - Controller decommission follows the acceptance, release, cleanup and finalization procedure below.
 
-See also: P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R495 -->
 
 - console: request, 409 server answers, platform/decommission/`<host>`, door deletion and withdrawal remain P/06.6 N3.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R359 -->
 
 - existing valid final mark and standing request: do not rewrite the mark, its slots or remaining contributions; no new cleanup is authorized.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
-<!-- req: P/04-R360 -->
-
-- 0.
-
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+<!-- removed: P/04-R360 by ADR-0133 -->
 
 <!-- req: P/04-R361 -->
 
-- Resume a readable pending row before admitting a new plan.
+- 0. Resume a readable pending row before admitting a new plan.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R362 -->
 
-- Its fixed request_index must still be the current request.
+- The fixed request_index of the pending row must still identify the current request.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R363 -->
 
 - Before mutation validate the progress invariants: remaining names are distinct and disjoint from released/skipped; released and skipped are disjoint; current is an ordered subset of released.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R364 -->
 
-- In cleaning, slot_cursor < len(current) and from_cursor \<= len(from); every from prefix belongs to this subsystem. The from list is frozen at acceptance from the declared owned books, never rebuilt from a later manifest. A malformed progress plan is a step error: keep it, do not infer completion, release/delete anything or replace it with a fresh plan. Schema readability alone is insufficient. No pending/final row: the server is heard by the ordinary observation rule -\> leave the request standing, no mutation; otherwise completely read the request, owned slots and required metadata.
+- In the cleaning phase of a pending decommission plan, slot_cursor < len(current) and from_cursor <= len(from).
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
+
+<!-- req: P/04-R502 -->
+
+- Every from prefix of the pending plan belongs to this subsystem. The from list is frozen at plan acceptance from the declared owned books and is never rebuilt from a later manifest.
+
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R503, P/04-R504.
+
+<!-- req: P/04-R503 -->
+
+- A malformed pending progress plan is a step error: keep it; do not infer completion, release/delete anything or replace it with a fresh plan. Schema readability alone is insufficient.
+
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R504.
+
+<!-- req: P/04-R504 -->
+
+- With no pending or final row, if the server is heard by the ordinary observation rule, leave the decommission request standing without mutation; otherwise completely read the request, owned slots and required metadata.
+
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503.
 
 <!-- req: P/04-R365 -->
 
-- An incomplete/unreadable source is not an empty list.
+- An incomplete or unreadable source while preparing the decommission plan is not an empty list.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R366 -->
 
 - Fix the original readable slots with server = s as ordered {name,index}, the owned from prefixes, asked_at, manifest_rev, units/holds metadata.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R367 -->
 
 - Preflight every full key, the largest reachable serialized progress row and final mark, row weights, and real batch-body ceiling.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R368 -->
 
 - Reserve the P/01 wire index width for cleanup_index; never parse an opaque version.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R369 -->
 
 - An unrepresentable plan is a step error before any slot/order change, not a partial final mark.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
-<!-- req: P/04-R370 -->
-
-- 1.
-
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+<!-- removed: P/04-R370 by ADR-0133 -->
 
 <!-- req: P/04-R371 -->
 
-- Accept pending with cas "" and delete an existing want row with its read cas in one conditional batch.
+- 1. Accept pending with cas "" and delete an existing want row with its read cas in one conditional batch.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R372 -->
 
-- Guards: the own placement_turn version and the fixed request_index.
+- The plan-acceptance batch uses guards of the own placement_turn version and the fixed request_index.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R373, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R373, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R373 -->
 
-- Count both writes.
+- Count both writes of the plan-acceptance batch.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R374, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R374, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R374 -->
 
 - State prepared has remaining candidates; no candidates means finalizing.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R375, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R375, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R375 -->
 
 - The pending server is outside the placement pool and gets no new orders/automatic want-row creation.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R376 -->
 
 - After acceptance continue only this frozen plan, also after a break or a later server answer; never add/adopt a new holder.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
 
-<!-- req: P/04-R377 -->
-
-- 2.
-
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+<!-- removed: P/04-R377 by ADR-0133 -->
 
 <!-- req: P/04-R378 -->
 
-- Prepared: read each next candidate only to confirm its original index and obtain the unchanged readable slot items.
+- 2. Prepared: read each next candidate only to confirm its original index and obtain the unchanged readable slot items.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R379, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R379 -->
 
 - A different index (including absence) is obsolete: move its name to skipped, never substitute the new version for release.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R380, P/04-R381, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R380 -->
 
 - A non-answer postpones the step; it is not obsolescence.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R381, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R381, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R381 -->
 
-- Keep holder/gen/server/until, set released = "true"; never invent gen.
+- When releasing a planned readable slot in prepared, keep holder/gen/server/until and set released = "true"; never invent gen.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R382, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R382, P/04-R383.
 
 <!-- req: P/04-R382 -->
 
 - Write up to BATCH_WRITES - 1 slots with their original cas plus pending with its read cas, guarded by turn and request.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R383.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R383.
 
 <!-- req: P/04-R383 -->
 
 - Atomically record their names in released/current and enter cleaning; the one returned batch index is the version of ALL those released slots AND pending.
 
-See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R377, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382.
+See also: P/04-R099, P/04-R101, P/04-R102, P/04-R376, P/04-R378, P/04-R379, P/04-R380, P/04-R381, P/04-R382.
 
 <!-- req: P/04-R384 -->
 
 - After a lost answer, a cleaning row with empty cleanup_index carries that exact release index as its own row index: no slot reread is needed.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R385 -->
 
-- With no from families, the same batch advances directly to prepared or finalizing with empty current/cursors.
+- With no from families, the slot-release batch advances directly to prepared or finalizing with empty current/cursors.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R386 -->
 
 - A refused release batch changes neither slots nor progress: barrier/re-read pending; only discard candidates proved to have changed from their planned index, never retry a release against a newer slot version.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R387 -->
 
-- Persist skipped candidates under pending cas and turn/request guards; if none remain, advance directly to finalizing.
+- Persist skipped candidates under pending CAS and turn/request guards; when no remaining release candidates exist, advance directly to finalizing.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R388 -->
 
-- 3. Cleaning: process one current slot at a time, from prefixes in their fixed order, split across bounded batches. Derive its authority from cleanup_index when non-empty, otherwise the current pending row index. Before ANY progress rewrite preserve that exact authority in cleanup_index; a later pending index must not replace it. Delete existing contribution rows by their read cas plus pending progress in one batch, guarded by turn, the fixed request and this slot's exact release index. Count all deletes AND progress/service writes, all guards, row weights and the full body. No guard key is also a written key. A confirmed missing contribution advances the cursor; an unknown read does not. A 409 conflict or 412 guard discards ALL remaining removals for this slot, with no new slot read/retry. Record cursor advancement under turn/request guards; never delete a new holder's contribution. Only confirmed cursor progress allows the next slot, then the next release chunk. On finishing a slot, advance slot_cursor and reset from_cursor. On finishing the whole current chunk, clear current, cleanup_index and both cursors, and set prepared if remaining is non-empty, otherwise finalizing, in a guarded progress write.
+- 3. Cleaning processes one current slot at a time, with from prefixes in their fixed order, split across bounded batches.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
-<!-- req: P/04-R389 -->
+<!-- req: P/04-R505 -->
 
-- 4.
+- Cleanup authority for the current slot is cleanup_index when non-empty, otherwise the current pending row index.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R506 -->
+
+- Before ANY rewrite of progress, preserve the exact release authority in cleanup_index; a later pending index must not replace it.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R507 -->
+
+- Delete existing contributions by their read CAS plus pending progress in one batch, guarded by the own turn, fixed request and this slot’s exact release index.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R508 -->
+
+- For each cleanup batch, count all deletes AND progress/service writes, every guard, row weights and the full serialized body.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R509 -->
+
+- A cleanup batch must not use any guard key as a written key.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R510 -->
+
+- A confirmed missing contribution advances the cleanup cursor; an unknown read does not.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R511 -->
+
+- A 409 conflict or 412 guard discards ALL remaining removals for this slot, without a new slot read or retry.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R512 -->
+
+- Record cleanup cursor advancement under turn/request guards; never delete a new holder’s contribution.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R513, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R513 -->
+
+- Only confirmed cursor progress permits the next current slot and then the next release chunk.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R514, P/04-R515.
+
+<!-- req: P/04-R514 -->
+
+- After finishing one current slot, advance slot_cursor and reset from_cursor.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R515.
+
+<!-- req: P/04-R515 -->
+
+- After finishing the whole current chunk, clear current, cleanup_index and both cursors; in a guarded progress write set prepared when remaining is non-empty, otherwise finalizing.
+
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514.
+
+<!-- removed: P/04-R389 by ADR-0133 -->
 
 <!-- req: P/04-R390 -->
 
-- Every prepared/cleanup/final batch fits BATCH_WRITES, BATCH_GUARDS and the actual body ceiling.
+- 4. Every prepared/cleanup/final batch fits BATCH_WRITES, BATCH_GUARDS and the actual body ceiling.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R391, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R391, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R391 -->
 
 - If even one indivisible operation plus required service writes cannot fit, record a step error and keep progress, never publish completion.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R392, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R392, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R392 -->
 
 - Renew the turn by the ordinary rule; an unknown write or lost turn stops further mutation behind the existing barrier.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R393, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R393, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R393 -->
 
 - A new holder re-reads pending after taking the turn and resumes its recorded phase, never restarts releases from slot names.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R394, P/04-R395.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R395, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
-<!-- req: P/04-R394 -->
-
-- 5.
-
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R395.
+<!-- removed: P/04-R394 by ADR-0133 -->
 
 <!-- req: P/04-R395 -->
 
-- Only after remaining is empty and the current chunk's eligible removals are confirmed or conservatively discarded, enter finalizing.
+- 5. Only after remaining is empty and the current chunk's eligible removals are confirmed or conservatively discarded, enter finalizing.
 
-See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R389, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R394.
+See also: P/04-R100, P/04-R103, P/04-R104, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R391, P/04-R392, P/04-R393, P/04-R505, P/04-R506, P/04-R507, P/04-R508, P/04-R509, P/04-R510, P/04-R511, P/04-R512, P/04-R513, P/04-R514, P/04-R515.
 
 <!-- req: P/04-R396 -->
 
 - Atomically write the absent final `<sub>`/decommissioned/`<host>` mark from released/units/holds and asked_at (at = now), delete pending by cas, and delete a remaining want by cas if necessary, with turn/request guards.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R397 -->
 
-- Count EVERY service write.
+- Count EVERY service write in the finalization batch.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R398 -->
 
 - The final mark is the LAST atomic step, never plan acceptance or merely the first released chunk.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R399 -->
 
 - A failed/unknown final batch proves no completion: use the barrier and confirm the actual pending/final state before continuing.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
-<!-- req: P/04-R400 -->
-
-- 6.
-
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+<!-- removed: P/04-R400 by ADR-0133 -->
 
 <!-- req: P/04-R401 -->
 
-- A withdrawn/replaced request cancels its old pending row with cas and guards proving the current request state and own turn; it does not roll back confirmed releases/deletes, invent a final mark, or authorize an old delayed batch for a new request.
+- 6. A withdrawn/replaced request cancels its old pending row with cas and guards proving the current request state and own turn; it does not roll back confirmed releases/deletes, invent a final mark, or authorize an old delayed batch for a new request.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R402 -->
 
 - Withdrawal removes an existing final mark as before.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R403, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R403 -->
 
 - The resource publishes its door again; contributions return by normal start/capture cleanup, not by rollback.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R404, P/04-R495.
 
 <!-- req: P/04-R404 -->
 
 - A new request requires a new admission and fresh plan.
 
-See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R105, P/04-R353, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R495.
 
 <!-- req: P/04-R055 -->
 
@@ -3003,13 +3305,13 @@ See also: P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R092, P/04-R093, P/04
 the request, the delete of the door row, the withdrawal) is [chapter P/06.6](../../06-console/spec/06.6-console.norms.md) N3
 «decommission_server(s) — the console side»; here — the execution by the controller.
 
-See also: P/04-R054, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R056, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 <!-- req: P/04-R056 -->
 
 - **Races.** The decommission of a server and the return of its workers: `decommissioned/*` is written with `cas`; a worker of this server checks the decommission at the capture (P/03.2 N3 «start()», step 3: `platform/decommission/<s>` or `<sub>/decommissioned/<s>`) and does not take the name; the console request and the pass of the controller are separated by a row — a repeat of the request is idempotent.
 
-See also: P/04-R054, P/04-R055, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R360, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R370, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R400, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495.
+See also: P/04-R054, P/04-R055, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04-R093, P/04-R094, P/04-R095, P/04-R096, P/04-R097, P/04-R098, P/04-R099, P/04-R105, P/04-R353, P/04-R359, P/04-R361, P/04-R362, P/04-R363, P/04-R364, P/04-R365, P/04-R366, P/04-R367, P/04-R368, P/04-R369, P/04-R371, P/04-R372, P/04-R373, P/04-R374, P/04-R375, P/04-R396, P/04-R397, P/04-R398, P/04-R399, P/04-R401, P/04-R402, P/04-R403, P/04-R404, P/04-R495, P/04-R502, P/04-R503, P/04-R504.
 
 ### manifest_rev — the rule guard
 
@@ -3017,25 +3319,25 @@ See also: P/04-R054, P/04-R055, P/04-R089, P/04-R090, P/04-R091, P/04-R092, P/04
 
 - Every placement write follows the manifest revision guard below.
 
-See also: P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
+See also: P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545.
 
 <!-- req: P/04-R496 -->
 
 - before every write of a placement row (place, move, remove): a missing manifest_rev is unreadable, never stamped.
 
-See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406.
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R545.
 
 <!-- req: P/04-R405 -->
 
 - row.manifest_rev > my revision → do not touch; the row — into manifest_behind
 
-See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R406, P/04-R496.
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R406, P/04-R496, P/04-R545.
 
 <!-- req: P/04-R406 -->
 
 - manifest_behind (N1.2): the number of rows of this pass whose write is postponed because of a lagging manifest; each row — once per pass, however many write attempts touched it
 
-See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R496.
+See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R496, P/04-R545.
 
 ---
 
@@ -3043,7 +3345,7 @@ See also: P/04-R057, P/04-R058, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04
 
 - **Races.** A change of the manifest during a pass: `rev` is read once per pass, the decisions are written with this `manifest_rev`; the controller sees a change of `rev` by the mark check (P/02.3) and stops with code 0; a new instance with the new `rev` re-reads everything; a row with a former `manifest_rev` is a snapshot of a decision, not a rule.
 
-See also: P/04-R057, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496.
+See also: P/04-R057, P/04-R077, P/04-R098, P/04-R116, P/04-R213, P/04-R216, P/04-R262, P/04-R405, P/04-R406, P/04-R496, P/04-R545.
 
 ### controller start — schema check
 
@@ -3083,37 +3385,37 @@ See also: P/04-R059, P/04-R060, P/04-R407, P/04-R408.
 
 - Table snapshots follow the procedure below, after unit snapshots and before the final report.
 
-See also: P/04-R012, P/04-R013, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R497 -->
 
 - for each table from domain.view_tables of the manifest: the rows of the table → rows by N1.3b, the order — key.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R409 -->
 
 - a row whose field does not read by its type — skip, the counter snapshot_rows_garbled.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R410, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R410 -->
 
 - rows equal to those this process has already written — do not write, ts is the former one.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R411, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R411, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R411 -->
 
 - serialize; more than SNAPSHOT_TABLE_MAX → write the stub of N1.3b ceiling, snapshot_tables_refused + 1, a log line once per series.
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R412, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R412, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 <!-- req: P/04-R412 -->
 
 - an error reading a table — do not write the object, a log line once per series: an empty object is not published instead of an unread one
 
-See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R488, P/04-R497.
+See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04-R175, P/04-R176, P/04-R177, P/04-R178, P/04-R179, P/04-R180, P/04-R181, P/04-R182, P/04-R183, P/04-R184, P/04-R409, P/04-R410, P/04-R411, P/04-R488, P/04-R497, P/04-R555, P/04-R556, P/04-R557.
 
 ### snapshot — after the control part, before the final report
 
@@ -3121,79 +3423,71 @@ See also: P/04-R012, P/04-R013, P/04-R062, P/04-R172, P/04-R173, P/04-R174, P/04
 
 - Unit snapshots follow the procedure below, after the control part and before the final report.
 
-See also: P/04-R011, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R498 -->
 
 - per worker: the unit rows of its assignment → [{id, revision, the fields of snapshot (address mask), worker, server}].
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R413 -->
 
-- a row whose snapshot field does not read by its type — skip, a log line once per series and the counter in
+- A unit row whose snapshot field does not read by its type is skipped; log once per series and increment `snapshot_rows_garbled` of the pass report (N1.2; N1.3a garbled).
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
-<!-- req: P/04-R414 -->
-
-- `snapshot_rows_garbled` of the pass report (N1.2; N1.3a garbled).
-
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+<!-- removed: P/04-R414 by ADR-0133 -->
 
 <!-- req: P/04-R415 -->
 
 - the unplaced → unplaced; a shard that existed and is not filled → empty; without units → an empty unplaced.
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R416 -->
 
 - an empty shard — {cluster, worker: null, ts, `<rows>`: []} (N1.3a).
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R417 -->
 
-- each unit has state by N1.3a (the acting states of the snapshot list); an unreadable state — without it, the counter
+- Each snapshot unit carries state by N1.3a (the acting states from the snapshot list); an unreadable state is omitted from that unit and increments `snapshot_state_garbled`.
 
-See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R064, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
-<!-- req: P/04-R418 -->
-
-- snapshot_state_garbled
-
-See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422.
+<!-- removed: P/04-R418 by ADR-0133 -->
 
 <!-- req: P/04-R419 -->
 
 - serialize each shard; check the size by N1.3a before the write; more than L → TooLarge, do not write this shard.
 
-See also: P/04-R068, P/04-R171, P/04-R182, P/04-R418, P/04-R420, P/04-R421, P/04-R422.
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R420, P/04-R421, P/04-R422, P/04-R552, P/04-R553, P/04-R554.
 
 <!-- req: P/04-R420 -->
 
 - write an admissible shard; TooLarge of the store → the same refusal; a publication error — one log line per series.
 
-See also: P/04-R068, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R421, P/04-R422.
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R421, P/04-R422, P/04-R552, P/04-R553, P/04-R554.
 
 <!-- req: P/04-R421 -->
 
 - TooLarge before the write keeps the former shard and its time; an unknown outcome of a write does not prove that the shard stayed the former one.
 
-See also: P/04-R068, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R422.
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R422, P/04-R552, P/04-R553, P/04-R554.
 
 <!-- req: P/04-R422 -->
 
 - On any error do not publish an empty shard instead of unchecked data
 
-See also: P/04-R068, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R421.
+See also: P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R552, P/04-R553, P/04-R554.
 
 <!-- req: P/04-R064 -->
 
 - **Races.** On one server there is one controller of a manifest; different servers can publish different local copies of one logical shard key.
 
-See also: P/04-R011, P/04-R063, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R414, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498.
+See also: P/04-R011, P/04-R063, P/04-R137, P/04-R138, P/04-R166, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R416, P/04-R417, P/04-R487, P/04-R498, P/04-R547, P/04-R548, P/04-R549, P/04-R550, P/04-R551.
 
 <!-- req: P/04-R423 -->
 
@@ -3221,25 +3515,25 @@ See also: P/04-R016, P/04-R017, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04
 
 <!-- req: P/04-R427 -->
 
-- about 45 s the controllers with already known heartbeats: the slots expire; the resource is silent; the tolerances of N3
+- In this drill, at about 45 s, controllers with already known heartbeats observe expired slots and a silent resource, with the tolerances of N3.
 
 See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R428, P/04-R429, P/04-R430, P/04-R431, P/04-R432, P/04-R433.
 
 <!-- req: P/04-R428 -->
 
-- SLOT_TERM + LOST_AFTER with all the tolerances of N3 and free capacity → move; a new epoch.
+- In this drill, controllers with already known heartbeats move units and take a new epoch after SLOT_TERM + LOST_AFTER, with all tolerances of N3 and free capacity.
 
 See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R427, P/04-R429, P/04-R430, P/04-R431, P/04-R432, P/04-R433.
 
 <!-- req: P/04-R429 -->
 
-- With unknown/unavailability/lack of room there is no common term; the archive stays on the volume.
+- In this drill there is no common movement deadline with unknown/unavailability/lack of room; the archive remains on the server volume.
 
 See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R427, P/04-R428, P/04-R430, P/04-R431, P/04-R432, P/04-R433.
 
 <!-- req: P/04-R430 -->
 
-- The neighbours have only confirmed mirror copies
+- In this failure drill, neighbours have only confirmed mirror copies.
 
 See also: P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R201, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R427, P/04-R428, P/04-R429, P/04-R431, P/04-R432, P/04-R433.
 
@@ -3287,11 +3581,11 @@ See also: P/04-R067, P/04-R068.
 
 - The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 4`.
 
-See also: P/04-R067, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R434.
+See also: P/04-R067, P/04-R171, P/04-R182, P/04-R419, P/04-R420, P/04-R421, P/04-R422, P/04-R434, P/04-R552, P/04-R553, P/04-R554.
 
 <!-- req: P/04-R435 -->
 
-- Columns `cause`, `outcome`, `diagnostic`, `caller` preserve the four original cells in source order; fixed machine codes supplement them.
+- Columns `cause`, `outcome`, `diagnostic`, `caller` define the cause, outcome, diagnostics and caller action; fixed machine codes supplement these fields.
 
 <!-- req: P/04-R436 -->
 
@@ -3303,7 +3597,7 @@ See also: P/04-R067, P/04-R171, P/04-R182, P/04-R418, P/04-R419, P/04-R420, P/04
 
 <!-- req: P/04-R437 -->
 
-- The directory [`../acceptance/`](../acceptance/README.md) (judge-only: checks P/04-R025–P/04-R066): a stand of the workers and the controller of `testsub` and `testsub2` of the implementation under
+- The directory [`../acceptance/`](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417): a stand of the workers and the controller of `testsub` and `testsub2` of the implementation under
 the control of the runner on a catalogue of two manifests ([the common README of the acceptance](../../common/acceptance/README.md), section «Stand»);
 sc. 12, 14–17 — with the resource P/05 on the server of the controller; the rows are read through the store door P/01.1, the console doors
 (`/where`, `/unplaceable`, `/servers`, `/metrics`) and the pass report object through the resource door.
@@ -3326,7 +3620,7 @@ sc. 12, 14–17 — with the resource P/05 on the server of the controller; the 
 
 <!-- req: P/04-R442 -->
 
-- Detailed case descriptions and their expected outcomes are recorded in [judge-only N5 coverage](04-controller.n5.cases.md) (judge-only: checks P/04-R025–P/04-R066).
+- Detailed case descriptions and their expected outcomes are recorded in [judge-only N5 coverage](04-controller.n5.cases.md) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417).
 
 <!-- req: P/04-R443 -->
 
@@ -3345,18 +3639,15 @@ an empty shard — sc. 40, the size of a shard with `ts` — N1.3a `ceiling` —
 
 <!-- req: P/04-R446 -->
 
-- A server failure
-(N1.4a) — drill 05 of [the system acceptance](../../common/acceptance/system/README.md), sc.
+- A server failure (N1.4a) is covered by drill 05 of [system acceptance](../../common/acceptance/system/README.md).
 
 <!-- req: P/04-R447 -->
 
-- `09-resource-door` [of the acceptance of
-P/05](../../05-resource/acceptance/README.md) (judge-only: checks P/04-R065, P/04-R066) and sc.
+- Server-failure witnesses also include scenario `09-resource-door` of [P/05 acceptance](../../05-resource/acceptance/README.md) (judge-only: checks P/04-R065, P/04-R066).
 
 <!-- req: P/04-R448 -->
 
-- `14-resource-silent` of the acceptance of
-[P/06.5](../../06-console/acceptance/5/README.md).
+- Server-failure witnesses also include scenario `14-resource-silent` of [P/06.5 acceptance](../../06-console/acceptance/5/README.md).
 
 <!-- req: P/04-R449 -->
 
@@ -3386,7 +3677,7 @@ of the resource; the order, the withdrawal on deadline, the number above want an
 
 <!-- req: P/04-R454 -->
 
-- They use the existing controller-pass/fate ports and actual IO observations of the forms README, not new commands or kit parts.
+- The public pass witnesses use the existing controller-pass/fate ports and actual IO observations of the forms README, not new commands or kit parts.
 
 <!-- req: P/04-R455 -->
 
@@ -3461,7 +3752,7 @@ findings and window records refer to:
 - [ ] **P/04-10** [test, reading] the slot fate of N3: the outcomes, the order of the rules, presence only from the live heartbeat of the resource, the terms SLOT_TERM/LOST_AFTER/HUNG_MOVE_AFTER, the controller does not write the slot except `release`; an unreadable gen is not reset and does not allow its capture — the outcomes and the exact boundaries of the terms: the seams `s1-fate-before-term`, `s3-fate-gone-with-units`, `s4-fate-margin`, `s5-fate-two-silences`, `s6-fate-gone-before-fresh-beat`, `s7-fate-hung-young`, `s8-fate-hung-boundary`, `s9-fate-wait-no-units`, `s10-fate-wait-boundary`, `s11-fate-runs-no-units`, `s12-fate-presence-unknown`, `s13-fate-unreachable-boundary`, `s34-fate-resource-never-seen-assigned`; the write release of a slot without units with the former items — `s2-fate-release-term`, `s35-fate-resource-never-seen-empty`; a lost CAS of release — `s15-release-cas-race`; an unreadable gen — no write and no permission — `s14-fate-no-permission-bad-gen`, `s16-release-unreadable-gen` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R039–P/04-R046) (`CALL controller-fate`); the judgement of a slot row — the vectors [`slot`](../../common/vectors/slot/README.md), the state of a resource — the vectors [`resource-state`](../../common/vectors/resource-state/README.md); on the full stand: release of a slot without units (not move), the write release of a readable slot, of a torn `until` and of an unreadable gen — sc. 21 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R039–P/04-R046); the margin SLOT_TERM + LOST_AFTER and `hung` with the presence `runs` (the name is not given, the slot is not released, the unit does not leave; without units — not release) — sc. 26, 27; `wait` with `unlisted` (the name is not given, the slot is not released) — sc. 42; the terms on a real server failure — P/04-22
 - [ ] **P/04-11** [test] `names_given` is bound to the version of the slot row; only NAME_FATES and `wait` beyond the limit; a row with an unreadable gen is not included until the generation is recovered — the permission version `permission_version` of the seams `s2-fate-release-term`, `s3-fate-gone-with-units`, `s8-fate-hung-boundary`, `s35-fate-resource-never-seen-empty`; `wait` gives the name only beyond the limit — `s9-fate-wait-no-units`, `s10-fate-wait-boundary`; an unreadable gen and a lost release CAS — no permission — `s14-fate-no-permission-bad-gen`, `s16-release-unreadable-gen`, `s15-release-cas-race` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R040, P/04-R041, P/04-R042, P/04-R046) (`CALL controller-fate`); on the full stand: the name of a released slot in `names_given`, an unreadable gen outside it — sc. 21; `wait` does not give the name before the limit — sc. 42
 - [ ] **P/04-12** [test, reading] move/first addition/sync — one intent: remove all members from all assignments, complete placement, add to one target and only then idle; each change with cas and guard turn, 412 stops the attempt; the removals before the addition — the seam `s18-intent-removals-before-add`, no write after an unknown outcome and a failed barrier — the seam `s19-intent-unknown-barrier` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R027, P/04-R036, P/04-R037) (`CALL controller-complete-intent`); the completion of an active intent (removal, row, addition, idle) — sc. 28, `sync` — sc. 29 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R036, P/04-R037); `Moved` with an already different source target (N3 «move», step 1) and the rest — checked by reading
-- [ ] **P/04-13** [test, reading] leaving: the reasons in order, without a budget, a group whole or it stays — checked by reading; `silent` — only with `requires: resource` and a live worker, otherwise the fate of SLOT_TERM + LOST_AFTER — P/04-30; a released slot — the units without a place are removed (`worker: ""`) — sc. 03 of [the acceptance of P/03.4](../../03-worker/acceptance/4/README.md) (judge-only: checks P/04-R047); a capture in progress (`taking`) takes them away only after SLOT_TERM of an unchanged version — sc. 13; drain — sc. 33, the place does not admit (`admits: false`) — sc. 39; reachability: the server no longer reaches the labels of the unit, the unit is removed with a reason of reachability — sc. 24 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R047); the budget REACH_BUDGET — checked by reading
+- [ ] **P/04-13** [test, reading] leaving: the reasons in order, without a budget, a group whole or it stays — checked by reading; `silent` — only with `requires: resource` and a live worker, otherwise the fate of SLOT_TERM + LOST_AFTER — P/04-30; a released slot — the units without a place are removed (`worker: ""`) — sc. 03 of [the acceptance of P/03.4](../../03-worker/acceptance/4/README.md) (judge-only: checks P/04-R047, P/04-R322); a capture in progress (`taking`) takes them away only after SLOT_TERM of an unchanged version — sc. 13; drain — sc. 33, the place does not admit (`admits: false`) — sc. 39; reachability: the server no longer reaches the labels of the unit, the unit is removed with a reason of reachability — sc. 24 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R047, P/04-R322); the budget REACH_BUDGET — checked by reading
 - [ ] **P/04-14** [test, reading] order: per — a positive observed capacity, otherwise a positive capacity.default, otherwise withheld without division; the shortage by label sets and weight minus the capacity in flight; the order row always, `want` 1…WANT_NUM_MAX as an absolute target, cas and guard turn; the candidates (the base is alive, room, numbers, distinct by place_by, drain, decommission); the withdrawal on deadline `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; shrinking — `SHRINK_AFTER`, hysteresis, only the live top number n=want(s)>1 per server; a protected top skips its whole server (a number above want is not a victim), `retiring`, `SHRINK_BUDGET`, cancel; the alarms `workers.no_server`, `workers.raise_failed`; in flight — the numbers 2…want without a live process by heartbeats, the candidate and the share — by the door (`live.<sub>` by numbers, free once per pass), a number above want is outside the pool (its stop by the script on the host — P/04-31), the withdrawal on deadline — by numbers, `distinct` with the place from the heartbeat — a server without a live suitable one without a place, without a probe in flight (in flight(s) = 0), no more than one probe per pass, and `no free <place_by>`, the capacity — the smallest positive one, the forms of `short[]` — the vectors `order`, `shrink-victim`, `shrink-allowed` (the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting); the deadline `WANT_GRACE` restarts when the number falls again — the seam `s32-want-grace-restarts` (`CALL controller-want`); a protected top skips its server — `s36-shrink-wanted-top-prefix`, the victim on another server — `s37-shrink-wanted-other-server`; the end of growth with a manual row does not block shrinking — `s38-growth-ended-manual-row`; `short[]` at the bound 2^53 — `s51-short-weight-max53`, `s52-short-weight-at53`, `s53-short-weight-odd53` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R050, P/04-R051, P/04-R052, P/04-R053) (`CALL controller-pass`); on the full stand — sc. 14–17 after P/05 (`@grow`); the rest by reading
 - [ ] **P/04-15** [test, reading] `delete_after` by the clock of the controller from the first look, a fresh check of the effective placement, `cas` of the unit and guard of the own turn, the journal: the count from the removal — the seam `s22-retire-counter-reset`; a refused delete of the unit deletes no state and writes no journal — `s23-delete-cas-then-state`; `409 early` without a barrier and a journal — `s25-made-delete-early` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R030) (`CALL controller-delete-after`); the journal bucket and the names — the vectors [`journal`](../../common/vectors/journal/README.md); the fresh check of the effective placement and the guard of the own turn — checked by reading
 - [ ] **P/04-16** [test, reading] current manifest_rev is required, no missing-revision stamp; the rule guard and manifest_behind for a newer row — sc.31; a newer placement turn is not taken — sc.32 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R057, P/04-R058); manifest change/code0 remains checked by reading

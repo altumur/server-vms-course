@@ -32,7 +32,7 @@ cleanup, decommission batches and placement turn/intent procedures remain their 
 
 ## Seams
 
-[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R026–P/04-R066) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
+[acceptance/seams.tsv](../acceptance/seams.tsv) (judge-only: checks P/04-R027, P/04-R030, P/04-R033, P/04-R047, P/04-R050, P/04-R054, P/04-R062, P/04-R063, P/04-R269, P/04-R276, P/04-R279, P/04-R322, P/04-R336, P/04-R413, P/04-R417) is kit testing, separate from the process runner's scenarios. Grammar and JSON comparison are
 those of [the P/03 forms README](../../03-worker/forms/README.md) and [the P/02 forms README](../../02-installer/forms/README.md): CALL with one
 JSON value, object subset, exact empty objects/lists, fresh scenario roots; no shell. The single-chapter address is `4`, with no acceptance subdirectory.
 The port names normalize tests, not the implementation API. Invoke the real controller functions and record effects, never return a canned expect.
@@ -99,22 +99,6 @@ All s51-s63 use the existing controller-pass port. fixture and scripted replies 
 
 Pure seams do not prove OS/process recovery or SUT. An unsupported binding remains an explicit gap until adapter/independent-check delivery, never canned PASS or an excluded execution.
 
-## Leaving checks
-
-This is the ordered selector of P/04-R047. Rows run by increasing `n`; the first true CEL condition returns the existing reason; row 10 is the reachable no-op. Inputs are local predicates from the current read, not a new API. `released` is the slot word, `age` is unchanged-version age, and `SLOT_TERM` is the slot owner's term. `worker_live` and `resource_state` use the observation/pool contracts. `distinct` means the effective policy; `has_place` means this worker holds its place. `place_admits` is true when there is no applicable place restriction. `draining`, `decommissioned`, `fate` and its `why` have their current N3 meanings. A `taking` slot younger than `SLOT_TERM` returns `none` before all later reasons; its capture is still allowed to finish. Resource/store silence does not invent a positive predicate.
-
-| n | CEL | outcome | R-id |
-|---|---|---|---|
-| 1 | `released == "true"` | `slot <name> released` | P/04-R047 |
-| 2 | `released == "taking" && age < SLOT_TERM` | `none` | P/04-R047 |
-| 3 | `released == "taking" && age >= SLOT_TERM` | `slot <name> capture did not finish` | P/04-R047 |
-| 4 | `requires_resource && worker_live && resource_state == "silent"` | `resource on <s> silent` | P/04-R047 |
-| 5 | `distinct && !has_place` | `<w> holds no <place_by> now` | P/04-R047 |
-| 6 | `!place_admits` | `<w>'s <place_by> <place> admits no unit` | P/04-R047 |
-| 7 | `draining` | `server <s> draining` | P/04-R047 |
-| 8 | `decommissioned` | `server <s> decommissioned` | P/04-R047 |
-| 9 | `fate in ["move", "hung_moved", "unsure_moved"]` | `fate.why` | P/04-R047 |
-| 10 | `true` | `none` | P/04-R047 |
 ## Shrink checks
 
 This is the ordered selector of P/04-R051. The first true row returns `why`; only `ok` allows shrinking. `victim_exists` means an eligible live top number `n = want(s) > 1` under the victim/wanted-place rules, never a number above want. `waiting` uses the existing placeable set; `distinct` and `placeless` use the heartbeat-place policy. `no_shortage_for` is seconds since the first pass without waiting, null when shortage is present; a new controller starts that observation again. `in_flight` is the heartbeat count of missing numbers in `2…want`, excluding the base. `per` is the existing positive capacity estimate, or null. `remaining_free_after_move` is the suitable live workers' free capacity after transferring the victim's units, excluding the victim and numbers above want; with distinct, only place keepers contribute. The existing numeric forms and units apply; no new constant is introduced. Equality at `SHRINK_AFTER` refuses; equality at `per` passes.
