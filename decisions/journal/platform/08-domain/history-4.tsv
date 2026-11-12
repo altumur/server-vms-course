@@ -181,3 +181,4 @@ P/08.4-R003	spec/08.4-domain.norms.md#N1.1	ADR-0098 §3	2026-11-11	: the row is 
 P/08.4-R009	spec/08.4-domain.norms.md#N1.3c	history of installations: introduction of first-admin (N1.9)	2026-11-11	at former installations
 -	spec/08.4-domain.norms.md#N5	history of installations: introduction of first-admin (N1.9)	2026-11-11	at a former installation
 -	spec/08.4-domain.norms.md#N5	history of installations: introduction of first-admin (N1.9)	2026-11-11	does not set up a former installation
+P/08.4-R021	spec/08.4-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.

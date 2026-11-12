@@ -1,9 +1,9 @@
-# P/08 refusal catalogue; literal TAB, no CSV quoting. Original normative cells are retained.
-# Four-cell source: cause/outcome/diagnostic/caller; the third cell of8.1 is the original Body.
-# Three-cell source8.4/8.7/8.8/8.9: word/outcome/cause. Words are catalogue indexes, never a free choice for a condition.
+# P/08 refusal catalogue; literal TAB, no CSV quoting. The cells are normative text.
+# Four-cell rows: cause/outcome/diagnostic/caller.
+# Three-cell rows 8.4/8.7/8.8/8.9: word/outcome/cause. Words are catalogue indexes, never a free choice for a condition.
 # Chapter8.4 adds two explicit first-admin failures from N1.9; they introduce no CLI spelling or new outcome.
 # Internal per-member relay results and stored edit outcomes do not become new HTTP failures. Success200 stays a success.
-# Fields name direct required schema properties; full composed schemas, conditional fields, dynamic headers and body meanings remain OpenAPI and source cells.
+# Fields name direct required schema properties; full composed schemas, conditional fields, dynamic headers and body meanings remain OpenAPI and the norms of the row.
 chapter	row	name	surface	code	kind	fields	headers	log	norm	word	response_schema	cause	outcome	diagnostic	caller
 8.0	1	c80_001_409_1	http	409	-	error,holder	-	-	P/08.0-R116,P/08.0-R010,P/08.0-R038	-	Deposed	the process is deposed	409 `deposed` with `holder` — the record of the new holder (chapter 8.8 N1.6): edits and reports	the agent; a person — through the console as it came	go to the new holder (chapter 8.8)
 8.0	2	c80_002_503_1	http	503	-	error,detail	-	-	P/08.0-R113,P/08.0-R114,P/08.0-R010	-	StandbyBody	the `domain` process is standby	503 `standby` (chapter 8.10 N1.7)	the agent; a person — through the console as it came	the agent — the next pass (P/09.1-19); a person — a repeat

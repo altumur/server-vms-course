@@ -54,3 +54,4 @@ P/08.10-R010	spec/08.10-domain.norms.md#N4	M11/12 N4	2026-11-11	of M11/12 N4
 -	acceptance/10/README.md#intro	M11/01	2026-11-11	; formerly the dictionary of the M11 README of the acceptance M11/01
 -	acceptance/10/README.md#stand	M11/03	2026-11-11	(formerly the acceptance README of M11/03,
 -	acceptance/10/README.md#stand	M11/03	2026-11-11	«Setup of each scenario 01–09»)
+P/08.10-R010	spec/08.10-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.
