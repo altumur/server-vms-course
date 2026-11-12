@@ -266,7 +266,7 @@ Everything that the shell has added the module places and repaints by its own po
 
 ## 10. Without a shell: the minimal page and `testsub`
 
-This is the test of the contract.
+These are the subjects of the contract checks. Evidence for the current canonical module has the input scope of P/07-R258 and P/07-R259; an existing fixture proves only its checked requirements on its actual input.
 
 - **The platform page** ([console.html](module/console.html), the P/07 canon) — the three lines from §1 and nothing else. It adds nothing and works on any manifest.
 - **`testsub`** — a fictitious subsystem (`testsub.subsystem.yaml`, §2.3 of the boundary note). The test brings up the console with it only and opens the minimal page in jsdom. It checks:
@@ -277,7 +277,7 @@ This is the test of the contract.
   - login;
   - that the DOM has not a single word from the dictionary of §2;
   - that the module has made not a single request outside the closed list P/07 N1.4: the test intercepts `fetch` in jsdom and checks every path against the list. This is the check «knows no other routes».
-- **The dictionary test** on the source `/platform/console.js` and `console.html`: it already exists for the current page, `Source/tests/console/platform-page.test.js` (judge-only: existing page-dictionary case noSubsystemWords; local mount-version guard cases for P/07-R059…P/07-R060).
+- **The dictionary test** `Source/tests/console/platform-page.test.js` loads the frozen Source JS and HTML rather than the current canonical files (judge-only: existing page-dictionary case noSubsystemWords; local mount-version guard cases for P/07-R059…P/07-R060; no current-module execution evidence under P/07-R258).
 - **The product page** (`vms/vms.shell.html` next to the manifest, in the product and in the course) includes the module and adds video, volumes, scenarios. Its test checks that it does not duplicate the platform sections: it has no login of its own, no server tree of its own, no domain of its own.
 
 ## 10a. The domain holder page

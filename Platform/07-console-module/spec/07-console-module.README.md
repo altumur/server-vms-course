@@ -58,8 +58,8 @@ The following behaviour is the responsibility of the owner of the common module 
    the memory of the owner. For an unknown PUT/table — a read first (N1.5). The three states of the session by which `may` judges —
    [chapter 6.3](../../06-console/spec/06.3-console.norms.md) N1.3 `session`.
 2. Check the module/shell separately: the jsdom test of the owner of the specification `Source/tests/console` (judge-only: owner test sources; existing fixture cases are mapped in N5 rows P/07-R271…P/07-R282) by the subjects of N5.
-   An implementation neither reads nor runs the jsdom tests of N5: they check the published bytes
-   of the module at the owner of the specification; the proof of an implementation is the bytes of the module as they are and the load of `?v=1` (sc. 01 (judge-only: checks P/07-R264) of the acceptance
+   The owner supplies common behavioural evidence by the actual requirements and input files under P/07-R258 and P/07-R259; a test loading a frozen Source module does not establish execution of the current canonical module.
+   An implementation neither reads nor runs the jsdom tests of N5; its proof is the bytes of the module as they are and the load of `?v=1` (sc. 01 (judge-only: checks P/07-R264) of the acceptance
    of chapter 6.5).
 3. The library for the shell turns the absent field `door` of the HTTP answer `Where` into `null` (N1.5 `where`). Check
    this level separately from HTTP: a `Where` without a trustworthy door has no field `door` — the check of the door is in
@@ -71,16 +71,16 @@ The following behaviour is the responsibility of the owner of the common module 
 |---|---|---|
 | N1.5 | A key cache by method/path/body merges two clicks | A key per logical action; a new call is independent. |
 
-The published module keeps a key per action and replays by itself only the `POST` of units, and `may` without grants gives `true` only
-with `open: true` («Implementation decides» item 1 of the norms is closed); the evidence is the jsdom tests by the table of N5.
+The key and replay rules are P/07-R082…P/07-R094; `may` follows P/07-R110…P/07-R119. «Implementation decides» item 1 is not closed in full.
+The N5 fixtures provide evidence only for their checked requirements and input files under P/07-R258; open criteria remain open.
 
 ## Boundary checks
 
 Compare the proposed changes of the module against N1.5/N1.6 and the current canonical module, not a historical witness. Keep the full original URL and CAS/replay behaviour; retain integer input on a local refusal and preserve typed list elements. Before worker changes, obtain the exact public-context disposition; before cursor code, fix the six-projection assembly and incomplete-read plan. Check current pending 0/1/null separately from outcomes; J-P07-01 stays a separate test scope. Disabled sections cannot be entered by mouse or keyboard. Publication checks still compare the same three files byte for byte at the existing routes and version. Existing unrelated debts remain open.
 
-The module calls nothing outside N1.4 `reads`/`writes`; the paths of `never` (`/{sub}/requests`, `/api/backup`, `/resources`, tables outside
-`servers.show`, the doors of the holders) do not appear among the requests intercepted by the jsdom test, neither on mounting nor on
-polling. The parts of the list that the domain introduces are checked in the mode `domain` of the late layer (N1.6).
+Check that the module calls nothing outside N1.4 `reads`/`writes`: the paths of `never` (`/{sub}/requests`, `/api/backup`, `/resources`, tables outside
+`servers.show`, the doors of the holders) must be absent from intercepted requests both on mounting and on polling.
+The parts of the list that the domain introduces require the mode `domain` of the late layer (N1.6); the evidence has the input scope of P/07-R258.
 
 ## Done when
 
