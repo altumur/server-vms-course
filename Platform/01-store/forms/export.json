@@ -18,8 +18,8 @@
     },
     {
       "path": "Platform/01-store/acceptance/1/inputs/rights.json",
-      "disposition": "model_and_judge",
-      "basis": "The rights file of the stand of chapter 1.1 (the role acc of «Role sockets» of the common stand); public like that paragraph."
+      "disposition": "judge_only",
+      "basis": "Judge stand data; the public norms and stand description state the implementation duties without this file."
     },
     {
       "path": "Platform/01-store/acceptance/1/scenarios.tsv",
@@ -303,8 +303,8 @@
     },
     {
       "path": "Platform/01-store/forms/group.tsv",
-      "disposition": "model_and_judge",
-      "basis": "A form of the lesson: an order of checks or a data table the norms refer to."
+      "disposition": "judge_only",
+      "basis": "Judge stand data; the public norms and stand description state the implementation duties without this file."
     },
     {
       "path": "Platform/01-store/forms/group.tsv.schema.json",

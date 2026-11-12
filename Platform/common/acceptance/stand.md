@@ -98,7 +98,7 @@ A profile describes those interfaces; it does not change their scenarios or expe
 - **Role sockets** (P/01.2, P/01.3 N1.3 `sockets`): on a box too the store opens a socket per role (`<role>.sock`, `admin.sock`) per the rights
   file; the runner calls through the socket of the role of the scenario. `{socket}` is the path of `admin.sock`; the role sockets lie next to it, in the same directory, flat (P/01.3 N1.3 `sockets`).
   `{socket}` is a door with full rights (preparation). Lesson 1 runs the scenarios with the role `acc` — read and write rights only on
-  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner puts exactly the file [`01-store/acceptance/1/inputs/rights.json`](../../01-store/acceptance/1/inputs/rights.json) into `{rights}` (the form — P/01.2 N1.2):
+  `acc/*`, the socket `acc.sock` next to `{socket}`. The runner supplies `{rights}` in the form of P/01.2 N1.2:
   the role `acc` with the group `acc` and the patterns `acc/*` for `read`, `write` and `delete`.
   Deletion is a separate action (P/01.2 N1.3 `allowed`); in the file it is named explicitly.
   The store is ready when `admin.sock` and the socket `<role>.sock` of every role of its rights file accept a connection, within the term of «Terms of the stand» (15 s from the start by default; `@store-start` and `@server-start` are exceptions, their rows name their own terms); without a rights file only `admin.sock` is awaited. An instance that exits earlier or is not ready by then is a failed start; a rights file that cannot be read or has no object `roles` is a failure of the stand.
@@ -112,10 +112,10 @@ A profile describes those interfaces; it does not change their scenarios or expe
   The server settings file is `W2C_ENV` of the form (P/02.4 N1.2: the directory `roles/` is next to `w2c.env`,
   there is no other place), the role files are `{data}/etc/w2c/roles/<role>.env`; for a server `on <server>` — the same paths in its
   `PLATFORM_DIR` `{data}/servers/<server>`.
-- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in the order of the form [`forms/stand-manifests.tsv`](forms/stand-manifests.tsv): `testsub`, then `testsub2` (it references `testsub`: `about`,
+- **Manifests** are the files of [`Platform/common/data/testsub/`](../data/testsub/README.md) (judge-only: the stand manifests); the stand sets them up by the command `manifest-put` in this order: `testsub`, then `testsub2` (it references `testsub`: `about`,
   `near`, `worker.requests`; the manifests reference each other, so their files do not give the order); loading the directory (P/02.1 N3) sees both.
   The manifest `testsub2` declares `console.shell` and `console.files`: the installation reads these files next to the manifest file (P/02.3 N3
-  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of the directory of the column `beside` of its row,
+  «Manifest change»), so the stand puts next to the copy of the manifest the whole content of the directory
   [`06-console/acceptance/5/inputs/testsub2/`](../../06-console/acceptance/5/inputs/testsub2), under the same paths — on every stand where
   `testsub2` is set up, not only in acceptance 6.5.
 - **Console root** (`CONSOLE_ROOT`) is named by the lesson README: chapter 6.2 — `testsub2` (the short paths `/tallies`),

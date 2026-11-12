@@ -58,7 +58,7 @@
       "dialect": {
         "commentChar": "#",
         "headerRows": [
-          27
+          19
         ],
         "csv": {
           "delimiter": "\t"
@@ -298,7 +298,7 @@
       "dialect": {
         "commentChar": "#",
         "headerRows": [
-          18
+          11
         ],
         "csv": {
           "delimiter": "\t"

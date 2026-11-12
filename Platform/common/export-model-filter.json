@@ -4583,8 +4583,8 @@
     },
     {
       "path": "Platform/common/acceptance/forms/stand-manifests.tsv",
-      "disposition": "model_and_judge",
-      "basis": "The stand manifests and their order (stand.md «Manifests»); public like that paragraph."
+      "disposition": "judge_only",
+      "basis": "Manifest preparation order and beside paths are judge stand inputs; public stand duties remain in acceptance/stand.md."
     },
     {
       "path": "Platform/common/acceptance/forms/stand-manifests.tsv.schema.json",

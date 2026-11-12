@@ -1,0 +1,2045 @@
+{
+  "source_commit": "5fcfeba34ac13411fd382d2d726fc7530f87eca3",
+  "baseline_method": "P01.283-baseline.json external_ids used full P/01.K-Rnnn forms only; this additive audit also accounts for qualified and unambiguous P/01 default-context short forms. Baseline commit remains unchanged.",
+  "extra_ids": [
+    "P/01.1-R009",
+    "P/01.1-R012",
+    "P/01.1-R050",
+    "P/01.1-R054",
+    "P/01.1-R089",
+    "P/01.1-R116",
+    "P/01.1-R264",
+    "P/01.3-R008",
+    "P/01.3-R034",
+    "P/01.3-R035",
+    "P/01.3-R036"
+  ],
+  "full_and_short_ids": 164,
+  "external_ids": {
+    "P/01.1-R007": {
+      "judge": [
+        "Platform/common/vectors/family-read/08.tsv"
+      ]
+    },
+    "P/01.1-R009": {
+      "judge": [
+        "Platform/common/vectors/family-read/08.tsv"
+      ]
+    },
+    "P/01.1-R012": {
+      "model": [
+        "Platform/06-console/data/operations.schema.json",
+        "Platform/06-console/spec/06.9-console.norms.md",
+        "Platform/08-domain/data/issued.schema.json",
+        "Platform/08-domain/spec/08.2-domain.norms.md"
+      ]
+    },
+    "P/01.1-R013": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R019": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R020": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.1-R028": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R030": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R031": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R032": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R034": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R036": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.1-R037": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.1-R038": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.1-R040": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R048": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R050": {
+      "model": [
+        "Platform/05-resource/spec/05-resource.norms.md",
+        "Platform/common/contracts/gate-and-pass.md"
+      ]
+    },
+    "P/01.1-R054": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/forms/extra.tsv",
+        "Platform/01-store/spec/production-acceptance.md"
+      ]
+    },
+    "P/01.1-R055": {
+      "model": [
+        "Platform/01-store/forms/read-checks.tsv",
+        "Platform/01-store/forms/rights-checks.tsv",
+        "Platform/01-store/forms/service-checks.tsv",
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/forms/write-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/read-checks.tsv",
+        "Platform/01-store/forms/rights-checks.tsv",
+        "Platform/01-store/forms/service-checks.tsv",
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/forms/write-checks.tsv"
+      ]
+    },
+    "P/01.1-R062": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R065": {
+      "model": [
+        "Platform/common/acceptance/README.md"
+      ],
+      "judge": [
+        "Platform/common/acceptance/README.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R066": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R070": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R078": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R079": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R080": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R084": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R088": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R089": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R090": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R099": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R105": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R116": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R122": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R125": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R126": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R128": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R132": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R133": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R134": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R135": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R141": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/runtime-constants.tsv",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/runtime-constants.tsv",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R144": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R147": {
+      "model": [
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/spec/production-acceptance.md"
+      ]
+    },
+    "P/01.1-R151": {
+      "model": [
+        "Platform/04-controller/spec/04-controller.norms.md",
+        "Platform/09-agent/spec/09.1-agent.norms.md",
+        "Platform/09-agent/spec/09.2-agent.norms.md"
+      ]
+    },
+    "P/01.1-R156": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv",
+        "Platform/03-worker/spec/03.2-worker.norms.md",
+        "Platform/06-console/forms/refusals.tsv",
+        "Platform/06-console/spec/06.1-console.norms.md"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.1-R193": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.1-R212": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.1-R217": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/forms/rights-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md",
+        "Platform/01-store/forms/rights-checks.tsv"
+      ]
+    },
+    "P/01.1-R219": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.1-R220": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R233": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.1-R242": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.1-R255": {
+      "model": [
+        "Platform/common/vectors/wire.md"
+      ],
+      "judge": [
+        "Platform/common/vectors/wire.md"
+      ]
+    },
+    "P/01.1-R264": {
+      "judge": [
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.1-R295": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.1-R313": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.1-R315": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.1-R342": {
+      "model": [
+        "Platform/common/vectors/wire.md"
+      ],
+      "judge": [
+        "Platform/common/vectors/wire.md"
+      ]
+    },
+    "P/01.1-R345": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R353": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R355": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R360": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R361": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R362": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R365": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R366": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R383": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.1-R384": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.1-R385": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.1-R402": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.2-R006": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R007": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.2-R008": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/vectors/rights-evaluator/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+        "Platform/01-store/vectors/rights-evaluator/README.md"
+      ]
+    },
+    "P/01.2-R010": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/vectors/rights-evaluator/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/vectors/rights-evaluator/README.md"
+      ]
+    },
+    "P/01.2-R014": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R015": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R017": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/forms/read-checks.tsv",
+        "Platform/01-store/forms/rights-checks.tsv",
+        "Platform/01-store/forms/service-checks.tsv",
+        "Platform/01-store/forms/write-checks.tsv",
+        "Platform/common/acceptance/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md",
+        "Platform/01-store/forms/read-checks.tsv",
+        "Platform/01-store/forms/rights-checks.tsv",
+        "Platform/01-store/forms/service-checks.tsv",
+        "Platform/01-store/forms/write-checks.tsv",
+        "Platform/common/acceptance/README.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.2-R019": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R020": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R021": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R022": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R023": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R024": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R025": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.2-R030": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R045": {
+      "judge": [
+        "Platform/01-store/forms/extra.scenarios.tsv"
+      ]
+    },
+    "P/01.2-R112": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R122": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R123": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R124": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R127": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R128": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R130": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R131": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R134": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.2-R138": {
+      "model": [
+        "Platform/01-store/acceptance/2/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/2/README.md"
+      ]
+    },
+    "P/01.3-R003": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.3-R004": {
+      "model": [
+        "Platform/01-store/spec/01-store.README.md"
+      ]
+    },
+    "P/01.3-R006": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R007": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R008": {
+      "model": [
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R009": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R010": {
+      "model": [
+        "Platform/01-store/README.md",
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R011": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R016": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R017": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R018": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R020": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R021": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/production/bindings.tsv",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R022": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R026": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R029": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R031": {
+      "model": [
+        "Platform/01-store/forms/daemon-flags.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/daemon-flags.tsv"
+      ]
+    },
+    "P/01.3-R032": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/metrics.tsv",
+        "Platform/01-store/spec/01-store.README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/forms/metrics.tsv"
+      ]
+    },
+    "P/01.3-R033": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R034": {
+      "model": [
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R035": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R036": {
+      "model": [
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/spec/production-acceptance.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R059": {
+      "model": [
+        "Platform/01-store/forms/group.tsv",
+        "Platform/common/acceptance/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/forms/group.tsv",
+        "Platform/common/acceptance/README.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R060": {
+      "model": [
+        "Platform/01-store/forms/group.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/group.tsv"
+      ]
+    },
+    "P/01.3-R061": {
+      "model": [
+        "Platform/01-store/forms/group.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/group.tsv"
+      ]
+    },
+    "P/01.3-R064": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md",
+        "Platform/01-store/spec/production-acceptance.md"
+      ]
+    },
+    "P/01.3-R072": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R075": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R076": {
+      "model": [
+        "Platform/01-store/forms/metrics.tsv",
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/metrics.tsv",
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R077": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R084": {
+      "model": [
+        "Platform/01-store/forms/metrics.tsv",
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/metrics.tsv",
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R087": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    },
+    "P/01.3-R109": {
+      "model": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ]
+    },
+    "P/01.3-R111": {
+      "model": [
+        "Platform/01-store/acceptance/1/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/1/README.md"
+      ]
+    },
+    "P/01.3-R160": {
+      "model": [
+        "Platform/01-store/forms/metrics.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/metrics.tsv"
+      ]
+    },
+    "P/01.3-R169": {
+      "model": [
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    },
+    "P/01.3-R170": {
+      "model": [
+        "Platform/01-store/forms/metrics.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/metrics.tsv"
+      ]
+    },
+    "P/01.3-R191": {
+      "model": [
+        "Platform/01-store/forms/metrics.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/metrics.tsv"
+      ]
+    },
+    "P/01.3-R207": {
+      "model": [
+        "Platform/01-store/forms/group.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/group.tsv"
+      ]
+    },
+    "P/01.3-R211": {
+      "model": [
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml",
+        "Platform/common/acceptance/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/forms/status-fields.tsv",
+        "Platform/01-store/spec/01-store.api.openapi.yaml",
+        "Platform/common/acceptance/README.md",
+        "Platform/common/acceptance/spec/acceptance.norms.md"
+      ]
+    },
+    "P/01.3-R221": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R237": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R240": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R252": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R257": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.3-R272": {
+      "model": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    },
+    "P/01.3-R283": {
+      "model": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/service-checks.tsv"
+      ]
+    },
+    "P/01.3-R304": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R305": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R320": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R321": {
+      "model": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    },
+    "P/01.3-R326": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R328": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R329": {
+      "model": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    },
+    "P/01.3-R330": {
+      "model": [
+        "Platform/01-store/forms/refusals.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/refusals.tsv"
+      ]
+    },
+    "P/01.3-R335": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R336": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R337": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R342": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R365": {
+      "model": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ]
+    },
+    "P/01.3-R381": {
+      "model": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/status-fields.tsv"
+      ]
+    },
+    "P/01.3-R396": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R397": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R406": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R407": {
+      "model": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ],
+      "judge": [
+        "Platform/01-store/forms/runtime-constants.tsv"
+      ]
+    },
+    "P/01.3-R409": {
+      "model": [
+        "Platform/01-store/acceptance/3/README.md"
+      ],
+      "judge": [
+        "Platform/01-store/acceptance/3/README.md"
+      ]
+    },
+    "P/01.3-R411": {
+      "model": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ],
+      "judge": [
+        "Platform/01-store/spec/01-store.api.openapi.yaml"
+      ]
+    }
+  },
+  "short_references": [
+    {
+      "id": "P/01.1-R054",
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "line": 171,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "as chunked (§6.3), closing the connection after the response (RFC 9112 §6.1). For a valid HTTP/1.1 request this is not an automatic `400`: its own operation determines the response. An HTTP/1.0 request with `Transfer-Encoding` has faulty framing: `400 badrequest` and close (R054; RFC 9112 §6.1). Early refusal (N2.1): `POST /v1/write` with `Content-Length` larger than the body limit and a body"
+    },
+    {
+      "id": "P/01.1-R116",
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "line": 193,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "Already covered and unchanged: scenario 35 steps 8–9 (judge-only: sc. 35) choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS — P/01.1-R125, P/01.1-R126; scenario 36 step 3 (judge-only: sc. 36) reorders guards on a successful replay without changing its fingerprint — P/01.1-R134. R116 and scenario 31 steps 1–4 (judge-only: sc. 31) already prove that a successful absent delete leaves read index \"\" and admits a later create-once; scenario 34 steps 7–8 (judge-only: sc. 34) covers batch deletion of an absent row — P/01.1-R128, P/01.1-R133. No duplicate witnesses are added for these obligations."
+    },
+    {
+      "id": "P/01.1-R089",
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "line": 195,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "Opaque versions do not expose the allocator's count. The new HTTP probes observe unchanged rows/list and a reusable refused id; they do not infer zero version issuance by subtracting or ordering index strings. R089/R132's no-issued-version obligation remains subject to the existing reading check. No snapshot/effects form, new port, native command, implementation or handwritten core is supplied. These are source witnesses awaiting the ordinary implementation adapter, not executed SUT results."
+    },
+    {
+      "id": "P/01.1-R132",
+      "file": "Platform/01-store/acceptance/1/README.md",
+      "line": 195,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "Opaque versions do not expose the allocator's count. The new HTTP probes observe unchanged rows/list and a reusable refused id; they do not infer zero version issuance by subtracting or ordering index strings. R089/R132's no-issued-version obligation remains subject to the existing reading check. No snapshot/effects form, new port, native command, implementation or handwritten core is supplied. These are source witnesses awaiting the ordinary implementation adapter, not executed SUT results."
+    },
+    {
+      "id": "P/01.1-R028",
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "line": 69,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "**Copying damaged rows.** An existing row with a damaged body and retained version stays in backup as `{key, items: null, index, unreadable: true}`, where `index` is its exact nonempty version; the existing key order and coherent copy header remain. This is separate from import/restore refusing unreadable input under N4. A lost version requires the P/01.1 R028 log entry, a nonzero backup CLI exit and preservation of the previous published file. HTTP copy may return `503 UnavailableFault` before `200` or close incompletely after `200`; a completed copy that omits the row or invents its `index` is invalid. An import refusal of unreadable input does not permit omitting a damaged row from backup. The `spoil-row` binding uses `what=body` or `what=index`; without it the dependent observation stays `NotExecuted`."
+    },
+    {
+      "id": "P/01.3-R021",
+      "file": "Platform/01-store/acceptance/3/README.md",
+      "line": 219,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "For the bindings of the target `P/01/production` the words of the payload mean the following. The boundary `admission_time` is the wall clock of the daemon process that P/01.1 N3 «Admission time» reads at admission: the provider observes this clock domain of the process, and the admission time that the daemon stores is judged by the public outcomes of the case, not by the provider. The resource `heap` is the resident anonymous memory of the process (`RssAnon` of `/proc/<pid>/status`), and `memory` is its resident set (`VmRSS`); a heap figure of a language runtime is no resource of the form. With the latch `sink` the provider is the reader of the output, and `cancel` is its deactivation: the provider closes the sink at `deactivate`, the `monotonic_ns` of the deactivation record is that moment, and no observation carries `cancel`. The phase `recover_mark` names no file: the mark is the first changing step of `recover` in `-dir` (P/01.3 R021), and the point of the fault is the first change of `-dir` after the first top-level entry that `recover` completes, so neither the payload nor the invocation carries a name of the mark. The phase `copy_after_headers` is the end of the stream as the client receives it after the complete header block of a `200`, made between the daemon and the client: it gives the half of `RUN-H03` that the CLI judges. The half of the daemon after `200`, only an incomplete close and no second fault, is judged on its own stream under the cancellation, the stalled sink and the stop that the judge makes; a failure inside the daemon has no binding."
+    },
+    {
+      "id": "P/01.1-R054",
+      "file": "Platform/01-store/forms/extra.tsv",
+      "line": 13,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "P/01.1/extra\textra-http10-te\tprobe\tPlatform/01-store/acceptance/1/README.md#request-parsing-n21-p011-23\tan HTTP/1.0 request with Transfer-Encoding\t400 badrequest and close\tR054; RFC 9112 §6.1"
+    },
+    {
+      "id": "P/01.3-R021",
+      "file": "Platform/01-store/forms/production/bindings.tsv",
+      "line": 36,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "prod-recover-interrupted\t-\tfault\t{\"capability\":\"fault\",\"phase\":\"recover_mark\",\"model\":\"interrupt\"}\tacceptance.norms.md#n63-probes prod-recover-interrupted: fault at the phase mark of recover (P/01.3 R021)"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/01-store/forms/refusals.tsv",
+      "line": 75,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "1.3\t34\treplay_limit\thttp\t503\tunavailable\t-\tRetry-After\t-\tP/01.3 R035"
+    },
+    {
+      "id": "P/01.3-R018",
+      "file": "Platform/01-store/forms/refusals.tsv",
+      "line": 78,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "1.3\t36\tadmin_not_leader_cli\tcli\texit !0\t-\t-\t-\t«not the leader»\tP/01.3 N1.3 admin_ops; P/01.3 R018"
+    },
+    {
+      "id": "P/01.1-R217",
+      "file": "Platform/01-store/forms/rights-checks.tsv",
+      "line": 4,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "# Before the table: the frame and the body limit (P/01.1 N2.1, R217 of P/01.1), the route and the method of the door (404 — P/01.1 N2.1); for GET /v1/get and GET /v1/list"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 13,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet. Each of them, like the budgets of P/01.3 R035 and R036, is a finite positive budget declared by the implementation, and the probe of a dependent case receives its value as input from the environment (ADR-0130 Addendum (5) item 3). The implementation declares the value; the threshold of production acceptance is approved as in ADR-0130 Addendum (9), and a claim of the candidate alone is not enough (ADR-0130 Addendum (15) item 7). The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults."
+    },
+    {
+      "id": "P/01.3-R036",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 13,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "Before measurement record exact Source/implementation/runner/profile/artifact/fixture/library/compiler identities, invocation and durability mode. Declare workload cardinalities, operation rate/mix, key/item/body sizes, replay locality, checkpoint policy, concurrency and input bytes; record CPU, RAM, storage/filesystem/mount/cache facts relevant to the experiment. The [first approved budgets](#first-approved-budgets) apply to the envelope named there. Cache/eligible-GC, output and cancellation budgets are not approved yet. Each of them, like the budgets of P/01.3 R035 and R036, is a finite positive budget declared by the implementation, and the probe of a dependent case receives its value as input from the environment (ADR-0130 Addendum (5) item 3). The implementation declares the value; the threshold of production acceptance is approved as in ADR-0130 Addendum (9), and a claim of the candidate alone is not enough (ADR-0130 Addendum (15) item 7). The stop budget fits below the actual manager stop deadline with measured teardown margin. Calibrate monotonic resolution/scheduling uncertainty separately; it does not increase a protocol budget. Candidate assertions alone do not qualify these inputs. Unknown values stay unknown, not invented universal defaults."
+    },
+    {
+      "id": "P/01.1-R141",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 15,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. The age runs from the first application on the admission-time clock (R141). GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink."
+    },
+    {
+      "id": "P/01.1-R141",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 15,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "The R141 minimum is strictly more than ID_REPLAY_MIN_AGE AND at least ID_REPLAY_MIN_RECORDS later applied identifier records, owned by [runtime-constants.tsv](../forms/runtime-constants.tsv); it is not a RAM/id upper bound. Test the two edges independently with distinct successful later applications; do not invent a counting rule from unadmitted requests, admitted refusals or replays. The age runs from the first application on the admission-time clock (R141). GC is finite only under the qualified workload/budget. Logical reclaim is not immediate physical file shrink."
+    },
+    {
+      "id": "P/01.1-R141",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 64,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "| RUN-W03 | Retained successful id, constant business-row count, distinct later successful id applications; exact age/count edges, cache pressure and reopen. | While either R141 condition is unmet, same answer/again and no new apply/version. Equality at the age minimum is ineligible for forgetting. After both, minimum-retention checks permit either lawful retention or forgetting. | Qualified clock/application-count and public replay oracle; age-only/count-only/never-applied request controls. |"
+    },
+    {
+      "id": "P/01.1-R147",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 68,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "| RUN-T03 | No-byte accepted connection; partial request line; slow headers; complete headers establishing a body with NO first body byte; body/chunk trickle; separate EOF control. | Use the exact phase starts of R147. Absolute deadlines do not reset. Before supported complete line close silently; after it pre-execution timeout is 400 BadRequestFault/Connection: close. R054 EOF remains silent/no effect/no id. | Declared positive phase budgets and calibrated monotonic observations; first-body-byte start and per-byte-reset mutants. |"
+    },
+    {
+      "id": "P/01.1-R054",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 68,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "| RUN-T03 | No-byte accepted connection; partial request line; slow headers; complete headers establishing a body with NO first body byte; body/chunk trickle; separate EOF control. | Use the exact phase starts of R147. Absolute deadlines do not reset. Before supported complete line close silently; after it pre-execution timeout is 400 BadRequestFault/Connection: close. R054 EOF remains silent/no effect/no id. | Declared positive phase budgets and calibrated monotonic observations; first-body-byte start and per-byte-reset mutants. |"
+    },
+    {
+      "id": "P/01.3-R034",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 106,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted | P/01.3 R034 | qualified stop observer and actual manager configuration |"
+    },
+    {
+      "id": "P/01.1-R144",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 107,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| RUN-F01, RUN-F02, RUN-F04, executable | P/01.1 R144 | qualified fault-stage binding |"
+    },
+    {
+      "id": "P/01.3-R021",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 110,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 N3 R021 | qualified interruption point |"
+    },
+    {
+      "id": "P/01.3-R036",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 111,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Full disk and exhausted descriptors | P/01.3 R036 | capacity input from the environment |"
+    },
+    {
+      "id": "P/01.1-R070",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 112,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Leader change and snapshot with different clocks; `admission_ahead` | P/01.3 N1.3 `admission`; P/01.1 R070 | D7 `clock` binding |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 113,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Response-write budget; commit wait under a live leader | P/01.3 R035 | slow reader and slow commit from the environment |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 114,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Door attempts against `-leader-wait`; all voters unreachable | P/01.3 R035 | group stand |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 115,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Replay-processing limit | P/01.3 R035 | overload input from the environment |"
+    },
+    {
+      "id": "P/01.3-R008",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 116,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `admin.sock` limit when the ordinary limits are exhausted | P/01.3 R008 | connection exhaustion from the environment |"
+    },
+    {
+      "id": "P/01.3-R018",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 117,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Temporary `backup` file after failure, cancellation and a killed run | P/01.3 R018 | qualified fault binding |"
+    },
+    {
+      "id": "P/01.1-R141",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 118,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| Age of the `id` memory from the first application on the admission-time clock | P/01.1 R141 | D7 `clock` binding |"
+    },
+    {
+      "id": "P/01.1-R013",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 126,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "The checks of P/01.1 R013 are the actual spread between the clocks beyond `CLOCK_SKEW`, a common shift and return, and the non-decrease of admission time. The probes also need a leader change, a Raft snapshot, the equality of admission time, and a replay held after `not_after` before the first application. Writer and client clocks belong to the scope only when the selected workload actually uses them; live P/03, P/04 or new N−1 stands are not assumed. Until the public case payload and a qualified provider exist, a dependent check stays `MissingBinding`/`NOTEXEC`."
+    },
+    {
+      "id": "P/01.1-R144",
+      "file": "Platform/01-store/spec/production-acceptance.md",
+      "line": 130,
+      "sides": [
+        "model",
+        "judge"
+      ],
+      "kind": "default-context",
+      "text": "Separate actual protocol output/state/replay from test-only instrumentation. Qualify each storage/clock/progress/fault binding independently with activated-stage receipts and negative controls; do not infer physical durability from ordinary process restart or SIGKILL. Complete recoverable bytes must be proved before judging the R144 ambiguous_barrier branch. Compare whole batch/id state, and admission metadata separately. An absent binding is not proof that an implementation is wrong or successful."
+    },
+    {
+      "id": "P/01.1-R050",
+      "file": "Platform/05-resource/spec/05-resource.norms.md",
+      "line": 1354,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "**Raw paths and route matching.** The shared P/01.1 R050 drain counts raw HTTP-stream bytes and its absolute monotonic interval starts after the complete refusal has been sent; chunked discard does not wait for a terminal chunk. This parsing reference does not replace the resource's own timeout outcomes or budgets with P/01 input-phase refusals, and adds no common response deadline to resource streams."
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/06-console/data/operations.schema.json",
+      "line": 28,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "   \"description\": \"iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2) Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.\","
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/06-console/data/operations.schema.json",
+      "line": 35,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "   \"description\": \"the term of the same token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.\","
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/06-console/spec/06.9-console.norms.md",
+      "line": 315,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "| `iat` | number | required |  | iat of the same token: an input of step 4a of the right contract (P/06.9 N1.2) Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field. |"
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/06-console/spec/06.9-console.norms.md",
+      "line": 316,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "| `exp` | number | required |  | the term of the same token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field. |"
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/08-domain/data/issued.schema.json",
+      "line": 21,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "   \"description\": \"exp of the token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field.\","
+    },
+    {
+      "id": "P/01.1-R012",
+      "file": "Platform/08-domain/spec/08.2-domain.norms.md",
+      "line": 633,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "| `exp` | number | required |  | exp of the token Copied from the same token as a finite number under P/01.1 R012; not a common row-Time precision field. |"
+    },
+    {
+      "id": "P/01.3-R034",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 285,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-stop` | P/01.3 R034 | `RUN-L03` and the initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted; the binding `progress`; the input `manager` | admission stops; a request read but not admitted gets 503 `unavailable`; a connection whose request is unread is closed; admitted work gets its definite or ambiguous outcome; snapshots, connections and listeners are released; a forced kill is no success | `BUDGET_STOP` on `graceful_stop_elapsed`, below the deadline of `manager` less its margin |"
+    },
+    {
+      "id": "P/01.1-R144",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 286,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-fault-stage` | P/01.1 R144 | `RUN-F01`, `RUN-F02`, `RUN-F04`; the bindings `fault` and `storage` | as the rows of these groups: `unavailable` with a proven absence of effect, `ambiguous` with an unknown result, a batch and its id whole or absent whole | none: the outcome is judged |"
+    },
+    {
+      "id": "P/01.3-R021",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 288,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-import-interrupted` | P/01.3 N1.3 `import`; P/01.3 R021 | group stand; an interrupted `import` | a member starts and holds writers with 503 `unavailable`; the import continues through `admin.sock` of the leader; after the loss of a majority `recover` publishes a floor, a repeat of the former attempt refuses, the floor does not decrease, and a new `import` attempt carries the full input | the key `writer_hold` |"
+    },
+    {
+      "id": "P/01.3-R021",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 289,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-recover-interrupted` | P/01.3 R021 | the binding `fault` at the phase mark of `recover` | the phase mark stands; a daemon start refuses with code 2; a repeat of `recover` starts over from the same input | none: the outcome is judged |"
+    },
+    {
+      "id": "P/01.3-R036",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 290,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-disk-fd` | P/01.3 R036 | the input `volume`, by the stages before and after the effect; a process limit of descriptors set from the key `descriptors` | full disk: 503 `unavailable` only on a proven refusal before the effect, otherwise the `ambiguous_*` outcomes; a read keeps working; writes return after space is freed, without a restart. Exhausted descriptors: `connection_limit` if the connection could be accepted, otherwise it is closed; started requests get their definite outcome; the daemon does not crash | the keys `disk`, `descriptors` |"
+    },
+    {
+      "id": "P/01.1-R013",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 291,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-clock-group` | P/01.3 N1.3 `admission`; P/01.1 R013, R070, R264 | group stand; the binding `clock` in the scope of [clocks in a group](../../../01-store/spec/production-acceptance.md#clocks-in-a-group); a leader change; a Raft snapshot | admission time does not decrease over a leader change and a snapshot; `expired` follows `not_after`; `admission_ahead` appears when the current clock of the leader is behind the saved admission time; the equality of admission time and a replay held after `not_after` before the first application are judged by R070 | `CLOCK_SKEW` bounds the spread of the clocks; no skew allowance is added |"
+    },
+    {
+      "id": "P/01.1-R070",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 291,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-clock-group` | P/01.3 N1.3 `admission`; P/01.1 R013, R070, R264 | group stand; the binding `clock` in the scope of [clocks in a group](../../../01-store/spec/production-acceptance.md#clocks-in-a-group); a leader change; a Raft snapshot | admission time does not decrease over a leader change and a snapshot; `expired` follows `not_after`; `admission_ahead` appears when the current clock of the leader is behind the saved admission time; the equality of admission time and a replay held after `not_after` before the first application are judged by R070 | `CLOCK_SKEW` bounds the spread of the clocks; no skew allowance is added |"
+    },
+    {
+      "id": "P/01.1-R264",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 291,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-clock-group` | P/01.3 N1.3 `admission`; P/01.1 R013, R070, R264 | group stand; the binding `clock` in the scope of [clocks in a group](../../../01-store/spec/production-acceptance.md#clocks-in-a-group); a leader change; a Raft snapshot | admission time does not decrease over a leader change and a snapshot; `expired` follows `not_after`; `admission_ahead` appears when the current clock of the leader is behind the saved admission time; the equality of admission time and a replay held after `not_after` before the first application are judged by R070 | `CLOCK_SKEW` bounds the spread of the clocks; no skew allowance is added |"
+    },
+    {
+      "id": "P/01.1-R070",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 291,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-clock-group` | P/01.3 N1.3 `admission`; P/01.1 R013, R070, R264 | group stand; the binding `clock` in the scope of [clocks in a group](../../../01-store/spec/production-acceptance.md#clocks-in-a-group); a leader change; a Raft snapshot | admission time does not decrease over a leader change and a snapshot; `expired` follows `not_after`; `admission_ahead` appears when the current clock of the leader is behind the saved admission time; the equality of admission time and a replay held after `not_after` before the first application are judged by R070 | `CLOCK_SKEW` bounds the spread of the clocks; no skew allowance is added |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 292,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-reply-commit` | P/01.3 R035 | a slow reader made by the judge; group stand for the commit part: the commit held under a live leader by a freeze of the other voters | a reader that does not take the answer loses the connection; when the commit wait ends the outcome is `ambiguous` (`ambiguous_leader`) | the keys `response_write`, `commit_wait` |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 293,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-door-attempts` | P/01.3 R035 | group stand with a door without a vote; all voters unreachable | the attempts of one request take not less than the effective `-leader-wait`; a repeat only with the same `id`; a write without `id` stays `ambiguous`; the loss of the answer to a sent attempt stays `ambiguous` | the effective `-leader-wait`; the key `door_attempts` |"
+    },
+    {
+      "id": "P/01.3-R035",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 294,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-replay-limit` | P/01.3 R035 | replays made by the judge above the key `replay_limit` | above the limit 503 `unavailable` with `Retry-After` before admission; neither the record nor the `id` memory is touched | the key `replay_limit` |"
+    },
+    {
+      "id": "P/01.3-R008",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 295,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-admin-limit` | P/01.3 R008 | the ordinary connection limits exhausted by the judge | `admin.sock` still admits the operator; above its own limit, `connection_limit`: 503 `unavailable` with `Retry-After` | the key `admin_connections` |"
+    },
+    {
+      "id": "P/01.3-R018",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 296,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-backup-temp` | P/01.3 R018 | a failure, a cancellation and a killed run of `backup`; the binding `fault` | the temporary file is removed on a failure and a cancellation; a leftover is removed by the next `backup` to the same target; the former copy stays | the key `cancellation` |"
+    },
+    {
+      "id": "P/01.1-R141",
+      "file": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "line": 297,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "| `prod-id-age` | P/01.1 R141 | the binding `clock`; the edges of `RUN-W03` | until both conditions hold, the same answer and no new application; equality at the age minimum is not eligible; the age runs from the first application on the admission-time clock | `ID_REPLAY_MIN_AGE`, `ID_REPLAY_MIN_RECORDS` |"
+    },
+    {
+      "id": "P/01.1-R050",
+      "file": "Platform/common/contracts/gate-and-pass.md",
+      "line": 275,
+      "sides": [
+        "model"
+      ],
+      "kind": "qualified-short",
+      "text": "**Early refusal.** Follow P/01.1 R050: send the complete refusal with `Connection: close` first, then discard raw HTTP-stream bytes without parsing/execution, bounded by the declared length when framing supplies one, the declared raw-byte limit and the absolute monotonic drain deadline. The interval starts after the complete refusal is sent; a trickle does not extend it and chunked discard does not wait for a terminal chunk. Then close; add no second refusal or executed pipelined request. The console ([P/06.5](../../06-console/spec/06.5-console.norms.md)), its bytes door (P/06.1) and the resource (P/05) keep their own outcomes and declared limits. This reference does not copy P/01 input-timeout responses/budgets onto them: console slow-body `408` and BODY_WAIT from headers remain owned here; forwarding, pass and stream response budgets are not replaced by a common P/01 response deadline."
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1770,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1769\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\"}\tok\t[]\t[]\tbase; valid person base at=\"1\" (P/01.1-R007/R009); no mutation"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1774,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1773\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"\":\"x\"}\trefused\t[\"\",\"/\"]\t[]\t: name ''; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1776,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1775\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"Bad Name!\":\"x\"}\trefused\t[\"\",\"/Bad Name!\"]\t[]\t: name 'Bad Name!'; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1778,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1777\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"a\\n\":\"x\"}\trefused\t[\"\",\"/a\\n\"]\t[]\t: name 'a\\n'; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1780,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1779\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"/x\":\"x\"}\trefused\t[\"\",\"/~1x\"]\t[]\t: name '/x'; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1782,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1781\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"zz_extra\":\"x\"}\trefused\t[\"\",\"/zz_extra\"]\t[]\t: name 'zz_extra'; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    },
+    {
+      "id": "P/01.1-R009",
+      "file": "Platform/common/vectors/family-read/08.tsv",
+      "line": 1784,
+      "sides": [
+        "judge"
+      ],
+      "kind": "qualified-short",
+      "text": "08-1783\tdomain/deleting/<name>\tdomain/deleting/w-1\trow\twriter\t[\"domain\"]\t{\"at\":\"1\",\"n0\":\"x\"}\trefused\t[\"\",\"/n0\"]\t[]\t: names over max_items; valid person base at=\"1\" (P/01.1-R007/R009); x-max-names and closed-profile paths"
+    }
+  ]
+}

@@ -12,14 +12,12 @@ The profile is `01-store` in the [generic profile and assembly contract](../../.
 
 ## `scenarios.tsv`
 
-The table `scenarios.tsv` of the chapter (judge-only: `acceptance/1/scenarios.tsv`) checks the requirements that the
-readiness checklist of the chapter norms names next to each scenario. The format is the dictionary of directives and
-doors of the common acceptance README. Specific to chapter 1.1:
+The chapter checks the requirements named by its readiness checklist. Its scenario format is the common dictionary of directives and doors, with these chapter-specific rules:
 
-- `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch. The targets of the chapter admit the unnamed fields `error` and `size` by the column `free` of their routing rows (judge-only: the routing of the judge, `forms/targets.routing.tsv`); the two items here state what that column admits.
+- `expect` is `<code> <JSON body>`; the JSON is compared whole: the targets of this chapter have the mode `whole` of the dictionary of the common acceptance README (`<code> <JSON>`); `error` is compared only if it is named: its text is not normed. An unnamed `error` is admitted only in the root of the body; an extra field elsewhere is a mismatch. The targets of the chapter admit only the unnamed root fields `error` and `size` under these two rules.
 - For a `200` answer to `GET /v1/list` the **order of names inside `keys`** is also checked: the sequence of names decoded from the JSON in the order received MUST equal the sequence in `expect`, which is given by UTF-8 bytes. The runner keeps this order when parsing the answer and does not sort what it received before the comparison. For an empty `keys` the sequence is empty. Spaces and the way of JSON escaping are insignificant; the order of other objects, `items` included, is still not checked.
 - `$name` binds only a JSON string (N1: a version is a string on the wire); a number or another type is a mismatch of the step.
-- An unnamed `size` is admitted only in the root of the body of a body refusal (the row `body_limit` of `forms/refusals.tsv`: `413` with the kind `toolarge` and the body limit as `limit`): it is checked to be an integer JSON number equal to the known full entity-body size in bytes, not a string and not a boolean, and is then excluded from the comparison with `expect`. A valid, representable `Content-Length` defines that full size even for an early answer after only a prefix of the body has been sent. With `Transfer-Encoding: chunked`, `Content-Length` is ignored: the full size of a completed chunked body is the sum of the decoded chunk-data bytes, excluding chunk framing and trailers; for an incomplete chunked body the full size is unknown and `size` is absent. A refusal for an unrepresentable framing length has no `size`. The absence of `size` remains admissible when the full size is known; other unnamed fields, `key` included, are not admitted (the column `free` above). A weight refusal names `key` and `size` in `expect`, and they are compared as named fields.
+- An unnamed `size` is admitted only in the root of the body of a body refusal (the row `body_limit` of `forms/refusals.tsv`: `413` with the kind `toolarge` and the body limit as `limit`): it is checked to be an integer JSON number equal to the known full entity-body size in bytes, not a string and not a boolean, and is then excluded from the comparison with `expect`. A valid, representable `Content-Length` defines that full size even for an early answer after only a prefix of the body has been sent. With `Transfer-Encoding: chunked`, `Content-Length` is ignored: the full size of a completed chunked body is the sum of the decoded chunk-data bytes, excluding chunk framing and trailers; for an incomplete chunked body the full size is unknown and `size` is absent. A refusal for an unrepresentable framing length has no `size`. The absence of `size` remains admissible when the full size is known; other unnamed fields, `key` included, are not admitted. A weight refusal names `key` and `size` in `expect`, and they are compared as named fields.
 
 ## Directives of chapters 1.1 and 1.2
 
@@ -95,7 +93,7 @@ restart (P/01.1-31). The runner executes them through the seam adapter, by the [
 
 ### Seam normalization
 
-P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/seams.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.
+The review seams of P/01.1 have no `CALL` rows. Its steps are HTTP requests and the directives `@clock`, `@reopen` and `@parallel`. Over the [bridge](../../../common/acceptance/seams.md#explicit-test-side-seam-bridge) of the common acceptance README each HTTP or directive step becomes `method: call` with one of three public tokens. No bridge field or method is added.
 
 | `name` | Step | `input` | Observation |
 |---|---|---|---|
@@ -107,12 +105,9 @@ P/01.1 `seams.tsv` (judge-only: `acceptance/1/seams.tsv`) has no `CALL` rows. It
 
 ## Additional check of the class of errors
 
-A replay of delete with the same id and different items (none/null/number/object/array) must match by op/key/cas/guard. A change of key/cas/guard is a different fingerprint. Compare versions only for equality: uniqueness does not mean a numeric order. (judge-only: sc. 17) also sends arbitrary bytes or no body by the common grammar of POST — it checks P/01.1-R048 and
-P/01.1-R144 (`body_form`).
+A replay of delete with the same id and different items (none/null/number/object/array) matches by op/key/cas/guard. Changing key, cas, guard, not_after or not_before gives a different fingerprint (P/01.1-R105). Versions are compared only for equality: uniqueness does not imply numeric order. The POST checks also send arbitrary bytes or no body under the common grammar, checking P/01.1-R048 and P/01.1-R144 (`body_form`).
 
-This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.
-A change of `key`, `cas`, `guard`, `not_after` and `not_before` on a replay of `delete` is now scenario 30 (judge-only:
-sc. 30) — it checks P/01.1-R105.
+These are subjects of a manual specification check and a future implementation check. Prepared requests, reading and the author's finite models are not a performed stand test.
 
 ## Batch
 
@@ -124,25 +119,17 @@ The role `console` does not know the limit on the number of rows — chapter 1.2
 
 ## Extra fields of a command
 
-Scenario 23 (judge-only: sc. 23) checks put/delete and their replays with different unknown top-level
-fields: they change neither the data nor the fingerprint — P/01.1-R040, P/01.1-R090, P/01.1-R385. The nested object zzz does not become a guard
-or a new command. The closedness of a real guard is checked separately by (judge-only: sc. 20) — P/01.1-R032; a wrong
-items of put — (judge-only: sc. 16) — P/01.1-R019 (`items`); ignoring items of delete — (judge-only: sc. 06 and 23) —
-P/01.1-R099. The limit of the full body holds, ignored fields included ((judge-only: sc. 22) and reading of the size
-check before parsing) — P/01.1-R034, P/01.1-R040, P/01.1-R217, P/01.1-R220.
-A prepared scenario does not mean a performed HTTP run of an implementation.
+Put/delete and their replays accept different unknown top-level fields without changing data or the fingerprint (P/01.1-R040, P/01.1-R090). The nested object zzz does not become a guard or a new command. A real guard stays closed under P/01.1-R032; put checks the `items` form of P/01.1-R019; delete ignores `items` under P/01.1-R099. The full-body limit still applies, ignored fields included, before parsing (P/01.1-R034). A prepared scenario is not a performed HTTP implementation run.
 
-The check outside the TSV: on a role socket the request GET /v1/list with a role forwarding header gets 403 forbidden before listing; an untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without the read right gets 200 with names/versions without values. Scenario 21 (judge-only: sc. 21) checks the latter — P/01.1-R066 — not all identity refusals; the former require a sockets/trust profile from acceptance 06 ((judge-only: sc. 08 of acceptance 06) — a header with a foreign role on a role socket; it checks P/01.1-R345 and P/01.1-R144 (`identity`)).
+Outside the TSV, check a valid GET /v1/list on a role socket with a role-forwarding header: it gets 403 forbidden before listing. Untrusted forwarding and a forbidden forwarded admin are also refused by P/01.2 N3 «check». The same admissible identity without read rights gets 200 with names and versions, without values. Identity refusals need a sockets/trust profile, including a foreign-role header on a role socket, under P/01.1-R066 and P/01.1-R144 (`identity`).
 
 ## A key that is absent or not a string
 
-Scenario 24 (judge-only: sc. 24) separates the form from the rules of the key (P/01.1-R030, P/01.1-R031): an absent or non-string `key` of a command,
-`guard.key` and the read parameter `key` — `400 badrequest`; a string that breaks the rules of N1 — `badkey`
-((judge-only: sc. 13 and 20) — P/01.1-R031, P/01.1-R032). The last step reads the row and sees that nothing is written.
+The checks distinguish the form from the key rules (P/01.1-R030, P/01.1-R031): an absent or non-string command key, guard.key or read parameter key gives `400 badrequest`; a string that breaks N1 gives `badkey` under P/01.1-R031 and P/01.1-R032. The final read confirms that nothing was written.
 
 ## Admission time conditions (P/01.1-25; ADR-0091 item 1)
 
-Scenario 28 (judge-only: sc. 28) takes only the edges of the admission time (P/01.1-R079, P/01.1-R080, P/01.1-R088,
+The admission-time checks cover only the edges of the admission time (P/01.1-R079, P/01.1-R088,
 P/01.1-R090): a `not_after` that has already passed, `not_after` and `not_before` that
 have not yet come under any clock of the stand. `expired` and `early` write nothing; the order is
 «time conditions → guard → CAS»; `not_after` is in the replay fingerprint (a numerically equal spelling is the same value, a different number and absence — `400`);
@@ -186,17 +173,17 @@ Probes of the framing and of the request line (N2.1), each on raw bytes:
 
 ## ADR-0129 core clarification witnesses
 
-Six seam scenarios (judge-only: `s7-admitted-single-refusals` to `s12-zero-version-not-absence` of `seams.tsv`) use only the existing HTTP, @clock and @reopen grammar; they check P/01.1-R088, P/01.1-R132, P/01.1-R070, P/01.1-R090, P/01.1-R355 and P/01.1-R366. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
+Six seam scenarios (judge-only: `s7-admitted-single-refusals` to `s12-zero-version-not-absence` of `seams.tsv`) use only the existing HTTP, @clock and @reopen grammar; they check P/01.1-R088, P/01.1-R132, P/01.1-R070, P/01.1-R090, P/01.1-R355. The four admitted refusals expired, early, guard and conflict for single writes and batches have zero business effects, and that coexists with retained admission metadata; the refused identifier stays reusable with a corrected condition. The same distinction holds across ordinary Close/Open; it is a graceful restart witness, not a power-cut or consensus witness.
 
 The admission bounds compare as binary64 values: for a bound that equals the clock in binary64 not_after admits equality and not_before refuses it, for put/delete/batch. On applied put/delete/batch replays bound spellings that round to the same binary64 value are the same fingerprint, and values that differ in binary64 give different fingerprints and badrequest. The request bytes must not be normalized before the actual store parses them. The CALL engine's exact-number comparison is not a replacement store fingerprint. A nonempty string version differs from the absent marker "" in single/batch CAS and guards.
 
-Already covered and unchanged: scenario 35 steps 8–9 (judge-only: sc. 35) choose the first failing guard in both source-list orders, steps 10–11 do the same for CAS — P/01.1-R125, P/01.1-R126; scenario 36 step 3 (judge-only: sc. 36) reorders guards on a successful replay without changing its fingerprint — P/01.1-R134. R116 and scenario 31 steps 1–4 (judge-only: sc. 31) already prove that a successful absent delete leaves read index "" and admits a later create-once; scenario 34 steps 7–8 (judge-only: sc. 34) covers batch deletion of an absent row — P/01.1-R128, P/01.1-R133. No duplicate witnesses are added for these obligations.
+Guard and CAS checks choose the first failure in both source-list orders (P/01.1-R125). Reordering guards on a successful replay does not change its fingerprint (P/01.1-R134). A successful absent delete leaves read index "" and admits a later create-once (R116); batch deletion of an absent row follows P/01.1-R128 and P/01.1-R133. These obligations need no duplicate witnesses.
 
 Opaque versions do not expose the allocator's count. The new HTTP probes observe unchanged rows/list and a reusable refused id; they do not infer zero version issuance by subtracting or ordering index strings. R089/R132's no-issued-version obligation remains subject to the existing reading check. No snapshot/effects form, new port, native command, implementation or handwritten core is supplied. These are source witnesses awaiting the ordinary implementation adapter, not executed SUT results.
 
 ## Replay and last admission metadata
 
-A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases (judge-only: seams `s13-replay-put-admission`, `s14-replay-delete-admission`, `s15-replay-batch-admission`) check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R353, P/01.1-R360, P/01.1-R362 and P/01.1-R365; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.
+A successful replay of put/delete/batch with the former id keeps the original answers and versions; a deleted row has no visible version. The replay's new last admission metadata is durable across an ordinary reopen (N3 «Admission time»). These cases check P/01.1-R070, P/01.1-R078, P/01.1-R105, P/01.1-R122; they are gated by durable because they include @reopen. These are source witnesses, not executed SUT acceptance.
 
 ## Admitted mismatches and admission-number domain (ADR-0129 addendum (10), item 3)
 
@@ -204,7 +191,7 @@ A put/delete/batch with an already-applied identifier and different content is a
 
 The assigned fractional binary64 admission value survives an ordinary reopen. No integer/millisecond or three-digit row-time writer may truncate it. The witness does not prescribe a metadata encoding or physical clock accuracy.
 
-All four cases (judge-only: seams `s16-mismatched-put-admission` to `s19-admission-binary64-fraction`) check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070, P/01.1-R361 and P/01.1-R362; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
+All four cases check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070; they use only existing HTTP, signed-decimal @clock and @reopen steps and are selected by the existing durable gate. No port, internal API, CALL grammar, snapshot or power-cut claim is added. The 56 new source steps are not executed implementation acceptance. Constant names are owned by forms/runtime-constants.tsv; specific stand/probe input numbers remain test data.
 
 ## Production qualification coverage
 

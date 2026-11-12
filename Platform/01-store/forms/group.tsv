@@ -4,6 +4,6 @@
 #key plain — where a daemon MAY run without -tls: loopback — -api and -raft on the loopback (the local box); a joining member never (-join requires -tls)
 #key stand_size — the number of voters of the store group of the acceptance stand (the assembly 1 → 2 → 3, acceptance/3/README.md «The store group»)
 key	value	norm
-transport	mtls	P/01.3-R059; P/01.3-R061; P/01.3-R207
-plain	loopback	P/01.3-R060; P/01.3-R207
+transport	mtls	P/01.3-R059; P/01.3-R059; P/01.3-R009
+plain	loopback	P/01.3-R059; P/01.3-R009
 stand_size	3	P/01.3 N5; acceptance/3/README.md «The store group»
