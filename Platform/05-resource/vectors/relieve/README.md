@@ -6,9 +6,7 @@ The owner is lesson [P/05](../../spec/05-resource.norms.md) (N1.4 `free_ask`, N3
 of a subsystem with `requests.free` (answer with the heartbeat field `freeing`, [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) N1.1).
 The bytes are written by the Specification.
 
-## `cases.tsv`
-
-The table is judge-only: checks of P/05-R025 and P/05-R053.
+## Request vectors
 
 UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, volume, sub, server, heartbeats}`: the row `platform/space` (`enabled`, `high`, `low`), the volume of the resource (`name`,
@@ -16,13 +14,11 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 the heartbeat field, or it is absent); `expect` — `{action: write, free}` (write or rewrite the row with `free`), `{action: delete}`
 (remove one's own row) or `{action: none}` (there is no request).
 
-## `short.tsv`
-
-The table is judge-only: checks of P/05-R025 and P/05-R053.
+## Shortfall vectors
 
 The heartbeat field of the resource `short` (P/05 N1.4). The same rules of the file; the header is `case<TAB>input<TAB>expect<TAB>note`.
 `input` — `{space, server, volumes, subs, heartbeats}`: the row `platform/space`, the server of the resource, the volumes (`name`, `used`, `total`),
-the subsystems with `requests.free`, the heartbeats of the workers (as in `cases.tsv`; judge-only: P/05-R025, P/05-R053); `expect` — `{short: <integer>}`: Σ over the volumes of the largest `need`
+the subsystems with `requests.free`, the heartbeats of the workers (in the same form as the request vectors above); `expect` — `{short: <integer>}`: Σ over the volumes of the largest `need`
 (> 0) among the subsystems — each subsystem has the `need` of a volume per N3 `relieve` (`used − total·low − Σ freeing`, rounded up to a byte), only
 for a volume above `high`. 6 cases: two volumes and two subsystems, a volume below `high`, everything is being freed, `space` is disabled, no subsystems,
 rounding up.

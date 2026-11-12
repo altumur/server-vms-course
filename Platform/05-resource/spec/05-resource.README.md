@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/05-resource.RE
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/05-resource.md` (for people, not in the export).
 
+Scenarios, fixtures and expected answers are not part of the model input; the visible norms contain all implementation obligations. sc. NN identifies scenario NN of this lesson unless another lesson is named; an `sNN-…` name identifies a synchronous CALL case, and `05-power-pull` names the system restoration drill.
+
 ## Task
 
 Give the platform objects, events and their reading; give the resource the cleanup, the mirroring and the restoration of its own buckets.
@@ -13,7 +15,6 @@ Give the platform objects, events and their reading; give the resource the clean
 - The canon is the [norms](05-resource.norms.md), the definitions of N0 — per P/01.1; the file contracts are
   [the event journal](../../common/contracts/event-journal.md) and [the presence lock](../../common/contracts/presence-lock.md).
 - The [HTTP contract](05-resource.api.openapi.yaml) expresses N2.
-- The [acceptance](../acceptance/README.md) (judge-only: stand preparation and observation instructions) sets the preparation and the observations.
 - The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
 The objects use the store vocabulary of P/01.1, the roles — [P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md) and
@@ -33,7 +34,7 @@ Meanings below point to the norms; they introduce no new rule or interface.
 | written | The object version stamp, the event bucket persisted write time and the mirror receiver stamp have distinct owners. | P/05-R063, P/05-R092, P/05-R159 |
 | copy | A body copy keeps source written; a bucket mirror has its receiver stamp; a received copy is not an owner source. | P/05-R012, P/05-R159, P/05-R185 |
 | bucket | An event file at the path and period of the event-journal contract, not an event or a store row. | P/05-R018, P/05-R034 |
-| server | The resource server owns a bucket; an event payload server may instead name the subject server. | P/05-R062, P/05-R259, P/05-R260 |
+| server | The resource server owns a bucket; an event payload server may instead name the subject server. | P/05-R062, P/05-R259 |
 | unit | The logical `<tree>/<unit>` reference excludes the .alarms layout suffix; `of` names the event addressee. | P/05-R019, P/05-R096 |
 | presence | A worker-process observation from OS locks and one role snapshot; silent is a resource state. | P/05-R087, P/05-R090, P/05-R091 |
 | unknown | An unavailable read or incomplete role snapshot does not prove absence; malformed readable content has its specified separate outcome. | P/05-R023, P/05-R090, P/05-R122, P/05-R199 |
@@ -102,6 +103,6 @@ Check the id for collisions of the composite names a-e1-j/node:1:aaaaaa and a/j-
 
 ## Forms and implementation stages
 
-The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: object/copy probes P/05-R006, P/05-R063, P/05-R183, P/05-R185, P/05-R186, P/05-R187, P/05-R252, P/05-R190, P/05-R017, P/05-R034–P/05-R036, P/05-R038, P/05-R045; event/query probes P/05-R020, P/05-R023, P/05-R049, P/05-R050; resource/wait probes P/05-R025, P/05-R026, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R030, P/05-R032, P/05-R052–P/05-R054; route probes P/05-R042, P/05-R057) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
+The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. Public synchronous CALL ports supplement the process scenarios and common vector obligations; they do not replace full runner acceptance or the reading methods above.
 
 The numeric source of independent scalars is [runtime-constants.tsv](../forms/runtime-constants.tsv); HTTP values stay in the current [OpenAPI form](05-resource.api.openapi.yaml), high/low in the P/02 space form. Scenario 41 observes early stability; synchronous s63 separately awaits the real end of relieve. Declared s63–s67 and family cells require actual execution, never an adapter answer from expect. The ms support is still a separate dependency, not PASS.
