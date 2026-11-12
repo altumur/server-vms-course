@@ -1,5 +1,5 @@
 # P/06 refusal form, literal TAB without CSV quoting; forms/README.md defines projections.
-# Original N4 cells are retained: cause/outcome/diagnostic/caller; chapter6.7 had word/outcome/cause.
+# A row carries the N4 cells cause/outcome/diagnostic/caller; a row of chapter 6.7 carries word/outcome/cause.
 # Chapter6.3 imports the 14 gate rows; its extra unreadable-row and glass exceptions remain the common contract.
 # Numeric code projections retain one source row; no source alternative becomes an arbitrary choice.
 # fields are the required properties declared directly by the named schema; composition and conditional fields remain that complete schema and source cells.

@@ -5,8 +5,6 @@ This English text is the source; the Russian translation `ru/acceptance/9/README
 The norm of the chapter is [`06.9-console.norms.md`](../../spec/06.9-console.norms.md) N5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 2 scenarios / 8 steps.
 
-**There is no dry run by an implementation.**
-
 ## Preparation
 
 A console with the manifest `testsub`, it declares no operations. A door without a prefix is the console; the role of the door `store` is `console`. There are no sleeps.

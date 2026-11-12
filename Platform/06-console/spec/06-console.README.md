@@ -93,8 +93,8 @@ components are chosen by the implementation.
 **On a discrepancy.** Name the norm id, the input, the initial state, the expected and the obtained outcome. First check which
 chapter or lesson the rule belongs to: the units door and the claim — chapter 6.1, the loader — P/02.1, the rights generator — P/02.5,
 the opening of a secret — P/03.5, people and grants — P/08.4, the forwarding and `peer` — the forwarding and `peer` contracts. If the implementation is wrong — fix it and repeat
-the related checks. If the norm, the contract or the expectation diverge — report to the Specification the place, the counterexample,
-the origin relative to the original slice and the proposed decision; the decision is reflected in the norm, the contract, the instructions and
+the related checks. If the norm, the contract or the expectation diverge — report the place, the counterexample
+and the proposed decision to the author of the norms; the decision is reflected in the norm, the contract, the instructions and
 the affected acceptance. Do not carry a difference of the implementation into the canon silently; an arbitrary refusal does not replace a missing norm, do not add a new
 mechanism only for the sake of an unsupported case. Record a change of the acceptance or a recurring error of its interpretation
 in `corrections-<K>.tsv` (historical correction record) of the chapter; do not leave a new rule only in the instructions.

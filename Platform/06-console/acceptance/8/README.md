@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/8/README
 The norm of the chapter is [`06.8-console.norms.md`](../../spec/06.8-console.norms.md) N5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 12 scenarios / 189 steps.
 
-**There is no dry run by an implementation.** The scenarios are composed by reading the norms and the contract; `index` and other values of the store the scenario binds from the answer and does not compute in advance.
+The scenarios are composed by reading the norms and the contract; `index` and other values of the store the scenario binds from the answer and does not compute in advance.
 
 ## Preparation
 
