@@ -70,3 +70,51 @@ req_id	file	source	date	removed
 -	forms/rollout-poll.machine.yaml#/transitions/0	ADR-0120 addendum (6) item 3	2026-11-04	; ADR-0120 addendum (6) item 3
 -	forms/rollout-poll.machine.yaml#/transitions/0	review of P/02, S1	2026-11-06	 (review of P/02, S1)
 -	forms/README.md#non-http-seams-exact-request-and-expectation-grammar	course checker at commit f6cffb3ea	2026-11-05	 These lexical rules match the course checker on `f6cffb3ea`.
+-	forms/refusals.tsv#header	ADR-0125 addendum (1) item 5 (the catalogue replaced the N4 tables)	2026-11-06	 This is the single source of the former N4 tables (ADR-0125 addendum (1) item 5).
+-	forms/refusals.tsv#row:name=load_form	ADR-0091 addendum (24) item 5	2026-11-04	 (ADR-0091 addendum (24) item 5)
+-	forms/refusals.tsv#row:name=load_form	ADR-0094 addendum (1), (4) item 2, (8) item 2	2026-11-04	 (ADR-0094 addendum (1), (4) item 2, (8) item 2)
+-	forms/refusals.tsv#row:name=view_ceiling_unavailable	the Architect's decision on the Go question P/02 № 4	2026-11-04	; the Architect's decision on the Go question P/02 № 4
+-	forms/refusals.tsv#row:name=manifest_mark_unreadable	analysis of review of stage A 6–7, B1	2026-11-06	; analysis of review of stage A 6–7, B1
+-	forms/refusals.tsv#row:name=manifest_mark_unreadable	the Architect's decision on gap Go P/02 № 1	2026-11-04	 (the Architect's decision on gap Go P/02 № 1)
+-	forms/refusals.tsv#row:name=put_revision_exhausted	the Architect's decision on the guess of Go	2026-10-20	 (the Architect's decision on the guess of Go, 2026-10-20)
+-	forms/refusals.tsv#row:name=put_ceiling_unavailable	the Architect's decision on question Go P/02 № 4	2026-11-04	; the Architect's decision on question Go P/02 № 4
+-	forms/refusals.tsv#row:name=put_shell_absent	ADR-0094 addendum (3) item 8	2026-11-04	 (ADR-0094 addendum (3) item 8)
+-	forms/refusals.tsv#row:name=put_file_unreadable	ADR-0094 addendum (1)	2026-11-04	 (ADR-0094 addendum (1))
+-	forms/refusals.tsv#row:name=secrets_unknown_family	finding C02-RESEAL-UNKNOWN-FORM-93, the Architect's decision	2026-10-25	 (C02-RESEAL-UNKNOWN-FORM-93, the Architect's decision 2026-10-25)
+-	forms/refusals.tsv#row:name=secrets_unreadable_family	V7 item 3, the Architect's decision, P4	2026-10-28	 (V7 item 3, the Architect's decision 2026-10-28, P4)
+-	forms/refusals.tsv#row:name=secrets_status_unknown	guess of stage C I02-G02, the Architect's decision	2026-10-23	 (guess of stage C I02-G02, the Architect's decision 2026-10-23)
+-	forms/refusals.tsv#row:name=address_without_tls	ADR-0075 addendum 2026-10-26 (6) item 2	2026-10-26	, ADR-0075 addendum 2026-10-26 (6) item 2
+-	forms/refusals.tsv#row:name=install_cycle	findings I02-INSTALL-ORDER, C02-KIND-ORDER-33; ADR-0091 addendum (26)	2026-11-04	; I02-INSTALL-ORDER, C02-KIND-ORDER-33, ADR-0091 addendum (26)
+-	forms/refusals.tsv#row:name=domain_install	M11/2 N4; the move of lesson 8, stage B	2026-11-06	 (from M11/2 N4; the move of lesson 8, stage B)
+-	forms/refusals.tsv#row:name=domain_window_busy	guess of stage C I02-DOMAIN-WINDOW, the Architect's decision	2026-10-23	 (guess of stage C I02-DOMAIN-WINDOW, the Architect's decision 2026-10-23)
+-	forms/refusals.tsv#row:name=install_domain_server	the Architect's decision on review P/02 S9	2026-11-06	; the Architect's decision on review P/02 S9
+-	forms/refusals.tsv#row:name=rights_reserved_read	finding C02-IDEM-ASKED-EXPLICIT-READ-01	2026-10-29	 (C02-IDEM-ASKED-EXPLICIT-READ-01)
+-	forms/refusals.tsv#row:name=rights_secret_intersection	finding C02-SECRETS-READS-INTERSECTION-01	2026-10-29	 (C02-SECRETS-READS-INTERSECTION-01)
+-	data/alarms-retention.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/canonical-row.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/manifest-rev.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/manifest-row.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/mirror.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/retention.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/space.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/manifest-file.outcomes.tsv#header	ADR-0094 B7; ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0094 B7; the form of outcomes — ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=<s>controller	review of stage A 6–7, B1	2026-11-06	; review of stage A 6–7, B1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=console	review of stage A 6–7, B1	2026-11-06	; review of stage A 6–7, B1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=resource	review of stage A 6–7, B1	2026-11-06	; review of stage A 6–7, B1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=domain	review of stage A 6–7, B1	2026-11-06	; review of stage A 6–7, B1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=domainconsole	review of stage A 6–7, B1	2026-11-06	; review of stage A 6–7, B1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=<s>controller	the Architect's decision on Go gap P/02 item 1	2026-11-06	; the Architect's decision on Go gap P/02 item 1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=console	the Architect's decision on Go gap P/02 item 1	2026-11-06	; the Architect's decision on Go gap P/02 item 1
+-	data/manifest-rev.outcomes.tsv#row:path=&reader=resource	the Architect's decision on Go gap P/02 item 1	2026-11-06	; the Architect's decision on Go gap P/02 item 1
+-	forms/stages.tsv#header	ADR-0126; ADR-0125 addendum (5)	2026-11-05	 (ADR-0126; ADR-0125 addendum (5))
+-	forms/stages.tsv#header	ADR-0133 addendum (39)	2026-11-10	 (ADR-0133 addendum (39))
+-	forms/stages.tsv#header	ADR-0133 addendum (43)	2026-11-10	 (ADR-0133 addendum (43))
+-	forms/stages.tsv#header	ADR-0130 addendum (19) item 6	2026-11-11	 (ADR-0130 Addendum (19) item 6)
+-	forms/code-rules.tsv#header	ADR-0133 addenda (28), (39) items 2, 5; audit P02.20, appendix B, and the answer of the Architect on it	2026-11-11	 (ADR-0133 addenda (28), (39) items 2, 5; audit P02.20, appendix B, and the answer of the Architect on it)
+-	forms/code-rules.tsv#header	P02.36, task P02.38	2026-11-11	 (P02.36, task P02.38)
+-	forms/daemon-flags.tsv#header	ADR-0125 addendum (5)	2026-11-05	, ADR-0125 addendum (5)
+-	data/retention.schema.json#/properties/days/description	ADR-0076	2026-10-12	 (ADR-0076)
+-	data/alarms-retention.schema.json#/properties/days/description	ADR-0076	2026-10-12	 (ADR-0076)
+-	data/manifest-row.schema.json#/additionalProperties/description	ADR-0088 lines 66–67; the Architect's decision on 1bd77782b	2026-11-04	; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b
+-	data/manifest-rev.schema.json#/additionalProperties/description	ADR-0088 lines 66–67; the Architect's decision on 1bd77782b	2026-11-04	; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b
+-	data/manifest-row.schema.json#/properties/sha256/description	review of stage A 2	2026-11-04	; review of stage A 2
