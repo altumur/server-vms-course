@@ -231,3 +231,11 @@ P/01.3-R030	spec/01.3-store.norms.md#N4	P01.270; Architect task and answered 202
 -	spec/01.3-store.norms.md#index	P01.270; Architect task and answered 2026-11-12T14:55:54Z; P01.266 F01-F07/F09 and class-2 navigation	2026-11-12	-
 -	spec/01.3-store.norms.md#index	P01.270; Architect task and answered 2026-11-12T14:55:54Z; P01.266 F01-F07/F09 and class-2 navigation	2026-11-12	-
 -	spec/01.3-store.norms.md#index	P01.270; Architect task and answered 2026-11-12T14:55:54Z; P01.266 F01-F07/F09 and class-2 navigation	2026-11-12	-
+-	acceptance/3/README.md#store-group-stand	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	the role certificate contract `cert`
+-	acceptance/3/README.md#store-group-stand	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	the layout — the contract
+-	acceptance/3/README.md#store-group-stand	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	`ok` — `admin@<id> GET /v1/status` answers 200 no later than 20 s
+-	acceptance/3/README.md#store-group-stand	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	the expectation — as for `@store-start`
+-	acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	the third without it. The size of the stand group
+-	acceptance/3/README.md#startup-observation	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	-
+-	acceptance/3/scenarios.tsv#row:scenario=34-group-lost-answer-noid&step=12	P01.271 F01/S1/S2; ADR-0135 addendum (23) item 2; ADR-0133 addenda (86), (90)	2026-11-12	409 {"kind": "conflict", "key": "testsub/counters/a34", "index": "$a"}
+-	acceptance/3/README.md#store-group-stand	P01.271 F01; Architect answered 2026-11-12T15:41:28Z; unprivileged group stand	2026-11-12	-

@@ -327,4 +327,4 @@ scenario	step	request	expect
 34-group-lost-answer-noid	9	store@d1 POST /v1/write {"op":"put","key":"testsub/counters/a34","items":{"n":"1"},"cas":""}	503 {"kind": "ambiguous"}
 34-group-lost-answer-noid	10	store@s1 GET /v1/get?key=testsub/counters/a34	200 {"items": {"n": "1"}, "index": "$a"}
 34-group-lost-answer-noid	11	@mend store@s1	ok
-34-group-lost-answer-noid	12	store@d1 POST /v1/write {"op":"put","key":"testsub/counters/a34","items":{"n":"1"},"cas":""}	409 {"kind": "conflict", "key": "testsub/counters/a34", "index": "$a"}
+34-group-lost-answer-noid	12	store@d1 POST /v1/write {"op":"put","key":"testsub/counters/a34","items":{"n":"1"},"cas":""}	409 {"kind": "conflict", "index": "$a"}
