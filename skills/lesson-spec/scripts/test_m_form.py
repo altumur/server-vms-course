@@ -120,6 +120,27 @@ class AcceptedForm(unittest.TestCase):
         hits = [e for e in check.errors if e.startswith(wanted) and words in e]
         self.assertTrue(hits, f"no error {wanted}…{words} in {check.errors}")
 
+    def edit_index_row(self, rel, language, change):
+        """Rewrites by change(ids) the requirements cell of the first index row of `rel` naming two or more
+        requirements (the row is taken from the copy, not written here, so a new text of the index needs no edit of
+        the test); returns its line."""
+        path = self.home / rel
+        n, _, cell, _ = next(row for row in m_form.index_rows(path, language) if len(row[2].split(",")) > 1)
+        lines = path.read_text(encoding="utf-8").split("\n")
+        self.assertIn(cell, lines[n - 1])
+        lines[n - 1] = lines[n - 1].replace(cell, change([x.strip() for x in cell.split(",")]), 1)
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return n
+
+    def add_sentence(self, rel, sentence):
+        """Puts the sentence before the first prose paragraph after the first section heading of `rel` (taken from the
+        copy); returns its line."""
+        lines = (self.home / rel).read_text(encoding="utf-8").split("\n")
+        start = next(i for i, line in enumerate(lines) if line.startswith("## "))
+        anchor = next(line for i, line in enumerate(lines) if i > start and line[:1].isupper() and not lines[i - 1])
+        self.replace(rel, anchor, sentence + " " + anchor)
+        return self.line_of(rel, sentence)
+
 
 class AcceptedFormPasses(AcceptedForm):
     def test_accepted_form_passes_every_check_with_counts(self):
@@ -251,15 +272,12 @@ class IndexRefs(AcceptedForm):
                            ("P/02.1-R001", "not a requirement of P/01")):
             with self.subTest(bad=bad):
                 self.setUp()
-                self.replace(self.REL, "P/01.3-R372, P/01.3-R373 | `forms/daemon-flags.tsv` (`-max-value`)",
-                             f"P/01.3-R372, P/01.3-R373, {bad} | `forms/daemon-flags.tsv` (`-max-value`)")
-                self.assert_error(self.run_checks(), f"{HOME}/{self.REL}",
-                                  self.line_of(self.REL, "`row_ceiling`"), words)
+                line = self.edit_index_row(self.REL, "en", lambda ids: ", ".join(ids + [bad]))
+                self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", line, words)
 
     def test_order_and_repeat(self):
-        self.replace(self.REL, "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,",
-                     "| P/01.1-R073, P/01.1-R019, P/01.1-R118, P/01.1-R131,")
-        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", self.line_of(self.REL, "`row_ceiling`"), "ascending")
+        line = self.edit_index_row(self.REL, "en", lambda ids: ", ".join([ids[1], ids[0]] + ids[2:]))
+        self.assert_error(self.run_checks(), f"{HOME}/{self.REL}", line, "ascending")
 
     def test_file_addresses_two_roots_no_fallback(self):
         # Both roots of the accepted index pass (the base test); a wrong prefix fails: no search over a second root.
@@ -281,7 +299,7 @@ class IndexRefs(AcceptedForm):
 
     def test_translation_row_differs(self):
         rel = "ru/" + self.REL
-        self.replace(rel, "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,", "| P/01.1-R019, P/01.1-R118, P/01.1-R131,")
+        self.edit_index_row(rel, "ru", lambda ids: ", ".join(ids[:1] + ids[2:]))
         check = self.run_checks()
         self.assertTrue(any(e.startswith(f"{HOME}/{rel}: line ") and "index row differs" in e for e in check.errors),
                         check.errors)
@@ -304,11 +322,9 @@ class SeeAlsoRefs(AcceptedForm):
 
 class JudgeOnlyRefs(AcceptedForm):
     REL = "acceptance/1/README.md"
-    ANCHOR = "The table `scenarios.tsv` of the chapter"
 
     def add(self, sentence):
-        self.replace(self.REL, self.ANCHOR, sentence + " " + self.ANCHOR)
-        return self.line_of(self.REL, sentence)
+        return self.add_sentence(self.REL, sentence)
 
     def test_path_in_backquotes_without_marker(self):
         line = self.add("The steps are in `scenarios.tsv` of this chapter.")
@@ -350,7 +366,17 @@ class ProductionScoped(AcceptedForm):
     def test_definition_in_n0_and_acting_labels_pass(self):
         check = self.run_checks()
         self.assertEqual(check.errors, [])
-        self.assertEqual(check.stats["production_scoped"], 22)      # P/01 after P01.176 (one requirement per item) — source and translation
+        # every acting label opens a paragraph or follows the id of a checklist item, in the source and in the
+        # translation; the definitions of N0 quote the label in «…» and are not counted
+        opening = r"^(?:- \[[ x]\] \*\*P/[0-9.]+-[0-9]+\*\* )?"
+        counts = []
+        for label, files in ((m_form.LABELS[0], [p for p in self.home.rglob("*.md") if "ru" not in p.relative_to(
+                self.home).parts]), (m_form.LABELS[1], list((self.home / "ru").rglob("*.md")))):
+            counts.append(sum(len(re.findall(opening + re.escape(label), p.read_text(encoding="utf-8"), flags=re.M))
+                              for p in files))
+        self.assertGreater(counts[0], 0)
+        self.assertEqual(counts[0], counts[1])
+        self.assertEqual(check.stats["production_scoped"], sum(counts))
 
     def test_acting_label_inside_a_paragraph(self):
         self.replace(self.REL, "Persistence of an ordinary fixed-size write MUST be incremental:",
@@ -451,8 +477,7 @@ class StageA(AcceptedForm):
 
     def test_stage_a_judges_only_its_three_checks(self):
         self.replace("spec/01.1-store.norms.md", "- [ ] **P/01.1-15** [reading]", "- [ ] **P/01.1-15**")
-        self.replace("spec/01.1-store.norms.md", "| P/01.1-R019, P/01.1-R073, P/01.1-R118, P/01.1-R131,",
-                     "| P/01.1-R073, P/01.1-R019, P/01.1-R118, P/01.1-R131,")
+        self.edit_index_row("spec/01.1-store.norms.md", "en", lambda ids: ", ".join([ids[1], ids[0]] + ids[2:]))
         self.replace("forms/runtime-constants.tsv", "\n", "\n# the constants of ADR-0129\n")
         self.replace("data/epoch_floor.outcomes.tsv", "\n", "\n# reconciliation of python and go\n")
         check = self.run_stage_a()
@@ -464,8 +489,7 @@ class StageA(AcceptedForm):
 
     def test_stage_a_finds_history_judge_only_and_rows(self):
         self.replace("README.md", "\n", "\nThe store (the Architect's decision of 2026-10-18).\n")
-        self.replace("acceptance/1/README.md", "The table `scenarios.tsv` of the chapter",
-                     "The steps are in `seams.tsv` here. The table `scenarios.tsv` of the chapter")
+        self.add_sentence("acceptance/1/README.md", "The steps are in `seams.tsv` here.")
         path = self.root / JOURNAL / "history.tsv"
         path.write_text(path.read_text(encoding="utf-8") + "-\tforms/write-checks.tsv#row:999\tx\t2026-11-11\ty\n",
                         encoding="utf-8")
@@ -663,9 +687,7 @@ class ParagraphLayout(AcceptedForm):
                  "if the row C is absent, then the request MUST get 400 `bad_request`. The limit of the rows is 3.\n\n")
         path.write_text(text[:at] + block + text[at:], encoding="utf-8")
         self.address = f"{self.NORMS}#{self.section}"
-        (self.root / self.MAP).write_text("old\tnew\tfile\tsource\n"
-                                          f"{self.old}\t{self.new}\t{self.address}\tP01.283: one paragraph\n",
-                                          encoding="utf-8")
+        self.map_rows(f"{self.old}\t{self.new}\t{self.address}\tP01.283: one paragraph")   # after the rows of the journal
         self.history(self.old)
 
     def history(self, value):
@@ -676,7 +698,8 @@ class ParagraphLayout(AcceptedForm):
 
     def map_rows(self, *rows):
         path = self.root / self.MAP
-        path.write_text(path.read_text(encoding="utf-8") + "".join(row + "\n" for row in rows), encoding="utf-8")
+        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + "\n" + "".join(row + "\n" for row in rows),
+                        encoding="utf-8")
         return path.read_text(encoding="utf-8").count("\n")
 
     def test_paragraph_with_one_id_and_a_merged_id_pass(self):
@@ -684,19 +707,17 @@ class ParagraphLayout(AcceptedForm):
         self.merge()
         check = self.run_checks()
         self.assertEqual(check.errors, [])
-        self.assertEqual(check.stats["req_map"], 1)
+        self.assertEqual(check.stats["req_map"], len(m_form.req_map_lines(ROOT / self.MAP)) + 1)   # the journal and ours
         self.assertGreater(check.stats["req_refs"], 0)
         self.assertEqual(check_forms.check_req_anchors(self.home)[0], [])
 
     def test_reference_to_a_merged_a_removed_or_an_unknown_id_fails(self):
         self.merge()
         readme = "acceptance/1/README.md"
-        anchor = "The table `scenarios.tsv` of the chapter"
-        self.replace(readme, anchor, f"The rule {self.old} holds. The rule P/01.1-R014 holds. "
-                                     f"The rule {self.spare} holds. " + anchor)
+        line = self.add_sentence(readme, f"The rule {self.old} holds. The rule P/01.1-R014 holds. "
+                                         f"The rule {self.spare} holds.")
         self.replace("forms/runtime-constants.tsv", "\n", f"\n# the constant of {self.old}\n")
         check = self.run_checks()
-        line = self.line_of(readme, f"The rule {self.old}")
         self.assert_error(check, f"{HOME}/{readme}", line, f"a reference to {self.old}, merged into {self.new}")
         self.assert_error(check, f"{HOME}/{readme}", line, "P/01.1-R014, a removed requirement")
         self.assert_error(check, f"{HOME}/{readme}", line, f"{self.spare}, not a requirement of P/01")
@@ -810,11 +831,9 @@ class JudgeOnlyByReference(AcceptedForm):
     """A marker «(judge-only: …)» is needed only where M names a file outside M; for a lesson of M_NARROW a file of
     another lesson that its dependency table does not name is outside M of the pair (the filters cut whole files)."""
     REL = "acceptance/1/README.md"
-    ANCHOR = "The table `scenarios.tsv` of the chapter"
 
     def add(self, sentence):
-        self.replace(self.REL, self.ANCHOR, sentence + " " + self.ANCHOR)
-        return self.line_of(self.REL, sentence)
+        return self.add_sentence(self.REL, sentence)
 
     def outside_file(self):
         check = Check(self.root, scope="platform")

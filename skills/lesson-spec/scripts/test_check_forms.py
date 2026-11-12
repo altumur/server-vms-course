@@ -16,6 +16,7 @@ import check_cyrillic
 
 ROOT = Path(__file__).resolve().parents[3]
 LESSON = ROOT / "Platform/01-store"
+JOURNAL = "decisions/journal/platform/01-store"
 
 
 # Frozen prose witness from ec48a8949, before the form became the sole source. Two rows follow later form
@@ -60,6 +61,9 @@ class Forms(unittest.TestCase):
         self.lesson = self.tmp / "Platform/01-store"
         for part in ("forms", "spec", "acceptance", "vectors"):
             shutil.copytree(LESSON / part, self.lesson / part)
+        (self.tmp / JOURNAL).mkdir(parents=True)
+        for path in (ROOT / JOURNAL).glob("*.tsv"):     # history files and the id map req-id-map.tsv (P01.283)
+            shutil.copy(path, self.tmp / JOURNAL / path.name)
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -69,6 +73,12 @@ class Forms(unittest.TestCase):
         text = path.read_text(encoding="utf-8")
         self.assertEqual(text.count(old), 1, old)
         path.write_text(text.replace(old, new), encoding="utf-8")
+
+    def live_anchor(self, *besides):
+        """The first live req anchor of 01.1 of the copy whose id is not among `besides` (from the data, not written
+        here)."""
+        text = (self.lesson / "spec/01.1-store.norms.md").read_text(encoding="utf-8")
+        return next(m[0] for m in re.finditer(r"<!-- req: (P/01\.1-R[0-9]{3}) -->", text) if m[1] not in besides)
 
     def flags(self):
         return check_forms.check_flags(self.lesson / "forms/daemon-flags.tsv")[0]
@@ -143,19 +153,19 @@ class Forms(unittest.TestCase):
         self.assertTrue(any("not of this chapter" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
 
     def test_req_tombstone(self):
-        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->", "<!-- removed: P/01.1-R002 by ADR-0122 -->\n<!-- req: P/01.1-R003 -->")
+        anchor = self.live_anchor("P/01.1-R002")
+        self.edit("spec/01.1-store.norms.md", anchor, "<!-- removed: P/01.1-R002 by ADR-0122 -->\n" + anchor)
         self.assertTrue(any("reuses a removed" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
 
     def test_req_merged_by_the_id_map(self):            # ADR-0133 доп. (93): слитый id резервирует карта журнала
-        journal = self.tmp / "decisions/journal/platform/01-store"
-        journal.mkdir(parents=True)
-        (journal / "req-id-map.tsv").write_text("old\tnew\tfile\tsource\nP/01.1-R998\tP/01.1-R002\t"
-                                                "spec/01.1-store.norms.md#N1\tP01.283\n", encoding="utf-8")
+        path = self.tmp / JOURNAL / "req-id-map.tsv"                 # the map of the journal and a row of ours
+        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + "\nP/01.1-R998\tP/01.1-R002\t"
+                        "spec/01.1-store.norms.md#N1\tP01.283\n", encoding="utf-8")
         self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])     # the map alone reserves, no anchor
         # a paragraph of several rules under one anchor is one requirement
-        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->",
-                  "<!-- req: P/01.1-R997 -->\nThe store MUST A. It MUST NOT B. If C, then it MUST D.\n\n"
-                  "<!-- req: P/01.1-R003 -->")
+        anchor = self.live_anchor("P/01.1-R002")
+        self.edit("spec/01.1-store.norms.md", anchor,
+                  "<!-- req: P/01.1-R997 -->\nThe store MUST A. It MUST NOT B. If C, then it MUST D.\n\n" + anchor)
         self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])
         self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R997 -->", "<!-- req: P/01.1-R998 -->")
         errors = check_forms.check_req_anchors(self.lesson)[0]
