@@ -1,0 +1,71 @@
+{
+ "from": "298e28fda4b91df25357e3a83d5e70045bea7bb2",
+ "to": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "21489b0ddda07708f8d38ca06d68ff30c9ab5ede",
+  "Platform/01-store/forms/export.json": "11995ca81a2d4b1d11ff820eb3ef5297e65c62db",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "34902d0b814d3934935b609c222d0e20607f284b"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "737c5b9798ef60ec46a10a79bd9d2e013dd611be",
+  "Platform/01-store/forms/export.json": "11995ca81a2d4b1d11ff820eb3ef5297e65c62db",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "34902d0b814d3934935b609c222d0e20607f284b"
+ },
+ "added": [],
+ "removed": [],
+ "changed": [
+  {
+   "path": "Platform/01-store/acceptance/1/inputs/rights.json",
+   "M": [
+    "model_and_judge",
+    "judge_only"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/01-store/forms/group.tsv",
+   "M": [
+    "model_and_judge",
+    "judge_only"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/acceptance/forms/stand-manifests.tsv",
+   "M": [
+    "model_and_judge",
+    "judge_only"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/contracts/role-certificate.md",
+   "M": [
+    "model_and_judge",
+    "model_and_judge"
+   ],
+   "JI": [
+    "exclude",
+    "include"
+   ]
+  }
+ ],
+ "counts": {
+  "added": 0,
+  "removed": 0,
+  "changed": 4,
+  "records_from": 3568,
+  "records_to": 3568
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "source_bare": "/home/pilot/git/minimax-loop.git",
+ "head": "6e1881e097e4bdda7f5b5fd26a0d795aae65bd25",
+ "branch": "en-generic",
+ "ancestor_checks": {
+  "5d0f33114": 0,
+  "6e1881e09": 0
+ },
+ "files_sha256": {
+  "agent_miniswe.py": "24e2bd47aee7a12218a8ae0e2111e215b2d722b450f38ef4b6a61c4199f24bcf",
+  "code_checks.py": "7f599c8e01ddd4c143b8f39a090d9cef8468790d5495dd0b0b6c740801c533c5",
+  "loop.py": "4f05b40e0e5cac50edd0c20fb90dce4bbdfa280169df6d4d15b4c97b949181d5",
+  "mode_trace.py": "f44825615d70c64a48a10c26c04babd831063fd938b83fd4a4935b42cb8d8934",
+  "mutation_trace.py": "ac739f5457ae13f45aec7e2a267daf2c9cee1be56df088eda59606cde43d3e75",
+  "norm_trace.py": "d286a394ec5b6567824d243ee8901cb33c544d29cc2fc8ce050ca0dab6c0bafd",
+  "prep_task.py": "1b69d58f6fa884ddd1288826e6d911c8e770fe03d160acedbf8077b350228f26",
+  "probe_judge.py": "3eae8fcd5ef5a859f625197d53b1ebec18e262ba254109b4b232fd46313fb236",
+  "profile_probe.py": "d4e8c08cee0aea2bf2de71eec9a2b5ad3b6a6a965c536c133942f9cfd94b58c6",
+  "report_clip.py": "be07a8f121b95f0617948efd3e15893aabd8313eea9e950bfa0a4ae08e56893f",
+  "rules/RULES.md": "7a85be015d82d086399317f256b6bbad8916a1ac6a7824edd10848c44fb1d8a2",
+  "variant_b.py": "53dec61421c4b0e9ce6870c9bbfb7ea61c87dbd432b6eb09c2709cf4972724cb"
+ },
+ "scope": "root Python modules and rules; no deployment or model execution"
+}

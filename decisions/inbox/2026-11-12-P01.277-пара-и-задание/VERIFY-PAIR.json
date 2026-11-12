@@ -1,0 +1,85 @@
+{
+ "C": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "source_roster_exact": true,
+ "filter_equals_check_spec": true,
+ "pair_m_with_authorized_exclusions_exact": true,
+ "external_dependencies": [
+  "Platform/02-installer/acceptance/5/README.md",
+  "Platform/02-installer/forms/README.md",
+  "Platform/02-installer/lifecycle.md",
+  "Platform/02-installer/spec/02.1-installer.norms.md",
+  "Platform/02-installer/spec/02.1-installer.schema.json",
+  "Platform/02-installer/spec/02.4-installer.norms.md",
+  "Platform/02-installer/spec/02.5-installer.norms.md",
+  "Platform/03-worker/data/epoch.layers.tsv",
+  "Platform/03-worker/data/epoch.outcomes.tsv",
+  "Platform/03-worker/data/epoch.schema.json",
+  "Platform/03-worker/spec/03.2-worker.norms.md",
+  "Platform/03-worker/spec/03.4-worker.norms.md",
+  "Platform/03-worker/spec/03.6-worker.norms.md",
+  "Platform/04-controller/spec/04-controller.norms.md",
+  "Platform/06-console/acceptance/5/README.md",
+  "Platform/06-console/spec/06.1-console.norms.md",
+  "Platform/06-console/spec/06.2-console.norms.md",
+  "Platform/06-console/spec/06.3-console.norms.md",
+  "Platform/06-console/spec/06.4-console.norms.md",
+  "Platform/06-console/spec/06.5-console.norms.md",
+  "Platform/08-domain/forms/runtime-constants.tsv",
+  "Platform/08-domain/spec/08.2-domain.norms.md",
+  "Platform/08-domain/spec/08.4-domain.norms.md",
+  "Platform/08-domain/spec/08.8-domain.norms.md"
+ ],
+ "M_subset_J": {
+  "M_files": 179,
+  "J_files": 3568,
+  "matched": 179
+ },
+ "JI_equals_assembled_filter": true,
+ "passports_exact": true,
+ "object_checks": {
+  "raw_M": {
+   "refs": [
+    "refs/heads/model 57fb5d1360073f2683437bf773db20ae91e51ab2"
+   ],
+   "parentless": true,
+   "physical_eq_reachable": true,
+   "objects": 894,
+   "fsck_exit": 0
+  },
+  "M": {
+   "refs": [
+    "refs/heads/model c4a17f0588dd5d843dbbfde0eed80e299b9ab159"
+   ],
+   "parentless": true,
+   "physical_eq_reachable": true,
+   "objects": 252,
+   "fsck_exit": 0,
+   "J_only_distinct_blobs_absent": 3283
+  },
+  "J": {
+   "refs": [
+    "refs/heads/judge 48033c2809dc8cde7142d1011bbeba7810318b15"
+   ],
+   "parentless": true,
+   "physical_eq_reachable": true,
+   "objects": 3893,
+   "fsck_exit": 0
+  },
+  "JI": {
+   "refs": [
+    "refs/heads/judge-input 5f3c384afa4613fd496c712d1fda443f748e2946"
+   ],
+   "parentless": true,
+   "physical_eq_reachable": true,
+   "objects": 2215,
+   "fsck_exit": 0
+  }
+ },
+ "counts": {
+  "M": 179,
+  "raw_M": 788,
+  "J": 3568,
+  "JI": 2124
+ },
+ "OK": true
+}

@@ -1,0 +1,161 @@
+{
+ "M": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159",
+ "loop_head": "6e1881e097e4bdda7f5b5fd26a0d795aae65bd25",
+ "prep_exit": 0,
+ "turns": 0,
+ "acceptance_rounds": 0,
+ "known_items": 54,
+ "active_items": 53,
+ "norm_trace": {
+  "items": 53,
+  "by_stage": {
+   "store_core": 11,
+   "http": 8,
+   "rights_eval": 1,
+   "rights": 8,
+   "daemon_doors": 1,
+   "daemon_copy": 3,
+   "durable": 5,
+   "group": 16
+  },
+  "marks": {
+   "read": 53,
+   "not_by_test": [
+    "P/01.1-15",
+    "P/01.1-18",
+    "P/01.1-19",
+    "P/01.1-20",
+    "P/01.1-22",
+    "P/01.1-27",
+    "P/01.1-32",
+    "P/01.3-09",
+    "P/01.3-10",
+    "P/01.3-12",
+    "P/01.3-13",
+    "P/01.3-14"
+   ],
+   "unread": {}
+  }
+ },
+ "head_files": 14,
+ "rules_in_all_12_heads": true,
+ "group_head_without_group_form": true,
+ "heads": [
+  {
+   "round": "plan",
+   "rules_full": true,
+   "chars": 20535
+  },
+  {
+   "round": "model",
+   "rules_full": true,
+   "chars": 88063,
+   "cited_missing": []
+  },
+  {
+   "round": "launch",
+   "rules_full": true,
+   "chars": 76179,
+   "cited_missing": []
+  },
+  {
+   "round": "jcs",
+   "rules_full": true,
+   "chars": 43269,
+   "cited_missing": []
+  },
+  {
+   "round": "store_core",
+   "rules_full": true,
+   "chars": 35760,
+   "cited_missing": []
+  },
+  {
+   "round": "http",
+   "rules_full": true,
+   "chars": 72362,
+   "cited_missing": []
+  },
+  {
+   "round": "rights_eval",
+   "rules_full": true,
+   "chars": 31143,
+   "cited_missing": []
+  },
+  {
+   "round": "rights",
+   "rules_full": true,
+   "chars": 40921,
+   "cited_missing": []
+  },
+  {
+   "round": "daemon_doors",
+   "rules_full": true,
+   "chars": 87476,
+   "cited_missing": []
+  },
+  {
+   "round": "daemon_copy",
+   "rules_full": true,
+   "chars": 77864,
+   "cited_missing": []
+  },
+  {
+   "round": "durable",
+   "rules_full": true,
+   "chars": 69233,
+   "cited_missing": []
+  },
+  {
+   "round": "group",
+   "rules_full": true,
+   "chars": 65063,
+   "cited_missing": [
+    "forms/group.tsv"
+   ]
+  }
+ ],
+ "negative_controls": [
+  {
+   "name": "norm_trace_mutation=1",
+   "reasons": [
+    "stages.norm_trace_mutation is true or false (P01.179)"
+   ]
+  },
+  {
+   "name": "norm_trace_mode=1",
+   "reasons": [
+    "stages.norm_trace_mode is true or false (P01.216)"
+   ]
+  },
+  {
+   "name": "stage_tests=1",
+   "reasons": [
+    "stages.stage_tests is true or false (P01.179)"
+   ]
+  },
+  {
+   "name": "norm_trace=false",
+   "reasons": [
+    "stages.norm_trace_mutation needs stages.norm_trace true (P01.179)",
+    "stages.norm_trace_mode needs stages.norm_trace true (P01.216)"
+   ]
+  },
+  {
+   "name": "wrong-passport-sha256",
+   "reasons": [
+    "stages.m_passport: the sha256 of /home/pilot/P01.277-evidence/passport/PASSPORT-M-c4a17f0588dd.json is not the task's 0000000000000000000000000000000000000000000000000000000000000000"
+   ]
+  }
+ ],
+ "warnings": [
+  "stage launch: $SPECS/Platform/01-store/spec/01.3-store.norms.md N1.3 is 40064 bytes, over miniswe_section_max 20000: the head shows its beginning, lines 56–235; the rest is read from the file",
+  "stage store_core: $SPECS/Platform/01-store/spec/01.1-store.norms.md N3 is 25487 bytes, over miniswe_section_max 20000: the head shows its headings with their lines, not its text",
+  "stage daemon_doors: $SPECS/Platform/01-store/spec/01.3-store.norms.md N1.3 is 40064 bytes, over miniswe_section_max 20000: the head shows its beginning, lines 56–235; the rest is read from the file",
+  "stage daemon_copy: $SPECS/Platform/01-store/spec/01.3-store.norms.md N1.3 is 40064 bytes, over miniswe_section_max 20000: the head shows its beginning, lines 56–235; the rest is read from the file",
+  "stage durable: $SPECS/Platform/01-store/spec/01.3-store.norms.md N1.3 is 40064 bytes, over miniswe_section_max 20000: the head shows its beginning, lines 56–235; the rest is read from the file",
+  "stage group: $SPECS/Platform/01-store/spec/01.3-store.norms.md N1.3 is 40064 bytes, over miniswe_section_max 20000: the head shows its beginning, lines 56–235; the rest is read from the file",
+  "cited path not in M: group: forms/group.tsv"
+ ],
+ "OK": true
+}

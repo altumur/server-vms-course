@@ -1,0 +1,71 @@
+{
+ "C": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "base_task_branch": "task/P01.277",
+ "course_dependencies": [
+  {
+   "task": "P01.270",
+   "commit": "0d2d8c1f38f76c4045effcf0f46159f74e6a41fd",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "68db94c71a2c9990b2a41b9ccce7e5a335e55a67d41d0aace50901be4641f1b6"
+  },
+  {
+   "task": "P01.271",
+   "commit": "a7aca1fe99232c6eea7221443fe92bb7978e763e",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "b5a185268b6428dcde0761a6e9226936a26333bf3a04ab97dad531ffcee7517d"
+  },
+  {
+   "task": "P01.273",
+   "commit": "45c413b823d824338479e98805ebcf2be5ace282",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "ddb3e7782d2e489f654b6530d2b0097aa98f6e2b8a8651ee3e9a517933b24c08"
+  },
+  {
+   "task": "P01.274",
+   "commit": "d5d76309d7afaa20ca8bd7ec62785d7e5bfc207c",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "986e74e99cf22e681d20d84317de1f520abafdc12673d492450e4a22943c1f77"
+  },
+  {
+   "task": "P01.276",
+   "commit": "fea3b8a5d352500f1449aea422bbf1eaa1db5d40",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "8054b8b5b03d0f6c29ffccd82f7af5ceab81f423eb7b4bf8f16351a0f19ff19a"
+  },
+  {
+   "task": "P01.278",
+   "commit": "21b57453db97b72a25a2021d6d0d0803e0a33b3d",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "b993993abfcd08f7d7b9102fbaf2bbba740b60dcf494a3406f45c763ebd5c44f"
+  },
+  {
+   "task": "P01.283",
+   "commit": "8832cec61c7813a675dd5525a62544e26a22df10",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "cd3bd46920dae978102e1826454904c33bde36a01278f9ff2541e0ba6e7a66d2"
+  },
+  {
+   "task": "P01.285",
+   "commit": "06062133ec6297ad4965f5b52da3003f7f72ec37",
+   "accepted": true,
+   "ancestor_of_C": true,
+   "receipt_sha256": "d159688bab5a3a0db27665f88b621cc4b81d7fa701ecc1a65e57be1db8e19f67"
+  }
+ ],
+ "P01.275": {
+  "cancelled": true,
+  "basis": "ADR-0133 (92); task note 2026-11-12T15:54:25Z",
+  "no_commits_with_task_id_since_P01.254": true,
+  "task_sha256": "02b82f6593e6247fba1e02189069c37ed4f05870c69637f3f9aebe123a61d8d9"
+ },
+ "OBSH.48": "cancelled by ADR-0133 (91) item5; no new fields required",
+ "P01.283_minimum_ancestor": "3338c505106aa5066ceeaabfab2d4376367b45aa",
+ "OK": true
+}

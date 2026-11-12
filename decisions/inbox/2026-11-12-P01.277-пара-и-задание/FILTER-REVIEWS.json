@@ -1,0 +1,34 @@
+{
+ "C": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "baseline": "P01.254 accepted pair; its existing records/reviews inherited byte-for-byte by disposition",
+ "delta_sha256": "7e1f568a24f17fb322251b8e1e4aa20e5cfa07c9193616cc530f372196c201f7",
+ "deltas": [
+  {
+   "task": "P01.271",
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "decisions/inbox/ревью/2026-11-12-P01.271-judge-Claude.md",
+   "records": [
+    "Platform/common/contracts/role-certificate.md"
+   ],
+   "accepted_receipt": "reviews/P01.271-accepted.json",
+   "review": "reviews/P01.271-review.md",
+   "review_sha256": "cfcb903a5a91ebc55a155c15aff294175e47a74e0a6bfabd4ba3aa6200acb2cd"
+  },
+  {
+   "task": "P01.283",
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "/home/pilot/P01.283-judge/findings.md",
+   "records": [
+    "Platform/01-store/acceptance/1/inputs/rights.json",
+    "Platform/01-store/forms/group.tsv",
+    "Platform/common/acceptance/forms/stand-manifests.tsv"
+   ],
+   "accepted_receipt": "reviews/P01.283-accepted.json",
+   "review": "reviews/P01.283-review.md",
+   "review_sha256": "aa235d2d7ae5d62fc6c46f13c2c6340f66a5ee7dc84826abe7c2dcb38d0fae35"
+  }
+ ],
+ "all_delta_records_covered": true
+}

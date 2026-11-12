@@ -1,0 +1,107 @@
+{
+  "name": "p01-b-raft-c4a17f0588dd",
+  "variant": "B",
+  "generation_only": true,
+  "module": "Platform",
+  "lesson": "01-store",
+  "agent": "miniswe",
+  "model": "MiniMax-M3.1-Flash-Preview",
+  "env_file": "/srv/minimax-loop/minimax.env",
+  "allow": [
+    "env GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local GOWORK=off GOENV=off (GOFLAGS=-mod=mod )?go (build|vet|test|mod tidy|mod init [A-Za-z0-9./_-]+)( [^;&|`$<>]*)?",
+    "gofmt -(l|w|d) [^;&|`$<>]+"
+  ],
+  "specs": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/tree",
+  "specs_sha": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159",
+  "seed_files": {
+    "SPEC_VERSION": "c4a17f0588dd5d843dbbfde0eed80e299b9ab159\n"
+  },
+  "head_files": [
+    "Platform/01-store/README.md",
+    "Platform/01-store/spec/01-store.README.md",
+    "Platform/01-store/lifecycle.md",
+    "Platform/01-store/forms/stages.tsv",
+    "Platform/01-store/forms/write-checks.tsv",
+    "Platform/01-store/spec/01.1-store.norms.md",
+    "Platform/01-store/spec/01.2-store.norms.md",
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/01-store/spec/production-acceptance.md",
+    "Platform/common/acceptance/PROFILE.md",
+    "Platform/common/acceptance/runner-targets.README.md",
+    "Platform/common/contracts/vector-adapter.protocol.json",
+    "Platform/common/versions/README.md",
+    "Platform/01-store/probes/README.md"
+  ],
+  "prompt": "Implement P/01 from scratch in 01-store, using only the pinned model-visible specification M. Implement the complete store, including the Raft group behavior, public interfaces, persistence, recovery and production obligations described by M. Write your own code and meaningful tests. Read the public contracts, forms, schemas, protocols and dependency versions in M as needed; do not use another implementation, generated SDK, judge or hidden case corpus.\nThis is generation only. The loop checks compilation, go vet and your own Go tests. Those checks do not establish conformance to the specification. No acceptance judge, judge feedback, stand gate or judge profile is used during generation. The finished candidate is judged separately after generation. Do not replace required product behavior with adapter answers or hard-coded examples. All implementation, auxiliary code and tests are your work. SPEC_VERSION identifies the immutable M input.\nFor each learning stage, implement its stated goal and norms. The source stage names/goals/norm references define the progression; acceptance/scenario/seam gates are not executed in this generation run. Keep the full implementation and tests coherent across all eleven stages. Use the public pinned Go dependencies with the supplied offline module cache. Produce a buildable complete candidate and tests exercising its behavior; tests that only check a stub are insufficient for your implementation goal.\nThe P/01 group is built in the variant keys.store_build: raft, on the library named by Platform/common/versions/README.md of M.\nA run with -group-size 3 must bring up the group on the Raft library named by Platform/common/versions/README.md of M.\n",
+  "miniswe_head": "stage",
+  "miniswe_focus": true,
+  "miniswe_group": 6,
+  "miniswe_stage_check": true,
+  "miniswe_checks": 6,
+  "miniswe_steps": 60,
+  "miniswe_round_max_input_tokens": 6000000,
+  "miniswe_plan_round": true,
+  "miniswe_plan_steps": 60,
+  "miniswe_plan_round_max_input_tokens": 6000000,
+  "miniswe_stable_prefix": true,
+  "context_tokens": 200000,
+  "max_input_tokens": 150000000,
+  "max_active_hours": 24,
+  "max_tokens_run": 150000000,
+  "max_tokens_stage": 150000000,
+  "stall_rounds": 3,
+  "stages": {
+    "form": "forms/stages.tsv",
+    "list": [
+      "model",
+      "launch",
+      "jcs",
+      "store_core",
+      "http",
+      "rights_eval",
+      "rights",
+      "daemon_doors",
+      "daemon_copy",
+      "durable",
+      "group"
+    ],
+    "agent_exec": {
+      "user": "b11-model",
+      "launcher": "b11-call",
+      "env": {
+        "PATH": "/opt/go1.22.10/bin:/usr/local/bin:/usr/bin:/bin",
+        "LANG": "C.UTF-8",
+        "GOFLAGS": "-mod=mod",
+        "GOPROXY": "off",
+        "GOTOOLCHAIN": "local",
+        "GOMODCACHE": "/opt/minimax-judge/gomodcache"
+      }
+    },
+    "mech": {
+      "cwd": "01-store",
+      "env": {
+        "GOPROXY": "off",
+        "GOSUMDB": "off",
+        "GOTOOLCHAIN": "local",
+        "GOWORK": "off",
+        "GOFLAGS": "-mod=mod"
+      },
+      "build": "go build ./...",
+      "vet": "go vet ./...",
+      "test": "go test -race -count=1 ./...",
+      "timeout": 1800,
+      "require_own_tests": true
+    },
+    "norm_trace": true,
+    "norm_trace_mutation": true,
+    "norm_trace_mode": true,
+    "stage_tests": true,
+    "m_passport": {
+      "path": "/srv/b11-isolation/model-specs/c4a17f0588dd5d843dbbfde0eed80e299b9ab159/PASSPORT-M.json",
+      "sha256": "9d82a3a0ab38356ba49cbb6630adae2f980fc7066c1c21f204d25e699829ca6c"
+    },
+    "profile_probe": true
+  },
+  "miniswe_design_max": 32000,
+  "miniswe_plan_idle_steps": 8
+}
