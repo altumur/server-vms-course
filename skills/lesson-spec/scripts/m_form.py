@@ -7,7 +7,7 @@ lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228). Seven checks, ea
 - `index_refs` — the `## Index` table of every chapter: each requirement exists in the norms of the lesson, ascending,
   once; each file address exists (`Platform/…` and `VMS/…` from the course root, any other path from the lesson root,
   no fallback root; the words in parentheses and «…» are not addresses); the translation has the same rows;
-- `see_also_refs` — the «See also» line of a requirement is exactly the union of the ids of all index rows of its
+- `see_also_refs` — no «See also» lines (navigation is the index alone, the Architect 2026-11-12); formerly: the union of the ids of all index rows of its
   topics over the chapters of the lesson without the id itself, ascending, once; a requirement in no row has none;
   the translation has the same lines in the same order;
 - `judge_only_refs` — a Markdown link or a path in backquotes from a Markdown file of M to a judge-only file (the
@@ -496,62 +496,16 @@ def see_lines(path, language):
 
 
 def see_also_refs(check, lesson):
-    live, removed = lesson.requirements()
-    expected = {}
+    """Navigation of form M is the index alone (the Architect 2026-11-12, by P08.25: «See also» lines with the union of
+    the topics tripled the norms — P/01.3 489 KB, 377 KB of them «See also»): a «See also» line is an error."""
     for norms in lesson.chapters:
-        for _, _, cell, _ in index_rows(norms, "en") or []:
-            ids = set(REQ_ID.findall(cell))
-            for value in ids:
-                expected.setdefault(value, set()).update(ids - {value})
-    for norms in lesson.chapters:
-        lines = see_lines(norms, "en")
-        have = {}
-        for n, current, tokens in lines:
-            check.stats["see_also_refs"] += 1
-            if current is None:
-                check.error(norms, f"line {n}: «See also» before any requirement anchor")
+        for path, language in ((norms, "en"), (lesson.translation(norms), "ru")):
+            if not path.is_file():
                 continue
-            if current in have:
-                check.error(norms, f"line {n}: a second «See also» line of {current} (first at line {have[current][0]})")
-                continue
-            have[current] = (n, tokens)
-            for token in tokens:
-                if not REQ_ID.fullmatch(token):
-                    check.error(norms, f"line {n}: See also of {current}: «{token}» is not a requirement id")
-                elif token in removed or token not in live:
-                    check.error(norms, f"line {n}: See also of {current}: {token} is not a requirement of {lesson.key}")
-            ids = [t for t in tokens if REQ_ID.fullmatch(t)]
-            if ids != sorted(set(ids), key=req_key):
-                check.error(norms, f"line {n}: See also of {current}: ascending, each id once")
-            want = expected.get(current, set())
-            if not want:
-                check.error(norms, f"line {n}: See also of {current}, which is in no index row of {lesson.key}")
-                continue
-            missing, extra = sorted(want - set(ids), key=req_key), sorted(set(ids) - want - {current}, key=req_key)
-            if current in ids:
-                check.error(norms, f"line {n}: See also of {current} names itself")
-            if missing or extra:
-                check.error(norms, f"line {n}: See also of {current} is not the union of its index topics without "
-                                   f"itself: missing {', '.join(missing) or '-'}; extra {', '.join(extra) or '-'}")
-        for value, (where, _) in sorted(live.items(), key=lambda item: req_key(item[0])):
-            if where == norms and expected.get(value) and value not in have:
-                check.error(norms, f"line {live[value][1]}: {value} is in an index row and has no «See also» line")
-        translation = lesson.translation(norms)
-        if not translation.is_file():
-            continue
-        ru = see_lines(translation, "ru")
-        for i in range(max(len(ru), len(lines))):
-            if i >= len(ru):
-                check.error(translation, f"line {ru[-1][0] if ru else 1}: no «{LANG['ru']['see']}» line for «See also» "
-                                         f"of the source line {lines[i][0]} (outside code, as in the source)")
-                break
-            if i >= len(lines):
-                check.error(translation, f"line {ru[i][0]}: «{LANG['ru']['see']}» without a «See also» in the source")
-                break
-            if ru[i][2] != lines[i][2]:
-                check.error(translation, f"line {ru[i][0]}: «{LANG['ru']['see']}» differs from «See also» of the source "
-                                         f"line {lines[i][0]}")
-                break
+            for n, current, _ in see_lines(path, language):
+                check.stats["see_also_refs"] += 1
+                check.error(path, f"line {n}: a «{LANG[language]['see']}» line — form M navigates by the index alone "
+                                  "(no per-requirement «See also»)")
 
 
 # --- judge_only_refs -----------------------------------------------------------------------------------------------
