@@ -106,6 +106,7 @@ Related rules: [P/AC-R006](spec/acceptance.norms.md#n13-target-registry) and [P/
 | What | Term | Ready or judged when |
 |---|---|---|
 | the readiness of a store, by default | 15 s | the rule of «Role sockets» |
+| `@hold` | 15 s | one monotonic interval from the first attempt to open a client connection until all N accepted server sockets are confirmed alive together; the boundary is inclusive, with no reset or per-connection interval |
 | the console, its first start and a copy `console#<n>` | 40 s | the port listens |
 | `@start` of a role with a door (the resource) | 20 s | the port listens and the door row exists |
 | `@import store` | 30 s | the instance `restored` is ready |
