@@ -20,7 +20,8 @@ lesson-spec proposal, item 4; review P01.214 C1–C5; P01.228). Seven checks, ea
   `req_id file source date removed`, `req_id` `-` or a requirement of the lesson, `file#fragment` exists by its kind
   (`#intro`; `#N0`…`#N5` with subsections — the section of the norms by its number in any language; `#/…` in YAML or
   JSON — a JSON Pointer into the parsed document; `#header` — the comment lines of a TSV before its column header,
-  `#row:<key>` — the one row of a TSV whose first column is the key; any other fragment of Markdown — a heading
+  `#row:<key>` — the one row of a TSV whose first column is the key, or `#row:<column>=<value>&…` — the one row
+  whose named columns hold the values; any other fragment of Markdown — a heading
   anchor), an ISO date, nonempty source and removed text;
 - `checklist_marks` — every item `- [ ] **P/NN.K-MM**` of the checklists of the norms names right after its id (after
   the label «**Scope: production.**» when it has it) one mark of the way it is closed: `[test]`, `[reading]`,
@@ -818,14 +819,18 @@ def _sections(path):
 
 
 def _tsv(target):
-    """(the comment lines before the column header, {value of the first column: [lines]}) of a TSV form."""
+    """(the comment lines before the column header, {value of the first column: [lines]}, column names, [(line, cells)])
+    of a TSV form."""
     lines = target.read_bytes().decode("utf-8").split("\n")
     head = next((i for i, line in enumerate(lines) if line and not line.startswith("#")), len(lines))
-    keys = {}
+    names = lines[head].split("\t") if head < len(lines) else []
+    keys, rows = {}, []
     for n, line in enumerate(lines[head + 1:], head + 2):
         if line and not line.startswith("#"):
-            keys.setdefault(line.split("\t", 1)[0], []).append(n)
-    return [line for line in lines[:head] if line.startswith("#")], keys
+            cells = line.split("\t")
+            keys.setdefault(cells[0], []).append(n)
+            rows.append((n, cells))
+    return [line for line in lines[:head] if line.startswith("#")], keys, names, rows
 
 
 def _tsv_problem(target, fragment, parsed):
@@ -836,12 +841,28 @@ def _tsv_problem(target, fragment, parsed):
             parsed[target] = _tsv(target)
         except (OSError, UnicodeError) as exc:
             return f"unreadable: {exc}"
-    comment, keys = parsed[target]
+    comment, keys, names, rows = parsed[target]
     if fragment == "header":
         return None if comment else "#header: the form has no comment lines # before its column header"
     if not fragment.startswith("row:") or fragment == "row:":
-        return "a TSV form is addressed by #header or #row:<value of the first column>"
+        return "a TSV form is addressed by #header or #row:<value of the first column> (or #row:<column>=<value>&…)"
     key = fragment[len("row:"):]
+    if "=" in key:
+        # a composite key (the Architect on P03.29): named columns, each equal to its value; exactly one row matches
+        wanted = []
+        for part in key.split("&"):
+            name, _, value = part.partition("=")
+            if name not in names:
+                return f"#row:{key}: no column «{name}» in the form (columns: {', '.join(names)})"
+            wanted.append((names.index(name), value))
+        if len({i for i, _ in wanted}) != len(wanted):
+            return f"#row:{key}: a column is named twice"
+        hit = [n for n, cells in rows if all((cells[i] if i < len(cells) else "") == v for i, v in wanted)]
+        if not hit:
+            return f"#row:{key}: no row matches"
+        if len(hit) > 1:
+            return f"#row:{key}: rows {', '.join(map(str, hit))} match: not an address — name more columns"
+        return None
     if key not in keys:
         return f"#row:{key}: no row with the first column «{key}»"
     if len(keys[key]) > 1:
