@@ -2,7 +2,7 @@
 // `wait`, не чаще раза в секунду; сообщение о строке своей подсистемы и сброс читают данные сразу, чужая подсистема и пустой
 // ответ — нет; 404 снимает ленту, опрос живёт; страница держателя ленту не зовёт.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-changes-"+process.pid+".html");
 const page=opts=>fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),${opts});</script>`);
 process.env.CONSOLE_FILE=TMP;

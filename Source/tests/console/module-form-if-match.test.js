@@ -2,7 +2,7 @@
 // revision показанной строки; отказ 412 — экран: слова в `.pc-err`, разошедшиеся значения в `.pc-moved`, ввод человека цел,
 // кнопка `.pc-reread` перечитывает строки и рисует форму заново. Прочие отказы — как прежде.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-ifmatch-"+process.pid+".html");
 fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en"});</script>`);
 process.env.CONSOLE_FILE=TMP;
@@ -10,6 +10,7 @@ const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"testsub",rows:"things",id:"name",fields:[{name:"name",type:"string"},{name:"start",type:"int"},{name:"note",type:"string"}]};
+b.FIX["/mounts"]={root:"testsub",mounts:{}};
 b.FIX["/things"]={configured:[{id:"c1",name:"c1",start:1,note:"a",revision:4}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};

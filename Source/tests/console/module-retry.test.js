@@ -6,7 +6,7 @@
 // Таблицы подсистемы (/<sub>/<table>[/<key>], и у корня — под именем подсистемы) — тоже: «PUT и таблицы без памяти повторов
 // автоматически не повторяются» (аудит покрытия P/07, проход Gemini, G04). 401 — окно входа.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-retry-"+process.pid+".html");
 fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en"});window.pc.retryWaits=[20,20,20];window.pc.timeoutMs=200;</script>`);
 process.env.CONSOLE_FILE=TMP;

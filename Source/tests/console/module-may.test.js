@@ -4,7 +4,7 @@
 // аварийная сессия (via break-glass, grants []) — да; без грантов да только у открытой консоли (open: true); закрытая
 // или неизвестная сессия (/session не ответила) без грантов — нет. Вход: сессия закрыта и пользователя нет — окно входа.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-may-"+process.pid+".html");
 fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en"});</script>`);
 process.env.CONSOLE_FILE=TMP;

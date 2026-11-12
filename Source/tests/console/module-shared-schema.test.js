@@ -3,7 +3,7 @@
 // чего форма сказать не может (объект без properties), — текст JSON на своём месте. Публикация — PUT /domain/shared
 // {base_rev, shared}; пустые поля не уходят; не то, что говорит схема (не JSON, не число), — ничего не отправлено.
 const fs=require("fs"),path=require("path");
-const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
+const SRC=require("./module-source")();
 const TMP=path.join(require("os").tmpdir(),"pc-shared-schema-"+process.pid+".html");
 fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en",sections:["domain"]});</script>`);
 process.env.CONSOLE_FILE=TMP;
