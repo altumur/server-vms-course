@@ -423,3 +423,176 @@ req_id	file	source	date	removed
 -	forms/README.md#refusals	54bd94881: P/06 forms and seams; ru	2026-11-11	прежней inline-
 -	forms/README.md#seams-and-stages	54bd94881: P/06 forms and seams; ru	2026-11-11	Добавленные
 -	forms/README.md#seams-and-stages	54bd94881: P/06 forms and seams; ru	2026-11-11	Новая выпущенная
+-	data/asked.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/commands.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/decommission.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/door-keys.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/door-signer.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/drain.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/folders.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/memberof-gone.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/memberof.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/next-id.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/opbusy.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/opcount.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/opdone.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/operations-epoch.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/operations-turn.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/operations.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/opsteps.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/policy.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/requests.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/schema.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/server-labels.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/sweep.outcomes.tsv#header	ADR-0088 addendum (1) R7, addendum (2) S11	2026-11-06	 (ADR-0088 addendum (1) R7, addendum (2) S11)
+-	data/asked.outcomes.tsv#row:path=&reader=console	layout audit, G-11; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-11; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/commands.outcomes.tsv#row:path=&reader=<s>worker	the Architect's decision of 2026-10-20, analysis of review of stage B 6–7	2026-10-20	 — the Architect's decision of 2026-10-20, analysis of review of stage B 6–7
+-	data/commands.outcomes.tsv#row:path=&reader=console	the Architect's decision of 2026-10-20, analysis of review of stage B 6–7	2026-10-20	 — the Architect's decision of 2026-10-20, analysis of review of stage B 6–7
+-	data/commands.outcomes.tsv#row:path=&reader=<s>worker	guess of stage C RM-G01, the Architect's decision of 2026-10-23	2026-10-23	 (guess of stage C RM-G01, the Architect's decision of 2026-10-23)
+-	data/decommission.outcomes.tsv#row:path=&reader=<s>controller	layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/decommission.outcomes.tsv#row:path=&reader=console	layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/door-keys.outcomes.tsv#row:path=&reader=<s>worker	the Architect's decision of 2026-10-20	2026-10-20	the Architect's decision of 2026-10-20, 
+-	data/door-keys.outcomes.tsv#row:path=&reader=console	analysis of review of stage B 6–7, № 3	2026-11-06	; analysis of review of stage B 6–7, № 3
+-	data/door-keys.outcomes.tsv#row:path=&reader=console	the Architect's decision of 2026-10-20, analysis of review of stage B 6–7	2026-10-20	; the Architect's decision of 2026-10-20, analysis of review of stage B 6–7
+-	data/door-signer.outcomes.tsv#row:path=&reader=console	layout audit, G-13; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-13; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/drain.outcomes.tsv#row:path=&reader=<s>controller	layout audit, G-14; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-14; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/drain.outcomes.tsv#row:path=&reader=console	layout audit, G-14; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-14; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/next-id.outcomes.tsv#row:path=&reader=console	analysis of review of stage B 6–7, № 38	2026-11-04	; analysis of review of stage B 6–7, № 38
+-	data/next-id.outcomes.tsv#row:path=&reader=console	the Architect's decision of 2026-10-20, analysis of review of stage B 6–7	2026-10-20	; (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7)
+-	data/next-id.outcomes.tsv#row:path=&reader=console	layout audit, G-15; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-15; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/requests.outcomes.tsv#row:path=&reader=<s>worker	guess of stage C RM-G01, the Architect's decision of 2026-10-23	2026-10-23	 (guess of stage C RM-G01, the Architect's decision of 2026-10-23)
+-	data/requests.outcomes.tsv#row:path=&reader=<s>worker	the Architect's decision of 2026-10-28, row 3 of the gap list	2026-10-28	; the Architect's decision of 2026-10-28, row 3 of the gap list
+-	data/sweep.outcomes.tsv#row:/at	finding C06-BLOB-CUTOFF-33-01, the Architect's decision of 2026-10-25	2026-10-25	 (C06-BLOB-CUTOFF-33-01, the Architect's decision of 2026-10-25)
+-	data/sweep.outcomes.tsv#row:path=&reader=console	layout audit, G-19; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (layout audit, G-19; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	data/refusal-words.tsv#header	ADR-0094 B5, addendum (13)	2026-11-04	 (ADR-0094 B5, addendum (13))
+-	data/refusal-words.tsv#row:door=tables&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=batch&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=policy&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=drain&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=labels&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=decommission&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	data/refusal-words.tsv#row:door=schema&error=key reused	ADR-0094 addendum (14)	2026-11-06	; ADR-0094 addendum. (14)
+-	forms/refusals.tsv#row:name=c61_013_400_1	ADR-0091 item 1	2026-11-06	; ADR-0091 item 1
+-	forms/refusals.tsv#row:name=c61_014_400_1	ADR-0091 item 1	2026-11-06	; ADR-0091 item 1
+-	forms/refusals.tsv#row:name=c61_019_422_1	ADR-0094 addendum (14)	2026-11-05	 (ADR-0094 addendum (14))
+-	forms/refusals.tsv#row:name=c61_061_409_1	ADR-0094 addendum (14)	2026-11-05	 (ADR-0094 addendum (14))
+-	forms/refusals.tsv#row:name=c61_061_422_1	ADR-0094 addendum (14)	2026-11-05	 (ADR-0094 addendum (14))
+-	forms/refusals.tsv#row:name=c61_044_409_1	reconciliation of python and go M10/6–11, T20	2026-11-06	 (reconciliation of python and go M10/6–11, T20)
+-	forms/refusals.tsv#row:name=c65_017_exit_2_1	reconciliation of python and go M10/6–11, C36	2026-11-06	 (reconciliation of python and go M10/6–11, C36)
+-	forms/refusals.tsv#row:name=c65_019_503_1	reconciliation of python and go M10/6–11, C31	2026-11-06	 (reconciliation of python and go M10/6–11, C31)
+-	forms/refusals.tsv#row:name=c63_007_503_1	DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	 (DF-OUTCOMES-109, the Architect's decision of 2026-10-25)
+-	forms/refusals.tsv#row:name=c63_008_503_1	finding C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28	2026-10-28	 (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28)
+-	forms/refusals.tsv#row:name=c63_009_503_1	finding C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28	2026-10-28	 (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28)
+-	forms/refusals.tsv#row:name=c63_009_503_1	finding C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, the Architect's decision of 2026-10-28	2026-10-28	 (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, the Architect's decision of 2026-10-28)
+-	forms/refusals.tsv#row:name=c63_010_401_1	ADR-0094 B1	2026-11-05	 (ADR-0094 B1)
+-	forms/refusals.tsv#row:name=c64_004_400_1	finding C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27	2026-10-27	; C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27
+-	forms/refusals.tsv#row:name=c64_006_400_1	the Architect's decision of 2026-10-27	2026-10-27	; the Architect's decision of 2026-10-27
+-	forms/refusals.tsv#row:name=c65_008_429_1	class GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (class GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_012_404_1	class GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (class GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_012_400_1	class GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (class GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_009_400_1	GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_009_413_1	GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_009_408_1	GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_023_503_1	GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_023_502_1	GP-L03, the decision of the Architect 2026-10-28	2026-10-28	 (GP-L03, the decision of the Architect 2026-10-28)
+-	forms/refusals.tsv#row:name=c65_011_503_1	finding C06-PULSE-LAPSE-503-01, the decision of the Architect 2026-10-29	2026-10-29	 (C06-PULSE-LAPSE-503-01, the decision of the Architect 2026-10-29)
+-	forms/refusals.tsv#row:name=c65_014_503_1	finding C06-WHERE-PLACE-LAPSE-01	2026-11-05	 — C06-WHERE-PLACE-LAPSE-01
+-	forms/refusals.tsv#row:name=c65_014_503_1	V7 item 3, the decision of the Architect 2026-10-28, P1; row 27 of the list	2026-10-28	; V7 item 3, the decision of the Architect 2026-10-28, P1; row 27 of the list
+-	forms/refusals.tsv#row:name=c65_018_exit_2_1	ADR-0094 B6	2026-11-05	; ADR-0094 B6
+-	forms/refusals.tsv#row:name=c65_022_200_1	the decision of the Architect 2026-10-20, review of stage B 6–7	2026-10-20	 (the decision of the Architect 2026-10-20, review of stage B 6–7)
+-	forms/refusals.tsv#row:name=c66_003_400_1	review of stage B 6–7, № 40	2026-11-05	 (№ 40)
+-	forms/refusals.tsv#row:name=c66_003_400_1	the Architect's decision of 2026-10-20, review of stage B 6–7	2026-10-20	 (the Architect's decision of 2026-10-20, review of stage B 6–7)
+-	forms/refusals.tsv#row:name=c67_020_503_1	DF-OUTCOMES-109, the Architect's decision of 2026-10-25	2026-10-25	; DF-OUTCOMES-109, the Architect's decision of 2026-10-25
+-	forms/refusals.tsv#row:name=c67_026_404_1	the Architect's decision on the reconciliation of M11	2026-11-06	 (the Architect's decision on the reconciliation of M11)
+-	data/asked.schema.json#/properties/rids/items/description	analysis of review of stage B 6–7, № 24	2026-11-04	; analysis of review of stage B 6–7, № 24
+-	data/commands.schema.json#/properties/outcome/description	ADR-0054	2026-10-28	 (ADR-0054)
+-	data/commands.schema.json#/properties/outcome/description	ADR-0091 addendum (11) item 4	2026-11-04	 (ADR-0091 addendum (11) item 4)
+-	data/commands.schema.json#/properties/action/description	analysis of review of stage B 6–7, № 16	2026-11-04	 (analysis of review of stage B 6–7, № 16)
+-	data/drain.schema.json#/properties/server/description	the Architect's decision of 2026-10-20	2026-10-20	 (the Architect's decision of 2026-10-20)
+-	data/drain.schema.json#/properties/revision/description	ADR-0094 B4	2026-11-06	; ADR-0094 B4
+-	data/policy.schema.json#/properties/revision/description	ADR-0094 B4	2026-11-06	; ADR-0094 B4
+-	data/schema.schema.json#/properties/revision/description	ADR-0094 B4	2026-11-06	; ADR-0094 B4
+-	data/server-labels.schema.json#/properties/revision/description	ADR-0094 B4	2026-11-06	; ADR-0094 B4
+-	data/next-id.schema.json#/properties/n/description	analysis of review of stage B 6–7, № 38	2026-11-04	 (analysis of review of stage B 6–7, № 38)
+-	data/next-id.schema.json#/properties/n/description	the Architect's decision of 2026-10-20	2026-10-20	 (the Architect's decision of 2026-10-20)
+-	data/operations.schema.json#/properties/iat/description	ADR-0100 §3	2026-11-06	; ADR-0100 §3
+-	data/requests.schema.json#/properties/digest/description	ADR-0091 addendum (24) item 3	2026-11-04	; ADR-0091 addendum (24) item 3
+-	data/requests.schema.json#/additionalProperties/description	ADR-0072	2026-11-04	, ADR-0072
+-	data/server-labels.schema.json#/properties/labels/description	analysis of review of stage B 6–7, № 40	2026-11-04	; analysis of review of stage B 6–7, № 40
+-	data/refusal-words.tsv#row:door=batch&error=no anchor	ADR-0094 addendum (12) item 3	2026-11-06	; ADR-0094 addendum. (12) item. 3
+-	forms/refusals.tsv#row:name=c61_009_400_1	review of M10/7	2026-11-06	 — added by M10/7
+-	forms/refusals.tsv#row:name=c61_028_503_1	finding № 13	2026-10-19	 — № 13
+-	forms/refusals.tsv#row:name=c61_029_400_1	review of M10/7	2026-11-06	added by M10/7; 
+-	forms/refusals.tsv#row:name=c61_030_503_1	review of M10/7	2026-11-06	added by M10/7; 
+-	forms/refusals.tsv#row:name=c64_008_409_1	guess of stage C RM-G01	2026-10-23	 (RM-G01)
+-	forms/refusals.tsv#row:name=c65_015_404_1	finding C06-WHERE-PLACE-SERVER-33-01	2026-10-25	; C06-WHERE-PLACE-SERVER-33-01
+-	forms/refusals.tsv#row:name=c67_003_404_1	reconciliation of M11, D4	2026-11-06	 (reconciliation of M11, D4)
+-	data/policy.outcomes.tsv#row:path=&reader=<s>controller	the Architect's answer of 2026-10-25 to the questions of stage 3, G-16	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-16)
+-	data/policy.outcomes.tsv#row:path=&reader=console	the Architect's answer of 2026-10-25 to the questions of stage 3, G-16	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-16)
+-	data/decommission.outcomes.tsv#row:path=&reader=<s>worker	the Architect's answer of 2026-10-25 to the questions of stage 3, G-12	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)
+-	data/decommission.outcomes.tsv#row:path=&reader=resource	the Architect's answer of 2026-10-25 to the questions of stage 3, G-12	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-12)
+-	data/server-labels.outcomes.tsv#row:path=&reader=<s>controller	the Architect's answer of 2026-10-25 to the questions of stage 3, G-18	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-18)
+-	data/server-labels.outcomes.tsv#row:path=&reader=console	the Architect's answer of 2026-10-25 to the questions of stage 3, G-18	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-18)
+-	data/schema.outcomes.tsv#row:path=&reader=<s>controller	the Architect's answer of 2026-10-25 to the questions of stage 3, G-17	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-17)
+-	data/schema.outcomes.tsv#row:path=&reader=<s>worker	the Architect's answer of 2026-10-25 to the questions of stage 3, G-17	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-17)
+-	data/schema.outcomes.tsv#row:path=&reader=console	the Architect's answer of 2026-10-25 to the questions of stage 3, G-17	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-17)
+-	data/schema.outcomes.tsv#row:path=&reader=resource	the Architect's answer of 2026-10-25 to the questions of stage 3, G-17	2026-10-25	 (the Architect's answer of 2026-10-25 to the questions of stage 3, G-17)
+-	data/requests.schema.json#/properties/valid_until/description	finding C06-DEADLINE-PRECISION-33-01	2026-10-25	; C06-DEADLINE-PRECISION-33-01
+-	forms/README.md#console-localization	commit a46ae1e6a «Compose Platform source and judges without normgen regeneration»	2026-11-06	The source map records every original path/value, duplicate provenance and519-row preservation. This does not close the P/07 owner's byte-synchronization/browser-fallback debt or 
+-	forms/README.md#refusals	commit a46ae1e6a «Compose Platform source and judges without normgen regeneration»	2026-11-06	It preserves all 204 original lesson N4 rows
+-	forms/README.md#refusals	commit 54bd94881 «Подготовить формы и швы девяти глав консоли P06»	2026-11-05	For four-cell tables, cause/outcome/diagnostic/caller preserve each cell exactly; 6.7 had three cells word/outcome/cause
+-	forms/README.md#numeric-loader-supplement	commit a46ae1e6a «Compose Platform source and judges without normgen regeneration»	2026-11-06	The original21 accepted numeric cases remain unchanged. Exact schemas/view and rule49 remain unchanged.
+-	forms/README.md#numeric-loader-supplement	commit a46ae1e6a «Compose Platform source and judges without normgen regeneration»	2026-11-06	; no exception or old-corpus replacement is added here.
+-	data/policy.outcomes.tsv#row:path=&reader=<s>controller	DF-OUTCOMES-109 (layout audit rule); the Architect's decision of 2026-10-25	2026-10-25	an exception to the rule DF-OUTCOMES-109: 
+-	data/policy.outcomes.tsv#row:path=&reader=console	DF-OUTCOMES-109 (layout audit rule); the Architect's decision of 2026-10-25	2026-10-25	; an exception to the rule DF-OUTCOMES-109
+-	vectors/contender-projection/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	The bytes are written by the Specification; the rows follow
+-	vectors/contender-projection/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	Байты пишет «Спецификация»; строки — по тексту
+-	vectors/key-families/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	The bytes are written by the Specification; the rows follow
+-	vectors/key-families/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	Байты пишет «Спецификация»; строки — по тексту
+-	vectors/metrics/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	 The bytes are written by the Specification. In `garbled
+-	vectors/metrics/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	 Байты пишет «Спецификация». В `garbled
+-	vectors/op-step/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	 The bytes are written by the Specification. There is no dry run
+-	vectors/op-step/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	 Байты пишет «Спецификация». Сухого прогона
+-	vectors/reap/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	 The bytes are written by the Specification.  ## `cases.tsv`
+-	vectors/reap/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	 Байты пишет «Спецификация».  ## `cases.tsv`
+-	vectors/request-digest/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	The bytes of the table are written by the Specification. The conformance
+-	vectors/request-digest/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	Байты таблицы пишет «Спецификация». Соответствие
+-	vectors/requests-body/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	as text). The bytes are written by the Specification; the conformance
+-	vectors/requests-body/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	текстом). Байты пишет «Спецификация»; соответствие
+-	vectors/resolve/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	N1.2. The bytes are written by the Specification; the conformance
+-	vectors/resolve/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	N1.2. Байты пишет «Спецификация»; соответствие
+-	vectors/rid/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	 The bytes are written by the Specification; the conformance
+-	vectors/rid/README.md#intro	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	 Байты пишет «Спецификация»; соответствие
+-	vectors/resolve/README.md#files	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes	2026-11-04	the norm is right, the vector is corrected by the Specification.
+-	vectors/resolve/README.md#files	126972a9b P/06 English source (ADR-0121), 2026-11-04: the session that writes the bytes; ru	2026-11-04	прав норма, вектор правит «Спецификация».
+-	forms/README.md#inputs-and-constants	d5e9ab4b4 merge of the accepted source shares P03–P10 into the common slice, 2026-11-08: review and freeze process	2026-11-08	 Exact physical pointers and independent negative controls are supplied to review103 after source freeze; adding this obligation does not claim that the separate checker code ran.
+-	forms/README.md#inputs-and-constants	d5e9ab4b4 merge of the accepted source shares P03–P10 into the common slice, 2026-11-08: review and freeze process; ru	2026-11-08	 Точные физические указатели и независимые отрицательные проверки передаются review103 после заморозки источника; эта обязанность не объявляет исполнение отдельного кода судьи.
+-	forms/README.md#inputs-and-constants	d5e9ab4b4 merge of the accepted source shares P03–P10 into the common slice, 2026-11-08: review and freeze process	2026-11-08	; token bytes and fixtures are unchanged.
+-	forms/README.md#inputs-and-constants	d5e9ab4b4 merge of the accepted source shares P03–P10 into the common slice, 2026-11-08: review and freeze process; ru	2026-11-08	; байты токена и фикстур прежние.
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	source alternatives apply under their original conditions
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form; ru	2026-11-05	Альтернативы действуют при прежних условиях
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	and original source cells
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form; ru	2026-11-05	и исходных ячейках
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	Original closed error words also remain [data/refusal-words.tsv]
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form; ru	2026-11-05	Закрытые слова также остаются в [data/refusal-words.tsv]
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	the public response stays at its original address.
+-	forms/README.md#refusals	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form; ru	2026-11-05	публичный ответ остаётся по прежнему адресу.
+-	forms/README.md#seams-and-stages	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	Chapter acceptance directories retain all original scenarios and README obligations.
+-	forms/README.md#seams-and-stages	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form; ru	2026-11-05	Сохраняются все исходные сценарии и обязанности README глав.
+-	forms/README.md#seams-and-stages	ebee40701 P06.16, 2026-11-11: the cases added to the seam table	2026-11-11	The additions use only these same ports.
+-	forms/README.md#seams-and-stages	ebee40701 P06.16, 2026-11-11: the cases added to the seam table; ru	2026-11-11	Добавления используют только те же порты.
+-	forms/README.md#seams-and-stages	e65553bb3 B7 P/06, 2026-11-08: the unit-delete cases added to the seams	2026-11-08	For the unit-delete additions, run
+-	forms/README.md#seams-and-stages	e65553bb3 B7 P/06, 2026-11-08: the unit-delete cases added to the seams; ru	2026-11-08	Для добавлений удаления единицы выполнить
+-	forms/refusals.tsv#header	54bd94881 forms and seams of the nine chapters of the console P06, 2026-11-05: the move of N4 cells into the form	2026-11-05	# Original N4 cells are retained: cause/outcome/diagnostic/caller; chapter6.7 had word/outcome/cause.
+-	acceptance/5/README.md#stand-observations	a46ae1e6a composing the Platform source and judges without normgen regeneration, 2026-11-06	2026-11-06	Publication remains synchronous at the existing paths with `?v=1`; the existing refusal of `?v=2` stays unchanged.
+-	acceptance/5/README.md#stand-observations	a46ae1e6a composing the Platform source and judges without normgen regeneration, 2026-11-06; ru	2026-11-06	Выдача остаётся синхронной по прежним путям с `?v=1`; прежний отказ для `?v=2` не меняется.
+-	acceptance/5/README.md#source-catalogue-until-restart	a46ae1e6a composing the Platform source and judges without normgen regeneration, 2026-11-06	2026-11-06	 The frozen platform module and thirteen raw asset witnesses are unchanged.
+-	acceptance/5/README.md#source-catalogue-until-restart	a46ae1e6a composing the Platform source and judges without normgen regeneration, 2026-11-06; ru	2026-11-06	 Замороженный модуль платформы и тринадцать исходных байтовых фикстур не меняются.
+-	spec/06-console.README.md#inputs-and-their-priority	126972a9b P/06 English source (ADR-0121), 2026-11-04: the course session and the source slice	2026-11-04	report to the Specification the place, the counterexample, the origin relative to the original slice and the proposed decision;
+-	spec/06-console.README.md#inputs-and-their-priority	126972a9b P/06 English source (ADR-0121), 2026-11-04: the course session and the source slice; ru	2026-11-04	сообщить «Спецификации» место, контрпример, происхождение относительно исходного среза и предлагаемое решение;
+-	acceptance/8/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run	2026-11-04	**There is no dry run by an implementation.**
+-	acceptance/8/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run; ru	2026-11-04	**Сухого прогона реализацией нет.**
+-	acceptance/9/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run	2026-11-04	**There is no dry run by an implementation.**
+-	acceptance/9/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run; ru	2026-11-04	**Сухого прогона реализацией нет.**
+-	vectors/op-step/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run	2026-11-04	There is no dry run by an implementation.
+-	vectors/op-step/README.md#intro	126972a9b P/06 по-английски — источник (ADR-0121): нормы 06.1–06.9, README урока и реализации, lifecycle, приёмка 1–9, векторы (9); OpenAPI P/06 на месте; state of the work: no dry run; ru	2026-11-04	Сухого прогона реализацией нет.

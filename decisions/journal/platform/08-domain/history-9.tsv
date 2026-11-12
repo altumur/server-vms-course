@@ -58,3 +58,4 @@ P/08.9-R011	spec/08.9-domain.norms.md#N5	M11/11-04; id-map	2026-11-11	8.9 part o
 -	acceptance/9/README.md#intro	ADR-0121	2026-11-11	(ADR-0121)
 -	acceptance/9/README.md#intro	the plan of lesson 8 V5	2026-11-11	; the plan of lesson 8 V5
 -	acceptance/9/README.md#stand	M11/03	2026-11-11	, from M11/03
+P/08.9-R011	spec/08.9-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.

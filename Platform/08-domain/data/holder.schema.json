@@ -28,7 +28,7 @@
      }
     },
     "ca": {
-     "description": "the holder's CA, 1–2 fingerprints without repetitions (ADR-0075 clarification 2); absent — the holder has no CA",
+     "description": "the holder's CA, 1–2 fingerprints without repetitions; absent — the holder has no CA",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.sha256_hex",
@@ -73,7 +73,7 @@
      "type": "string"
     },
     "key": {
-     "description": "hex of the key of the holder member; in term 1, before the first report of its agent, there is no field (ADR-0113 addendum (3) item 2)",
+     "description": "hex of the key of the holder member; in term 1, before the first report of its agent, there is no field",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     }

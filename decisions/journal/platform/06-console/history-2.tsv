@@ -141,3 +141,5 @@ P/06.2-R013	spec/06.2-console.norms.md#readiness-checklist	M11; M10/7-01; analys
 -	spec/06.2-console.norms.md#readiness-checklist	M11; M10/7-01; analysis of review of stage A 6–7, № 9; ru	2026-11-11	появляются в M11
 P/06.2-R005	spec/06.2-console.norms.md#N1.2	ADR-0083 addendum (1)	2026-11-11	stage B;
 -	spec/06.2-console.norms.md#N1.2	ADR-0083 addendum (1); ru	2026-11-11	стадия B;
+P/06.2-R013	spec/06.2-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05): the move of the N4 tables into forms/refusals.tsv	2026-11-05	The form preserves each original normative cell; 
+P/06.2-R013	spec/06.2-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05); ru	2026-11-05	Форма сохраняет исходные нормативные ячейки; 

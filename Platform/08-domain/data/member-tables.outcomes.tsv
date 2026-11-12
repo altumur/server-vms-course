@@ -1,4 +1,4 @@
-# Outcomes of an unreadable object domain/members/<member>/tables/<sub>/<table> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable object domain/members/<member>/tables/<sub>/<table>. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole object is unreadable: the holder's pass considers the written one different and writes the object from the member's copy; log without the value (P/08.1 N1.4a)	1	row	P/08.1 N1.4a

@@ -92,7 +92,7 @@
      "scope": {
       "type": "string",
       "pattern": "^(?:\\*|folder:[0-9a-f]{32})$",
-      "description": "Whole-domain role scope: only * or folder; labels and unit are forbidden on role lines (P/08.4 N1.3a; P08 review C2)."
+      "description": "Whole-domain role scope: only * or folder; labels and unit are forbidden on role lines (P/08.4 N1.3a)."
      },
      "until": {
       "type": "number",
@@ -123,7 +123,7 @@
    ]
   },
   "supervision": {
-   "description": "supervision: subsystem → role of supervisors; an action of an author with this role over the subsystem requires confirmation by a person of the supervisors' role (P/08.4 N1.3a supervision; ADR-0119 addendum (5) item 1); no field — no supervision",
+   "description": "supervision: subsystem → role of supervisors; an action of an author with this role over the subsystem requires confirmation by a person of the supervisors' role (P/08.4 N1.3a supervision); no field — no supervision",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"

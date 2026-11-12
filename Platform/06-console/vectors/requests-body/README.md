@@ -6,7 +6,7 @@ The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `<bo
 N2: the `fault` of the requests door is only `too_long`). The participants are the units and tables door of
 [chapter 6.1](../../spec/06.1-console.norms.md) (a field of type `json`: the value as is, the ceiling `JSON_CEILING`, `not_json`) and
 the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) N1.5: the fields of the row body
-as text). The bytes are written by the Specification; the conformance of the product is by its acceptance against this table.
+as text). The conformance of the product is by its acceptance against this table.
 
 The product copy is checked against the table bytes. The `fault` words of the table are from the dictionary
 [`fault`](../../../common/vectors/fault/README.md) (chapter 6.1).
