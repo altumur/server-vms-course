@@ -104,7 +104,7 @@ req_id	file	source	date	removed
 -	data/heartbeats.schema.json#/properties/status/items/properties/why/description	the second pilot, N-7; P03.29 judge finding 9	2026-11-12	 (the second pilot, N-7)
 -	data/heartbeats.schema.json#/properties/status/items/properties/lease/description	VMS request «heartbeat and a garbled row»; P03.29 judge finding 9	2026-11-12	 (VMS request «heartbeat and a garbled row»)
 -	data/heartbeats.schema.json#/properties/status/items/additionalProperties/description	the second pilot, N-7; P03.29 judge finding 9	2026-11-12	 (the second pilot, N-7)
--	data/heartbeats.schema.json#/properties/previous_hb/description	log of cammeta-go, lesson 9 № 6:; P03.29 judge finding 9	2026-11-12	log of cammeta-go, lesson 9 № 6:
+-	data/heartbeats.schema.json#/properties/previous_hb/description	log of cammeta-go, lesson 9 № 6:; P03.29 judge finding 9; exact full original description, normative computation retained	2026-11-12	the ts number of the heartbeat found in place under its own name at start, if there was one (log of cammeta-go, lesson 9 № 6: by it the console computes failover_seconds, P/06.5 N3)
 -	data/heartbeats.schema.json#/properties/was_fenced/description	VMS request «heartbeat and a garbled row»; P03.29 judge finding 9	2026-11-12	 (VMS request «heartbeat and a garbled row»)
 -	data/heartbeats.schema.json#/properties/freeing/description	VMS request freeing; P03.29 judge finding 9	2026-11-12	 (VMS request freeing)
 -	data/heartbeats.schema.json#/properties/garbled_rows/description	RM-G01; P03.29 judge finding 9	2026-11-12	; RM-G01
