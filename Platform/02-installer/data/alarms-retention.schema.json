@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "days": {
-   "description": "days; a finite number > 0; no row — the default is the event log contract «Retention of a tree»; anything else — «unknown», remove nothing (ADR-0076)",
+   "description": "days; a finite number > 0; no row — the default is the event log contract «Retention of a tree»; anything else — «unknown», remove nothing",
    "type": "number",
    "exclusiveMinimum": 0,
    "x-codec": [
