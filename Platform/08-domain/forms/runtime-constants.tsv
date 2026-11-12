@@ -33,8 +33,8 @@ VIEW_EVERY	3	s	P/08.1-R147	Minimum interval between writes of the view head; par
 VIEW_MEMBERS	2000	count	P/08.1-R156	Members per second in the view-round budget. Measurement status: unmeasured; this is the declared budget, not measured throughput.
 KNOCKS	32	count	P/08.3-R092	Knocking strangers held in memory; the last knock of one name replaces the former one. Shared report-reception contract.
 BATCH_LIMIT	67108864	bytes	P/08.3-R014	Relay-batch body limit, equal to four BODY_LIMIT. Shared report-reception contract.
-REPORT_RATE	200	count	P/08.3-R074	Reports or re-signed member-list rows per second as specified by the owning procedure. Measurement status: unmeasured; no claim of measured throughput.
-SERVERS_MAX	500	count	P/08.3-R315	Admitted server members, including the holder; must equal MISSING_SHOWN.
+REPORT_RATE	200	count	P/08.3-R374	Reports or re-signed member-list rows per second as specified by the owning procedure. Measurement status: unmeasured; no claim of measured throughput.
+SERVERS_MAX	500	count	P/08.10-R029	Admitted server members, including the holder; must equal MISSING_SHOWN.
 MISSING_SHOWN	500	count	P/08.5-R045	Visible missing/stale members in truncated book lists; server class first; must equal SERVERS_MAX.
 NEAR_CEILING	419430	bytes	P/08.5-R107	Book-key part row threshold for the near-ceiling alarm and admission refusal.
 BOOK_PARTS_SHOWN	64	count	P/08.5-R121	Requested all-recipient book parts shown by one round.
@@ -43,12 +43,12 @@ BOOK_WANT_EVERY	86400	s	P/08.5-R123	Reader renewal interval for a still-needed b
 BOOK_WANT_TTL	259200	s	P/08.5-R124	Book-part request is removed only when now minus at is greater than this interval.
 UNITS_PAGE_CHECKS	200	count	P/08.5-R211	Per-unit permission checks per folder page when whole-page wide does not apply.
 OWN_MAX	1048576	bytes	P/08.5-R248	Maximum own folders/membership publication before joining the domain.
-BACKUP_EVERY_MIN	30	s	P/08.8-R090	Lower bound in derived BACKUP_EVERY; BACKUP_EVERY is max(BACKUP_EVERY_MIN, changed bytes / BACKUP_RATE), not a fixed interval.
-BACKUP_RATE	1048576	bytes	P/08.8-R096	Bytes per second in the backup interval calculation. Measurement status: unmeasured; no claim of measured throughput.
+BACKUP_EVERY_MIN	30	s	P/08.8-R445	Lower bound in derived BACKUP_EVERY; BACKUP_EVERY is max(BACKUP_EVERY_MIN, changed bytes / BACKUP_RATE), not a fixed interval.
+BACKUP_RATE	1048576	bytes	P/08.8-R445	Bytes per second in the backup interval calculation. Measurement status: unmeasured; no claim of measured throughput.
 BACKUP_FETCH	600	s	P/08.8-R122	A part remains live while referred to by retained backup heads or by a fetch not older than this interval.
 BACKUP_HEADS	5	count	P/08.8-R091	Newest backup head documents retained by the holder.
 PARTIAL_QUIET	10800	s	P/08.8-R403	No-merge interval before partial gathering closes; monotonic clock, reset at process start.
-OUTCOMES_LIMIT	50	count	P/08.6-R152	Newest kept-edit outcomes by descending (at,id).
+OUTCOMES_LIMIT	50	count	P/08.6-R234	Newest kept-edit outcomes by descending (at,id).
 VIA_EDIT_MAX	20	count	P/08.3-R147	Member routes named by one topology via edit; excess is refused, the caller sends the rest again.
 REVOKED_WORDS_CAMERA	4	count	P/08.2-R089	Executed revoked words per camera member per day; REVOKED_WORDS selects the row by member class.
 REVOKED_WORDS_SERVER	256	count	P/08.2-R089	Executed revoked words per server member per day; REVOKED_WORDS selects the row by member class.
