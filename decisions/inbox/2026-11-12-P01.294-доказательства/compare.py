@@ -80,6 +80,12 @@ for lang, marker in [('', ' (judge-only: qualification procedures)'), ('ru/', ' 
         normalized = normalized.replace('`qualification/README.md`', '`spec/production-acceptance.md`')
         assert normalized == before(path), (path, 'non-address change')
         result['inventories'].append({'path': path, 'only_source_address_and_marker_changed': True})
+    for relative in ('acceptance/1/README.md', 'acceptance/3/README.md', 'probes/README.md'):
+        path = f'Platform/01-store/{lang}{relative}'
+        normalized = (ROOT/path).read_text().replace(marker, '')
+        normalized = normalized.replace('qualification/README.md', 'spec/production-acceptance.md')
+        assert normalized == before(path), (path, 'non-address change')
+        result['inventories'].append({'path': path, 'only_source_address_and_marker_changed': True})
 
 m = (ROOT/'Platform/01-store/spec/production-acceptance.md').read_text()
 assert not re.search(r'RUN-|BUDGET_|WORKLOAD_|ADR-0|## (Qualified inputs|First approved budgets|Case groups|Measurement definitions|Public executable probes|Evidence and outcomes)', m)

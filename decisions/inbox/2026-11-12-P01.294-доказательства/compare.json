@@ -764,11 +764,35 @@
       "only_source_address_and_marker_changed": true
     },
     {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
       "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
       "only_source_address_and_marker_changed": true
     },
     {
       "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.md",
       "only_source_address_and_marker_changed": true
     }
   ],

@@ -195,4 +195,4 @@ All four cases check P/01.1-R078, P/01.1-R105, P/01.1-R122, P/01.1-R070; they us
 
 ## Production qualification coverage
 
-The [production acceptance contract](../../qualification/README.md) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.
+The [production acceptance contract](../../qualification/README.md) (judge-only: qualification procedures) assigns the workload, phase-deadline, copy/stop, fault-stage and HTTP-copy groups separately from these functional scenarios. Their declared budgets, independent activation and complete observations are required for a production result. Existing TSV inputs/expectations and ordinary/group applicability remain unchanged; a missing binding or budget is blocked/NotExecuted, not PASS.
