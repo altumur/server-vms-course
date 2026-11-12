@@ -2,11 +2,9 @@
 
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
-[`01.2-store.norms.md`](../../spec/01.2-store.norms.md) N5, the full bodies of the two routes are in
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The acceptance checks the requirements of P/01.2 named below; the full bodies of the two routes are in
 [OpenAPI](../../spec/01-store.api.openapi.yaml).
-The rights
-file of the stand is a ready input [`inputs/rights.json`](inputs/rights.json) (judge-only: the rights fixture of the stand; the form of P/01.2 N1.2 — P/01.2-R007 and P/01.2-R008).
+The runner supplies the stand rights file in the form of P/01.2-R007 and P/01.2-R008.
 The runner puts it
 into `{rights}` before the store starts; the chapter needs no rights generator: the chapter checks the evaluator, not the output. The scenarios of the rights output from a manifest are in [the acceptance of P/02.5](../../../02-installer/acceptance/5/README.md).
 

@@ -6,7 +6,7 @@
 #var mode string — box (the store of a box, one voter without raft), group (a voter of a raft group, a group of one included), door (a door without a vote)
 #var raft string — the Raft state of the instance (not the field role of the answer): leader, follower, candidate, shutdown; a box is leader; a door has none, ""
 #var ahead double — by how many seconds the admission time of the last record is ahead of the clock of this instance
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; binding by name, not declaration order (P/01.1-R055)
 #lim CLOCK_SKEW — P/01.1 N0 «Cluster clocks»; the value — forms/runtime-constants.tsv
 # MemberId — a member identifier of P/01.3 N2 (1–128 ASCII characters: the first a letter/digit, then letters/digits/_/./-). uint64 — a JSON integer 0 … 2^64 − 1, exact.
 field	type	required_when	allowed_when	value_rule	norm

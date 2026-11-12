@@ -149,6 +149,8 @@ The answer is a set of paths: repeats merge, the order does not matter.
 
 ## 7. Outcomes of the unreadable (`<family>.outcomes.tsv`)
 
+The `family-read` vector-call output has fields `verdict`, `paths` and `outcome` by the [public call contract](vectors/family-read/README.md). At `reader`, `outcome` is a JSON object mapping each requested role to an array of paths of the outcome-table rows selected below; at `writer` it is `[]`. The paths in `outcome` are row selectors in that table, distinct from the refusal paths in `paths`. Concrete vector rows and their expected outputs are not part of the model input; the schemas, catalogue and outcome tables define the behaviour.
+
 A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
 - `path` — a prefix of the refusal path as a JSON Pointer, empty — the row whole; the segment `*` — any name outside the keys of `properties`
   of the same place or any element of a list;

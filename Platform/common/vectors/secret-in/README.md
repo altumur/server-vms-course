@@ -9,6 +9,8 @@ N3 «read_address»; N4 the row «a password or a login in an address»). The pa
 ADR-0083). Moved from `Source/tests/testdata/secret_in.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision
 on V8 of the plan of lesson 6); the head of the file is English, as it was: `M10/7 N1.1a` in it is the former address of chapter P/06.2 N1.1a.
 
+The concrete `fields.yaml` fixture is absent from the model input. The vector caller supplies its contents through `files`; the public field-declaration contract defines how the implementation reads it.
+
 ## `cases.tsv`
 
 UTF-8, LF, fields separated by TAB; lines with `#` are explanations, empty lines are skipped. There is no header. A cell is read byte for byte
@@ -23,7 +25,7 @@ between TABs, nothing is unescaped: `\t`, `\n` in a cell are two characters. Fiv
 | `note` | why the row exists |
 
 The declarations of the two fields are vector data, not a reference to the VMS catalog (ADR-0001): the file
-[`fields.yaml`](fields.yaml) next to it (moved from the acceptance of chapter 6.2 byte for byte; stage C guess URLC-SOURCE-01, the Architect's decision 2026-10-23; the key is the name from the column `field`, the value is the declaration
+`fields.yaml` next to it (moved from the acceptance of chapter 6.2 byte for byte; stage C guess URLC-SOURCE-01, the Architect's decision 2026-10-23; the key is the name from the column `field`, the value is the declaration
 of the field by the form of P/02.1 N1.2a). The rule of the catalog for nested addresses (A8) is the union of the rules of these two fields with the common
 dictionary N1.1 `common_words`.
 

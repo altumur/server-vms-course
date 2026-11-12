@@ -6,7 +6,7 @@ A common contract of the module «Platform» (ADR-0083 addendum (5); the Archite
 [P/02](../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 N1.6 (the center, the role kits, the address rule; ADR-0083 addendum (29) item 9: the line names the lesson that owns the norm; the library by the contract is written by the session `common` of the generation). The
 certificates are issued by the installer ([P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md): the center, `w2c-ca.sh`, the role kits,
 the address rule); the peer is verified by every door between processes — the store daemon
-([P/01.3 N1.6](../../01-store/spec/01.3-store.norms.md)), the role doors ([P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md)
+(P/01.3 N1.6), the role doors ([P/02.4 N1.6](../../02-installer/spec/02.4-installer.norms.md)
 `doors`) and the domain doors (lessons P/08–P/10; analysis of review of stage B 8–10, № 22); the server side of the doors
 between clusters of the class `signed` is the section «The server side: the class `signed`» (the participants are the process `domain`, chapter P/08.0,
 the relay, [P/09.2](../../09-agent/spec/09.2-agent.norms.md) N1.6, P/09.2-07, and the cluster console — everything incoming from other

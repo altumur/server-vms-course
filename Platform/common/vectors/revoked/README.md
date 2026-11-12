@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/revoked/REA
 
 The owner is the common [role certificate contract](../../contracts/role-certificate.md) `revoke` (`file`, `bad_file`; the guess
 of stage C S01, the Architect's decision of 2026-10-23). The participants are the doors that check a TLS peer: the store daemon
-([P/01.3](../../../01-store/spec/01.3-store.norms.md) N1.6), the role door of the domain console ([P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
+(P/01.3 N1.6), the role door of the domain console ([P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
 N1.4), the worker door at the domain ([P/03.7](../../../03-worker/spec/03.7-worker.norms.md) N1.6), the listener of `SIGNER_URL`. The bytes are written by
 «Specification».
 

@@ -7,7 +7,7 @@
 #var body dyn — the JSON of the body; strings carry U+FFFD instead of a lone surrogate
 #var sock string — the caller role at this check, defined once by P/01.2-R017 (spec/01.2-store.norms.md, N3 check)
 #var lone list<string> — the JSON Pointer of every string of the body with a lone surrogate; for a field name — the pointer of the object where it stands (N2.1)
-#var lim map<string,int> — the parameters of the lesson, only the names of #lim
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim; binding by name, not declaration order (P/01.1-R055)
 #lim BATCH_WRITES — P/01.1 N1 batch
 #lim BATCH_GUARDS — P/01.1 N1 batch
 #lim ROW_CEILING — P/01.1 N1 row.items.ceiling: the row ceiling of the store
