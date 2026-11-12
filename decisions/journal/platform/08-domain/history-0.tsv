@@ -31,3 +31,4 @@ P/08.0-R010	spec/08.0-domain.norms.md#N4	ADR-0094 B5	2026-11-11	(ADR-0094 B5).
 -	acceptance/0/README.md#intro	ADR-0121	2026-11-11	(ADR-0121).
 -	spec/08.0-domain.norms.md#readiness-checklist	finding C3	2026-11-11	C3 
 -	spec/08.0-domain.norms.md#readiness-checklist	finding C3	2026-11-11	C3 
+P/08.0-R117	spec/08.0-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.

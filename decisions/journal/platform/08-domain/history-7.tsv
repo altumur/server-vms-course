@@ -41,3 +41,4 @@ P/08.7-R009	spec/08.7-domain.norms.md#N5	coverage audit of P/08, second pass by 
 -	acceptance/7/README.md#intro	the plan of the move of lesson 8, V12	2026-11-11	(the plan of the move of lesson 8, V12)
 -	acceptance/7/README.md#preparation	M11/03	2026-11-11	; before the move, the acceptance README of
 -	acceptance/7/README.md#preparation	M11/03	2026-11-11	M11/03, «Setup of each scenario 01–09»
+P/08.7-R009	spec/08.7-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.
