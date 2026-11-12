@@ -560,7 +560,10 @@ def add_rows(root, base, text, note):
 
 def family_keys(root):
     """Пакет family-read на месте (данные «Спецификации»): столбец `key` после `family` — пример по шаблону каталога
-    (таблица плейсхолдеров README каталога); строки `catalog key: …` — заново. Повтор — те же байты. → {урок: строк ключа}."""
+    (таблица плейсхолдеров README каталога); строки `catalog key: …` — заново. Строка ключа с прежним case встаёт на
+    место прежней (строки `add_rows` и иные, вставленные между строками ключа или после них, остаются на своих местах);
+    новые строки ключа — после последней прежней, прежних нет — в конец; строка ключа без пары — снимается. Повтор — те
+    же байты. → {урок: строк ключа}."""
     cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
     templates = templates_of(root)
     d = root / FAMILY_READ
@@ -574,9 +577,19 @@ def family_keys(root):
             rows = lines[1:]
         else:
             sys.exit("%s: the header is neither the old one nor %s" % (p, "<TAB>".join(HEADER)))
-        rows = [r for r in rows if not r[-1].startswith(KEY_NOTE)]
-        keys = key_rows(root, cat, templates, rows, fams)
-        write_tsv(p, [], HEADER, rows + keys)
+        plain = [r for r in rows if not r[-1].startswith(KEY_NOTE)]
+        keys = key_rows(root, cat, templates, plain, fams)
+        built = {k[0]: k for k in keys}
+        out, last = [], None
+        for r in rows:
+            if not r[-1].startswith(KEY_NOTE):
+                out.append(r)
+            elif r[0] in built:
+                out.append(built.pop(r[0]))
+                last = len(out)
+        rest = [k for k in keys if k[0] in built]
+        out = out + rest if last is None else out[:last] + rest + out[last:]
+        write_tsv(p, [], HEADER, out)
         done[p.stem] = len(keys)
     return done
 

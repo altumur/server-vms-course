@@ -256,7 +256,17 @@ class TestDefects(unittest.TestCase):
         new = stack.jcs(project.canonical(m.sch, r["tree"])).encode("utf-8")
         self.assertEqual(json.loads(old)["snapshot"], ["name"])                           # дефект: без состояний
         self.assertEqual(json.loads(new)["snapshot"], ["name", "state.result"])           # исправлено: без cursor
-        self.assertTrue(sut.p1_states(new, old))
+        # Второе, не D19, расхождение того же вида: умолчания слов display переведены (ADR-0121 (6), (7); 828e2583f —
+        # «canonical220 only mapped UI/default values»). Сверяется точно и снимается до проверки D19, иначе
+        # p1_states справедливо не узнаёт вид, отличающийся не только snapshot.
+        words = ("unit", "units", "units_count")
+        mapped = json.loads(new)
+        self.assertEqual({k: json.loads(old)["display"][k] for k in words}, dict.fromkeys(words, "единица"))
+        self.assertEqual({k: mapped["display"][k] for k in words}, dict.fromkeys(words, "unit"))
+        self.assertFalse(sut.p1_states(new, old))
+        mapped["display"].update({k: json.loads(old)["display"][k] for k in words})
+        self.assertEqual(mapped["display"], json.loads(old)["display"])
+        self.assertTrue(sut.p1_states(stack.jcs(mapped).encode("utf-8"), old))
         self.assertFalse(sut.p1_states(new, new.replace(b'"name"]', b'"name","x"]')))
 
 

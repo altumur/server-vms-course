@@ -516,7 +516,7 @@ def family_read(root, catalog, judge=True):
     by_key = {(r["key"], r["kind"]): r for r in catalog if is_v7_family(r)}       # ключ каталога — пара (key, kind)
     fams = {}
     templates, why = key_templates(root, catalog)
-    errors += [(KEYS_README, "family-read: %s" % w) for w in why]
+    errors += [(KEYS_TABLE, "family-read: %s" % w) for w in why]
     for p in sorted(d.iterdir()):
         if p.name in ("README.md", ".DS_Store", "en"):            # en — английский источник README (ADR-0121)
             continue
