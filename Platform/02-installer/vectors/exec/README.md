@@ -19,4 +19,4 @@ The side parses `exec` with its own code of the loader or of the runner and comp
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.1-R117 and P/02.1-R118) is set by the `02-installer/exec` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.1-R117) is set by the `02-installer/exec` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

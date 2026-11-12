@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/canonical/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-The owner is chapter [P/02.2](../../spec/02.2-installer.norms.md) of the installer (N1.1 projection, P/02.2-R041, P/02.2-R047, P/02.2-R048, P/02.2-R052 to P/02.2-R061, P/02.2-R073 to P/02.2-R075). The participants are
+The owner is chapter [P/02.2](../../spec/02.2-installer.norms.md) of the installer (N1.1 projection, P/02.2-R041, P/02.2-R047, P/02.2-R048, P/02.2-R051, P/02.2-R054, P/02.2-R055, P/02.2-R060, P/02.2-R061, P/02.2-R073 to P/02.2-R075). The participants are
 the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only from an accepted manifest, verdict `ok`) and the installer
 `manifest put` [P/02.3](../../spec/02.3-installer.norms.md) N3 (writes the view next to the row). A vector is the bytes of a manifest → the bytes of the field
 `manifest` of the view row `platform/manifest/<sub>/canonical/1`; the wrapper `{form, rev, sha256, manifest}` and `rev` are not vectors but
@@ -12,12 +12,12 @@ the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only 
 
 | What | Where | Who writes |
 |---|---|---|
-| table of cases | `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005 to P/02.2-R022, P/02.2-R024, P/02.2-R025, P/02.2-R043) | rows `corpus-*`, `course-*` — the builder; rows `example-*` — the Specification |
+| table of cases | `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005, P/02.2-R007, P/02.2-R009, P/02.2-R012, P/02.2-R014, P/02.2-R015, P/02.2-R016, P/02.2-R017, P/02.2-R018, P/02.2-R019, P/02.2-R020, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043) | rows `corpus-*`, `course-*` — the builder; rows `example-*` — the Specification |
 | expected bytes | `expect/<case>.json` — one file per row | the builder of the skill `lesson-spec`, not edited by hand |
 | inputs of the example rows | `inputs/<name>.subsystem.yaml` | the Specification |
 
 Inputs of the rows:
-- `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`; judge-only: the corpus table; the rows `corpus-*` check P/02.2-R005 to P/02.2-R007, P/02.2-R012, P/02.2-R013, P/02.2-R021, P/02.2-R022, P/02.2-R024, P/02.2-R025, P/02.2-R043);
+- `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`; judge-only: the corpus table; the rows `corpus-*` check P/02.2-R005, P/02.2-R007, P/02.2-R012, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043);
 - `course-<name>` — each manifest of the course `Platform/common/data/testsub/*.subsystem.yaml`;
 - `example-<rule>` — one row per rule of N1.1: a section without a default and with a default, a nested key, sugar ×3, P1 (and a stated `snapshot: []`), P2–P5,
   `ordered`. The input of an example row is a small manifest that changes one rule against the minimal one; what it shows is
@@ -48,9 +48,9 @@ Who executes — the installer (`02-installer`: «build view» P/02.2 N3 — for
 ## What the vector does not cover
 
 The wrapper of the view row, the write order row — view — mark, «unchanged» with the view, the refusal `toolarge` of the view — the acceptance of chapter
-[`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Form of the canonical view» of the norms of chapter 2.2 (P/02.2-R036 to P/02.2-R039;
-`check_spec` checks that the view of each input passes it). The reader of the view — by the edits of the readers (P/02.2-R062 to P/02.2-R072).
+[`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Form of the canonical view» of the norms of chapter 2.2 (P/02.2-R036, P/02.2-R039;
+`check_spec` checks that the view of each input passes it). The reader of the view — by the edits of the readers (P/02.2-R062, P/02.2-R064, P/02.2-R067, P/02.2-R068, P/02.2-R069, P/02.2-R070, P/02.2-R072).
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005 to P/02.2-R022, P/02.2-R024, P/02.2-R025, P/02.2-R043) is set by the `02-installer/canonical` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005, P/02.2-R007, P/02.2-R009, P/02.2-R012, P/02.2-R014, P/02.2-R015, P/02.2-R016, P/02.2-R017, P/02.2-R018, P/02.2-R019, P/02.2-R020, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043) is set by the `02-installer/canonical` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

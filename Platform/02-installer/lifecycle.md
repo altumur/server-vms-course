@@ -79,7 +79,7 @@ from the highest number (P/02.4 N1.5 rules 3).
 ## Stand
 
 «Stand» — the [common acceptance README](../common/acceptance/README.md):
-- the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`; judge-only: the corpus table, which checks P/02.1-R008 to P/02.1-R011, P/02.1-R013 to P/02.1-R049, P/02.1-R051, P/02.1-R053 to P/02.1-R056, P/02.1-R058, P/02.1-R059, P/02.1-R062, P/02.1-R064 to P/02.1-R068, P/02.1-R070 to P/02.1-R086, P/02.1-R088 to P/02.1-R094, P/02.1-R102 to P/02.1-R104, P/02.1-R108, P/02.1-R114, P/02.1-R115, P/02.1-R126 to P/02.1-R131, P/02.1-R134, P/02.1-R136 to P/02.1-R139, P/02.1-R141, P/02.1-R153, P/02.1-R155, P/02.1-R185, P/02.1-R198, P/02.1-R201, P/02.1-R203, P/02.1-R209, P/02.1-R213, P/02.1-R215 to P/02.1-R217, P/02.1-R236);
+- the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`; judge-only: the corpus table, which checks P/02.1-R008, P/02.1-R013, P/02.1-R018, P/02.1-R020, P/02.1-R024, P/02.1-R026, P/02.1-R027, P/02.1-R028, P/02.1-R030, P/02.1-R033, P/02.1-R034, P/02.1-R036, P/02.1-R038, P/02.1-R041, P/02.1-R043, P/02.1-R047, P/02.1-R048, P/02.1-R049, P/02.1-R054, P/02.1-R055, P/02.1-R056, P/02.1-R058, P/02.1-R059, P/02.1-R062, P/02.1-R064 to P/02.1-R068, P/02.1-R070, P/02.1-R072, P/02.1-R074, P/02.1-R076, P/02.1-R078, P/02.1-R083, P/02.1-R086, P/02.1-R088, P/02.1-R092, P/02.1-R094, P/02.1-R099, P/02.1-R104, P/02.1-R108, P/02.1-R113, P/02.1-R115, P/02.1-R126, P/02.1-R127, P/02.1-R128, P/02.1-R131, P/02.1-R134, P/02.1-R136, P/02.1-R139, P/02.1-R141, P/02.1-R153, P/02.1-R155, P/02.1-R182, P/02.1-R198, P/02.1-R201, P/02.1-R206, P/02.1-R213, P/02.1-R215, P/02.1-R236);
 - `manifest-put {socket} {file}` — through `admin.sock`, the stand's manifests one by one before the first `@start`;
 - the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances of the other lessons and the variants of chapter 2.5.
 
@@ -88,7 +88,7 @@ from the highest number (P/02.4 N1.5 rules 3).
 | What | How | Norm |
 |---|---|---|
 | domain units | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (no port of its own; the relay door — `RELAY_PORT` 8446); `w2c-domainagent-token-<role>.socket` — the local token door, `<AGENT_TOKEN_DIR>/<role>.sock` | P/02.4 N1.12, N1.1, [local token door contract](../common/contracts/local-token-door.md) |
-| domain installation | an operator command, once per domain | P/02.4 N3 «domain installation» (P/02.4-R009, P/02.4-R013, P/02.4-R014, P/02.4-R483 to P/02.4-R485, P/02.4-R504) |
+| domain installation | an operator command, once per domain | P/02.4 N3 «domain installation» (P/02.4-R009, P/02.4-R013, P/02.4-R483, P/02.4-R484, P/02.4-R504) |
 
 ## Open
 
