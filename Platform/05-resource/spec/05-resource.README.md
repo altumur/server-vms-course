@@ -21,6 +21,26 @@ the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — N1.1 �
 Internal functions,
 libraries and the way the handlers are placed are not prescribed.
 
+## Glossary
+
+Meanings below point to the norms; they introduce no new rule or interface.
+
+| Word | Meaning here | Definition |
+|---|---|---|
+| resource | The server process that owns the object door and the resource pass. | P/05-R025, P/05-R052 |
+| object | A file object at a resource; a row object is instead a store row objects/`<key>`. | P/05-R006, P/05-R064, P/05-R104 |
+| row | A store row, an event JSONL line and an HTTP listing entry have different forms. | P/05-R003, P/05-R018, P/05-R034 |
+| written | The object version stamp, the event bucket persisted write time and the mirror receiver stamp have distinct owners. | P/05-R063, P/05-R092, P/05-R159 |
+| copy | A body copy keeps source written; a bucket mirror has its receiver stamp; a received copy is not an owner source. | P/05-R012, P/05-R159, P/05-R185 |
+| bucket | An event file at the path and period of the event-journal contract, not an event or a store row. | P/05-R018, P/05-R034 |
+| server | The resource server owns a bucket; an event payload server may instead name the subject server. | P/05-R062, P/05-R259, P/05-R260 |
+| unit | The logical `<tree>/<unit>` reference excludes the .alarms layout suffix; `of` names the event addressee. | P/05-R019, P/05-R096 |
+| presence | A worker-process observation from OS locks and one role snapshot; silent is a resource state. | P/05-R087, P/05-R090, P/05-R091 |
+| unknown | An unavailable read or incomplete role snapshot does not prove absence; malformed readable content has its specified separate outcome. | P/05-R023, P/05-R090, P/05-R122, P/05-R199 |
+| pass | The resource retain→usage→relieve→mirror attempt differs from the client ordinary periodic poll after a hint. | P/05-R031, P/05-R032, P/05-R052, P/05-R053 |
+| lane | Computed /events requests share a computation bound; a held wait uses a door connection, not that bound. | P/05-R299, P/05-R153 |
+| free / freeing / short | The request asks for still-needed bytes; live worker freeing reports not-yet-reflected release; short is the resource diagnostic. | P/05-R085, P/05-R101 |
+
 ## What to create
 
 The operations of objects and their permitted door; the write of events with buckets and classes;
@@ -82,6 +102,6 @@ Check the id for collisions of the composite names a-e1-j/node:1:aaaaaa and a/j-
 
 ## Forms and implementation stages
 
-The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: object/copy probes P/05-R006, P/05-R017, P/05-R034–P/05-R036, P/05-R038, P/05-R045; event/query probes P/05-R020, P/05-R023, P/05-R049, P/05-R050; resource/wait probes P/05-R025, P/05-R026, P/05-R030, P/05-R032, P/05-R052–P/05-R054; route probes P/05-R042, P/05-R057) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
+The normalized process inputs, refusal catalogue, role admission and CALL ports are in [the forms README](../forms/README.md). [stages.tsv](../forms/stages.tsv) is a possible implementation order; the generated kit does not claim a complete stage. The kit [seams](../acceptance/seams.tsv) (judge-only: object/copy probes P/05-R006, P/05-R063, P/05-R183, P/05-R185, P/05-R186, P/05-R187, P/05-R252, P/05-R190, P/05-R017, P/05-R034–P/05-R036, P/05-R038, P/05-R045; event/query probes P/05-R020, P/05-R023, P/05-R049, P/05-R050; resource/wait probes P/05-R025, P/05-R026, P/05-R087, P/05-R088, P/05-R090, P/05-R091, P/05-R030, P/05-R032, P/05-R052–P/05-R054; route probes P/05-R042, P/05-R057) supplement the unchanged process scenarios and the common vector obligations, not the runner’s full acceptance or the reading methods above.
 
 The numeric source of independent scalars is [runtime-constants.tsv](../forms/runtime-constants.tsv); HTTP values stay in the current [OpenAPI form](05-resource.api.openapi.yaml), high/low in the P/02 space form. Scenario 41 observes early stability; synchronous s63 separately awaits the real end of relieve. Declared s63–s67 and family cells require actual execution, never an adapter answer from expect. The ms support is still a separate dependency, not PASS.
