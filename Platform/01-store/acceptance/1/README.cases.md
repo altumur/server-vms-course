@@ -115,8 +115,8 @@ with rights on acc/ check the keys of this prefix with the full length of 200, 2
 UTF-8 bytes, including Cyrillic and four-byte characters. The first four pass the door rule,
 1025 gives 400 badkey without a write; check the same set in a non-empty guard.key. For an existing
 guard use its actual version, for an absent one — index="", so as not to fall
-into the version comparison refusal. For a file implementation separately check its declared limit:
-an earlier badkey is admissible, but the threshold 200 by itself is not a norm of the platform.
+into the version comparison refusal. Every implementation accepts an admissible full key through KEY_BYTES;
+a file-system name limit does not lower this bound.
 This is a separate harness beyond the scenario TSV; test the full UTF-8 representation, not the number of characters.
 
 ### Original passage 17

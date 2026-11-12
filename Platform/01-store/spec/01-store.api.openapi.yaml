@@ -156,7 +156,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
+              description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
   /v1/join:
     post:
       summary: Joining by the certified role of the daemon
@@ -204,7 +204,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
+              description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
         '409':
           description: The whole JSON body
           content:
@@ -270,7 +270,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
+              description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
         '409':
           description: 'The store of a box without raft: leave of the last vote (N1.3 box)'
           content:
@@ -406,7 +406,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
+              description: For this operation it is exactly 1 at the connection limit (P/01.3-R321), otherwise absent. The separate replay_limit deadline of writes is specified by P/01.3-R329.
 components:
   schemas:
     Key:
@@ -418,8 +418,8 @@ components:
         - pattern: "^(?:(?:[\\s\\S]*/)?\\.\\.(?:/[\\s\\S]*)?)$"
       description: >-
         N1: a key is not empty, does not start with /, no segment between / equals ..;
-        ..foo is admissible. The limit of 1024 UTF-8 bytes and a smaller file limit
-        are checked separately; maxLength does not express a number of bytes.
+        ..foo is admissible. The limit of 1024 UTF-8 bytes applies to every implementation
+        and is checked separately; maxLength does not express a number of bytes.
     Version:
       type: string
       pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"
@@ -943,7 +943,7 @@ components:
       headers:
         Retry-After:
           schema: {type: integer}
-          description: Only for unavailable. At the connection limit of the door it is exactly 1 (P/01.3 N4); above the replay-processing limit it is the time until admission in seconds, computed by the implementation (P/01.3 R035, replay_limit); otherwise absent.
+          description: Only for unavailable. At the connection limit of the door it is exactly 1 (P/01.3-R321); above the replay-processing limit it is the time until admission in seconds, computed by the implementation (P/01.3-R329, replay_limit); otherwise absent.
       content:
         application/json:
           schema:
