@@ -9,6 +9,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[3]
 BASE = '813ea367c7694ca85291fd0cf0ba52752905e1d2'
 REJECTED = '8da025ff27b9dd66689bd72ce5df7ebbc083be9b'
+REJECTED2 = '38c759f3f7c11daadc123354be2dc6d20589d6ab'
 
 
 def at(revision, path):
@@ -60,7 +61,7 @@ def r147_line(text, language):
     return found[0]
 
 
-def approved_q_row(old_row, language):
+def r147_q_row(old_row, language):
     cells = old_row.split('|')
     name = cells[1].strip(' `')
     old_value, interval = PHASES[language][name]
@@ -78,8 +79,61 @@ def approved_q_row(old_row, language):
     return '|'.join(cells)
 
 
-result = {'base': BASE, 'rejected': REJECTED, 'approved_answer': '2026-11-12T22:56:42Z',
-          'tables': [], 'inventories': [], 'history': [], 'r147_delta': [], 'q_interval_delta': []}
+R234 = {
+    '': 'Discard stops at the declared body length when framing supplies one. Discard stops earlier at the declared raw-byte limit; this limit MUST NOT exceed the configured `-max-body` value. Discard stops earlier at the absolute monotonic drain deadline. A chunked sender need not send a terminal chunk for discard to finish. The drain volume and time are declared in item 9 of «Implementation decides».',
+    'ru/': 'Слив прекращается на заявленной длине тела, если framing задаёт длину. Слив прекращается раньше при достижении объявленного предела сырых байтов; этот предел НЕ ДОЛЖЕН превышать настроенное значение `-max-body`. Слив прекращается раньше при достижении абсолютного монотонного срока слива. Для завершения слива chunked отправитель не обязан прислать завершающую часть. Объём и срок слива объявлены в п. 9 «Решает реализация».'}
+MANAGER_RULE = {
+    '': 'The qualification stand sets the actual manager stop deadline consistently with `BUDGET_STOP`.',
+    'ru/': 'Стенд квалификации задаёт фактический срок остановки менеджера согласованно с `BUDGET_STOP`.'}
+SOURCE_RULE3 = {'': 'The bounds on declared input-phase intervals come from [P/01.1-R147 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing), and the bound on the declared raw-byte drain limit comes from [P/01.1-R234 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing). Other named normative limits retain their existing sources; this section defines the measurement thresholds and other text uses their names.', 'ru/': 'Пределы объявляемых интервалов фаз ввода заданы в [P/01.1-R147 раздела N2.1 «Разбор запроса»](../spec/01.1-store.norms.md#n21-разбор-запроса), предел объявляемого объёма сырого слива — в [P/01.1-R234 раздела N2.1 «Разбор запроса»](../spec/01.1-store.norms.md#n21-разбор-запроса). Остальные названные нормативные пределы сохраняют свои источники; этот раздел задаёт измерительные пороги, а остальной текст использует их имена.'}
+RAW_LIMIT = {
+    '': (' and at most the `-max-body` value in raw bytes',
+         ' and [the bound on the declared raw-byte drain limit in P/01.1-R234](../spec/01.1-store.norms.md#n21-request-parsing)'),
+    'ru/': (' и не более значения `-max-body` сырых байтов',
+            ' и [предел объявляемого объёма сырого слива по P/01.1-R234](../spec/01.1-store.norms.md#n21-разбор-запроса)')}
+
+
+def r234_line(text, language):
+    prefix = 'Discard stops at the declared body length' if not language else 'Слив прекращается на заявленной длине тела'
+    found = [line for line in text.splitlines() if line.startswith(prefix)]
+    assert len(found) == 1
+    return found[0]
+
+
+def raw_reference_row(previous, language):
+    old_value, new_value = RAW_LIMIT[language]
+    assert previous.startswith('| `BUDGET_DRAIN` | ') and previous.count(old_value) == 1
+    return previous.replace(old_value, new_value)
+
+
+def approved_q_row(old_row, language):
+    new = r147_q_row(old_row, language)
+    if old_row.startswith('| `BUDGET_DRAIN` | '):
+        new = raw_reference_row(new, language)
+        assert '-max-body' not in new
+    return new
+
+
+def approved_stop_row(old_row, language):
+    expected = ('| `BUDGET_STOP` | 15 s | `graceful_stop_elapsed` | RUN-L03 | limit `norm`; margin `judgement` |' if not language
+                else '| `BUDGET_STOP` | 15 с | `graceful_stop_elapsed` | RUN-L03 | предел `norm`; запас `judgement` |')
+    assert old_row == expected
+    cells = old_row.split('|')
+    assert cells[5] == (' limit `norm`; margin `judgement` ' if not language else ' предел `norm`; запас `judgement` ')
+    cells[5] = ' `judgement` '
+    return '|'.join(cells)
+
+
+def manager_rule_insert(text, language):
+    retained = 'The R141 minimum is strictly more than' if not language else 'Минимум R141 — строго больше'
+    assert text.count(retained) == 1 and MANAGER_RULE[language] not in text
+    return text.replace(retained, MANAGER_RULE[language]+'\n\n'+retained)
+
+
+result = {'base': BASE, 'rejected': REJECTED, 'rejected_attempt_2': REJECTED2,
+          'approved_answers': ['2026-11-12T22:56:42Z', '2026-11-12T23:14:48Z'],
+          'tables': [], 'inventories': [], 'history': [], 'r147_delta': [], 'q_interval_delta': [],
+          'r234_delta': [], 'attempt_3_q_delta': [], 'stop_obligations_unchanged': []}
 for lang, names in [('', ['First approved budgets', 'Case groups', 'Measurement definitions', 'Probe debt']),
                     ('ru/', ['Первые утверждённые бюджеты', 'Группы случаев', 'Определения измерений', 'Долг проб'])]:
     oldpath = f'Platform/01-store/{lang}spec/production-acceptance.md'
@@ -91,19 +145,25 @@ for lang, names in [('', ['First approved budgets', 'Case groups', 'Measurement 
         expected_rows = []
         for line in old_rows:
             key = line.split('|')[1].strip(' `')
-            expected = approved_q_row(line, lang) if key in PHASES[lang] else line
+            expected = (approved_q_row(line, lang) if key in PHASES[lang] else
+                        approved_stop_row(line, lang) if key == 'BUDGET_STOP' else line)
             expected_rows.append(expected)
-        assert expected_rows == new_rows, (lang, name, 'outside the four approved bound cells')
+        assert expected_rows == new_rows, (lang, name, 'outside the four phase cells and STOP basis')
         result['tables'].append({'language': lang or 'en', 'section': name,
                                  'rows': [{'key': old.split('|')[1].strip(), 'source_sha256': digest(old),
                                            'current_sha256': digest(new), 'equal': old == new,
-                                           'approved_bound_reference_delta': old != new}
+                                           'approved_bound_reference_delta': old != new and old.split('|')[1].strip(' `') in PHASES[lang],
+                                           'approved_stop_basis_delta': old.split('|')[1].strip(' `') == 'BUDGET_STOP'}
                                           for old, new in zip(old_rows, new_rows)], 'matches_approved_delta': True})
     for name in (['Qualified inputs', 'Clocks in a group', 'Evidence and outcomes', 'Related parsing and scope'] if not lang
                  else ['Квалифицированные входы', 'Часы в группе', 'Доказательства и исходы', 'Связанный разбор и область']):
         old_text, new_text = section(original, name), section(qualified, name)
-        assert old_text == new_text, (lang, name)
-        result['tables'].append({'language': lang or 'en', 'section': name, 'sha256': digest(old_text), 'equal': True})
+        qualified_inputs = name in ('Qualified inputs', 'Квалифицированные входы')
+        expected_text = manager_rule_insert(old_text, lang) if qualified_inputs else old_text
+        assert expected_text == new_text, (lang, name, 'outside the one approved manager sentence')
+        result['tables'].append({'language': lang or 'en', 'section': name,
+                                 'source_sha256': digest(old_text), 'current_sha256': digest(new_text),
+                                 'equal': old_text == new_text, 'approved_manager_rule_inserted': qualified_inputs})
     rejected_q = at(REJECTED, qpath)
     expected_rejected = original.replace('canonical `spec/production-acceptance.md`', 'canonical `qualification/README.md`')
     expected_rejected = expected_rejected.replace('[HTTP contract](01-store.api.openapi.yaml)', '[HTTP contract](../spec/01-store.api.openapi.yaml)')
@@ -114,19 +174,49 @@ for lang, names in [('', ['First approved budgets', 'Case groups', 'Measurement 
     expected_q = rejected_q.replace(intro_old, intro_new)
     for key in PHASES[lang]:
         old_row = next(line for line in rejected_q.splitlines() if line.startswith(f'| `{key}` | '))
-        new_row = approved_q_row(old_row, lang)
+        new_row = r147_q_row(old_row, lang)
         assert expected_q.count(old_row) == 1
         expected_q = expected_q.replace(old_row, new_row)
-        result['q_interval_delta'].append({'language': lang or 'en', 'name': key, 'old': old_row, 'new': new_row,
+        result['q_interval_delta'].append({'slice': 'attempt_2', 'language': lang or 'en', 'name': key, 'old': old_row, 'new': new_row,
                                           'only_bound_cell_changed': True, 'no_numeric_duplicate': True})
-    assert qualified == expected_q, (lang, 'unapproved Q change outside four cells and source sentence')
+    second_q = at(REJECTED2, qpath)
+    assert second_q == expected_q, (lang, 'second rejected Q versus the approved R147 delta')
+    old_drain = next(line for line in second_q.splitlines() if line.startswith('| `BUDGET_DRAIN` | '))
+    old_stop = next(line for line in second_q.splitlines() if line.startswith('| `BUDGET_STOP` | '))
+    new_drain = raw_reference_row(old_drain, lang)
+    new_stop = approved_stop_row(old_stop, lang)
+    assert second_q.count(INTRO_DELTA[lang][1]) == 1
+    expected_q = manager_rule_insert(second_q.replace(old_drain, new_drain).replace(old_stop, new_stop), lang)
+    expected_q = expected_q.replace(INTRO_DELTA[lang][1], SOURCE_RULE3[lang])
+    assert qualified == expected_q, (lang, 'unapproved Q change outside DRAIN raw cell, STOP basis, manager rule and source phrase')
+    result['attempt_3_q_delta'].append({'language': lang or 'en', 'drain_old': old_drain, 'drain_new': new_drain,
+                                      'stop_old': old_stop, 'stop_new': new_stop, 'manager_rule': MANAGER_RULE[lang],
+                                      'source_phrase_old': INTRO_DELTA[lang][1], 'source_phrase_new': SOURCE_RULE3[lang],
+                                      'remaining_q_unchanged': True})
     normpath = f'Platform/01-store/{lang}spec/01.1-store.norms.md'
     current_norm = (ROOT/normpath).read_text()
     rejected_norm = at(REJECTED, normpath)
     previous_r147 = r147_line(rejected_norm, lang)
     assert r147_line(current_norm, lang) == R147[lang]
     assert ('### N2.1 Request parsing' if not lang else '### N2.1 Разбор запроса') in current_norm
-    assert current_norm == rejected_norm.replace(previous_r147, R147[lang]), (lang, 'unapproved norm change')
+    second_norm = at(REJECTED2, normpath)
+    assert second_norm == rejected_norm.replace(previous_r147, R147[lang]), (lang, 'previous R147 correction changed')
+    assert r147_line(second_norm, lang) == r147_line(current_norm, lang)
+    previous_r234 = r234_line(second_norm, lang)
+    assert r234_line(current_norm, lang) == R234[lang]
+    assert current_norm == second_norm.replace(previous_r234, R234[lang]), (lang, 'unapproved change beyond exact R234')
+    result['r234_delta'].append({'language': lang or 'en', 'old': previous_r234, 'new': R234[lang],
+                                'r147_unchanged': True, 'remaining_norms_unchanged': True})
+    for relative in ('spec/01.3-store.norms.md', 'spec/production-acceptance.md', 'lifecycle.md', 'spec/01-store.README.md'):
+        unchanged_path = f'Platform/01-store/{lang}{relative}'
+        content = (ROOT/unchanged_path).read_text()
+        assert content == at(REJECTED2, unchanged_path), (unchanged_path, 'stop obligation changed')
+        result['stop_obligations_unchanged'].append({'path': unchanged_path, 'sha256': digest(content), 'equal_to_attempt_2': True})
+    stop_norm = (ROOT/'Platform/01-store/spec/01.3-store.norms.md').read_text()
+    for req in ('P/01.3-R034', 'P/01.3-R277'):
+        match = re.search(r'<!-- req: '+re.escape(req)+r' -->\n(.*?)(?=\n<!-- req:|\Z)', stop_norm, re.S)
+        assert match
+        result['stop_obligations_unchanged'].append({'requirement': req, 'sha256': digest(match[1]), 'unchanged': True})
     result['r147_delta'].append({'language': lang or 'en', 'old': previous_r147, 'new': R147[lang],
                                 'finite_positive': True, 'strict_bounds': [60, 10, 30, 5],
                                 'monotonic_time_preserved': True, 'no_q_dependency': True})
@@ -165,12 +255,14 @@ for lang, marker in [('', ' (judge-only: qualification procedures)'), ('ru/', ' 
         if chapter == '1':
             assert normalized.count(R147[lang]) == 1
             normalized = normalized.replace(R147[lang], r147_line(at(REJECTED, path), lang))
+            assert normalized.count(R234[lang]) == 1
+            normalized = normalized.replace(R234[lang], r234_line(at(REJECTED, path), lang))
         normalized = normalized.replace(marker, '')
         normalized = normalized.replace('../qualification/README.md', 'production-acceptance.md')
         normalized = normalized.replace('`qualification/README.md`', '`spec/production-acceptance.md`')
         assert normalized == before(path), (path, 'non-address change')
         result['inventories'].append({'path': path, 'only_source_address_and_marker_changed': chapter != '1',
-                                      'exact_approved_r147_delta': chapter == '1'})
+                                      'exact_approved_r147_and_r234_delta': chapter == '1'})
     for relative in ('acceptance/1/README.md', 'acceptance/3/README.md', 'probes/README.md'):
         path = f'Platform/01-store/{lang}{relative}'
         normalized = (ROOT/path).read_text().replace(marker, '')
@@ -251,6 +343,23 @@ for path in ('Platform/01-store/forms/stages.tsv', 'Platform/01-store/forms/stag
     old_comment = next(line for line in at(REJECTED, path).splitlines() if 'production qualification: qualification/README.md.' in line)
     assert old_comment in saved_rows
 result['approved_delta_history_literal'] = True
+attempt3_saved = [line.split('\t', 4)[4] for line in (current_history+'\n'+current_chapter_history).splitlines()
+                  if len(line.split('\t')) == 5 and '\tP01.294 attempt 3;' in line]
+for lang in ('', 'ru/'):
+    normpath = f'Platform/01-store/{lang}spec/01.1-store.norms.md'
+    assert r234_line(at(REJECTED2, normpath), lang) in attempt3_saved
+    qpath = f'Platform/01-store/{lang}qualification/README.md'
+    second_q = at(REJECTED2, qpath)
+    for key in ('BUDGET_DRAIN', 'BUDGET_STOP'):
+        old_row = next(line for line in second_q.splitlines() if line.startswith(f'| `{key}` | '))
+        assert old_row in attempt3_saved
+    old_intro_line = next(line for line in second_q.splitlines() if INTRO_DELTA[lang][1] in line)
+    assert old_intro_line in attempt3_saved
+assert '-' in attempt3_saved
+result['approved_attempt_3_history_literal'] = True
+assert manifest == json.loads(at(REJECTED2, 'Platform/common/qualification-input-filter.json'))
+result['filter']['r234_source_already_included'] = norm_dependency
+
 old_export = json.loads(before('Platform/01-store/forms/export.json'))
 new_export = json.loads((ROOT/'Platform/01-store/forms/export.json').read_text())
 q_source = 'Platform/01-store/qualification/README.md'
