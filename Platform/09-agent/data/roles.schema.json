@@ -80,7 +80,7 @@
    ]
   },
   "supervision": {
-   "description": "a role with supervision → {subsystem: the role of the supervisors}; always all such roles of the domain (P/08.4 N1.3b; ADR-0119 addendum (4) item 1, addendum (6) item 2); no field — no supervision",
+   "description": "a role with supervision → {subsystem: the role of the supervisors}; always all such roles of the domain (P/08.4 N1.3b); no field — no supervision",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.person_name"
@@ -100,7 +100,7 @@
    ]
   },
   "unreadable": {
-   "description": "the rows of roles and groups unreadable at the holder that the table would carry: a mark instead of a skip — supervision is judged in favour of supervision (P/08.4 N1.3b; ADR-0119 addendum (6) item 2); no field — there are none",
+   "description": "the rows of roles and groups unreadable at the holder that the table would carry: a mark instead of a skip — supervision is judged in favour of supervision (P/08.4 N1.3b); no field — there are none",
    "type": "object",
    "properties": {
     "roles": {

@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "the copy of the placement record at the member — elements as at the holder (N1.5 member); only at has the exact-copy JSON-number exception G09-PLACEMENT-AT-COPY-01.",
+ "description": "the copy of the placement record at the member — elements as at the holder (N1.5 member); only at has the exact-copy JSON-number exception.",
  "type": "object",
  "properties": {
   "cluster": {
@@ -40,7 +40,7 @@
   },
   "at": {
    "type": "number",
-   "description": "Exact JSON-number lexeme copied byte for byte from carry.placement.records.at at the holder, including exponent notation and more than three fractional digits; no normalization, rounding or truncation. This exception is only for placed.at of P/09.1 N1.5, not other time writers (G09-PLACEMENT-AT-COPY-01).",
+   "description": "Exact JSON-number lexeme copied byte for byte from carry.placement.records.at at the holder, including exponent notation and more than three fractional digits; no normalization, rounding or truncation. This exception is only for placed.at of P/09.1 N1.5, not other time writers.",
    "x-codec": [
     "any"
    ],
