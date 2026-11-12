@@ -1,6 +1,6 @@
 # keep:true local cache policy, receiver outcomes are external facts; IO effects are only observed here.
 machine: token-cache
-norm: P/03.7-R009, P/03.7-R018
+norm: P/03.7-R009, P/03.7-R055, P/03.7-R056, P/03.7-R057, P/03.7-R058, P/03.7-R059, P/03.7-R060, P/03.7-R106, P/03.7-R107
 states:
 - loading
 - ready

@@ -36,3 +36,6 @@ P/03.7-R022	spec/03.7-worker.norms.md#N5	move of the acceptance of M11/02: forme
 -	spec/03.7-worker.norms.md#readiness-checklist	move of the acceptance of M11/02: sc. 12 (P/03.7-03)	2026-10-20	 (M11/02 sc. 12)
 -	spec/03.7-worker.norms.md#system-checklist	ADR-0130 Addendum (19) item 6	2026-11-10	 (ADR-0130 Addendum (19) item 6)
 -	spec/03.7-worker.norms.md#system-checklist	move of the acceptance of M11/05: former sc. 04 (P/03.7-05)	2026-10-20	 (former M11/05 sc. 04)
+P/03.7-R003	spec/03.7-worker.norms.md#N1	judge attempt 2: 6d29792be; P03.29 attempt 3, restoration of baseline meaning / M references	2026-11-12	**Data** ([catalogue](../../common/data/catalog.tsv)):
+P/03.7-R044	spec/03.7-worker.norms.md#N1.2	judge attempt 2: 6d29792be; P03.29 attempt 3, restoration of baseline meaning / M references	2026-11-12	**`claim`.** Without the contribution-memory reset, a server cut off, not dead, after withdrawal and revocation would get back
+P/03.7-R044	spec/03.7-worker.norms.md#N1.2	judge attempt 2: 6d29792be; P03.29 attempt 3, restoration of baseline meaning / M references	2026-11-12	the name by a repeated capture without contributions while alive.
