@@ -1,0 +1,1600 @@
+{
+  "base": "813ea367c7694ca85291fd0cf0ba52752905e1d2",
+  "rejected": "8da025ff27b9dd66689bd72ce5df7ebbc083be9b",
+  "rejected_attempt_2": "38c759f3f7c11daadc123354be2dc6d20589d6ab",
+  "approved_answers": [
+    "2026-11-12T22:56:42Z",
+    "2026-11-12T23:14:48Z"
+  ],
+  "tables": [
+    {
+      "language": "en",
+      "section": "First approved budgets",
+      "rows": [
+        {
+          "key": "`WORKLOAD_ROWS`",
+          "source_sha256": "938d508196d609159a7201bd971322ba01538ed8c7dab884767b8496ef768f50",
+          "current_sha256": "938d508196d609159a7201bd971322ba01538ed8c7dab884767b8496ef768f50",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`WORKLOAD_ORDINARY`",
+          "source_sha256": "7d3fac6c5c65b910fb73d2245422161f2dbfb5353c53b5848ca5f71f559bf015",
+          "current_sha256": "7d3fac6c5c65b910fb73d2245422161f2dbfb5353c53b5848ca5f71f559bf015",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`WORKLOAD_WORST`",
+          "source_sha256": "dc0c88cc7a4a29f48f50938b814bcffcb9534cb55f46da59ed26c9c6fee735b8",
+          "current_sha256": "dc0c88cc7a4a29f48f50938b814bcffcb9534cb55f46da59ed26c9c6fee735b8",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_OVERFLOW_REFUSAL`",
+          "source_sha256": "75d907a28b48126a1f3e3c6b407b341974a1fd627044703aa5fd80abc1caf1f7",
+          "current_sha256": "75d907a28b48126a1f3e3c6b407b341974a1fd627044703aa5fd80abc1caf1f7",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IDLE`",
+          "source_sha256": "750cbfc2e2cfab5bf8f41eff3379f8488b154ab983ef39e4c6c898c30943f418",
+          "current_sha256": "8e0887c24129da54fe95a5f79607db0e65b9eda3b380e57bcacc589c4154f60e",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_HEADERS`",
+          "source_sha256": "682f76c6d24c6be0bf4fd4cf9b26d7ed8a3c88473f1216b9719633cc91f9040f",
+          "current_sha256": "9b693eb36114aa4b86e1e66216888d2c8bf5f0f7915b16cd581c4ae20ae68404",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BODY`",
+          "source_sha256": "e3f0db1c0923eef351a1ac9cd927a8b5a50b2e7c74923d05d883e78a44493f50",
+          "current_sha256": "dfb4c01f402072aeb52ad64b8025acf8de3d0ee01cc872d028d7618e9e9f4621",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_DRAIN`",
+          "source_sha256": "57f5d9f51cbf35ae3b4fc90d0e6242f4dd9fcaec089d03ca26f061528e575e6a",
+          "current_sha256": "f8112855d0ec2d3790deeb84606af296fd92bbc6508bb4dbd9fce85bdc577602",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "lock wait",
+          "source_sha256": "7c87ff22b7226a9cb2152c9e708a8a5a29a52f0967e3eb6d638054c71141971f",
+          "current_sha256": "7c87ff22b7226a9cb2152c9e708a8a5a29a52f0967e3eb6d638054c71141971f",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_P99`",
+          "source_sha256": "08be81e5e9254d8a22e42ea5e22063b90eac513b4b98e0aab9a65209b4eebb03",
+          "current_sha256": "08be81e5e9254d8a22e42ea5e22063b90eac513b4b98e0aab9a65209b4eebb03",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_GROWTH`",
+          "source_sha256": "eeed1ed9695ecd966b3161e185d992cc050ef03a87ad0db1fa576f5c4c374328",
+          "current_sha256": "eeed1ed9695ecd966b3161e185d992cc050ef03a87ad0db1fa576f5c4c374328",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_BYTES`",
+          "source_sha256": "fbb280d30547e4e53ebc0d2a892c0d23c2c21ece42eb54186887346130d91969",
+          "current_sha256": "fbb280d30547e4e53ebc0d2a892c0d23c2c21ece42eb54186887346130d91969",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_ORDINARY`",
+          "source_sha256": "3efebb76bb2f105f0a3b4e9441f8c060981f03676f8f68d82204c462f542db1b",
+          "current_sha256": "3efebb76bb2f105f0a3b4e9441f8c060981f03676f8f68d82204c462f542db1b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_WORST`",
+          "source_sha256": "38e73268d861f682e6665f08bf8d9218933fc5bfbd1409d0deacb82bf54d400c",
+          "current_sha256": "38e73268d861f682e6665f08bf8d9218933fc5bfbd1409d0deacb82bf54d400c",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_GROWTH`",
+          "source_sha256": "47ad5fd173463e246bf1f415ae6923fbb403191b895d8b20f74e9f7a510545fd",
+          "current_sha256": "47ad5fd173463e246bf1f415ae6923fbb403191b895d8b20f74e9f7a510545fd",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_MEMORY_ORDINARY`",
+          "source_sha256": "69aa9be8c30fba040bf2e63322eea835488728f7141f65f1fc1f3308521ea5d9",
+          "current_sha256": "69aa9be8c30fba040bf2e63322eea835488728f7141f65f1fc1f3308521ea5d9",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_MEMORY_WORST`",
+          "source_sha256": "ee6f0767b40b559321653fc9b9d0dce8aff4d95c0b4b8c587a40d874c35d44e2",
+          "current_sha256": "ee6f0767b40b559321653fc9b9d0dce8aff4d95c0b4b8c587a40d874c35d44e2",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_ORDINARY`",
+          "source_sha256": "f132f56c4a0a1ead2204628d37aa368f590894ed410027037be7c39e715221a5",
+          "current_sha256": "f132f56c4a0a1ead2204628d37aa368f590894ed410027037be7c39e715221a5",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_WORST`",
+          "source_sha256": "9f9f97ad8881cebdded2072801efc1ea7257e32f53b8ab438eaba2335a4c3137",
+          "current_sha256": "9f9f97ad8881cebdded2072801efc1ea7257e32f53b8ab438eaba2335a4c3137",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_STALL`",
+          "source_sha256": "aff3782a0f95d9b65acb42f74d80dba7bfb19041dabb74dff5a2c462c73fb31d",
+          "current_sha256": "aff3782a0f95d9b65acb42f74d80dba7bfb19041dabb74dff5a2c462c73fb31d",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_STOP`",
+          "source_sha256": "c60993d0d18318010b41a6c779f7209424cdf950ed98d6a8f887e7a6466f4705",
+          "current_sha256": "ac15ad6d872ce50322bef6bde99404e6eb28b2051d43e2cbee31b0fee63e8cb1",
+          "equal": false,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": true
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "en",
+      "section": "Case groups",
+      "rows": [
+        {
+          "key": "RUN-W01",
+          "source_sha256": "d31697684e91ccc48f28843b8f7524bc149c4855d5f3dc3560e29473dbe679e5",
+          "current_sha256": "d31697684e91ccc48f28843b8f7524bc149c4855d5f3dc3560e29473dbe679e5",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W02",
+          "source_sha256": "7476146bf3ac1ee74607577e28e9ea85d6130586b48bdefae3371ebb9998a572",
+          "current_sha256": "7476146bf3ac1ee74607577e28e9ea85d6130586b48bdefae3371ebb9998a572",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W03",
+          "source_sha256": "f77401b6028b822bd0a44424e7234452950108086e33b6e05ca22bd60cb580c4",
+          "current_sha256": "f77401b6028b822bd0a44424e7234452950108086e33b6e05ca22bd60cb580c4",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W04",
+          "source_sha256": "fa655d4d93b093c189abafd8a747287e37b182968120821cda5244f09615e5fa",
+          "current_sha256": "fa655d4d93b093c189abafd8a747287e37b182968120821cda5244f09615e5fa",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T01",
+          "source_sha256": "7a8216add8e00dbd757b4bd1860ebd8cb9718fcd336db6246123b37836c531fe",
+          "current_sha256": "7a8216add8e00dbd757b4bd1860ebd8cb9718fcd336db6246123b37836c531fe",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T02",
+          "source_sha256": "3a8ef542804b6a7254b84818bfeb5d71ce8d3dbbeeb6db405c47b49714aa9ccd",
+          "current_sha256": "3a8ef542804b6a7254b84818bfeb5d71ce8d3dbbeeb6db405c47b49714aa9ccd",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T03",
+          "source_sha256": "776220b1a7773d5d0f173c10cbd5f23e65e679deee64b5a7f94fcd76a3102583",
+          "current_sha256": "776220b1a7773d5d0f173c10cbd5f23e65e679deee64b5a7f94fcd76a3102583",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L01",
+          "source_sha256": "b926921a14afa83ffda307553408d5e1ccb999ea5e569e2b43a3c26ee143a361",
+          "current_sha256": "b926921a14afa83ffda307553408d5e1ccb999ea5e569e2b43a3c26ee143a361",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L02",
+          "source_sha256": "205c41041a7f7624c527c1cea6380e853d388fb0c14b5265661f6d481b219906",
+          "current_sha256": "205c41041a7f7624c527c1cea6380e853d388fb0c14b5265661f6d481b219906",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L03",
+          "source_sha256": "d041d44959f860991c34e6a7356d1d0de98713445a23a968a3b970278494fe65",
+          "current_sha256": "d041d44959f860991c34e6a7356d1d0de98713445a23a968a3b970278494fe65",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F01",
+          "source_sha256": "d6908a3646e370146ed22d83f506229c396245ae431b45cc8bf11be8779de248",
+          "current_sha256": "d6908a3646e370146ed22d83f506229c396245ae431b45cc8bf11be8779de248",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F02",
+          "source_sha256": "3d268c14444decc975e424a98ddbdf124b4eac5b1b54a50db22c3224b6f521b3",
+          "current_sha256": "3d268c14444decc975e424a98ddbdf124b4eac5b1b54a50db22c3224b6f521b3",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F03",
+          "source_sha256": "c5a79dfe7d988e6acd6343cea13eca66be7a78394ed6e7325bea55744bea959b",
+          "current_sha256": "c5a79dfe7d988e6acd6343cea13eca66be7a78394ed6e7325bea55744bea959b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F04",
+          "source_sha256": "e00975612a13b9d015beab48303a71de8cbd0501b595c3ad518277cecb08d3a0",
+          "current_sha256": "e00975612a13b9d015beab48303a71de8cbd0501b595c3ad518277cecb08d3a0",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H01",
+          "source_sha256": "7f25a0f4b6f97e42985e016e029b4b306b23a1084c6ceae0c3345e9459e05c78",
+          "current_sha256": "7f25a0f4b6f97e42985e016e029b4b306b23a1084c6ceae0c3345e9459e05c78",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H02",
+          "source_sha256": "2447183a5e7891757b546103a7a44e64dc53d4fffbad97fd21269faacd9141e6",
+          "current_sha256": "2447183a5e7891757b546103a7a44e64dc53d4fffbad97fd21269faacd9141e6",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H03",
+          "source_sha256": "99ae8f11f8fa511a9fa113b78af04e56072babad5e4f1f2ca5456132acfcbaa0",
+          "current_sha256": "99ae8f11f8fa511a9fa113b78af04e56072babad5e4f1f2ca5456132acfcbaa0",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "en",
+      "section": "Measurement definitions",
+      "rows": [
+        {
+          "key": "`store_write_bytes`",
+          "source_sha256": "b41d38a777c4260fd31429a6427cbdaecdcdc7be88ffcc9b28efbc1d88f7a9a7",
+          "current_sha256": "b41d38a777c4260fd31429a6427cbdaecdcdc7be88ffcc9b28efbc1d88f7a9a7",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`store_read_bytes`",
+          "source_sha256": "482bb878926d2ca7cd48e05e364535364df650d17554fd828c403784e2cb07d6",
+          "current_sha256": "482bb878926d2ca7cd48e05e364535364df650d17554fd828c403784e2cb07d6",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`durability_barrier_attempts`",
+          "source_sha256": "cdcda4692e31615f3f7b01d46c6aa61591ca8ca7ffe115bcd037b851807c5806",
+          "current_sha256": "cdcda4692e31615f3f7b01d46c6aa61591ca8ca7ffe115bcd037b851807c5806",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`logical_apply_count`",
+          "source_sha256": "fccb7e3649fd603b38b3efc0309de39cb0ff06f82f8f2b9620629c105355a24b",
+          "current_sha256": "fccb7e3649fd603b38b3efc0309de39cb0ff06f82f8f2b9620629c105355a24b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`replay_storage_counts`",
+          "source_sha256": "ce109ad526fd0cfd3b5d15c2f2396bd588fe0d93826ec6444c02cfb2d921a430",
+          "current_sha256": "ce109ad526fd0cfd3b5d15c2f2396bd588fe0d93826ec6444c02cfb2d921a430",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`mutation_lock_hold_wait`",
+          "source_sha256": "6e4b3b1f389fdb9c8d7bdb629dde1846639f9718e4a0e65f9acf93125c1138e7",
+          "current_sha256": "6e4b3b1f389fdb9c8d7bdb629dde1846639f9718e4a0e65f9acf93125c1138e7",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`backup_progress`",
+          "source_sha256": "d9ab0c4e7dd63bb2b211660341617126a1b07c1ae81e0136c732e9beeb2d8730",
+          "current_sha256": "d9ab0c4e7dd63bb2b211660341617126a1b07c1ae81e0136c732e9beeb2d8730",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`graceful_stop_elapsed`",
+          "source_sha256": "76e30cf2f459c83d756a8a83f47971d93ba32ba0f41f1d695bac02af41ca3d1c",
+          "current_sha256": "76e30cf2f459c83d756a8a83f47971d93ba32ba0f41f1d695bac02af41ca3d1c",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`early_refusal_timeline`",
+          "source_sha256": "83ce64a0b9e683d078a0503584d3aeefe0d26784b03b1bde79fa739a4c400244",
+          "current_sha256": "83ce64a0b9e683d078a0503584d3aeefe0d26784b03b1bde79fa739a4c400244",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`fault_stage_receipt`",
+          "source_sha256": "09561d951682613a427702bbe0958558de65f2ec80529cdac50675eb276b1a5c",
+          "current_sha256": "09561d951682613a427702bbe0958558de65f2ec80529cdac50675eb276b1a5c",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`copy_transport_evidence`",
+          "source_sha256": "d7dd5f8ca1cb9840889c358b9f8855ff893d4df7f43a67594dd7191f581f2807",
+          "current_sha256": "d7dd5f8ca1cb9840889c358b9f8855ff893d4df7f43a67594dd7191f581f2807",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "en",
+      "section": "Probe debt",
+      "rows": [
+        {
+          "key": "RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted",
+          "source_sha256": "5f1ef56ef97ec8a8b11dc1eae797bc12f5230adca5a330a9b3bd74517eae8555",
+          "current_sha256": "5f1ef56ef97ec8a8b11dc1eae797bc12f5230adca5a330a9b3bd74517eae8555",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F01, RUN-F02, RUN-F04, executable",
+          "source_sha256": "2542a51181f15975dfe199e4e1dcb83bba388c456e3afb04a3e84547a7308567",
+          "current_sha256": "2542a51181f15975dfe199e4e1dcb83bba388c456e3afb04a3e84547a7308567",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Loss of the leader after sending (the death of the leader; a held answer of a forwarded write); a two-way partition of a member",
+          "source_sha256": "fbca53fe513c16f03a27cd379b136a10b924bab84390977cb989bdc2124ebf1c",
+          "current_sha256": "fbca53fe513c16f03a27cd379b136a10b924bab84390977cb989bdc2124ebf1c",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Interrupted `import` in a group: start, holding writers, continuation through `admin.sock` of the leader, `recover` after the loss of a majority",
+          "source_sha256": "c9a3d99080b811f97d18e903220687cf8b42e515cff7f7e064a9deef1e29e1e1",
+          "current_sha256": "c9a3d99080b811f97d18e903220687cf8b42e515cff7f7e064a9deef1e29e1e1",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start",
+          "source_sha256": "afb346bed1f011cb15b8b8be5073f727b50c15db48b793c9e01025315123279e",
+          "current_sha256": "afb346bed1f011cb15b8b8be5073f727b50c15db48b793c9e01025315123279e",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Full disk and exhausted descriptors",
+          "source_sha256": "83b9b57c04b5afc6497d6d1914085aa6f6ac26ab98183a7eef983bc1e9c24e1d",
+          "current_sha256": "83b9b57c04b5afc6497d6d1914085aa6f6ac26ab98183a7eef983bc1e9c24e1d",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Leader change and snapshot with different clocks; `admission_ahead`",
+          "source_sha256": "56ad7879320815764b2334c0f498aa6c3bd6c61ff7b8c83d0e7e526d5464b9f4",
+          "current_sha256": "56ad7879320815764b2334c0f498aa6c3bd6c61ff7b8c83d0e7e526d5464b9f4",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Response-write budget; commit wait under a live leader",
+          "source_sha256": "938b000853ebbc5f001cf9e6bc49bbc97145108b277a9c2067c94479ed144e25",
+          "current_sha256": "938b000853ebbc5f001cf9e6bc49bbc97145108b277a9c2067c94479ed144e25",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Door attempts against `-leader-wait`; all voters unreachable",
+          "source_sha256": "2e0615db06c83004efeff18e509060b8bb3e42442e592e52ffd237b0eeb1d1aa",
+          "current_sha256": "2e0615db06c83004efeff18e509060b8bb3e42442e592e52ffd237b0eeb1d1aa",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Replay-processing limit",
+          "source_sha256": "9e22807dbcf4272c2cf6db59058785e0701ce636b86fee049cd5e4f4b23b69d3",
+          "current_sha256": "9e22807dbcf4272c2cf6db59058785e0701ce636b86fee049cd5e4f4b23b69d3",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`admin.sock` limit when the ordinary limits are exhausted",
+          "source_sha256": "2bdc8d92ca41c51726e78ab52f46ca424c51fd0b318136a540ad9ea15d257058",
+          "current_sha256": "2bdc8d92ca41c51726e78ab52f46ca424c51fd0b318136a540ad9ea15d257058",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Temporary `backup` file after failure, cancellation and a killed run",
+          "source_sha256": "070680a0f8e58304197fc5836ea71bb8c9bf2959035ab6a40e526349daf3e7b6",
+          "current_sha256": "070680a0f8e58304197fc5836ea71bb8c9bf2959035ab6a40e526349daf3e7b6",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Age of the `id` memory from the first application on the admission-time clock",
+          "source_sha256": "ad47db6bd13812b26edb1546161e0477e0c9e650f243279f211606c2308e1743",
+          "current_sha256": "ad47db6bd13812b26edb1546161e0477e0c9e650f243279f211606c2308e1743",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "en",
+      "section": "Qualified inputs",
+      "source_sha256": "140e94c8f4b83bafc65ae52fe0c3ebc7396902f2987684b14fb57ff76a94487c",
+      "current_sha256": "c49bd3b88e7bddecc418cd7fc091a324f3535a9142c516fae11fb977cb189694",
+      "equal": false,
+      "approved_manager_rule_inserted": true
+    },
+    {
+      "language": "en",
+      "section": "Clocks in a group",
+      "source_sha256": "f55dc29a8e90949e406b6c861487fa32523a8c6c2b20071d5ea1ffe6b9001053",
+      "current_sha256": "f55dc29a8e90949e406b6c861487fa32523a8c6c2b20071d5ea1ffe6b9001053",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    },
+    {
+      "language": "en",
+      "section": "Evidence and outcomes",
+      "source_sha256": "6f1c76a1a7e7eecfe7c5102d528490830b76009f0ad56f027fe98e36b8371c9d",
+      "current_sha256": "6f1c76a1a7e7eecfe7c5102d528490830b76009f0ad56f027fe98e36b8371c9d",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    },
+    {
+      "language": "en",
+      "section": "Related parsing and scope",
+      "source_sha256": "e671eac633b759e0dbb26e1c3fbda437e6044758ca384753de6fdd013a54e015",
+      "current_sha256": "e671eac633b759e0dbb26e1c3fbda437e6044758ca384753de6fdd013a54e015",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    },
+    {
+      "language": "ru/",
+      "section": "Первые утверждённые бюджеты",
+      "rows": [
+        {
+          "key": "`WORKLOAD_ROWS`",
+          "source_sha256": "69ea0b5b1bbe4937c1c47dd2a067be31ed06756bb9adf3aedbf9446a065e27f0",
+          "current_sha256": "69ea0b5b1bbe4937c1c47dd2a067be31ed06756bb9adf3aedbf9446a065e27f0",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`WORKLOAD_ORDINARY`",
+          "source_sha256": "7977983c50c0d94cc8c5f8d0862427ae6abe9fb491ace6c7edc67449390e1455",
+          "current_sha256": "7977983c50c0d94cc8c5f8d0862427ae6abe9fb491ace6c7edc67449390e1455",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`WORKLOAD_WORST`",
+          "source_sha256": "b66443e70aac5b4d28d9e6ba0310a496de562fa8d47e1fa959491cf6aaf13a9a",
+          "current_sha256": "b66443e70aac5b4d28d9e6ba0310a496de562fa8d47e1fa959491cf6aaf13a9a",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_OVERFLOW_REFUSAL`",
+          "source_sha256": "4237978f18c89c052acf33fe4efbb32f9591e7b028775fdab66703c1473463f2",
+          "current_sha256": "4237978f18c89c052acf33fe4efbb32f9591e7b028775fdab66703c1473463f2",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IDLE`",
+          "source_sha256": "bc91ef09601f6cc611d3cd2fb564ac1a7053d82d32a919062f2829dc7d79110a",
+          "current_sha256": "d95d43d81e1a9e8f16eeac087c3bb53dedaa9d4219baf9d54645e3cd7295ffc9",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_HEADERS`",
+          "source_sha256": "6591da0e752c2c6e76e933ce3898d8301a13ace37fb056312bd60987889c787b",
+          "current_sha256": "18ecf7519b9c67f91e8d3c9d91402587220e23413b2027eae0f8a664f929e2d0",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BODY`",
+          "source_sha256": "c2215ea767210ef990a493840edc648153148431d188402b343bcba634cde3f3",
+          "current_sha256": "b00e982a8355078d7965cde9c6283ccffa9a05558ff82ae9306e94a1c4241bd9",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_DRAIN`",
+          "source_sha256": "9c4c76f53eeb47be44bcb7eadf62ebc316b296f09aef5a27792d2a26c09e74ba",
+          "current_sha256": "392e7f2f0fbf290b665884a4f4aea821a3f7a53bb597c00adf722b12908ccb6b",
+          "equal": false,
+          "approved_bound_reference_delta": true,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "ожидание замка",
+          "source_sha256": "a6efa0a11de0dabf165accbc5a7b99b045d3591e1ec88e05777d37aed81b71c7",
+          "current_sha256": "a6efa0a11de0dabf165accbc5a7b99b045d3591e1ec88e05777d37aed81b71c7",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_P99`",
+          "source_sha256": "08e50fe51f6a5d4b5bf7fed54dcedcde5b71a9288ac8a615c7d50e643248cdea",
+          "current_sha256": "08e50fe51f6a5d4b5bf7fed54dcedcde5b71a9288ac8a615c7d50e643248cdea",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_GROWTH`",
+          "source_sha256": "88d39e6508f5a6879b1deadaf0777fa028f9608ebc3b9406e2b459f217b5fc31",
+          "current_sha256": "88d39e6508f5a6879b1deadaf0777fa028f9608ebc3b9406e2b459f217b5fc31",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_WRITE_BYTES`",
+          "source_sha256": "e9a9c86125b587e328f4e53621f112ee8a34ccadd786c80c0ad66c0303a7d44a",
+          "current_sha256": "e9a9c86125b587e328f4e53621f112ee8a34ccadd786c80c0ad66c0303a7d44a",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_ORDINARY`",
+          "source_sha256": "2ac973bc8428f6da7d05819d367e9271daa39703b41c7f4a35621ea255aa133e",
+          "current_sha256": "2ac973bc8428f6da7d05819d367e9271daa39703b41c7f4a35621ea255aa133e",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_WORST`",
+          "source_sha256": "1e698d0a9eb97d425e3070f25f5f9e29867d59db01e81d57151e312279f2009c",
+          "current_sha256": "1e698d0a9eb97d425e3070f25f5f9e29867d59db01e81d57151e312279f2009c",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_IMPORT_GROWTH`",
+          "source_sha256": "3f7b0db26c3247a368723ce6072918be9a199db6372d9d3a7df4d2d33be8d781",
+          "current_sha256": "3f7b0db26c3247a368723ce6072918be9a199db6372d9d3a7df4d2d33be8d781",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_MEMORY_ORDINARY`",
+          "source_sha256": "430a8ca4f68cf63ef3d53aa0fe57b1e7098c98132ff9a5a0cd3caa5a8b756069",
+          "current_sha256": "430a8ca4f68cf63ef3d53aa0fe57b1e7098c98132ff9a5a0cd3caa5a8b756069",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_MEMORY_WORST`",
+          "source_sha256": "e8d258ab537d2c957b52239ce4c3e9ca01f24ea8ffc699ab42459beb4b27a1ff",
+          "current_sha256": "e8d258ab537d2c957b52239ce4c3e9ca01f24ea8ffc699ab42459beb4b27a1ff",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_ORDINARY`",
+          "source_sha256": "d2c626bf6ab61275c2aed1215df5f84cf39ffc216e669790a81f15e4cffad8dd",
+          "current_sha256": "d2c626bf6ab61275c2aed1215df5f84cf39ffc216e669790a81f15e4cffad8dd",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_WORST`",
+          "source_sha256": "b0967cf466f25a1d394272e4b56dda8ae5ba590ddbe61ee97b9676c9c7e6a84b",
+          "current_sha256": "b0967cf466f25a1d394272e4b56dda8ae5ba590ddbe61ee97b9676c9c7e6a84b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_BACKUP_STALL`",
+          "source_sha256": "2b24bb488ad6b8734fcceecdec4e5f73441277f65e74a4f6723568dc35823d91",
+          "current_sha256": "2b24bb488ad6b8734fcceecdec4e5f73441277f65e74a4f6723568dc35823d91",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`BUDGET_STOP`",
+          "source_sha256": "4510fa2a4bfea9637c0654c53a3ce673d1ca0ccd22a4613fbb296397f312de24",
+          "current_sha256": "ad8d8c1fb6eabb9881e922fc916b8978639762e79ee316a1094c50f1a59a2c84",
+          "equal": false,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": true
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "ru/",
+      "section": "Группы случаев",
+      "rows": [
+        {
+          "key": "RUN-W01",
+          "source_sha256": "28fce0d8d3a4d14416c3c5c7f65941ce19e8de0073f48fff1a1305bd550d3ebc",
+          "current_sha256": "28fce0d8d3a4d14416c3c5c7f65941ce19e8de0073f48fff1a1305bd550d3ebc",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W02",
+          "source_sha256": "84c41d67e3532d924be791c195868d945191ee47124e2914114780fc6b1c4799",
+          "current_sha256": "84c41d67e3532d924be791c195868d945191ee47124e2914114780fc6b1c4799",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W03",
+          "source_sha256": "12f18aa5589ecbfb5837435725a10adab1507232cee672d4b3e73f351a0cfc09",
+          "current_sha256": "12f18aa5589ecbfb5837435725a10adab1507232cee672d4b3e73f351a0cfc09",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-W04",
+          "source_sha256": "a8a9fa274e0ec58a44b8c2cf78a7945034df71aa25eafaf15e6f1ec82f16776d",
+          "current_sha256": "a8a9fa274e0ec58a44b8c2cf78a7945034df71aa25eafaf15e6f1ec82f16776d",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T01",
+          "source_sha256": "e5ebd88cb70b75c3d0c474a7361fbc9d9a226e57a9f9fbb6d426025c5e2c5eec",
+          "current_sha256": "e5ebd88cb70b75c3d0c474a7361fbc9d9a226e57a9f9fbb6d426025c5e2c5eec",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T02",
+          "source_sha256": "f4dab647339a5f5f0cea794eba71d750429efe177843814fabf685ebd8a4a9ca",
+          "current_sha256": "f4dab647339a5f5f0cea794eba71d750429efe177843814fabf685ebd8a4a9ca",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-T03",
+          "source_sha256": "8a25f06a6ea0cd13fbc907bbbd0549163548ebe5df8ac8dcb2b4661e7fc53f0e",
+          "current_sha256": "8a25f06a6ea0cd13fbc907bbbd0549163548ebe5df8ac8dcb2b4661e7fc53f0e",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L01",
+          "source_sha256": "a992649fcb3b207d4b593d6ca74db2fd5c2f830003767fc1b99a9843eb623f5e",
+          "current_sha256": "a992649fcb3b207d4b593d6ca74db2fd5c2f830003767fc1b99a9843eb623f5e",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L02",
+          "source_sha256": "ee6835e1915c2fc73f72e3a712f09b8c4535d51c8d5a9668ad91caed5b28c8e5",
+          "current_sha256": "ee6835e1915c2fc73f72e3a712f09b8c4535d51c8d5a9668ad91caed5b28c8e5",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-L03",
+          "source_sha256": "b50db648eb766cff1a28a7d76adc789f5215446ecb4ae9de07eea0f7bc7cfdbd",
+          "current_sha256": "b50db648eb766cff1a28a7d76adc789f5215446ecb4ae9de07eea0f7bc7cfdbd",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F01",
+          "source_sha256": "18446676231e4871b2ce794eb522aae7b05f8be010ab77f94950240b9e51b223",
+          "current_sha256": "18446676231e4871b2ce794eb522aae7b05f8be010ab77f94950240b9e51b223",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F02",
+          "source_sha256": "7f1e4416052d2d8bb3554c5b7064a72a368be2724335306f4136b9d389e9a899",
+          "current_sha256": "7f1e4416052d2d8bb3554c5b7064a72a368be2724335306f4136b9d389e9a899",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F03",
+          "source_sha256": "db788bc573bf9eaab17251f1757d3e3baaa7a565a9e1af72072d0634b4702a10",
+          "current_sha256": "db788bc573bf9eaab17251f1757d3e3baaa7a565a9e1af72072d0634b4702a10",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F04",
+          "source_sha256": "4e691df2c40595ca22b17d8bf2282bbe0ee2d60c0f57f73003a0c6e58408f024",
+          "current_sha256": "4e691df2c40595ca22b17d8bf2282bbe0ee2d60c0f57f73003a0c6e58408f024",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H01",
+          "source_sha256": "de4dd7d0a41c8565fbdf269ebc065c7ac25626dbd4e4ccdbac8d72f8c560023f",
+          "current_sha256": "de4dd7d0a41c8565fbdf269ebc065c7ac25626dbd4e4ccdbac8d72f8c560023f",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H02",
+          "source_sha256": "d88ac6d55cf8f7d93e4f85a188fbbffd273f17b3f1b9852ab8a458db2eef675f",
+          "current_sha256": "d88ac6d55cf8f7d93e4f85a188fbbffd273f17b3f1b9852ab8a458db2eef675f",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-H03",
+          "source_sha256": "b2a3d824f897a3aa7d7e6b74f133039221dee6c614d9d86179f87c2ee8b51793",
+          "current_sha256": "b2a3d824f897a3aa7d7e6b74f133039221dee6c614d9d86179f87c2ee8b51793",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "ru/",
+      "section": "Определения измерений",
+      "rows": [
+        {
+          "key": "`store_write_bytes`",
+          "source_sha256": "be1a8074a747e4b4c0f86c35effb67377e64cfdd2d9835cd574b64ef018422ba",
+          "current_sha256": "be1a8074a747e4b4c0f86c35effb67377e64cfdd2d9835cd574b64ef018422ba",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`store_read_bytes`",
+          "source_sha256": "4b150bbb12d5fe5eac96a9a5343ba0becabafc845a8189da6e472e0cbbd2de03",
+          "current_sha256": "4b150bbb12d5fe5eac96a9a5343ba0becabafc845a8189da6e472e0cbbd2de03",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`durability_barrier_attempts`",
+          "source_sha256": "657ff72660bfab2cb15e8da47673d06480adabadf7069cd9e4a4c6eb084fae7a",
+          "current_sha256": "657ff72660bfab2cb15e8da47673d06480adabadf7069cd9e4a4c6eb084fae7a",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`logical_apply_count`",
+          "source_sha256": "47b731758cb43915c1b4dae139bd9b5603667a34739eeef0f089fe635b419f46",
+          "current_sha256": "47b731758cb43915c1b4dae139bd9b5603667a34739eeef0f089fe635b419f46",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`replay_storage_counts`",
+          "source_sha256": "d2096450a9305f2a6360eb356b016a7690dbf29c7327b0c0f617248ab26dff82",
+          "current_sha256": "d2096450a9305f2a6360eb356b016a7690dbf29c7327b0c0f617248ab26dff82",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`mutation_lock_hold_wait`",
+          "source_sha256": "0bb04e1da647b110d9ed4ef0389171686d44262a9e587b19e75a94fa92e27a78",
+          "current_sha256": "0bb04e1da647b110d9ed4ef0389171686d44262a9e587b19e75a94fa92e27a78",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`backup_progress`",
+          "source_sha256": "9fd864eae8f012dc1c73fe8b80edf88f86e32b6f3cec3719e2469eba138d43d5",
+          "current_sha256": "9fd864eae8f012dc1c73fe8b80edf88f86e32b6f3cec3719e2469eba138d43d5",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`graceful_stop_elapsed`",
+          "source_sha256": "30a5d3fd0a70e29d4d8adf7336960cfff0f5c057365572d11f7a1274a7fe43e0",
+          "current_sha256": "30a5d3fd0a70e29d4d8adf7336960cfff0f5c057365572d11f7a1274a7fe43e0",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`early_refusal_timeline`",
+          "source_sha256": "c5668a1cbf321ce4f9d64b5537fecdf013e7927d45a6456b9ebe8c858ed3908b",
+          "current_sha256": "c5668a1cbf321ce4f9d64b5537fecdf013e7927d45a6456b9ebe8c858ed3908b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`fault_stage_receipt`",
+          "source_sha256": "6bff391c06bba8d14c6593fa598186777d1a7ba60bacb3f6fe9b87002ff7b635",
+          "current_sha256": "6bff391c06bba8d14c6593fa598186777d1a7ba60bacb3f6fe9b87002ff7b635",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "`copy_transport_evidence`",
+          "source_sha256": "18cc221f06c52514cf2a00a19576c3c5cb94a33c12cd2a807e918e8a06936855",
+          "current_sha256": "18cc221f06c52514cf2a00a19576c3c5cb94a33c12cd2a807e918e8a06936855",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "ru/",
+      "section": "Долг проб",
+      "rows": [
+        {
+          "key": "RUN-L03, исполняемая, с добавленными начальными состояниями: принятая запись, пересылка двери, соединение в фазе ввода, запрос прочитан, но не принят",
+          "source_sha256": "05fffffa78b5c86b89a9398aeecb04982b9fc8fdb09816e9bb8497f37d4f3203",
+          "current_sha256": "05fffffa78b5c86b89a9398aeecb04982b9fc8fdb09816e9bb8497f37d4f3203",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "RUN-F01, RUN-F02, RUN-F04, исполняемые",
+          "source_sha256": "da973a9d5df5e2532ea436ee6d40a2ed37afc74629046be47967fd8855808a58",
+          "current_sha256": "da973a9d5df5e2532ea436ee6d40a2ed37afc74629046be47967fd8855808a58",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Потеря лидера после отправки (смерть лидера; удержанный ответ пересланной записи); двусторонний разрез участника",
+          "source_sha256": "ef0c4984d0c449d24f7d52b0699d703faa28c9d49a5ab045b6690dfc4d3d00cb",
+          "current_sha256": "ef0c4984d0c449d24f7d52b0699d703faa28c9d49a5ab045b6690dfc4d3d00cb",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Прерванный `import` в группе: старт, удержание писателей, продолжение через `admin.sock` лидера, `recover` при потере большинства",
+          "source_sha256": "dca09b15efc714aebbc781cd804e05ba2002fbf757fa9eab999eb2fa56d9ae23",
+          "current_sha256": "dca09b15efc714aebbc781cd804e05ba2002fbf757fa9eab999eb2fa56d9ae23",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Прерванный `recover`: метка фазы, отказ старта с кодом 2, повтор с начала",
+          "source_sha256": "3034d6a861ac1c84da758dbe4176a58fc0bd6cfb87977640699e36287a50e648",
+          "current_sha256": "3034d6a861ac1c84da758dbe4176a58fc0bd6cfb87977640699e36287a50e648",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Заполненный диск и исчерпанные дескрипторы",
+          "source_sha256": "54afd36311ef8ad243e1ba59f59d835fa9569ef8e4520146aa0f19eaee40f971",
+          "current_sha256": "54afd36311ef8ad243e1ba59f59d835fa9569ef8e4520146aa0f19eaee40f971",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Смена лидера и снимок при разных часах; `admission_ahead`",
+          "source_sha256": "e409c2543d202f72822671de6372044dc1483ab3854f01dd5ae0735f7bf332da",
+          "current_sha256": "e409c2543d202f72822671de6372044dc1483ab3854f01dd5ae0735f7bf332da",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Срок записи ответа; ожидание фиксации при живом лидере",
+          "source_sha256": "c5568d0531867bb18a9d2d39520718fccf9d26971fb91ffd7652465f5ca03a4b",
+          "current_sha256": "c5568d0531867bb18a9d2d39520718fccf9d26971fb91ffd7652465f5ca03a4b",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Попытки двери против `-leader-wait`; все голосующие недоступны",
+          "source_sha256": "24d74211ae3c8bb86c9885bfd42c07629b6ff3e10cd329562e2f3f47a3fa6ab2",
+          "current_sha256": "24d74211ae3c8bb86c9885bfd42c07629b6ff3e10cd329562e2f3f47a3fa6ab2",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Предел обработки повторов",
+          "source_sha256": "46521c89bdeff3c45afbb65499070332943338b9461c98582d419df87dd741a7",
+          "current_sha256": "46521c89bdeff3c45afbb65499070332943338b9461c98582d419df87dd741a7",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Предел `admin.sock` при исчерпании обычных пределов",
+          "source_sha256": "0ddb6064bc606c17d1e2c8ce6a6c5cb51edf06816fb4ccb43907880861306009",
+          "current_sha256": "0ddb6064bc606c17d1e2c8ce6a6c5cb51edf06816fb4ccb43907880861306009",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Временный файл `backup` после отказа, отмены и убитого запуска",
+          "source_sha256": "a38b9e27dce64a01130052b7611fdc635d87e14885e24693960874ac62605c69",
+          "current_sha256": "a38b9e27dce64a01130052b7611fdc635d87e14885e24693960874ac62605c69",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        },
+        {
+          "key": "Возраст памяти `id` от первого применения по часам времени приёма",
+          "source_sha256": "e38b508321be1de8351ce982ea1e0087b463853ec6bb11417a77dcfe2c8d1dbf",
+          "current_sha256": "e38b508321be1de8351ce982ea1e0087b463853ec6bb11417a77dcfe2c8d1dbf",
+          "equal": true,
+          "approved_bound_reference_delta": false,
+          "approved_stop_basis_delta": false
+        }
+      ],
+      "matches_approved_delta": true
+    },
+    {
+      "language": "ru/",
+      "section": "Квалифицированные входы",
+      "source_sha256": "fb549592ca98129ff26f2116557922145cd5dc1aa87190d9f6e8a7fe6b5a5afa",
+      "current_sha256": "f63d1b2090f646733e833aabdddbf581d54f735e6af1199469c375bc2b5e0d7a",
+      "equal": false,
+      "approved_manager_rule_inserted": true
+    },
+    {
+      "language": "ru/",
+      "section": "Часы в группе",
+      "source_sha256": "f05ba238081f754564d775eaef78631700f257ce14fa258fa735ad5f19254580",
+      "current_sha256": "f05ba238081f754564d775eaef78631700f257ce14fa258fa735ad5f19254580",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    },
+    {
+      "language": "ru/",
+      "section": "Доказательства и исходы",
+      "source_sha256": "5844a45dbb527b80955dd20933975fc54be7985073ea69ef2c531d7d60096477",
+      "current_sha256": "5844a45dbb527b80955dd20933975fc54be7985073ea69ef2c531d7d60096477",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    },
+    {
+      "language": "ru/",
+      "section": "Связанный разбор и область",
+      "source_sha256": "3d21e6caee6dc24ffa76dde7c56b312dc4e92f384e4f8253893db46d9d81ea34",
+      "current_sha256": "3d21e6caee6dc24ffa76dde7c56b312dc4e92f384e4f8253893db46d9d81ea34",
+      "equal": true,
+      "approved_manager_rule_inserted": false
+    }
+  ],
+  "inventories": [
+    {
+      "path": "Platform/01-store/forms/production.tsv",
+      "only_source_address_changed": true,
+      "source_address_and_judge_only_marker": false
+    },
+    {
+      "path": "Platform/01-store/forms/production/bindings.tsv",
+      "only_source_address_changed": true,
+      "source_address_and_judge_only_marker": false
+    },
+    {
+      "path": "Platform/01-store/forms/process-1.1.scenarios.tsv",
+      "only_source_address_changed": true,
+      "source_address_and_judge_only_marker": false
+    },
+    {
+      "path": "Platform/01-store/forms/process-1.3.scenarios.tsv",
+      "only_source_address_changed": true,
+      "source_address_and_judge_only_marker": false
+    },
+    {
+      "path": "Platform/01-store/forms/stages.tsv",
+      "only_source_address_changed": false,
+      "source_address_and_judge_only_marker": true
+    },
+    {
+      "path": "Platform/01-store/forms/stages.kit.tsv",
+      "only_source_address_changed": false,
+      "source_address_and_judge_only_marker": true
+    },
+    {
+      "path": "Platform/01-store/forms/targets.tsv",
+      "only_source_address_changed": true,
+      "source_address_and_judge_only_marker": false
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "only_source_address_and_marker_changed": false,
+      "exact_approved_r147_and_r234_delta": true
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "only_source_address_and_marker_changed": true,
+      "exact_approved_r147_and_r234_delta": false
+    },
+    {
+      "path": "Platform/01-store/acceptance/1/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.1-store.norms.md",
+      "only_source_address_and_marker_changed": false,
+      "exact_approved_r147_and_r234_delta": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "only_source_address_and_marker_changed": true,
+      "exact_approved_r147_and_r234_delta": false
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/1/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/acceptance/3/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/ru/probes/README.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/common/acceptance/seams.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/common/ru/acceptance/seams.md",
+      "only_source_address_and_marker_changed": true
+    },
+    {
+      "path": "Platform/01-store/README.md",
+      "only_redundant_path_segment_removed": true
+    },
+    {
+      "path": "Platform/01-store/ru/README.md",
+      "only_redundant_path_segment_removed": true
+    }
+  ],
+  "history": [
+    {
+      "source": "Platform/01-store/spec/production-acceptance.md",
+      "all_nonempty_lines_preserved": true
+    },
+    {
+      "source": "Platform/01-store/ru/spec/production-acceptance.md",
+      "all_nonempty_lines_preserved": true
+    }
+  ],
+  "r147_delta": [
+    {
+      "language": "en",
+      "old": "**Input phase deadlines.** The implementation MUST declare finite positive idle, header, body and refusal-drain intervals, each strictly below its corresponding budget of [First approved budgets](../qualification/README.md#first-approved-budgets) (judge-only: qualification procedures). These intervals are measured by monotonic time.",
+      "new": "**Input phase deadlines.** The implementation MUST declare finite positive intervals: idle strictly below 60 s, headers strictly below 10 s, body strictly below 30 s, and refusal-drain strictly below 5 s. These intervals are measured by monotonic time.",
+      "finite_positive": true,
+      "strict_bounds": [
+        60,
+        10,
+        30,
+        5
+      ],
+      "monotonic_time_preserved": true,
+      "no_q_dependency": true
+    },
+    {
+      "language": "ru/",
+      "old": "**Сроки фаз ввода.** Реализация ДОЛЖНА объявить конечные положительные интервалы простоя, заголовков, тела и слива отказа, каждый строго ниже своего бюджета из [первых утверждённых бюджетов](../qualification/README.md#первые-утверждённые-бюджеты) (только для судьи: процедуры квалификации). Эти интервалы измеряются по монотонным часам.",
+      "new": "**Сроки фаз ввода.** Реализация ДОЛЖНА объявить конечные положительные интервалы: простой строго меньше 60 с, заголовки строго меньше 10 с, тело строго меньше 30 с, слив отказа строго меньше 5 с. Эти интервалы измеряются по монотонным часам.",
+      "finite_positive": true,
+      "strict_bounds": [
+        60,
+        10,
+        30,
+        5
+      ],
+      "monotonic_time_preserved": true,
+      "no_q_dependency": true
+    }
+  ],
+  "q_interval_delta": [
+    {
+      "slice": "attempt_2",
+      "language": "en",
+      "name": "BUDGET_IDLE",
+      "old": "| `BUDGET_IDLE` | 60 s | Wait for the first request byte | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_IDLE` | [The upper bound for the declared idle interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Wait for the first request byte | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "en",
+      "name": "BUDGET_HEADERS",
+      "old": "| `BUDGET_HEADERS` | 10 s | Absolute header phase | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_HEADERS` | [The upper bound for the declared header interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Absolute header phase | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "en",
+      "name": "BUDGET_BODY",
+      "old": "| `BUDGET_BODY` | 30 s | Absolute body phase | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_BODY` | [The upper bound for the declared body interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) | Absolute body phase | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "en",
+      "name": "BUDGET_DRAIN",
+      "old": "| `BUDGET_DRAIN` | 5 s and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |",
+      "new": "| `BUDGET_DRAIN` | [The upper bound for the declared refusal-drain interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "ru/",
+      "name": "BUDGET_IDLE",
+      "old": "| `BUDGET_IDLE` | 60 с | Ожидание первого байта запроса | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_IDLE` | [Верхний предел объявляемого интервала простоя из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) | Ожидание первого байта запроса | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "ru/",
+      "name": "BUDGET_HEADERS",
+      "old": "| `BUDGET_HEADERS` | 10 с | Абсолютная фаза заголовков | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_HEADERS` | [Верхний предел объявляемого интервала заголовков из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) | Абсолютная фаза заголовков | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "ru/",
+      "name": "BUDGET_BODY",
+      "old": "| `BUDGET_BODY` | 30 с | Абсолютная фаза тела | RUN-T03 | `judgement` |",
+      "new": "| `BUDGET_BODY` | [Верхний предел объявляемого интервала тела из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) | Абсолютная фаза тела | RUN-T03 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    },
+    {
+      "slice": "attempt_2",
+      "language": "ru/",
+      "name": "BUDGET_DRAIN",
+      "old": "| `BUDGET_DRAIN` | 5 с и не более значения `-max-body` сырых байтов | Сырой слив после раннего отказа | RUN-T01, RUN-T02 | `judgement` |",
+      "new": "| `BUDGET_DRAIN` | [Верхний предел объявляемого интервала слива отказа из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) и не более значения `-max-body` сырых байтов | Сырой слив после раннего отказа | RUN-T01, RUN-T02 | `judgement` |",
+      "only_bound_cell_changed": true,
+      "no_numeric_duplicate": true
+    }
+  ],
+  "r234_delta": [
+    {
+      "language": "en",
+      "old": "Discard stops at the declared body length when framing supplies one. Discard stops earlier at the declared raw-byte limit. Discard stops earlier at the absolute monotonic drain deadline. A chunked sender need not send a terminal chunk for discard to finish. The drain volume and time are declared in item 9 of «Implementation decides».",
+      "new": "Discard stops at the declared body length when framing supplies one. Discard stops earlier at the declared raw-byte limit; this limit MUST NOT exceed the configured `-max-body` value. Discard stops earlier at the absolute monotonic drain deadline. A chunked sender need not send a terminal chunk for discard to finish. The drain volume and time are declared in item 9 of «Implementation decides».",
+      "r147_unchanged": true,
+      "remaining_norms_unchanged": true
+    },
+    {
+      "language": "ru/",
+      "old": "Слив прекращается на заявленной длине тела, если framing задаёт длину. Слив прекращается раньше при достижении объявленного предела сырых байтов. Слив прекращается раньше при достижении абсолютного монотонного срока слива. Для завершения слива chunked отправитель не обязан прислать завершающую часть. Объём и срок слива объявлены в п. 9 «Решает реализация».",
+      "new": "Слив прекращается на заявленной длине тела, если framing задаёт длину. Слив прекращается раньше при достижении объявленного предела сырых байтов; этот предел НЕ ДОЛЖЕН превышать настроенное значение `-max-body`. Слив прекращается раньше при достижении абсолютного монотонного срока слива. Для завершения слива chunked отправитель не обязан прислать завершающую часть. Объём и срок слива объявлены в п. 9 «Решает реализация».",
+      "r147_unchanged": true,
+      "remaining_norms_unchanged": true
+    }
+  ],
+  "attempt_3_q_delta": [
+    {
+      "language": "en",
+      "drain_old": "| `BUDGET_DRAIN` | [The upper bound for the declared refusal-drain interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) and at most the `-max-body` value in raw bytes | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |",
+      "drain_new": "| `BUDGET_DRAIN` | [The upper bound for the declared refusal-drain interval in P/01.1-R147](../spec/01.1-store.norms.md#n21-request-parsing) and [the bound on the declared raw-byte drain limit in P/01.1-R234](../spec/01.1-store.norms.md#n21-request-parsing) | Raw drain after an early refusal | RUN-T01, RUN-T02 | `judgement` |",
+      "stop_old": "| `BUDGET_STOP` | 15 s | `graceful_stop_elapsed` | RUN-L03 | limit `norm`; margin `judgement` |",
+      "stop_new": "| `BUDGET_STOP` | 15 s | `graceful_stop_elapsed` | RUN-L03 | `judgement` |",
+      "manager_rule": "The qualification stand sets the actual manager stop deadline consistently with `BUDGET_STOP`.",
+      "source_phrase_old": "The bounds on declared input-phase intervals come from [P/01.1-R147 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing). This section is the source of the other thresholds; other text uses their names.",
+      "source_phrase_new": "The bounds on declared input-phase intervals come from [P/01.1-R147 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing), and the bound on the declared raw-byte drain limit comes from [P/01.1-R234 in N2.1 Request parsing](../spec/01.1-store.norms.md#n21-request-parsing). Other named normative limits retain their existing sources; this section defines the measurement thresholds and other text uses their names.",
+      "remaining_q_unchanged": true
+    },
+    {
+      "language": "ru/",
+      "drain_old": "| `BUDGET_DRAIN` | [Верхний предел объявляемого интервала слива отказа из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) и не более значения `-max-body` сырых байтов | Сырой слив после раннего отказа | RUN-T01, RUN-T02 | `judgement` |",
+      "drain_new": "| `BUDGET_DRAIN` | [Верхний предел объявляемого интервала слива отказа из P/01.1-R147](../spec/01.1-store.norms.md#n21-разбор-запроса) и [предел объявляемого объёма сырого слива по P/01.1-R234](../spec/01.1-store.norms.md#n21-разбор-запроса) | Сырой слив после раннего отказа | RUN-T01, RUN-T02 | `judgement` |",
+      "stop_old": "| `BUDGET_STOP` | 15 с | `graceful_stop_elapsed` | RUN-L03 | предел `norm`; запас `judgement` |",
+      "stop_new": "| `BUDGET_STOP` | 15 с | `graceful_stop_elapsed` | RUN-L03 | `judgement` |",
+      "manager_rule": "Стенд квалификации задаёт фактический срок остановки менеджера согласованно с `BUDGET_STOP`.",
+      "source_phrase_old": "Пределы объявляемых интервалов фаз ввода заданы в [P/01.1-R147 раздела N2.1 «Разбор запроса»](../spec/01.1-store.norms.md#n21-разбор-запроса). Этот раздел — источник остальных порогов; остальной текст использует их имена.",
+      "source_phrase_new": "Пределы объявляемых интервалов фаз ввода заданы в [P/01.1-R147 раздела N2.1 «Разбор запроса»](../spec/01.1-store.norms.md#n21-разбор-запроса), предел объявляемого объёма сырого слива — в [P/01.1-R234 раздела N2.1 «Разбор запроса»](../spec/01.1-store.norms.md#n21-разбор-запроса). Остальные названные нормативные пределы сохраняют свои источники; этот раздел задаёт измерительные пороги, а остальной текст использует их имена.",
+      "remaining_q_unchanged": true
+    }
+  ],
+  "stop_obligations_unchanged": [
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "sha256": "5d81c148e421e384f803b59f2c5686e10308b8a69820d1d637066607c8aaf9b6",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "sha256": "6ece76095dcd2a3c927425ca8d016360c7e65387377a039ed2dbae46213538be",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/lifecycle.md",
+      "sha256": "d74a68752d4f6264374c8a9cd9a58530557eaa4527889280fd8b5ed28bbc137c",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.README.md",
+      "sha256": "7861466d5d9bbcad51ed45893daf17db53e8ee8c529dbaeb3bc00c61c16b222a",
+      "equal_to_attempt_2": true
+    },
+    {
+      "requirement": "P/01.3-R034",
+      "sha256": "d74aa1cdbf5c92e2c0e7d0bdfe660200d3f5c5c2a5667e58c73a77ae5de4ff8d",
+      "unchanged": true
+    },
+    {
+      "requirement": "P/01.3-R277",
+      "sha256": "f94c539068d30a139b7aa18de74f305ff4d87b5a667dc581b7da487afd82408d",
+      "unchanged": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01.3-store.norms.md",
+      "sha256": "dcf8208f6ac733e185033711bf1e108b3ca1dab78fef6d138aba18fe2d3d2e13",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/production-acceptance.md",
+      "sha256": "a86ce4627f0e89eeafdd6b3ee1663538469bc0133eea4df689e8cf002abc556f",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/ru/lifecycle.md",
+      "sha256": "1c87e2621f3b8a3248e6a44412b5e56d5acef9d0d83c356b10b7c1220fa5ed5c",
+      "equal_to_attempt_2": true
+    },
+    {
+      "path": "Platform/01-store/ru/spec/01-store.README.md",
+      "sha256": "1e860b151aad733cc35ad96cb960c7032d093eaf75b2f8088f2be693343f4bd3",
+      "equal_to_attempt_2": true
+    },
+    {
+      "requirement": "P/01.3-R034",
+      "sha256": "d74aa1cdbf5c92e2c0e7d0bdfe660200d3f5c5c2a5667e58c73a77ae5de4ff8d",
+      "unchanged": true
+    },
+    {
+      "requirement": "P/01.3-R277",
+      "sha256": "f94c539068d30a139b7aa18de74f305ff4d87b5a667dc581b7da487afd82408d",
+      "unchanged": true
+    }
+  ],
+  "historical_carrier_addresses": [
+    {
+      "old": "spec/production-acceptance.md#probe-debt",
+      "new": "qualification/README.md#probe-debt",
+      "removed_unchanged": true
+    },
+    {
+      "old": "forms/export.json#/judge/129/disposition",
+      "new": "forms/export.json#/judge/131/disposition",
+      "removed_unchanged": true
+    },
+    {
+      "old": "forms/export.json#/judge/129/basis",
+      "new": "forms/export.json#/judge/131/basis",
+      "removed_unchanged": true
+    },
+    {
+      "old": "spec/production-acceptance.md#qualified-inputs",
+      "new": "qualification/README.md#qualified-inputs",
+      "removed_unchanged": true
+    },
+    {
+      "old": "spec/production-acceptance.md#probe-debt",
+      "new": "qualification/README.md#probe-debt",
+      "removed_unchanged": true
+    }
+  ],
+  "filter": {
+    "explicit_files": 27,
+    "existing_unique_english_paths": true,
+    "r147_source_included": "Platform/01-store/spec/01.1-store.norms.md",
+    "all_previous_records_unchanged": true,
+    "r234_source_already_included": "Platform/01-store/spec/01.1-store.norms.md"
+  },
+  "approved_delta_history_literal": true,
+  "approved_attempt_3_history_literal": true,
+  "export_q_records": [
+    {
+      "side": "model",
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "judge_only"
+    },
+    {
+      "side": "model",
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "judge_only"
+    },
+    {
+      "side": "judge",
+      "path": "Platform/01-store/qualification/README.md",
+      "disposition": "include"
+    },
+    {
+      "side": "judge",
+      "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "exclude"
+    }
+  ],
+  "m_obligations": [
+    {
+      "group": "RUN-W01",
+      "section": "Incremental write cost",
+      "sha256": "13fe43dda40a6dac913e3f5cb88b6485b7fea1ae1fbc968f3cd4dda581f25d77",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-W02",
+      "section": "Import validation and cost",
+      "sha256": "5919af2f6b5c2aff85bf2c330f5416b148acf2d33fd3fd11d5ead634f410bebd",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-W03",
+      "section": "Replay retention",
+      "sha256": "ca1dfa8ee45826c32d438e4e45d05b0f188deae70eaf3dabb0253c1e43e3a11c",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-W04",
+      "section": "Replay resources",
+      "sha256": "05e4b30a15cec469724a120dfb0eb6f0e8cdb96b197ad0a2d2575e9355f16770",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-T01",
+      "section": "Early refusal",
+      "sha256": "7160a46b267a87c5262ab0da156bc09bab99c0d0cb6e0aa1e8e253cc6eb4e4a7",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-T02",
+      "section": "Early refusal",
+      "sha256": "7160a46b267a87c5262ab0da156bc09bab99c0d0cb6e0aa1e8e253cc6eb4e4a7",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-T03",
+      "section": "Input phase deadlines",
+      "sha256": "13737411dbb71a8ad4c4cc968aee849fad1601947bd6da22ebe5aaef992d8574",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-L01",
+      "section": "Consistent copy and publication",
+      "sha256": "8d7fa4deb38feb99456af166f74c36cabde35a02441d1481e2fc33e157a39093",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-L02",
+      "section": "Snapshot output and release",
+      "sha256": "a8348dfbe734eec73be417ee919c5c6392fb4fc53577052c4c03e0f882b7ff7e",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-L03",
+      "section": "Graceful stop",
+      "sha256": "c1cf091bcf7e2ea53e522806fec42fd814cb6a2ba3d9a9a4abb2a2be1d2fbd12",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-F01",
+      "section": "Proven pre-effect failure",
+      "sha256": "9ab9fbf96e0d212bdf98f85598da700cfe03864874c737f6918ecb4ba2f35d6c",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-F02",
+      "section": "Unknown storage result",
+      "sha256": "e892783c9f76b3998dc2c3bc5cbdf43752f73aa61feeb86401b5cde72ee69ba4",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-F03",
+      "section": "Complete record and failed barrier",
+      "sha256": "9ede042c0e1120e418eeca7af059d45731daf19b92fd62df5cb657f5c57ba26c",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-F04",
+      "section": "Batch and id recovery",
+      "sha256": "9b713e7c91c0545421c89d758a471cc7b2f287361a23cd0d0bdfa943421b7a5b",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-H01",
+      "section": "Backup CLI and artifact",
+      "sha256": "8e043fe93ae5a02b2d8e2a1b93ceb12adde7f1b2295b1f2c8da54598e4e7634b",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-H02",
+      "section": "HTTP copy",
+      "sha256": "7db15517c94ef2e0502afc2a518dfce94229342c983135c556e5cc623bee0600",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    },
+    {
+      "group": "RUN-H03",
+      "section": "Incomplete copy output",
+      "sha256": "42214af00055b1744fb3de2c5bbe3756f85f7650d314dd15e7205711abd23f72",
+      "meaning_review": "See the group-by-group matrix in the task note."
+    }
+  ],
+  "m_without_procedure_tables": true,
+  "pass": true
+}

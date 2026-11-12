@@ -1,5 +1,5 @@
 # The process probes without D7 of the functional judge of P/01.1 (task P01.149; ADR-0130 Addendum (19) item 7): one scenario per probe, the thresholds are the first
-# approved budgets of Platform/01-store/spec/production-acceptance.md (ADR-0130 Addendum (9)). A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words
+# approved budgets of Platform/01-store/qualification/README.md (ADR-0130 Addendum (9)). A row is a step by «A row of scenarios.tsv» of the common acceptance README, with the words
 # of its dictionary and of the acceptance READMEs of P/01 chapters 1.1 and 1.3 (@wire, @pause, @by, @close, @noreply, @hold, @io, @sigterm store included); no cell-json. The target P/01.1/door runs these rows through the column tables of
 # forms/targets.routing.tsv, every scenario on its own instance as the README of Platform/01-store/acceptance/1 says.
 # scenario	step	request	expect
