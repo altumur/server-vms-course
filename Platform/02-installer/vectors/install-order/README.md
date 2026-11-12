@@ -24,7 +24,7 @@ The command’s native form and rule-refusal mapping are in the wire form below.
 
 The side computes the order with its own code of the installer without a store and compares it with `expect`. The edge of the domain token kind
 (the declarer of `domain.tokens` before the subsystem whose `door.routes[].domain` names it; P/02.4 N1.7 `order`) is not expressed by the input — the form of the input is not extended: rows without kinds do not set it, the rule — by reading and
-`puts.tsv` of chapter 2.3 (`door_domain_kind_other`, `door_domain_kind_missing`; judge-only: the installation sequences of chapter 2.3; they check P/02.4-R233, P/02.4-R241, P/02.4-R253, P/02.4-R259, P/02.4-R496, P/02.4-R506, P/02.4-R511).
+`puts.tsv` of chapter 2.3 (`door_domain_kind_other`, `door_domain_kind_missing`; judge-only: the installation sequences of chapter 2.3).
 
 The order is set only by `requests` (and by the kind, not expressed by the input); `near`, `creates`, `uses` are in the input but do not set the order: `cycle` — a cycle by `requests`; `requests-near-pair` — `requests` and `near`
 towards each other — the order by `requests`, not a cycle; `near-only` — only `near`, no order (by name). Nine rows: eight
@@ -33,4 +33,4 @@ Who executes — the installer (`02-installer`: the order of `manifest put` and 
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.4-R233, P/02.4-R241, P/02.4-R253, P/02.4-R259, P/02.4-R496, P/02.4-R506, P/02.4-R511) is set by the `02-installer/install-order` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself) is set by the `02-installer/install-order` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

@@ -38,4 +38,4 @@ Who executes — the installer (`02-installer`: the server script `w2c-workers.s
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks rules 2–4 of N1.5 of chapter 2.4 — P/02.4-R115, P/02.4-R119, P/02.4-R126) is set by the `02-installer/workers-script` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself) is set by the `02-installer/workers-script` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

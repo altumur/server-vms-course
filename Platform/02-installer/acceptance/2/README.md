@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
 [`02.2-installer.norms.md`](../../spec/02.2-installer.norms.md) N5; the write of the view is [chapter 2.3](../../spec/02.3-installer.norms.md)
-N3 «Manifest change» (the installer). `puts.tsv` has 9 installations (judge-only: the installation table of the chapter; it checks P/02.2-R027, P/02.2-R032, P/02.2-R047, P/02.2-R051, P/02.2-R054, P/02.2-R055 and P/02.2-R060); the installation files are in `puts/`. The view is built before
+N3 «Manifest change» (the installer). `puts.tsv` has 9 installations (judge-only: the installation table of the chapter); the installation files are in `puts/`. The view is built before
 any write, a view above the ceiling is a refusal of the installation as a whole, the write order is row, view, mark last. The bytes of the view are
 the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
 
@@ -14,15 +14,15 @@ Use the `02-installer` [profile format](../../../common/acceptance/PROFILE.md). 
 
 ## puts.tsv and puts-ceiling.tsv
 
-Both tables are run by the engine word `puts` in the form «[Installation sequences](../../../common/acceptance/command-tables.md#installation-sequences)» of the common acceptance README: the four or five columns, the directives `@view-delete`, `@view-spoil`, `@rev-delete`, `@rev-spoil`, the execution in a fresh store per line and the comparison of the code, stderr, `rev`, the mark and the view are defined there. The declaration `# canonical:` of both tables names the vector package [`canonical`](../../vectors/canonical/README.md): the bytes `expect/<canonical>.json` are the expected field `manifest` of the view row (judge-only: the expected views of the package; they check P/02.2-R027 and P/02.2-R043). The installation is `stand.manifest-put` above. `puts.tsv` runs with the default row ceiling of 524288 bytes; `puts-ceiling.tsv` sets the ceiling of each line in its column `ceiling`, and the judge confirms it before the line (the same form; judge-only: the installation tables of the chapter; they check P/02.2-R009, P/02.2-R015, P/02.2-R017, P/02.2-R027, P/02.2-R032, P/02.2-R044, P/02.2-R051, P/02.2-R054, P/02.2-R055, P/02.3-R016, P/02.3-R031, P/02.3-R103 and P/02.3-R123).
+Both tables are run by the engine word `puts` in the form «[Installation sequences](../../../common/acceptance/command-tables.md#installation-sequences)» of the common acceptance README: the four or five columns, the directives `@view-delete`, `@view-spoil`, `@rev-delete`, `@rev-spoil`, the execution in a fresh store per line and the comparison of the code, stderr, `rev`, the mark and the view are defined there. The declaration `# canonical:` of both tables names the vector package [`canonical`](../../vectors/canonical/README.md): the bytes `expect/<canonical>.json` are the expected field `manifest` of the view row (judge-only: the expected views of the package). The installation is `stand.manifest-put` above. `puts.tsv` runs with the default row ceiling of 524288 bytes; `puts-ceiling.tsv` sets the ceiling of each line in its column `ceiling`, and the judge confirms it before the line (the same form; judge-only: the installation tables of the chapter).
 
 The view ceiling is `max_value` of the answer of `GET /v1/status` of the store, not the number 524288. The installer checks the weight with the final new rev before any write (chapter 2.3 N3 step 14a), so a refusal above the ceiling comes before the parts, the row and the mark.
 
-The cases of a non-default ceiling and their expected outcomes are in [judge-only case data](README.cases.md) (judge-only: it checks P/02.2-R032, P/02.2-R044, P/02.2-R051).
+The cases of a non-default ceiling and their expected outcomes are in the judge's case data.
 
 ## Cases
 
-The cases and their expected outcomes are in [judge-only case data](README.cases.md) (judge-only: they check P/02.2-R009, P/02.2-R015, P/02.2-R017, P/02.2-R027, P/02.2-R032, P/02.2-R051, P/02.2-R054, P/02.3-R031 and P/02.3-R103). They cover these rules:
+The cases and their expected outcomes are in the judge's case data. They cover these rules:
 
 | What it checks | Norm |
 |---|---|
@@ -43,7 +43,7 @@ The weight of the view row is the sum of the bytes of the names and values of `i
 - The order of the writes in time (row — view — mark) and the repeat of the view after a `cas` conflict: the tables compare the state after the installation; the order is checked by reading per N5 of the chapter.
 - The ceiling reached through a `cas` conflict of two installers, and any conflict of two installers: they need the store of another lesson and belong to the stage of the system; the tables install sequentially.
 - A cluster of one process (P/02.4 N1.10) and the reader of the view (P/02.2-R062, P/02.2-R064, P/02.2-R067, P/02.2-R068, P/02.2-R069, P/02.2-R070, P/02.2-R072 — by the readers' edits): by reading per N5 of the chapter.
-- An unreadable row `platform/manifest/<name>`: by [`manifest-row.outcomes.tsv`](../../data/manifest-row.outcomes.tsv) the reader `admin` refuses `manifest put` and writes nothing; its rows are `row_spoiled_yaml` and `row_spoiled_sha256` of [`../3/puts.tsv`](../3/puts.tsv) (judge-only: the installation table of chapter 2.3; they check P/02.3-R031; three columns: a spoiled `sha256` makes the view of item 5 differ from the row by itself).
+- An unreadable row `platform/manifest/<name>`: by [`manifest-row.outcomes.tsv`](../../data/manifest-row.outcomes.tsv) the reader `admin` refuses `manifest put` and writes nothing; its rows are `row_spoiled_yaml` and `row_spoiled_sha256` of [`../3/puts.tsv`](../3/puts.tsv) (judge-only: the installation table of chapter 2.3); three columns: a spoiled `sha256` makes the view of item 5 differ from the row by itself.
 
 ## The mark `/rev`
 

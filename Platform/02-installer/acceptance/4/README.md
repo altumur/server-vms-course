@@ -2,11 +2,11 @@
 
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` is derived from it by translation and is not edited by hand.
 
-This directory supplies [`seams.tsv`](seams.tsv) (judge-only: the seam table; it checks P/02.4-R371, P/02.4-R383, P/02.4-R386, P/02.4-R388, P/02.4-R394, P/02.4-R400, P/02.4-R401, P/02.4-R305, P/02.4-R307, P/02.4-R319, P/02.4-R321, P/02.4-R324, P/02.4-R330, P/02.4-R332 and P/02.3 N3 «Manifest change» step 1) to generated stagetests. It adds no HTTP stand. The engine word `run` executes the table through the seam adapter protocol of the common acceptance README; its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
+This directory supplies [`seams.tsv`](seams.tsv) (judge-only: the seam table) to generated stagetests. It adds no HTTP stand. The engine word `run` executes the table through the seam adapter protocol of the common acceptance README; its scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
 
-The obligations of these scenarios are P/02.3 N3 «Manifest change» step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» (P/02.4-R371, P/02.4-R383, P/02.4-R386, P/02.4-R388, P/02.4-R394, P/02.4-R400, P/02.4-R401), and P/02.4 N1.9 poll (P/02.4-R305, P/02.4-R307, P/02.4-R319, P/02.4-R321, P/02.4-R324, P/02.4-R330, P/02.4-R332); the scenario subjects are in [judge-only case data](README.cases.md) (judge-only: the subject of each scenario; they check P/02.4-R305, P/02.4-R307, P/02.4-R319, P/02.4-R321, P/02.4-R324, P/02.4-R330, P/02.4-R332, P/02.4-R371, P/02.4-R383, P/02.4-R386, P/02.4-R388, P/02.4-R394, P/02.4-R400, P/02.4-R401).
+The obligations of these scenarios are P/02.3 N3 «Manifest change» step 1 and N4, P/02.4 N1.9 `secrets` and «Walk» (P/02.4-R371, P/02.4-R383, P/02.4-R386, P/02.4-R388, P/02.4-R394, P/02.4-R400, P/02.4-R401), and P/02.4 N1.9 poll (P/02.4-R305, P/02.4-R307, P/02.4-R319, P/02.4-R321, P/02.4-R324, P/02.4-R330, P/02.4-R332); the scenario subjects are in the judge's case data.
 
-Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes 0 versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine; they check P/02.4-R321) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
+Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes 0 versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
 
 The source traces exercise the complete machine; these seven sampled poll scenarios are a smaller implementation regression. They do not prove the real rollout, get/install, store and console barriers, OS/service-manager effects, TLS, revocation, operator windows or remote-client behavior. Those retain the named checks of the norms and readiness checklist. The 951 loader cases, existing puts tables and rights acceptance remain separate. No implementation was run when preparing these seams.
 
@@ -16,7 +16,7 @@ The [generic profile contract](../../../common/acceptance/PROFILE.md) does not m
 
 ## Inputs
 
-File inputs of the seam table are judge-owned; their descriptions are in [judge-only case data](README.cases.md) (judge-only: the file inputs of the seams; they check P/02.3 N3 «Manifest change» step 1 and P/02.4-R371, P/02.4-R400, P/02.4-R401).
+File inputs of the seam table are judge-owned; their descriptions are in the judge's case data.
 
 ## Platform role socket groups
 
@@ -29,7 +29,7 @@ The added seam `CALL installer-role-unit-groups <JSON>` runs the ordinary instal
 The seams `s12-secrets-walk-unknown` and `s13-secrets-walk-kept` check the selection of P/02.4 N1.9 «Walk». The input of
 `CALL secrets-walk <JSON>` is `{argv:["w2cctl","secrets","status"|"seal",<prefix>,…], rows:{<key>:<row>,…}}`, a row is an object of
 string elements. The adapter prepares a fresh store of the scenario (the store of P/01 with the full-rights door, in process or as a
-temporary daemon under `$data/configstore`), installs the owned manifest [`testsub`](../2/puts/testsub.subsystem.yaml) (judge-only: the manifest fixture of chapter 2.2; it serves the check of P/02.4 N1.9 «Walk», P/02.4-R383, P/02.4-R386, P/02.4-R388, P/02.4-R394) by the
+temporary daemon under `$data/configstore`), installs the owned manifest [`testsub`](../2/puts/testsub.subsystem.yaml) (judge-only: the manifest fixture of chapter 2.2) by the
 ordinary `manifest put`, writes exactly the given rows by `cas ""`, sets no ring (`SECRETS_KEY` is unset) and invokes the command
 function with argv against this store. It returns `{exit_code:<integer>, unknown:[…], untouched:<bool>}`: `unknown` — the keys of
 the log lines «`<key>` unknown-row-form» of the call, sorted, each once; `untouched` — every given row has the same bytes and version

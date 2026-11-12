@@ -12,12 +12,12 @@ the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only 
 
 | What | Where | Who writes |
 |---|---|---|
-| table of cases | `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005, P/02.2-R007, P/02.2-R009, P/02.2-R012, P/02.2-R014, P/02.2-R015, P/02.2-R016, P/02.2-R017, P/02.2-R018, P/02.2-R019, P/02.2-R020, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043) | rows `corpus-*`, `course-*` — the builder; rows `example-*` — the Specification |
+| table of cases | `cases.tsv` (judge-only: the table itself) | rows `corpus-*`, `course-*` — the builder; rows `example-*` — the Specification |
 | expected bytes | `expect/<case>.json` — one file per row | the builder of the skill `lesson-spec`, not edited by hand |
 | inputs of the example rows | `inputs/<name>.subsystem.yaml` | the Specification |
 
 Inputs of the rows:
-- `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`; judge-only: the corpus table; the rows `corpus-*` check P/02.2-R005, P/02.2-R007, P/02.2-R012, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043);
+- `corpus-<case>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`; judge-only: the corpus table);
 - `course-<name>` — each manifest of the course `Platform/common/data/testsub/*.subsystem.yaml`;
 - `example-<rule>` — one row per rule of N1.1: a section without a default and with a default, a nested key, sugar ×3, P1 (and a stated `snapshot: []`), P2–P5,
   `ordered`. The input of an example row is a small manifest that changes one rule against the minimal one; what it shows is
@@ -53,4 +53,4 @@ The wrapper of the view row, the write order row — view — mark, «unchanged�
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.2-R005, P/02.2-R007, P/02.2-R009, P/02.2-R012, P/02.2-R014, P/02.2-R015, P/02.2-R016, P/02.2-R017, P/02.2-R018, P/02.2-R019, P/02.2-R020, P/02.2-R021, P/02.2-R024, P/02.2-R025, P/02.2-R043) is set by the `02-installer/canonical` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself) is set by the `02-installer/canonical` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

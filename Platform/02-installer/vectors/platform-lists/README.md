@@ -30,9 +30,9 @@ Who executes — by `list`, the installer (`02-installer`): `heartbeat_strings`,
 
 ## What the vector does not cover
 
-The loader refusal on a manifest that names a word from the list — the cases of the corpus of [the acceptance of P/02.1](../../acceptance/1/) (judge-only: the corpus cases; they check P/02.1-R058);
-the derivation of the rights for the secret rows — the variants of [the acceptance of P/02.5](../../acceptance/5/) and sc. 06 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md) (judge-only: the variants and the scenario; they check P/02.5-R087, P/02.5-R091, P/02.5-R092, P/02.5-R093, P/02.5-R094, P/02.5-R095).
+The loader refusal on a manifest that names a word from the list — the cases of the corpus of [the acceptance of P/02.1](../../acceptance/1/) (judge-only: the corpus cases);
+the derivation of the rights for the secret rows — the variants of [the acceptance of P/02.5](../../acceptance/5/) and sc. 06 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md) (judge-only: the variants and the scenario).
 
 ## Vector wire
 
-The wire of `cases.tsv` (judge-only: the table itself; it checks P/02.5-R005, P/02.5-R008, P/02.5-R011 and P/02.5-R038) is set by the `02-installer/platform-lists` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `cases.tsv` (judge-only: the table itself) is set by the `02-installer/platform-lists` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
