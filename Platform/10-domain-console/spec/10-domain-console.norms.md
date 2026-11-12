@@ -25,8 +25,9 @@ Topics whose rules stand in several places; paths are from the lesson root unles
 
 | Topic | Requirements | Files |
 |---|---|---|
-| `production_scope` production qualification | P/10-R002, P/10-R021, P/10-R022, P/10-R023 | `Platform/common/contracts/production-obligations.md` |
-| `process_start` process and start | P/10-R003, P/10-R024, P/10-R025, P/10-R026, P/10-R027, P/10-R047, P/10-R048, P/10-R049, P/10-R050, P/10-R051, P/10-R052, P/10-R053, P/10-R054 | `lifecycle.md`, `forms/daemon-flags.tsv`, `forms/runtime-constants.tsv`, `Platform/common/contracts/schema.md` |
+| `common_obligations` common operating obligations and marker confirmation | P/10-R002, P/10-R021, P/10-R022, P/10-R023 | `Platform/common/contracts/production-obligations.md` |
+| `process_start` process and start | P/10-R003, P/10-R047, P/10-R048, P/10-R049, P/10-R050, P/10-R051, P/10-R052, P/10-R053, P/10-R054 | `lifecycle.md`, `forms/daemon-flags.tsv`, `Platform/common/contracts/schema.md` |
+| `runtime_limits` runtime limits | P/10-R024, P/10-R025, P/10-R026, P/10-R027 | `forms/runtime-constants.tsv`, `forms/README.md` |
 | `data_and_clocks` data ownership and clocks | P/10-R028, P/10-R029, P/10-R030, P/10-R031, P/10-R032, P/10-R033, P/10-R034, P/10-R035, P/10-R036, P/10-R037, P/10-R038, P/10-R039, P/10-R040, P/10-R041, P/10-R042, P/10-R043, P/10-R044, P/10-R045 | `lifecycle.md`, `Platform/common/data/catalog.tsv`, `Platform/common/contracts/event-journal.md` |
 | `read_doors` read doors and refusals | P/10-R004, P/10-R012, P/10-R015, P/10-R056, P/10-R057, P/10-R058, P/10-R059, P/10-R060, P/10-R061, P/10-R062, P/10-R063, P/10-R064, P/10-R065, P/10-R066, P/10-R067, P/10-R068, P/10-R069, P/10-R070, P/10-R071, P/10-R072, P/10-R073, P/10-R074, P/10-R075, P/10-R076, P/10-R077, P/10-R078, P/10-R079, P/10-R080, P/10-R081, P/10-R082, P/10-R083, P/10-R084, P/10-R085, P/10-R086, P/10-R087, P/10-R088, P/10-R089, P/10-R090, P/10-R091, P/10-R092, P/10-R093, P/10-R094, P/10-R095, P/10-R096, P/10-R097, P/10-R098, P/10-R099, P/10-R100, P/10-R101, P/10-R102, P/10-R103, P/10-R104, P/10-R105, P/10-R106, P/10-R107, P/10-R108, P/10-R109, P/10-R110, P/10-R111, P/10-R112, P/10-R113, P/10-R114, P/10-R115, P/10-R116, P/10-R117, P/10-R118, P/10-R119, P/10-R120, P/10-R121, P/10-R122, P/10-R123, P/10-R124, P/10-R125, P/10-R126, P/10-R127, P/10-R128, P/10-R129, P/10-R130, P/10-R131, P/10-R132, P/10-R133, P/10-R134, P/10-R135, P/10-R136, P/10-R137, P/10-R138, P/10-R139, P/10-R140, P/10-R141, P/10-R142, P/10-R143, P/10-R144, P/10-R145, P/10-R146, P/10-R147, P/10-R148, P/10-R149, P/10-R150, P/10-R151, P/10-R152, P/10-R153, P/10-R154, P/10-R155, P/10-R156, P/10-R157, P/10-R158, P/10-R159, P/10-R160, P/10-R161, P/10-R162, P/10-R163, P/10-R164, P/10-R165, P/10-R166, P/10-R167, P/10-R168, P/10-R169, P/10-R170, P/10-R171, P/10-R172, P/10-R173, P/10-R174, P/10-R175, P/10-R176, P/10-R177, P/10-R178, P/10-R179, P/10-R180, P/10-R181, P/10-R182, P/10-R183, P/10-R184, P/10-R185, P/10-R186, P/10-R187, P/10-R188, P/10-R189, P/10-R190, P/10-R191, P/10-R192, P/10-R193, P/10-R194, P/10-R195, P/10-R196, P/10-R197, P/10-R198, P/10-R199, P/10-R200, P/10-R201, P/10-R202, P/10-R203, P/10-R204, P/10-R205, P/10-R206, P/10-R207, P/10-R208, P/10-R209, P/10-R210, P/10-R211, P/10-R212, P/10-R213, P/10-R214, P/10-R215, P/10-R216, P/10-R217, P/10-R218, P/10-R219, P/10-R220, P/10-R221 | `spec/10-domain-console.api.openapi.yaml`, `forms/refusals.tsv`, `data/refusal-words.tsv`, `Platform/08-domain/spec/08-domain.api.openapi.yaml` |
 | `view_pages` view pagination and incomplete observations | P/10-R004, P/10-R118, P/10-R119, P/10-R120, P/10-R121, P/10-R122, P/10-R123, P/10-R124, P/10-R125, P/10-R126, P/10-R127, P/10-R128, P/10-R129, P/10-R130, P/10-R131, P/10-R132, P/10-R133, P/10-R134, P/10-R135, P/10-R136, P/10-R137, P/10-R138, P/10-R139, P/10-R140, P/10-R141, P/10-R142, P/10-R143, P/10-R144, P/10-R145, P/10-R146, P/10-R147, P/10-R148, P/10-R149, P/10-R150, P/10-R151, P/10-R152, P/10-R153, P/10-R154, P/10-R155, P/10-R156, P/10-R157, P/10-R158 | `forms/runtime-constants.tsv`, `spec/10-domain-console.api.openapi.yaml` |
@@ -35,7 +36,7 @@ Topics whose rules stand in several places; paths are from the lesson root unles
 | `gate` identity and grants | P/10-R008, P/10-R263, P/10-R264, P/10-R265, P/10-R266, P/10-R267, P/10-R268, P/10-R269, P/10-R270, P/10-R271, P/10-R272, P/10-R273, P/10-R274, P/10-R275, P/10-R276, P/10-R277, P/10-R278, P/10-R279, P/10-R280, P/10-R281, P/10-R282 | `Platform/common/contracts/gate-and-pass.md`, `Platform/common/contracts/domain-token.md`, `Platform/common/contracts/may.md` |
 | `door_pass` worker routing and second-kind pass | P/10-R009, P/10-R284, P/10-R285, P/10-R286, P/10-R287, P/10-R288, P/10-R289, P/10-R290, P/10-R291, P/10-R292, P/10-R293, P/10-R294, P/10-R295, P/10-R296, P/10-R297, P/10-R298, P/10-R299, P/10-R300, P/10-R301, P/10-R302, P/10-R303, P/10-R304, P/10-R305, P/10-R306, P/10-R307, P/10-R308, P/10-R309, P/10-R310, P/10-R311, P/10-R312, P/10-R313, P/10-R314 | `Platform/common/contracts/gate-and-pass.md`, `Platform/common/contracts/forwarding.md` |
 | `holder_page` holder page and session | P/10-R010, P/10-R316, P/10-R317, P/10-R318, P/10-R319, P/10-R320, P/10-R321, P/10-R322, P/10-R323, P/10-R324, P/10-R325 | `lifecycle.md`, `spec/10-domain-console.api.openapi.yaml`, `Platform/07-console-module/CONSOLE-MODULE.md` |
-| `alarms` alarm collection and function | P/10-R011, P/10-R014, P/10-R016, P/10-R327, P/10-R328, P/10-R329, P/10-R330, P/10-R331, P/10-R332, P/10-R333, P/10-R334, P/10-R335, P/10-R336, P/10-R337, P/10-R338, P/10-R339, P/10-R340, P/10-R341, P/10-R342, P/10-R343, P/10-R344, P/10-R345, P/10-R346, P/10-R347, P/10-R348, P/10-R349, P/10-R350, P/10-R351, P/10-R352, P/10-R353, P/10-R354, P/10-R355, P/10-R356, P/10-R357, P/10-R358, P/10-R396, P/10-R397, P/10-R398, P/10-R399, P/10-R400, P/10-R401, P/10-R402, P/10-R403, P/10-R404, P/10-R405, P/10-R406, P/10-R407, P/10-R408, P/10-R409, P/10-R410, P/10-R411, P/10-R412, P/10-R413, P/10-R414, P/10-R415, P/10-R416, P/10-R417, P/10-R418, P/10-R419, P/10-R420, P/10-R421, P/10-R422, P/10-R423, P/10-R424, P/10-R425, P/10-R426, P/10-R427, P/10-R428, P/10-R429, P/10-R430, P/10-R431, P/10-R432, P/10-R433, P/10-R434, P/10-R435, P/10-R436, P/10-R437, P/10-R438, P/10-R439, P/10-R459, P/10-R460, P/10-R461, P/10-R462, P/10-R463, P/10-R464, P/10-R465, P/10-R466, P/10-R467 | `vectors/alarms/README.md`, `forms/runtime-constants.tsv`, `Platform/common/contracts/alarm-history.md`, `Platform/09-agent/spec/09.1-agent.norms.md` |
+| `alarms` alarm collection and function | P/10-R011, P/10-R014, P/10-R016, P/10-R327, P/10-R328, P/10-R329, P/10-R330, P/10-R331, P/10-R332, P/10-R333, P/10-R334, P/10-R335, P/10-R336, P/10-R337, P/10-R338, P/10-R339, P/10-R340, P/10-R341, P/10-R342, P/10-R344, P/10-R345, P/10-R346, P/10-R347, P/10-R348, P/10-R349, P/10-R350, P/10-R351, P/10-R352, P/10-R353, P/10-R354, P/10-R355, P/10-R356, P/10-R357, P/10-R358, P/10-R396, P/10-R397, P/10-R398, P/10-R399, P/10-R400, P/10-R401, P/10-R402, P/10-R403, P/10-R404, P/10-R405, P/10-R406, P/10-R407, P/10-R408, P/10-R409, P/10-R410, P/10-R411, P/10-R412, P/10-R413, P/10-R414, P/10-R415, P/10-R416, P/10-R417, P/10-R418, P/10-R419, P/10-R420, P/10-R421, P/10-R422, P/10-R423, P/10-R424, P/10-R425, P/10-R426, P/10-R427, P/10-R428, P/10-R429, P/10-R430, P/10-R431, P/10-R432, P/10-R433, P/10-R434, P/10-R435, P/10-R436, P/10-R437, P/10-R438, P/10-R439, P/10-R459, P/10-R460, P/10-R461, P/10-R462, P/10-R463, P/10-R464, P/10-R465, P/10-R466, P/10-R467 | `vectors/alarms/README.md`, `forms/runtime-constants.tsv`, `Platform/common/contracts/alarm-history.md`, `Platform/09-agent/spec/09.1-agent.norms.md` |
 | `refusals` refusal catalogue | P/10-R015, P/10-R441, P/10-R442, P/10-R443, P/10-R444, P/10-R445, P/10-R446, P/10-R447, P/10-R448, P/10-R449, P/10-R450, P/10-R451, P/10-R452, P/10-R453, P/10-R454 | `forms/refusals.tsv`, `data/refusal-words.tsv`, `spec/10-domain-console.api.openapi.yaml` |
 | `acceptance` acceptance and evidence boundaries | P/10-R016, P/10-R017, P/10-R456, P/10-R457, P/10-R458, P/10-R459, P/10-R460, P/10-R461, P/10-R462, P/10-R463, P/10-R464, P/10-R465, P/10-R466, P/10-R467, P/10-R468, P/10-R469, P/10-R470, P/10-R471, P/10-R472, P/10-R473, P/10-R474, P/10-R475, P/10-R476, P/10-R477, P/10-R478, P/10-R479, P/10-R480, P/10-R481, P/10-R482, P/10-R483, P/10-R484, P/10-R485 | `acceptance/README.md`, `forms/README.md`, `forms/stages.tsv`, `vectors/alarms/README.md` |
 
@@ -52,7 +53,7 @@ Topics whose rules stand in several places; paths are from the lesson root unles
 
 <!-- req: P/10-R002 -->
 
-**Scope: production.** The [common production obligations](../../common/contracts/production-obligations.md) apply here.
+The [common production obligations](../../common/contracts/production-obligations.md) apply here.
 
 <!-- req: P/10-R021 -->
 - The selected MB3 rules in the common contracts apply here.
@@ -119,27 +120,27 @@ the family has no schema in `data/` (the form is the declaration `domain.witness
 N1.2 (the forms of the rows are in their chapters of lesson P/08);
 
 <!-- req: P/10-R038 -->
-- `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
+- What each door reads: `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
 `domain/grants/<cluster>`, `domain/roles/<name>`, `domain/groups/<name>` — the gate (N1.5; the keys and the token — [the domain token contract](../../common/contracts/domain-token.md),
 `may` — [the right contract](../../common/contracts/may.md));
 
 <!-- req: P/10-R039 -->
-- `domain/member-rows/<part>` and the rows
+- What each door reads: `domain/member-rows/<part>` and the rows
 `domain/members/<member>/ca-certs` — the role door (N1.4 `server.role`; the domain console does not read the copy `domain/member-list/<part>`);
 
 <!-- req: P/10-R040 -->
-- `domain/<sub>/worker` and the heartbeat `domain/<sub>/heartbeat` —
+- What each door reads: `domain/<sub>/worker` and the heartbeat `domain/<sub>/heartbeat` —
 `door.pass` on the domain (N1.6);
 
 <!-- req: P/10-R041 -->
-- the member's report, the mark `reported` (`received_at`, `sent_at`), the history and `domain/member-rows/<part>` — the alarm
+- What each door reads: the member's report, the mark `reported` (`received_at`, `sent_at`), the history and `domain/member-rows/<part>` — the alarm
 list (N1.8);
 
 <!-- req: P/10-R042 -->
-- the manifest rows and `platform/schema` — the start (N1.1);
+- What each door reads: the manifest rows and `platform/schema` — the start (N1.1);
 
 <!-- req: P/10-R043 -->
-- the key of the server certificate of the role `domainconsole` — the role door
+- What each door reads: the key of the server certificate of the role `domainconsole` — the role door
 of TLS.
 
 <!-- req: P/10-R044 -->
@@ -163,14 +164,13 @@ N3 «Process start», «Manifest change»): it has no built-in manifest, steps 0
 the schema check against `SCHEMA` of the platform build ([the schema contract](../../common/contracts/schema.md) «Check at start»);
 
 <!-- req: P/10-R048 -->
-- step 1 — the whole catalogue;
+- Process start, step 1: check the whole catalogue.
 
 <!-- req: P/10-R049 -->
-- step 2 — only `sha256` of the row (there are no built-in bytes to compare with);
+- Process start, step 2: check only `sha256` of the row (there are no built-in bytes to compare with).
 
 <!-- req: P/10-R050 -->
-- then the environment, the kit
-of TLS, the port;
+- After the manifest checks of process start, check the environment and the TLS kit, then open the port.
 
 <!-- req: P/10-R051 -->
 - readiness is the port, it does not send `sd_notify` (P/02.4 N1.12; P/10-15).
@@ -191,7 +191,7 @@ of TLS, the port;
 (P/01.1 N2.1 with the deviations of the console);
 
 <!-- req: P/10-R056 -->
-- there are no deviations of its own.
+- The domain console has no deviations of its own from the request parsing in P/10-R004.
 
 <!-- req: P/10-R057 -->
 - The identity and the grants are N1.5 (`view` for reading by `domain/grants/domain`; the view doors — «Judgement by target» of [the right contract](../../common/contracts/may.md)).
@@ -281,7 +281,7 @@ also covers `HEAD` of the same path — the same code and headers without a body
 - **Refusals** — 404 `{error: "no such member"}` — the member is not in the list;
 
 <!-- req: P/10-R084 -->
-- **Refusals** — other parameters are not read
+- **Query** — other parameters are not read
 
 **GET `/domain/<sub>/kept/<name>`**
 
@@ -330,7 +330,7 @@ also covers `HEAD` of the same path — the same code and headers without a body
 - **Refusals** — 503 `{error: "unavailable"}` — the row does not read or exceeds its owner limit;
 
 <!-- req: P/10-R099 -->
-- **Refusals** — never truncate
+- **Members** — Never truncate the relay member list.
 
 **GET `/domain/<sub>/tables/<table>?cluster=<member>`**
 
@@ -341,7 +341,7 @@ also covers `HEAD` of the same path — the same code and headers without a body
 - **Success** — `ETag` — sha256 of the served body, separate for each answer, `If-None-Match` — 304: reading the list of members is cheap;
 
 <!-- req: P/10-R102 -->
-- **Success** — one member per request: the object is bounded by P/04 N1.3b, there is no list of all
+- **Read scope** — one member per request: the object is bounded by P/04 N1.3b, there is no list of all
 
 <!-- req: P/10-R103 -->
 - **Refusals** — in order: 400 — `cluster` is absent, twice or empty;
@@ -365,7 +365,7 @@ also covers `HEAD` of the same path — the same code and headers without a body
 - **Refusals** — 503 `{error: "unavailable"}` — the object does not read;
 
 <!-- req: P/10-R110 -->
-- **Refusals** — other parameters are not read
+- **Query** — other parameters are not read
 
 **GET `/domain/shadow`**
 
@@ -610,7 +610,7 @@ also covers `HEAD` of the same path — the same code and headers without a body
 - **Refusals** — 404 `no domain here` — the view is not built (N4);
 
 <!-- req: P/10-R186 -->
-- **Refusals** — there is no row `domain/topology` — not a refusal: 200 `{rev: 0, star: [], via: {}}` (P/08.3 N1.2: rev 0 — «never written», no row — the same);
+- **Absent topology** — there is no row `domain/topology` — not a refusal: 200 `{rev: 0, star: [], via: {}}` (P/08.3 N1.2: rev 0 — «never written», no row — the same);
 
 <!-- req: P/10-R187 -->
 - **Refusals** — the row `domain/topology` exists but does not read — 503 `{error: "unavailable"}`;
@@ -737,8 +737,7 @@ to the process (N1.3; the execution — chapter 8.9 N1.3).
 - The reception of the passing, `writer` and `answers` are [P/08.0 N1.8](../../08-domain/spec/08.0-domain.norms.md) (P/08.0-01);
 
 <!-- req: P/10-R223 -->
-- here is the side
-of the domain console.
+- This section defines the domain console's side of the passing in P/10-R005.
 
 <!-- req: P/10-R224 -->
 - **console** — the domain console is a door: it checks the identity and the grant (the gate, N1.5) and passes the edit on;
@@ -783,7 +782,7 @@ recompute them (P/08.0 N1.8 `answers`; the forwarding contract «Refusals by tra
 - The lines `first`, `member` are [P/08.4 N1.9](../../08-domain/spec/08.4-domain.norms.md) (P/08.4-07);
 
 <!-- req: P/10-R236 -->
-- here is the passing.
+- This section defines the domain console's passing of the people doors in P/10-R006.
 
 <!-- req: P/10-R237 -->
 - **pass** — the doors /domain/users…, /domain/groups…, /domain/roles…, /domain/batch and /domain/break-glass… with any method, GET too, the edits /domain/grants/… and /domain/revoke the domain console passes on to the process domain by N1.3;
@@ -898,8 +897,7 @@ unit doors.
 store with `expect {kind: person, cluster: null}`;
 
 <!-- req: P/10-R267 -->
-- the refusal is
-401 `{error: denied, detail: "token refused: <word>"}` (the form of P/06.3), except `no_revocations` and a row `domain/keys` that exists
+- A refusal of the person-token check in P/10-R266 is 401 `{error: denied, detail: "token refused: <word>"}` (the form of P/06.3), except `no_revocations` and a row `domain/keys` that exists
 but does not read (there is nothing to check the token with): the rule «Unreadable row» of the gate-and-pass contract
 (503 `{error: "unavailable"}`).
 
@@ -930,7 +928,7 @@ read — the rule «Unreadable row», 503 `unavailable`);
 `manager`) serves the gate only at the doors `gives`: `/domain/users…`, `/domain/groups…`, `/domain/roles…`, `/domain/batch`, `GET /domain/grants`, `PUT /domain/grants/<cluster>`, and also `/domain/break-glass…`: at this door the group is counted only so that the request reaches the process and it answers 403 `admin only` (P/08.4 N1.5, N1.3c `denies`);
 
 <!-- req: P/10-R275 -->
-- at the others its group is not counted in `may`.
+- At doors outside the list in P/10-R274, the manager line's group is not counted in `may`.
 
 <!-- req: P/10-R276 -->
 - The domain doors have no subsystem: `sub` is `null`.
@@ -1143,10 +1141,9 @@ the process `domain`;
 - **unreadable** — the page is not by the form of P/09.1 N1.10 (at the function alarms — the input "garbled" too)
 
 <!-- req: P/10-R342 -->
-- **silence_line** — a silent member — an alarm row {t: silent_since, kind: silent | not_reporting, class: alarm, member,
+- **silence_line** — A silent member has an alarm row `{t: silent_since, kind: silent | not_reporting, class: alarm, member, subsystem: "domain", last_report, ongoing: true, alive_at?, alive_via?}` — always, while it is silent.
 
-<!-- req: P/10-R343 -->
-- **subsystem** — "domain", last_report, ongoing: true, alive_at?, alive_via?} — always, while it is silent
+<!-- removed: P/10-R343 by ADR-0133 -->
 
 <!-- req: P/10-R344 -->
 - **witness** — domain.witness {report, member_field} (P/02.1 N1.2b): the objects \<sub\>/\<report\>/\<name\> = {ts, cluster, units: {\<member\>: seconds since the last time}} at the clusters and in the reports;
@@ -1629,42 +1626,34 @@ input:  {now, since, until, lost_after, members: {<member>: {last_report: <domai
 - Checked by reading: `door.pass` on the domain (N1.6) — the stand has no worker on the domain;
 
 <!-- req: P/10-R472 -->
-- «accept by a console» and the role door
-(N1.4) — until the TLS stand;
+- Checked by reading: «accept by a console» and the role door (N1.4) — until the TLS stand.
 
 <!-- req: P/10-R473 -->
-- the reader's side of the manifest row at start (N1.1) — the domain console has no step in acceptance;
+- Checked by reading: the reader's side of the manifest row at start (N1.1) — the domain console has no step in acceptance.
 
 <!-- req: P/10-R474 -->
-- the deadline «Wait» of the passing (502 on
-silence not earlier than the deadline) and `answer broke off` — acceptance does not measure the answer time and does not break the answer of the process (502 on
-a break and on silence — sc. 08, 09);
+- Checked by reading: the deadline «Wait» of the passing (502 on silence not earlier than the deadline) and `answer broke off` — acceptance does not measure the answer time and does not break the answer of the process (502 on a break and on silence — sc. 08, 09).
 
 <!-- req: P/10-R475 -->
-- `not in the directory` — the manifests of the stand have `domain.ref`;
+- Checked by reading: `not in the directory` — the manifests of the stand have `domain.ref`.
 
 <!-- req: P/10-R476 -->
-- that the domain console does not recompute `deposed`, `frozen`,
-`standby` (N1.3) — the stands of chapters 8.8, 8.10 through `holder`;
+- Checked by reading: that the domain console does not recompute `deposed`, `frozen`, `standby` (N1.3) — the stands of chapters 8.8, 8.10 through `holder`.
 
 <!-- req: P/10-R477 -->
-- the role journal — acceptance does not compare the journal;
+- Checked by reading: the role journal — acceptance does not compare the journal.
 
 <!-- req: P/10-R478 -->
-- the family of witnesses in
-the report;
+- Checked by reading: the carriage of the witness family in the member report (N1.8 `witness`).
 
 <!-- req: P/10-R479 -->
-- there is no row `domain/placement`  and there is no row `domain/keys` with a trace of the domain (`shut`) —
-the door `admin.sock` cannot remove a row under `domain/` (P/01.2 N1.3 `never`);
+- Checked by reading: the cases with no row `domain/placement`, and no row `domain/keys` with a trace of the domain (`shut`) — the door `admin.sock` cannot remove a row under `domain/` (P/01.2 N1.3 `never`).
 
 <!-- req: P/10-R480 -->
-- a generation `reports/<rev>` not by the `sha256`
-of the mark  — the key carries `rev` of the mark, the directive `@spoil object` takes the key as is;
+- Checked by reading: a generation `reports/<rev>` not matching the mark's `sha256` — the key carries `rev` of the mark, the directive `@spoil object` takes the key as is.
 
 <!-- req: P/10-R481 -->
-- `X-Operator: console` at
-a proven role — until the TLS stand.
+- Checked by reading: `X-Operator: console` at a proven role — until the TLS stand.
 
 <!-- req: P/10-R482 -->
 - The TLS stand ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md)): the probes of the door `holder` (class `role`) belong to this

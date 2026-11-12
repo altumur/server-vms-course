@@ -16,7 +16,7 @@ TIMEZONE uses exactly the IANA-name spelling of the environment contract: empty 
 
 The header is chapter,row,name,surface,code,kind,fields,headers,log,norm,word,response_schema,cause,outcome,diagnostic,caller, with literal TAB separators. HTTP response_schema names an OpenAPI component; fields lists directly required/directly declared properties. A composed or referenced schema still applies in full even when fields is -. The names GateDenied, ConsoleRefusal and DomainPassRefusal only reference existing published schemas. DomainPassRefusal includes the existing manifest-mapped ProblemRefusal of the second kind, so a catalogue row does not force error/detail on a code/message body. It does not rewrite a worker reply. The full pass contract also retains its independently specified deadline/status and dynamic headers.
 
-The word cell is a source catalogue index, never a free choice of error for a condition. The transition-3 siblings/executors replies have surface=peer: they are passed as received from the domain writer and introduce no own HTTP failure. A TLS chain refused at the handshake has no HTTP status; row 1 retains this distinction. All other ordering, role/gate/body rules and exact conditional bodies remain in the preserved source cells and OpenAPI.
+The word cell is a source catalogue index, never a free choice of error for a condition. The transition-3 siblings/executors replies have surface=peer: they are passed as received from the domain writer and introduce no own HTTP failure. A TLS chain refused at the handshake has no HTTP status; row 1 retains this distinction. All other ordering, role/gate/body rules and exact conditional bodies remain in the catalogue cells and OpenAPI.
 
 ## Seams and stages
 
