@@ -1,0 +1,62 @@
+{
+  "P/01": {
+    "status": "PASS",
+    "before_errors": 0,
+    "after_errors": 0,
+    "new_errors": []
+  },
+  "P/02": {
+    "status": "FAIL",
+    "before_errors": 240,
+    "after_errors": 240,
+    "new_errors": []
+  },
+  "P/03": {
+    "status": "PASS",
+    "before_errors": 0,
+    "after_errors": 0,
+    "new_errors": []
+  },
+  "P/04": {
+    "status": "PASS",
+    "before_errors": 0,
+    "after_errors": 0,
+    "new_errors": []
+  },
+  "P/05": {
+    "status": "PASS",
+    "before_errors": 0,
+    "after_errors": 0,
+    "new_errors": []
+  },
+  "P/06": {
+    "status": "FAIL",
+    "before_errors": 452,
+    "after_errors": 452,
+    "new_errors": []
+  },
+  "P/07": {
+    "status": "FAIL",
+    "before_errors": 16,
+    "after_errors": 16,
+    "new_errors": []
+  },
+  "P/08": {
+    "status": "FAIL",
+    "before_errors": 432,
+    "after_errors": 424,
+    "new_errors": []
+  },
+  "P/09": {
+    "status": "FAIL",
+    "before_errors": 228,
+    "after_errors": 214,
+    "new_errors": []
+  },
+  "P/10": {
+    "status": "FAIL",
+    "before_errors": 40,
+    "after_errors": 40,
+    "new_errors": []
+  }
+}

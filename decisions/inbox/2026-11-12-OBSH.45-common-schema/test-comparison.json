@@ -1,0 +1,377 @@
+{
+  "before": {
+    "tests": 988,
+    "seconds": 773.293,
+    "result": "FAILED (failures=62, errors=10, skipped=13)"
+  },
+  "after": {
+    "tests": 988,
+    "seconds": 763.548,
+    "result": "FAILED (failures=62, errors=10, skipped=13)"
+  },
+  "new_failures": [],
+  "resolved_failures": [],
+  "unchanged_failures": [
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_absent_unrelated_or_non_directory_lessons_never_call_helpers (test_check_constants.NumericSubjectHookIntegration.test_absent_unrelated_or_non_directory_lessons_never_call_helpers) (directories=('unrelated',), files=())",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_absent_unrelated_or_non_directory_lessons_never_call_helpers (test_check_constants.NumericSubjectHookIntegration.test_absent_unrelated_or_non_directory_lessons_never_call_helpers) (directories=(), files=('06-console', '08-domain', '09-agent'))",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_absent_unrelated_or_non_directory_lessons_never_call_helpers (test_check_constants.NumericSubjectHookIntegration.test_absent_unrelated_or_non_directory_lessons_never_call_helpers) (directories=(), files=())",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_all_new_subject_errors_and_separate_counts_are_forwarded (test_check_constants.NumericSubjectHookIntegration.test_all_new_subject_errors_and_separate_counts_are_forwarded)",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_each_helper_is_called_only_for_its_own_lesson_directory (test_check_constants.NumericSubjectHookIntegration.test_each_helper_is_called_only_for_its_own_lesson_directory) (lesson='06-console')",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_each_helper_is_called_only_for_its_own_lesson_directory (test_check_constants.NumericSubjectHookIntegration.test_each_helper_is_called_only_for_its_own_lesson_directory) (lesson='08-domain')",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_each_helper_is_called_only_for_its_own_lesson_directory (test_check_constants.NumericSubjectHookIntegration.test_each_helper_is_called_only_for_its_own_lesson_directory) (lesson='09-agent')",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_missing_each_lesson_guard_excludes_only_its_helpers (test_check_constants.NumericSubjectHookIntegration.test_missing_each_lesson_guard_excludes_only_its_helpers) (absent='06-console')",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_missing_each_lesson_guard_excludes_only_its_helpers (test_check_constants.NumericSubjectHookIntegration.test_missing_each_lesson_guard_excludes_only_its_helpers) (absent='08-domain')",
+      "count": 1
+    },
+    {
+      "kind": "ERROR",
+      "test_and_subtest": "test_missing_each_lesson_guard_excludes_only_its_helpers (test_check_constants.NumericSubjectHookIntegration.test_missing_each_lesson_guard_excludes_only_its_helpers) (absent='09-agent')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_actual_519_values_paths_parameters_and_four_block_identity (test_console_module_canon.ConsoleModuleCanon.test_actual_519_values_paths_parameters_and_four_block_identity)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_actual_mutants_fail_through_check_spec_hook (test_check_constants.StoreConstants.test_actual_mutants_fail_through_check_spec_hook)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_built_section_between_markers (test_check_spec.FamiliesChapterTests.test_built_section_between_markers)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_chapters_zero_and_two_digits (test_check_spec.PlatformLessonTests.test_chapters_zero_and_two_digits)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_checklist_inventory (test_check_spec.PlatformLessonTests.test_checklist_inventory)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_clean_and_exact_closed_roster (test_check_constants.Constants.test_clean_and_exact_closed_roster)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_markdown_images_all_forms (test_check_spec.CheckSpecTests.test_cli_markdown_images_all_forms) (use='![Diagram]({target})', target='spec/diagram.svg')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_markdown_images_all_forms (test_check_spec.CheckSpecTests.test_cli_markdown_images_all_forms) (use='![Diagram][image]\\n\\n[image]: {target}', target='spec/diagram.svg')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_markdown_images_all_forms (test_check_spec.CheckSpecTests.test_cli_markdown_images_all_forms) (use='![image][]\\n\\n[image]: {target}', target='spec/diagram.svg')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_markdown_images_all_forms (test_check_spec.CheckSpecTests.test_cli_markdown_images_all_forms) (use='![image]\\n\\n[image]: {target}', target='spec/diagram.svg')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_names_exceptions_and_keeps_them_out_of_pass (test_check_spec.CheckSpecTests.test_cli_names_exceptions_and_keeps_them_out_of_pass)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_pointer_array_indices (test_check_spec.CheckSpecTests.test_cli_pointer_array_indices) (index='0')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_pointer_array_indices (test_check_spec.CheckSpecTests.test_cli_pointer_array_indices) (index='1')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_pointer_escape_sequences (test_check_spec.CheckSpecTests.test_cli_pointer_escape_sequences) (ref='#/x-target~0')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_pointer_escape_sequences (test_check_spec.CheckSpecTests.test_cli_pointer_escape_sequences) (ref='#/x-target~02')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_cli_pointer_escape_sequences (test_check_spec.CheckSpecTests.test_cli_pointer_escape_sequences) (ref='#/x-target~1child')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_closed_meaning_references_keep_actual_numeric_comparison (v7.test_spec.TestTree.test_closed_meaning_references_keep_actual_numeric_comparison)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_d19_dialect_p1_states (v7.test_v7.TestDefects.test_d19_dialect_p1_states)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_dom_mutants_really_change_observed_language_or_date_arguments (test_console_module_canon.ConsoleModuleCanon.test_dom_mutants_really_change_observed_language_or_date_arguments)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_each_owned_mutant_reaches_its_own_rule (test_console_module_canon.ConsoleModuleCanon.test_each_owned_mutant_reaches_its_own_rule)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_excluded_v11_journal_keeps_its_original_path (test_check_spec.LayoutTests.test_excluded_v11_journal_keeps_its_original_path)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_family_read_key (v7.test_spec.TestTree.test_family_read_key)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_history_log_values_and_physical_line_numbers (test_check_spec.LayoutTests.test_history_log_values_and_physical_line_numbers)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_html_and_images_in_code_are_examples (test_check_spec.CheckSpecTests.test_html_and_images_in_code_are_examples)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='100')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='200')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='299')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='400')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='500')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_http_status_requires_ascii_digits (test_check_spec.CheckSpecTests.test_http_status_requires_ascii_digits) (code='599')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_image_alt_is_not_independent_link_or_html (test_check_spec.CheckSpecTests.test_image_alt_is_not_independent_link_or_html)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_late_layer_rows_and_the_data_paragraph_exception (test_check_spec.PlatformCatalogTests.test_late_layer_rows_and_the_data_paragraph_exception)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_legacy_flag_prose_passes (test_check_forms.Forms.test_legacy_flag_prose_passes)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_lesson_checks_read_the_translation (test_check_spec.LayoutTests.test_lesson_checks_read_the_translation)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_lesson_scenario_count_is_the_sum_of_chapters (test_check_spec.PlatformLessonTests.test_lesson_scenario_count_is_the_sum_of_chapters)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_manifest_clean (v7.test_spec.TestTree.test_manifest_clean)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_markdown_structure_accepts_rendered_variants_and_ignores_examples (test_check_spec.CheckSpecTests.test_markdown_structure_accepts_rendered_variants_and_ignores_examples)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_names_agree (test_check_spec.ProcessNamesTests.test_names_agree)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_new_id_map_is_required_even_with_a_valid_old_copy (test_check_spec.PlatformCatalogTests.test_new_id_map_is_required_even_with_a_valid_old_copy)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_new_layout_passes (test_check_spec.LayoutTests.test_new_layout_passes)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_no_columns_is_skipped (test_check_spec.ProcessNamesTests.test_no_columns_is_skipped)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_old_id_map_does_not_override_history (test_check_spec.PlatformCatalogTests.test_old_id_map_does_not_override_history)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_own_scenario_grammar_is_excepted_per_chapter (test_check_spec.PlatformLessonTests.test_own_scenario_grammar_is_excepted_per_chapter)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_owned_dom_browser_mismatch_mixed_mounts_and_formatters (test_console_module_canon.ConsoleModuleCanon.test_owned_dom_browser_mismatch_mixed_mounts_and_formatters)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_p09_c4_registry_requires_exact_rows_and_current_meaning (v7.test_spec.TestTree.test_p09_c4_registry_requires_exact_rows_and_current_meaning)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_pass (test_check_spec.FormSourceChapterTests.test_pass)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_pass (test_check_spec.PlatformCatalogTests.test_pass)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_platform_pipeline_calls_the_explicit_shared_registration (test_pac_registration.RegisteredSharedLessonControls.test_platform_pipeline_calls_the_explicit_shared_registration)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_published_map_preserves_all_cells_and_line_numbers (test_check_spec.PlatformHistoryMapTests.test_published_map_preserves_all_cells_and_line_numbers)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_real_seams_four_marked_cells (test_source_cells.SeamsBinding.test_real_seams_four_marked_cells)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_row_of_a_moved_process_has_a_schema_or_the_exception (test_check_spec.PlatformCatalogTests.test_row_of_a_moved_process_has_a_schema_or_the_exception)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_schema_manifest_is_a_form_given_by_the_manifest (test_check_spec.PlatformCatalogTests.test_schema_manifest_is_a_form_given_by_the_manifest)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_sections_keep_dialect_meaning (v7.test_spec.TestTree.test_sections_keep_dialect_meaning)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_two_chapters_pass (test_check_spec.PlatformLessonTests.test_two_chapters_pass)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_two_missing_meanings_require_exact_current_keys_and_source_count (v7.test_spec.TestTree.test_two_missing_meanings_require_exact_current_keys_and_source_count)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_without_markers_is_counted_not_failed (test_check_spec.FamiliesChapterTests.test_without_markers_is_counted_not_failed)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_alias_under_literal_merge_key_stays_nested_data (test_check_spec.CheckSpecTests.test_yaml12_alias_under_literal_merge_key_stays_nested_data)",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_symbol_strings_preserve_properties_and_example_data (test_check_spec.CheckSpecTests.test_yaml12_symbol_strings_preserve_properties_and_example_data) (spelling='\"<<\"')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_symbol_strings_preserve_properties_and_example_data (test_check_spec.CheckSpecTests.test_yaml12_symbol_strings_preserve_properties_and_example_data) (spelling='\"=\"')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_symbol_strings_preserve_properties_and_example_data (test_check_spec.CheckSpecTests.test_yaml12_symbol_strings_preserve_properties_and_example_data) (spelling='<<')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_symbol_strings_preserve_properties_and_example_data (test_check_spec.CheckSpecTests.test_yaml12_symbol_strings_preserve_properties_and_example_data) (spelling='=')",
+      "count": 1
+    },
+    {
+      "kind": "FAIL",
+      "test_and_subtest": "test_yaml12_words_are_distinct_string_property_names (test_check_spec.CheckSpecTests.test_yaml12_words_are_distinct_string_property_names)",
+      "count": 1
+    }
+  ],
+  "no_new_failures": true
+}

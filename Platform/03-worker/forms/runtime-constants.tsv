@@ -1,26 +1,26 @@
 # Independent owned scalar settings; exact formulas and foreign values remain at their named sources.
 # Positive integer values; units count|s|ms|bytes.
 name	value	unit	norm	meaning
-LEASE_TTL	30	s	P/03.2-R005	Lease duration; action window subtracts LEASE_MARGIN.
-LEASE_MARGIN	5	s	P/03.2-R005	Lease safety margin, independent of the observation HOLD_SKEW.
-CONTEND_EVERY	10	s	P/03.2-R005	Cadence for rewriting the current contender object.
-HEARTBEAT_EVERY	10	s	P/03.3-R005	Ordinary loop heartbeat cadence.
-WAKE_GAP_MS	250	ms	P/03.3-R005	Minimum event-triggered pass gap; exact seconds are WAKE_GAP_MS / 1000.
-PASS_SHARE	2	count	P/03.3-R005	Minimum pass spacing in multiples of the previous pass duration.
-RETRY_MIN	1	s	P/03.3-R005	Initial failed-start retry backoff.
-RETRY_MAX	60	s	P/03.3-R005	Maximum retry backoff and continuous-stability reset interval.
-BEAT_EVERY	10	s	P/03.4-R010	Stand-in heartbeat repeat cadence.
-DOOR_CONNECTIONS	32	count	P/03.4-R014	Maximum concurrent process-door connections.
-DOOR_PER_ADDRESS	8	count	P/03.4-R014	Maximum concurrent process-door connections from one address.
-DOOR_HEAD_WITHIN	5	s	P/03.4-R014	Deadline for a complete process-door request line and headers.
-DOOR_PACE_FLOOR_BYTES	65536	bytes	P/03.4-R014	Minimum average transfer byte count per one second after DOOR_PACE_AFTER.
-DOOR_PACE_AFTER	30	s	P/03.4-R014	Delay before measuring the connection transfer pace.
-DOOR_BODY_BYTES	1048576	bytes	P/03.4-R014	Maximum process-door request body.
-DOOR_BUSY_RETRY_AFTER	1	s	P/03.4-R027	Retry-After duration on the existing process_busy response.
-PERFORM_TIMEOUT	10	s	P/03.6-R012	Request handler call timeout within one holder.
-PERFORM_GRACE_MS	200	ms	P/03.6-R012	Post-timeout grace; exact seconds are PERFORM_GRACE_MS / 1000.
-REQUESTS_HOLD_MS	500	ms	P/03.6-R012	Request look hold; exact seconds are REQUESTS_HOLD_MS / 1000.
-COMMANDS_PER_LOOK	200	count	P/03.6-R012	Maximum commands processed in one holder look.
-STATE_EVERY	10	s	P/03.6-R018	Cadence for writing ordinary unit state.
-MADE_ROWS_MIN_INTERVAL	60	s	P/03.4-R006	Minimum interval between made_rows listings; no upper listing deadline and no obligation to list exactly at this interval.
-COMMAND_BEHIND_TOLERANCE	1	s	P/03.4-R006	Strict threshold for a filing timestamp earlier than the prior listing that did not see it; behind only when the difference is greater.
+LEASE_TTL	30	s	P/03.2-R014	Lease duration; action window subtracts LEASE_MARGIN.
+LEASE_MARGIN	5	s	P/03.2-R014	Lease safety margin, independent of the observation HOLD_SKEW.
+CONTEND_EVERY	10	s	P/03.2-R125	Cadence for rewriting the current contender object.
+HEARTBEAT_EVERY	10	s	P/03.3-R041	Ordinary loop heartbeat cadence.
+WAKE_GAP_MS	250	ms	P/03.3-R013	Minimum event-triggered pass gap; exact seconds are WAKE_GAP_MS / 1000.
+PASS_SHARE	2	count	P/03.3-R020	Minimum pass spacing in multiples of the previous pass duration.
+RETRY_MIN	1	s	P/03.3-R024	Initial failed-start retry backoff.
+RETRY_MAX	60	s	P/03.3-R024	Maximum retry backoff and continuous-stability reset interval.
+BEAT_EVERY	10	s	P/03.4-R019	Stand-in heartbeat repeat cadence.
+DOOR_CONNECTIONS	32	count	P/03.4-R104	Maximum concurrent process-door connections.
+DOOR_PER_ADDRESS	8	count	P/03.4-R104	Maximum concurrent process-door connections from one address.
+DOOR_HEAD_WITHIN	5	s	P/03.4-R105	Deadline for a complete process-door request line and headers.
+DOOR_PACE_FLOOR_BYTES	65536	bytes	P/03.4-R103	Minimum average transfer byte count per one second after DOOR_PACE_AFTER.
+DOOR_PACE_AFTER	30	s	P/03.4-R103	Delay before measuring the connection transfer pace.
+DOOR_BODY_BYTES	1048576	bytes	P/03.4-R195	Maximum process-door request body.
+DOOR_BUSY_RETRY_AFTER	1	s	P/03.4-R194	Retry-After duration on the existing process_busy response.
+PERFORM_TIMEOUT	10	s	P/03.6-R155	Request handler call timeout within one holder.
+PERFORM_GRACE_MS	200	ms	P/03.6-R155	Post-timeout grace; exact seconds are PERFORM_GRACE_MS / 1000.
+REQUESTS_HOLD_MS	500	ms	P/03.6-R225	Request look hold; exact seconds are REQUESTS_HOLD_MS / 1000.
+COMMANDS_PER_LOOK	200	count	P/03.6-R226	Maximum commands processed in one holder look.
+STATE_EVERY	10	s	P/03.6-R133	Cadence for writing ordinary unit state.
+MADE_ROWS_MIN_INTERVAL	60	s	P/03.4-R077	Minimum interval between made_rows listings; no upper listing deadline and no obligation to list exactly at this interval.
+COMMAND_BEHIND_TOLERANCE	1	s	P/03.4-R197	Strict threshold for a filing timestamp earlier than the prior listing that did not see it; behind only when the difference is greater.

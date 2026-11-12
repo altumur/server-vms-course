@@ -1,0 +1,608 @@
+{
+  "base": "4b679c0cfea14e94af282c15f372a5ff0ca20444",
+  "schemas": [
+    {
+      "path": "Platform/common/data/common.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/01-store/data/configstore-doors.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/01-store/data/epoch_floor.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/alarms-retention.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/canonical-row.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-file.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-rev.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/manifest-row.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/mirror.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/retention.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/02-installer/data/space.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/epoch.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/slots.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/03-worker/data/state.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/decommissioned.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/placement-turn.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/want.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/04-controller/data/workers.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/doors.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/gone.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/asked.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/commands.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/decommission.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/door-keys.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/door-signer.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/drain.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/folders.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/memberof.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/next-id.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/opbusy.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/opcount.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/opdone.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/operations-epoch.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/operations-turn.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/operations.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/opsteps.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/policy.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/requests.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/schema.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/server-labels.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/06-console/data/sweep.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/alarm-history.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/anywhere.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/backups.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/batches.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/book-all.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/book-keys.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/book-part.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/book-seal.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/book.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/break-glass.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/deleting.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/disabled.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/domain-folders.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/domain-memberof.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/folder-counts.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/folder-log.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/folder-rev.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units-head.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/folder-units.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/from-nothing.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/grants.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/groups.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/holder.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/idem.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/issued.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/keepers.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/keys.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/knocks.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-ca-certs.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-count.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-report-delta.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-report.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-reported.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/member-tables.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/members.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/move-ask.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/names-index.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/outcomes.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/partial.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/pending.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/placement-record.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/placement.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/ref-claims.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/relay-members.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/revoked.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/roles.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/root.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/shadow.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/shared-docs.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/shared.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/signer-pending.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/signer-turn.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/signer.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/stranded.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/topology.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/view-rows.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/08-domain/data/view.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/agent-turn.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/agent.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/alarms.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/backup-refused.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/backup-taken.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/backup.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/book-copy.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/book-want.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/grants.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/join.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/member-key.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/member-list.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/member-topology.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/member-want.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/member.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/outcomes.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/placed-record.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/placed.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/reached.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/reaches.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/relay-for.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/roles.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/servers.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/shared-copy.schema.json",
+      "changed_descriptions": 8
+    },
+    {
+      "path": "Platform/09-agent/data/shared-refused.schema.json",
+      "changed_descriptions": 8
+    }
+  ],
+  "by_directory": {
+    "01-store": 2,
+    "02-installer": 8,
+    "03-worker": 6,
+    "04-controller": 11,
+    "05-resource": 12,
+    "06-console": 21,
+    "08-domain": 58,
+    "09-agent": 25,
+    "common": 1
+  },
+  "changed_descriptions": 1152,
+  "changed_norms": [
+    "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+    "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+    "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+    "Platform/08-domain/spec/08.4-domain.norms.md",
+    "Platform/08-domain/spec/08.8-domain.norms.md",
+    "Platform/08-domain/spec/08.9-domain.norms.md",
+    "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+    "Platform/09-agent/spec/09.1-agent.norms.md"
+  ],
+  "normative_json_keywords_unchanged": true,
+  "prose_outside_built_blocks_unchanged": true,
+  "schema_formatting_unchanged": true,
+  "history_json_pointers_resolve": true,
+  "white_space_and_unicode_version_preserved": true
+}

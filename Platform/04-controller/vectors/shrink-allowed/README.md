@@ -29,21 +29,26 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`. There are 53 r
 **Output** — `{shrink, why, victim}`: `shrink` — `true` only with `why: "ok"`; `victim` — the name of the victim, named also on
 a refusal (who would be the victim), `null` — only with `no_victim`. Comparison — JSON by value.
 
+## Binding the vector to the shrink form
+
+The vector uses its declared input and victim selection below; it adds no runtime field or check. Bind the variables of [the shrink checks](../../forms/README.md#shrink-checks) as follows (P/04-R342):
+
+| Form variable | Vector input or computation |
+|---|---|
+| `victim_exists` | The victim selected by the existing `shrink-victim` rules is not null; only live tops `n = want(s) > 1` qualify. |
+| `distinct` | Input `distinct`: servers: distinct and a place from the heartbeat. |
+| `waiting` | Input `waiting`, with a group as one piece. |
+| `placeless` | There is a live input worker with `placeless: true`; read this only with `distinct`. |
+| `no_shortage_for`, `SHRINK_AFTER` | Inputs `no_shortage_for`, `shrink_after`; null means a shortage; equality is not longer than the hold time. |
+| `in_flight` | Sum over servers of the missing live numbers in `2…want(s)`; the base is excluded. |
+| `per` | Input `per`, including null for no estimate. |
+| `remaining_free_after_move` | `Σ free − load(victims)`: sum free over suitable live workers without the selected victim and without numbers above their server's want, then subtract the victim load. With `distinct`, only workers with `holder: true` contribute to the sum. |
+
+The last row is the original hysteresis test: `Σ free − load(victims) < per` refuses; equality passes. The vector’s existing consistency assumptions still hold. This binding does not add a wanted-place field to its closed input; the existing victim/protection cases and composed process seams retain their scopes.
+
 ## Order of the reasons
 
-The check goes in order, `why` is the first reason that fired (P/04 N3 «shrink (step 9a)», `condition`):
-
-1. `no_victim` — there is no live top number `n = want(s) > 1` on any server (only the base ones; a number above want is not in the pool); `victim: null`;
-2. `placeless_with_waiting` — `distinct`, `waiting > 0` and there is a live one without a place: the live ones without a place are not shrunk while there are
-   waiting ones; without `distinct` `placeless` is not read;
-3. `no_shortage_long_enough` — `waiting > 0` («no shortage» — there are no waiting ones), or `no_shortage_for` `null`, or
-   `no_shortage_for ≤ shrink_after`: the norm is «no shortage for **longer** than SHRINK_AFTER», equality is not yet «longer»
- ;
-4. `in_flight` — at some server `|{2…want(s)} ∖ live(s)| > 0`: in flight — by numbers by the heartbeats, not by a count;
-5. `hysteresis` — `per` `null` or `Σ free` of the workers without the victim and without the numbers above the want of their server `− load(victims) < per`:
-   after the transfer of the units of the victim the remaining ones have less free than `per`; equality to `per` passes; with `distinct` only the keepers of places (`holder: true`)
-   enter `Σ free` — as «free at suitable live workers» of N3 «per label set»;
-6. `ok` — shrink, `victim` — the victim.
+The first matching row of [the shrink checks](../../forms/README.md#shrink-checks) selects `why` (P/04-R051). The vector uses the same conditions; `victim: null` only for `no_victim`.
 
 **The victim** is the same as in [`shrink-victim`](../shrink-victim/README.md): the largest number `n` (as an integer, not by the slot
 order), with equal numbers on different servers — the smaller name of the server in UTF-8 bytes. Victim candidates are only live tops `n = want(s) > 1` of their own servers. The capacity of the other suitable workers in 1…want(s) still counts by the ordinary hysteresis rule. A number above want is never a victim and its free does not count (N3 number above want). This also applies to `shrink-victim`, whose input has `want` for each server; the candidates come from `live`.

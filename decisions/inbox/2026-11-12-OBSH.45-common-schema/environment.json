@@ -1,0 +1,261 @@
+{
+  "python": "3.12.15",
+  "all_pinned_versions_match": true,
+  "packages": [
+    {
+      "package": "annotated-types",
+      "expected": "0.8.0",
+      "actual": "0.8.0"
+    },
+    {
+      "package": "attrs",
+      "expected": "26.1.0",
+      "actual": "26.1.0"
+    },
+    {
+      "package": "cel-expr-python",
+      "expected": "0.1.3",
+      "actual": "0.1.3"
+    },
+    {
+      "package": "jsonschema",
+      "expected": "4.26.0",
+      "actual": "4.26.0"
+    },
+    {
+      "package": "jsonschema-path",
+      "expected": "0.5.0",
+      "actual": "0.5.0"
+    },
+    {
+      "package": "jsonschema-specifications",
+      "expected": "2025.9.1",
+      "actual": "2025.9.1"
+    },
+    {
+      "package": "lazy-object-proxy",
+      "expected": "1.13.0",
+      "actual": "1.13.0"
+    },
+    {
+      "package": "markdown-it-py",
+      "expected": "4.2.0",
+      "actual": "4.2.0"
+    },
+    {
+      "package": "mdurl",
+      "expected": "0.1.2",
+      "actual": "0.1.2"
+    },
+    {
+      "package": "openapi-schema-validator",
+      "expected": "0.9.0",
+      "actual": "0.9.0"
+    },
+    {
+      "package": "openapi-spec-validator",
+      "expected": "0.9.0",
+      "actual": "0.9.0"
+    },
+    {
+      "package": "pathable",
+      "expected": "0.6.0",
+      "actual": "0.6.0"
+    },
+    {
+      "package": "pydantic",
+      "expected": "2.14.1",
+      "actual": "2.14.1"
+    },
+    {
+      "package": "pydantic-core",
+      "expected": "2.50.1",
+      "actual": "2.50.1"
+    },
+    {
+      "package": "pydantic-settings",
+      "expected": "2.16.1",
+      "actual": "2.16.1"
+    },
+    {
+      "package": "python-dotenv",
+      "expected": "1.2.4",
+      "actual": "1.2.4"
+    },
+    {
+      "package": "pyyaml",
+      "expected": "6.0.3",
+      "actual": "6.0.3"
+    },
+    {
+      "package": "referencing",
+      "expected": "0.37.0",
+      "actual": "0.37.0"
+    },
+    {
+      "package": "regress",
+      "expected": "2026.9.1",
+      "actual": "2026.9.1"
+    },
+    {
+      "package": "rfc3339-validator",
+      "expected": "0.1.4",
+      "actual": "0.1.4"
+    },
+    {
+      "package": "rpds-py",
+      "expected": "2026.9.1",
+      "actual": "2026.9.1"
+    },
+    {
+      "package": "ruamel-yaml",
+      "expected": "0.19.1",
+      "actual": "0.19.1"
+    },
+    {
+      "package": "six",
+      "expected": "1.17.0",
+      "actual": "1.17.0"
+    },
+    {
+      "package": "typing-extensions",
+      "expected": "4.16.0",
+      "actual": "4.16.0"
+    },
+    {
+      "package": "typing-inspection",
+      "expected": "0.4.4",
+      "actual": "0.4.4"
+    },
+    {
+      "package": "annotated-doc",
+      "expected": "0.0.6",
+      "actual": "0.0.6"
+    },
+    {
+      "package": "certifi",
+      "expected": "2026.10.23",
+      "actual": "2026.10.23"
+    },
+    {
+      "package": "chardet",
+      "expected": "7.7.0",
+      "actual": "7.7.0"
+    },
+    {
+      "package": "charset-normalizer",
+      "expected": "3.5.2",
+      "actual": "3.5.2"
+    },
+    {
+      "package": "frictionless",
+      "expected": "5.18.1",
+      "actual": "5.18.1"
+    },
+    {
+      "package": "humanize",
+      "expected": "4.16.0",
+      "actual": "4.16.0"
+    },
+    {
+      "package": "idna",
+      "expected": "3.20",
+      "actual": "3.20"
+    },
+    {
+      "package": "isodate",
+      "expected": "0.7.2",
+      "actual": "0.7.2"
+    },
+    {
+      "package": "Jinja2",
+      "expected": "3.1.6",
+      "actual": "3.1.6"
+    },
+    {
+      "package": "marko",
+      "expected": "2.2.5",
+      "actual": "2.2.5"
+    },
+    {
+      "package": "MarkupSafe",
+      "expected": "3.0.4",
+      "actual": "3.0.4"
+    },
+    {
+      "package": "petl",
+      "expected": "1.7.32",
+      "actual": "1.7.32"
+    },
+    {
+      "package": "Pygments",
+      "expected": "2.21.0",
+      "actual": "2.21.0"
+    },
+    {
+      "package": "python-dateutil",
+      "expected": "4.0.0",
+      "actual": "4.0.0"
+    },
+    {
+      "package": "python-slugify",
+      "expected": "9.1.3",
+      "actual": "9.1.3"
+    },
+    {
+      "package": "requests",
+      "expected": "2.34.2",
+      "actual": "2.34.2"
+    },
+    {
+      "package": "rfc3986",
+      "expected": "2.0.0",
+      "actual": "2.0.0"
+    },
+    {
+      "package": "rich",
+      "expected": "15.0.0",
+      "actual": "15.0.0"
+    },
+    {
+      "package": "shellingham",
+      "expected": "1.5.4",
+      "actual": "1.5.4"
+    },
+    {
+      "package": "simpleeval",
+      "expected": "1.0.8",
+      "actual": "1.0.8"
+    },
+    {
+      "package": "tabulate",
+      "expected": "0.10.0",
+      "actual": "0.10.0"
+    },
+    {
+      "package": "text-unidecode",
+      "expected": "1.3",
+      "actual": "1.3"
+    },
+    {
+      "package": "typer",
+      "expected": "0.29.0",
+      "actual": "0.29.0"
+    },
+    {
+      "package": "tzdata",
+      "expected": "2026.6",
+      "actual": "2026.6"
+    },
+    {
+      "package": "urllib3",
+      "expected": "2.8.0",
+      "actual": "2.8.0"
+    },
+    {
+      "package": "validators",
+      "expected": "0.36.0",
+      "actual": "0.36.0"
+    }
+  ]
+}

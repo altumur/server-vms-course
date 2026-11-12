@@ -242,3 +242,18 @@ req_id	file	source	date	removed
 -	acceptance/1/README.md#additional-inputs	history of the corpus: worker.exec appended to the manifests	2026-10-23	the key is appended mechanically to all other manifests of the corpus, the verdicts and classes are the former ones, the line numbers of the diagnostics are shifted at blob_default and status_worker
 -	acceptance/1/README.md#the-full-list-of-names-and-the-catalogue-check	history of the corpus: the former 251 inputs	2026-10-19	; all the former 251 inputs are unchanged
 -	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	history of the corpus: the former scalar case	2026-10-17	The former scalar is kept as
+P/02.1-R060	spec/02.1-installer.norms.md#N1.2a	V7 item 2: the classes of N4 by the layer (set A reconciled with the former classes)	2026-10-28	serve only to reconcile set A with the former classes, they
+P/02.1-R119	spec/02.1-installer.norms.md#N1.4	ADR-0091 addendum (14), (17) item 5	2026-10-23	: the current manifests move over without an edit
+P/02.1-R133	spec/02.1-installer.norms.md#N1.4	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	the existing catalogue rule of P02.3
+P/02.1-R134	spec/02.1-installer.norms.md#N1.4	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	These are existing-class `refused:relations`; there is no schema/view change.
+-	spec/02.1-installer.norms.md#N1.4	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	Named units keep their existing rules.
+-	spec/02.1-installer.norms.md#N1.4	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	The distinct unplaced rule49 below is unchanged.
+P/02.1-R137	spec/02.1-installer.norms.md#N1.4	move of M11, lessons 2 and 5	2026-10-04	still 
+P/02.1-R143	spec/02.1-installer.norms.md#N1	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	existing 
+-	spec/02.1-installer.norms.md#N1	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	The original951 corpus,220 canonical, all rights and P03 remain unchanged.
+P/02.1-R145	spec/02.1-installer.norms.md#N1	P/06 C3: the numeric relations 160–162 and the numeric-loader supplement (the Architect's decision 2026-11-06)	2026-11-06	no native command or new loader class is introduced
+P/02.1-R162	spec/02.1-installer.norms.md#N3	ADR-0091 addendum (25), (26): near sets no order of installation	2026-10-23	, as before
+-	spec/02.1-installer.norms.md#readiness-checklist	M10/9: lesson «Console» (ADR-0080, ADR-0082)	2026-10-14	`display.actions` is removed
+-	acceptance/1/README.md#additional-check-of-string-field-names	fix spec36: reconciliation of the acceptance README of М10_Platform/02	2026-10-16	These inputs are added as profile_unit_key_*/profile_table_key_* to verdicts.tsv
+-	acceptance/1/README.md#additional-inputs	fix spec37: reconciliation of the acceptance README of М10_Platform/02	2026-10-16	The new files
+-	acceptance/1/README.md#separate-check-of-the-form-and-of-the-reference-group_by	fix spec39: reconciliation of the acceptance README of М10_Platform/02	2026-10-17	The inputs and verdicts are kept, no new form of derived is introduced.

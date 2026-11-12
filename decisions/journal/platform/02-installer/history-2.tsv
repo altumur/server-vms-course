@@ -95,3 +95,12 @@ req_id	file	source	date	removed
 -	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/items/description	ADR-0115 addendum (2) item 5, addendum (3) item 5	2026-11-03	 (ADR-0115 addendum (2) item 5, addendum (3) item 5)
 -	spec/02.2-installer.view.schema.json#/$defs/unitFields/items/properties/ref_label/description	ADR-0115 addendum (5) item 2, addendum (6) item 2	2026-11-03	 (ADR-0115 addendum (5) item 2, addendum (6) item 2)
 -	spec/02.2-installer.norms.md#N4	the former N4 tables of the chapter, moved into forms/refusals.tsv (the rule in words: a stable address of a refusal)	2026-11-05	preserve the addresses of the former table
+-	acceptance/2/README.cases.md#intro	ADR-0121	2026-11-04	 (ADR-0121)
+-	acceptance/2/README.cases.md#original-passage-1	ADR-0091 addendum (5); finding of cammeta-c-go I02-G01	2026-10-23	; the numbers are after `worker.exec`, ADR-0091 addendum (5), finding of cammeta-c-go I02-G01
+-	acceptance/2/README.cases.md#original-passage-1	review of lesson P/02, S4	2026-11-05	 (the P/02 lesson review, S4)
+-	acceptance/2/README.cases.md#original-passage-2	ADR-0089 addendum (1) R12; window 2.2	2026-10-19	; window 2.2, R12
+-	acceptance/2/README.cases.md#original-passage-2	chapter 2.2 canonical-view window of 2026-10-20, Architect's decision item 8	2026-10-20	 (window 2.2, item 8)
+-	acceptance/2/README.cases.md#original-passage-2	ADR-0089 addendum (1) R11	2026-10-19	 (ADR-0089 addendum (1) R11)
+-	acceptance/2/README.cases.md#original-passage-2	coverage audit Gemini P/02, property 13	2026-10-30	 (the Gemini audit P/02, property 13)
+-	acceptance/2/README.cases.md#original-passage-2	coverage audit Gemini P/02, property 14	2026-10-30	 (property 14)
+-	acceptance/2/README.cases.md#original-passage-3	ADR-0091 addendum (5) (worker.exec shortened the field; the length of the view kept as a fact)	2026-10-23	after `worker.exec` the field is shortened by 49 bytes: the view of 06 is again 524201

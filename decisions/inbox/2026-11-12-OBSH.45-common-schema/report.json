@@ -1,0 +1,148 @@
+{
+  "task": "OBSH.45",
+  "role": "run",
+  "working_directory": "/home/pilot/wt-task-OBSH.45",
+  "branch": "task/OBSH.45",
+  "base_commit": "4b679c0cfea14e94af282c15f372a5ff0ca20444",
+  "decision": "ADR-0133, дополнения (56) и (72)",
+  "origin": {
+    "classification": "была раньше",
+    "confirmed_slice": "23f688102",
+    "evidence": "В common.schema.json этого среза уже есть ADR-0099/0097, решение о White_Space, C08-BACKUP-JSON-99 и REC-G01. Правка их не внесла."
+  },
+  "change": {
+    "source": "Platform/common/data/common.schema.json",
+    "description_pointers": 8,
+    "schema_files": 144,
+    "description_replacements": 1152,
+    "history": "decisions/journal/platform/common/history.tsv",
+    "history_rows": 9,
+    "language": "Один машинный источник схем; построенные блоки источника и перевода пересобраны через v7.sections."
+  },
+  "copy_builder": {
+    "existing": "skills/lesson-spec/scripts/v7/build.py: common_schema(), all_families()",
+    "unavailable_inputs": [
+      "Platform/common/data/common.form.yaml",
+      "Platform/02-installer/spec/02.1-installer.form.yaml"
+    ],
+    "method": "refresh_common.py: ожидаемые before/after по восьми JSON Pointer; замена JSON-строк с проверкой единственности и полного разобранного документа. Исходное оформление и локальные дельты сохраняются. Скрипты навыка не менялись."
+  },
+  "sections": {
+    "command": "Из skills/lesson-spec/scripts: python -m v7.sections --root <корень> <абсолютные пути из sections-inputs.txt>",
+    "rebuilt_source_pairs": 14,
+    "changed_files": [
+      "Platform/08-domain/ru/spec/08.4-domain.norms.md",
+      "Platform/08-domain/ru/spec/08.8-domain.norms.md",
+      "Platform/08-domain/ru/spec/08.9-domain.norms.md",
+      "Platform/08-domain/spec/08.4-domain.norms.md",
+      "Platform/08-domain/spec/08.8-domain.norms.md",
+      "Platform/08-domain/spec/08.9-domain.norms.md",
+      "Platform/09-agent/ru/spec/09.1-agent.norms.md",
+      "Platform/09-agent/spec/09.1-agent.norms.md"
+    ],
+    "note": "В diff четыре пары: P/08.4, P/08.8, P/08.9, P/09.1. В остальных десяти главах затронутые описания не выводятся."
+  },
+  "preserved_rules": [
+    "none < view < edit < admin; none только у строки роли",
+    "нет sub — строка действует во всех подсистемах и platform",
+    "White_Space Unicode 15.0.0; длина имени 1–64; break-glass и запрещённые знаки",
+    "raw: байты объектов не по форме семьи, включая неверный JSON; существующий base64 сохраняется",
+    "shared_doc: another_domain, not_a_record/bad_signature по существующему договору record; порядок (term, rev)"
+  ],
+  "related_places": [
+    {
+      "place": "Общие определения и 143 копии в P/01–P/06, P/08–P/09",
+      "result": "изменено",
+      "check": "scope-proof.json: восемь description на схему; прочие JSON-значения и оформление побайтно сохранены"
+    },
+    {
+      "place": "Построенные блоки en+ru",
+      "result": "изменено",
+      "check": "v7.sections; проза вне маркеров побайтно сохранена"
+    },
+    {
+      "place": "Происхождение и адреса",
+      "result": "изменено",
+      "check": "Девять строк истории; JSON Pointer каждого места разрешается"
+    },
+    {
+      "place": "Типы, грамматика, обязательность, исходы, ограничения состояния",
+      "result": "согласовано",
+      "check": "Нормативные слова в скобках сохранены; остальные поля схем не изменены"
+    },
+    {
+      "place": "Лекция, lifecycle, HTTP-контракт, формы, приёмка",
+      "result": "не относится",
+      "reason": "Текущие правила и наблюдаемое поведение не изменены"
+    },
+    {
+      "place": "Нынешний формат без совместимости",
+      "result": "согласовано",
+      "check": "Правка не добавляет прежних форматов или идентификаторов; from M11 перенесено в историю. Старые ключи после переноса домена описывают существующее состояние и сохранены."
+    }
+  ],
+  "m_form": {
+    "method": "m_form_full.py: все семь имеющихся проверок для каждого P/01–P/10; множества стадий меняются только в процессе аудита, файлы навыка не правятся; действующие исключения ADR_LATER сохраняются.",
+    "comparison": "m-form-comparison.json",
+    "complete_pass": [
+      "P/01",
+      "P/03",
+      "P/04",
+      "P/05"
+    ],
+    "new_complete_pass": [],
+    "remaining": "P/02, P/06–P/10 имеют прежний долг формы M вне восьми описаний. Подробности и адреса — m-form-after.json."
+  },
+  "checklist": {
+    "scope_and_origin": "выполнено; базис и старый срез названы",
+    "history_outside_M": "выполнено в охвате восьми описаний; removed хранит дословные фрагменты",
+    "schema_copy_and_links": "выполнено; полный охват копий и адреса проверены",
+    "current_format": "выполнено в изменяемом объёме",
+    "fields_and_refusals": "выполнено; исполнимые условия сохранены",
+    "races_lifecycles_stands_and_product_bytes": "не относится: правка описаний, эти правила и байты не менялись",
+    "new_rule_ids_or_checklist_items": "не относится: новых требований нет",
+    "checks_limits": "Документы, схемы и тесты навыка; кандидаты, генерация реализации, суд и боевые стенды не запускались"
+  },
+  "validation": {
+    "environment": "environment.json: Python 3.12.15; все 51 закреплённая версия совпала",
+    "check_spec_platform": {
+      "before_exit": 0,
+      "after_exit": 0,
+      "logs": [
+        "check-spec-before.log",
+        "check-spec-after.log"
+      ]
+    },
+    "scope_proof": "scope-proof.json: вне 1152 строк description остальные байты схем сохранены; проза вне построенных блоков сохранена; все JSON Pointer разрешаются.",
+    "skill_tests": {
+      "before": {
+        "tests": 988,
+        "seconds": 773.293,
+        "result": "FAILED (failures=62, errors=10, skipped=13)"
+      },
+      "after": {
+        "tests": 988,
+        "seconds": 763.548,
+        "result": "FAILED (failures=62, errors=10, skipped=13)"
+      },
+      "no_new_failures": true,
+      "identical_failure_and_subtest_ids": 72,
+      "evidence": "test-comparison.json; skill-tests-before.log; skill-tests-after.log"
+    },
+    "copy_replay": "replay-proof.json: все 145 файлов воспроизведены на временной копии базиса побайтно; второй запуск меняет 0 схем и 0 строк истории."
+  },
+  "handoff": "Точный итоговый коммит и каталог указывает штатная квитанция cammeta-task done; до приёма main и дерево не убираются.",
+  "handoff_check": {
+    "task_sha256": "02816c894b9d0747f8964c77dbbf2d58fe39af608c82f40522066d7423322fec",
+    "task_unchanged": true,
+    "adr_0133_unchanged_in_fetched_origin": true,
+    "fetched_origin_main": "5e7daf4a6552dee76ed2066fac12585822004650",
+    "overlap_with_new_main": [
+      "Platform/02-installer/data/alarms-retention.schema.json",
+      "Platform/02-installer/data/manifest-rev.schema.json",
+      "Platform/02-installer/data/manifest-row.schema.json",
+      "Platform/02-installer/data/retention.schema.json"
+    ],
+    "merge_rule": "После приёма самостоятельно в main не вливать: в новом main изменились те же четыре схемы. Сообщить judge и ждать маршрута; эта работа сдана на исходном базисе. Полный m_form в отчёте относится к своей ветке, а не к обновлённому main."
+  }
+}
