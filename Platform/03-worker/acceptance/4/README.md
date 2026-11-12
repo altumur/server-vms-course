@@ -53,7 +53,7 @@ The cases that need a scripted clock, the order of calls or store replies are ro
 | Subject | Seams |
 |---|---|
 | the order of the stop by SIGTERM: the units, the closing of the place writers, the last heartbeat, the place let go before the slot is given away (sc. 37 sees only both writes); a crash writes nothing | `s1-stop-order`, `s2-crash-no-hooks` of chapter 3.1 |
-| the stop term (P/03.4-18): a slow `stop_unit` under the scripted clock, the slot given away within `WRITE_WINDOW` − `RENEW_EVERY` from the last confirmation | `s3-stop-slow-unit`, `s4-stop-two-slow-units` of chapter 3.1 |
+| the stop term (P/03.4-18): a slow `stop_unit` under the scripted clock, the write that gives away the slot is sent no later than `WRITE_WINDOW` after the send moment of the last confirmed request | `s3-stop-slow-unit`, `s4-stop-two-slow-units` of chapter 3.1 |
 | the stand-in at the neighbours of STALL and FOR, its strict place, no revival of a fenced holder | `s1`, `s2`, `s7`–`s13` |
 | the memory budget and the base heartbeat | `s3`–`s6` |
 | the cadence of the heartbeat (at most ⌊seconds / HEARTBEAT_EVERY⌋ + 1 writes) and no writes of a nobody | `s14-lease-run-live`, `s15-lease-run-nobody` |
