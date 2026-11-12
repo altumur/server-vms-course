@@ -26,7 +26,7 @@
     {
       "name": "sock",
       "type": "string",
-      "description": "A role of the socket or peer:<role> of a connection over -api (#var sock of the table); checked by the existing check.",
+      "description": "The caller transport role by P/01.2-R017 (#var sock of the table); checked by the existing check.",
       "constraints": {
         "required": true,
         "pattern": "(?:(?:peer:)?[a-z][a-z0-9_-]*)"

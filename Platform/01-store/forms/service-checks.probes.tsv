@@ -8,7 +8,7 @@ n	case	sock	body
 0	pass	console	{"method": "GET", "path": "/v1/status", "query": "", "size": 0, "role_header": null}
 0	pass	console	{"method": "GET", "path": "/metrics", "query": "", "size": 8, "role_header": null}
 0	pass	admin	{"method": "POST", "path": "/v1/join", "query": "", "size": 8, "role_header": null}
-0	pass	configstore	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
+0	pass	peer:configstore	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
 0	pass	admin	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": null}
 0	pass	console	{"method": "POST", "path": "/v1/write", "query": "x=1", "size": 4, "role_header": "admin"}
 0	pass	console	{"method": "GET", "path": "/v1/rights", "query": "", "size": 0, "role_header": null}
@@ -33,8 +33,8 @@ n	case	sock	body
 6	only	writer	{"method": "GET", "path": "/metrics", "query": "", "size": 8, "role_header": "console"}
 6	pair	console	{"method": "POST", "path": "/v1/join", "query": "", "size": 0, "role_header": "admin"}
 7	only	console	{"method": "POST", "path": "/v1/join", "query": "", "size": 8, "role_header": null}
-7	only	configstore-door	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
+7	only	peer:configstore-door	{"method": "POST", "path": "/v1/leave", "query": "", "size": 2, "role_header": "console"}
 7	nopair	console	the next row names only /v1/copy, which this row does not name
 8	only	console	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": null}
-8	only	configstore	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": "console"}
+8	only	peer:configstore	{"method": "GET", "path": "/v1/copy", "query": "", "size": 0, "role_header": "console"}
 8	nopair	console	the last row of the table

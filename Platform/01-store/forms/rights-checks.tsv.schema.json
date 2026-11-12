@@ -14,7 +14,7 @@
     {
       "name": "id",
       "type": "string",
-      "description": "The stable address of the row: rc-<check> (rc-forwarded_admin is the second row of the check forwarding_untrusted), apart from the order n; not renumbered.",
+      "description": "The stable address of the row, prefixed rc-, independent of check and the order n; not renamed or renumbered.",
       "constraints": {
         "required": true,
         "pattern": "(?:rc-[a-z][a-z0-9_]*)"
@@ -46,7 +46,8 @@
       "constraints": {
         "required": true,
         "pattern": "(?:[a-z][a-z0-9_]*)"
-      }
+      },
+      "description": "The refusal name in refusals.tsv; several checks may select the same refusal."
     },
     {
       "name": "when",

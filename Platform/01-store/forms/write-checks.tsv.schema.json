@@ -14,7 +14,7 @@
     {
       "name": "id",
       "type": "string",
-      "description": "wc-<check> or wc-batch_<check>, stable, not renumbered.",
+      "description": "The stable address of the row, prefixed wc-, independent of check and the order n; not renamed or renumbered.",
       "constraints": {
         "required": true,
         "pattern": "(?:wc-[a-z][a-z0-9_]*)"
@@ -44,7 +44,8 @@
       "constraints": {
         "required": true,
         "pattern": "(?:[a-z][a-z0-9_]*)"
-      }
+      },
+      "description": "The refusal name in refusals.tsv; several checks may select the same refusal."
     },
     {
       "name": "when",
