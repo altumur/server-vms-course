@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "server": {
-   "description": "the drained server — the server name of N2.1 (an RFC 1123 host name: labels of 1–63 characters `[A-Za-z0-9-]` joined by «.», not beginning and not ending with «-», 253 bytes at most in all); \"\" — no drain: the end of a drain DELETE /drain writes server: \"\", does not delete the row; no row — no drain either (a fresh installation) (the Architect's decision of 2026-10-20)",
+   "description": "the drained server — the server name of N2.1 (an RFC 1123 host name: labels of 1–63 characters `[A-Za-z0-9-]` joined by «.», not beginning and not ending with «-», 253 bytes at most in all); \"\" — no drain: the end of a drain DELETE /drain writes server: \"\", does not delete the row; no row — no drain either (a fresh installation)",
    "type": "string",
    "pattern": "^(?:(([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9])(\\.([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]))*)?)$",
    "x-max-bytes": 253,
@@ -20,7 +20,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 N2.1 «Row revision»)",
    "x-whole": true,
    "x-codec": [
     "integer"

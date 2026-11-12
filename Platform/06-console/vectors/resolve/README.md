@@ -6,8 +6,7 @@ Vectors of the function `resolve(field, unit, domain)` of the cluster console �
 the domain → `inherit` of the manifest; a document field and a grouping field come only from the domain. The owner is lesson P/06, chapter 6.7 of the late
 layer ([P/06.7](../../spec/06.7-console.norms.md) N1.14, N3 `resolve`, N5 `resolve`); it is executed by the cluster console at the door
 `GET /domain/shared/<sub>`. The declaration `domain.shared` and `merge` are [P/02.1 N1.2b](../../../02-installer/spec/02.1-installer.norms.md),
-the shared document is [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) N1.2. The bytes are written by the Specification;
-the conformance of the product is by its acceptance against this table.
+the shared document is [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) N1.2. The conformance of the product is by its acceptance against this table.
 
 `case` is the case name; `expect` is the expected output. The table is the only source of these cases.
 
@@ -30,7 +29,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 | [`cases.tsv`](cases.tsv) (judge-only: checking material outside M), 14 rows: 10 computed, 4 `@exit 2` | `input` — the input of the command `resolve` as JSON text (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — the value of the unit row, no key — no value, `domain` — `{term, rev, value}` or `null`) → `expect`: `{"value":…,"from":…}` — own (`unit`), of the domain (`domain term T rev R`), of the manifest (`manifest`), the union `union` (`unit + domain term T rev R`), a document and its absence (`none`), `override` for a list; `{"groups":…,"from":…}` — a grouping field |
 
 On a divergence
-the norm is right, the vector is corrected by the Specification.
+the norm is right, and the vector is corrected.
 
 ## Vector wire
 

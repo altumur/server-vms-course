@@ -1,4 +1,4 @@
-# The closed list of the error words of the cluster console doors: chapters 6.1, 6.2, 6.4, 6.5, 6.6, 6.8, 6.9 (ADR-0094 B5, addendum (13)). The rules — chapter 6.1 N2 «Refusal: error and field».
+# The closed list of the error words of the cluster console doors: chapters 6.1, 6.2, 6.4, 6.5, 6.6, 6.8, 6.9. The rules — chapter 6.1 N2 «Refusal: error and field».
 # door — the doors: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
 # next_id /{sub}/next_id; changes /changes — no rows of its own, the words of 6.1 N4 «Change feed» — the rows *; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
 # folders /folders, /folders/{id}; operations /{sub}/operations…; pass the routes door.pass, a refusal of the console: the worker's answer goes as received, the form ProblemRefusal carries no words of its own (code and message are named by the manifest); pages the pages and /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
@@ -65,13 +65,13 @@ tables	409	conflict	/<field>	row check contract P5; 6.1 N4
 tables	409	refused	-	6.1 N4
 tables	409	in flight	-	6.1 N3 «replay memory»
 tables	412	revision moved	/revision	6.1 N2 «Versions»
-tables	422	key reused	-	6.1 N3 «replay memory»; ADR-0094 addendum. (14)
+tables	422	key reused	-	6.1 N3 «replay memory»
 tables	413	row too large	-	6.1 N3 «replay memory»
 next_id	404	no such path	-	6.1 N2 «Counter door»
 batch	400	not_json	-	6.1 N4 «Batch door»
 batch	400	bad batch	/<field>	6.1 N4 «Batch door»
 batch	400	badkey	/<field>	6.1 N4 «Batch door»
-batch	400	no anchor	/writes/<number>/fields/<field>	6.1 N2 «Batch door»; ADR-0094 addendum. (12) item. 3
+batch	400	no anchor	/writes/<number>/fields/<field>	6.1 N2 «Batch door»
 batch	400	Idempotency-Key required	-	6.1 N3 «batch»
 batch	400	sealing key required	-	6.2 N4
 batch	400	a sealed value is not taken from outside — give the password itself	/writes/<number>/fields/<field>	6.2 N4
@@ -98,21 +98,21 @@ batch	409	in flight	-	6.1 N3 «batch»
 batch	412	row moved	/writes/<number>/cas	6.1 N2 «Batch door»; at the guard — /guards/<number>/index
 batch	413	batch too large	-	6.1 N1.4, N4 «Batch door»
 batch	413	row too large	-	6.1 N4 «Batch door»
-batch	422	key reused	-	6.1 N3 «batch»; ADR-0094 addendum. (14)
+batch	422	key reused	-	6.1 N3 «batch»
 batch	503	store unavailable	-	6.1 N4 «Batch door»
 policy	400	refused	/servers	6.6 N4
 policy	400	Idempotency-Key required	-	6.6 N2.1 «Replay memory»
 policy	400	If-Match is a unit revision	-	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 policy	412	revision moved	/revision	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 policy	409	in flight	-	6.6 N2.1 «Replay memory»
-policy	422	key reused	-	6.6 N2.1 «Replay memory»; ADR-0094 addendum. (14)
+policy	422	key reused	-	6.6 N2.1 «Replay memory»
 drain	400	refused	-	6.6 N4
 drain	409	refused	-	6.6 N4
 drain	400	Idempotency-Key required	-	6.6 N2.1 «Replay memory»
 drain	400	If-Match is a unit revision	-	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 drain	412	revision moved	/revision	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 drain	409	in flight	-	6.6 N2.1 «Replay memory»
-drain	422	key reused	-	6.6 N2.1 «Replay memory»; ADR-0094 addendum. (14)
+drain	422	key reused	-	6.6 N2.1 «Replay memory»
 labels	400	labels	/labels	6.6 N4
 labels	400	refused	-	6.6 N4
 labels	404	refused	-	6.6 N4
@@ -120,20 +120,20 @@ labels	400	Idempotency-Key required	-	6.6 N2.1 «Replay memory»
 labels	400	If-Match is a unit revision	-	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 labels	412	revision moved	/revision	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 labels	409	in flight	-	6.6 N2.1 «Replay memory»
-labels	422	key reused	-	6.6 N2.1 «Replay memory»; ADR-0094 addendum. (14)
+labels	422	key reused	-	6.6 N2.1 «Replay memory»
 decommission	400	refused	-	6.6 N4
 decommission	404	refused	-	6.6 N4
 decommission	409	server answers	-	6.6 N3
 decommission	400	Idempotency-Key required	-	6.6 N2.1 «Replay memory»
 decommission	409	in flight	-	6.6 N2.1 «Replay memory»
-decommission	422	key reused	-	6.6 N2.1 «Replay memory»; ADR-0094 addendum. (14)
+decommission	422	key reused	-	6.6 N2.1 «Replay memory»
 schema	400	a version is a whole number from 1	-	6.6 N3 «raise_schema» step 1
 schema	409	refused	-	6.6 N4
 schema	400	Idempotency-Key required	-	6.6 N2.1 «Replay memory»
 schema	400	If-Match is a unit revision	-	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 schema	412	revision moved	/revision	6.1 N2 «Versions»; 6.6 N2.1 «Row revision»
 schema	409	in flight	-	6.6 N2.1 «Replay memory»
-schema	422	key reused	-	6.6 N2.1 «Replay memory»; ADR-0094 addendum. (14)
+schema	422	key reused	-	6.6 N2.1 «Replay memory»
 where	400	badkey	-	6.5 N4
 pages	404	no such version	-	6.5 N4
 pages	404	is mounted	-	6.5 N2

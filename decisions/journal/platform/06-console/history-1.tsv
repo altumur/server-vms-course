@@ -290,3 +290,13 @@ P/06.1-R029	spec/06.1-console.norms.md#N3	ADR-0083 addendum (1), worker-table si
 -	spec/06.1-console.norms.md#readiness-checklist	ADR-0083 addendum (1), resource body-copy coverage P/06.1-13; ru	2026-11-11	(часть, стадия B)
 -	spec/06.1-console.norms.md#readiness-checklist	ADR-0083 addendum (1), resource sweep coverage P/06.1-14; ru	2026-11-11	(часть, стадия B)
 -	acceptance/1/README.md#checks-outside-the-sequential-http-file	review of P06.16 reject-1, finding 10: origin text in M	2026-11-11	the counterexamples of runs
+P/06.1-R032	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05): the move of the N4 tables into forms/refusals.tsv	2026-11-05	The form preserves each original normative cell; 
+P/06.1-R032	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05); ru	2026-11-05	Форма сохраняет исходные нормативные ячейки; 
+P/06.1-R033	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05): the move of the N4 tables into forms/refusals.tsv	2026-11-05	The form preserves each original normative cell; 
+P/06.1-R033	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05); ru	2026-11-05	Форма сохраняет исходные нормативные ячейки; 
+P/06.1-R034	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05): the move of the N4 tables into forms/refusals.tsv	2026-11-05	The form preserves each original normative cell; 
+P/06.1-R034	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05); ru	2026-11-05	Форма сохраняет исходные нормативные ячейки; 
+P/06.1-R035	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05): the move of the N4 tables into forms/refusals.tsv	2026-11-05	The form preserves each original normative cell; 
+P/06.1-R035	spec/06.1-console.norms.md#N4	commit 54bd94881 (forms and seams of the nine chapters of the console, 2026-11-05); ru	2026-11-05	Форма сохраняет исходные нормативные ячейки; 
+P/06.1-R213	spec/06.1-console.norms.md#N2	commit 20b64867c (ADR-0094 B5: the closed list of error and field, 2026-10-31)	2026-10-31	, the rules as before
+P/06.1-R213	spec/06.1-console.norms.md#N2	commit 20b64867c (ADR-0094 B5: the closed list of error and field, 2026-10-31); ru	2026-10-31	, правила прежние
