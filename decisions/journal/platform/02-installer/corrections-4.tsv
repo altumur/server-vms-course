@@ -1,3 +1,4 @@
 date	sample	fix	languages
 2026-11-05	форма пакета P/02: свойства файлов и чистого опроса только чтением	ADR-0125 доп. (5): acceptance/4/seams.tsv, 11 сценариев/19 шагов; RUN/CALL не доказывают установку ОС или весь rollout	all
 2026-11-13	проход P02.63 (б): нечитаемая обходимая строка secrets status/seal (P/02.4-R396) без шва	ADR-0133 доп. (107) п. 1 (б): acceptance/4/seams.tsv s15-secrets-walk-unreadable (domain/book-seal без seed_secret → exit 1, unknown [], untouched), вне ворот как s12/s13 до функции адаптера secrets-walk	all
+2026-11-13	P02.64: исход неверной опции команд P/02 (daemon-flags: чужая, неизвестная, повторённая, без значения, вне типа, required, bad) не судился	решение Архитектора по вопросу 1 P02.63: acceptance/4/seams.tsv s16-command-options (secrets new -bogus, -last → exit 2, stderr называет опцию, файла нет; rights без -deployment и с повторённой -deployment → exit 2), ворота этапа 8	all
