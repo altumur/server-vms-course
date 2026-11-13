@@ -1,0 +1,67 @@
+{
+ "C": "0fbe6e55ceb0b07e4a70727e813934a2f06edb1b",
+ "baseline": "P01.299 accepted pair; unchanged classifications inherited",
+ "delta_sha256": "9abb9b3beb3c72119a126878eb4d968efe5c9627105e844123bc026ede034237",
+ "deltas": [
+  {
+   "task": "P01.324",
+   "records": [
+    "Platform/01-store/acceptance/3/inputs/member-join-other.json",
+    "Platform/01-store/acceptance/3/inputs/member-leave-other-follower.json",
+    "Platform/01-store/acceptance/3/inputs/member-leave-other.json"
+   ],
+   "author_provider": "Anthropic",
+   "reviewer_provider": "OpenAI",
+   "provider_evidence": "actual Codex classification review in P01.329; task provider claude",
+   "accepted_receipt": "reviews/P01.324-accepted.json",
+   "review": "reviews/P01.324-classification-review-Codex.md",
+   "review_sha256": "77b5a076a762b35475774df99fb9f02f977e3d215898a5e7a6b949824ba46479",
+   "inherited_from": "accepted P01.329 FILTER-REVIEWS.json; unchanged classification"
+  },
+  {
+   "task": "P01.320",
+   "records": [
+    "Platform/01-store/qualification/stand-procedures.md",
+    "Platform/01-store/ru/qualification/stand-procedures.md"
+   ],
+   "author_provider": "Anthropic",
+   "reviewer_provider": "OpenAI",
+   "provider_evidence": "actual Codex classification review in P01.329; task provider claude",
+   "accepted_receipt": "reviews/P01.320-accepted.json",
+   "review": "reviews/P01.320-classification-review-Codex.md",
+   "review_sha256": "5ad6a475fbc48eda5d2ab79daa6e2af70b64f972bf2f54a821637e4787c1937a",
+   "inherited_from": "accepted P01.329 FILTER-REVIEWS.json; unchanged classification"
+  },
+  {
+   "task": "P03.35",
+   "records": [
+    "Platform/03-worker/ru/vectors/fetched/README.md",
+    "Platform/03-worker/vectors/fetched/README.md",
+    "Platform/03-worker/vectors/fetched/cases.tsv"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "accepted.window equals architect Claude handle; accepted receipt is review record",
+   "accepted_receipt": "reviews/P03.35-accepted.json",
+   "review": "reviews/P03.35-accepted-review.json",
+   "review_sha256": "f157fbfd0130f11023a5780ef1ae3cd1e6825794e94291c4ef88f99fd03e1b05",
+   "inherited_from": "accepted P01.329 FILTER-REVIEWS.json; unchanged classification"
+  },
+  {
+   "task": "P01.341",
+   "records": [
+    "Platform/01-store/forms/production/soak.json",
+    "Platform/01-store/forms/production/soak.schema.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "task provider codex; accepted.window equals architect Claude handle",
+   "accepted_receipt": "reviews/P01.341-accepted.json",
+   "review": "reviews/P01.341-accepted.json",
+   "review_sha256": "6f8dc49446c647d0321ff8aaee08e7188fd0f5c655050fd6e8d6999e6ab24d84"
+  }
+ ],
+ "filter_author_provider": "per-record actual provider in deltas",
+ "filter_reviewer_provider": "different actual provider per record in deltas",
+ "all_delta_records_covered": true
+}

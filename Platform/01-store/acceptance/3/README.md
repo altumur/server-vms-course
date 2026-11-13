@@ -8,7 +8,7 @@ The acceptance checks the requirements of P/01.3 named below.
 Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store`, `@backup store`,
 `@import store` and the door `restored`; the store group stand — `@group-setup`, `@store-start`,
 `@restart store@<id>`, `@sigterm`/`@sigkill store@<id>`, `@store-op`, the doors `store@<id>`, `admin@<id>`, the probe `@tls` to
-`api@<id>` (sc. 07, 17, 18, 25–29, 31–35, 37, 37; the section [«Store group stand»](#store-group-stand)). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
+`api@<id>` (sc. 07, 17, 18, 25–29, 31–35, 37; the section [«Store group stand»](#store-group-stand)). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
 a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description.
 
 ## Profile interface
@@ -154,7 +154,7 @@ The runner starts no next joining voter until this barrier succeeds. It polls st
 
 The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the stand supplies kits by P/01.3-R009 (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The stand group has three voters and uses mTLS between members. The box store build
-(`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–35, 37, 37 are not_applicable for it, not red; without
+(`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–35, 37 are not_applicable for it, not red; without
 the marker they are not executed («Store group stand» above).
 
 - **A batch in the group (ADR-0094 B9).** A door forwards a batch whole: the followers read both rows with one version; a replay by `id` goes through a voter and through a door; a stale `cas` of a row means the others are not written. The door's own row by a batch — 403 (N1.3 `door`). After `@sigkill` of the leader the new leader gives both rows.

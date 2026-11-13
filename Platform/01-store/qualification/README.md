@@ -79,6 +79,14 @@ The environment and the method are not budgets. The first budgets were set for a
 | RUN-H02 | Independent raw HTTP GET /v1/copy on admin and ordinary role sockets; fragmented CL/chunked success, concurrent atomic pairs, wrong method/path and framing precedence. | One 200 application/x-ndjson with complete framing/consistent artifact; exact role 403 before snapshot; 405/Allow GET, HEAD bodyless; other path 404. No private prelude or EOF-only success. | Independent HTTP+JSONL oracle; no producer client as its own judge, no list-plus-GET snapshot or 403 or 404 widening. |
 | RUN-H03 | Previous published copy; pre-header snapshot refusal and failures after 200: short CL, missing terminal chunk, EOF, cancel, stalled sink and shutdown. | Before headers use owned failures incl 503 UnavailableFault; after 200 only incomplete close, no second fault/final success. CLI validates full artifact/framing and preserves previous file on any incomplete result. | Independent stream/file/cancellation evidence; false 200 success, second JSON fault and partial-file publication controls. |
 
+## Additional adapter qualification record
+
+RUN-F05 is an additional Q record for the Go Raft adapter. It complements the closed group/probe inventory of `P/01/production`; it adds no row to `forms/production.tsv`, no D7 payload and no requirement for other languages. It uses qualified observations of the existing fault/storage boundaries. A missing conflict/replacement observer or an unactivated control leaves the record blocked/NotExecuted, never a clean result.
+
+| Id | Initial state and load/fault | Required observation | Binding and negative controls |
+|---|---|---|---|
+| RUN-F05 | A Go group under P/01.3-R180 with three voters and confirmed seed rows; a former leader has a proven uncommitted suffix, the majority commits a conflicting suffix during two-way isolation, then communication resumes. | The former leader replaces the conflict and continues serving without an unexpected command exit or signal (P/01.3-R180); reads return the confirmed rows and versions. | The [conflicting-suffix procedure](stand-procedures.md#former-leader-with-a-conflicting-suffix) requires independent activation evidence and controls; an unproved conflict is blocked/NotExecuted, never PASS. |
+
 ## Long random fault run
 
 [`soak.json`](../forms/production/soak.json) is the Q record of the long random fault run. Its duration is 2 h; its group and box fault inventories, observed properties and negative controls are data, not parameters hidden in a task. The [stand procedure](stand-procedures.md#long-random-fault-run) defines the history, controls and evidence. This record complements the case groups and the probes of N6.2; it is not a functional scenario or a new directive of J.
