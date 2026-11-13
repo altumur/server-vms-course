@@ -1228,7 +1228,7 @@ class Z21PrivateDoorprobe(unittest.TestCase):
         self.assertEqual([(o["op"], o["method"], o["path"]) for o in actual],
                          [(o["op"], o["method"], o["path"]) for o in self.doc.ops])
         for got, source in zip(actual, self.doc.ops):
-            self.assertEqual(got["declared"], {str(c): {"schemas": r["schemas"] or None, "headers": r["headers"] or None}
+            self.assertEqual(got["declared"], {str(c): {"schemas": r["schemas"], "headers": r["headers"] or None}
                                              for c, r in source["declared"].items()})
             query = []
             for p in source["params"]:

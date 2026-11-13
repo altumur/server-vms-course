@@ -23,8 +23,8 @@ RUNTIME = HERE / "launch/go/launch.go"
 FRAME = HERE / "launch/go/frame/frame.go"
 NORMS = L.norms("1")
 # N2.1 HTTP frame clauses selected by text prefix: header anchors state strict parser requirements.
-FRAME_ITEMS = ("- A body in `Transfer-Encoding: chunked`", "- **Early refusal.**", "- **Method and HTTP.**",
-               "- **Request line and headers.**", "- **Body framing**")
+FRAME_ITEMS = ("A body in `Transfer-Encoding: chunked`", "**Early refusal.**", "**Method and HTTP.**",
+               "**Request line and headers.**", "**Body framing**")
 FLAGS = L.form("daemon-flags.tsv")
 OPENAPI = L.openapi
 JUDGE = HERE / "launch_judge.py"
@@ -123,7 +123,7 @@ def frame_norms():
         out.append(f"//   req: {hits[0][0]} — {gen_core.brief(hits[0][1])}")
     # Older Source lacks this paragraph; when present, carry its actual anchor.
     for anchor, text in sec[2]:
-        if text.startswith("- **Input phase deadlines.**"):
+        if text.startswith("**Input phase deadlines.**"):
             out.append(f"//   req: {anchor} — {gen_core.plain(text)}")
     return "\n".join(out) + "\n"
 

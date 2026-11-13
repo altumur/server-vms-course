@@ -23,7 +23,11 @@ from gen_checks import go_str, gofmt  # noqa: E402
 L = lesson.CURRENT
 DEFAULT_OUT = L.out
 GO_MODULE = L.go_module
-CALLS = ("command", "load", "load-catalogue", "rollout-poll")
+OBSERVATION_CALLS = {
+    "installer-role-unit-groups": "InstallerRoleUnitGroups",
+    "secrets-walk": "SecretsWalk",
+}
+CALLS = ("command", "load", "load-catalogue", "rollout-poll", *OBSERVATION_CALLS)
 STAND = re.compile(r"\$(data|run|manifest)/[^\s\"]*")
 VAR = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*")
 RUN_EXPECT = re.compile(r"exit (0|[1-9][0-9]*)((?:; (?:stdout|stdout-text|stderr) .*)?)")
@@ -422,6 +426,19 @@ def _build(root=ROOT):
     files["go/lessonadapter/lessonadapter.go"] = gofmt(ADAPTER_TYPES)
     for name, text in STUBS.items():
         files[f"go/lessonadapter/{name}"] = gofmt(STUB_HEAD + text)
+    for port, fn in OBSERVATION_CALLS.items():
+        files[f"go/lessonadapter/{port.replace('-', '_')}.go"] = gofmt(STUB_HEAD + f'''import (
+    "encoding/json"
+    "fmt"
+)
+
+// {fn} calls the implementation's {port} seam with the scenario roots and input.
+// Return observations of the actual call described in acceptance/4/README.md,
+// without calculating an expected answer. Errors and panics fail the seam.
+func {fn}(roots Roots, input json.RawMessage) (json.RawMessage, error) {{
+    return nil, fmt.Errorf("lessonadapter.{fn}: not implemented")
+}}
+''')
     inv = ["# Inventory of the stage tests of the lesson (gen_cmdtests.py): every selected step or case — translated or excluded.",
            "step\tstage\ttest\tstatus\treason"] + ["\t".join(map(str, r)) for r in inventory]
     files["go/stagetests/inventory.tsv"] = "\n".join(inv) + "\n"
@@ -1149,6 +1166,17 @@ func (sc *scenario) invoke(st step) (got outcome, errs []string) {
 func (sc *scenario) call(name string, in any) (any, error) {
 	obj, _ := in.(map[string]any)
 	switch name {
+	case "installer-role-unit-groups", "secrets-walk":
+		raw, err := json.Marshal(in)
+		if err != nil { return nil, err }
+		var out json.RawMessage
+		if name == "installer-role-unit-groups" {
+			out, err = lessonadapter.InstallerRoleUnitGroups(sc.roots, raw)
+		} else {
+			out, err = lessonadapter.SecretsWalk(sc.roots, raw)
+		}
+		if err != nil { return nil, err }
+		return decode(out)
 	case "command":
 		r, err := sc.resolveJSON(obj["argv"])
 		if err != nil {
@@ -1567,13 +1595,15 @@ KIT_MD = """
 | Package | Import path | Origin |
 |---|---|---|
 | `stagetests` | `{module}/internal/stagetests` | generated from `forms/stages.kit.tsv`, `acceptance/K/seams.tsv`, `verdicts.tsv`; closed |
-| `lessonadapter` | `{module}/internal/lessonadapter` | `lessonadapter.go` — the kit's types (closed); `command.go`, `load.go`, `catalogue.go`, `poll.go` — **yours** |
+| `lessonadapter` | `{module}/internal/lessonadapter` | `lessonadapter.go` — the kit's types (closed); `command.go`, `load.go`, `catalogue.go`, `poll.go`, `installer_role_unit_groups.go`, `secrets_walk.go` — **yours** |
 
 ```go
 func Command(r Roots, process string, argv []string, stdin []byte) Result // your command, in process (no OS process)
 func Load(source string, text []byte) Loaded                            // your regular loader, one manifest alone
 func LoadCatalogue(manifests []Source) Catalogue                       // load_catalogue of a complete set
 func RolloutPoll(input json.RawMessage, events []Event) Poll           // your poll on virtual time (poll.go)
+func InstallerRoleUnitGroups(roots Roots, input json.RawMessage) (json.RawMessage, error)
+func SecretsWalk(roots Roots, input json.RawMessage) (json.RawMessage, error)
 type Roots struct { Data, Run, Manifest string }  // the $data/ $run/ $manifest/ of a scenario
 type Result struct { Exit int; Stdout, Stderr []byte }
 type Loaded struct { OK bool; Name, Class, Message string }       // Class text|form|relations; Message names the file
@@ -1581,6 +1611,8 @@ type Catalogue struct { OK bool; Names []string; Class, Message string }
 type Poll struct { State string; Result *PollResult }; type PollResult struct { Code int; Word string }
 ```
 
+InstallerRoleUnitGroups and SecretsWalk return observations of the actual implementation seam described in
+acceptance/4/README.md; errors, panics and invalid JSON fail the step.
 Each function is in its own file — edit one, never delete one. The stubs answer «not implemented» (a negative exit
 code is not an exit code), so every test is red until you connect your code. `Test<Stage>_<Scenario>` — a seam,
 `Test<Stage>_Verdicts` — the loader corpus (a subtest per case, `testdata/verdicts.jsonl`). The installations of

@@ -1,9 +1,10 @@
-"""P03 GEN01 overlay in the existing families part; private export only."""
+"""P03 GEN01 overlay in the existing families part, using an owned export fixture."""
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,20 +13,30 @@ import unittest
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 GEN = HERE.parent
-EXPORT = "1ddce2b1ac932095166653e06435ab1123ba0fb3"
-SPECS = Path("/home/pilot/coord103/candidate-p03-export")
 GOENV = dict(os.environ, GOFLAGS="-mod=vendor", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 
 
-@unittest.skipUnless((SPECS / ".git").exists(), "private P03 export is unavailable")
 class P03RowWritesKit(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory(prefix="p03-rowwrites-kit-")
         cls.kit = Path(cls.tmp.name) / "kit"
+        cls.specs = Path(cls.tmp.name) / "specs"
+        cls.specs.mkdir()
+        shutil.copytree(ROOT / "Platform", cls.specs / "Platform")
+        # This temporary Git export is test input, separate from experiment pins.
+        def git(*args):
+            return subprocess.check_output(["git", "-c", "user.name=normgen-fixture", "-c",
+                                            "user.email=normgen-fixture@example.invalid", *args],
+                                           cwd=cls.specs, stderr=subprocess.STDOUT, text=True).strip()
+        git("init", "-q")
+        files = sorted(str(p.relative_to(cls.specs)) for p in (cls.specs / "Platform").rglob("*") if p.is_file())
+        git("add", "--", *files)
+        git("commit", "-q", "-m", "Owned P03 normgen export fixture")
+        cls.export = git("rev-parse", "HEAD")
         cls.command = [sys.executable, str(HERE / "build_kit.py"), str(cls.kit), "--lesson", "03-worker",
                        "--module", "p03worker/03-worker", "--part", "families", "--part", "stagetests",
-                       "--export", EXPORT, "--specs", str(SPECS)]
+                       "--export", cls.export, "--specs", str(cls.specs)]
         cls.build()
         cls.manifest = json.loads((cls.kit / "kit.manifest.json").read_bytes())
         cls.mod = cls.kit / "03-worker"
@@ -38,14 +49,14 @@ class P03RowWritesKit(unittest.TestCase):
     @classmethod
     def build(cls):
         done = subprocess.run(cls.command, cwd=ROOT, capture_output=True, text=True)
-        if done.returncode: raise AssertionError("private KIT build: " + done.stdout + done.stderr)
+        if done.returncode: raise AssertionError("owned export KIT build: " + done.stdout + done.stderr)
 
     @classmethod
     def tearDownClass(cls): cls.tmp.cleanup()
 
     def test_private_inputs_closed_overlay_and_compilation(self):
         man = self.manifest
-        self.assertEqual(man["export"], EXPORT)
+        self.assertEqual(man["export"], self.export)
         self.assertEqual(man["parts"], ["families", "stagetests"])
         paths = {f["path"]: f for f in man["files"]}
         for path, entry in paths.items():
@@ -63,7 +74,7 @@ class P03RowWritesKit(unittest.TestCase):
         for path in ("Platform/03-worker/forms/row-write-bindings.tsv", "Platform/03-worker/forms/row-write-bindings.md",
                      "Platform/03-worker/data/state.schema.json", "Platform/common/data/codec.tsv",
                      "Platform/01-store/spec/01-store.api.openapi.yaml", "Platform/02-installer/spec/02.1-installer.schema.json"):
-            raw = subprocess.check_output(["git", "show", EXPORT + ":" + path], cwd=SPECS)
+            raw = subprocess.check_output(["git", "show", self.export + ":" + path], cwd=self.specs)
             self.assertEqual(forms[path], hashlib.sha256(raw).hexdigest(), path)
         generators = {e["path"] for e in prov["generators"]}
         self.assertIn("tools/normgen/gen_row_writes.py", generators)

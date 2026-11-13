@@ -11,12 +11,15 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import vector_consumers as C
+import consumer_vectors
 import wire
 
 PIN = '7b96ff9f84e8090e11922131bc77799f0a0b54e1'
@@ -98,6 +101,89 @@ class Registry(unittest.TestCase):
         wire.check_ignore(['/a~1b', '/list/0'], 'fixture')
         for paths in ([], [''], ['relative'], ['/bad~2'], ['/a','/a'], ['/a','/a/b']):
             with self.subTest(paths=paths), self.assertRaises(wire.WireError): wire.check_ignore(paths, 'fixture')
+
+
+class LocalAPIGates(unittest.TestCase):
+    """A local Go API is enabled by its gate, independently of lesson identity."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='consumer-local-gates-')
+        self.root = Path(self.tmp.name)
+        (self.root / 'Platform').mkdir()
+        shutil.copy2(ROOT / 'Platform/lessons.tsv', self.root / 'Platform/lessons.tsv')
+        path = self.root / C.FORM
+        path.parent.mkdir(parents=True)
+        path.write_text('\t'.join(C.COLUMNS) + '\n')
+        self.owner, self.package = '03-worker', 'fetched'
+        self.source_wire = next(line for line in (ROOT / wire.FORM).read_text().splitlines()
+                                if line.startswith('03-worker/fetched\tcases.tsv\tvectors\t'))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def fixture(self, owner='03-worker', name='fetched'):
+        self.owner, self.package = owner, name
+        directory = self.root / 'Platform' / owner / 'vectors' / name
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / 'cases.tsv').write_text('case\tinput\texpect\tnote\nlocal\tfixture\t["b","a"]\tindependent fixture\n')
+        (directory / 'README.md').write_text('# Vector wire\n')
+        fields = self.source_wire.split('\t')
+        fields[0], fields[-1] = owner + '/' + name, owner + '/vectors/' + name + '/README.md#vector-wire'
+        (self.root / wire.FORM).write_text('\t'.join(wire.COLUMNS) + '\n' + '\t'.join(fields) + '\n')
+        self.stages = self.root / 'Platform' / owner / 'forms/stages.kit.tsv'
+        self.stages.parent.mkdir(parents=True, exist_ok=True)
+        return SimpleNamespace(L=SimpleNamespace(key=owner, rel='Platform/' + owner),
+                               lesson_consumers=lambda root: C.for_lesson(root, owner))
+
+    def test_real_unqualified_and_qualified_gates_select_the_wire(self):
+        g = self.fixture()
+        for cell in ('vectors:fetched', 'code:*;vectors:03-worker/fetched'):
+            self.stages.write_text('stage\tgate\nnative\t' + cell + '\n')
+            with self.subTest(cell=cell):
+                decls = consumer_vectors.declarations(self.root, g)
+                self.assertEqual([(d['package'], d['table'], d['fn']) for d in decls],
+                                 [('03-worker/fetched', 'cases.tsv', 'Fetched')])
+                self.assertEqual(len(decls[0]['_runs']), 1)
+                self.assertEqual(decls[0]['compare'], 'set')
+
+    def test_comments_other_cells_and_substrings_never_activate(self):
+        g = self.fixture()
+        # No wire binding exists here: accidental activation must fail this test,
+        # rather than returning an unnoticed extra declaration.
+        (self.root / wire.FORM).write_text('\t'.join(wire.COLUMNS) + '\n')
+        for text in ('# vectors:fetched\nstage\tgate\nnative\tcode:*\n',
+                     'stage\tgate\tnote\nvectors:fetched\tbuild\tvectors:fetched\n',
+                     'stage\tgate\nnative\tvectors:fetched-extra\n'):
+            self.stages.write_text(text)
+            with self.subTest(text=text):
+                self.assertEqual(consumer_vectors.declarations(self.root, g), [])
+        self.stages.unlink()        # Historical sources may predate the gate/form.
+        self.assertEqual(consumer_vectors.declarations(self.root, g), [])
+
+    def test_selected_api_requires_real_binding_and_owned_table(self):
+        g = self.fixture()
+        self.stages.write_text('stage\tgate\nnative\tvectors:fetched\n')
+        (self.root / wire.FORM).write_text('\t'.join(wire.COLUMNS) + '\n')
+        with self.assertRaisesRegex(wire.WireError, 'no vector binding'):
+            consumer_vectors.declarations(self.root, g)
+        (self.root / 'Platform/03-worker/vectors/fetched/cases.tsv').unlink()
+        with self.assertRaisesRegex(wire.WireError, 'no assigned tables'):
+            consumer_vectors.declarations(self.root, g)
+
+    def test_gate_parser_rejects_malformed_cells(self):
+        g = self.fixture()
+        for cell in ('vectors:fetched;', 'code:*; vectors:fetched', 'vectors:fetched;vectors:fetched'):
+            self.stages.write_text('stage\tgate\nnative\t' + cell + '\n')
+            with self.subTest(cell=cell), self.assertRaises(wire.WireError):
+                consumer_vectors.declarations(self.root, g)
+
+    def test_local_api_selection_is_generic_for_another_lesson(self):
+        g = self.fixture('04-controller', 'local-probe')
+        with patch.dict(consumer_vectors.API, {'04-controller/local-probe': ('LocalProbe', 'cells')}):
+            for cell in ('vectors:local-probe', 'vectors:04-controller/local-probe'):
+                self.stages.write_text('stage\tgate\nnative\t' + cell + '\n')
+                with self.subTest(cell=cell):
+                    decls = consumer_vectors.declarations(self.root, g)
+                    self.assertEqual([(d['package'], d['fn']) for d in decls], [('04-controller/local-probe', 'LocalProbe')])
 
 
 class NewPin(unittest.TestCase):

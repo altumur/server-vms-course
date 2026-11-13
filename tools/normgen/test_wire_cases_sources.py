@@ -4,13 +4,13 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import check_forms
+import lesson
 import source_cells
 import wire
 from check_spec import Check
@@ -44,9 +44,9 @@ class ActualWireSources(unittest.TestCase):
             errors, stats = check_forms.check_wire(path, seen=seen)
             self.assertEqual(errors, [])
             total += stats["wire_bindings"]
-        self.assertEqual(total, 92)
+        self.assertEqual(total, 97)
         bindings = wire.parse(ROOT)
-        self.assertEqual(len(bindings), 92)
+        self.assertEqual(len(bindings), 97)
         self.assertEqual({(b.source, b.line) for b in bindings if b.key in MOVED},
                          {(wire.CASE_FORM, n) for n in (4, 5, 6)})
 
@@ -56,7 +56,7 @@ class ActualWireSources(unittest.TestCase):
             with self.subTest(owner=owner):
                 decls = [] if owner in ("02-installer", "06-console") else [
                     {"_form": True, "package": "common/probe"}]
-                with patch.object(gen_vectors, "L", SimpleNamespace(key=owner)), \
+                with patch.object(gen_vectors, "L", lesson.get(owner)), \
                      patch.object(gen_vectors, "plan", return_value=(decls, [])), \
                      patch.object(wire, "expand", return_value=([], [])), \
                      patch.object(gen_vectors, "read_table", return_value=([], ROOT / wire.FORM)):
@@ -64,6 +64,8 @@ class ActualWireSources(unittest.TestCase):
                 forms = {item["path"] for item in provenance["form"]}
                 self.assertIn(wire.FORM, forms)
                 self.assertIn(wire.CASE_FORM, forms)
+                if owner == "08-domain":
+                    self.assertIn("Platform/08-domain/forms/stages.kit.tsv", forms)
 
     def test_three_relocated_positional_headers_remain_bound(self):
         headers = source_cells.wire_headers(ROOT, source_scopes=("Platform",))

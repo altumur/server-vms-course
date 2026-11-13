@@ -1,4 +1,4 @@
-"""Judge the P/02 loader and canonical view against lesson data. With Go 1.22 and cached pinned modules, no network, require fresh manifest files/module requirements/sums and vet. Check947 verdicts and text/form/relations classes, 220exact canonical bytes and402yaml-suite layer1 outcomes. Each runtime mutant must disagree with data. The corpus cannot distinguish extra empty-value refusal, layer2 normalization4.0->4 (JCS/text bytes coincide), or x-opaque projection with no nested defaults; preserve V7 rules despite those equivalent mutants."""
+"""Judge the P/02 loader and canonical view against lesson data. With Go 1.22 and cached pinned modules, no network, require fresh manifest files/module requirements/sums and vet. Check951 verdicts and text/form/relations classes, 220exact canonical bytes and402yaml-suite layer1 outcomes. Each runtime mutant must disagree with data. The corpus cannot distinguish extra empty-value refusal, layer2 normalization4.0->4 (JCS/text bytes coincide), or x-opaque projection with no nested defaults; preserve V7 rules despite those equivalent mutants."""
 import lesson as output_lesson
 import json
 import os
@@ -486,7 +486,7 @@ class Loader(unittest.TestCase):
         self.assertEqual(bad, [])
         for k, (got, total) in ((k, v[:2]) for k, v in sums.items()):
             self.assertEqual(got, total, k)
-        self.assertEqual(int(sums["verdicts"][1]), 947)
+        self.assertEqual(int(sums["verdicts"][1]), 951)
         self.assertEqual(int(sums["canonical"][1]), 220)
         self.assertEqual(int(sums["yaml-suite"][1]), 402)
 

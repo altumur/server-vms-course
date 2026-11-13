@@ -87,8 +87,8 @@ def fake_go(g, mut=None):
     by_fn = {}
     for d in decls:
         by_fn.setdefault(d["fn"], []).append(d)
-    out = ["package vectoradapter", "", "import (", '\t"encoding/json"', '\t"sort"', '\t"strings"', ")", "",
-           "func val(s string) any {", "\tvar v any", "\t_ = json.Unmarshal([]byte(s), &v)", "\treturn v", "}", "",
+    out = ["package vectoradapter", "", "import (", '\t"bytes"', '\t"encoding/json"', '\t"fmt"', '\t"sort"', '\t"strings"', ")", "",
+           "func val(s string) any {", "\tvar v any", "\td := json.NewDecoder(bytes.NewBufferString(s))", "\td.UseNumber()", "\t_ = d.Decode(&v)", "\treturn v", "}", "",
            "func key(table, variant string, cells map[string]string) string {", "\tks := []string{}",
            "\tfor k := range cells {", '\t\tks = append(ks, k+"="+cells[k])', "\t}", "\tsort.Strings(ks)",
            '\treturn table + "|" + variant + "|" + strings.Join(ks, "\\x00")', "}", ""]
@@ -141,6 +141,39 @@ def fake_go(g, mut=None):
                        f"\treturn answers{fn}[key(table, variant, cells)]\n}}\n")
         else:
             out.append(f"func {fn}(input []byte) Answer {{\n\treturn answers{fn}[string(input)]\n}}\n")
+    # Positive mutant baselines must also execute all existing Common tests.
+    # These are owned response fixtures for the shared adapter APIs; no SUT
+    # implementation is inferred from their expected values.
+    shared = {
+        "crl": ("CRL", "input []byte", "any", "string(input)", "input", "nil"),
+        "revoked": ("Revoked", "file []byte", "any", "string(file)", "file", "nil"),
+        "store-client": ("StoreClient", "input []byte", "string", "string(input)", "input", '""'),
+        "log-mask": ("LogMask", "raw string, fields []byte", "string", 'raw + "\\x00" + string(fields)', "raw", '""'),
+    }
+    for name, table in g.common_vectors.composition(g.L.key, ROOT, known_only=True):
+        if name not in shared:
+            continue
+        fn, arguments, result_type, key_expr, column, zero = shared[name]
+        if fn in by_fn:
+            raise AssertionError(f"fixture API collision: {fn}")
+        rel, _, rows = g.common_vectors.read(ROOT, name, table)
+        fixture = g.common_vectors.fixtures(ROOT, name)
+        fields = fixture["fields.yaml"][1].decode() if name == "log-mask" else ""
+        values = {}
+        for no, row in rows:
+            key_value = row[column] + ("\x00" + fields if name == "log-mask" else "")
+            value = json.dumps(g.common_vectors.expected(name, row, f"{rel}:{no}"), ensure_ascii=False)
+            if key_value in values and values[key_value] != value:
+                raise AssertionError(f"conflicting fixture input: {name}:{no}")
+            values[key_value] = value
+        body = ",\n".join(f"\t{g.gstr(k)}: {g.gstr(v)}" for k, v in values.items())
+        out += [f"var common{fn} = map[string]string{{\n{body},\n}}",
+                f"func {fn}({arguments}) ({result_type}, error) {{",
+                f"\tanswer, ok := common{fn}[{key_expr}]",
+                f'\tif !ok {{ return {zero}, fmt.Errorf("undeclared {fn} fixture input") }}',
+                "\treturn val(answer)" + (".(string)" if result_type == "string" else "") + ", nil", "}"]
+        by_fn[fn] = []
+    out += ["var _ = fmt.Errorf"]
     return "\n".join(out), list(by_fn)
 
 

@@ -53,7 +53,8 @@ NORMS_13 = L.norms("3")
 REFUSALS = L.form("refusals.tsv")
 ACCEPT_2 = L.path("acceptance/2/README.md")
 IDENTITY = [
-    (NORMS_12, 'N1.1 Roles identity, box', "P/01.2-R006", r"\bbox:\s*(.*?)\s+doors:"),
+    (NORMS_12, 'N1.1 Roles identity, cluster', "P/01.2-R043", None),
+    (NORMS_12, 'N1.1 Roles identity, box', "P/01.2-R045", None),
     (NORMS_12, 'N3 check(role, action, key) steps 1-3', "P/01.2-R017", None),
     (NORMS_12, None, "P/01.2-R018", None),
     (NORMS_12, None, "P/01.2-R019", None),
@@ -61,19 +62,17 @@ IDENTITY = [
     (NORMS, 'N3 list', "P/01.1-R066", r"(Identity is checked before the operation.*?403 forbidden\.)"),
 ]
 ORDER = (NORMS_13, r"\*\*(P/01\.3-07)\*\*[^«]*the order «([^»]+)»")
-ROLE_HEADER = (ACCEPT_2, r"the name (X-[A-Za-z-]+) is a designation of the header of trusted role forwarding")
+ROLE_HEADER = (ACCEPT_2, r"The name (X-[A-Za-z-]+).*? is a designation of the header of trusted role forwarding")
 IDENTITY_REFUSALS = ("role_header", "identity", "forwarding_untrusted")
-ORDER_13 = r"(The order of checks: .*?→ body and membership \(400, 409\))"
 STUBS = {
     "Rights": [(NORMS_12, "P/01.2-R012", None), (NORMS_12, "P/01.2-R014", None), (NORMS_12, "P/01.2-R015", None),
                (NORMS_13, "P/01.3-R016", "door:GET `/v1/rights`")],
-    "Status": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R015", None),
-               (NORMS_13, "P/01.3-R016", "door:GET `/v1/status`"), (NORMS_13, "P/01.3-R017", ORDER_13)],
-    "Join": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R016", "door:POST `/v1/join`"),
-             (NORMS_13, "P/01.3-R017", ORDER_13)],
-    "Leave": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R016", "door:POST `/v1/leave`"),
-              (NORMS_13, "P/01.3-R017", ORDER_13), (NORMS_13, "P/01.3-R023", None)],
-    "Metrics": [(NORMS_13, "P/01.3-R015", None), (NORMS_13, "P/01.3-R016", "door:GET `/metrics`")],
+    "Status": [(NORMS_13, "P/01.3-R016", "door:GET `/v1/status`"), (NORMS_13, "P/01.3-R221", None)],
+    "Join": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/join`"),
+             (NORMS_13, "P/01.3-R017", None), (NORMS_13, "P/01.3-R221", None)],
+    "Leave": [(NORMS_13, "P/01.3-R016", "door:POST `/v1/leave`"),
+              (NORMS_13, "P/01.3-R221", None), (NORMS_13, "P/01.3-R023", None)],
+    "Metrics": [(NORMS_13, "P/01.3-R016", "door:GET `/metrics`"), (NORMS_13, "P/01.3-R221", None)],
     "CopyGet": [(NORMS_13, "P/01.3-R033", None), (NORMS_13, "P/01.3-R034", None)],
     "CopyHead": [(NORMS_13, "P/01.3-R033", None)],
 }
@@ -146,10 +145,10 @@ def pick(sec, how):
     if how == "intro":                      # Clauses before a section's first subsection; subsections have their own clauses.
         return items
     if how == "query":
-        start = [i for i, (_, t) in enumerate(items) if t.startswith("- **Query.**")]
+        start = [i for i, (_, t) in enumerate(items) if t.startswith("**Query.**")]
         if len(start) != 1:
-            raise GenError(f"{NORMS.name}: «{sec[0]}» — no single «- **Query.**» item")
-        end = next((j for j in range(start[0] + 1, len(items)) if items[j][1].startswith("- **")), len(items))
+            raise GenError(f"{NORMS.name}: «{sec[0]}» — no single «**Query.**» item")
+        end = next((j for j in range(start[0] + 1, len(items)) if items[j][1].startswith("**")), len(items))
         return items[start[0]:end]
     return items
 

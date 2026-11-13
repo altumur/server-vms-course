@@ -341,9 +341,18 @@ class SourceSchemaReader:
         self.docs, self.provenance = {}, {}
         self.kinds, self.children, self.locations = {}, {}, {}
         self.edges, self.visited, self.active = {}, set(), set()
+        self.walk_stack = []
         self.parameters = {}
         self.document(self.source)
         self._walk(self.source, "", "schema" if self.is_json(self.source) else "document", (self.source,))
+        # Discovering an external resource does not make all its unrelated
+        # schemas descendants of the reference that happened to load it.
+        while True:
+            pending = [p for p in self.docs if (p, "", "schema" if self.is_json(p) else "document") not in self.visited]
+            if not pending:
+                break
+            for path in pending:
+                self._walk(path, "", "schema" if self.is_json(path) else "document", (path,))
 
     @staticmethod
     def escape(token):
@@ -629,8 +638,6 @@ class SourceSchemaReader:
             if not allowed and not (origin_owner is not None and target_owner is not None
                                     and self._late(source, pointer, target_owner)):
                 raise CheckingError(f"forbidden owner transition: {source}#{pointer} -> {target}")
-            if target in chain:
-                raise CheckingError("cross-file reference cycle: " + " -> ".join(map(str, chain + (target,))))
         # The owner/declaration check above always runs, including for cached resources and aliases.
         self.document(target)
         self.at(target, fragment, kind)
@@ -639,16 +646,20 @@ class SourceSchemaReader:
             raise CheckingError("physical reference target changed after reading")
         self.edges[identity] = (target, fragment)
         next_chain = chain + (target,) if target != source else chain
-        if target != source:
-            self._walk(target, "", "schema" if self.is_json(target) else "document", next_chain)
         return target, fragment, next_chain
 
     def _walk(self, path, pointer, kind, chain):
         node = self.at(path, pointer, kind)
         key = (path, pointer, kind)
-        if key in self.active or key in self.visited:
+        if key in self.active:
+            cycle = self.walk_stack[self.walk_stack.index(key):]
+            if len({entry[0] for entry in cycle}) > 1:
+                raise CheckingError("cross-file reference cycle: " + " -> ".join(f"{p}#{ptr}" for p, ptr, _ in cycle))
+            return
+        if key in self.visited:
             return
         self.active.add(key)
+        self.walk_stack.append(key)
         if kind == "schema":
             self._check_schema(node)
         if type(node) is dict and "$ref" in node:
@@ -657,6 +668,7 @@ class SourceSchemaReader:
         for child, child_kind in self.children[key]:
             self._walk(path, child, child_kind, chain)
         self.active.remove(key)
+        self.walk_stack.pop()
         self.visited.add(key)
 
     @staticmethod
@@ -989,7 +1001,10 @@ class SourceSchemaReader:
     # producer output. Verified copies may be selected on an individual reader.
     P06_OPERATION_IDENTITY_INPUT = Path(
         "/home/pilot/coord103-src/z21-p06-operation-identity-current-binding-a08-20261108/immutable-input")
-    P06_CURRENT_API_SHA256 = "a64e0b92ab0fba1581309ef88f2b62fcaa3d29521f06e8d64126e64b3469f8d2"
+    # Immutable operation coordinates keep their original API binding; current
+    # payload bytes and the complete source slot roster are checked separately.
+    P06_IDENTITY_BASE_API_SHA256 = "a64e0b92ab0fba1581309ef88f2b62fcaa3d29521f06e8d64126e64b3469f8d2"
+    P06_CURRENT_API_SHA256 = "a189b5bb056547ac74990fb061d02f197a82a8f711983372eb138b9c20e8e323"
     P06_BINDING_SHA256 = "301877bb8402fc1f02ca5273161b2d943be6d4f139b4208c331fdc823b868751"
     P06_WITNESS_SHA256 = "af5920d7fb4e73055b33229f9a65c330bc021d4e780e9cd7719b46531d547f19"
 
@@ -1007,7 +1022,7 @@ class SourceSchemaReader:
                 binding.get("Source_pin") != "a08ef6ef101514c926e68d3fb00c8d121da60e01" or
                 type(binding.get("current_API")) is not dict or
                 binding["current_API"].get("path") != "Platform/06-console/spec/06-console.api.openapi.yaml" or
-                binding["current_API"].get("sha256") != self.P06_CURRENT_API_SHA256 or
+                binding["current_API"].get("sha256") != self.P06_IDENTITY_BASE_API_SHA256 or
                 type(binding.get("immutable_original_witness")) is not dict or
                 binding["immutable_original_witness"].get("sha256") != self.P06_WITNESS_SHA256):
             raise CheckingError("incomplete/wrong current Source identity binding")
@@ -2370,6 +2385,21 @@ class SourceSchemaReaderControls(unittest.TestCase):
             target.write_bytes(content)
             with self.subTest(content=content), self.assertRaises(CheckingError):
                 self.reader({"$ref": "../data/target.schema.json"})
+
+    def test_cross_file_return_to_other_pointer_is_not_recursion(self):
+        a = self.schema({"$defs": {"Start": {"$ref": "other.schema.json#/$defs/Start"},
+                                   "Leaf": {"type": "integer", "minimum": 1}}})
+        self.schema({"$defs": {"Start": {"$ref": "target.schema.json#/$defs/Leaf"}}}, name="other")
+        reader = self.reader({"$ref": "../data/target.schema.json#/$defs/Start"})
+        validator = reader.validator_at(a, "/$defs/Start")
+        self.assertTrue(validator.is_valid(1))
+        self.assertFalse(validator.is_valid(0))
+        self.assertFalse(validator.is_valid("1"))
+        # A cycle through object children is still a cross-file cycle.
+        self.schema({"type": "object", "properties": {"next": {"$ref": "other.schema.json"}}})
+        self.schema({"type": "object", "properties": {"next": {"$ref": "target.schema.json"}}}, name="other")
+        with self.assertRaises(CheckingError):
+            self.reader({"$ref": "../data/target.schema.json"})
 
     def test_18_schema_dialect_and_base_are_not_silently_changed(self):
         for bad in ({"$schema": "http://json-schema.org/draft-07/schema#"}, {"$id": "https://other/"},

@@ -1,4 +1,4 @@
-"""Test build_kit --export (Architect, 2026-11-05): Platform inputs come from the export Git commit, code from a clean course HEAD, both SHAs recorded without -dirty in the manifest and SOURCE.txt. Dirty tools/normgen refuses; the course tree stays unchanged. Temporary repositories contain tracked generator files and Platform from EXPORT in CAMMETA_SPECS or ~/cammeta-specs."""
+"""Test build_kit --export (Architect, 2026-11-05): Platform inputs come from the export Git commit, code from a clean course HEAD, both SHAs recorded without -dirty in the manifest and SOURCE.txt. Dirty tools/normgen refuses; the course tree stays unchanged. Temporary repositories contain tracked generator files and an owned current Platform snapshot; no experiment pin is selected."""
 import hashlib
 import json
 import os
@@ -14,7 +14,6 @@ sys.path.insert(0, str(HERE))
 import build_kit  # noqa: E402
 
 ROOT = build_kit.ROOT
-EXPORT = "4c1015709945fd5dc9434a2aca4d554aeaaa1b65"
 MODULE = "p01store/01-store"
 PARTS = ["door", "flags", "refusals", "launch", "vectors", "stagetests", "core", "families", "admin"]
 
@@ -30,7 +29,6 @@ def repo(path):
     return path
 
 
-@unittest.skipUnless((build_kit.SPECS / ".git").exists(), "no cammeta-specs")
 class Export(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -42,12 +40,15 @@ class Export(unittest.TestCase):
             if src.is_file():
                 (cls.course / rel).parent.mkdir(parents=True, exist_ok=True)
                 (cls.course / rel).write_bytes(src.read_bytes())
-        git(cls.course, "add", "-A")
+        git(cls.course, "add", "--", *git(ROOT, "ls-files", "tools/normgen").splitlines())
         git(cls.course, "commit", "-q", "-m", "course")
         cls.course_sha = git(cls.course, "rev-parse", "HEAD")
         cls.specs = repo(t / "specs")
-        build_kit.unpack(build_kit.SPECS, EXPORT, "Platform", cls.specs)
-        git(cls.specs, "add", "-A")
+        # Owned current-source export fixture, independent of any experiment pin.
+        shutil.copytree(ROOT / "Platform", cls.specs / "Platform")
+        fixture_stage = cls.specs / "Platform/01-store/forms/stages.kit.tsv"
+        fixture_stage.write_text("# Owned export fixture\n" + fixture_stage.read_text())
+        git(cls.specs, "add", "--", *sorted(str(p.relative_to(cls.specs)) for p in (cls.specs / "Platform").rglob("*") if p.is_file()))
         git(cls.specs, "commit", "-q", "-m", "export")
         cls.export = git(cls.specs, "rev-parse", "HEAD")
         cls.before = git(ROOT, "status", "--porcelain")
@@ -77,13 +78,10 @@ class Export(unittest.TestCase):
         import gen_tests
         consumers = gen_tests.common_vectors.CONSUMERS
         lessons = gen_tests.vector_consumers.LESSONS
-        self.assertFalse((self.specs / consumers).exists(), "4c101 predates the consumers registry")
-        paths = gen_tests.sources("vectors", root=self.specs)
-        self.assertNotIn(self.specs / consumers, paths)
-        self.assertNotIn(self.specs / lessons, paths)
         with tempfile.TemporaryDirectory(prefix="export-no-registries-") as tmp:
             root = Path(tmp)
             shutil.copytree(self.specs / "Platform", root / "Platform")
+            (root / consumers).unlink(missing_ok=True)
             (root / lessons).unlink(missing_ok=True)
             paths = gen_tests.sources("vectors", root=root)
             self.assertIn(root / gen_tests.STAGES, paths)

@@ -31,6 +31,8 @@ def positive_control(g):
     known = {(f'common/{name}', table, 'vectors')
              for name, table in g.common_vectors.composition('06-console', ROOT, known_only=True)}
     for name, fn in [('crl', 'CRL'), ('revoked', 'Revoked'), ('store-client', 'StoreClient'), ('log-mask', 'LogMask')]:
+        if fn in fns:
+            continue  # The shared fixture already supplies this Common API.
         values = {}
         for run in runs:
             if run.binding.package != 'common/' + name or run.binding.key not in known:
@@ -102,11 +104,11 @@ class CanonicalP06(unittest.TestCase):
         covered |= {(f'common/{name}', table, 'vectors') for name, table in known}
         self.assertEqual(covered, active)
         self.assertEqual(len(active), 67)
-        self.assertEqual(len(self.runs), 3200)
+        self.assertEqual(len(self.runs), 3224)
         self.assertTrue(all(d['_form'] and d['_runs'] for d in decls))
         self.assertFalse(any(d['surface'] == 'stand:group-of' for d in decls))
         files, inv = g.build(ROOT)
-        self.assertEqual(sum(status == 'translated' for _, status in inv), 3200)
+        self.assertEqual(sum(status == 'translated' for _, status in inv), 3224)
         for rel, data in files.items():
             self.assertEqual((output_lesson.output_root() / 'p06' / rel).read_bytes(), data, rel)
         self.assertIn('func GroupOf(input []byte) Answer', files['go/vectoradapter/groupof.go'].decode())
@@ -118,7 +120,7 @@ class CanonicalP06(unittest.TestCase):
             self.assertIn('go/wirecheck/check.go', files)
             self.assertIn('P/06 uses the published canonical wire form', self.g.lesson_kit_md())
 
-    def test_all_3200_native_calls(self):
+    def test_all_3224_native_calls(self):
         done = subprocess.run(['go', 'test', '-count=1', '-json', './vectortests/'], cwd=self.mod,
                               env=GOENV, capture_output=True, text=True)
         results = {}
@@ -129,7 +131,7 @@ class CanonicalP06(unittest.TestCase):
             if event.get('Test') and event.get('Action') in ('pass', 'fail'):
                 self.assertNotIn(event['Test'], results, 'duplicate terminal native test')
                 results[event['Test']] = event['Action']
-        self.assertEqual(len(results), 3200, done.stderr + done.stdout[-2000:])
+        self.assertEqual(len(results), 3224, done.stderr + done.stdout[-2000:])
         self.assertEqual(done.returncode, 0, done.stderr + done.stdout[-4000:])
         self.assertEqual(set(results.values()), {'pass'})
 
