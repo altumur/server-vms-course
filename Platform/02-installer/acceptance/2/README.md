@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/2/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
 [`02.2-installer.norms.md`](../../spec/02.2-installer.norms.md) N5; the write of the view is [chapter 2.3](../../spec/02.3-installer.norms.md)
-N3 «Manifest change» (the installer). `puts.tsv` has 9 installations (judge-only: the installation table of the chapter); the installation files are in `puts/`. The view is built before
+N3 «Manifest change» (the installer). `puts.tsv` has 10 installations (judge-only: the installation table of the chapter); the installation files are in `puts/`. The view is built before
 any write, a view above the ceiling is a refusal of the installation as a whole, the write order is row, view, mark last. The bytes of the view are
 the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
 
@@ -35,6 +35,7 @@ The cases and their expected outcomes are in the judge's case data. They cover t
 | the sugar `tables`, `bound_to`, the absence of `snapshot` and `display` — the installer's view equals the assigned vector | P/02.2-R009, P/02.2-R015, P/02.2-R017 |
 | there is no mark, the file is the same — «unchanged»: the row and the view stay, the mark is brought up to date with the revision and the `sha256` of the row | P/02.3 N3 «Manifest change» («missing mark … → bring up to date»), P/02.3-R103 |
 | the mark is not by the form, the file is the same — a refusal, code 2, nothing is written: the row, the view and the mark stay | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-R031 |
+| the row without the view and without the mark — the state of a first installation broken after the write of the row — and the same file again: a new revision of the row, the view and the mark, code 0 | P/02.3-R078, P/02.3-R080, P/02.3-R104, P/02.3-R123 |
 The weight of the view row is the sum of the bytes of the names and values of `items` (P/01.1 N1): `form` `"1"`, `rev` of one digit, `sha256` 64 characters,
 `manifest` — `87 +` the length of the view.
 
