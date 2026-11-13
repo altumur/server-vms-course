@@ -54,7 +54,7 @@ def scenario_selection(lesson, gate, *, legacy):
 
 
 def compare_stage_sets(public):
-    """Retain native accept/seams and all non-scenario gates as well as converted tests."""
+    """Retain kit gates and converted tests; the public form may add checks."""
     old = stage_rows(public.with_name("stages.kit.tsv"))
     new = stage_rows(public)
     if [(r["n"], r["stage"]) for r in old] != [(r["n"], r["stage"]) for r in new]:
@@ -65,14 +65,14 @@ def compare_stage_sets(public):
             raise ValueError("stage dependency changed")
         left = scenario_selection(public.parent.parent, before["gate"], legacy=True)
         right = scenario_selection(public.parent.parent, after["gate"], legacy=False)
-        if left != right:
+        if not (left[0] <= right[0] and left[1] <= right[1]):
             raise ValueError(f"gate set differs at {after['stage']}")
         result.append((after["stage"], len(right[0])))
     return result
 
 
 class PublishedStageGateSets(unittest.TestCase):
-    def test_all_nine_selected_forms_preserve_per_stage_sets_and_kit_legacy(self):
+    def test_all_nine_selected_forms_preserve_kit_gates_and_may_add_checks(self):
         public = sorted(ROOT.glob("Platform/*/forms/stages.tsv"))
         self.assertEqual(len(public), 9)
         total = 0
@@ -116,6 +116,12 @@ class StageGateContractControls(unittest.TestCase):
         self.write("stages.tsv", "accept:1.1:ordinary;seams:1.1:edge")
         with self.assertRaisesRegex(ValueError, "gate set differs"):
             compare_stage_sets(public)
+
+    def test_public_form_can_add_checks_without_losing_kit_gates(self):
+        self.write("stages.kit.tsv", "tests:1.1:ordinary;seams:1.1:edge")
+        public = self.write("stages.tsv", "accept:1.1:ordinary,second;seams:1.1:edge;vectors:write-checks;code:*")
+        self.assertEqual(compare_stage_sets(public), [("core", 3)])
+        self.assertEqual(check_forms.check_stage_parts(public)[0], [])
 
     def test_native_accept_star_is_preserved_not_reclassified_as_converted_tests(self):
         self.write("stages.kit.tsv", "accept:1.1:*;tests:1.1:edge:seams")
