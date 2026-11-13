@@ -183,6 +183,44 @@ class NewPin(unittest.TestCase):
         self.assertTrue(all(set(f['cells']) == {'raw'} and f['files'] == {} for f in frames))
         self.assertTrue(any(p.startswith('01-store/jcs ') and status=='translated' for p,status in inv))
 
+    def test_draft_stage_packages_require_the_declared_owner(self):
+        g = generator('03-worker')
+        path = self.root / 'Platform/03-worker/forms/stages.kit.tsv'
+        original = path.read_bytes() if path.exists() else None
+        try:
+            for token in ('creates-key', 'common/slot', '01-store/jcs', '06-console/rid'):
+                path.write_text('stage\tgate\nexample\tvectors:' + token + ';code:*\n')
+                g.plan(self.root)
+            for token in ('03-worker/jcs', '06-console/jcs', 'common/creates-key'):
+                with self.subTest(token=token):
+                    path.write_text('stage\tgate\nexample\tvectors:' + token + '\n')
+                    with self.assertRaisesRegex(g.GenError, 'no declaration of its wire'):
+                        g.plan(self.root)
+        finally:
+            if original is None:
+                path.unlink()
+            else:
+                path.write_bytes(original)
+
+    def test_wire_stage_packages_require_the_declared_owner(self):
+        import wire_vectors
+        path = self.root / 'Platform/02-installer/forms/stages.kit.tsv'
+        original = path.read_bytes() if path.exists() else None
+        try:
+            for token in ('canonical', 'common/loopback', '01-store/jcs'):
+                path.write_text('stage\tgate\nexample\tvectors:' + token + ';code:*\n')
+                wire_vectors.declarations(self.root)
+            for token in ('02-installer/jcs', '06-console/jcs', 'common/canonical'):
+                with self.subTest(token=token):
+                    path.write_text('stage\tgate\nexample\tvectors:' + token + '\n')
+                    with self.assertRaisesRegex(wire.WireError, 'undeclared stages.kit.tsv package'):
+                        wire_vectors.declarations(self.root)
+        finally:
+            if original is None:
+                path.unlink()
+            else:
+                path.write_bytes(original)
+
     def historical_families(self, slug):
         # This named old source has its own creation/receipt. Never copy current
         # output into a historical test and label it as a matching source.

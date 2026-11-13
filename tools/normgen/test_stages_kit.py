@@ -223,9 +223,8 @@ class Phase3ActualSourceControls(unittest.TestCase):
                 self.assertFalse({"kit", "parts"} & set(rows[0]))
                 for row in rows[1:]:
                     for gate in row[rows[0].index("gate")].split(";"):
-                        match = check_forms.GATE.fullmatch(gate)
-                        self.assertIsNotNone(match)
-                        self.assertIsNone(match[1])
+                        self.assertFalse(gate.startswith("tests:"), gate)
+                        self.assertEqual(check_forms.gate_errors(path.parent.parent, row[1], gate), [], gate)
                 self.assertEqual(check_forms.check_stage_parts(path)[0], [])
                 kit = path.with_name("stages.kit.tsv")
                 self.assertTrue(kit.is_file())
