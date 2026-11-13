@@ -778,3 +778,5 @@ P/04-R452	spec/04-controller.norms.md#N5	P04.31; ADR-0133 addendum (107) item 1	
 -	acceptance/scenarios.tsv#row:scenario=45-retiring-recovery&step=1	P04.31; ADR-0133 addendum (107) item 1	2026-11-13	-
 -	acceptance/scenarios.tsv#row:scenario=46-turn-unreadable&step=1	P04.31; ADR-0133 addendum (107) item 1	2026-11-13	-
 -	acceptance/scenarios.tsv#row:scenario=47-controller-sigkill&step=1	P04.31; ADR-0133 addendum (107) item 1	2026-11-13	-
+P/04-R164	spec/04-controller.norms.md#N1.3	P04.31; Architect answered 2026-11-13T18:47:52Z	2026-11-13	**`rebalance: {dead_band}`.** rebalancing on request: while the spread of the load is smaller — do not move. Default: `0.10`.
+-	spec/04-controller.norms.md#implementation-decides	P04.31; Architect answered 2026-11-13T18:47:52Z	2026-11-13	5. **how rebalancing is requested** and who calls it; the budget;

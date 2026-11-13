@@ -310,7 +310,7 @@ The form of the keys is P/02.1 (N1.2). Here — what each of them means for the 
 
 <!-- req: P/04-R164 -->
 
-**`rebalance: {dead_band}`.** rebalancing on request: while the spread of the load is smaller — do not move. Default: `0.10`.
+**`rebalance: {dead_band}`.** rebalancing on request: while the spread of the load is smaller — do not move. Default: `0.10`. The implementation declares the request channel, caller and rebalance budget in its description. Production qualification measures rebalance against that declared budget.
 
 <!-- req: P/04-R165 -->
 
@@ -1680,7 +1680,7 @@ The implementation is to name in its description:
 2. **the cache between passes** — what is held by the row version, and how this does not change the decisions (the rows decide, not the cache). After turn acquisition and between decisions the judge observes the fresh store decisions and assignments; after restart the former placement version/rev and epoch remain until a new decision is needed.
 3. **how the resource of a server reports the presence of a process** (the form of the field `workers` of the resource heartbeat — P/05 N1.4) and the presence lock ([the presence lock contract](../../common/contracts/presence-lock.md)). The judge observes fates and names_given from the fixed presence words and only a live resource heartbeat; it does not call a private controller presence API.
 4. **how the effective inputs are read** — channel and defaults are the named source of lifecycle/forms/common contracts, not another local choice. The stand observes the effective settings through the required report/snapshot fields and policy effects, and start refusals through the exit codes of lifecycle.md.
-5. **how rebalancing is requested** and who calls it; the budget;
+5. **how rebalancing is requested** and who calls it; the declared budget of P/04-R164. The common functional judge does not call this private channel; P/04-R164 is checked by reading.
 6. **additional fields of the report** beyond N1.2 and how the metrics are made from it (the series `<sub>_reconcile_*`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 N3 «/metrics — text»). The judge reads the required fields and types of the N1.2 object and the fixed metric series of P/06.5; extra counters do not replace those fields.
 7. **the exact texts** of reasons and refusals beyond the grammar of N3/N4. The observable values are placement.reason, the console answer and the refusal outcome of N4; the MUST for a non-empty reason and the SHOULD grammar of N3 remain in force.
 8. **what a manifest without `grows` does** with a shortage (it counts nothing) and where the server script lives (`w2c-workers.sh`, P/02.4 N1.5 `script`). Without grows the judge observes no growth order; the script name and its target/stop behaviour remain those of P/02.4.
