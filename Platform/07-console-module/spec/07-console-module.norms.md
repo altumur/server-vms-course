@@ -832,7 +832,7 @@ The P/06 form does not prove that the published module bytes implement hidden-fi
 ## Implementation decides
 
 The module is one code in all implementations: an implementation does not write it and chooses nothing in it, but serves the published bytes
-(P/06.5 N1.1 `module`). The items below are debts of the published module; the owner of the specification closes them; item 1 is not closed in full; items 2–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
+(P/06.5 N1.1 `module`). On a generation line the judge observes only this packaging: the three published files byte for byte at their routes, `?v=1` served and `?v=2` answered 404 — scenario 01 (judge-only: checks P/07-R264) of acceptance 6.5 under P/07-R264 and P/07-R266; no item below changes that outcome. The items below are debts of the published module; the owner of the specification closes them; item 1 is not closed in full; items 2–5 are closed; items 6 and 7 remain open debts of this owner, not a separate module implementation by a generation line:
 
 1. **not closed in full: conformance of the canonical `console.js`, `console.html` and `CONSOLE-MODULE.md` to N1.4 and N1.5.**
    Evidence applies only to the requirements and input files actually checked under P/07-R258; existing bounded fixture cases remain mapped in N5 rows P/07-R271…P/07-R282.
