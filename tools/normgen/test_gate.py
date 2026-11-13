@@ -28,6 +28,30 @@ class Gate(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(gate.GateError):
                 gate.parse(bad)
 
+    def test_owned_packages_keep_their_full_identity(self):
+        text = "vectors:creates-key;vectors:common/slot;vectors:01-store/jcs;vectors:06-console/rid;code:*"
+        self.assertEqual([c.package for c in gate.parse(text) if c.kind == "vectors"],
+                         ["creates-key", "common/slot", "01-store/jcs", "06-console/rid"])
+        self.assertEqual(gate.vector_packages(text, "03-worker"),
+                         {"03-worker/creates-key", "common/slot", "01-store/jcs", "06-console/rid"})
+        for check in gate.parse(text):
+            self.assertEqual(check_forms.gate_errors(ROOT / "Platform/03-worker", "test", check.text), [])
+
+    def test_owned_package_shape_refusals(self):
+        for bad in ("vectors:common/", "vectors:other/slot", "vectors:1-store/jcs",
+                    "vectors:common/slot/extra", "vectors:../slot", "vectors:/slot",
+                    "vectors:common/../slot", "vectors:common/slot ", "vectors:common/slot;vectors:common/slot",
+                    "code:rules", "code:", "seams:1.1:a:seams", "seams:1.1:a,a"):
+            with self.subTest(bad=bad), self.assertRaises(gate.GateError):
+                gate.parse(bad)
+
+    def test_public_seams_and_code_gates(self):
+        checks = gate.parse("seams:1.1:a,b;seams:4:*;code:*")
+        self.assertEqual((checks[0].kind, checks[0].chapter, checks[0].names, checks[0].seams),
+                         ("seams", "1.1", ("a", "b"), True))
+        self.assertIsNone(checks[1].names)
+        self.assertEqual(checks[2].kind, "code")
+
     def test_form(self):
         """Parse every P/01 gate cell and require check_forms to accept each element."""
         lines = [x.split("\t") for x in STAGES.read_text(encoding="utf-8").splitlines() if x and not x.startswith("#")]

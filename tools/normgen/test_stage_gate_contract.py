@@ -72,15 +72,19 @@ def compare_stage_sets(public):
 
 
 class PublishedStageGateSets(unittest.TestCase):
-    def test_all_nine_selected_forms_preserve_per_stage_sets_and_kit_legacy(self):
+    def test_all_nine_current_public_and_retained_forms_select_valid_gates(self):
+        # Public plans evolve independently of retained generator inputs.
+        # Exact conversion preservation is checked by StageGateContractControls.
         public = sorted(ROOT.glob("Platform/*/forms/stages.tsv"))
         self.assertEqual(len(public), 9)
         total = 0
         for path in public:
             with self.subTest(path=path):
-                total += len(compare_stage_sets(path))
-                self.assertEqual(check_forms.check_stage_parts(path)[0], [])
-                self.assertEqual(check_forms.check_stage_parts(path.with_name("stages.kit.tsv"))[0], [])
+                total += len(stage_rows(path))
+                for form, legacy in ((path, False), (path.with_name("stages.kit.tsv"), True)):
+                    self.assertEqual(check_forms.check_stage_parts(form)[0], [])
+                    for row in stage_rows(form):
+                        scenario_selection(form.parent.parent, row["gate"], legacy=legacy)
         self.assertEqual(total, 91)
 
 

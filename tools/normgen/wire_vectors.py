@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 import common_vectors
+import gate
 import wire
 
 # Go signatures are a package choice. Only wire.tsv defines inputs, fixtures, expectations, grouping and comparisons.
@@ -106,9 +107,14 @@ def declarations(root, lesson="02-installer", api=API_P02):
     stages = Path(root) / "Platform" / lesson / "forms/stages.kit.tsv"
     if stages.is_file():
         lines = [line.split("\t") for line in stages.read_text().splitlines() if line and not line.startswith("#")]
-        gate = lines[0].index("gate")
-        for pkg in {p for row in lines[1:] for p in re.findall(r"vectors:([a-z0-9-]+)", row[gate])}:
-            if not any(b.package == f"{lesson}/{pkg}" for b in bindings):
+        gate_column = lines[0].index("gate")
+        try:
+            packages = {p for row in lines[1:]
+                        for p in gate.vector_packages(row[gate_column], lesson)}
+        except gate.GateError as exc:
+            raise wire.WireError(f"stages.kit.tsv: {exc}") from None
+        for pkg in sorted(packages):
+            if not any(b.package == pkg for b in bindings):
                 raise wire.WireError(f"{wire.FORM}: undeclared stages.kit.tsv package {pkg}")
     return out
 
