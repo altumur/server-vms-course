@@ -114,6 +114,8 @@ References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
 1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only [forms/daemon-flags.tsv](../forms/daemon-flags.tsv); the sockets lie side by side in one directory, none in a subdirectory of it (admin.sock and the role sockets), and other entries of that directory are not a start refusal; inherited sockets are taken by `FileDescriptorName` (N1.3 `sockets`).
 
+   At the `group` stage, use [forms/daemon-flags.tsv](../forms/daemon-flags.tsv), [forms/status-fields.tsv](../forms/status-fields.tsv) and [forms/service-checks.tsv](../forms/service-checks.tsv) together with N2 for the service doors, modes and roles.
+
    Write the mark `FORMAT` first into an empty directory and check it before any write: a foreign or unmarked non-empty directory is exit code 2 without changes. Write the copy `backup`, and read `import`/`restore`, only in the form of N1.3 `copy`; do not carry your own on-disk format into the copy.
 
 2. On a separate model check all phases of restore/import/recover: isolation, a reliable upper, the uint64 bounds, one raise of the floor, a partial transfer and continuation of the same attempt. Force does not allow a lowering or two operators (N3).
