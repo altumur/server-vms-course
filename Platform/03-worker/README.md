@@ -49,6 +49,7 @@ These common files supply definitions used by the chapters, the implementation i
 | [Data catalog](../common/data/catalog.tsv) | Owned files, keys and readers — the data-families sections of the chapters |
 | [Data codec](../common/data/codec.tsv) | Storage of family values — string row fields and object JSON values |
 | [Common acceptance](../common/acceptance/README.md) | Stand; Dictionary of directives and doors — the common process stand and scenario grammar |
+| [Held connections](../common/acceptance/command-tables.md#held-connections) | Held connections — accepted-socket observation for the worker process door |
 | [Acceptance profile](../common/acceptance/PROFILE.md) | Commands, keys, substitutions, vector commands and code-check names — the implementation supplies its own profile |
 | [SDK seams](../common/acceptance/seams.md) | Procedure and peer ownership; CALL input and observation; Explicit test-side seam bridge — normalized test ports over the real SDK |
 | [Teaching subsystem stand](../common/acceptance/testsub-stand.md) | testsub process stand — process acceptance with the teaching subsystem |

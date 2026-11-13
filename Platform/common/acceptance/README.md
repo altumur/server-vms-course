@@ -16,7 +16,7 @@ The rules of the stand are kept by topic; each lives in one file, and this READM
 | «Assembly example», «Layout by processes (stage C)», «Environment of stand processes», «Stand without root»: the composition of the stand, the commands of the profiles, the environment of the processes, the modes of a stand without root | [`stand.md`](stand.md) |
 | «Testsub process stand»: the role processes on one server over the stand manifests | [`testsub-stand.md`](testsub-stand.md) |
 | «Table header and columns by name», «Target registry and export lists assembled from the lessons» | [`tables.md`](tables.md) |
-| «Command tables»: «Loader verdicts», «Installation sequences», «Rights variants» — the routing words `verdicts`, `puts`, `variants` | [`command-tables.md`](command-tables.md) |
+| «Command tables»: «Held connections», «Loader verdicts», «Installation sequences», «Rights variants» — the routing words `verdicts`, `puts`, `variants` | [`command-tables.md`](command-tables.md) |
 | «Seam adapter protocol»: procedures and peers, `CALL`, the explicit test-side seam bridge, the D7 test-side evidence bindings | [`seams.md`](seams.md) |
 | «Domain stand»: the domain vector commands and the multi-cluster stand | [`domain-stand.md`](domain-stand.md) |
 | «Stand-in worker of the pass of the second kind» | [the pass stand](pass/README.md#stand-in-worker-of-the-pass-of-the-second-kind) |
@@ -44,6 +44,7 @@ Related rules: [P/AC-R006](spec/acceptance.norms.md#n13-target-registry) and [P/
 | `console` | the console on `{port}`, the root subsystem `testsub` | 5 |
 | `console2` | the same console, the prefix `/testsub2` of the mounted subsystem | 10 |
 | `resource` | the door of the server resource on `{rport}` with an admissible identity | 8 |
+| `worker <name>` | the process door of the latest live copy of worker `<name>` started by `@start worker`: the URL in `url` of its heartbeat `<sub>/heartbeats/<name>`, read through the `resource` door of its own server. The runner resolves this field before holding connections; the sockets belong to that worker process group. On the stand without a kit, HTTP on loopback; all held connections and dependent HTTP steps use the same source address, without a proxy or console forwarding | P/03.4 |
 
 **Request.**
 
@@ -89,7 +90,7 @@ Related rules: [P/AC-R006](spec/acceptance.norms.md#n13-target-registry) and [P/
 | `@sleep <seconds>` | wait. Only a check of absence (nothing happened within the term) or a time that the norm requires before an action; waiting for an event — `@until` by an observable sign. The length is the smallest at which a violation would have had time to show; each judge-owned case sleep is named with its reason in the lesson’s acceptance case instructions | 5 |
 | `@together <request> \|\| <request>` | two requests at once: the runner opens both connections and sends both requests without waiting for the answer to the first (the last byte of the second leaves before the answer to the first arrives); the expectation `ok {"codes": [<code>, <code>]}` — the codes of both answers in ascending order, the bodies are not judged; so the acceptance sees an admission race that sequential steps would not show | - |
 | `@until <seconds> <request>` | repeat the request, at least once per second, until it matches `expect`, no longer than the term; the term ran out — FAIL with the last answer; a read is repeated, not a mutation; validation and failure classes: [P/AC-R020, P/AC-R024](spec/acceptance.norms.md) | 5 |
-| `@hold <door> <N>` | P/01, definition: [acceptance/1/README.md «Directives of chapters 1.1 and 1.2»](../../01-store/acceptance/1/README.md#directives-of-chapters-11-and-12) | P/01 |
+| `@hold <door> <N>` | [Held connections](command-tables.md#held-connections) | P/01, P/03 |
 | `@io store $<name>` | P/01, definition: [acceptance/1/README.md «Directives of chapters 1.1 and 1.2»](../../01-store/acceptance/1/README.md#directives-of-chapters-11-and-12) | P/01 |
 | `@manual <text>` | a drill step: the runner prints the text and does not execute it; its result is the word `manual`, neither green nor red, and it takes no GREEN from its target; a target whose selection holds only such steps is not executed (`manual_only`); `expect` — `manual` | 11 |
 | `@stream-open <label> <door> <request>` | a GET stream through the door `member <cluster> console` or `console2` from the current `@person`, only on the stand without a kit, `@header Last-Event-ID` is admissible; the expectation — `<code>` or the class `2xx` of the answer headers | V/11 |
@@ -156,6 +157,7 @@ A subset in `expect` does not cancel the full form of the answer per the contrac
 | `store`, `admin`, `restored`, `store@<id>`, `admin@<id>` | P/01: the response schema of the operation (method and path) and of the status in [`01-store.api.openapi.yaml`](../../01-store/spec/01-store.api.openapi.yaml) |
 | `console`, `console2`, `member <cluster> console`, `member <cluster> console2`: the paths `/api/…` and `/domain…`; on a stand other than the domain stand, every path | P/06 |
 | `console` on a forwarded path `/domain/at/<cluster>/…` of a successful answer | P/06 of the forwarded path |
+| `worker <name>` | P/03.4 N1.7 for the process-door `busy` refusal; the called route contract for other answers |
 | `resource`, `resource#<name>` | P/05 |
 | `holder`, `holder@<cluster>` | P/10, then P/08: the first contract that names the operation |
 | `signer`, `signer2` | P/08 |

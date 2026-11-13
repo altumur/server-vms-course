@@ -1,0 +1,17 @@
+case	input	expect	note
+empty	{"count":3,"bytes":100,"reported":[]}	[]	no reported names
+present-retained	{"count":3,"bytes":100,"reported":[{"rid":"r1","row":"present"},{"rid":"r2","row":"present"}]}	["r1","r2"]	confirmed existing rows retain both names
+unknown-retained	{"count":3,"bytes":100,"reported":[{"rid":"r1","row":"unknown"},{"rid":"r2","row":"present"}]}	["r1","r2"]	an unknown read does not confirm removal
+observed-removal	{"count":3,"bytes":100,"reported":[{"rid":"r1","row":"absent"},{"rid":"r2","row":"present"}]}	["r2"]	remove the name after confirmed row absence
+all-removed	{"count":3,"bytes":100,"reported":[{"rid":"r1","row":"absent"},{"rid":"r2","row":"absent"}]}	[]	no retained names after all rows are confirmed absent
+count-equal	{"count":2,"bytes":100,"reported":[{"rid":"z","row":"present"},{"rid":"a","row":"present"}]}	["z","a"]	two names equal FETCHED_COUNT 2
+count-over	{"count":2,"bytes":100,"reported":[{"rid":"z","row":"present"},{"rid":"a","row":"unknown"},{"rid":"m","row":"present"}]}	["a","m"]	three names exceed count 2; the oldest is z, not the first by bytes
+count-one	{"count":1,"bytes":100,"reported":[{"rid":"old","row":"unknown"},{"rid":"new","row":"present"}]}	["new"]	pressure can evict an old name with an unknown row read
+bytes-equal	{"count":9,"bytes":5,"reported":[{"rid":"ab","row":"present"},{"rid":"cd","row":"unknown"}]}	["ab","cd"]	2 + 1 comma + 2 equals the byte limit 5
+bytes-over	{"count":9,"bytes":4,"reported":[{"rid":"ab","row":"present"},{"rid":"cd","row":"present"}]}	["cd"]	one byte over; evict the oldest whole name
+bytes-drop-two	{"count":9,"bytes":6,"reported":[{"rid":"aa","row":"present"},{"rid":"bb","row":"present"},{"rid":"long","row":"present"}]}	["long"]	10 bytes; removing aa leaves 7, so bb must also go
+utf8-equal	{"count":9,"bytes":7,"reported":[{"rid":"é","row":"present"},{"rid":"🙂","row":"unknown"}]}	["é","🙂"]	2 UTF-8 bytes + comma + 4 equals 7
+utf8-over	{"count":9,"bytes":6,"reported":[{"rid":"é","row":"present"},{"rid":"🙂","row":"unknown"}]}	["🙂"]	7 UTF-8 bytes exceed 6 despite two Unicode code points
+both-limits	{"count":2,"bytes":5,"reported":[{"rid":"z","row":"present"},{"rid":"aa","row":"present"},{"rid":"bbb","row":"present"}]}	["bbb"]	count requires dropping z; remaining aa,bbb still exceed bytes
+removed-before-selection	{"count":2,"bytes":5,"reported":[{"rid":"old","row":"absent"},{"rid":"a","row":"unknown"},{"rid":"b","row":"present"}]}	["a","b"]	a removed name spends neither count nor bytes
+said-id-weight	{"count":3,"bytes":21,"reported":[{"rid":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","row":"present"}]}	["#3164596df4fdd018b2c5"]	a long rid weighs as its SaidID hash, not as 41 raw bytes

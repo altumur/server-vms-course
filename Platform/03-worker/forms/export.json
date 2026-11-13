@@ -452,6 +452,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/03-worker/ru/vectors/fetched/README.md",
+      "disposition": "judge_only",
+      "basis": "Russian mirror outside the exported inputs."
+    },
+    {
       "path": "Platform/03-worker/spec/03-worker.README.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -520,6 +525,16 @@
       "path": "Platform/03-worker/vectors/creates-key/cases.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/03-worker/vectors/fetched/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Worker fetched retention vector interface and acceptance."
+    },
+    {
+      "path": "Platform/03-worker/vectors/fetched/cases.tsv",
+      "disposition": "judge_only",
+      "basis": "Concrete vector cases outside the model input."
     }
   ],
   "judge": [
@@ -974,6 +989,11 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/03-worker/ru/vectors/fetched/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror outside the exported inputs."
+    },
+    {
       "path": "Platform/03-worker/spec/03-worker.README.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -1042,6 +1062,16 @@
       "path": "Platform/03-worker/vectors/creates-key/cases.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/03."
+    },
+    {
+      "path": "Platform/03-worker/vectors/fetched/README.md",
+      "disposition": "include",
+      "basis": "Worker fetched retention vector interface and acceptance."
+    },
+    {
+      "path": "Platform/03-worker/vectors/fetched/cases.tsv",
+      "disposition": "include",
+      "basis": "Worker fetched retention vector interface and acceptance."
     }
   ]
 }
