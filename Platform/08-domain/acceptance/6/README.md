@@ -38,4 +38,4 @@ the counter `domain/placement` by 1 (P/08.6 N3).
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) (judge-only: `acceptance/6/seams.tsv`; they check P/08.6-R066, P/08.6-R073, P/08.6-R079, P/08.6-R080, P/08.6-R081, P/08.6-R082, P/08.6-R083, P/08.6-R203 and P/08.6-R228) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: `acceptance/6/seams.tsv`; they check P/08.6-R066, P/08.6-R073, P/08.6-R079, P/08.6-R081, P/08.6-R082, P/08.6-R203 and P/08.6-R228) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

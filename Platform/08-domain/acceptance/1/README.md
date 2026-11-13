@@ -30,4 +30,4 @@ Selected scenarios use real reports of agents in `domain/members/<member>/report
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) (judge-only: the seam table; it checks P/08.1-R071, P/08.1-R165, P/08.1-R169, P/08.1-R170, P/08.1-R236 and P/08.1-R243) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: the seam table; it checks P/08.1-R070, P/08.1-R165, P/08.1-R169, P/08.1-R236 and P/08.1-R243) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

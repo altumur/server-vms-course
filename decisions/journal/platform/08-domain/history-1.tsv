@@ -68,3 +68,90 @@ P/08.1-R016	spec/08.1-domain.norms.md#N3	C08-PASS-PART-01	2026-11-11	works of th
 -	spec/08.1-domain.norms.md#N1.6a	M11/4	2026-11-11	the fields of lesson 4
 P/08.1-R208	spec/08.1-domain.norms.md#N1.6	Specification work log (debt of placement by the domain)	2026-11-12	; placement by the domain is a debt in the Specification work log (for people)
 P/08.1-R017	spec/08.1-domain.norms.md#N4	fccb30810 (2026-11-05) transfer of the P/08 N4 refusal tables into forms/refusals.tsv; judge P08.25 M1 (sentence rewritten: the cells are normative text, a repeated row number selects one condition)	2026-11-12	Original normative cells are preserved; repeated row numbers select the original condition and its operation-specific projection.
+P/08.1-R018	spec/08.1-domain.norms.md#N0	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The rules of the module are [P/01.1 N0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
+P/08.1-R019	spec/08.1-domain.norms.md#N0	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The [order of output arrays](08.0-domain.norms.md#order-of-output-arrays) is P/08.0 N0 (scope — lessons\n8–10).
+P/08.1-R021	spec/08.1-domain.norms.md#N0	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Use exactly one marker reread before silent.
+P/08.1-R022	spec/08.1-domain.norms.md#N0	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A changed marker with no exact fresh generation is temporarily unconfirmed: defer the derived snapshot and use existing 503 unavailable on a door requiring the confirmed read, not a new member state.
+P/08.1-R026	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The process writes objects by the queue rule of\n[chapter 8.10](08.10-domain.norms.md) N1.7 `objects`.
+P/08.1-R027	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The fields of the view of other chapters (`books`, `pending`, `outcomes`, `term`,\n`shared`) the process writes in the same pass.
+P/08.1-R028	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The form and meaning of the fields of the view of other chapters are in the owner chapters (the head of the chapter).
+P/08.1-R030	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The pass reads `domain/topology` for the field\n`topology` (N1.6a; owner — chapter 8.3).
+P/08.1-R031	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The pass reads `domain/member-rows/<part>` — the list of members (owner — chapter\n8.3).
+P/08.1-R032	spec/08.1-domain.norms.md#N1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The pass reads the copies of the members by the mark `reported` and the generation ([P/08.3 N1.3](08.3-domain.norms.md) and N3 «read the copy»).
+P/08.1-R038	spec/08.1-domain.norms.md#N1.1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Which member is the holder is a decision of deployment (chapter 8.8), not the order of installation.
+P/08.1-R040	spec/08.1-domain.norms.md#N1.1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The domain reads a member only by its copy, it does not go to the member itself.
+P/08.1-R045	spec/08.1-domain.norms.md#N1.1	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The epoch of a unit is monotonic in its cluster ([P/03.2 N1.5](../../03-worker/spec/03.2-worker.norms.md)); the domain needs no issuer of epochs.
+P/08.1-R047	spec/08.1-domain.norms.md#N1.2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`siblings`: at one member several units can carry one ref: the main one and the other records of a camera.
+P/08.1-R049	spec/08.1-domain.norms.md#N1.2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Which of the `siblings` is the main one the domain does not judge: that is a word of the subsystem.
+P/08.1-R052	spec/08.1-domain.norms.md#N1.2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	For a manifest without `domain.ref`, the door `/domain/<sub>/<rows>` — 404.
+P/08.1-R055	spec/08.1-domain.norms.md#N1.2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A unit row without a value of the field `domain.ref` takes nothing from the completeness of the view.
+P/08.1-R057	spec/08.1-domain.norms.md#N1.2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The heartbeat of a unit without a value of the field `domain.ref` goes into the member's report all the same.
+P/08.1-R067	spec/08.1-domain.norms.md#N1.3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	This process's first look at a heartbeat is a change in any state of the member (the age of the\nheartbeat counts from it).
+P/08.1-R071	spec/08.1-domain.norms.md#N1.3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	After a restart of the same holder the marks of the members remain in its store, but the first look at a mark is not a change: a member with\na mark is `unseen`, the view is incomplete, until the process sees a change.
+P/08.1-R072	spec/08.1-domain.norms.md#N1.3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A live member updates its mark at least every LOST_AFTER/2 (chapter 8.3 N1.3)\nand comes to `ok` no later than this term.
+P/08.1-R073	spec/08.1-domain.norms.md#N1.3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A member that died before the restart becomes `silent` after LOST_AFTER. So it does not look\nalive after the restart, and an edit of chapter 8.6 on its unit answers 503 «not heard», not 404 «nowhere».
+P/08.1-R075	spec/08.1-domain.norms.md#N1.3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	There is no new window «from old memory».
+P/08.1-R105	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`Unit.age` has one digit after the point.
+P/08.1-R108	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`Unit.labels` and `Unit.about` serve the judgement by target (the rights contract), so that the view is filtered no coarser than the console.
+P/08.1-R109	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In `Unit.view` there are no secret fields (P/06.2 N1.4).
+P/08.1-R112	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The heartbeat is unreadable — `Unit.status` as if there is no element.
+P/08.1-R114	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A unit in the heartbeats of two workers\nof one member — two elements (both carry it; the shadow report sorts out which of them acts).
+P/08.1-R119	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The role of an executor\n(main or reserve) is the concern of the subsystem, the view does not show it.
+P/08.1-R122	spec/08.1-domain.norms.md#N1.4	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	With `executors`, the completeness of the view — by N3 step 5.
+P/08.1-R127	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Tables do not enter `domain/view`: the view is written every 3 s, and tables change rarely.
+P/08.1-R128	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A dispute of `ref` (`contested`) does not remove the rows of tables: a row is addressed by the cluster and the key.
+P/08.1-R131	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The object `domain/members/<member>/tables/<sub>/<table>` is the snapshot of P/04 N1.3b from the member's copy as is; cluster equals the member's name.
+P/08.1-R133	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The fields of a table of `domain.view_tables` — from its fields\nor unit.fields, not *_secret, not blob, held_by — only for the table of places (P/02.1, relations 137–143).
+P/08.1-R134	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`manifest`: the key `domain.view_status` of the manifest — N1.4 Unit status.
+P/08.1-R136	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	For `refused`, the reader shows that there is no data, not that the table is empty.
+P/08.1-R138	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	For a silent member the table object is the former object, the reader takes liveness from members[].state of the view.
+P/08.1-R141	spec/08.1-domain.norms.md#N1.4a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	An error of the removal of the objects of a member that left — the next pass.
+P/08.1-R155	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A row of a part is written only on a difference, so the worker on the domain reads the part that changed as_of.
+P/08.1-R157	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A part is a unit of work, the list of non-empty ones is parts of the head, round = members / budget; a row is written only on a difference.
+P/08.1-R159	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	After a change of the holder and a start of the process `complete` is false until the round is closed.
+P/08.1-R161	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A row of domain/ref-claims with two members is a dispute.
+P/08.1-R167	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	domain/shadow is written once per round.
+P/08.1-R168	spec/08.1-domain.norms.md#N1.4b	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	With a small domain the round is shorter than VIEW_EVERY and all is as before.
+P/08.1-R170	spec/08.1-domain.norms.md#N1.5	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A short list MUST NOT\nbe passed off as a complete one.
+P/08.1-R171	spec/08.1-domain.norms.md#N1.5	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	«Not found» in a complete answer is a fact about the domain; in an incomplete one — a fact about the network: the refusal names who\nwas not heard (N4).
+P/08.1-R173	spec/08.1-domain.norms.md#N1.5	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Every derivative of the copies carries its own list of the absent.
+P/08.1-R177	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`claim`: ref — by the id of the unit from the snapshot shard of this member; an element without ref (no row in the shard) — no claim.
+P/08.1-R178	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	An element not in the form of P/03.4 N1.1 (epoch, revision, observed_revision are not integers, etc.) — no claim.
+P/08.1-R180	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	An element phase: unreadable (the epoch is not taken, P/03.3 N3 step 2) — no claim.
+P/08.1-R186	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Before SHADOW_STALL has run out for `orphaned` there is no finding (the member's controller has not placed yet).
+P/08.1-R190	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	An equal greatest epoch at two workers on one unit (the same id) — conflict; different ids of one ref are different units (N1.2 siblings), not a dispute.
+P/08.1-R194	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The findings lagging and stalled — only for acting claims.
+P/08.1-R196	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A placement is\nthe triple (sub, ref, cluster): a change of the target and a return to the former one — a new placement, the count anew.
+P/08.1-R200	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	SHADOW_STALL for class camera — max(60, 3 × every of the mark) (P/08.3 N1.1a).
+P/08.1-R202	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Both counts of SHADOW_STALL — from this process's first look\nat the pair or the placement, in any state of the member.
+P/08.1-R203	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The count has run out — the time is strictly greater than SHADOW_STALL: at exactly SHADOW_STALL it has not (both counts).
+P/08.1-R205	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	A placement on a member that is not `ok` is not orphaned but unknown\n(`unknown` in findings, it does not enter the count of failures).
+P/08.1-R208	spec/08.1-domain.norms.md#N1.6	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In the module the domain does not place by itself\n(the placement is written by the operator, chapter 8.6).
+P/08.1-R216	spec/08.1-domain.norms.md#N1.2a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In `domain/view.trust`, root and book_seal are fingerprints (P/08.2 N1.1 fingerprint).
+P/08.1-R221	spec/08.1-domain.norms.md#N1.6a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In `domain/view.relay_refused`, refused is empty — there is no key of the relay (not {}).
+P/08.1-R222	spec/08.1-domain.norms.md#N1.6a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	An accepted packet of a relay does not change the other relays in `domain/view.relay_refused`.
+P/08.1-R223	spec/08.1-domain.norms.md#N1.6a	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	`domain/view.relay_refused` is the memory of the process — after a restart the field is empty.
+P/08.1-R227	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The content of the doors `GET /domain`, `GET /domain/<sub>/<rows>`, `GET /domain/shadow` is N1.4,\nN1.6 of this chapter.
+P/08.1-R228	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The command `view` of an implementation («Implementation decides» item 1): the input is a file of passes (N5), the output is the JSON `{view, shadow}` of the last\npass.
+P/08.1-R229	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In the output of the command `view`, `shadow` is the report of the last pass that built it, N1.6 `unread`; none built it — `null`.
+P/08.1-R231	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	The command `view` is the same function as the holder's pass, without the store.
+P/08.1-R232	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Native camera input. In `ViewInput`, an explicitly present `silent_after` selects camera freshness for that pass; without it the input models a server. This is the native command’s abstraction of `Entry.class` and the mark’s `received_at`, which its closed input does not carry.
+P/08.1-R234	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In the camera input of the command, a mark never seen is `never`; a vanished mark is `silent`, as in N1.3.
+P/08.1-R235	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	In the input of the command, a server keeps the ordinary first-look `unseen` rule until an observed mark change.
+P/08.1-R237	spec/08.1-domain.norms.md#N2	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	No class or receipt field is inferred from the copy’s objects.
+P/08.1-R016	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Step 7 writes the row of a part on a difference, the head once per VIEW_EVERY; step 5 — `complete` of N1.4b.
+P/08.1-R238	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	Steps 3a, 6 — once per round (N1.4b `shadow`).
+P/08.1-R239	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	1. Read the list of members (chapter 8.3) and the mark of each member.
+P/08.1-R241	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 1, one that has left the list — forget it (N1.3 leave).
+P/08.1-R242	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 1, a change of the mark in sight — the age is reset.
+P/08.1-R246	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 2, a copy that is not readable — the member is silent.
+P/08.1-R247	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 2, the mark is readable, there is no generation or the sha256 is not the right one: silent also at the process's first look, not unseen.
+P/08.1-R248	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 2, for a member silent with a readable mark, reports — the fields\n   of this mark, as for any member with a mark, N1.7.
+P/08.1-R250	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 3, an id already from a heartbeat — the shard does not duplicate it.
+P/08.1-R251	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 3, a row without a value of domain.ref is not a unit (N1.2 no_value).
+P/08.1-R253	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 3b, an object `<sub>/snapshot-tables/<table>` that is not in the copy, or not by the family, or whose cluster is not the member's name — do not\n   touch it, a log entry without the value.
+P/08.1-R254	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 3b, for an object `<sub>/snapshot-tables/<table>` that is in the copy, by the family and whose cluster is the member's name: if rows or refused differs from what is written → write `domain/members/<member>/tables/<sub>/<table>`\n   (chapter 8.10 N1.7 objects).
+P/08.1-R258	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 3a, the placements are not read — there are no placements of this pass.
+P/08.1-R259	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	4. A ref given by two members or more, except a ref all members of which are executors of its placement of step 3a (N1.4 executors), → contested, remove the units of this ref from units.
+P/08.1-R262	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	6. The shadow report by N1.6: the placements of step 3a; the claims; the kinds; clean_streak and may_write.
+P/08.1-R265	spec/08.1-domain.norms.md#N3	ADR-0133 (93), (94), (98); P08.F1	2026-11-13	   In step 7, the report is not built —\n   domain/shadow and the memory of the report are the former ones.

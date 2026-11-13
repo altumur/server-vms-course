@@ -11,7 +11,7 @@ REPORT_EVERY	5	s	P/08.3-R189	s — the agent pass; the holder's answer can assig
 BODY_LIMIT	16777216	bytes	P/08.3-R192	the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
 ROAD_QUIET	15	s	P/08.3-R206	s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY); longer — the former road is silent;
 PASSWORD_MIN	10	count	P/08.4-R389	characters: Unicode code points, not bytes
-TOKEN_LIFETIME	900	s	P/08.4-R107	s
+TOKEN_LIFETIME	900	s	P/08.4-R106	s
 LOGIN_BODY	16384	bytes	P/08.4-R081	LOGIN_BODY
 GUARD_RETRIES	3	count	P/08.4-R163	GUARD_RETRIES
 ANYWHERE_MAX	262144	bytes	P/08.4-R190	bytes of JCS doc, its own row: the summary does not touch the grants copy; larger — the row stays the former one, the journal domain.anywhere.too_large once per pass
@@ -38,7 +38,7 @@ SERVERS_MAX	500	count	P/08.10-R029	Admitted server members, including the holder
 MISSING_SHOWN	500	count	P/08.5-R045	Visible missing/stale members in truncated book lists; server class first; must equal SERVERS_MAX.
 NEAR_CEILING	419430	bytes	P/08.5-R107	Book-key part row threshold for the near-ceiling alarm and admission refusal.
 BOOK_PARTS_SHOWN	64	count	P/08.5-R121	Requested all-recipient book parts shown by one round.
-BOOK_PARTS_PASS	8	count	P/08.5-R122	All-recipient book parts fetched per agent pass.
+BOOK_PARTS_PASS	8	count	P/08.5-R121	All-recipient book parts fetched per agent pass.
 BOOK_WANT_EVERY	86400	s	P/08.5-R123	Reader renewal interval for a still-needed book-part request.
 BOOK_WANT_TTL	259200	s	P/08.5-R124	Book-part request is removed only when now minus at is greater than this interval.
 UNITS_PAGE_CHECKS	200	count	P/08.5-R211	Per-unit permission checks per folder page when whole-page wide does not apply.
@@ -49,7 +49,7 @@ BACKUP_FETCH	600	s	P/08.8-R122	A part remains live while referred to by retained
 BACKUP_HEADS	5	count	P/08.8-R091	Newest backup head documents retained by the holder.
 PARTIAL_QUIET	10800	s	P/08.8-R403	No-merge interval before partial gathering closes; monotonic clock, reset at process start.
 OUTCOMES_LIMIT	50	count	P/08.6-R234	Newest kept-edit outcomes by descending (at,id).
-VIA_EDIT_MAX	20	count	P/08.3-R147	Member routes named by one topology via edit; excess is refused, the caller sends the rest again.
+VIA_EDIT_MAX	20	count	P/08.3-R146	Member routes named by one topology via edit; excess is refused, the caller sends the rest again.
 REVOKED_WORDS_CAMERA	4	count	P/08.2-R089	Executed revoked words per camera member per day; REVOKED_WORDS selects the row by member class.
 REVOKED_WORDS_SERVER	256	count	P/08.2-R089	Executed revoked words per server member per day; REVOKED_WORDS selects the row by member class.
 PBKDF2_ITERATIONS	600000	count	P/08.4-R088	PBKDF2-HMAC-SHA256 iterations in the password hash and same-cost dummy check; hash encoding remains the password-hash contract.

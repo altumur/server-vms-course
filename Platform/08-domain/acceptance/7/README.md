@@ -32,4 +32,4 @@ The format is the dictionary of the «Stand» and the dictionary of the domain; 
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.7; they check P/08.7-R030, P/08.7-R071 and P/08.7-R072) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+[3 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.7; they check P/08.7-R030, P/08.7-R071) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
