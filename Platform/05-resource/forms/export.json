@@ -1,0 +1,747 @@
+{
+  "version": 1,
+  "model": [
+    {
+      "path": "Platform/05-resource/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/README.md",
+      "disposition": "judge_only",
+      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/gone-foo.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/ticket-t1.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/scenarios.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/seams.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/sleeps.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.layers.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.outcomes.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.schema.json",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/05-resource/forms/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+    },
+    {
+      "path": "Platform/05-resource/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
+      "path": "Platform/05-resource/forms/daemon-flags.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv",
+      "disposition": "model_and_judge",
+      "basis": "P05.9: Public ordered resource decisions, classified like the neighbouring public lesson forms."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv.schema.json",
+      "disposition": "judge_only",
+      "basis": "P05.9: Frictionless Table Schema data of check_spec; course tooling, not a model input."
+    },
+    {
+      "path": "Platform/05-resource/forms/door-roles.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/forms/export.json",
+      "disposition": "judge_only",
+      "basis": "Lesson export inventory; outside the model and judge inputs."
+    },
+    {
+      "path": "Platform/05-resource/forms/refusals.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/05-resource/forms/runtime-constants.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/forms/stages.kit.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/05-resource/forms/stages.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/lifecycle.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/05-resource.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/acceptance/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/acceptance/sleeps.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/05-resource/ru/forms/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/05-resource/ru/forms/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/lifecycle.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.norms.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/05-resource/ru/vectors/relieve/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.api.openapi.yaml",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.n5.cases.md",
+      "disposition": "judge_only",
+      "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/cases.tsv",
+      "disposition": "judge_only",
+      "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/short.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    }
+  ],
+  "judge": [
+    {
+      "path": "Platform/05-resource/README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/gone-foo.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/inputs/ticket-t1.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/scenarios.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/seams.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/acceptance/sleeps.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit-alarms.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-audit.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console-alarms.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-console.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-mirror.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit-alarms.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/events-unit.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/free-ask.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/gone.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/presence-lock.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.layers.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.outcomes.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.schema.json",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
+      "path": "Platform/05-resource/forms/daemon-flags.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/decision-order.tsv.schema.json",
+      "disposition": "exclude",
+      "basis": "P05.9: Frictionless Table Schema data of check_spec; outside the judge input."
+    },
+    {
+      "path": "Platform/05-resource/forms/door-roles.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/export.json",
+      "disposition": "exclude",
+      "basis": "Lesson export inventory; outside the model and judge inputs."
+    },
+    {
+      "path": "Platform/05-resource/forms/refusals.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/runtime-constants.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/stages.kit.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/stages.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/lifecycle.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/ru/05-resource.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/acceptance/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/acceptance/sleeps.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/forms/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/forms/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/lifecycle.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/spec/05-resource.norms.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/ru/vectors/relieve/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.api.openapi.yaml",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.n5.cases.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.norms.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/README.md",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/cases.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/vectors/relieve/short.tsv",
+      "disposition": "exclude",
+      "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    }
+  ]
+}
