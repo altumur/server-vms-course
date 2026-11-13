@@ -1,0 +1,289 @@
+{
+ "C": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+ "passport_sha256": "8c056298cbbf51e9bec6b46936b802164f09a3e0547fb07ddae0cc7115769e50",
+ "journal": "decisions/inbox/2026-11-13-P01.346-пара-M10-J10/CHANGED-NORMS.md",
+ "journal_sha256": "d80540fe0a6fd4ab6675ca7723a89d42920793e4e36b6c46ee3f861ae7c20d8f",
+ "baselines": {
+  "M9′": {
+   "old_C": "bacf1dd2171aa69b49d4bc5cdd6a2c7a9a4fac30",
+   "old_passport_sha256": "949319343dd1288c249e1211e4215d7ab4681f10e08b6cb8a81f1cbce04fa6b9",
+   "changed_paragraphs": {},
+   "history_evidence": {},
+   "changed_checklist_items": {
+    "P/01.3-14": "Platform/01-store/spec/01.3-store.norms.md"
+   },
+   "checklist_history_evidence": {
+    "P/01.3-14": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 660,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#N5"
+     }
+    ]
+   },
+   "changed_M_files_evidence": {
+    "Platform/01-store/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 658,
+       "req_id": "-",
+       "file": "README.md#what-this-lesson-takes-from-common"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "f6b3025d523913ae22bed519c1635487ba26ee0f93c01f5bb2550b81c3e01a21"
+    },
+    "Platform/01-store/acceptance/3/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 648,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 649,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#profile-interface"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 650,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#directives-of-chapter-13"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 651,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#directives-of-chapter-13"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 652,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 653,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#full-form-and-reproducibility"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 662,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#deterministic-recovery-and-checkpoint-faults"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "5956963003888808d520b212eaeef837c02974a552cdebc5daa150231d95d419"
+    },
+    "Platform/01-store/forms/targets.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 657,
+       "req_id": "-",
+       "file": "forms/targets.tsv#row:P/01.3/daemon"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "cd4361816d05c50d588020471d985d48c5d0a0ff3183984c7823d59d66fa779c"
+    },
+    "Platform/01-store/spec/01-store.README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 660,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#order-of-work"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 661,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#done-when"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 662,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#done-when"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "f0c6382c00e54a47a564776df0f890cfd51a0835d6d1ae7b47e1bf250125ce1e"
+    },
+    "Platform/01-store/spec/01.3-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 660,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#N5"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "ea7f5c3cf6a026c8a05f5b5188640cc17fa739b298cbf2bbf384f8d8b22b20fb"
+    },
+    "Platform/02-installer/forms/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/02-installer/history.tsv",
+       "line": 190,
+       "req_id": "-",
+       "file": "forms/README.md#call-normalization"
+      }
+     ],
+     "change_commits": [
+      "040fa3aa2cf6f7e9eccf1ee5f0dd2971833a4c4d"
+     ],
+     "diff_sha256": "f99c4935d850ecc338d5bb3e77a704efa9099d0141de572ef5895fcafb5d720a"
+    },
+    "Platform/common/acceptance/PROFILE.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 449,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#forced-state-saving"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 465,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#code-check-names"
+      }
+     ],
+     "change_commits": [
+      "7ecf46591b39413bfe5f04cc3bea2cc20a49354a",
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "d3754d9114394b1e3417ba6887324021418c7daeca20f08e0a62b445037d68c1"
+    },
+    "Platform/common/acceptance/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 435,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 451,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 459,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      }
+     ],
+     "change_commits": [
+      "02c1df29d74337b94502d616b4d6d05c5d0b59ef",
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "b8e1d8da533310c5ac499c69e8a19f8bd3ea39cc7ae562352bf7afd05823d38d"
+    },
+    "Platform/common/acceptance/command-tables.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 447,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 458,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#stand-controls-for-qualification"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 473,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#form-mutation-step"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 495,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#cell-results-and-duplicate-trial"
+      }
+     ],
+     "change_commits": [
+      "7f6ab14ec7b9fd9a751177ed3359ed8958e55355",
+      "d3581cb588c5e52c288569f08dbe4583907926b4",
+      "7ecf46591b39413bfe5f04cc3bea2cc20a49354a",
+      "02c1df29d74337b94502d616b4d6d05c5d0b59ef",
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "0748dfa42b8082dbda4f5fdd644540521c22a70d5f12c032c9581f63a812df07"
+    },
+    "Platform/common/acceptance/forms/code-rules.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 492,
+       "req_id": "-",
+       "file": "acceptance/forms/code-rules.tsv#header"
+      }
+     ],
+     "change_commits": [
+      "7ecf46591b39413bfe5f04cc3bea2cc20a49354a"
+     ],
+     "diff_sha256": "c16b3d3b47bbcaa037f23c1fc6f988a18e80b28bbdbd6ea6e389595d5f4e496f"
+    },
+    "Platform/common/acceptance/forms/profile-substitutions.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 453,
+       "req_id": "-",
+       "file": "acceptance/forms/profile-substitutions.tsv#row:section=stand&key=checkpoint"
+      }
+     ],
+     "change_commits": [
+      "6e96c9d8cd1402ffbe474641447d908ed06d67e3"
+     ],
+     "diff_sha256": "ea2e2358b4d793b50d3a60d4169f1bab9206e1d77afea40087872a4f4d76c4fa"
+    }
+   },
+   "files_without_own_added_English_history": [],
+   "listed_exactly_changed_paragraphs": true,
+   "OK": true
+  }
+ },
+ "note": "Exact paragraph/checklist/file coverage and added history evidence; summary meaning and unanchored changes reviewed by reading. The transport marker is excluded.",
+ "OK": true
+}
