@@ -31,6 +31,8 @@ def positive_control(g):
     known = {(f'common/{name}', table, 'vectors')
              for name, table in g.common_vectors.composition('06-console', ROOT, known_only=True)}
     for name, fn in [('crl', 'CRL'), ('revoked', 'Revoked'), ('store-client', 'StoreClient'), ('log-mask', 'LogMask')]:
+        if fn in fns:
+            continue  # The shared fixture already supplies this Common API.
         values = {}
         for run in runs:
             if run.binding.package != 'common/' + name or run.binding.key not in known:
