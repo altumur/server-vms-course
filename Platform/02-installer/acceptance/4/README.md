@@ -22,7 +22,7 @@ File inputs of the seam table are judge-owned; their descriptions are in the jud
 
 The structural unit check includes the role-socket group in SupplementaryGroups for resource, console, `<sub>controller`, domain, domainconsole and domainagent (P/02.5 N3 item 2). It adds to, rather than replaces, the existing store/events/secret groups. Do not grant every role group to the shared w2c user. In particular domainconsole still has no w2c-secrets.
 
-The added seam `CALL installer-role-unit-groups <JSON>` runs the ordinary installer's unit renderer/writer with a valid catalogue containing testsub, deployment w2c and the domain units enabled, in a temporary output root. Parse the actual generated service/socket units; compare each service's effective SupplementaryGroups with the role's socket SocketGroup and SocketMode=0660. `checked` counts the six actual matched roles, `missing` lists roles without their required supplementary group, `mismatched_socket_groups` lists role socket mismatches, `domainconsole_secrets` observes membership of w2c-secrets. Return observations of the generated units, not a copy of the input or expected object. This structural seam needs no service launch, root or OS-group modification; the real system stand remains its own obligation.
+The seam `CALL installer-role-unit-groups <JSON>` uses the [CALL normalization](../../forms/README.md#call-normalization).
 
 ## Secrets walk selection
 
