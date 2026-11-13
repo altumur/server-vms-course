@@ -530,6 +530,10 @@ class StoreConstants(unittest.TestCase):
             shutil.copytree(ROOT / rel, self.root / rel)
         rel = "Platform/common/vectors/consumers.tsv"
         shutil.copyfile(ROOT / rel, self.root / rel)
+        # The code rows are judged by the dictionary of kinds; requires_module names the pin file (OBSH.69).
+        for rel in ("Platform/common/versions/go.mod", "Platform/common/acceptance/forms/code-rules.tsv"):
+            (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / rel, self.root / rel)
         for rel in (frictionless_forms.PACKAGE,
                     *(f"Platform/{name}{suffix}" for name in frictionless_forms.RESOURCES.values()
                       for suffix in ("", ".schema.json"))):

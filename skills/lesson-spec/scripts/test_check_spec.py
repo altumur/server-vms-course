@@ -2396,8 +2396,9 @@ class PlatformHistoryMapTests(unittest.TestCase):
         self.assertEqual([n for n, _ in rows], [n for n, _ in physical[1:]])
         ids = {row["new"] for _, row in rows if re.fullmatch(r"P/[0-9]{2}(?:\.[0-9]+)?-[0-9]+", row["new"])}
         # 532 at a46ae1e6a; new ids of the map since: ecb501b35 (+3), 34e8538aa (+1), P02.23 858ea017b (+7),
-        # P03.21 cac433612 (+7), P04.21 206e160f8 (+4), P01.176 6e2e26e4a (+1) and its attempt 2 ca50a3385 (−1).
-        self.assertEqual(len(ids), 554)
+        # P03.21 cac433612 (+7), P04.21 206e160f8 (+4), P01.176 6e2e26e4a (+1) and its attempt 2 ca50a3385 (−1),
+        # P01.347 e69f33954 (+2).
+        self.assertEqual(len(ids), 556)
 
 
 @unittest.skipUnless(NUMERIC_TABLE.is_file(), "no numeric-loader witnesses of P/06 C3 in this tree")
