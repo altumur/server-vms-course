@@ -1,0 +1,40 @@
+{
+ "C": "bacf1dd2171aa69b49d4bc5cdd6a2c7a9a4fac30",
+ "dependencies": [
+  {
+   "task": "P01.329",
+   "status": "accepted",
+   "commit": "2b1d10cc71b028ad7f94f87cc03a4e929bef108e",
+   "utc": "2026-11-13T11:59:52Z",
+   "accepted_sha256": "ff0180e8d30afb1c886093da2a5e65adeabdf239d3b599a1ed46cd9788e2fa6b",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.299",
+   "status": "accepted",
+   "commit": "5cae9848940d5d821584c65da635d6212aa94d32",
+   "utc": "2026-11-13T09:59:53Z",
+   "accepted_sha256": "cfd165899a55abce3ae2a199801379933c60b4d056672f49129623e422576e56",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.331",
+   "status": "accepted",
+   "commit": "957305e659366992b3d11643b2ece7b714ca755b",
+   "utc": "2026-11-13T12:03:59Z",
+   "accepted_sha256": "49d9c560841a07b61b033c37e3ecdaaaad02d3e72de99504b0c28c12c03f4467",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.58",
+   "status": "accepted",
+   "commit": "34e5dedba5a408bd85dbd5cc0ddfc4b43676f6f6",
+   "utc": "2026-11-13T12:41:14Z",
+   "accepted_sha256": "11d0fe9123d37b7478b5b6a278e782bc8887b20337c1351087d6a69eda11a3f4",
+   "ancestor_C": true
+  }
+ ],
+ "task_sha256": "d4b824616edc6149143455b2bdfd3e5e0868896c77a2e8bd7d81370ad00346f6",
+ "latest_fetched_main_at_source": "bacf1dd2171aa69b49d4bc5cdd6a2c7a9a4fac30",
+ "OK": true
+}
