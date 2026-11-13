@@ -6,7 +6,7 @@ In a command table a row is a call of a command or an adapter of the profile, no
 
 ## Form mutation step
 
-This is a separate step of acceptance, not a scenario directive, routing word, generation gate or production probe. Its obligations and finding semantics are [R059–R064 of the judge norms](spec/acceptance.norms.md#n35-form-mutation-step) (judge-only: judge norms). It checks whether changing an embedded form changes externally observed behaviour as that cell specifies. The original candidate's functional verdict remains separate; a trial is an intentionally changed candidate, not another product submission.
+This is a separate step of acceptance, not a scenario directive, routing word, generation gate or production probe. Its obligations and finding semantics are [R061–R066 of the judge norms](spec/acceptance.norms.md#n36-form-mutation-step) (judge-only: judge norms). It checks whether changing an embedded form changes externally observed behaviour as that cell specifies. The original candidate's functional verdict remains separate; a trial is an intentionally changed candidate, not another product submission.
 
 ### Discovery and trial form
 

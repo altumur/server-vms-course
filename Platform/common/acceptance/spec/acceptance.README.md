@@ -23,7 +23,7 @@ The generation input of the engine contains no code of products or of an existin
 
 ## What to create
 
-One engine with these parts: the readers of the tables; the plan with the dry listing; the runner of the stand by the dictionary; the callers of the adapters and the vector command; the separate form mutation step (N3.5 of the norms); the probes of the production qualification (N6 of the norms); the classification of results; the report.
+One engine with these parts: the readers of the tables; the plan with the dry listing; the runner of the stand by the dictionary; the callers of the adapters and the vector command; the separate form mutation step (N3.6 of the norms); the probes of the production qualification (N6 of the norms); the classification of results; the report.
 
 ## Order of work
 
