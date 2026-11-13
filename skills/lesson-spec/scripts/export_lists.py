@@ -15,8 +15,21 @@ Checked here, by data only:
   `forms/targets.routing.tsv` is judge_only in M (never given to the model) and include in J, `forms/export.json` is
   judge_only in M and exclude in J.
 
+The roster (OBSH.58): in a git tree every file of Platform/ — the lessons, common and the other files — is classified in
+both assembled filters, and the filters name no other path. The roster is the one the export pair operator classifies
+(P02.52, `b7_export_pair._classification`, «filter does not cover exact full J roster»): the regular files under
+Platform/ in git's index (the operator reads the committed tree of C: what is not added is not in the export) and the
+source marker `Platform/COURSE_COMMIT` that the operator adds before classifying. So:
+- a file of the roster without a record in M or in J is an error with its path and the filter (for a lesson with its
+  list the list check above reports it);
+- a record of the common filter that names no file of the roster (nor the marker) is an error;
+- the marker as a tracked file, and a tracked entry under Platform/ that is not a regular file (a link, a submodule),
+  are errors: the operator refuses both.
+No ledger of exceptions. A root that is not a git tree (a test fixture) has no index and no roster check.
+
 A file of a lesson that has not moved yet (no forms/export.json) and that no record names is counted in the stats
-(`export_unlisted`), not an error: its lesson brings its list when it moves (ADR-0135 addendum (14) item 4).
+(`export_unlisted`); in a git tree the roster check makes it an error of the common filters (ADR-0135 addendum (14)
+item 4: such a lesson keeps its records in the common filters until it brings its list).
 
 The third input Q (qualification, ADR-0130 addendum (20) item 1): the procedures of checking the production obligations
 of M — the files `Platform/<lesson>/qualification/**` (translations `Platform/<lesson>/ru/qualification/**`; likewise
@@ -32,6 +45,7 @@ of M — the files `Platform/<lesson>/qualification/**` (translations `Platform/
 
 `assemble(root)` → ({"model": [records], "judge": [records]}, errors, stats); errors are (path, message).
 `qualification_files(root)` → the repository paths of the Q files of the tree (sources and translations).
+`platform_roster(root)` → {path: mode} of the files under Platform/ in git's index, None without git.
 """
 import json
 import re
@@ -52,6 +66,8 @@ RULES = {  # item 3: the forms of the registry and of the list in every lesson
     "forms/export.json": {"model": "judge_only", "judge": "exclude"},
 }
 LESSON_DIR = re.compile(r"^\d\d-[a-z0-9-]+$")
+MARKER = "Platform/COURSE_COMMIT"   # the source marker the export pair operator adds to the roster (b7_export_pair.MARKER)
+REGULAR = {"100644", "100755"}      # the only entries the operator takes
 
 
 def lesson_dirs(root):
@@ -90,6 +106,55 @@ def lesson_files(root, lesson):
         if done.returncode == 0:
             return {p for p in done.stdout.decode("utf-8").split("\0") if p}
     return {p.relative_to(root).as_posix() for p in (root / rel).rglob("*") if p.is_file()}
+
+
+def platform_roster(root):
+    """{path: mode} of the entries under Platform/ in git's index — the roster of the export operator without its
+    marker; None when the root is not a git tree (no index)."""
+    root = Path(root)
+    if not (root / ".git").exists():
+        return None
+    done = subprocess.run(["git", "-C", str(root), "ls-files", "-s", "-z", "--", "Platform"], capture_output=True)
+    if done.returncode != 0:
+        return None
+    roster = {}
+    for raw in done.stdout.decode("utf-8").split("\0"):
+        if raw:
+            meta, path = raw.split("\t", 1)
+            roster[path] = meta.split()[0]
+    return roster
+
+
+def roster_coverage(root, by, seen, moved, errors, stats):
+    """Every file of the roster has a record in M and in J, and the common filters name no other path (OBSH.58)."""
+    roster = platform_roster(root)
+    if roster is None:
+        return False
+    stats["export_roster_files"] = len(roster)
+    if MARKER in roster:
+        errors.append((root / MARKER, f"{MARKER} is tracked — the export operator adds the source marker itself and "
+                                      "refuses a tree that already has it"))
+    for p, mode in sorted(roster.items()):
+        if mode not in REGULAR:
+            errors.append((root / p, f"{p} is a tracked entry of mode {mode} — the export operator takes only regular "
+                                     "files (100644, 100755)"))
+    expected = set(roster) | {MARKER}
+
+    def listed(p):  # a file of a lesson with its list: the list check reports it missing
+        parts = p.split("/")
+        return len(parts) > 2 and parts[1] in moved
+
+    for side, rel in COMMON.items():
+        named = set(by[side])
+        for p in sorted(expected - named):
+            if not listed(p):
+                errors.append((root / rel, f"{side}: the file {p} of Platform has no record in {rel.as_posix()} — the "
+                                           "export operator refuses a filter that does not cover the exact roster"))
+        for p in sorted(named - expected):
+            if seen[side][p] == root / rel:  # a lesson list reports a record outside its lesson itself
+                errors.append((root / seen[side][p], f"{side}: {p} has a record and is no file of Platform in git's "
+                                                     "index — the export operator refuses a filter wider than the roster"))
+    return True
 
 
 def _records(path, records, side, errors):
@@ -175,10 +240,12 @@ def assemble(root):
 
     by = {side: {r["path"]: r["disposition"] for r in assembled[side]} for side in assembled}
     model_paths, judge_paths = set(by["model"]), set(by["judge"])
-    for p in sorted(model_paths - judge_paths):
-        errors.append((root / COMMON["judge"], f"{p} has a record in M and none in J"))
-    for p in sorted(judge_paths - model_paths):
-        errors.append((root / COMMON["model"], f"{p} has a record in J and none in M"))
+    if not roster_coverage(root, by, seen, moved, errors, stats):
+        # without git, M and J only agree with each other; with git both equal the roster, which says more
+        for p in sorted(model_paths - judge_paths):
+            errors.append((root / COMMON["judge"], f"{p} has a record in M and none in J"))
+        for p in sorted(judge_paths - model_paths):
+            errors.append((root / COMMON["model"], f"{p} has a record in J and none in M"))
 
     for lesson in lessons:
         for rel, want in RULES.items():
