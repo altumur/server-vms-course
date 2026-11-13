@@ -34,7 +34,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](../../../vectors/alarms/cases.tsv) (judge-only: случаи приёмки P/10-R016), 37 строк: 22 вычислено, 15 `@exit 2` | `input` — вход команды `alarms` текстом JSON → `expect`: `{events, members, complete, sentence}` или его часть |
+| Корпус тревог, 37 строк: 22 вычислено, 15 `@exit 2` | `input` — вход команды `alarms` текстом JSON → `expect`: `{events, members, complete, sentence}` или его часть |
 
 При расхождении права норма, «Спецификация» исправляет вектор.
 

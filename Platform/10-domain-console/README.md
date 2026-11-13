@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-A micromodule: the process domainconsole. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people, not in the export), the table «Lessons».
+A micromodule: the process domainconsole.
 
 The layout of the catalogue (the English source on the canonical path, the Russian text for people in `ru/`):
 
@@ -88,4 +88,3 @@ This index names inputs outside the lesson; their owners define the imported rul
 | [`common/data/catalog.tsv`](../common/data/catalog.tsv) | `owner`, `reader`, `writer` (`domainconsole`) | `lifecycle.md`, `spec/10-domain-console.norms.md` |
 | [`common/data/codec.tsv`](../common/data/codec.tsv) | `time` | `spec/10-domain-console.norms.md` |
 | [`common/vectors/consumers.tsv`](../common/vectors/consumers.tsv) | `10-domain-console` | `spec/10-domain-console.norms.md` |
-| `Platform/module-design.md` (judge-only: human design note; no implementation rule) | «Lessons» | `README.md` |

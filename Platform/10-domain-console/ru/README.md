@@ -2,7 +2,7 @@
 
 Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом.
 
-Микромодуль: процесс domainconsole. Что нормирует и откуда — записка модуля `Platform/module-design.md` (judge-only: для человека, в выгрузку не входит), таблица «Уроки».
+Микромодуль: процесс domainconsole.
 
 Раскладка каталога (английский источник — на каноническом пути, русский текст для человека — в `ru/`):
 
@@ -88,4 +88,3 @@ ru/                                       для человека, в выгру
 | [`common/data/catalog.tsv`](../../common/data/catalog.tsv) | `owner`, `reader`, `writer` (`domainconsole`) | `lifecycle.md`, `spec/10-domain-console.norms.md` |
 | [`common/data/codec.tsv`](../../common/data/codec.tsv) | `time` | `spec/10-domain-console.norms.md` |
 | [`common/vectors/consumers.tsv`](../../common/vectors/consumers.tsv) | `10-domain-console` | `spec/10-domain-console.norms.md` |
-| `Platform/module-design.md` (judge-only: записка для человека; правил реализации не задаёт) | «Уроки» | `README.md` |

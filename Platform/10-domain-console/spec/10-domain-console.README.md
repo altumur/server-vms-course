@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/10-domain-cons
 
 This file is for the agent (or the human) who writes code by the lesson. The explanation of «why» is `ru/10-domain-console.md` (for people, not in the export).
 
+Acceptance scenarios, fixtures and reference results are not supplied to the implementation model. Scenario names and «sc. NN» in N5 and the readiness checklist name the judge's case data; the visible norms and forms contain the implementation obligations.
+
 ## Task
 
 Implement the process `domainconsole` on the holder's box in the language `<LANG>`; pass the acceptance of N5 and close the readiness
@@ -79,7 +81,7 @@ This is a suggested order, not a mandatory structure of the code.
 6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of N5).
 
-The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit [seams](../acceptance/seams.tsv) (judge-only: acceptance cases for P/10-R016) supplement the scenarios of step 6 and the reading, they do not replace them.
+The machine-readable plan of this order is [forms/stages.tsv](../forms/stages.tsv), with the CALL ports in [forms/README.md](../forms/README.md); its kit seams supplement the scenarios of step 6 and the reading, they do not replace them.
 
 ## Pitfalls of the language and the library
 
