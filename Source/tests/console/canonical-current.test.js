@@ -9,7 +9,8 @@ const file = path.resolve(__dirname, "../../../Platform/07-console-module/module
 const sha256 = createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const fixtures = [
   "module-calls", "module-changes", "module-retry", "module-may",
-  "module-shared-schema", "module-card-markup", "module-refusal-field", "module-form-if-match"
+  "module-shared-schema", "module-card-markup", "module-refusal-field", "module-form-if-match",
+  "module-refresh-event"
 ];
 let failed = false;
 for (const fixture of fixtures) {
