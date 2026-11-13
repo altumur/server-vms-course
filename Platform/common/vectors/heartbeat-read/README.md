@@ -12,6 +12,10 @@ P/05). The participants are the observers of `resource_state`: the controller an
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first line not skipped is the header
 `case<TAB>object<TAB>expect<TAB>note`.
 
+Each case starts from a heartbeat with all required fields, including `door`, `waits`, `restore` and `mirror`.
+The base uses a `loopback` door, zero wait and mirror counters, `waits.max: 16` and an empty `restore` map.
+Each case changes only its stated subject; numeric lexemes in `object` are part of the input and must be preserved.
+
 | Field | Meaning |
 |---|---|
 | `object` | the heartbeat of a resource — a JSON object under the key `platform/resources/srv-a/heartbeat` |
