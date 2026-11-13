@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/08-domain.READ
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/08-domain.md` (for people, not in the export).
 
+Scenario names (`sc. NN`), vector case names and fixture names identify the judge's checking data; scenarios, fixtures and expected results are not provided to the model. All implementation obligations are stated in the visible norms and contracts.
+
 ## Task
 
 Implement the process `domain` of the domain holder in the language `<LANG>`: the door of the process, the domain trust, the acceptance of reports, the view and
@@ -93,12 +95,12 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); chapter 8.0 has no catalogue (N5). The stand of several
   clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
   The vectors of the lesson — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
-  [`issue`](../vectors/issue/README.md) (8.7); the common ones (judge-only: the common vector packages; they check `keys` — P/08.2-R013, P/08.2-R040 and P/08.2-R042; `domain-token` — P/08.2-R008, P/08.2-R014, P/08.2-R076, P/08.2-R078 and P/08.2-R079; `domain-envelopes` — P/08.2-R007, P/08.2-R015 and P/08.3-R218; `accept` — P/08.3-R016, P/08.3-R078, P/08.3-R161, P/08.3-R166, P/08.3-R167, P/08.3-R169, P/08.3-R170, P/08.3-R171, P/08.3-R180, P/08.3-R182, P/08.3-R183, P/08.3-R191, P/08.3-R202, P/08.3-R203, P/08.3-R206, P/08.3-R208, P/08.3-R233; `agent-sig` — P/08.3-R009; `may` — P/08.4-R010; `record` — P/08.8-R014, P/08.8-R439 and P/08.8-R443; `ask-sig` — P/08.8-R015, P/08.8-R438, P/08.8-R439 and P/08.8-R444) — [`keys`](../../common/vectors/keys/README.md),
-  [`domain-token`](../../common/vectors/domain-token/README.md),
-  [`domain-envelopes`](../../common/vectors/domain-envelopes/README.md) (8.2, 8.3),
-  [`accept`](../../common/vectors/accept/README.md), [`agent-sig`](../../common/vectors/agent-sig/README.md) (8.3),
-  [`may`](../../common/vectors/may/README.md) (8.4), [`record`](../../common/vectors/record/README.md),
-  [`ask-sig`](../../common/vectors/ask-sig/README.md) (8.8). Flags, environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
+  [`issue`](../vectors/issue/README.md) (8.7); the common ones  — `keys`,
+  `domain-token`,
+  `domain-envelopes` (8.2, 8.3),
+  `accept`, `agent-sig` (8.3),
+  `may` (8.4), `record`,
+  `ask-sig` (8.8). Flags, environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
 - The lecture (`ru/08-domain.md`, for people, not in the export) explains the mechanism and examples.
 
 The internal interfaces, types, error classes, libraries and the division into components are chosen by the implementation. The acceptance commands

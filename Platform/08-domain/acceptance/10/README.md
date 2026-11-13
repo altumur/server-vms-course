@@ -24,4 +24,4 @@ In total 6 scenarios / 56 steps.
 
 ## Kit seams
 
-[5 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.10; they check P/08.10-R051, P/08.10-R060, P/08.10-R064, P/08.10-R066, P/08.10-R086, P/08.10-R088 and P/08.10-R092) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+5 CALL seams  execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

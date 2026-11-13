@@ -6,7 +6,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`08.4-domain.norms.md`](../../spec/08.4-domain.norms.md) N5. In total 33 scenarios / 498 steps.
 
-The function `may` without a stand is the vectors [`may`](../../../common/vectors/may/README.md) (judge-only: the vectors of the function may; the canonical package README lists the cases; they check P/08.4-R010).
+The function `may` without a stand is the vectors `may`.
 
 ## Stand
 
@@ -32,4 +32,4 @@ The format is the dictionary of the «Stand» and the section «Domain stand» o
 
 ## Kit seams
 
-[CALL seams](seams.tsv) (judge-only: the seams of the chapter; they check P/08.0-R006, P/08.4-R019, P/08.4-R092, P/08.4-R106, P/08.4-R108, P/08.4-R110, P/08.4-R216, P/08.4-R240, P/08.4-R244, P/08.4-R248, P/08.4-R330, P/08.4-R332 and P/08.4-R467) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+CALL seams  execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

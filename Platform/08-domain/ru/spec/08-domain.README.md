@@ -4,6 +4,8 @@
 
 Этот файл — для агента (или человека), который пишет код по уроку. Объяснение «зачем» — `ru/08-domain.md` (для человека, в выгрузку не входит).
 
+Имена сценариев (`sc. NN`), случаев векторов и фикстур обозначают проверочные данные судьи; сценарии, фикстуры и эталоны модель не получает. Все обязанности реализации заданы видимыми нормами и контрактами.
+
 ## Задача
 
 Реализовать процесс `domain` держателя домена на языке `<LANG>`: дверь процесса, доверие домена, приём отчётов, вид и
@@ -93,12 +95,12 @@
   [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); у главы 8.0 каталога нет (N5). Стенд нескольких
   кластеров, директивы и двери — [общий README приёмки](../../../common/ru/acceptance/README.md#словарь-директив-и-дверей).
   Векторы урока — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
-  [`issue`](../vectors/issue/README.md) (8.7); общие (только для судьи: пакеты общих векторов; они проверяют: `keys` — P/08.2-R013, P/08.2-R040 и P/08.2-R042; `domain-token` — P/08.2-R008, P/08.2-R014, P/08.2-R076, P/08.2-R078 и P/08.2-R079; `domain-envelopes` — P/08.2-R007, P/08.2-R015 и P/08.3-R218; `accept` — P/08.3-R016, P/08.3-R078, P/08.3-R161, P/08.3-R166, P/08.3-R167, P/08.3-R169, P/08.3-R170, P/08.3-R171, P/08.3-R180, P/08.3-R182, P/08.3-R183, P/08.3-R191, P/08.3-R202, P/08.3-R203, P/08.3-R206, P/08.3-R208, P/08.3-R233; `agent-sig` — P/08.3-R009; `may` — P/08.4-R010; `record` — P/08.8-R014, P/08.8-R439 и P/08.8-R443; `ask-sig` — P/08.8-R015, P/08.8-R438, P/08.8-R439 и P/08.8-R444) — [`keys`](../../../common/ru/vectors/keys/README.md),
-  [`domain-token`](../../../common/ru/vectors/domain-token/README.md),
-  [`domain-envelopes`](../../../common/ru/vectors/domain-envelopes/README.md) (8.2, 8.3),
-  [`accept`](../../../common/ru/vectors/accept/README.md), [`agent-sig`](../../../common/ru/vectors/agent-sig/README.md) (8.3),
-  [`may`](../../../common/ru/vectors/may/README.md) (8.4), [`record`](../../../common/ru/vectors/record/README.md),
-  [`ask-sig`](../../../common/ru/vectors/ask-sig/README.md) (8.8). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
+  [`issue`](../vectors/issue/README.md) (8.7); общие  — `keys`,
+  `domain-token`,
+  `domain-envelopes` (8.2, 8.3),
+  `accept`, `agent-sig` (8.3),
+  `may` (8.4), `record`,
+  `ask-sig` (8.8). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
 - Лекция (`ru/08-domain.md`, для человека, в выгрузку не входит) объясняет механизм и примеры.
 
 Внутренние интерфейсы, типы, классы ошибок, библиотеки и разбиение на компоненты выбирает реализация. Команды приёмки

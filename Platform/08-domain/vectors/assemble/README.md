@@ -23,7 +23,7 @@ not of the form of N5: the keys of `copies` are not exactly `members`; `grants` 
 
 The input is N5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the names index `notes/` with `grant: view`) or `testsub2/rolls`
 (`pick: all`), `members` is the list of members, `book_seal_seed` is the `seed_secret` of the book acceptance key (`book seal 1`,
-[the README of the package `domain-token`](../../../common/vectors/domain-token/README.md#keys) «Keys»; judge-only: the test keys of the common vectors; with them the rows `assemble-06-secret-opens`, `assemble-07-secret-unopened` and `assemble-19-unique-same-secret-two-envelopes` check P/08.5-R041, P/08.5-R052 and P/08.5-R270), `copies` is the state and the objects of the copy
+the `domain-token` checking data «Keys»), `copies` is the state and the objects of the copy
 of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule N1.3 `grant`. The secrets of the
 inputs are envelopes `x25519:v1` to `book seal 1`, `eph 1`, `nonce` 0…11
 ([the domain envelopes contract](../../../common/contracts/domain-envelopes.md) «Envelope `x25519:v1`», the AAD is `[member, row key,
@@ -38,7 +38,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv) (judge-only: the vector table; it checks P/08.5-R032, P/08.5-R034, P/08.5-R037, P/08.5-R040, P/08.5-R041, P/08.5-R043, P/08.5-R044, P/08.5-R045, P/08.5-R049, P/08.5-R052, P/08.5-R053, P/08.5-R059, P/08.5-R062, P/08.5-R067, P/08.5-R068, P/08.5-R138, P/08.5-R263, P/08.5-R265, P/08.5-R269, P/08.5-R270, P/08.5-R291 and P/08.5-R292), 23 rows: 22 computed, 1 `@exit 2` | `input` is the input of `assemble` as JSON text → `expect`: the rows `rows` (delivery only to the members from `to`, the order of `entries` by (member, item), `missing` with closed words, the key of a `unique` conflict and one not delivered by the grant — `"@absent"`, an opened secret in `value`) and `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` without `now` |
+| the vector cases, 23 rows: 22 computed, 1 `@exit 2` | `input` is the input of `assemble` as JSON text → `expect`: the rows `rows` (delivery only to the members from `to`, the order of `entries` by (member, item), `missing` with closed words, the key of a `unique` conflict and one not delivered by the grant — `"@absent"`, an opened secret in `value`) and `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` without `now` |
 
 The vectors are checked by an oracle against the text of the norms (N1.3, N3 «assembly of a book», N5; the opening of a secret — by reference X25519, HKDF-SHA256
 and AES-256-GCM by the domain envelopes contract; the acting grant row — [the right contract](../../../common/contracts/may.md)

@@ -30,4 +30,4 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 
 ## Kit seams
 
-[3 CALL seams](seams.tsv) (judge-only: the seams of chapter 8.9; they check P/08.0-R058, P/08.9-R043, P/08.9-R067, P/08.9-R074 and P/08.9-R078) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+3 CALL seams  execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

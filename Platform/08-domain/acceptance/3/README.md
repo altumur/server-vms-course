@@ -6,7 +6,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 (the dictionary of directives and doors of the stand of several clusters). The norm of the chapter is
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) N5. In total 21 scenarios / 218 steps.
 
-The commands `agent-sig`, `seal-member`, `seal-member-round`, `accept` are the vectors of the common contracts [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md) and [`accept`](../../../common/vectors/accept/README.md) (judge-only: the test vectors of these contracts; they check P/08.3-R009, P/08.3-R016, P/08.3-R078, P/08.3-R161, P/08.3-R166, P/08.3-R167, P/08.3-R169, P/08.3-R170, P/08.3-R171, P/08.3-R180, P/08.3-R182, P/08.3-R183, P/08.3-R191, P/08.3-R202, P/08.3-R203, P/08.3-R206, P/08.3-R208, P/08.3-R233 and P/08.3-R218).
+The commands `agent-sig`, `seal-member`, `seal-member-round`, `accept` are the vectors of the common contracts `agent-sig`, `domain-envelopes` and `accept`.
 
 ## Stand
 
@@ -45,4 +45,4 @@ of the holder on a relay packet — [the acceptance of chapter 9.2](../../../09-
 
 ## Kit seams
 
-[CALL seams](seams.tsv) (judge-only: the seams of chapter 8.3; they check P/08.3-R009, P/08.3-R188, P/08.3-R195, P/08.3-R280, P/08.3-R281, P/08.3-R282, P/08.3-R283 and P/08.3-R286) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
+CALL seams  execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

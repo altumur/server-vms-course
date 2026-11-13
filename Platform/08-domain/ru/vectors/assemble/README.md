@@ -23,7 +23,7 @@
 
 Вход — N5 главы: `book` — `testsub2/notes` (`pick: unique`, индекс имён `notes/` с `grant: view`) или `testsub2/rolls`
 (`pick: all`), `members` — список членов, `book_seal_seed` — `seed_secret` ключа приёма книг (`book seal 1`,
-[README пакета `domain-token`](../../../../common/ru/vectors/domain-token/README.md#ключи) «Ключи»; только для судьи: тестовые ключи общих векторов; на них строки `assemble-06-secret-opens`, `assemble-07-secret-unopened` и `assemble-19-unique-same-secret-two-envelopes` проверяют P/08.5-R041, P/08.5-R052 и P/08.5-R270), `copies` — состояние и объекты копии
+проверочные данные `domain-token` «Ключи»), `copies` — состояние и объекты копии
 каждого члена (`null` — копии нет), `grants` и `now` — строки грантов получателей для правила N1.3 `grant`. Секреты
 входов — конверты `x25519:v1` к `book seal 1`, `eph 1`, `nonce` 0…11
 ([договор конвертов домена](../../../../common/ru/contracts/domain-envelopes.md) «Конверт `x25519:v1`», AAD — `[member, row key,
@@ -38,7 +38,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](../../../vectors/assemble/cases.tsv) (только для судьи: таблица векторов; проверяет P/08.5-R032, P/08.5-R034, P/08.5-R037, P/08.5-R040, P/08.5-R041, P/08.5-R043, P/08.5-R044, P/08.5-R045, P/08.5-R049, P/08.5-R052, P/08.5-R053, P/08.5-R059, P/08.5-R062, P/08.5-R067, P/08.5-R068, P/08.5-R138, P/08.5-R263, P/08.5-R265, P/08.5-R269, P/08.5-R270, P/08.5-R291 и P/08.5-R292), 23 строки: 22 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
+| случаи векторов, 23 строки: 22 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
 
 Векторы проверены оракулом по тексту норм (N1.3, N3 «сборка книги», N5; открытие секрета — эталонными X25519, HKDF-SHA256
 и AES-256-GCM по договору конвертов домена; действующая строка гранта — [договор права](../../../../common/ru/contracts/may.md)
