@@ -4,6 +4,52 @@ A topic of the [common acceptance README](README.md): the directives and doors a
 
 In a command table a row is a call of a command or an adapter of the profile, not an HTTP step. The routing word of the target names the form: `verdicts`, `puts` or `variants` ([`forms/targets.routing.tsv`](forms/targets.routing.tsv); judge-only: the routing of the judge). The tables are those of the first directory of the routing row. The interface of each call comes from the public row of the target ([target registry](forms/targets.README.md)). The judge reads every table of the target whole before the stand starts. Empty lines and lines that begin with `#` are notes, except the declarations that a form names. A row outside its form is a data error of the class `data`, found before the stand starts; it is not an outcome of the implementation. The inventory of the target (N1.4 of the [norms](spec/acceptance.norms.md); judge-only: the norms of the judge) names each row by its file and the number of its physical line.
 
+## Deterministic syscall faults
+
+The two directives below are shared stand operations. They inspect the selected store process from outside; they introduce no production route, signal handler, checkpoint schedule or on-disk name. The [judge norms](spec/acceptance.norms.md#n32-life-cycle-of-the-stand) define their planning, evidence and failure classes.
+
+| Form | Meaning |
+|---|---|
+| `@crash <process> <calls> <K> <trigger>` | sweep the reachable syscall ordinals 1 through K after the trigger begins; at the selected successful syscall's exit stop all traced threads before any returns to user code, send SIGKILL to the selected process group and confirm its exit; expectation `ok` requires the independently observed kill at that ordinal |
+| `@io-error <process> <calls> <K> <errno> <trigger>` | sweep the same ordinals; at the selected syscall's entry suppress its execution and return the selected error to its caller, with no effect from that call; inject once, then remove the fault before subsequent steps; expectation `ok` requires the independently observed suppression and error return, and the trigger outcome below |
+
+**Arguments.** `<process>` is `store` or `store@<id>`, an existing store identity of the stand. `<calls>` is a nonempty comma-separated set without repeats or spaces: `rename`, `fsync`, `write` for `@crash`, and `fsync`, `write` for `@io-error`. `<K>` matches `^[1-9][0-9]*$`. `<errno>` is exactly `EIO` or `ENOSPC`. `<trigger>` is one strict JSON object, with exactly one of these forms:
+
+- `{"request":"<request>","expect":"<expect>"}`: execute an existing dictionary request with its existing expectation. It names the selected store or starts a local operator command for that stopped store. A nested sweep, a different store, an empty request/expect or a mutation under `@until` is a data error. request and expect are nonempty strings without NUL, TAB, CR or LF; duplicate fields and non-JSON numbers are invalid. The rest of the request cell is the JSON object; spaces inside its strings are ordinary content.
+- `{"checkpoint":{"request":"<request>","expect":"<expect>"}}`: for the selected live store call its required profile command `stand.checkpoint`. When its value is the string `none`, execute the enclosed ordinary write request instead, with its expectation. The fallback request and expectation are validated even when the command is present; they write through the selected store's door. No phase or filename is selected by the implementation.
+
+**Checkpoint binding.** `stand.checkpoint` is a nonempty shell command that forces saving the current state, waits for completion and exits 0 only after its durability barriers succeed, or exactly the string `none` when this implementation has no checkpoint.
+
+It receives the selected instance's `{data}`, `{dir}`, `{socket}`, `{id}` and `{tls}`; `dir` is its store directory and `data` its platform directory. An instance without TLS has an empty `tls`. It runs with the ordinary profile working directory and stand environment. `none` is a declaration, never a command to execute.
+
+An absent command is an incomplete profile: the selected target is `blocked` before execution, even if its registry flag is `optional`. There is no `MissingBinding` or `not_executed` fallback for an absent command. The declaration MUST describe the actual implementation; `none` does not disable tracing or skip its journal writes.
+
+**Counting.** Install the observer before starting the trigger; zero the counter at that boundary, after the scenario prefix has completed. Count only operations on regular files or directories in the selected store directory, using resolved path/descriptor identities, including files subsequently renamed or unlinked. Do not count socket, stdout, stderr or unrelated-file writes.
+
+Trace all threads and descendants of the selected store command; for an offline operator trigger trace the operator command from exec, not the stopped daemon. A checkpoint helper is traced too, but its socket writes do not count.
+
+Serialize syscall stops to define one recorded order across threads. Normalize `rename`, `renameat`, `renameat2` to `rename`; `fsync`, `fdatasync` to `fsync`; and `write`, `writev`, `pwrite64`, `pwritev`, `pwritev2` to `write`.
+
+The ordinal is in the union of the named families. For a crash count successful exits; for an error count entries that would address the selected storage object. The observer records the native syscall and the normalized family. It does not infer a phase from a candidate's path, source code, log message or counter.
+
+**Sweep and isolation.** The scenario is a finite family of trials, not successive damage to one directory. For each sweep, first discover its reachable ordinals without that sweep's fault, under the already selected earlier faults. Run that prefix and trigger on a fresh stand with fresh bindings; require the ordinary trigger expectation (and code 0 for a checkpoint command). Record the trace and retain ordinals `1..min(K,C)`, where C is the observed call count; record the untested tail if C exceeds K. No matching call is a `stand` failure, never an empty GREEN. An ordinal beyond C is absent, not a successful injection.
+
+Then replay the scenario from its beginning on a fresh stand for every retained ordinal, inject that fault and run the suffix. With several sweeps enumerate the product of the reachable ordinals, discovering each later sweep under each earlier faulted prefix. No counter, bound version, directory or process crosses trials; never copy a live directory as a reset. A selected ordinal not reached on its trial is `stand`.
+
+Every trial keeps its step/source-line identity and ordinal tuple in the report. A source step matches only if it matches in every trial in which it runs; a failed preparation aborts that trial's dependent steps. Scenario success requires successful discovery and every required trial, not a successful last trial.
+
+**Trigger outcome.** On a discovery run the trigger must match its ordinary expectation. On a crash trial its expected SIGKILL replaces only the interrupted trigger's ordinary outcome; no refusal code, closed socket or timeout proves this kill. The suffix starts after the whole selected command group has exited.
+
+On an error trial a request trigger, including the `none` fallback, must match its supplied expectation by the ordinary response rules; a real checkpoint command may exit normally with a nonzero code after the proven fault. A crash, timeout, malformed response or unexpected loss of a serving store is still an implementation failure. The fault is removed and the observer detached before later scenario steps. These operations simulate process failure or a syscall error; they do not establish loss of dirty kernel pages or physical power-loss durability.
+
+**Independent evidence and controls.** Before scoring, qualify the observer and injector on judge-owned temporary files/processes: correct versus wrong process/object, zero versus one effect, native call normalization, ordinal boundaries, all threads, successful versus failed calls, both error numbers, a suppressed write with unchanged bytes and a crash with a proven wait status. Include inactive/no-op and stale-ordinal controls; activating an error must leave the selected syscall's side effects absent.
+
+A failure to trace, inject, observe or clean up is `stand`; a malformed selector or trigger is `data`. No trace capability is a stand failure, not a candidate refusal or an unexecuted successful case.
+
+Keep process/group and storage-object identities, monotonic boundaries, native call, ordinal, result/error and kill/wait evidence, with secrets redacted. Profile ACK, helper exit, an EIO string or a configured hook alone proves nothing.
+
+This is the same separation of binding and independently observed effect as the [test-side evidence bindings](seams.md#d7-test-side-evidence-bindings); these directives require no D7 descriptor. Budgets are finite under the common stand rules; exceeding one never produces GREEN.
+
 ## Held connections
 
 | Form | Definition | Users |

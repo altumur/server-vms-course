@@ -68,6 +68,10 @@ Artifact labels use ASCII letters, digits, `_`, `.` and `-`. Each path is nonemp
 
 Profile loading resolves artifact ownership; it does not require outputs to exist before their build. After optional builds, and before unit or acceptance, the runner fixes source/profile/artifact identities, including permissions and safe link targets. Escaping links, cycles and special files are refused. Source inventory includes Git-tracked and nonignored untracked files; declared artifacts are sealed separately even when ignored by Git. Build may not change the assembly, profiles or repository `SPEC_VERSION`. A unit command or an acceptance run that changes sealed inputs does not pass. Packaging `07-console-module`, when selected, precedes the builds of its `06-console` and `10-domain-console` consumers.
 
+### Forced state saving
+
+The command `stand.checkpoint` is the [checkpoint binding](command-tables.md#deterministic-syscall-faults): a command that forces state saving or the literal string `none` for an implementation without a checkpoint. Its absence blocks a selected target with a checkpoint trigger, including an optional target; it is not an omitted optional interface. The runner resolves its command substitutions for the selected store instance. `none` is admitted as this declaration only; ordinary command fields do not gain a sentinel value.
+
 ## Parameters in `keys`
 
 The key set is closed. Parameter values belong to their profile rather than a merged last-writer-wins map.
