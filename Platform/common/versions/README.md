@@ -17,6 +17,11 @@ version is the standard, the external test suite and the known defects of this v
 
 A module of the pinned [`go.mod`](go.mod) that the main module of a Go implementation uses is taken only by a `require` directive with the pinned version and the checksums of [`go.sum`](go.sum), from the module cache that the stand provides ([build](../acceptance/PROFILE.md#command-ownership-and-build-results)). The implementation tree holds no copy of the sources of these modules, its `go.mod` has no `replace` directive of them, and the root of the main module holds no `vendor` directory and no `go.work`.
 
+
+## Shared code module pins
+
+The modules in [the shared code inventory](../modules.md) use direct requirements in this same `go.mod` and checksums in `go.sum`. Their pins are added after generation and qualification of those modules. Until then, a consuming lesson is not ready for generation; this inventory does not invent a version or select a commit.
+
 ## Raft library and implementation boundary
 
 The Go implementation of the P/01 Raft group uses the direct dependency `github.com/hashicorp/raft v1.7.3` in [`go.mod`](go.mod), with its checksums in [`go.sum`](go.sum). The model implements the FSM, I/O and adapters around this library; it does not implement a new consensus core. This library choice does not add an external platform protocol.

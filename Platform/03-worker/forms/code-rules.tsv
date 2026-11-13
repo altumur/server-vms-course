@@ -41,3 +41,8 @@ C27	pure_core	token_core	{"forbid": ["os", "net", "time", "sync", "io/fs", "sysc
 C28	step_form	token_cache_step	{"core": "token_core"}	domain_worker	P/03.7-R009; P/03.7-R055; P/03.7-R056; P/03.7-R057; P/03.7-R058; P/03.7-R059; P/03.7-R060; P/03.7-R106; P/03.7-R107; forms/token-cache.machine.yaml
 C29	property_tests	token_cache_step	{}	domain_worker	P/03.7-R009; P/03.7-R055; P/03.7-R056; P/03.7-R057; P/03.7-R058; P/03.7-R059; P/03.7-R060; P/03.7-R106; P/03.7-R107; forms/token-cache.machine.yaml
 C30	complexity	token_core	{"max_branches": 15, "max_lines": 80}	domain_worker	P/03.7 N1.5; P/03.7 N3 check at the recipient
+C31	requires_module	common_json	{"module": "servervms.local/common/json", "from": "Platform/common/versions/go.mod"}	sdk_model	Platform/common/modules.md; Platform/common/contracts/json.md
+C32	requires_module	common_store_client	{"module": "servervms.local/common/store-client", "from": "Platform/common/versions/go.mod"}	slot_capture	Platform/common/modules.md; Platform/common/contracts/store-client.md
+C33	requires_module	common_log_mask	{"module": "servervms.local/common/log-mask", "from": "Platform/common/versions/go.mod"}	sdk_model	Platform/common/modules.md; Platform/common/contracts/log-mask.md
+C34	requires_module	common_row_check	{"module": "servervms.local/common/row-check", "from": "Platform/common/versions/go.mod"}	reconciliation	Platform/common/modules.md; Platform/common/contracts/row-check.md
+C35	forbid_imports	common_json	{"forbid": ["encoding/json"]}	sdk_model	Platform/common/modules.md; Platform/common/contracts/json.md

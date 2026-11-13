@@ -1,0 +1,8 @@
+# Code checks of this lesson use the closed dictionary Platform/common/acceptance/forms/code-rules.tsv.
+# name maps through the profile code field to a package of the lesson that calls the shared module.
+# Stage gates code:* select these rows from their stage onward; norm gives the existing function contract.
+id	kind	name	args	stage	norm
+C01	requires_module	common_json	{"module": "servervms.local/common/json", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/json.md
+C02	requires_module	common_store_client	{"module": "servervms.local/common/store-client", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/store-client.md
+C03	requires_module	common_log_mask	{"module": "servervms.local/common/log-mask", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/log-mask.md
+C04	forbid_imports	common_json	{"forbid": ["encoding/json"]}	model	Platform/common/modules.md; Platform/common/contracts/json.md

@@ -627,6 +627,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/05-resource/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/05-resource/forms/daemon-flags.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -1480,6 +1485,11 @@
       "path": "Platform/06-console/forms/README.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/06-console/forms/code-rules.tsv",
+      "disposition": "include",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
     },
     {
       "path": "Platform/06-console/forms/daemon-flags.tsv",
@@ -4842,6 +4852,11 @@
       "basis": "Shared algorithm contract used by the existing vector consumers."
     },
     {
+      "path": "Platform/common/contracts/json.md",
+      "disposition": "include",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/contracts/keys.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -5062,6 +5077,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/common/modules.md",
+      "disposition": "include",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/qualification-input-filter.json",
       "disposition": "exclude",
       "basis": "Qualification input filter; administrative input of the trusted exporter, outside the judge input."
@@ -5277,6 +5297,11 @@
       "basis": "Russian mirror; the inputs are English only."
     },
     {
+      "path": "Platform/common/ru/contracts/json.md",
+      "disposition": "exclude",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/ru/contracts/keys.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -5440,6 +5465,11 @@
       "path": "Platform/common/ru/data/testsub/README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/modules.md",
+      "disposition": "exclude",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
     },
     {
       "path": "Platform/common/ru/placeholders.tsv",

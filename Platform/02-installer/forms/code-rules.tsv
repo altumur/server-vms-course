@@ -29,3 +29,7 @@ C19	step_form	rollout_step	{"core": "rollout_core"}	rollout-poll	P/02.4 N1.9 pol
 C20	property_tests	rollout_step	{}	rollout-poll	P/02.4 N1.9 poll; forms/rollout-poll.machine.yaml
 C21	complexity	rollout_core	{"max_branches": 15, "max_lines": 80}	rollout-poll	P/02.4 N1.9 poll
 C22	pure_core	manifest_load	{"forbid": ["os", "net", "time", "sync", "io/fs", "syscall", "os/exec"]}	manifest-load	P/02.1 N3 load
+C23	requires_module	common_json	{"module": "servervms.local/common/json", "from": "Platform/common/versions/go.mod"}	manifest-load	Platform/common/modules.md; Platform/common/contracts/json.md
+C24	requires_module	common_store_client	{"module": "servervms.local/common/store-client", "from": "Platform/common/versions/go.mod"}	manifest-put	Platform/common/modules.md; Platform/common/contracts/store-client.md
+C25	requires_module	common_log_mask	{"module": "servervms.local/common/log-mask", "from": "Platform/common/versions/go.mod"}	manifest-put	Platform/common/modules.md; Platform/common/contracts/log-mask.md
+C26	forbid_imports	common_json	{"forbid": ["encoding/json"]}	manifest-load	Platform/common/modules.md; Platform/common/contracts/json.md

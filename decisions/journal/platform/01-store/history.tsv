@@ -745,3 +745,11 @@ P/01.1-R156	spec/01-store.api.openapi.yaml#/components/schemas/Key/description	P
 -	forms/export.json#/judge	P01.347; ADR-0130 Addendum (24)	2026-11-13	The long random fault run is qualification data outside the implementation input M; full judge input retains it without a new functional scenario.
 -	forms/export.json#/judge	P01.347; ADR-0130 Addendum (24)	2026-11-13	The full judge input retains the qualification procedures; functional selection is unchanged.
 -	forms/export.json#/judge	P01.347; ADR-0130 Addendum (24)	2026-11-13	Groups, budgets and measurements of N6, named as an engine input by spec/acceptance.README.md.
+-	README.md#what-this-lesson-takes-from-common	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/code-rules.tsv#row:C25	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/code-rules.tsv#row:C26	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/code-rules.tsv#row:C27	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/code-rules.tsv#row:C28	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/code-rules.tsv#row:C29	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	-
+-	forms/stages.tsv#row:7	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	7\trights\tThe rights at the doors: the check order of N3, /v1/list, /v1/rights, the refusals of N4\tP/01.2 N2; P/01.2 N3; P/01.2 N4; forms/rights-checks.tsv; P/01.1-29; P/01.2-01; P/01.2-02; P/01.2-03; P/01.2-05; P/01.2-06; P/01.2-07; P/01.2-09\taccept:1.2:*\t3\t5,6\t
+-	forms/stages.tsv#row:8	OBSH.70; ADR-0133 addendum (115) items 1, 3; Architect answered 2026-11-13T17:29:42Z	2026-11-13	8\tdaemon_doors\tThe daemon on one box: status, the service doors, the metrics, the id memory\tP/01.3 N1.3; P/01.3 N2; P/01.3 N3; P/01.3 N4; forms/service-checks.tsv; forms/status-fields.tsv; forms/metrics.tsv; P/01.1-11\taccept:1.3:04-store-metrics,15-service-doors,16-status-no-api,23-service-door-forms,24-service-door-methods,21-id-memory;seams:1.3:s7-loopback-api-no-tls,s8-loopback-join-needs-tls,s9-public-api-needs-tls\t1\t5\ttrue

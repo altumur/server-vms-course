@@ -41,3 +41,8 @@ C27	property_tests	order_plan	{}	growth_shrink	P/04 N3 shortage(), order(); vect
 C28	property_tests	shrink_victim	{}	growth_shrink	P/04 N3 shrink(); vectors/shrink-victim
 C29	property_tests	shrink_allowed	{}	growth_shrink	P/04 N3 shrink() — step 9a; vectors/shrink-allowed
 C30	complexity	growth_core	{"max_branches": 15, "max_lines": 80}	growth_shrink	P/04 N3 «shortage(), order(), withdraw the order, shrink()»
+C31	requires_module	common_json	{"module": "servervms.local/common/json", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/json.md
+C32	requires_module	common_store_client	{"module": "servervms.local/common/store-client", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/store-client.md
+C33	requires_module	common_log_mask	{"module": "servervms.local/common/log-mask", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/log-mask.md
+C34	requires_module	common_row_check	{"module": "servervms.local/common/row-check", "from": "Platform/common/versions/go.mod"}	cleanup	Platform/common/modules.md; Platform/common/contracts/row-check.md
+C35	forbid_imports	common_json	{"forbid": ["encoding/json"]}	model	Platform/common/modules.md; Platform/common/contracts/json.md
