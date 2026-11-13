@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "skills/lesson-spec/scripts/check_spec.py",
+  "--scope",
+  "platform"
+ ],
+ "cwd": "/home/pilot/P01.332-evidence/r2/archive-C",
+ "C": "0fbe6e55ceb0b07e4a70727e813934a2f06edb1b",
+ "exit": 0,
+ "seconds": 76.08789923100267,
+ "limitation": "Archive check; exact source roster additionally checked by unchanged export operator preflight"
+}

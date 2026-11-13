@@ -1,0 +1,17 @@
+{
+ "files": [
+  {
+   "path": "Platform/01-store/qualification/README.md",
+   "case_group_count": 17,
+   "RUN_F05_outside_closed_groups_and_probe_debt": true
+  },
+  {
+   "path": "Platform/01-store/ru/qualification/README.md",
+   "case_group_count": 17,
+   "RUN_F05_outside_closed_groups_and_probe_debt": true
+  }
+ ],
+ "production_table_unchanged_from_main": true,
+ "new_D7_payload": false,
+ "OK": true
+}

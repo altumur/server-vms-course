@@ -1,0 +1,10 @@
+{
+ "source_main": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+ "source_C": "0fbe6e55ceb0b07e4a70727e813934a2f06edb1b",
+ "fetched_main": "364c5bd0eddf58f3ece5e7fbab325346652b100c",
+ "task_sha256": "87674f54111ac042ffb48dd042c2b3b7641943b5b966a7290f89f37f4aeace3f",
+ "task_note_latest": "2026-11-13T16:20:41Z; P01.344 merged, pair from main431",
+ "ADR0133_changes_since_source_main": false,
+ "Platform_changes_since_source_main": false,
+ "later_main_scope": "P01.346 report only; source pair retained as explicitly directed"
+}

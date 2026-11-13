@@ -1,0 +1,100 @@
+{
+ "basis": "3ee4ab68be24dbd02b3b52533ad1eada9d38c845",
+ "C8prime": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "candidate": "6d0ad481f43e57ee0ddccc52a8af67890034078e",
+ "primary_evidence": {
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/INDEX.md": {
+   "bytes": 27181,
+   "sha256": "a3b468b140f4de66f332363c9d2fbe6fd29ae630f89b65e6124cc2828d05971a"
+  },
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/court/lm43.txt": {
+   "bytes": 349,
+   "sha256": "4cec1a025c61fef88a4898eb5e77be7cf32a1a72330c8a4ae55012422a2347ad"
+  },
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/soak/runs/c81-recover.out": {
+   "bytes": 60290,
+   "sha256": "cbcdfdedaf0ef5596bf4845d32f8676085eddb423b4e2796b32a16419c75dd42"
+  },
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/soak/runs/c81-box2.out": {
+   "bytes": 1828,
+   "sha256": "270e53a9a93ebd58fbb2c5297af5d05e8e2cca2276fb6108a0faf295b5669946"
+  },
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/form-mutation/claude81/report.md": {
+   "bytes": 25021,
+   "sha256": "c3e280543d39593c26560d1ac3d5565c583dfec598c3fc08eeaffe34e8046e6b"
+  },
+  "/home/pilot/owner-receipts/P01.301-court-81-vs-71-20261113T1534Z/form-mutation/claude81/report.json": {
+   "bytes": 49340,
+   "sha256": "cef55638e57c3c316e72197030185a25a9a8b3322a46b050dd805e0fb98d45dc"
+  }
+ },
+ "recover": {
+  "points": 62,
+  "fail_points": [
+   55,
+   56,
+   57,
+   58,
+   59
+  ]
+ },
+ "checkpoint": {
+  "control": {
+   "B_lost": false,
+   "version_reissued": false,
+   "next": "171"
+  },
+  "two_failures": {
+   "B_lost": true,
+   "version_reissued": true,
+   "B_version": "170",
+   "next": "170"
+  }
+ },
+ "live_report_R_ids": [
+  "P/01.1-R143",
+  "P/01.1-R162",
+  "P/01.3-R021",
+  "P/01.3-R029",
+  "P/01.3-R111",
+  "P/01.3-R180",
+  "P/01.3-R277",
+  "P/06.2-R114",
+  "P/AC-R040",
+  "P/AC-R061"
+ ],
+ "journals": {
+  "decisions/journal/platform/01-store/history-1.tsv": {
+   "prefix_preserved": true,
+   "added_lines": 2
+  },
+  "decisions/journal/platform/01-store/history-3.tsv": {
+   "prefix_preserved": true,
+   "added_lines": 4
+  },
+  "decisions/journal/platform/01-store/corrections-1.tsv": {
+   "prefix_preserved": true,
+   "added_lines": 2
+  },
+  "decisions/journal/platform/01-store/history.tsv": {
+   "prefix_preserved": true,
+   "added_lines": 36
+  }
+ },
+ "norm_budget": {
+  "en": {
+   "from_C8prime_bytes": 238955,
+   "to_bytes": 241252,
+   "delta_bytes": 2297
+  },
+  "ru": {
+   "from_C8prime_bytes": 320292,
+   "to_bytes": 323367,
+   "delta_bytes": 3075
+  }
+ },
+ "Q_input_hash": "d0b3e59126f3b7e849ec2470bf4ce8b7e8d45aa8d7c2de46be3638e50f09c24a",
+ "logstore_unchanged_from_Opus8": true,
+ "candidate_execution": false,
+ "OK": true
+}

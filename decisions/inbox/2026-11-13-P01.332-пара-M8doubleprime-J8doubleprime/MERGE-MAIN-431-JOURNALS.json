@@ -1,0 +1,23 @@
+{
+ "conflicts_only_append_journals": true,
+ "files": [
+  {
+   "path": "decisions/journal/platform/01-store/corrections-1.tsv",
+   "base_sha256": "739637fd13ac6dc0102f33413aa4355008ff87861fa383bed655b730264e33e7",
+   "ours_added_lines": 1,
+   "theirs_added_lines": 1,
+   "result_sha256": "68e94d2d1721d76d6378754eb2e3f45e3583d75c15eecff950e9a456b15687f1",
+   "prefix_preserved": true,
+   "order": "base + ours additions + theirs additions; no deduplication"
+  },
+  {
+   "path": "decisions/journal/platform/01-store/history.tsv",
+   "base_sha256": "48e7909dcc1736cf02f945538ee31da3ecc8fb4216468dd2f86a5ef3eb86f51f",
+   "ours_added_lines": 6,
+   "theirs_added_lines": 18,
+   "result_sha256": "b03f1b8fa7224f7eb1925f2a49efa6a7111ce41c22e91300423cd9c580e31357",
+   "prefix_preserved": true,
+   "order": "base + ours additions + theirs additions; no deduplication"
+  }
+ ]
+}
