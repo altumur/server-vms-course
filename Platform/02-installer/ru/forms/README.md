@@ -9,7 +9,7 @@
 `daemon-flags.tsv` сохраняет восемь колонок P/01: `flag`, `type`, `default`, `default_text`, `required`, `commands`, `bad`, `norm`.
 `commands` — id из [`operator-commands.tsv`](../../forms/operator-commands.tsv) через запятую. Типы: `string`, конечное `number`, `file`, `bool`; `required` и `bad` — CEL над переданными опциями `f` и id команды `cmd`. Нет умолчания — `-`; отсутствующий bool — false, переданный — true. Это аргументы команд, не флаги демона и не переменные окружения.
 
-Колонки `operator-commands.tsv`: `command`, `process`, `prefix`, `positionals`, `norm`. `prefix` — JSON-массив постоянных слов argv; `positionals` — JSON Schema 2020-12 для остальных позиционных слов после разбора опций. Форма не задаёт shell-разбор, формат вывода, код для неоговорённого входа или новый интерфейс чужой команды.
+Колонки `operator-commands.tsv`: `command`, `process`, `prefix`, `positionals`, `norm`. `prefix` — JSON-массив постоянных слов argv; `positionals` — JSON Schema 2020-12 для остальных позиционных слов после разбора опций. Форма не задаёт shell-разбор, формат вывода, код для неоговорённого входа или новый интерфейс чужой команды. Опции вне `daemon-flags.tsv` — не неоговорённый вход: это отказ `command_options` каталога (P/02.4 «Аргументы команд»).
 
 ## Каталог отказов
 
