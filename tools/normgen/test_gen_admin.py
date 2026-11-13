@@ -124,18 +124,19 @@ class Admin(unittest.TestCase):
 
     def test_anchors_by_table(self):
         text = {c: (self.pkg / f"{c}.go").read_text(encoding="utf-8") for c in gen_admin.KEYS}
-        self.assertIn("import: from an immutable copy", text["import"])
-        self.assertIn("copy: the backup copy", text["backup"])
+        self.assertIn("import: --from <copy>", text["import"])
+        self.assertIn("req: P/01.3-R149", text["import"])
+        self.assertIn("copy: JSON Lines", text["backup"])
         self.assertIn("floor: (platform/epoch_floor {floor, generation_at}); generation:", text["restore"])
         self.assertIn("req: P/01.3-R020 — ", text["recover"])
         self.assertIn("| Isolation |", text["recover"])                # R026 is the full phase table, not just its first row.
         self.assertIn("«recover the store (no majority)»", text["recover"])
-        self.assertIn("recover — a refusal, code 2", text["recover"])
+        self.assertIn("`recover` MUST be a refusal, code 2", text["recover"])
         self.assertIn("req: P/01.3-R018 — The CLI `backup`", text["backup"])
-        self.assertIn("GET `/v1/status`: `{id, state", text["status"])
+        self.assertIn("GET `/v1/status`: status-fields.tsv", text["status"])
         self.assertIn("req: P/01.2-R014 — `GET /v1/rights` returns", text["rights"])
-        self.assertIn("leave — 409 refused («the last voter»)", text["leave"])
-        self.assertNotIn("join of its own id", text["recover"])          # box includes only clauses about the current subcommand.
+        self.assertIn("`leave` MUST give 409 `refused` («the last voter»)", text["leave"])
+        self.assertIn("req: P/01.3-R169", text["recover"])          # box includes only clauses about the current subcommand.
         own = (self.pkg / "own.go").read_text(encoding="utf-8")
         self.assertIn('"spoil-row": SpoilRow,', own)
         self.assertIn("the command `spoil-row` of «Stand»", own)

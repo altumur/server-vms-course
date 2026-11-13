@@ -19,7 +19,10 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 
 def ports(lesson):
     text = (ROOT / "Platform" / lesson / "forms/README.md").read_text(encoding="utf-8")
-    return re.findall(r"^\| `([a-z][a-z0-9-]*)` \| ", text, re.M)
+    table = re.search(r"^\| CALL port \|[^\n]*\n((?:\|[^\n]*\n)+)", text, re.M)
+    if not table:
+        raise AssertionError("missing CALL port table")
+    return re.findall(r"^\| `([a-z][a-z0-9-]*)` \| ", table[1], re.M)
 
 
 def seam_steps(lesson):

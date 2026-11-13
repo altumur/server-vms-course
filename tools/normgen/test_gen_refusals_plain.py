@@ -100,7 +100,7 @@ func TestReviewCatalogue(t *testing.T) {
     def test_mutants_killed(self):
         for old, new, why in (
                 ('Name: "secrets_unknown_family", Surface: "cli", Exit: 1,', 'Name: "secrets_unknown_family", Surface: "cli", Exit: 2,', "exit code"),
-                ('Word: "unknown-row-form"', 'Word: ""', "word"),
+                ('Word: "`unknown-row-form`"', 'Word: ""', "word"),
                 ('Name: "install_partial", Surface: "cli", Exit: -1, AnyNonZero: true,',
                  'Name: "install_partial", Surface: "cli", Exit: -1, AnyNonZero: false,', "exit !0"),
                 ('Words: []string{"manifest changed, restart"}', 'Words: []string{"manifest changed"}', "log fragment")):

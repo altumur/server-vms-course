@@ -78,7 +78,7 @@ func main(){
 BOUNDARY = r'''package families
 import ("encoding/json";"reflect";"sync";"testing")
 func TestRowWriteJSONBoundary(t *testing.T){
- start:=json.RawMessage(`{"sub":"testsub","unit":"u1","born":"","revision":3,"epoch":8,"epoch_index":"9007199254740993"}`)
+ start:=json.RawMessage(`{"sub":"testsub","unit":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3,"epoch":8,"epoch_index":"9007199254740993"}`)
  spec:=StateSpec{Schemas:map[string]json.RawMessage{"result":json.RawMessage(`{}`)}}
  snap,err:=CaptureStateStart(start,spec);if err!=nil{t.Fatal(err)}
  bad:=[][]byte{
@@ -106,14 +106,14 @@ func TestRowWriteJSONBoundary(t *testing.T){
  if _,err:=CaptureStateStart(start,invalidKey);err==nil{t.Fatal("invalid Go definition key must not be rewritten by json.Marshal")}
 }
 func TestRowWriteSnapshotConcurrent(t *testing.T){
- start:=json.RawMessage(`{"sub":"testsub","unit":"u1","born":"","revision":3,"epoch":8,"epoch_index":"9007199254740993"}`)
+ start:=json.RawMessage(`{"sub":"testsub","unit":"u1","born":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","revision":3,"epoch":8,"epoch_index":"9007199254740993"}`)
  spec:=StateSpec{Schemas:map[string]json.RawMessage{"result":json.RawMessage(`{"type":"object","properties":{"s":{"type":"string","pattern":"^[a-z]+$"}}}`)}}
  snap,err:=CaptureStateStart(start,spec);if err!=nil{t.Fatal(err)}
  in:=json.RawMessage(`{"name":"result","value":{"s":"open"}}`)
  var wg sync.WaitGroup
  for i:=0;i<8;i++{wg.Add(1);go func(){defer wg.Done();for j:=0;j<20;j++{
   out,err:=BuildState(snap,in);if err!=nil{t.Error(err);return}
-  if out.Guard.Index!="9007199254740993"||out.Items["born"]!=""{t.Error("snapshot drift")}
+  if out.Guard.Index!="9007199254740993"||out.Items["born"]!="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"{t.Error("snapshot drift")}
   out.Items["born"]="mutated";out.Guard.Index="mutated"
  }}()};wg.Wait()
 }
@@ -177,7 +177,7 @@ class Producer(unittest.TestCase):
             "unknown source": original.replace("\tstart\t/born\t", "\treread\t/born\t"),
             "different key": original.replace("/state/", "/foreign/", 1),
             "unknown norm": original.replace("P/03.6-R018", "P/03.6-R999"),
-            "norm repeat": original.replace("P/03.6-R018,P/03.6-R029", "P/03.6-R018,P/03.6-R018"),
+            "norm repeat": original.replace("P/03.6-R018", "P/03.6-R018,P/03.6-R018"),
             "bad const": original.replace("\tstart\t/born\t", '\tconst\t{"x":1,"x":2}\t'),
             "const type": original.replace("\tstart\t/born\t", "\tconst\t3\t"),
         }
@@ -253,11 +253,11 @@ class Runtime(unittest.TestCase):
         bad = request(Alias=True);bad["Input"]["value"] = {"state": 7}
         self.assertIn("error", self.invoke([bad])[0], "a new schema after capture must not make the value legal")
 
-    def test_exact_versions_integers_and_empty_born(self):
+    def test_exact_versions_and_integers(self):
         versions = ("9007199254740993", "9223372036854775808", "18446744073709551615", "99999999999999999999", "", "0")
         cases = []
         for version in versions:
-            c = request();c["Start"]["epoch_index"] = version;c["Start"]["born"] = ""
+            c = request();c["Start"]["epoch_index"] = version
             c["Start"]["revision"] = 9007199254740991
             cases.append(c)
         got = self.invoke(cases)
@@ -270,7 +270,7 @@ class Runtime(unittest.TestCase):
         cases = [request(Zero=True)]
         for source, field in (("Start", "born"), ("Start", "epoch_index"), ("Input", "value"), ("Input", "name")):
             c = request();del c[source][field];cases.append(c)
-        for source, field, value in (("Start", "born", None), ("Start", "sub", ""), ("Start", "sub", "a/b"),
+        for source, field, value in (("Start", "born", None), ("Start", "born", ""), ("Start", "sub", ""), ("Start", "sub", "a/b"),
                                      ("Start", "unit", ".."), ("Input", "name", "foreign"),
                                      ("Start", "epoch_index", 9007199254740993), ("Start", "epoch_index", "01"),
                                      ("Start", "epoch_index", "1" * 21), ("Start", "born", "wrong")):

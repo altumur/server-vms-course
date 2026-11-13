@@ -1,5 +1,6 @@
 """Test stage-test generation (ADR-0125 addenda3/4, ADR-0126 addendum 7). Require fresh stagetests/coreadapter and complete selected-step inventory. Gate tests selections precede transitional declarations. Stand directives and later-stage refusals truncate prefixes; reject empty projections, missing scenarios, scenario/seam duplicate names and new bindings in each/rest. Check fixture-core engine binding, number kinds, extra fields, error, !contains, list ordering, ASSERT, unbound names, status classes and clock/reopen/parallel seams. scenario_judge compares runner execution on identical implementation code. Go 1.22 required."""
 import lesson as output_lesson
+import re
 import json
 import shutil
 import subprocess
@@ -303,7 +304,11 @@ class StageTests(unittest.TestCase):
             selected = [r for r in inventory if r[0].startswith(chapter + "/seams.tsv/")]
             listed = {r[0].split("/")[2] for r in selected}
             if seams:                                    # Every declared seam scenario appears step-for-step in inventory.
-                self.assertEqual(listed, set(seams))
+                selected_names = set()
+                for stage in STAGES.split("\n"):
+                    for match in re.finditer(r"tests:" + re.escape(chapter) + r":([^;:]+):seams", stage):
+                        selected_names.update(seams if match[1] == "*" else match[1].split(","))
+                self.assertEqual(listed, selected_names)
                 self.assertEqual(len(selected), sum(len(seams[n]) for n in listed))
         stages = {r[1] for r in inventory}
         for line in STAGES.split("\n"):

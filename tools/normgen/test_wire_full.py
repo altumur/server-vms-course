@@ -1,4 +1,4 @@
-"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3200 P/06 fixture calls."""
+"""Full wire 4f0cff2e: closed grammar, exact raw input, active surfaces, and all 3224 P/06 fixture calls."""
 import lesson as output_lesson
 import base64
 import copy
@@ -32,10 +32,10 @@ class Grammar(unittest.TestCase):
         cls.ex=wire.Expander(ROOT)
 
     def test_full_registry_and_exclusions(self):
-        self.assertEqual(len(self.bindings),91)
+        self.assertEqual(len(self.bindings),97)
         runs,excluded=wire.expand(ROOT,'06-console')
-        self.assertEqual(len(runs),3200)
-        self.assertEqual(len({r.identity for r in runs}),3200)
+        self.assertEqual(len(runs),3224)
+        self.assertEqual(len({r.identity for r in runs}),3224)
         layouts={(e.binding.package,e.binding.table) for e in excluded if e.binding.surface=='layout'}
         self.assertEqual(layouts,{('common/journal','modes.tsv'),('06-console/requests-body','requests_body.tsv'),('common/fault','fault.tsv')})
         self.assertFalse(any(r.binding.package=='06-console/requests-body' for r in runs))
@@ -293,7 +293,7 @@ class Render(unittest.TestCase):
         self.assertEqual(len({e['Test'] for e in terminals}),len(terminals),'duplicate terminal native test')
         self.assertFalse(any(e['Action']=='skip' for e in terminals),'skipped native test')
         results={e['Test']:e['Action'] for e in terminals}
-        self.assertEqual(len(results),3200,done.stderr+done.stdout[-2000:])
+        self.assertEqual(len(results),3224,done.stderr+done.stdout[-2000:])
         self.assertEqual(done.returncode,0,done.stderr+done.stdout[-3000:])
         self.assertTrue(all(a=='pass' for a in results.values()))
 

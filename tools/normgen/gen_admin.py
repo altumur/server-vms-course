@@ -33,13 +33,13 @@ RECOVER = "recover the store (no majority)"
 
 # Subcommand -> N1.3 clauses: key plus all (whole clause) or word (semicolon clauses mentioning the command).
 KEYS = {
-    "recover": [("box", "word")],
-    "restore": [("copy", "all"), ("floor", "all"), ("box", "word")],
-    "import": [("copy", "all"), ("import", "all"), ("floor", "all"), ("box", "word")],
-    "status": [("box", "word")],
-    "join": [("repeat", "word"), ("box", "word")],
-    "leave": [("repeat", "word"), ("box", "word")],
-    "admit": [("repeat", "word"), ("box", "word")],
+    "recover": [("box", "all")],
+    "restore": [("copy", "all"), ("floor", "all"), ("box", "all")],
+    "import": [("copy", "all"), ("import", "all"), ("floor", "all"), ("box", "all")],
+    "status": [("box", "all")],
+    "join": [("repeat", "word"), ("box", "all")],
+    "leave": [("repeat", "word"), ("box", "all")],
+    "admit": [("repeat", "word"), ("box", "all")],
     "backup": [("copy", "all")],
     "rights": [],
 }
@@ -167,6 +167,12 @@ def stub_comment(cmd, gram, rest, keys, cli, recover, flags):
             raise GenError(f'{NORMS_13.name}: N1.3 {key!r} does not name {cmd!r} (gen_admin KEYS)')
         for p in parts:
             lines += gen_core.wrap(f"{key}: {p}", "//     ", "//       ")
+    # The YAML is now a compact form; the rules following it retain their own
+    # anchors. Include the clauses for the selected key and command, not only
+    # the abbreviated form cell.
+    for anchor, (_, paragraph) in anchor_items(NORMS_13).items():
+        if re.match(r"^`(?:admin_ops|" + "|".join(re.escape(k) for k, _ in KEYS[cmd]) + r")(?:[.` ])", paragraph) and mentions(paragraph, cmd):
+            lines += gen_core.wrap(f"req: {anchor} — {gen_core.plain(paragraph)}", "//     ", "//       ")
     said = [s.strip() for s in re.split(r"(?<=\.) ", cli) if re.search(r"`(?:[a-z]+/)?" + re.escape(cmd) + r"\b", s)]
     if said:
         lines.append(f'//   spec/{NORMS_13.name} N2 Doors (the CLI):')

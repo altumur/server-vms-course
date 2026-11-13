@@ -3,6 +3,9 @@
 Run with the pinned lesson-spec Python; only Platform public source is read.
 """
 import json
+import io
+import subprocess
+import tarfile
 import sys
 import tempfile
 import unittest
@@ -19,8 +22,19 @@ def family(name, kind="row"):
 
 
 class CurrentFamilyControls(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # The one-time migration has exact source143 prose guards. Its input is
+        # an explicit historical fixture; current family behavior below uses ROOT.
+        cls.source143_tmp = tempfile.TemporaryDirectory(prefix="family-source143-")
+        cls.addClassCleanup(cls.source143_tmp.cleanup)
+        cls.source143_root = Path(cls.source143_tmp.name)
+        data = subprocess.check_output(["git", "archive", "ca38a0818", "Platform/08-domain"], cwd=ROOT)
+        with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+            archive.extractall(cls.source143_root, filter="data")
+
     def test_source143_published_pending_and_outcomes_cells(self):
-        _, maximum, rules = family_refresh.source_rules(ROOT)
+        _, maximum, rules = family_refresh.source_rules(self.source143_root)
         lines = (ROOT / spec.FAMILY_READ / "08.tsv").read_text().splitlines()
         rows = {line.split("\t")[0]: dict(zip(spec.FR_HEADER, line.split("\t"))) for line in lines[1:]}
         other = rows["08-1612"]
@@ -32,7 +46,7 @@ class CurrentFamilyControls(unittest.TestCase):
                          {k:v for k,v in row.items() if k != "outcome"})
 
     def test_source143_root_seq_and_bad_name_outcomes(self):
-        _, _, all_rules = family_refresh.source_rules(ROOT)
+        _, _, all_rules = family_refresh.source_rules(self.source143_root)
         rules = all_rules["domain/pending/<member>"]
         who = ["domain", "domainagent"]
         cases = (([], []), (["/seq"], ["/seq"]), (["/bad-name"], ["/*"]),
@@ -134,8 +148,8 @@ class CurrentFamilyControls(unittest.TestCase):
                 got = obj.judge({"as_of": value, "holder": "a", "complete": True}, mode)
                 self.assertEqual(got["paths"], [] if allowed else ["/as_of"])
 
-    def test_current_revision_keeps_other_mutation_and_missing_control(self):
-        _, maximum, outcomes = family_refresh.source_rules(ROOT)
+    def test_source143_revision_migration_keeps_other_mutation_and_missing_control(self):
+        _, maximum, outcomes = family_refresh.source_rules(self.source143_root)
         row = dict(zip(spec.FR_HEADER, ["private-control", "domain/groups/<name>", "domain/groups/ops", "row", "writer", '["domain"]',
                                        '{"name":"ops","members":"bad-list"}', "refused", '["/members"]', "[]", "members: wrong type"]))
         got = family_refresh.migrated(row, maximum, outcomes)
@@ -147,6 +161,34 @@ class CurrentFamilyControls(unittest.TestCase):
         self.assertEqual(json.loads(got["paths"]), ["/revision"])
         self.assertEqual(json.loads(got["outcome"]), {"domain": [""], "domainconsole": [""]})
         self.assertEqual(family_refresh.migrated(got, maximum, outcomes), got)
+
+    def test_current_revision_absent_and_unreadable_use_current_family_outcomes(self):
+        catalog = spec.read_catalog(ROOT)
+        corpus = [dict(zip(spec.FR_HEADER, line.split("\t"))) for line in
+                  (ROOT / spec.FAMILY_READ / "08.tsv").read_text().splitlines()[1:]]
+        for template in family_refresh.REVISION_FAMILIES:
+            declaration = next(r for r in catalog if r["key"] == template)
+            _, _, doc, _, outcomes = spec.load_family(ROOT, declaration)
+            current = stack.Family(doc, "row", family_template=template)
+            base = next(json.loads(r["text"]) for r in corpus if r["family"] == template
+                        and r["mode"] == "reader" and r["verdict"] == "ok"
+                        and "revision" in json.loads(r["text"]))
+            for value in (None, "bad", "0"):
+                row = dict(base)
+                if value is None:
+                    row.pop("revision")
+                else:
+                    row["revision"] = value
+                with self.subTest(family=template, revision=value):
+                    result = current.judge(row, "reader")
+                    self.assertEqual(result["verdict"], "refused")
+                    self.assertIn("/revision", result["paths"])
+                    roles = {o.reader for o in outcomes if o.path == "" and o.reader != "*"}
+                    self.assertTrue(roles)
+                    for role in roles:
+                        selected = spec.outcomes_for(outcomes, result["paths"], role)
+                        self.assertTrue(selected)
+                        self.assertTrue(all(o.unit == "row" for o in selected))
 
     def test_actual_pending_name_count_excludes_seq(self):
         # Use the real edit form, with valid dynamic names. This isolates layer 3

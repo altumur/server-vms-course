@@ -82,18 +82,18 @@ class DoorJudge(unittest.TestCase):
                 code = judge.main([str(folder), "--scenarios", str(path), "--json", str(result)])
         return code, json.loads(result.read_text()), output.getvalue()
 
-    def test_canonical_345_rows_40_scenarios_have_75_prefix_and_148_own_steps(self):
+    def test_canonical_346_rows_40_scenarios_have_76_prefix_and_149_own_steps(self):
         path = judge.ROOT / RELATIVE
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
-                         "a60cbcd2c429cc6464daa228320097ce6d15d26253239e34602f6fd1bf31bcde")
+                         "4a7431e62c6e5484d906f58a9a6b990d74181e27fa4a37979ba4b114eefc0dfe")
         # Scenario/step ids do not need cell decoding and do not use the judge as oracle.
         rows = [tuple(line.split("\t")) for line in path.read_text().split("\n")
                 if line and not line.startswith("#")]
-        self.assertEqual((len(rows), len({r[0] for r in rows})), (345, 40))
+        self.assertEqual((len(rows), len({r[0] for r in rows})), (346, 40))
         code, result, _ = self.run_judge(path, self.report(rows))
         self.assertEqual(code, 0)
-        self.assertEqual((result["passed"], result["total"], result["core_steps"]), (75, 75, 270))
-        self.assertEqual((result["own"]["passed"], result["own"]["total"]), (148, 148))
+        self.assertEqual((result["passed"], result["total"], result["core_steps"]), (76, 76, 270))
+        self.assertEqual((result["own"]["passed"], result["own"]["total"]), (149, 149))
         self.assertEqual(result["errors"], [])
         self.assertEqual(len(result["scenarios"]), 40)
 

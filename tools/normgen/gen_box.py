@@ -2,7 +2,8 @@
 
   python3 tools/normgen/gen_box.py [<out>]
 Default: tools/normgen/out/p01-1. Only these source locations are read:
-- P/01.3-R006 YAML: box Status fields, member metrics, join/leave/admit/recover; metrics series; copy header, rows and input refusals; generation/floor; backup outside -dir.
+- P/01.3-R006 YAML: copy header and generation/floor; anchored N1.3 paragraphs: box outcomes, copy input checks, F1 continuation and backup containment.
+- forms/status-fields.tsv and forms/metrics.tsv: box state, term, metric series/labels and values.
 - P/01.1 N1 row.items: row-weight ceiling.
 - forms/refusals.tsv: named refusals.
 - OpenAPI: Status, Refused, Empty and Metrics200 response types from the door part.
@@ -28,6 +29,8 @@ NORMS_13 = L.path("spec/01.3-store.norms.md")
 NORMS_11 = L.path("spec/01.1-store.norms.md")
 REFUSALS = L.form("refusals.tsv")
 FLAGS = L.form("daemon-flags.tsv")
+METRICS = L.form("metrics.tsv")
+STATUS_FIELDS = L.form("status-fields.tsv")
 OPENAPI = L.openapi
 KEYS_README = ROOT / "Platform/common/data/README.md"
 JUDGE = HERE / "test_gen_box.py"
@@ -86,10 +89,18 @@ def row_ceiling(text):
 
 
 def facts():
-    """Extract the normative numbers and names embedded into Go, each by a location-specific regular expression."""
+    """Extract the normative numbers and names from their current forms and anchored paragraphs."""
     t13 = NORMS_13.read_text(encoding="utf-8")
     t11 = NORMS_11.read_text(encoding="utf-8")
-    metrics, box, copy_, floor = (block_line(t13, w) for w in ("metrics", "box", "copy", "floor"))
+    floor = block_line(t13, "floor")
+    import gen_core
+    clauses = gen_core.anchored(NORMS_13)
+    def clause(anchor):
+        if anchor not in clauses:
+            raise GenError(f"{NORMS_13.name}: no req anchor {anchor}")
+        return gen_core.plain(clauses[anchor]).replace("`", "")
+    box = clause("P/01.3-R169")
+    copy_ = " ".join(clause(a) for a in ("P/01.3-R093", "P/01.3-R295", "P/01.3-R100"))
     import yamlsub
     try:
         api = yamlsub.load(OPENAPI.read_text(encoding="utf-8"), OPENAPI.name)
@@ -104,57 +115,62 @@ def facts():
                     body.get("minimum") != 1):
         raise GenError("Status.max_body must be a required positive integer")
     f = {"status_max_body": present}
-    m = re.match(r"(configstore_raft_term), (.*?), (configstore_doors);", metrics)
-    if not m:
-        raise GenError('N1.3 metrics: the list configstore_raft_term,...,configstore_doors is not found')
-    series = [m[1]] + ["configstore_raft" + s if s.startswith("_") else s for s in m[2].split(", ")] + [m[3]]
-    f["series"] = []
-    for s in series:
-        sm = re.fullmatch(r"([a-z_]+)(?:\{(\w+)(?:=([\w|]+))?\})?", s)
-        if not sm:
-            raise GenError(f'N1.3 metrics: series {s!r}')
-        f["series"].append((sm[1], sm[2], sm[3].split("|") if sm[3] else None))
-    vm = re.search(r"\(term (\d+), elections_total (\d+), last_contact (\d+), voters (\d+), voters_expected (\d+), "
-                   r"doors (\d+)\)", box)
-    if not vm:
-        raise GenError('N1.3 box: single-member values (term,...,doors) are not found')
-    f["values"] = dict(zip(("term", "elections_total", "last_contact_seconds", "voters", "voters_expected", "doors"),
-                           map(int, vm.groups())))
-    sm = re.search(r"/v1/status — state (\w+), term (\d+), leader — its -api address \(empty without -api\), "
-                   r"leader_id — its id, voters \[<id>\], members \{<id>: <api>\} \(without -api — \{\}", box)
-    if not sm or sm[1] not in STATES or int(sm[2]) != f["values"]["term"]:
-        raise GenError('N1.3 box: the /v1/status form is not found')
-    f["state"] = sm[1]
-    for k, pat in (("join", r"join of its own id — 200 \{\}, of a foreign one — 409 refused even with -force"),
-                   ("leave", r"leave — 409 refused \(«the last voter»\)"),
-                   ("admit", r"admit — a refusal, code ≠ 0"),
-                   ("recover", r"recover — a refusal, code 2 \(«this build has no raft»\)"),
-                   ("noraft", r"-group-size 3 or 5, -join and -door — a start refusal with code 2")):
-        if not re.search(pat, box):
-            raise GenError(f'N1.3 box: {k} is not found by {pat!r}')
+    import tsv_input
+    try:
+        metric_rows = tsv_input.read(METRICS, root=ROOT).rows
+        status_rows = {r["field"]: r for _, r in tsv_input.read(STATUS_FIELDS, root=ROOT).rows}
+    except tsv_input.TSVError as exc:
+        raise GenError(str(exc)) from None
+    f["series"], f["values"] = [], {}
+    for _, row in metric_rows:
+        if "box" not in [v.strip() for v in row["emitted_by"].split(",")]:
+            continue
+        name, label = row["series"], row["labels"]
+        if label == "-":
+            f["series"].append((name, None, None))
+            value = re.search(r"\bbox: ([0-9]+)\b", row["value_rule"])
+            if not value:
+                raise GenError(f"{METRICS.name}: {name}: no numeric box value")
+            short = name.removeprefix("configstore_raft_").removeprefix("configstore_")
+            f["values"][short] = int(value[1])
+        else:
+            label_parts = re.fullmatch(r"([a-z_]+)=([a-z_|]+)", label)
+            if not label_parts:
+                raise GenError(f"{METRICS.name}: {name}: unsupported labels {label!r}")
+            f["series"].append((name, label_parts[1], label_parts[2].split("|")))
+    state = re.search(r"\bbox: (\w+)", status_rows["state"]["value_rule"])
+    term = re.search(r"\bbox: (\d+)", status_rows["term"]["value_rule"])
+    if not state or state[1] not in STATES or not term or int(term[1]) != f["values"]["term"]:
+        raise GenError("status-fields.tsv: no supported box state/term")
+    f["state"] = state[1]
+    for phrase in ("join of its own id MUST give 200 {}", "join of a foreign id MUST give 409 refused",
+                   "leave MUST give 409 refused", "admit MUST be a refusal, code ≠ 0",
+                   "recover MUST be a refusal, code 2"):
+        if phrase not in box:
+            raise GenError(f"P/01.3-R169: missing box rule {phrase!r}")
+    if "MUST refuse to start with box_no_raft, code 2" not in clause("P/01.3-R164"):
+        raise GenError("P/01.3-R164: missing no-raft refusal")
     hm = re.search(r'\{"format": "([\w-]+)", "version": (\d+), "index": <version>\}', copy_)
     if not hm:
         raise GenError('N1.3 copy: the header line is not found')
     f["copy_format"], f["copy_version"] = hm[1], int(hm[2])
-    for pat in (r"then — a line per key: \{key, items, index\}", r"\{key, items: null, index, unreadable: true\}",
-                r"ascending order of UTF-8 bytes", r"a repeated key", r"an index of a row higher than the index of the header",
-                r"an unreadable row in the input — also a refusal"):
-        if not re.search(pat, copy_):
-            raise GenError(f'N1.3 copy: {pat!r} is not found')
-    import_ = block_line(t13, "import")
-    copy_rules = ("Transfer excludes the input platform/epoch_floor: the first write is the new floor F1",
-                  "a partial replay preserves the exact saved F1 row (items and index)")
-    f["copy_storage"] = all(phrase in import_ for phrase in copy_rules)
-    if any(phrase in import_ for phrase in copy_rules) and not f["copy_storage"]:
-        raise GenError('N1.3 import: incomplete published F1/continuation rule')
-    if not f["copy_storage"] and "platform/epoch_floor is an ordinary row" not in copy_:
-        raise GenError('N1.3 copy: neither the known earlier form nor the complete F1 rule')
-    if f["copy_storage"]:
-        for pattern in (r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"):
-            if pattern not in t11:
-                raise GenError('N0 time: reader/writer notation required by the copy runtime is absent')
+    for phrase in ("line per key: {key, items, index}", "{key, items: null, index, unreadable: true}",
+                   "ascending order of UTF-8 bytes", "a repeated key", "index of a row higher than the index of the header",
+                   "If an unreadable row is in the input"):
+        if phrase not in copy_:
+            raise GenError(f"P/01.3 copy: missing {phrase!r}")
+    import_ = clause("P/01.3-R149") + " " + clause("P/01.3-R151")
+    for phrase in ("transfer MUST exclude the input platform/epoch_floor", "first write MUST be new F1",
+                   "partial replay MUST preserve the exact saved F1 row (items and index)"):
+        if phrase not in import_:
+            raise GenError(f"P/01.3 import: missing F1 rule {phrase!r}")
+    f["copy_storage"] = True
+    time_pattern = r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"
+    for anchor in ("P/01.1-R007", "P/01.1-R008"):
+        if time_pattern not in gen_core.anchored(NORMS_11).get(anchor, ""):
+            raise GenError(f"{anchor}: current writer/reader time notation is absent")
     gm = re.search(r"generation: max\(\(upper >> (\d+)\) \+ 1, whole hours of UTC since (\d{4})-(\d\d)-(\d\d)\); "
-                   r"floor = generation << (\d+);", floor)
+                   r"floor = generation << (\d+)(?:;| )", floor)
     bm = re.search(r"1 … 2\^53 − 2\^32", floor)
     lm = re.search(r"generation ≤ 2\^21 − 1", floor)
     if not gm or gm[1] != gm[5] or not bm or not lm:
@@ -164,9 +180,8 @@ def facts():
     if not re.search(r"weight \(sum of byte lengths of every key and every value\) at most the store's ceiling", t11):
         raise GenError(f"{NORMS_11.name}: row.items ceiling is not found")
     f["ceiling"], f["ceiling_from_flags"] = row_ceiling(t11)
-    if not re.search(r"backup <file>: the file path \(after resolving links\) outside -dir of the daemon", block_line(
-            t13, "admin_ops")):
-        raise GenError('N1.3 admin_ops: backup outside -dir is not found')
+    if "not outside -dir of the daemon" not in clause("P/01.3-R121"):
+        raise GenError('P/01.3-R121: backup outside -dir is not found')
     keys = KEYS_README.read_text(encoding="utf-8")
     for ph in ("<sub>", "<id>"):
         km = re.search(r"^\| `%s` \| `(.+?)` \| " % re.escape(ph), keys, re.M)
@@ -752,10 +767,11 @@ def provenance():
     def entries(sources):
         return [entry(p) for p in dict.fromkeys(p for src in sources for p in
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
-    return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README] +
+    return {"form": entries([NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README, METRICS, STATUS_FIELDS] +
                             ([FLAGS] if f["ceiling_from_flags"] else [])),
             "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()] if storage else [],
-            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py")] +
+            "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(HERE / "yamlsub.py"),
+                           entry(HERE / "gen_core.py")] +
                           ([entry(HERE / "gen_flags.py")] if f["ceiling_from_flags"] else []),
             "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)] if storage else [entry(JUDGE)],
             "judge_inputs": entries([L.form("stages.kit.tsv"),

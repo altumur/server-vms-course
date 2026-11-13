@@ -3,9 +3,10 @@
   python3 tools/normgen/gen_machine.py --lesson 03-worker [<part> ...] [--out <out>] [--root <course-root>]
 Default: all machines, out/pNN. --root permits alternate forms for judge mutants. A forms/<part>.tsv table declares n, state, condition, action, next, norm plus states, Initial, #var, #const and #action headers. Select the first matching row in the current state; no match waits without effect. An action '-' is a YOURS normative procedure, not a no-op. Conditions and arguments use generator 1's typed CEL parser: boolean operators, comparisons, +, ternary, literals and string-keyed maps. Unsupported syntax refuses with the form row. Integer addition is allowed only in arguments and reports CEL-style overflow.
 
-Emit closed <package>/machine.go: State, In fields, constants, Step(state, in), Actions and Apply. Step selects a transition but does not execute events, reads or effects. Form tests cover the first enumerated input for each variable-value/outcome pair, including no match. Numeric boundaries come from constants and uppercase #var default descriptions. Emit inventory.tsv and YOURS <package>impl/actions.go plus one file per action or '-' procedure, installed once and initially returning not in this stage. test_gen_machine.py independently evaluates the form with cel_expr_python and mutants over the same enumeration."""
+Emit closed <package>/machine.go: State, In fields, constants, Step(state, in), Actions and Apply. Step selects a transition but does not execute events, reads or effects. Form tests cover the first enumerated input for each variable-value/outcome pair, including no match. Numeric boundaries come from constants and uppercase #var settings bound to daemon-flags.tsv defaults. Emit inventory.tsv and YOURS <package>impl/actions.go plus one file per action or '-' procedure, installed once and initially returning not in this stage. test_gen_machine.py independently evaluates the form with cel_expr_python and mutants over the same enumeration."""
 import hashlib
 import itertools
+import math
 import re
 import sys
 from pathlib import Path
@@ -249,7 +250,28 @@ def read(part, root=ROOT):
     if part not in forms:
         raise GenError(f"{L.rel}/forms: no machine form {part}.tsv (machines: {', '.join(forms) or 'none'})")
     p = forms[part]
-    return Machine(part, p.read_text(encoding="utf-8"), str(p.relative_to(Path(root))))
+    m = Machine(part, p.read_text(encoding="utf-8"), str(p.relative_to(Path(root))))
+    m.setting_defaults = {}
+    flags = p.parent / "daemon-flags.tsv"
+    if flags.is_file():
+        import tsv_input
+        try:
+            table = tsv_input.read(flags, root=root)
+        except tsv_input.TSVError as exc:
+            raise GenError(str(exc)) from None
+        for _, row in table.rows:
+            name = row["flag"].removeprefix("$")
+            if name not in m.vars or not name.isupper():
+                continue
+            typ = m.vars[name][0]
+            try:
+                value = int(row["default"]) if typ == "int" else float(row["default"])
+            except ValueError:
+                raise GenError(f"{flags}: {name}: numeric default required") from None
+            if typ not in ("int", "double") or (typ == "int" and not INT_MIN <= value <= INT_MAX) or (typ == "double" and not math.isfinite(value)):
+                raise GenError(f"{flags}: {name}: default is not a finite {typ}")
+            m.setting_defaults[name] = value
+    return m
 
 
 # ---------------------------------------------------------------- generator enumeration
@@ -285,10 +307,14 @@ def ev(m, node, env):
 
 
 def setting(m, name):
-    """For uppercase #var settings, read 'default N' from the description, otherwise use1."""
+    """Use the machine's setting default from daemon-flags, or an explicit inline default."""
+    if name in getattr(m, "setting_defaults", {}):
+        return m.setting_defaults[name]
     t, doc = m.vars[name]
     d = re.search(r"\bdefault (\d+(?:\.\d+)?)", doc)
-    v = float(d[1]) if d else 1.0
+    if not d:
+        raise GenError(f"{m.rel}: {name}: no default in daemon-flags.tsv or its #var description")
+    v = float(d[1])
     return v if t == "double" else int(v)
 
 
@@ -672,6 +698,8 @@ def provenance(part):
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     forms = tsv_input.source_files(machine_forms()[part], root=ROOT) + [L.form("README.md")]
+    if any(name.isupper() for name in read(part).vars):
+        forms += tsv_input.source_files(L.form("daemon-flags.tsv"), root=ROOT)
     return {"form": [entry(p) for p in dict.fromkeys(forms)],
             "generator": entry(Path(__file__).resolve()),
             "generators": [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))],

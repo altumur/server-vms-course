@@ -129,9 +129,9 @@ func AppendLine(file, line string) (string, error) {
 	return file + line + "\n", nil
 }
 
-var readerTime = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`)
+var readerTime = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`)
 
-// timeOK — a time by the reader's codec: a JSON number or string ^(0|[1-9][0-9]*)(\.[0-9]+)?$, finite in binary64.
+// timeOK — a time by the reader's codec: a JSON number or string ^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$, finite in binary64.
 func timeOK(v any) bool {
 	var text string
 	switch x := v.(type) {

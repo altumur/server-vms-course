@@ -127,6 +127,22 @@ func Command(r Roots, process string, argv []string, stdin []byte) Result {
 	return Result{Exit: 2}
 }
 
+func observation(name string, input json.RawMessage) (json.RawMessage, error) {
+    var parsed any
+    if err:=json.Unmarshal(input,&parsed);err!=nil {return nil,err}
+    key,err:=json.Marshal(parsed)
+    if err!=nil {return nil,err}
+    out,ok:=observations[name+"|"+string(key)]
+    if !ok {return nil,fmt.Errorf("fixture input not declared: %s",key)}
+    return json.RawMessage(out),nil
+}
+func InstallerRoleUnitGroups(roots Roots, input json.RawMessage) (json.RawMessage,error) {
+    return observation("installer-role-unit-groups",input)
+}
+func SecretsWalk(roots Roots, input json.RawMessage) (json.RawMessage,error) {
+    return observation("secrets-walk",input)
+}
+
 var _ = base64.StdEncoding
 '''
 
@@ -175,6 +191,16 @@ def fake_answers_go():
     for k, w in polls.items():
         res = "nil" if w["result"] is None else f"&PollResult{{Code: {w['result']['code']}, Word: {go_str(w['result']['word'])}}}"
         out.append(f"\t{go_str(k)}: {{State: {go_str(w['state'])}, Result: {res}}},")
+    out += ["}", "", "var observations = map[string]string{"]
+    for path in (ROOT / "Platform/02-installer/acceptance").glob("*/seams.tsv"):
+        table = tsv_input.read(path, names=("scenario", "step", "request", "expect"), positional=True, root=ROOT)
+        for _, row in table.rows:
+            if not row["request"].startswith("CALL "):
+                continue
+            name, _, data = row["request"][5:].partition(" ")
+            if name in ("installer-role-unit-groups", "secrets-walk"):
+                key = name + "|" + json.dumps(json.loads(data),sort_keys=True,separators=(",", ":"),ensure_ascii=False)
+                out.append(f"\t{go_str(key)}: {go_str(row['expect'])},")
     out.append("}")
     return "\n".join(out) + "\n"
 
@@ -223,7 +249,7 @@ class CmdTests(unittest.TestCase):
         t = Path(tempfile.mkdtemp(dir=self.tmp.name))
         shutil.copytree(self.mod, t / "go")
         ad = t / "go/lessonadapter"
-        for f in ("command.go", "load.go", "catalogue.go", "poll.go"):
+        for f in ("command.go", "load.go", "catalogue.go", "poll.go", "installer_role_unit_groups.go", "secrets_walk.go"):
             (ad / f).unlink()
         text = FAKE
         if mutate:
@@ -244,7 +270,7 @@ class CmdTests(unittest.TestCase):
         inv = (self.mod / "stagetests/inventory.tsv").read_text(encoding="utf-8")
         self.assertIn("2.3/puts.tsv/*\tmanifest-put\t-\texcluded\tneeds the store of P/01 (runner corpus puts)", inv)
         self.assertIn("2.2/puts.tsv/*\tcanonical-put\t-\texcluded", inv)
-        self.assertEqual(inv.count("\ttranslated\t"), 947 + 33)
+        self.assertEqual(inv.count("\ttranslated\t"), 951 + 34)
 
     def test_review_operator_file_and_ordinary_seams(self):
         operator = (self.mod / "stagetests/operator_files_test.go").read_text(encoding="utf-8")
@@ -267,7 +293,7 @@ class CmdTests(unittest.TestCase):
     def test_fake_green(self):
         res, _, done = results(self.fake())
         self.assertEqual({n for n, a in res.items() if a != "pass"}, set(), done.stdout[-3000:])
-        self.assertEqual(len(res), 1 + 4 + 4 + 7)          # Verdicts + s1–s4 (2.1) + s1–s4 (2.4) + s5–s11 (poll)
+        self.assertEqual(len(res), 1 + 4 + 5 + 7)          # Verdicts + s1–s4 (2.1) + s1–s4 (2.4) + s5–s11 (poll)
 
     def test_adapter_mutants(self):
         for old, new, want, why in (
@@ -286,6 +312,15 @@ class CmdTests(unittest.TestCase):
             else:
                 self.assertTrue(want <= red, f"mutant {why}: red {red}, want {want}")
 
+    def test_observation_call_errors_empty_json_and_panics_fail(self):
+        old = 'return observation("installer-role-unit-groups",input)'
+        for replacement in ('return nil,fmt.Errorf("owned error")', 'return nil,nil',
+                            'return json.RawMessage(`not-json`),nil', 'panic("owned panic")'):
+            with self.subTest(replacement=replacement):
+                res, _, _ = results(self.fake((old, replacement)))
+                red = {n for n, a in res.items() if a != "pass"}
+                self.assertEqual(red, {"TestRunnerWorkers_S14UnitRoleSocketGroups"})
+
     def test_seam_mutant(self):
         """Mutating a seam expectation in an alternate source root must fail exactly that scenario."""
         root = Path(self.tmp.name) / "root"
@@ -301,7 +336,7 @@ class CmdTests(unittest.TestCase):
         (mod / "go.mod").write_text("module normgen/p02\n\ngo 1.22\n", encoding="utf-8")
         t = Path(tempfile.mkdtemp(dir=self.tmp.name))
         shutil.copytree(mod, t / "go")
-        for f in ("command.go", "load.go", "catalogue.go", "poll.go"):
+        for f in ("command.go", "load.go", "catalogue.go", "poll.go", "installer_role_unit_groups.go", "secrets_walk.go"):
             (t / "go/lessonadapter" / f).unlink()
         (t / "go/lessonadapter/fake.go").write_text(FAKE, encoding="utf-8")
         (t / "go/lessonadapter/answers.go").write_text(fake_answers_go(), encoding="utf-8")

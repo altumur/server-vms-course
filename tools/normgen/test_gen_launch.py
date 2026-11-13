@@ -216,7 +216,7 @@ class Frame(unittest.TestCase):
             text = frame.read_text(encoding="utf-8")
             self.assertIn("TEMPORARY FRAME ON net/http -- REPLACE IT", text)
             self.assertNotIn("DO NOT EDIT", text)
-            for a in ("P/01.1-R049", "P/01.1-R050", "P/01.1-R052", "P/01.1-R053", "P/01.1-R054"):
+            for a in ("P/01.1-R049", "P/01.1-R050", "P/01.1-R052", "P/01.1-R242", "P/01.1-R054"):
                 self.assertIn(f"req: {a}", text)
             doc = (dst / "KIT.md").read_text(encoding="utf-8")
             self.assertIn("is a temporary frame on `net/http`; the raw HTTP acceptance requires the strict parse of\n> "

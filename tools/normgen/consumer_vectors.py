@@ -1,8 +1,9 @@
-"""Cross-lesson wire.tsv table bindings. Only the Go API is declared here; consumers.tsv assigns rows."""
+"""Selected wire.tsv bindings. Only the Go API is declared here; the forms own the wire."""
 import wire
 import wire_vectors
 
 API = {
+    '03-worker/fetched': ('Fetched', 'cells'),
     '01-store/jcs': ('JCS', 'cells'),
     '06-console/rid': ('RidCells', 'cells'),
     '06-console/request-digest': ('RequestDigestCells', 'cells'),
@@ -13,6 +14,12 @@ API = {
 def declarations(root, g):
     foreign = {key for key in g.lesson_consumers(root)
                if key[0].split('/')[0] not in ('common', g.L.key)}
+    # P/03's new local package already has a canonical wire; keep its input,
+    # native schema and set comparison in that form, alongside the partial wire.
+    from pathlib import Path
+    stages = Path(root) / g.L.rel / 'forms/stages.kit.tsv'
+    if g.L.key == '03-worker' and stages.is_file() and 'vectors:fetched' in stages.read_text():
+        foreign.add(('03-worker/fetched', 'cases.tsv'))
     if not foreign:
         return []
     bindings = wire.lesson_bindings(root, g.L.key, wire.parse(root, keys=foreign, surfaces={"vectors"}))

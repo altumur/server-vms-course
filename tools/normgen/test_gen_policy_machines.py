@@ -280,7 +280,7 @@ class PolicyMachines(unittest.TestCase):
             self.assertNotEqual(done.returncode, 0)
             self.assertNotIn("panic:", done.stdout + done.stderr)
             events = [json.loads(s) for s in done.stdout.split("\n") if s]
-            self.assertEqual(sum(e.get("Action") == "fail" and bool(e.get("Test")) for e in events), 55)
+            self.assertEqual(sum(e.get("Action") == "fail" and bool(e.get("Test")) for e in events), 88)
             self.assertFalse(any(e.get("Action") == "skip" for e in events))
             sdk = next(p for p in (mod / "internal/lessonadapter").glob("*.go") if p.name != "lessonadapter.go")
             sdk.write_text(sdk.read_text() + "\n// preserved SDK edit\n")

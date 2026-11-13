@@ -44,9 +44,9 @@ class ActualWireSources(unittest.TestCase):
             errors, stats = check_forms.check_wire(path, seen=seen)
             self.assertEqual(errors, [])
             total += stats["wire_bindings"]
-        self.assertEqual(total, 92)
+        self.assertEqual(total, 97)
         bindings = wire.parse(ROOT)
-        self.assertEqual(len(bindings), 92)
+        self.assertEqual(len(bindings), 97)
         self.assertEqual({(b.source, b.line) for b in bindings if b.key in MOVED},
                          {(wire.CASE_FORM, n) for n in (4, 5, 6)})
 
