@@ -1,0 +1,13 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "decisions/inbox/2026-11-13-P02.68-M/verify_m.py",
+  "/home/pilot/P02.68-evidence/r2"
+ ],
+ "cwd": "/home/pilot/wt-task-P02.68",
+ "exit": 0,
+ "stdout_sha256": "97b985935317f2db6ac888511aa16764f979f1ceb50e3ade2638151629a2ef00",
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "result_sha256": "499761de13b55656f7859b1c3b1e4f0da43aba2dfd6ce70a890cde3b5e73efe0"
+}

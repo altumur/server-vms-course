@@ -1,0 +1,34 @@
+{
+ "task": "P02.68",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "operator_sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+ "assembled_filter_blob": "3972c200f6d5b8d3e7796a9792b47cd8fd387a2a",
+ "assembled_filter_sha256": "2f7bb277e16ff858ebe66aca8cf5108bea092845dcdeedbaa03326e41e8afdd1",
+ "filter_sources": {
+  "Platform/common/export-model-filter.json": "003e4a7c951df4a118aa3a0fb75ebfa01427aa09",
+  "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "wire_blob": "b8367cffbd6cd7c5c62308ff202a9cd5a1f43a34",
+ "derived_sha256": "d27284387d5753e1d5f6e2ec24ae14cf90613ac739dc7996e7fbef3d0453bbd4",
+ "J_files": 3593,
+ "M_files": 795,
+ "cases_removed": 158,
+ "M_files_by_top_dir": {
+  "01-store": 30,
+  "02-installer": 56,
+  "03-worker": 46,
+  "04-controller": 49,
+  "05-resource": 50,
+  "06-console": 104,
+  "07-console-module": 8,
+  "08-domain": 213,
+  "09-agent": 95,
+  "10-domain-console": 13,
+  "common": 128
+ },
+ "lexical_guard": "pass",
+ "classification": "pass",
+ "case_boundary": "pass"
+}

@@ -1,0 +1,16 @@
+{
+ "argv": [
+  "git",
+  "--git-dir",
+  "/home/pilot/P02.68-evidence/r2/narrow/M.git",
+  "fsck",
+  "--full",
+  "--strict"
+ ],
+ "cwd": "/home/pilot/P02.68-evidence/r2",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "exit": 0,
+ "seconds": 0.03759096399880946,
+ "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

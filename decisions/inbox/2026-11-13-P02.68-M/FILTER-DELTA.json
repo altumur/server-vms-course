@@ -1,0 +1,37 @@
+{
+ "from": "a494be12d54c2e596467c1508973da3031af2088",
+ "to": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "003e4a7c951df4a118aa3a0fb75ebfa01427aa09",
+  "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "f30ca4cc2b3dab4aa38379383f00559a03acb092",
+  "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "added": [
+  {
+   "path": "Platform/01-store/forms/production/threshold-approvals.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/forms/production/threshold-approvals.schema.json",
+   "M": "judge_only",
+   "JI": "include"
+  }
+ ],
+ "removed": [],
+ "changed": [],
+ "counts": {
+  "added": 2,
+  "removed": 0,
+  "changed": 0,
+  "records_from": 3591,
+  "records_to": 3593
+ }
+}

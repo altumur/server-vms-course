@@ -1,0 +1,26 @@
+{
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "operators": {
+  "b7_export_pair.py": {
+   "source": "/home/pilot/P02.68-evidence/r2/archive-C/decisions/inbox/2026-11-11-P02.52-операторы/operator/b7_export_pair.py",
+   "sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+   "unchanged": true
+  },
+  "judge_input_export.py": {
+   "source": "/home/pilot/P02.68-evidence/r2/archive-C/decisions/inbox/2026-11-11-P02.52-операторы/operator/judge_input_export.py",
+   "sha256": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+   "unchanged": true
+  },
+  "m_passport.py": {
+   "source": "/home/pilot/P01.360-evidence/operator/m_passport.py",
+   "sha256": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
+   "unchanged": true
+  },
+  "check_m_passport.py": {
+   "source": "/home/pilot/P01.360-evidence/operator/check_m_passport.py",
+   "sha256": "4c23afc9fe7d0b68ca10681c01b6beef38faa3d6e57bef37f381ae003f8e6d4c",
+   "unchanged": true
+  }
+ },
+ "OK": true
+}

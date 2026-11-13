@@ -1,0 +1,26 @@
+{
+ "task": "P02.68",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "M": "cad17520d865243883d46c93948cc764eb1d554e",
+ "M_tree": "9b128f0f16add7f5ec12befa61bd5c6b578d7ff0",
+ "count": 256,
+ "raw_M": "05e3e62dfa1f8eed87abdbc9cfda745e5505f1ff",
+ "J": "a7f036e61fdebd2008ff5f8bedca3a8c0cfa0ae6",
+ "directory": "/home/pilot/P02.68-evidence/M",
+ "M_git": "/home/pilot/P02.68-evidence/r2/narrow/M.git",
+ "J_git": "/home/pilot/P02.68-evidence/r2/pair-000fec9a4239/J.git",
+ "raw_M_git": "/home/pilot/P02.68-evidence/r2/pair-000fec9a4239/M.git",
+ "passport": "/home/pilot/P02.68-evidence/r2/PASSPORT-M.json",
+ "passport_sha256": "6c2daa21cc8a5bd9071d345b3500630190bd55afd6611fc33d9c372695cf9ef4",
+ "files_sha256": "987abb22e4459d3b65d688ef0a37d6c010552caaeffdf4725b58589702ea0d47",
+ "sha256sums": "/home/pilot/P02.68-evidence/r2/SHA256SUMS",
+ "sha256sums_sha256": "6a4b5be3b54c7900aef2334158602b6384ec7d336e47a5852514cd6eeb0ad612",
+ "shared_module_pins": {
+  "servervms.local/common/json": "v0.0.0-20261113192059-b8b1a5bd1dad",
+  "servervms.local/common/store-client": "v0.0.0-20261113192213-48487824baa5",
+  "servervms.local/common/log-mask": "v0.0.0-20261113215911-e19621128ad8"
+ },
+ "filter_review_course_path": "decisions/inbox/ревью/2026-11-13-P01.365-ревью-записей-фильтра.md",
+ "evidence": "/home/pilot/P02.68-evidence/r2",
+ "OK": true
+}

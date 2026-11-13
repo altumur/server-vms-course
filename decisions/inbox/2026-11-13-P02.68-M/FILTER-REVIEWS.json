@@ -1,0 +1,28 @@
+{
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "baseline_C": "a494be12d54c2e596467c1508973da3031af2088",
+ "baseline_acceptance": "reviews/P01.360-accepted.json",
+ "baseline_acceptance_sha256": "c1ee6f23a9f8f7e24f2a84e7aac00a0eb08633960582cf333ce46c48e613697c",
+ "baseline_reviews": "reviews/P01.360-filter-reviews.json",
+ "baseline_reviews_sha256": "cf05348c4834d3faa11eb35ef5348603ad98437f7ea732e3940b5a279df8b04f",
+ "delta_sha256": "9487a40f0326fbf34192a71670f061ac5d262e44c98ce73e3ac5a3876639aee5",
+ "filter_author_provider": "codex",
+ "filter_reviewer_provider": "claude",
+ "all_delta_records_covered": true,
+ "deltas": [
+  {
+   "records": [
+    "Platform/01-store/forms/production/threshold-approvals.json",
+    "Platform/01-store/forms/production/threshold-approvals.schema.json"
+   ],
+   "author_provider": "codex",
+   "reviewer_provider": "claude",
+   "review": "reviews/P01.365-filter-review.md",
+   "review_course_path": "decisions/inbox/ревью/2026-11-13-P01.365-ревью-записей-фильтра.md",
+   "review_blob": "6eba8bc73e11b1aac9e234862132fd9e4e582759",
+   "review_sha256": "4483abf9fa178da0d5346f890c988a3c32835ff58563667fb6c63a898052b3e0",
+   "accepted_receipt": "reviews/P01.365-accepted.json",
+   "accepted_receipt_sha256": "4d92907c2caf0ec02618fbfd2fd4218aae3ff1d8c30748150d9f78a8e0152cac"
+  }
+ ]
+}
