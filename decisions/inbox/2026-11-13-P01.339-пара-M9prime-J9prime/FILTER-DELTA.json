@@ -1,0 +1,26 @@
+{
+ "from": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "to": "bacf1dd2171aa69b49d4bc5cdd6a2c7a9a4fac30",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "4d5c3c7c7b2d57956e0ff904a9322e4f24253802",
+  "Platform/01-store/forms/export.json": "56fb5b46d50f16610322d974a7a85d766342abbe",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "c908133c01ab19a5aec22d42ba8ea54d08135596",
+  "Platform/01-store/forms/export.json": "56fb5b46d50f16610322d974a7a85d766342abbe",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "added": [],
+ "removed": [],
+ "changed": [],
+ "counts": {
+  "added": 0,
+  "removed": 0,
+  "changed": 0,
+  "records_from": 3579,
+  "records_to": 3579
+ }
+}
