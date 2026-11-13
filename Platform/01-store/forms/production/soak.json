@@ -36,15 +36,18 @@
     "linearizable_reads"
   ],
   "negative_controls": [
-    "lost_log_tail",
-    "read_without_fence"
+    "barrier_noop_power_loss",
+    "directory_barrier_noop_power_loss",
+    "isolated_read_stale_response"
   ],
   "executor": {
     "repository": "court-tools",
     "path": "soak/",
     "revision": "6fd588df",
     "before_qualifier": "executor",
-    "after_qualifier": "comparison_reference"
+    "after_qualifier": "comparison_reference",
+    "scope": "load_and_faults",
+    "stand_controls": "requires_qualified_binding"
   },
   "environment": {
     "preferred": "virtual_machine",
