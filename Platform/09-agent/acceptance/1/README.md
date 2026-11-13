@@ -4,14 +4,13 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Domain stand»](../../../common/acceptance/domain-stand.md#domain-stand) (the stand of several clusters). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) N5;
-[the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). In total 22 scenarios / 252 steps (judge-only: the scenario table; by the N5 table P/09.1-R714 it checks P/09.1-R008, P/09.1-R009, P/09.1-R012, P/09.1-R015, P/09.1-R016, P/09.1-R018, P/09.1-R020, P/09.1-R043, P/09.1-R054, P/09.1-R063, P/09.1-R079, P/09.1-R080, P/09.1-R085, P/09.1-R088, P/09.1-R089, P/09.1-R129, P/09.1-R172, P/09.1-R202, P/09.1-R229, P/09.1-R243, P/09.1-R250, P/09.1-R254, P/09.1-R276, P/09.1-R280, P/09.1-R281, P/09.1-R294–P/09.1-R299, P/09.1-R306, P/09.1-R308, P/09.1-R323, P/09.1-R328, P/09.1-R332–P/09.1-R334, P/09.1-R341–P/09.1-R344, P/09.1-R355, P/09.1-R369, P/09.1-R371, P/09.1-R373, P/09.1-R377, P/09.1-R381, P/09.1-R395, P/09.1-R410–P/09.1-R412, P/09.1-R470, P/09.1-R471, P/09.1-R475–P/09.1-R480, P/09.1-R530, P/09.1-R533, P/09.1-R535–P/09.1-R537, P/09.1-R539, P/09.1-R541–P/09.1-R545, P/09.1-R548, P/09.1-R549, P/09.1-R551–P/09.1-R553, P/09.1-R560, P/09.1-R564, P/09.1-R565, P/09.1-R573, P/09.1-R577–P/09.1-R582, P/09.1-R586, P/09.1-R636, P/09.1-R686, P/09.1-R688, P/09.1-R691, P/09.1-R693, P/09.1-R712).
+[the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). In total 22 scenarios / 252 steps.
 
-The agent side in the scenarios of other chapters — the list «Neighbours on the stand» of the norm of the chapter, N5 (judge-only: the scenario tables of those chapters; by P/09.1-R729 they check P/09.1-R004, P/09.1-R008, P/09.1-R009, P/09.1-R011, P/09.1-R017, P/09.1-R019, P/09.1-R021–P/09.1-R023, P/09.1-R045, P/09.1-R046, P/09.1-R060, P/09.1-R077, P/09.1-R085, P/09.1-R089, P/09.1-R166, P/09.1-R167, P/09.1-R177, P/09.1-R183, P/09.1-R184, P/09.1-R199, P/09.1-R201, P/09.1-R204, P/09.1-R227, P/09.1-R245, P/09.1-R246, P/09.1-R254, P/09.1-R306, P/09.1-R310, P/09.1-R332, P/09.1-R333, P/09.1-R337, P/09.1-R355, P/09.1-R369, P/09.1-R373, P/09.1-R377, P/09.1-R381, P/09.1-R420, P/09.1-R430, P/09.1-R443, P/09.1-R461, P/09.1-R464, P/09.1-R466, P/09.1-R467, P/09.1-R475, P/09.1-R547, P/09.1-R573, P/09.1-R574, P/09.1-R597, P/09.1-R602, P/09.1-R603, P/09.1-R605–P/09.1-R607, P/09.1-R618, P/09.1-R629, P/09.1-R634, P/09.1-R637, P/09.1-R638, P/09.1-R651, P/09.1-R661, P/09.1-R675, P/09.1-R677, P/09.1-R678, P/09.1-R680, P/09.1-R695, P/09.1-R704, P/09.1-R705).
+The agent side in the scenarios of other chapters — the list «Neighbours on the stand» of the norm of the chapter, N5.
 
 ## Stand
 
-**Preparation of each scenario** — as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md)
-(«Preparation of each scenario»): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
+**Preparation of each scenario**: the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
 its own empty store, its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 N1.2), the manifest catalogue
 — only `testsub`; the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
 There are no units. There is no domain: it is set up by the directive `@domain` of the first step of each scenario. The domain name is `acme`.
@@ -28,7 +27,7 @@ There are no units. There is no domain: it is set up by the directive `@domain` 
 Common notes for selected scenarios:
 
 - The doors `holder`, `member`, `resource`, `store`, `token` and the directives `@domain`, `@start`/`@stop agent`, `@cut`, `@mend`, `@clock`, `@join`, `@on` (`@freeze`, `@thaw`, `@put object`) — the dictionary of the «Domain stand» and the common dictionary of directives; the freeze limit is 120 s.
-- At the door `holder` the runner sets `Idempotency-Key` also for `PUT`/`DELETE`. `$id` is the id of the stored edit from the answer 202. The holder stores an edit (chapter 8.6), the agent applies it (N1.5); the condition `If-Match` of the units door — the acceptance of [P/06.1](../../../06-console/acceptance/1/README.md).
+- At the door `holder` the runner sets `Idempotency-Key` also for `PUT`/`DELETE`. `$id` is the id of the stored edit from the answer 202. The holder stores an edit (chapter 8.6), the agent applies it (N1.5); the condition `If-Match` of the units door — the norms of [P/06.1](../../../06-console/spec/06.1-console.norms.md).
 - Some scenarios use the catalogue `testsub` with a declaration of the shared document:
   - `domain.shared: [step, marks, {rounds}]`;
   - `step` — `int` with `inherit: 1`;
@@ -38,7 +37,7 @@ The rows bypassing the writer are put by the store door of the member through `a
 
 ## scenarios.tsv
 
-The format of the table (judge-only: the scenarios of the chapter; by the N5 table P/09.1-R714 they check P/09.1-R008, P/09.1-R009, P/09.1-R012, P/09.1-R015, P/09.1-R016, P/09.1-R018, P/09.1-R020, P/09.1-R043, P/09.1-R054, P/09.1-R063, P/09.1-R079, P/09.1-R080, P/09.1-R085, P/09.1-R088, P/09.1-R089, P/09.1-R129, P/09.1-R172, P/09.1-R202, P/09.1-R229, P/09.1-R243, P/09.1-R250, P/09.1-R254, P/09.1-R276, P/09.1-R280, P/09.1-R281, P/09.1-R294–P/09.1-R299, P/09.1-R306, P/09.1-R308, P/09.1-R323, P/09.1-R328, P/09.1-R332–P/09.1-R334, P/09.1-R341–P/09.1-R344, P/09.1-R355, P/09.1-R369, P/09.1-R371, P/09.1-R373, P/09.1-R377, P/09.1-R381, P/09.1-R395, P/09.1-R410–P/09.1-R412, P/09.1-R470, P/09.1-R471, P/09.1-R475–P/09.1-R480, P/09.1-R530, P/09.1-R533, P/09.1-R535–P/09.1-R537, P/09.1-R539, P/09.1-R541–P/09.1-R545, P/09.1-R548, P/09.1-R549, P/09.1-R551–P/09.1-R553, P/09.1-R560, P/09.1-R564, P/09.1-R565, P/09.1-R573, P/09.1-R577–P/09.1-R582, P/09.1-R586, P/09.1-R636, P/09.1-R686, P/09.1-R688, P/09.1-R691, P/09.1-R693, P/09.1-R712) is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
+The format of the table is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
 `@time` — a time in a string (P/01.1 N0), `@not(…)` — not equal; in total 22 scenarios / 252 steps.
 
 ## Evidence outside the TSV
@@ -50,18 +49,18 @@ for the holder's answer, and an edit received before the key was spoiled is a ra
 a member, the refusals of the keeper's agent by the sum and by `record` (the holder does not send such a document), a break of the road of the local token door,
 an answer from the relay memory and `as_of` of the grants copy (on the stand `as_of` is visible only as a store row, and its freshening is
 no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client and the first contact (the stand without TLS). The bytes of the agent signature
-— the package [`agent-sig`](../../../common/vectors/agent-sig/README.md) (judge-only: a common vector package; it checks P/09.1-R006, P/09.1-R078, P/09.1-R737, P/09.2-R044, P/09.2-R096), the function `peer` — the package
-[`peer`](../../../common/vectors/peer/README.md) (judge-only: a common vector package; it checks P/09.1-R445, P/09.1-R456), the function `follow` — the package [`follow`](../../vectors/follow/README.md).
+— the package `agent-sig`, the function `peer` — the package
+`peer`, the function `follow` — the package [`follow`](../../vectors/follow/README.md).
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) (judge-only: the seam table; it checks P/09.1-R012, P/09.1-R020, P/09.1-R024, P/09.1-R063, P/09.1-R079, P/09.1-R080, P/09.1-R085, P/09.1-R088, P/09.1-R089, P/09.1-R106, P/09.1-R108, P/09.1-R110, P/09.1-R115, P/09.1-R117, P/09.1-R118, P/09.1-R120, P/09.1-R122, P/09.1-R124–P/09.1-R126, P/09.1-R128–P/09.1-R130, P/09.1-R133, P/09.1-R134, P/09.1-R154, P/09.1-R155, P/09.1-R157, P/09.1-R173, P/09.1-R179, P/09.1-R182–P/09.1-R187, P/09.1-R218, P/09.1-R248, P/09.1-R268–P/09.1-R273, P/09.1-R279, P/09.1-R288, P/09.1-R289, P/09.1-R292, P/09.1-R293, P/09.1-R300, P/09.1-R301, P/09.1-R312, P/09.1-R316–P/09.1-R320, P/09.1-R328, P/09.1-R332, P/09.1-R335, P/09.1-R343, P/09.1-R355, P/09.1-R359–P/09.1-R362, P/09.1-R371, P/09.1-R383, P/09.1-R384, P/09.1-R422, P/09.1-R423, P/09.1-R428, P/09.1-R444, P/09.1-R470, P/09.1-R478, P/09.1-R479, P/09.1-R481, P/09.1-R499–P/09.1-R503, P/09.1-R505, P/09.1-R537, P/09.1-R539, P/09.1-R541, P/09.1-R545, P/09.1-R551, P/09.1-R556–P/09.1-R558, P/09.1-R560, P/09.1-R561, P/09.1-R564, P/09.1-R565, P/09.1-R573, P/09.1-R574, P/09.1-R581–P/09.1-R583, P/09.1-R586, P/09.1-R589–P/09.1-R591, P/09.1-R593, P/09.1-R605–P/09.1-R608, P/09.1-R610, P/09.1-R611, P/09.1-R615, P/09.1-R616, P/09.1-R638–P/09.1-R640, P/09.1-R669, P/09.1-R670, P/09.1-R686–P/09.1-R688, P/09.2-R080) provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
+CALL seams provides 44 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
 
 ## Anywhere copy hash
 
-The five fixture vectors in [`inputs/anywhere-hash/cases.tsv`](inputs/anywhere-hash/cases.tsv) (judge-only: the vector table; it checks P/09.1-R312, P/09.1-R316–P/09.1-R320) specify the complete-body
+The five fixture vectors in Vector cases specify the complete-body
 digest of P/08.4 N1.3 carry and the check before the copy of N1.4 member_anywhere. The input column names a JSON file
-next to the table (judge-only: the case inputs; they check P/09.1-R312, P/09.1-R316–P/09.1-R320); expect is a JSON subset of the observations, not an input to the implementation.
+next to the table; expect is a JSON subset of the observations, not an input to the implementation.
 
 Each input has an initial stored copy with its exact index and last confirmed taken_sha256 marker, and a list of attempts.
 Every attempt starts independently from that initial state: its trusted carry advertisement is advertised, its real

@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 from collections import Counter
 from pathlib import Path
@@ -3932,7 +3933,11 @@ def _vms_reports(args, names):
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for result in report["phases"]:
         _print_phase(result)
-    print("VMS_REPORT", path)
+    if args.vms_evidence or report["canonical_status"] != "PASS":
+        print("VMS_REPORT", path)
+    else:                                   # OBSH.54: a passing run without --vms-evidence keeps no temporary directory
+        shutil.rmtree(evidence, ignore_errors=True)
+        print("VMS_REPORT removed (PASS; pass --vms-evidence <dir> to keep the evidence)")
     return report
 
 

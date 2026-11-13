@@ -16,21 +16,21 @@ $CLUSTER	string	local	local	false	domainagent		P/09.1-R029; common/contracts/env
 $CLUSTERS	string	-	absent/empty: empty list; malformed input remains unconfirmed at its operation, not an invented empty list	false	domainagent		P/09.1-R011; P/09.1-R021; P/09.1-R637; common/contracts/env-file.md: CLUSTERS
 $BOX_ID	string	-	nonempty BOX_ID; otherwise machine-id, then hostname, by the box resolver	false	domainagent		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/instance.md
 $SERVER_NAME	string	-	short hostname; validate the supplied name by the environment contract	false	domainagent		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
-$INSTANCE_ID	string	-	absent or empty: computed <box>:<pid>:<6hex>; supplied nonempty: preserve the accepted spelling	false	domainagent		P/09.1-R550; common/contracts/instance.md; common/contracts/env-file.md
+$INSTANCE_ID	string	-	absent or empty: computed <box>:<pid>:<6hex>; supplied nonempty: preserve the accepted spelling	false	domainagent		P/09.1-R548; common/contracts/instance.md; common/contracts/env-file.md
 $W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; own kit domainagent	false	domainagent		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; P/02.4 N1.6
 $W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env; the launcher reads it, never sources it	false	domainagent		common/contracts/env-file.md: Files and reading order
 $BUILD	string	dev	dev	false	domainagent		common/contracts/env-file.md: Environment variables; P/02.4 N1.2; common/contracts/schema.md
 $DOMAIN_URL	string	-	holder road; either DOMAIN_URL or RELAY_URL must be nonempty before any turn/key write	!("$RELAY_URL" in f) || f["$RELAY_URL"] == ""	domainagent	(!("$DOMAIN_URL" in f) || f["$DOMAIN_URL"] == "") && (!("$RELAY_URL" in f) || f["$RELAY_URL"] == "")	P/09.1-R010; P/09.1-R428
-$RELAY_URL	string	-	relay road; comma-separated addresses tried in order	!("$DOMAIN_URL" in f) || f["$DOMAIN_URL"] == ""	domainagent	(!("$DOMAIN_URL" in f) || f["$DOMAIN_URL"] == "") && (!("$RELAY_URL" in f) || f["$RELAY_URL"] == "")	P/09.1-R010; P/09.1-R425; P/09.1-R428; P/09.2-R036; P/09.2-R037
+$RELAY_URL	string	-	relay road; comma-separated addresses tried in order	!("$DOMAIN_URL" in f) || f["$DOMAIN_URL"] == ""	domainagent	(!("$DOMAIN_URL" in f) || f["$DOMAIN_URL"] == "") && (!("$RELAY_URL" in f) || f["$RELAY_URL"] == "")	P/09.1-R010; P/09.1-R425; P/09.1-R428; P/09.2-R036; P/09.2-R036
 $DOMAIN_CA	string	-	first-contact holder CA fingerprint, only at confirmed first-contact knowledge	false	domainagent		P/09.1-R444; P/09.1-R446; P/09.1-R449; P/09.1-R452; common/contracts/peer.md
 $RELAY_CA	string	-	first-contact relay CA fingerprint; not a replacement for unreadable member-list trust	false	domainagent		P/09.1-R444; P/09.1-R452; common/contracts/peer.md
-$RELAY_MEMBER	string	-	relay member name required when any RELAY_URL address uses https	"$RELAY_URL" in f && f["$RELAY_URL"].matches("(^|,)https://")	domainagent	f["$RELAY_MEMBER"] == "" && "$RELAY_URL" in f && f["$RELAY_URL"].matches("(^|,)https://")	P/09.1-R428; P/09.1-R444; P/09.2-R038; common/contracts/peer.md
-$REACHES	string	-	absent/empty: interface networks; otherwise comma-separated domain/reaches words	false	domainagent		P/09.1-R437; P/09.1-R438
-$CONSOLE_HOST	string	127.0.0.1	own console host from w2c.env; own_url/own_client rules	false	domainagent		P/09.1-R224; P/09.1-R225; common/contracts/env-file.md
+$RELAY_MEMBER	string	-	relay member name required when any RELAY_URL address uses https	"$RELAY_URL" in f && f["$RELAY_URL"].matches("(^|,)https://")	domainagent	f["$RELAY_MEMBER"] == "" && "$RELAY_URL" in f && f["$RELAY_URL"].matches("(^|,)https://")	P/09.1-R428; P/09.1-R444; P/09.2-R036; common/contracts/peer.md
+$REACHES	string	-	absent/empty: interface networks; otherwise comma-separated domain/reaches words	false	domainagent		P/09.1-R437; P/09.1-R437
+$CONSOLE_HOST	string	127.0.0.1	own console host from w2c.env; own_url/own_client rules	false	domainagent		P/09.1-R224; P/09.1-R224; common/contracts/env-file.md
 $CONSOLE_PORT	string	8080	own console port from w2c.env; common port grammar applies	false	domainagent		P/09.1-R224; common/contracts/env-file.md
-$RELAY	string	-	absent or empty: relay door off; exactly 1: relay door enabled for the active agent	false	domainagent	f["$RELAY"] != "" && f["$RELAY"] != "1"	P/09.2-R031; P/09.2-R032; P/09.2-R033; P/09.2-R035
-$RELAY_HOST	string	0.0.0.0	implicit wildcard without kit refuses start; explicit-address/TLS policy remains P02.4 N1.6	false	domainagent		P/09.2-R034; P/02.4 N1.6
-$RELAY_PORT	string	8446	relay listener port, read only under the owning relay/listener rules	false	domainagent		P/09.2-R034
+$RELAY	string	-	absent or empty: relay door off; exactly 1: relay door enabled for the active agent	false	domainagent	f["$RELAY"] != "" && f["$RELAY"] != "1"	P/09.2-R031; P/09.2-R031; P/09.2-R031; P/09.2-R035
+$RELAY_HOST	string	0.0.0.0	implicit wildcard without kit refuses start; explicit-address/TLS policy remains P02.4 N1.6	false	domainagent		P/09.2-R031; P/02.4 N1.6
+$RELAY_PORT	string	8446	relay listener port, read only under the owning relay/listener rules	false	domainagent		P/09.2-R031
 $AGENT_TOKEN_DIR	dir	/run/w2c/domainagent	local role socket directory, one flat <role>.sock per worker role	false	domainagent		P/09.1-R009; common/contracts/local-token-door.md
 $W2C_WALL_OFFSET	string	-	stand only: signed wall-clock seconds offset; loud log line when set	false	domainagent		P/09.1-R029; common/contracts/env-file.md
 $PUBLIC_URL	string	-	entry address for people in report object domain/servers	false	domainagent		P/09.1-R004; P/09.1-R162; common/contracts/env-file.md
