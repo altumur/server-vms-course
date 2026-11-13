@@ -1,7 +1,7 @@
 """Judge refusal catalogs against the form, acceptance and door (ADR-0125 generator 4, addendum 1, item 1).
 
   python tools/normgen/refusal_judge.py [--module-dir <module-with-refusals-and-door>] [--json <result>]
-Default module: out/p01-1/go; stdlib and Go 1.22 suffice. Reread refusals.tsv independently and compare every harness-reported Spec's code, kind, fields, headers and log. Each acceptance chapters1..3 4xx/5xx JSON expectation must match a catalog code/kind: chapter 1.1 requires all mandatory fields plus optional fields, while1.2/1.3 use subsets. Every HTTP Spec must encode through apidoor.Refuse/Encode for at least one OpenAPI operation, with required/all fields and Retry-After where declared.
+Default module: out/p01-1/go; stdlib and Go 1.22 suffice. Reread refusals.tsv independently and compare every harness-reported Spec's code, kind, fields, headers and log. Each acceptance chapters1..3 4xx/5xx JSON expectation must match a catalog code/kind: chapter 1.1 requires all mandatory fields plus optional fields, while1.2/1.3 use subsets. Every HTTP Spec must encode through apidoor.Refuse/Encode for at least one OpenAPI operation, with required/all fields and Retry-After where declared. Fixed Headers and bare DynamicHeaders remain separate metadata. Private wire observations preserve explicit header inputs; Retry-After witnesses use integer syntax without choosing the implementation's admission delay.
 
 Runner refusal steps on the door stub are the door judge's task. Result: refusals:P/N PASS|FAIL; exit 0=all pass, 1=failure, 2=judge startup error."""
 import argparse
@@ -62,13 +62,21 @@ def read_table(path=None):
             r["code_n"] = 2 if r["code"] == "exit 2" else 1
         else:
             raise CheckingError(f"{r['name']}: unknown source surface")
-        r["header_pairs"] = []
+        r["header_pairs"], r["dynamic_headers"] = [], []
+        header_names = {}
         if r["headers"] != "-":
             for header in r["headers"].split(";"):
-                match = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", header)
-                if match is None:
-                    raise CheckingError(f"{r['name']}: malformed header")
-                r["header_pairs"].append([match[1], match[2]])
+                fixed = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", header)
+                bare = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*)\s*", header)
+                match = fixed or bare
+                if match is None or (match[1].lower() in header_names and
+                                     (not fixed or header_names[match[1].lower()])):
+                    raise CheckingError(f"{r['name']}: malformed header or repeated dynamic name")
+                header_names[match[1].lower()] = not bool(fixed)
+                if fixed:
+                    r["header_pairs"].append([match[1], match[2]])
+                else:
+                    r["dynamic_headers"].append(match[1])
         logs = [] if r["log"] == "-" else [x.strip() for x in re.findall(r"«[^«»]*»|[^,«»]+", r["log"]) if x.strip()]
         r["log_names"] = [x for x in logs if not x.startswith("«")]
         r["log_words"] = [x[1:-1] for x in logs if x.startswith("«")]
@@ -131,13 +139,13 @@ def read_report(raw):
         raise CheckingError("incomplete private catalogue observation")
     for row in report["rows"]:
         _shape(row, ("Chapter", "Row", "Name", "Surface", "Code", "Kind", "Fields", "Headers",
-                     "RetryAfter", "Log", "Words", "Norm", "probes"))
+                     "RetryAfter", "DynamicHeaders", "Log", "Words", "Norm", "probes"))
         if (any(type(row[k]) is not str for k in ("Chapter", "Name", "Surface", "Kind", "Norm")) or
                 any(type(row[k]) is not int for k in ("Row", "Code")) or type(row["RetryAfter"]) is not bool):
             raise CheckingError("mistyped observed catalogue scalar")
         for key in ("Chapter", "Name", "Surface", "Kind", "Norm"):
             _text(row[key])
-        for key in ("Log", "Words"):
+        for key in ("Log", "Words", "DynamicHeaders"):
             _strings(row[key])
         fields = row["Fields"] or []
         if row["Fields"] is not None and type(row["Fields"]) is not list:
@@ -163,14 +171,42 @@ def read_report(raw):
         if len(probes) != len(sets):
             raise CheckingError("partial/extra observation of declared field cohorts")
         for probe, expected_fields in zip(probes, sets):
-            _shape(probe, ("fields", "ints", "ops", "retry", "body"))
+            _shape(probe, ("fields", "ints", "ops", "retry", "body", "wire"))
             for key in ("fields", "ints", "ops"):
                 _strings(probe[key])
             if ((probe["fields"] or []) != expected_fields or type(probe["retry"]) is not bool or
                     type(probe["body"]) is not str):
                 raise CheckingError("wrong field-cohort identity or mistyped probe")
             _text(probe["body"])
+            if type(probe["wire"]) is not list or len(probe["wire"]) != len(probe["ops"] or []):
+                raise CheckingError("partial/extra wire header observation")
+            for op, witness in zip(probe["ops"] or [], probe["wire"]):
+                _shape(witness, ("op", "requested", "headers"))
+                if witness["op"] != op:
+                    raise CheckingError("wrong wire operation identity")
+                for key in ("requested", "headers"):
+                    if type(witness[key]) is not list:
+                        raise CheckingError("wire headers must be an array")
+                    for pair in witness[key]:
+                        if type(pair) is not list or len(pair) != 2 or any(type(x) is not str for x in pair):
+                            raise CheckingError("mistyped wire header pair")
+                        for value in pair:
+                            _text(value)
+                    if len({p[0].lower() for p in witness[key]}) != len(witness[key]):
+                        raise CheckingError("duplicate wire header name")
     return report["rows"]
+
+
+def dynamic_header_error(names, witnesses):
+    """Compare explicit test inputs with Encode wire values, never choose an admission delay."""
+    for witness in witnesses:
+        supplied = {k.lower(): v for k, v in witness["requested"]}
+        observed = {k.lower(): v for k, v in witness["headers"]}
+        if all(name.lower() in supplied and observed.get(name.lower()) == supplied[name.lower()]
+               and (name.lower() != "retry-after" or re.fullmatch(r"-?(0|[1-9][0-9]*)", supplied[name.lower()]))
+               for name in names):
+            return None
+    return "no operation preserves typed dynamic-header inputs on the wire"
 
 
 def harness(module_dir, work):
@@ -379,7 +415,9 @@ def main(argv=None):
                                  ("kind", g["Kind"] == ("" if r["kind"] == "-" else r["kind"])),
                                  ("fields", fields == want and len(g["Fields"] or []) == len(want)),
                                  ("headers", (g["Headers"] or []) == headers),
-                                 ("retry", g["RetryAfter"] == any(h[0] == "Retry-After" for h in headers)),
+                                 ("dynamic headers", (g["DynamicHeaders"] or []) == r["dynamic_headers"]),
+                                 ("retry", g["RetryAfter"] == any(n.lower() == "retry-after" for n in
+                                     [h[0] for h in headers] + r["dynamic_headers"])),
                                  ("log", (g["Log"] or []) == r["log_names"]),
                                  ("words", (g["Words"] or []) == r["log_words"]),
                                  ("norm", g["Norm"] == r["norm"]))
@@ -397,6 +435,11 @@ def main(argv=None):
                     why = f"apidoor.Refuse/Encode take the fields {p['fields'] or []} at no operation"
                 elif g["RetryAfter"] and not p["retry"]:
                     why = "no operation declares Retry-After for it"
+                elif any({n.lower(): value for n, value in w["headers"]}.get(k.lower()) != v
+                         for w in p["wire"] for k, v in w["requested"]):
+                    why = "an operation changes an explicit header input on the wire"
+                elif r["dynamic_headers"]:
+                    why = dynamic_header_error(r["dynamic_headers"], p["wire"])
                 check(f"door {r['name']} {sorted(fields)}", why)
     http = [r for r in rows if r["surface"] == "http"]
     for ch, sc, step, code, kind, fields in expectations():

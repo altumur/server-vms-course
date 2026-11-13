@@ -7,17 +7,25 @@ import (
 	"kitmodule/internal/refusals"
 )
 
-// guardMismatch — a refusal of N4 by its catalogue row: code, kind, fields and header from forms/refusals.tsv.
+// guardMismatch — a refusal of N4 by its catalogue row: code, kind and fields from forms/refusals.tsv.
 func guardMismatch(key, index string) apidoor.Answer {
 	s := refusals.GuardMismatch // 412 guard {key, index}
 	a, err := apidoor.Refuse(apidoor.OpWrite, s.Code, s.Kind, "the guard does not hold", map[string]any{"key": key, "index": index})
 	if err != nil {
 		return apidoor.Answer{Code: 500}
 	}
-	if s.RetryAfter {
-		seconds := int64(1)
-		a.RetryAfter = &seconds
+	return a
+}
+
+// replayLimit — the caller computes seconds until admission from its own replay budget.
+// DynamicHeaders declares the header name; the catalogue does not choose its value.
+func replayLimit(seconds int64) apidoor.Answer {
+	s := refusals.ReplayLimit
+	a, err := apidoor.Refuse(apidoor.OpWrite, s.Code, s.Kind, "replay limit", nil)
+	if err != nil {
+		return apidoor.Answer{Code: 500}
 	}
+	a.RetryAfter = &seconds
 	return a
 }
 
