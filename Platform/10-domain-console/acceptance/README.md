@@ -51,7 +51,7 @@ The subset of expect does not replace the check of the full HTTP form of the Ope
 
 ## Forwarding credential seams
 
-[seams.tsv](seams.tsv) (judge-only: acceptance cases for P/10-R016) uses `scenario step request expect`, literal TAB, and the CALL/JSON grammar of [P/02](../../02-installer/forms/README.md). `CALL console-forward-credentials <JSON>` is an acceptance adapter over the ordinary gate, HTTP forwarding and writer admission, not a new product API or native vectors command. P/06.7 uses the same port. Each case has a fresh temporary root, valid catalogue, confirmed holder, readable rows, current turn, ordinary keys/signatures, independent real sessions for persons `a` and `b`, and the grants needed by the selected valid operation. The adapter obtains tokens and cookie proof through the ordinary code. It does not supply a successful gate result or echo an expectation.
+The forwarding-credential seam table uses `scenario step request expect`, literal TAB, and the CALL/JSON grammar of [P/02](../../02-installer/forms/README.md). `CALL console-forward-credentials <JSON>` is an acceptance adapter over the ordinary gate, HTTP forwarding and writer admission, not a new product API or native vectors command. P/06.7 uses the same port. Each case has a fresh temporary root, valid catalogue, confirmed holder, readable rows, current turn, ordinary keys/signatures, independent real sessions for persons `a` and `b`, and the grants needed by the selected valid operation. The adapter obtains tokens and cookie proof through the ordinary code. It does not supply a successful gate result or echo an expectation.
 
 `transition` is the **first external cookie hop**: 1 is a non-holder cluster console, 2 the holder's cluster console, 3 a direct request to the domain console. For 1/2, use the actual cluster-console forwarding path; running only domainconsole is insufficient. Subsequent receivers and the final writer run their ordinary admission code. A controlled HTTP transport may intercept the outgoing request at the first hop and deliver it to those ordinary handlers; it does not replace their identity, need, may or CSRF decisions. This port alone is not the full multi-process stand.
 
@@ -63,6 +63,6 @@ The returned JSON normalizes actual observations: `refused` means a non-success 
 
 ## Kit assistance seams
 
-[seams.tsv](seams.tsv) (judge-only: acceptance cases for P/10-R016) provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
+The kit seam table provides 82 CALL steps of 44 scenarios over ordinary implementation paths. The fixture/port contract is [forms/README.md](../forms/README.md); [stages.tsv](../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary scenarios of this directory, the vector `alarms`, the neighbours on the stands of lesson P/08 or the items checked by reading.
 
 The forms README defines the real collector, own reads, closed-route dispatch and composed hop fixtures.

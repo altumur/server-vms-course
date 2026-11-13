@@ -35,7 +35,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](cases.tsv) (judge-only: acceptance cases for P/10-R016), 37 rows: 22 computed, 15 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
+| The alarm corpus, 37 rows: 22 computed, 15 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
 
 On a discrepancy the norm is right, «Specification» corrects the vector.
 
