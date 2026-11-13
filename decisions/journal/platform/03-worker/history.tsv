@@ -176,4 +176,4 @@ req_id	file	source	date	removed
 -	spec/03-worker.README.md#order-of-work	P03.35; Architect answer 2026-11-13; P03.34 V1	2026-11-13	48 scenarios / 497
 -	spec/03-worker.README.md#order-of-work	P03.35; Architect answer 2026-11-13; P03.34 V1; derived Russian translation	2026-11-13	48 сценариев / 497
 -	forms/README.md#seams	P03.36; ADR-0133 (107) item 3; P03.34 answered V3; P/03.2-R079/R098	2026-11-13	The slot has no ceiling here: the renewal step is an implementation choice within N1.2 (P/03.2 «Implementation decides» item 2).
--	ru/forms/README.md#швы	P03.36; ADR-0133 (107) item 3; P03.34 answered V3; derived Russian translation	2026-11-13	У слота здесь потолка нет: шаг продления — выбор реализации в пределах N1.2 (P/03.2 «Решает реализация» п. 2).
+-	forms/README.md#seams	P03.36; ADR-0133 (107) item 3; P03.34 answered V3; derived Russian translation	2026-11-13	У слота здесь потолка нет: шаг продления — выбор реализации в пределах N1.2 (P/03.2 «Решает реализация» п. 2).
