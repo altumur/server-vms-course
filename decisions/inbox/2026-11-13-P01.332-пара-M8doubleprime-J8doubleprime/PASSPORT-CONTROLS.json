@@ -1,0 +1,169 @@
+{
+ "M": "d378d59f11beeced0198ec53398c800a428d5ba6",
+ "passport": "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+ "checks": [
+  {
+   "name": "M-as-is",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/M-as-is",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/M-as-is",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 0,
+   "exit": 0,
+   "pass": true,
+   "stdout_sha256": "a12b7cb43c9d9134b5bb1b35e9096b66775d9e92e7611d1cc92b02edd6782a87",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "J-with-M-passport",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/full-J",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/full-J",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "478c73517d2df38f43e0735a38f61b6051d770368e18aa70fd358cdce4fdc867",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "byte-change",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/byte-change",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/byte-change",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "d4484612b23e5ce3daf7ed18574956f0b17656b71216572f62708f5a4f20a39c",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "missing",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/missing",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/missing",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "8e20b7816f91733fb0d94ed3df0fcc64713dde858c9ee0e3a5491f86db950f6c",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "symlink",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/symlink",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/symlink",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "a6ba2ef2d6540e628c25541bc842974c3c556973b05bde1fb342b0eed4d7fb2d",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "extra-J-only",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/extra-J-only",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/extra-J-only",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "98c3f33256c0dc8ec797facc0d4c165525a7fce5a432cba7de1c4cf627229173",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "excluded-common",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/excluded-common",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/excluded-common",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "b4e8c5134765c987f1c47469fd634d50927d44385de6f93c15022e18f6a94e14",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "other-M-tree",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/other-M-P01.299",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/other-M-P01.299",
+    "d378d59f11beeced0198ec53398c800a428d5ba6"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "e58762926835125365f05c0ac64c7f853213ffe53a5a8660437353cceca9785a",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "name": "other-M-commit",
+   "root": "/home/pilot/P01.332-evidence/r2/passport/controls-final/M-as-is",
+   "argv": [
+    "/home/pilot/venv-spec/bin/python",
+    "-I",
+    "-B",
+    "/home/pilot/P01.332-evidence/r2/operator/check_m_passport.py",
+    "/home/pilot/P01.332-evidence/r2/passport/PASSPORT-M-d378d59f11be.json",
+    "/home/pilot/P01.332-evidence/r2/passport/controls-final/M-as-is",
+    "bfa66fa76ecfb2c1d9b59c7ac7e2641722493942"
+   ],
+   "expected_exit": 1,
+   "exit": 1,
+   "pass": true,
+   "stdout_sha256": "9178738c3835728d4bb1f5f7200dff9c938c6d54f35783a4239e714a0a8ac5ed",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+ ],
+ "OK": true
+}

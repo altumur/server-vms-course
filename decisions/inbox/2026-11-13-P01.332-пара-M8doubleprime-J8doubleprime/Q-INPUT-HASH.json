@@ -1,0 +1,182 @@
+{
+ "method": "SHA256 of compact UTF-8 JSON list sorted by path bytes; object keys sorted; rows path/bytes/sha256; no final newline in hashed bytes",
+ "input_records": [
+  {
+   "path": "Platform/01-store/acceptance/3/README.md",
+   "bytes": 48309,
+   "sha256": "8d0e3fd1fcb754c42658021c4adf5ca191c61cc2d566df1c960b9d778aaa7beb"
+  },
+  {
+   "path": "Platform/01-store/forms/daemon-flags.tsv",
+   "bytes": 5249,
+   "sha256": "80ee90555f55ab07fae4a970915897facc8f70ad886dc5f270d7e348d3bad295"
+  },
+  {
+   "path": "Platform/01-store/forms/production-input.schema.json",
+   "bytes": 2450,
+   "sha256": "274774ddf4621d838d68ca808519e36f53867fbff4aef18628ce029010a5517d"
+  },
+  {
+   "path": "Platform/01-store/forms/production.tsv",
+   "bytes": 4985,
+   "sha256": "97ffd412614a39bffb323ba7d211db29f91e6ec96bc6d0bc584b9d31e3f4af6c"
+  },
+  {
+   "path": "Platform/01-store/forms/production/README.md",
+   "bytes": 5414,
+   "sha256": "d7457171fd818e73d25d709733a6121342f12188f552052c4a3d31e587b97258"
+  },
+  {
+   "path": "Platform/01-store/forms/production/bindings.tsv",
+   "bytes": 7924,
+   "sha256": "f7582cae39bcc10a7dcb1e0accef1cfe7183c5c668555b8f75729e3fd1b58b0e"
+  },
+  {
+   "path": "Platform/01-store/forms/production/input.json",
+   "bytes": 18,
+   "sha256": "4ae3f0c00241cb6269312ab8e0c5a39ef219ff0c9df43821a958cb78ea5d5287"
+  },
+  {
+   "path": "Platform/01-store/forms/production/soak.json",
+   "bytes": 1351,
+   "sha256": "05e00ddbb4389a8c5bcb17f251d4e54a987b077a63e8a5e6cbfa9557ce21e172"
+  },
+  {
+   "path": "Platform/01-store/forms/production/soak.schema.json",
+   "bytes": 3958,
+   "sha256": "c385557aed23fbed25927a096e866c2cb93d8d605ead57048b90bf6bd4415f4f"
+  },
+  {
+   "path": "Platform/01-store/forms/refusals.tsv",
+   "bytes": 6756,
+   "sha256": "8c26d5851294ff6a9bc0f7c9a6f468604a5bb24b7b86ab0252232775a8925b8b"
+  },
+  {
+   "path": "Platform/01-store/forms/runtime-constants.tsv",
+   "bytes": 2029,
+   "sha256": "c2bcbfa9b382b17480c569cb91baba85d5b9c31e01b4a1177b0daf0e6abff913"
+  },
+  {
+   "path": "Platform/01-store/probes/README.cases.md",
+   "bytes": 1967,
+   "sha256": "22b25f3f376af143609fa26c257317a2da6cfde37f893f0a6ef82604e847f874"
+  },
+  {
+   "path": "Platform/01-store/probes/README.md",
+   "bytes": 2158,
+   "sha256": "baacfdcb30cf375f5539071f43f6f0f13f7a535802329b921b19d852584d1802"
+  },
+  {
+   "path": "Platform/01-store/probes/copy_stream.py",
+   "bytes": 11373,
+   "sha256": "c041e7468f2d8e0432783876095edb489482f7c129402034b6e31081e9e5f45e"
+  },
+  {
+   "path": "Platform/01-store/probes/store_fitness.py",
+   "bytes": 18300,
+   "sha256": "f507960ef50ecd09c1aa61633263d627ccebd5c04743f93caff4ecbeb8a9f1c5"
+  },
+  {
+   "path": "Platform/01-store/probes/store_probe_http.py",
+   "bytes": 8680,
+   "sha256": "b4cf8cb36496c7bdb9c83ac3f7e7272ce8df46a93337573ead7a3c28d5c9f438"
+  },
+  {
+   "path": "Platform/01-store/probes/store_probes.py",
+   "bytes": 48145,
+   "sha256": "953996fe5ff5a3dad2f3c5f437b8416a607991f1ce6b70c60732a45919078571"
+  },
+  {
+   "path": "Platform/01-store/qualification/README.md",
+   "bytes": 26489,
+   "sha256": "e6b925b1f97b27b355085f6015d060f914e056e7c8aabae1a974ba6d5e5c27ba"
+  },
+  {
+   "path": "Platform/01-store/qualification/stand-procedures.md",
+   "bytes": 34606,
+   "sha256": "47d70316ae7cc2341402a0333a0c2804636e21d68a085f623de35beea0de10e8"
+  },
+  {
+   "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+   "bytes": 37506,
+   "sha256": "bb2a438fe5a4fbd1ddb457bf49dc63eed5a371e8aa8290879afd378d6c1f13bd"
+  },
+  {
+   "path": "Platform/01-store/spec/01.1-store.norms.md",
+   "bytes": 100904,
+   "sha256": "1ada50f03891d8e45d1cd234a6f74464044d4d36ae0b69440d9577af2b6135d4"
+  },
+  {
+   "path": "Platform/08-domain/forms/runtime-constants.tsv",
+   "bytes": 7085,
+   "sha256": "3d141a97cf73c7bf754915c3aba1e09d1e7f75e37ea492044b5c2b456049097c"
+  },
+  {
+   "path": "Platform/common/acceptance/PROFILE.md",
+   "bytes": 37001,
+   "sha256": "ce54d184dcfaacdf2c7f798295cc6f61a60aa7439f16c527460aae81a37bea58"
+  },
+  {
+   "path": "Platform/common/acceptance/README.md",
+   "bytes": 38148,
+   "sha256": "2d7331c7cc76ca4a10a19d194f8fbb0045ba5307efe72e35f4164a374e05e51a"
+  },
+  {
+   "path": "Platform/common/acceptance/command-tables.md",
+   "bytes": 45752,
+   "sha256": "b43844d4f2c08e0658e7ef2f26dc4bf7b99a38d0de5795e86af6adf719dd9610"
+  },
+  {
+   "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+   "bytes": 11060,
+   "sha256": "ba25d5120e6196bd51050fc1489c66b006691cde359d1f4a19f0747b3e2d9bcf"
+  },
+  {
+   "path": "Platform/common/acceptance/forms/d7.schema.json",
+   "bytes": 3480,
+   "sha256": "e1e69a630114dfe28a1169188562259265f4dbe21eac2409c2c3ec8ba5e9d641"
+  },
+  {
+   "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+   "bytes": 7469,
+   "sha256": "fde8770fce4f968973c5d2f10e910223436295e5728219485583a4a3996c3f2a"
+  },
+  {
+   "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+   "bytes": 2944,
+   "sha256": "7e1939644d38fb14d581ccbe4936b8b13083b506007522b50ec46a5628a56f40"
+  },
+  {
+   "path": "Platform/common/acceptance/seams.md",
+   "bytes": 25723,
+   "sha256": "9d2e86df6bbb67e2f4252c48252d1785eeed22eb061964cd4556ae6dae290979"
+  },
+  {
+   "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+   "bytes": 51982,
+   "sha256": "ef567d96c888fa0003ec0e76a448753b97957d0c18a7f138dfd84679ad0d00df"
+  },
+  {
+   "path": "Platform/common/acceptance/stand.md",
+   "bytes": 22645,
+   "sha256": "f7409ca1abb0b4868b6f55555304379114eb289e0d1b1552e7d184a45cdf69aa"
+  },
+  {
+   "path": "Platform/common/contracts/gate-and-pass.md",
+   "bytes": 83576,
+   "sha256": "eeca1da110705505399c2d557241ffd90e57707ba51c6bc78be480fbb1dd5bd7"
+  },
+  {
+   "path": "Platform/common/contracts/production-obligations.md",
+   "bytes": 3522,
+   "sha256": "29284f4e8d9ca58f0526d7b6d75b841baa5d14b7c70d7b57f8104bbeb37ec247"
+  },
+  {
+   "path": "Platform/common/vectors/production-obligations/README.md",
+   "bytes": 7845,
+   "sha256": "7118252cc4757f7ca8dabdd8fed3325797c87c277cf0b2ac3400169248e2949d"
+  }
+ ],
+ "sha256": "d0b3e59126f3b7e849ec2470bf4ce8b7e8d45aa8d7c2de46be3638e50f09c24a",
+ "count": 35
+}
