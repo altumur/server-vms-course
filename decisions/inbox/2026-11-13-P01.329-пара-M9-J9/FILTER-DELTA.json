@@ -1,0 +1,67 @@
+{
+ "from": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "to": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "4d5c3c7c7b2d57956e0ff904a9322e4f24253802",
+  "Platform/01-store/forms/export.json": "56fb5b46d50f16610322d974a7a85d766342abbe",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "c908133c01ab19a5aec22d42ba8ea54d08135596",
+  "Platform/01-store/forms/export.json": "56fb5b46d50f16610322d974a7a85d766342abbe",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b"
+ },
+ "added": [
+  {
+   "path": "Platform/01-store/acceptance/3/inputs/member-join-other.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/acceptance/3/inputs/member-leave-other-follower.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/acceptance/3/inputs/member-leave-other.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/qualification/stand-procedures.md",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/ru/qualification/stand-procedures.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/03-worker/ru/vectors/fetched/README.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/03-worker/vectors/fetched/README.md",
+   "M": "model_and_judge",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/03-worker/vectors/fetched/cases.tsv",
+   "M": "judge_only",
+   "JI": "include"
+  }
+ ],
+ "removed": [],
+ "changed": [],
+ "counts": {
+  "added": 8,
+  "removed": 0,
+  "changed": 0,
+  "records_from": 3571,
+  "records_to": 3579
+ }
+}

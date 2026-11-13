@@ -1,0 +1,64 @@
+{
+ "C": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "dependencies": [
+  {
+   "task": "P01.298",
+   "status": "accepted",
+   "commit": "29bbb9ea2bf06a286401664e3c47bd003b226e90",
+   "utc": "2026-11-13T09:22:10Z",
+   "accepted_sha256": "355b57581b5c76c8b5e5c8cd04deaad8c3953635af07ef577726a51684ed2c73",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.324",
+   "status": "accepted",
+   "commit": "2f427dffefaab9e76c51ae1e782f05b39a5d9778",
+   "utc": "2026-11-13T10:16:31Z",
+   "accepted_sha256": "e37ffa821b5d4f62cdace26db05d60bd218f5c599247952e3847197a2e5e1291",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.56",
+   "status": "accepted",
+   "commit": "d481d794b2effb24392ab08c879dece602536200",
+   "utc": "2026-11-13T10:37:56Z",
+   "accepted_sha256": "754d6a32ed62a3f5b693059201b245cbd6fecbfa30dd674bfac1c24233187186",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.61",
+   "status": "accepted",
+   "commit": "977bf0440d42223dc7b964ac5d05cb1c437b0309",
+   "utc": "2026-11-13T11:35:05Z",
+   "accepted_sha256": "ae43385a87436afdda9bbd5b1db1d02722734254e1127f12692bcfa589023185",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.320",
+   "status": "accepted",
+   "commit": "bafdfa8c22183ecbf3f6246ca7db563305cec6ca",
+   "utc": "2026-11-13T09:52:49Z",
+   "accepted_sha256": "3cb6473146cbb8112cd9bee36819dae9a11b66c8f78cdc40d7ab86238a5bfb83",
+   "ancestor_C": true
+  },
+  {
+   "task": "P03.35",
+   "status": "accepted",
+   "commit": "d20cd2030fb1fbc5cc2c8b76c4112126d14c0e70",
+   "utc": "2026-11-13T11:38:05Z",
+   "accepted_sha256": "f157fbfd0130f11023a5780ef1ae3cd1e6825794e94291c4ef88f99fd03e1b05",
+   "ancestor_C": true
+  }
+ ],
+ "OBSH.58": {
+  "status": "rejected",
+  "receipt": "reviews/OBSH.58-rejected.json",
+  "sha256": "bb4307ab6c32efe1eea2e3b2cb1bab344e401a43b1fcdf9d877a401a04270729",
+  "authorized_by_answered": true,
+  "answered_utc": "2026-11-13T11:48:06Z",
+  "scope": "operator itself validates roster; check_spec without .git defect does not block this pair"
+ },
+ "task_sha256": "4b0ab1adbfee839630bf855be087d1c464b3cd707ff65c3333ccc48d90429a46",
+ "latest_fetched_main_at_source": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "OK": true
+}

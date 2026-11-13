@@ -1,0 +1,174 @@
+{
+ "C": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "M": "67e3abaec8f0468495e05c3ec7d5a9521fd47efd",
+ "J": "45f7ecba1ea6f2a2453030796ef0ff621b7c9bd7",
+ "JI": "93df0016747c29b409fdc55179a4a11d46fd4daf",
+ "report_files": [
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/CHANGED-NORMS-AUDIT.json",
+   "bytes": 27530,
+   "sha256": "96c5d36388be447882c6c67d08b28dc8f3bc1715c61f164c3e6d0ea982cae8e5"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/CHANGED-NORMS.md",
+   "bytes": 19236,
+   "sha256": "e5f4822c3f63393bb247c52ee5dac9e5da83db031d1dde8267f47308a48f69a2"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/CHECK-SPEC-C.run.json",
+   "bytes": 412,
+   "sha256": "649060fd46d6a6267d3224540bfea02350de2c8289a8072d13ab9971af4db76f"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/DELTA-FILES.tsv",
+   "bytes": 26789,
+   "sha256": "ec8a6a05e4a0c618e6b0e55ae656b8111fde16d76997cdbddcf6dfd5ab234228"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/DELTA-PAIR.md",
+   "bytes": 1449,
+   "sha256": "ee93d92f8503547999e746d871163d5a2d2a49c6790991434d01ede20d6b97c9"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/FILTER-DELTA.json",
+   "bytes": 1973,
+   "sha256": "9fb4f89b733d57ccab7ea331f3ebcf68e30bfa92592ce591423e9d65128e72ea"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/FILTER-REVIEWS.json",
+   "bytes": 2178,
+   "sha256": "d1207e5e3b627a6ccf29b8bc4576ea4820ba8013ea19dc54201c9cba05c8fa73"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/IDENTITIES.json",
+   "bytes": 974,
+   "sha256": "885bfd162188f367ed9230d60d2d166ba6ad51ff800b003db81402126336e122"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/NARROW-M.json",
+   "bytes": 43232,
+   "sha256": "11ba939ed9f31c249eb30d027d3f7379df49ff9b8b77cfc9c5a4d9be7fa9d56a"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/OPERATOR-UNCHANGED.json",
+   "bytes": 718,
+   "sha256": "fa8a42e2a849c4c7dcab13a1ccde9cd19f511437cae3463dc703665cccb08c17"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PAIR-EVIDENCE-MANIFEST.json",
+   "bytes": 16404,
+   "sha256": "15a2efbfa64330a77123b3267af344309c0262c0f1041cd702b4ba21fb4463f9"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PAIR-RESULT.md",
+   "bytes": 6146,
+   "sha256": "dc6b0a0cedfa8de367b7fd798e355dfa8b10066a1e0b9a4cae139c8371a6282b"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PASSPORT-CONTROLS.json",
+   "bytes": 6264,
+   "sha256": "7d68ca21ef897e7ff629558147e99c3d669d191989f730b2d7db21fc3049429c"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PASSPORT-JI.json",
+   "bytes": 1080,
+   "sha256": "94278dcdef90626006ba421b03f7624667da71c18cf68c524f50db51b05c296e"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PASSPORT-M.json",
+   "bytes": 33293,
+   "sha256": "59f4992ce2e0bb40512508b5a3408390b228c019491b114ba3feb8bf276307a5"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/PASSPORT-RAW-PAIR.json",
+   "bytes": 2851,
+   "sha256": "8a8c03ea4a9c340bf1f425f508314c143f9e6946d157b65e50ff941da12b766f"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/RECEIPT.md",
+   "bytes": 4064,
+   "sha256": "4604de140faf0e8a29aba71f1cfe855184efbdbf373cad3a0740825b052a8742"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/SOURCE-COMPOSITION.json",
+   "bytes": 2150,
+   "sha256": "a151a191faf3063ea2492a11835bc0cd7238c740d1ad6c684b26cd63c485b725"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/VERIFY-ALL.json",
+   "bytes": 466,
+   "sha256": "b6d19204268c3884093a1a7116e9bd1333cb0339c2d1165b230608bdb3a38543"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/VERIFY-JI.json",
+   "bytes": 14663,
+   "sha256": "535b4fc02c26a9510e661e464a91e82ab1d1198e59927ca9926ee9559ea3397b"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/VERIFY-PAIR.json",
+   "bytes": 2610,
+   "sha256": "f7745e1bc8d845ff2e979d7e8df2a846b0a61221fef7586335cde3d6a087dfcd"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/README.md",
+   "bytes": 6937,
+   "sha256": "9a1cf814b941b6a73455a9388aa3d391d46fbdac2797d35e4dfa79e31ead5c1b"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/audit_changed_norms.py",
+   "bytes": 6276,
+   "sha256": "1babebdec3675e2750100c49c7df9fabad0887d915bb67ae142bc3f9da6db7d4"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/bind_reviews.py",
+   "bytes": 6683,
+   "sha256": "5324cada1a5a35bcc25588651094289b4526c905963b99e4442dd5bb302ff724"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/delta_pair.py",
+   "bytes": 5807,
+   "sha256": "ad8fdd38d16bb1998c03e68a0c928a7d386bd2c815cec3953a915ff600d1b19a"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/filter_delta.py",
+   "bytes": 1649,
+   "sha256": "8d8942fcb14612545d8158f97d5754ed20c0dcc63f853f89a17fa3fd294a7cdd"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/package_evidence.py",
+   "bytes": 2692,
+   "sha256": "2e8f2dd98c53bfac8d9ca12ef0d3e3fa62c50f005620058d6f0ad018a2fdd711"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/passport_controls.py",
+   "bytes": 2724,
+   "sha256": "d6402bfb30c888dc3cb35735c6fd3a9fbcb53d735ce46afd9fed9f363e3c4fec"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/preflight.py",
+   "bytes": 1537,
+   "sha256": "44fc84c1c657397b6bf4b3ee1a6184db67c875d11e4691a2644a6fec3cd13c32"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/prepare_source.py",
+   "bytes": 4282,
+   "sha256": "caa47e97a424820a7719898c0bfe01749acd77902e1965743fbb58c8a871baab"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/release_pair.py",
+   "bytes": 7997,
+   "sha256": "79931fd04ccbfb10a781585a58823db5d7c2e59f594a68502fd955a055566be8"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/verify_exports.py",
+   "bytes": 9504,
+   "sha256": "1c71ce1565d25ae0ce6da5de6fcbeade5dab7298deaea3848580892365558c3e"
+  },
+  {
+   "path": "/home/pilot/wt-task-P01.329/decisions/inbox/2026-11-13-P01.329-пара-M9-J9/scripts/verify_ji_raw.py",
+   "bytes": 5740,
+   "sha256": "9c3bffb774f659ad2b840869b088d3a9bf8e098f198498c5a8513dc060411aec"
+  }
+ ],
+ "OK": true
+}
