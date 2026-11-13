@@ -70,7 +70,7 @@ are different boundaries of confirmation; one does not prove another.
    and the sum; a failure keeps the former copy.
    The door row carries, next to `room.<sub>`, the list `live.<sub>` — the numbers n ≥ 2 of the live locks of the same snapshot (the presence
    lock contract): the controller computes the free space of the server by it.
-6. Pass the 35 scenarios / 292 steps of the acceptance separately. Check full answers by the owner of the form,
+6. Pass the 35 scenarios / 297 steps of the acceptance separately. Check full answers by the owner of the form,
    even when only a code is expected in the TSV. For each checklist item name a separate
    observation; the probes outside the TSV are listed in the README of the acceptance.
 

@@ -3,7 +3,7 @@
 # This table is the source of the option names, value types, defaults and conditions. Positional arguments are in operator-commands.tsv.
 # type: string (a string), number (a finite decimal number), file (a file path), bool (no value).
 # required and bad are CEL over f: map<string,dyn>, cmd: string; f contains supplied options, numbers as numbers, bool as true.
-# - means no default. There is no implicit CLI spelling rule or universal exit code inherited from P/01.
+# - means no default. There is no implicit CLI spelling rule inherited from P/01. An option out of this form is the refusal command_options of refusals.tsv (code 2, before any effect).
 # high/low and retention options carry the numeric values of their owner rows; the readers' unreadable-value rules are not new CLI refusals.
 flag	type	default	default_text	required	commands	bad	norm
 -deployment	string	-	-	true	rights		P/02.5 N2

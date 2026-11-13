@@ -13,6 +13,7 @@ No default is `-`. A missing bool is false; a supplied bool is true. These are c
 `operator-commands.tsv` columns are `command`, `process`, `prefix`, `positionals`, `norm`. `prefix` is a JSON array of fixed argv words;
 `positionals` is JSON Schema 2020-12 over the remaining positional words after option parsing. The form does not choose a shell lexer,
 an output format, an exit code on unspecified input, or a new interface for commands delegated to another lesson.
+Options out of `daemon-flags.tsv` are not unspecified input: they are the refusal `command_options` of the catalogue (P/02.4 «Command options»).
 
 ## Refusal catalogue
 
@@ -97,6 +98,10 @@ this layout; it looks for no other forbidden directory. A seam never requires a 
 target path exists before the call — a root, one of these two directories, or a directory made by an earlier `@file` step of the
 same scenario. An absent directory of the path is a refusal of the command (`refuse` of the contract), not a fixture to repair.
 
+### Scenario store
+
+`RUN w2cctl manifest put …`, `RUN w2cctl manifest get …` and `CALL secrets-walk …` use [store and installed manifest preparation](../../common/acceptance/seams.md#store-and-installed-manifest-preparation). For RUN the new store starts empty: only explicit `manifest put` steps install manifests, with no implicit `testsub`. The `put` and `get` commands receive the same full-rights door and retain one store within the scenario; `MANIFEST_DIR` is `$manifest`. The source files of `put` may live in a different owned temporary directory: neighbouring shell/files are read relative to that source manifest's path. Copying an input there does not change `$manifest`. `SECRETS_KEY` is unset. The other seams receive no implicit store.
+
 ### CALL normalization
 
 * `command`: input `{argv:[<process>,<argument>,…]}`. Invoke that command function with the scenario roots, resolving stand paths in argv. Return `{success:<exit code == 0>}` and optionally `exit_code`. The function must return normally; do not convert a panic, exception or signal into a refusal. This is used only for outcomes whose norm sets zero versus nonzero without an exact refusal code.
@@ -105,6 +110,7 @@ same scenario. An absent directory of the path is a refusal of the command (`ref
 * `load-catalogue`: input `{manifests:[{source:string,text:string},…]}`. Load those manifests by the same loader and check their complete
   set with `load_catalogue`. Success returns `{verdict:"ok", names:[…]}` with names sorted only by the test adapter; a refusal returns
   `{verdict:"refused", class:<text|form|relations|catalogue>}`, without names or a partial catalogue. No implicit stand manifest is added.
+* `secrets-walk`: input `{argv:["w2cctl","secrets","status"|"seal",<prefix>,…], rows:{<key>:<row>,…}}`, a row is an object of string elements. Preparation uses the `testsub` manifest of chapter 2.2 acceptance, installed by the ordinary `manifest put`, then exactly `rows` through `cas ""`; `SECRETS_KEY` is unset. Invoke the command function with argv against that store. Return `{exit_code:<integer>, unknown:[…], untouched:<bool>}`: `unknown` is the sorted unique keys of the call's log lines «`<key>` unknown-row-form»; `untouched` means every given row retains its bytes and version after the call. Return observations of the call, not its expectation. [Acceptance 4 README](../acceptance/4/README.md#secrets-walk-selection) names the fixture source.
 * `rollout-poll`: input `{input:<machine input>, events:[{t:<seconds>,event:<trace event string>},…]}`. The names, event syntax, timer
   ordering and optional `input.const` overrides are those of [`rollout-poll.machine.yaml`](rollout-poll.machine.yaml) and its
   [`rollout-poll.traces.tsv`](rollout-poll.traces.tsv) (judge-only: the source traces of the poll machine). A fresh poll starts at t=0. Advance the virtual clock through each event (timers
