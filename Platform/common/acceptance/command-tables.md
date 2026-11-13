@@ -4,6 +4,77 @@ A topic of the [common acceptance README](README.md): the directives and doors a
 
 In a command table a row is a call of a command or an adapter of the profile, not an HTTP step. The routing word of the target names the form: `verdicts`, `puts` or `variants` ([`forms/targets.routing.tsv`](forms/targets.routing.tsv); judge-only: the routing of the judge). The tables are those of the first directory of the routing row. The interface of each call comes from the public row of the target ([target registry](forms/targets.README.md)). The judge reads every table of the target whole before the stand starts. Empty lines and lines that begin with `#` are notes, except the declarations that a form names. A row outside its form is a data error of the class `data`, found before the stand starts; it is not an outcome of the implementation. The inventory of the target (N1.4 of the [norms](spec/acceptance.norms.md); judge-only: the norms of the judge) names each row by its file and the number of its physical line.
 
+## Form mutation step
+
+This is a separate step of acceptance, not a scenario directive, routing word, generation gate or production probe. Its obligations and finding semantics are [R059–R064 of the judge norms](spec/acceptance.norms.md#n35-form-mutation-step) (judge-only: judge norms). It checks whether changing an embedded form changes externally observed behaviour as that cell specifies. The original candidate's functional verdict remains separate; a trial is an intentionally changed candidate, not another product submission.
+
+### Discovery and trial form
+
+For every module of `assembly.yaml`, read its profile and the J input's `forms/code-rules.tsv`. For each `table_driven` row, `args.form` identifies the canonical bytes, `name` selects a package through `code` of the profile, and the [embedding rule](PROFILE.md#requirements-of-the-course-to-code) identifies matching embedded files. Record every matching path and repeat the selected cell trial on each matching file separately, in UTF-8 byte order. Change only one file per trial. An unchanged first copy cannot establish hardcoding while another matching copy remains untested or supplies that observer; record this as unobservable for that copy, with the other copy's evidence. Do not infer a form's kind from its basename. Missing rules, mappings, matching bytes or observation interfaces are explicit inventory gaps, not empty success.
+
+The trial inventory has one record per selected cell and observed external surface, with the following fields. A surface is the externally called interface, such as a vector command or a door; it is part of the result's identity. This is a logical form; the engine chooses the serialization, without adding a candidate interface.
+
+| Field | Meaning |
+|---|---|
+| input identity | pinned J export, source commit, original candidate commit, assembly, profile, module, code-rule id/name and form SHA-256 |
+| cell | form path, physical line from 1, row key, column, exact old and new cells, embedded file path and kind |
+| selection | whole-row coverage or sample, seed derived from the form SHA-256, selected order, pool size, skipped rows/columns and reasons |
+| observation | named external surface and observer, external command or vector interface, J input identities, arguments/environment without secrets, baseline twice, mutated result, expectation or explicit absence |
+| evidence | build results, raw and normalized launch observations, exact native vector answers, changed observation identities, duplicate trial, noise controls and normalization counts |
+| result | one cell result below, its reason, and restoration, cleanup and final original-build results |
+
+Run on a writable copy, never on the submitted candidate or the pinned J files. Mutate one cell and preserve all other bytes, including comments, header and row order. Build through the profile's `build` command in its working directory. Restore the original form before another trial; a duplicate trial starts from the original forms. Restore even after a failed build or observation, then rebuild the original module at the end. Retain evidence of incomplete work; a failed build of a mutated copy is a trial result, not the baseline build's functional verdict. Ordinary baseline build failures and judge/stand failures retain their ordinary classes. Process isolation, deadlines and whole-group cleanup use the existing stand rules.
+
+### Kinds, cells and external observers
+
+Apply the following kind tests in table order. All paths, command names, refusal codes and vector packages come from J or profiles. Selection is repeatable for identical form bytes: seed it from the form SHA-256, traverse forms and rows in recorded order, and record the selected cells. For sampled kinds choose a target size of 3–5 cells per form and select up to that size under the row's pool quotas; state any shortfall, including a quota-limited one. For a numeric form with fewer eligible cells select them all. No missing observer is filled by knowledge of a lesson.
+
+| Kind and recognition | Cell change | Observer and expected effect |
+|---|---|---|
+| check table: a row of the common `vectors/probe-tables.tsv` has `native = check-row:<form path>` and its `package` has a profile vector command | For every row, change each present `code` and `kind` cell to the first other nonempty value, other than `-`, of that column in UTF-8 byte order. With no alternative, record the skipped cell. | Construct the J inputs by that probe-table row's `source`, `case`, `cells` and `skip`, using the vector envelope and profile command. For initially matching inputs whose `n` names the changed row, expect that row's new `code`/`kind` by `check-row`; all other initially matching inputs, including `n=0`, keep their answers. Missing or initially nonmatching inputs are recorded, not counted as checks. |
+| flags: header includes `flag`, `type`, `commands` | Every eligible `type`: remove the last member of an `enum:` with at least two members; for `int:lo..hi` raise a nonnegative numeric `lo` by one only if the range stays nonempty (an absent upper bound stays absent). Every eligible `commands`: remove one deterministically selected command when at least two are listed. | Invoke the removed enum value, the former integer lower bound, or the flag with a valid value on the removed command. The baseline must reach and admit this flag; after mutation expect refusal with a J-declared exit code and a diagnostic naming the flag. |
+| refusals: header includes `name`, `code`, after the tests above | Sample (a) an observed `code = exit N`, changing it to `exit N+1` within the native exit-code range; (b) `code`/`kind` cells with a matching check-table duplicate, changing to the first other value of their column. Reserve at most half the sample, rounded down but at least one if available, for (a), then fill from (b); record a smaller eligible pool. | (a) Reuse baseline flag launches that exited N and named this refusal; expect N+1. (b) Use J inputs of the matching check-table row; expect the changed value there. A refusal merely sharing an exit code does not identify the row. |
+| other numeric form, including runtime constants | Sample rows with an unsigned integer cell after the key column; change the first such cell in header order to 1, or to 2 when it was 1. | Replay all J vector and flag-launch observers of the module. With no J-derived expectation this establishes only a visible change, never an exact change; no stable visible change is unobservable by these observers. |
+
+The `skip` grammar is `true`, `false`, `row["c"] == "v"`, `row["c"] != "v"`, with `&&` and `||` (`&&` binds tighter). Another expression is a data error, not a guessed input. Probe envelopes, scalar conversion and native `check-row` answers follow the [probe table](../vectors/probe-tables.tsv) and [vector transport](PROFILE.md#unified-vector-command).
+
+**Flag launch construction.** Find profile `stand` templates containing at least two flags of this form. Select the executable occurring in the most such templates, breaking ties by UTF-8 byte order, and use only its templates. A template whose second argument is a flag has no subcommand: its command is the unique common member of the listed flags' `commands`; no unique member means no binding for that launch. For an explicit command use its template, or the selected executable followed by the command if no template names it. Substitute values from the form's type grammar and add its flags whose `required` is `true` for that command. Use defaults admitted by `enum:`, `int:` or `bytes:`, otherwise an admitted member or lower bound; `path`/`dir` get a directory and `file` a path under the trial workspace. Generate other values from the declared type grammar, not a lesson name. A default `$NAME` sets only that declared environment variable to a value of the flag's type, within the allowed stand environment.
+
+Derive refusal exit codes from rows of the module's refusal forms that refer to the selected flag form. If no codes can be derived, a nonzero exit naming the flag is only a refusal observation, not proof of a particular J-derived code. If a different flag hides the selected check, supply an admitted value for that flag and repeat at most three times, recording the repairs. A baseline already refusing the mutated flag, a still-hidden check, a missing executable/template or an unsupported type is unobservable with its reason. Retain each launch's exit status and last line of combined stdout then stderr, both raw and normalized; elapsed run time is evidence, not part of equality.
+
+The step does not mutate a check table's CEL condition, `fault` or descriptive columns, nor flag defaults, `required`, `bad` or types outside the two listed type mutations. Enumerate these untested columns. Where J identifies cases on another relevant external surface, include them through the existing dictionary and profile interfaces, with an expectation derived from the changed cell only when J supplies that relationship. Otherwise list that surface as unobservable with the missing binding or expectation; do not invent an internal API or a lesson-specific rule to reach it. HTTP refusals without a suitable J observer and constants without an external observer remain unobservable.
+
+### Launch normalization and noise control
+
+Replace the workspace prefix by `$W`. Then apply the rules below in order; temporary suffixes precede timestamps so a random ten-digit filename suffix is not mistaken for Unix time. Apply them to launch text, including timestamps at the start of a line; never to a native vector answer or an exit code. Keep the raw evidence with the normalized evidence under the report's secret rules.
+
+| Rule | Run-varying part | Replacement |
+|---|---|---|
+| tmp | numeric suffix of a temporary name under `/tmp`, `/var/tmp`, `/dev/shm`, `$W/tmp`; preserve its directory and nonnumeric prefix | `<R>` |
+| time | RFC 3339/date-time stamps with fractions and zones, also date-time with a space and an optional zone, Go log dates `YYYY/MM/DD hh:mm:ss` with optional fractions, and time of day with fractions | `<T>` |
+| time | Unix time with 9–19 integer digits and optional fraction at `ts`, `time`, `t`, `at`, `unix`, `timestamp`, `when`, `now`; a bare epoch second value from 1500000000 through 2099999999, also scaled to ms, us or ns and with optional fraction | `<T>` |
+| duration | measured fractional durations such as `1.234s`, `1m2.5s`, subsecond-unit durations such as `12ms`, `350µs`/`350us`, `20ns`, and fractional `seconds`/`sec`/`secs` | `<D>` |
+| pid | numeric pid in `pid 123`, `pid=123`, `PID:123` or `prog[123]:`; preserve the label | `<PID>` |
+| port | port at least 32768 at `127.x.x.x`, `localhost`, `0.0.0.0`, `[::]` or `[::1]`; preserve the host | `<PORT>` |
+
+Keep configured integer seconds, minutes and hours (`2s`, `10m`), ports below 32768, ordinary numbers, refusal and flag names. Record replacement counts by rule. Compare the two unchanged baselines after normalization: list observations still differing as unstable, and list raw-only differences separately. Neither a raw-only difference nor an unstable observation proves a mutation effect. For a numeric form, show the identities and before/after evidence of changed stable observations separately from unstable changes; absence of an exact expectation remains explicit even when a stable difference exists.
+
+### Cell results and duplicate trial
+
+A possible duplicate is a row of another embedded J form of the same module: one cell equals a unique key-column value of the original row, and the changed column exists with the same original value. Report all matching rows. After the original trial changes nothing, restore its form and test the same single-cell change in each possible duplicate separately, rebuilding and replaying the same observer. A duplicate classification needs an observed effect, not just equal cell text. Keep every duplicate trial's evidence; a failed duplicate build or unstable/missing observer leaves that classification unproven. Every result below is limited to the named observer and surface. A vector can read the other form while a door reads the original one: retain both results, and do not summarize the cell as unused or as a global duplicate. Unobserved surfaces remain explicit gaps.
+
+| Result | Evidence required |
+|---|---|
+| exact change | The J-derived expectation matches, at least one intended stable observation changed, and all observed unaffected inputs kept their expected answers. |
+| unchanged: duplicate form | The valid stable observer did not change in the original trial; an isolated mutation of a named duplicate changed that same observer. |
+| unchanged: hardcoding | The valid stable observer reached the changed cell's outcome and did not change; every matching embedded copy and required duplicate was tried, and none changed it. This is a finding limited to that surface, not an automatic functional red. |
+| changed otherwise | A stable observation changed but did not meet the J-derived expectation. |
+| unobservable | No J input, matching baseline, stable observer, binding or reachable check; an unresolved duplicate trial; or no visible change with only a numeric-form observer. State which reason applies. |
+| changed, no J-derived expectation | A stable numeric-form observation changed, but J does not determine its new answer. |
+| trial build failed | The changed copy did not build; retain that build result and restoration evidence. It proves no behavioural outcome. |
+
+Summaries count these results separately by form and retain untested rows/columns and failed preparations. They do not turn missing evidence, sampling or unchanged cells into GREEN or automatic red. The step's report follows the same redaction and feedback limits as other judge evidence; restricted raw observations do not become expected answers sent to a generation line.
+
 ## Deterministic syscall faults
 
 The two directives below are shared stand operations. They inspect the selected store process from outside; they introduce no production route, signal handler, checkpoint schedule or on-disk name. The [judge norms](spec/acceptance.norms.md#n32-life-cycle-of-the-stand) define their planning, evidence and failure classes.

@@ -1,8 +1,8 @@
 # The closed dictionary of the kinds of code checks.
 # Public, in the model input. The rows of a lesson are
 # Platform/<lesson>/forms/code-rules.tsv with the columns id, kind, name, args, stage, norm; a row names a kind of this dictionary and carries no expected
-# answer. The product generation cycle checks the lesson rows by one common interpreter that holds no literal of a lesson; the acceptance does not
-# read them. This
+# answer. The product generation cycle checks the lesson rows by one common interpreter that holds no literal of a lesson; ordinary functional acceptance does not
+# read them. The separate form mutation step reads table_driven rows to locate embedded data through the profile mapping, as command-tables.md defines. This
 # dictionary is not the closed dictionary of the judge engine (spec/acceptance.norms.md): the names do not mix (addendum (39) item 7).
 # name: what the profile field code (PROFILE.md) maps the name of a row to — package: the import path of a package of the main module of the candidate, as
 # go list prints it; function, type: <import path>#<identifier>, a top-level function or type of that package (# because an import path may hold dots).
