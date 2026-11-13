@@ -8,12 +8,12 @@ The acceptance checks the requirements of P/01.3 named below.
 Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store`, `@backup store`,
 `@import store` and the door `restored`; the store group stand — `@group-setup`, `@store-start`,
 `@restart store@<id>`, `@sigterm`/`@sigkill store@<id>`, `@store-op`, the doors `store@<id>`, `admin@<id>`, the probe `@tls` to
-`api@<id>` (sc. 07, 17, 18, 25–29, 31–35; the section [«Store group stand»](#store-group-stand)). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
+`api@<id>` (sc. 07, 17, 18, 25–29, 31–35, 37, 37; the section [«Store group stand»](#store-group-stand)). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
 a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description.
 
 ## Profile interface
 
-Use the `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the durable daemon. It carries the stand's substitutions in its own flags, each once, and none of the flags that the group stand appends ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)); the group stand appends the member flags ([store group stand](#store-group-stand)). `stand.backup` copies through `{socket}` to `{file}`; `stand.import` imports `{file}` into the stopped fresh `{data}` using `{index_base}`. Group operator calls use `stand.store-op` with `{socket}`, `{dir}`, `{id}`, `{tls}` and prepared `{args}`; row-corruption checks use `stand.spoil-row` with `{data}`, `{key}` and `{what}` as assigned by their existing stand contract. `keys.store_build` declares `raft` or `box` with the applicability below; omission or another value does not silently select one. The role header uses `keys.role_header`. Program names and wrappers belong to the implementation; operation semantics and the flags appended by the group stand remain those of the referenced norms and common stand.
+Use the `01-store` [profile format](../../../common/acceptance/PROFILE.md). `stand.store` starts the durable daemon. It carries the stand's substitutions in its own flags, each once, and none of the flags that the group stand appends ([substitutions](../../../common/acceptance/PROFILE.md#substitutions)); the group stand appends the member flags ([store group stand](#store-group-stand)). `stand.backup` copies through `{socket}` to `{file}`; `stand.import` imports `{file}` into the stopped fresh `{data}` using `{index_base}`. Group operator calls use `stand.store-op` with `{socket}`, `{dir}`, `{id}`, `{tls}` and prepared `{args}`; forced state saving uses the required `stand.checkpoint` command or its explicit `none` declaration ([shared binding](../../../common/acceptance/command-tables.md#deterministic-syscall-faults)); row-corruption checks use `stand.spoil-row` with `{data}`, `{key}` and `{what}` as assigned by their existing stand contract. `keys.store_build` declares `raft` or `box` with the applicability below; omission or another value does not silently select one. The role header uses `keys.role_header`. Program names and wrappers belong to the implementation; operation semantics and the flags appended by the group stand remain those of the referenced norms and common stand.
 
 ## Stand
 
@@ -43,12 +43,16 @@ Only the acceptance of P/01 uses the words below; the [dictionary of the common 
 
 | Form | Meaning |
 |---|---|
-| `@restart store` | SIGTERM to the store, wait for the exit, start it with the same command with the same `{data}`, wait for its readiness by the rule of «Role sockets» |
-| `@sigterm store` | on the stand of one store: SIGTERM to the process group of the store; the expectation `ok` — the process exited, `@exit <code>` — it exited with this code, not by a signal |
+| `@restart store` | if the store is live, SIGTERM and wait for its exit; if an earlier explicit scenario stop or proven `@crash` killed it, start the stopped instance directly; an unexpected prior exit remains a mismatch. Start with the same command with the same `{data}`, wait for its readiness by the rule of «Role sockets» |
+| `@sigterm store` / `@sigkill store` | on the stand of one store: SIGTERM / SIGKILL to the process group of the store; the expectation `ok` — the whole group exited; only for SIGTERM, `@exit <code>` — it exited with this code, not by a signal |
 | `@backup store <name>` | take a copy of the stand store with the command `backup` of «Stand» into a file of the runner `<name>` (it lives until the end of the scenario); `ok` — code 0 and the file in the form of P/01.3 N1.3 `copy` (a header, Row rows, keys in ascending byte order); otherwise a refusal of the runner |
 | `@backup store <name> in-data` | the command `backup` of «Stand» with `{file}` = `{data}/configstore/<name>` — inside the data directory of the stand store (`-dir`); the expectation `refused` — code ≠ 0 and there is no file `{data}/configstore/<name>` |
 | `@import store <file>` / `@import store backup <name>` | the input is a file from the acceptance directory of the lesson or a copy `@backup store <name>` of this scenario; the runner takes a new empty `{data}`, calls the command `import` of «Stand» with `{index_base}` — the `index` of the header of the input (the header is not readable — `0`), then on this `{data}` starts a second store instance with the command of «Stand» with its own `{socket}` and waits for its readiness by the rule of «Role sockets» — its door is `restored`. The expectation `ok` — the code of `import` is 0; `refused` — code ≠ 0 (that the directory remained without rows is seen by the following steps `restored`). The stand store is not touched |
 | `@foreign store nolabel` / `@foreign store otherlabel` | a second store instance with the same command with a new directory `{data}` and its own `{socket}`; before the start the runner puts into the store directory `{data}/configstore`: `nolabel` — a file `rows` with the bytes `x` and without `FORMAT`; `otherlabel` — `FORMAT` with the bytes `{"format":"w2c-acceptance-foreign","version":1,"impl":"runner"}`. `ok` — the process exited with code 2 no later than 10 s and the directory tree (names, bytes) is the same as before the start; otherwise a refusal of the runner. The stand store is not touched (P/01.3 N1.3 `format`) |
+
+## Deterministic recovery and checkpoint faults
+
+The [shared syscall directives](../../../common/acceptance/command-tables.md#deterministic-syscall-faults) operate on fresh trial stands. A forced state save is the required `stand.checkpoint` command or its explicit `none` branch; the latter faults ordinary journal writes. The command's substitutions and the `blocked` result for absence are the common contract. These tests do not require a checkpoint at SIGTERM and do not reproduce loss of dirty kernel pages.
 
 ## Batch and restart (sc. 30)
 
@@ -150,7 +154,7 @@ The runner starts no next joining voter until this barrier succeeds. It polls st
 
 The group stand is the section [«Store group stand»](#store-group-stand): the members `s1`…`s5`, `d1`, `d2` on the loopback, the stand supplies kits by P/01.3-R009 (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 N1.3 `join`), the third without it, after the second has passed the fresh-join barrier of [startup observation](#startup-observation). The stand group has three voters and uses mTLS between members. The box store build
-(`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–35 are not_applicable for it, not red; without
+(`keys.store_build: box`, P/01.3 N1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31–35, 37, 37 are not_applicable for it, not red; without
 the marker they are not executed («Store group stand» above).
 
 - **A batch in the group (ADR-0094 B9).** A door forwards a batch whole: the followers read both rows with one version; a replay by `id` goes through a voter and through a door; a stale `cas` of a row means the others are not written. The door's own row by a batch — 403 (N1.3 `door`). After `@sigkill` of the leader the new leader gives both rows.
@@ -192,7 +196,7 @@ Before each automatic scenario stop the processes of the previous one, create se
 
 A subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, types, Content-Type, special headers and the absence of a body for HEAD/204. In expectation lines `$name` is first bound only after a successful match of the whole answer; the following uses compare, and requests use only values already bound. A failed attempt of @until does not change the variables. @until repeats a read until the given local deadline, not a mutation; after it expires — FAIL with the last answer. @any admits any value of a present field, @absent requires absence; they do not replace the types of the full schema. A JSON object is compared by subset (`{}` at any level is exactly an empty object: the dictionary of the common README), an array by length and order. Raw HTML/text is compared as UTF-8 bytes with the given substring, it is not parsed as JSON.
 
-In total 29 scenarios / 350 steps, all automatic (judge-only: `acceptance/3/scenarios.tsv`). The floor goes only upwards, only admin. The replay memory of `op: floor` is in the store
+In total 32 scenarios / 394 steps, all automatic (judge-only: `acceptance/3/scenarios.tsv`). The floor goes only upwards, only admin. The replay memory of `op: floor` is in the store
 (chapter 1.3 N2): a replay with the same `id` after a restart — the same `index` and `again`, a different `floor` with this `id` — 400; an implementation
 that keeps it in process memory answers 409 «only upwards» after a restart, and the scenario does not pass.
 
