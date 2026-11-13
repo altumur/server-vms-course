@@ -39,12 +39,12 @@
     {
       "path": "Platform/01-store/forms/production/soak.json",
       "disposition": "include",
-      "basis": "The machine record and closed schema of the long random fault run of P/01 qualification."
+      "basis": "The machine long-run record and its closed schema, including recovery-budget observations shared with RUN-W03."
     },
     {
       "path": "Platform/01-store/forms/production/soak.schema.json",
       "disposition": "include",
-      "basis": "The machine record and closed schema of the long random fault run of P/01 qualification."
+      "basis": "The machine long-run record and its closed schema, including recovery-budget observations shared with RUN-W03."
     },
     {
       "path": "Platform/01-store/forms/refusals.tsv",
@@ -89,7 +89,7 @@
     {
       "path": "Platform/01-store/qualification/README.md",
       "disposition": "include",
-      "basis": "Qualification procedures of P/01: cases, budgets, measurements, probe debt, clocks and evidence."
+      "basis": "Qualification procedures: groups, performance thresholds, recovery-budget observations and controls, measurements, probe debt, clocks and evidence."
     },
     {
       "path": "Platform/01-store/qualification/stand-procedures.md",
@@ -105,6 +105,16 @@
       "path": "Platform/01-store/spec/01.1-store.norms.md",
       "disposition": "include",
       "basis": "P/01.1-R147 owns the required input-phase interval bounds used by the qualification measurements."
+    },
+    {
+      "path": "Platform/01-store/spec/01.3-store.norms.md",
+      "disposition": "include",
+      "basis": "The backup, stop, reopen and member-return obligations and existing status/progress semantics used by recovery-budget qualification."
+    },
+    {
+      "path": "Platform/01-store/spec/production-acceptance.md",
+      "disposition": "include",
+      "basis": "The normative performance goals and workload envelope measured by qualification, including crash reopen and healthy member return."
     },
     {
       "path": "Platform/08-domain/forms/runtime-constants.tsv",

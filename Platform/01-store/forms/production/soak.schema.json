@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "The long random fault run of P/01 qualification",
-  "description": "The closed form of the Q record RUN-SOAK. This is qualification data, not an input of N6.2, a functional judge directive or a candidate setting. Duration is the only numeric qualification value introduced by this record.",
+  "description": "The closed form of the Q record RUN-SOAK. This is qualification data, not an input of N6.2, a functional judge directive or a candidate setting. Recovery thresholds repeat the performance goals of M; duration remains the value owned by the long-run record.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -12,7 +12,8 @@
     "negative_controls",
     "executor",
     "environment",
-    "procedure_ref"
+    "procedure_ref",
+    "recovery_checks"
   ],
   "properties": {
     "id": {
@@ -162,6 +163,54 @@
     },
     "procedure_ref": {
       "const": "qualification/stand-procedures.md#long-random-fault-run"
+    },
+    "recovery_checks": {
+      "description": "Recovery-budget observations shared by RUN-W03 and RUN-SOAK; execution requires a qualified observer and activated controls.",
+      "const": {
+        "groups": [
+          "RUN-W03",
+          "RUN-SOAK"
+        ],
+        "procedure_ref": "qualification/README.md#recovery-budget-checks",
+        "targets": [
+          {
+            "budget": "BUDGET_REOPEN",
+            "workload": "WORKLOAD_ORDINARY",
+            "upper_seconds": 30,
+            "observation": "reopen_elapsed",
+            "modes": [
+              "box",
+              "group"
+            ]
+          },
+          {
+            "budget": "BUDGET_REOPEN",
+            "workload": "WORKLOAD_WORST",
+            "upper_seconds": 900,
+            "observation": "reopen_elapsed",
+            "modes": [
+              "box",
+              "group"
+            ]
+          },
+          {
+            "budget": "BUDGET_MEMBER_RETURN",
+            "workload": "WORKLOAD_ORDINARY",
+            "upper_seconds": 60,
+            "observation": "member_return_elapsed",
+            "modes": [
+              "group"
+            ]
+          }
+        ],
+        "negative_controls": [
+          "early_status_late_service",
+          "late_timer_start",
+          "lost_acknowledged_state",
+          "forwarding_without_local_catchup"
+        ],
+        "execution": "requires_qualified_observer_and_controls"
+      }
     }
   }
 }

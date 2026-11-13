@@ -9,7 +9,7 @@
 id	kind	source	executed_by	inputs	term
 RUN-W01	group	Platform/01-store/qualification/README.md#case-groups	-	["storage","progress"]	["BUDGET_WRITE_P99","BUDGET_WRITE_GROWTH","BUDGET_WRITE_BYTES"]
 RUN-W02	group	Platform/01-store/qualification/README.md#case-groups	-	["storage"]	["BUDGET_IMPORT_ORDINARY","BUDGET_IMPORT_WORST","BUDGET_IMPORT_GROWTH"]
-RUN-W03	group	Platform/01-store/qualification/README.md#case-groups	-	["clock"]	[]
+RUN-W03	group	Platform/01-store/qualification/README.md#case-groups	-	["clock"]	["BUDGET_REOPEN","BUDGET_MEMBER_RETURN"]
 RUN-W04	group	Platform/01-store/qualification/README.md#case-groups	-	["progress"]	["BUDGET_MEMORY_ORDINARY","BUDGET_MEMORY_WORST"]
 RUN-T01	group	Platform/01-store/qualification/README.md#case-groups	-	[]	["BUDGET_DRAIN"]
 RUN-T02	group	Platform/01-store/qualification/README.md#case-groups	-	[]	["BUDGET_DRAIN"]

@@ -54,5 +54,50 @@
     "fallback": "CT 103",
     "load_gate_ref": "Platform/common/acceptance/spec/acceptance.norms.md#n33-declared-environment"
   },
-  "procedure_ref": "qualification/stand-procedures.md#long-random-fault-run"
+  "procedure_ref": "qualification/stand-procedures.md#long-random-fault-run",
+  "recovery_checks": {
+    "groups": [
+      "RUN-W03",
+      "RUN-SOAK"
+    ],
+    "procedure_ref": "qualification/README.md#recovery-budget-checks",
+    "targets": [
+      {
+        "budget": "BUDGET_REOPEN",
+        "workload": "WORKLOAD_ORDINARY",
+        "upper_seconds": 30,
+        "observation": "reopen_elapsed",
+        "modes": [
+          "box",
+          "group"
+        ]
+      },
+      {
+        "budget": "BUDGET_REOPEN",
+        "workload": "WORKLOAD_WORST",
+        "upper_seconds": 900,
+        "observation": "reopen_elapsed",
+        "modes": [
+          "box",
+          "group"
+        ]
+      },
+      {
+        "budget": "BUDGET_MEMBER_RETURN",
+        "workload": "WORKLOAD_ORDINARY",
+        "upper_seconds": 60,
+        "observation": "member_return_elapsed",
+        "modes": [
+          "group"
+        ]
+      }
+    ],
+    "negative_controls": [
+      "early_status_late_service",
+      "late_timer_start",
+      "lost_acknowledged_state",
+      "forwarding_without_local_catchup"
+    ],
+    "execution": "requires_qualified_observer_and_controls"
+  }
 }
