@@ -1,0 +1,147 @@
+{
+ "C": "a494be12d54c2e596467c1508973da3031af2088",
+ "passport_sha256": "7d4891acc1d8d0017bb12d38816d403336aa3c7369d7a7c3b49913cf4a4b3dca",
+ "J_input_changed_paths_listed_exactly": true,
+ "J_input_changed_files": [
+  "Platform/01-store/acceptance/3/README.md",
+  "Platform/01-store/acceptance/3/scenarios.tsv",
+  "Platform/common/acceptance/PROFILE.md",
+  "Platform/common/acceptance/README.md",
+  "Platform/common/acceptance/command-tables.md",
+  "Platform/common/acceptance/forms/targets.routing.tsv",
+  "Platform/common/acceptance/spec/acceptance.norms.md"
+ ],
+ "journal": "decisions/inbox/2026-11-13-P01.360-пара-M12-J12/CHANGED-NORMS.md",
+ "journal_sha256": "a35bd73fc3894e9a6d252f48242c7291af73b6fbed59c9ddecb88aff373bd0dc",
+ "baselines": {
+  "M11": {
+   "old_C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+   "old_passport_sha256": "907be7597990105e887f9dc943465347b1799880454c9557f3441f3b187daa71",
+   "changed_paragraphs": {},
+   "history_evidence": {},
+   "changed_checklist_items": {},
+   "checklist_history_evidence": {},
+   "changed_M_files_evidence": {
+    "Platform/01-store/acceptance/3/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 692,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#deterministic-recovery-and-checkpoint-faults"
+      }
+     ],
+     "change_commits": [
+      "238e239513c7ae04d2bb1dac950e163a281e17ec"
+     ],
+     "diff_sha256": "12ca1fe0dd667a48c83da53bd2c8a0d9a812e4af11e5c073f447c107fab9acdc"
+    },
+    "Platform/common/acceptance/PROFILE.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 534,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#substitutions"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b"
+     ],
+     "diff_sha256": "d7b54af368988495464aa1b5efe462f9729abf280aa7f82103f96c421c442e4e"
+    },
+    "Platform/common/acceptance/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 528,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 530,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 532,
+       "req_id": "-",
+       "file": "acceptance/README.md#full-form-by-door"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b"
+     ],
+     "diff_sha256": "6bd299f480c5f43e9edc5d6c565d9e660a7525aa3f6127c3d88f754f84e0902f"
+    },
+    "Platform/common/acceptance/command-tables.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 536,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 538,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 540,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 542,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 544,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 546,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 548,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 550,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b"
+     ],
+     "diff_sha256": "17ce6f9ba15d56bff8531ef42021d5ac89689784db8f15714d0558e44b309335"
+    }
+   },
+   "files_without_own_added_English_history": [],
+   "listed_exactly_changed_paragraphs": true,
+   "OK": true
+  }
+ },
+ "note": "Exact paragraph/checklist/file coverage and added history evidence; summary meaning and unanchored changes reviewed by reading. The transport marker is excluded.",
+ "OK": true
+}

@@ -1,0 +1,13 @@
+{
+ "C": "a494be12d54c2e596467c1508973da3031af2088",
+ "baseline": "accepted P01.355 M11/J11; exact zero semantic filter delta",
+ "delta_sha256": "f70f07e365e48790f0167b5d78269a1f553a7f03b14bfa1b1746fcfe9f4531c0",
+ "deltas": [],
+ "filter_author_provider": "inherited accepted classifications; no new delta",
+ "filter_reviewer_provider": "inherited accepted different-provider review; no new delta",
+ "all_delta_records_covered": true,
+ "inherited_review": "reviews/P01.355-inherited-filter-reviews.json",
+ "inherited_review_sha256": "3188c4d813d74d76c36ffa9f00c128a0f27e08d54b5b61d32711ee6b7edb8ccf",
+ "inherited_acceptance": "reviews/P01.355-accepted.json",
+ "inherited_acceptance_sha256": "13f9aeacdf354b5a62ff20b43ae96e66ae1d1688ebf35a3bcf7cb29bba372dda"
+}

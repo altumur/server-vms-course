@@ -1,0 +1,17 @@
+{
+ "C": "a494be12d54c2e596467c1508973da3031af2088",
+ "raw_M": "ac9f03324c7a5c43e33f9177f66e098b55dee28b",
+ "M": "18ca2e7254971855d4b1ae84c3185703c5c76b6b",
+ "J": "d8c679abf66cfd4002c12e7f29b45b68131710ce",
+ "JI": "6d1950ac9519e855a551c65ee360c36cc703ddf6",
+ "pair_directory": "/home/pilot/P01.360-evidence/pair-a494be12d54c",
+ "M_git": "/home/pilot/P01.360-evidence/narrow/M.git",
+ "J_git": "/home/pilot/P01.360-evidence/pair-a494be12d54c/J.git",
+ "JI_directory": "/home/pilot/P01.360-evidence/ji-a494be12d54c",
+ "JI_git": "/home/pilot/P01.360-evidence/ji-a494be12d54c/JI.git",
+ "M_passport": "/home/pilot/P01.360-evidence/passport/PASSPORT-M-18ca2e725497.json",
+ "M_passport_sha256": "7d4891acc1d8d0017bb12d38816d403336aa3c7369d7a7c3b49913cf4a4b3dca",
+ "JI_passport_sha256": "ea9b76fb4ffae1f1a0241c05def3b07991d8536d19470adef74373a23f1990b8",
+ "raw_M_filter_blob": "6fa8f1ea4c35e4178e6396c17aab29793ef91ccf",
+ "JI_filter_blob": "efc209169b7014c592fbfe0dc2f1a10f65cc0f76"
+}
