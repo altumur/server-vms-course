@@ -172,6 +172,27 @@ class PlatformPinBinding(unittest.TestCase):
         self.assertEqual(before["phases"][0]["counts"], after["phases"][0]["counts"])
         self.assertEqual(before["phases"][0]["inputs"]["view_files"], after["phases"][0]["inputs"]["view_files"])
 
+    def test_temporary_evidence_kept_only_on_failure(self):
+        """OBSH.54: without --vms-evidence a failing run keeps and names its temporary directory."""
+        import check_spec
+        import shutil as _shutil
+        self.write("Platform/common/data/catalog.tsv", "wrong\theader\n")
+        self.write("VMS/common/lessons.tsv", "# lesson\tdir\ttitle\tsubsystem\tstatus\n")
+        self.write("decisions/history/vms/id-map.tsv", "old\tnew\tchapter\tsubject\tnote\n")
+        self.write("VMS/common/data/catalog.tsv", "key\tkind\towner\tops\treaders\twhen\tversion\tnorm\tplace\n")
+        self.git("add", "Platform/common/data/catalog.tsv", "VMS/common/lessons.tsv", "decisions/history/vms/id-map.tsv", "VMS/common/data/catalog.tsv")
+        self.git("commit", "-qm", "fixture failing phase")
+        self.write("VMS/PLATFORM_PIN", self.git("rev-parse", "HEAD").decode().strip() + "\n")
+        args = self.checker_args(vms_evidence=None)
+        out = StringIO()
+        with redirect_stdout(out):
+            report = check_spec._vms_reports(args, [])
+        self.assertEqual(report["canonical_status"], "FAIL")
+        line = next(l for l in out.getvalue().splitlines() if l.startswith("VMS_REPORT "))
+        path = Path(line.split(" ", 1)[1])
+        self.assertTrue(path.is_file())
+        _shutil.rmtree(path.parent)
+
     def test_real_vms_openapi_keeps_pinned_schema_dependency_errors(self):
         import check_spec
         self.write("Platform/common/dependency.schema.json", '{"type":"not-a-json-schema-type"}')
@@ -415,7 +436,7 @@ class VmsEvidencePaths(unittest.TestCase):
             report = self.run_report(self.args())
         create.assert_called_once_with(prefix="check-spec-vms-")
         self.assertEqual(Path(report["phases"][0]["view"]).parent, generated.resolve())
-        self.assertEqual(report, json.loads((generated.resolve() / "report.json").read_text()))
+        self.assertFalse(generated.exists())   # OBSH.54: a passing run without --vms-evidence removes its temporary directory
 
     def test_explicit_symlink_parent_is_rejected_without_canonicalizing(self):
         import check_spec
