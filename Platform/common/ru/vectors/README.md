@@ -17,7 +17,7 @@
 
 | Вектор | Где сейчас | Владелец (стадия A) | Норма |
 |---|---|---|---|
-| JCS | [`01-store/vectors/jcs/`](../../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
+| JCS | [`common/vectors/jcs/`](jcs/) | P/01 | [договор JCS](../contracts/jcs.md), RFC 8785 |
 | словарь `fault` отказов дверей | [`common/vectors/fault/`](../../vectors/fault/) | P/06.1 | двери P/06 (главы 6.1, 6.5, 6.6) |
 | `cut_at: host` | [`common/vectors/group-of/`](../../vectors/group-of/) | P/04 | P/04 N1.3 `group_by` |
 | `rid` | [`06-console/vectors/rid/`](../../../06-console/vectors/rid/) | P/06.4 | P/06.4 N1.5 |
@@ -27,7 +27,7 @@
 | маска лога | [`common/vectors/log-mask/`](../../vectors/log-mask/) | P/06.2 | договор маски журнала `log-mask` (P/06.2 N1.4; C06-LOG-MASK-33-01) |
 | секретные строки платформы | [`02-installer/vectors/platform-lists/`](../../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 N1.3, P/02.5 N1.4 |
 | корпус манифеста | [`02-installer/acceptance/1/`](../../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); прежние `spec_verdicts.tsv` и `spec_verdicts/` читает замороженный свидетель, не вектор | P/02.1 | P/02.1 N1, N4, N5 |
-| оценщик прав (буквальные образцы, префикс, отрицание) | [`01-store/vectors/rights-evaluator/`](../../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 N1.2 `pattern`, N1.3 |
+| оценщик прав (буквальные образцы, префикс, отрицание) | [`common/vectors/rights-evaluator/`](rights-evaluator/) | P/01.2 | [договор оценщика прав](../contracts/rights-evaluator.md) |
 | копия хранилища | [`01-store/acceptance/3/inputs/`](../../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 N1.3 `copy` |
 | вывод прав из манифеста (по смыслу) | [`02-installer/acceptance/5/variants/`](../../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 N1.4, N3 |
 | текстовые формы значений (`values_by_type`) | [`common/vectors/values-by-type/`](../../vectors/values-by-type/) | P/06.1 | договор проверки строки «Строка единицы» (P/06.1 N1.2) |

@@ -387,7 +387,7 @@ the relay passes them with its function, without a stand. There is no row for st
 (the README of the package, «Candidates»; analysis of review of stage B 8–10, № 6). The limits of the relay batch (the bound 64 MiB, knock 33,
 a knock larger than 256 KiB) are not expressed by the function «accept» — by reading (C08-G05).
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
 [Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

@@ -62,6 +62,11 @@ class Forms(unittest.TestCase):
         self.lesson = self.tmp / "Platform/01-store"
         for part in ("forms", "spec", "acceptance", "vectors"):
             shutil.copytree(LESSON / part, self.lesson / part)
+        for name in ("jcs", "rights-evaluator"):
+            rel = f"Platform/common/vectors/{name}"
+            shutil.copytree(ROOT / rel, self.tmp / rel)
+        rel = "Platform/common/vectors/consumers.tsv"
+        shutil.copyfile(ROOT / rel, self.tmp / rel)
         (self.tmp / JOURNAL).mkdir(parents=True)
         for path in (ROOT / JOURNAL).glob("*.tsv"):     # history files and the id map req-id-map.tsv (P01.283)
             shutil.copy(path, self.tmp / JOURNAL / path.name)
@@ -535,7 +540,7 @@ class Wire(unittest.TestCase):                     # провод векторо
         self.assertGreaterEqual(stats["wire_bindings"], 27)        # форма растёт по урокам (P/05 +2)
 
     def test_lf_only_lines(self):                   # U+2028 в ячейке — байт ячейки, не конец строки (JCS P/01)
-        jcs = self.tmp / "Platform/01-store/vectors/jcs/canonical_json.tsv"
+        jcs = self.tmp / "Platform/common/vectors/jcs/canonical_json.tsv"
         self.assertIn(" ", jcs.read_text(encoding="utf-8"))
         table = self.tmp / "t.tsv"
         table.write_text("a\tb\nx y\tz w\x85\n", encoding="utf-8")
@@ -614,8 +619,8 @@ class Wire(unittest.TestCase):                     # провод векторо
         self.assertTrue(any("consumers.tsv" in e for e in self.mutate('"when":"true","cells"', '"when":"owner == \\"07-console-module\\"","cells"', crl)))
 
     def test_lesson_package_owner(self):             # потребители — строки consumers.tsv ∪ урок-владелец пакета урока
-        row = self.row("01-store/rights-evaluator", "expect.tsv", "vectors")
-        self.assertTrue(any("not a consumer" in e for e in self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row)))
+        row = self.row("06-console/rid", "rid.tsv", "stand:rid")
+        self.assertTrue(any("not a consumer" in e for e in self.mutate('owner == \\"06-console\\"', 'owner == \\"01-store\\"', row)))
         self.consumers("06-console/rid\ttemplate.tsv\t03-worker\t", None)    # без строки when с 03-worker — чужой
         self.assertTrue(any("not a consumer" in e and "template.tsv" in e for e in self.errors()))
 

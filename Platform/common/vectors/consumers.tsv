@@ -6,6 +6,10 @@
 # No row turns an existing byte carrier, signer, writer-only role or ready-result reader into a caller of a different function.
 # family-read assigns NN.tsv only to its owner lesson NN. No common vectors are assigned to the published byte module 07-console-module.
 package	table	lesson	norm
+06-console/request-digest	digest.tsv	03-worker	06-console/vectors/request-digest/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/requests-body	requests_body.tsv	03-worker	06-console/vectors/requests-body/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/rid	rid.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/rid	template.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
 common/accept	cases.tsv	08-domain	common/vectors/accept/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/accept	cases.tsv	09-agent	common/vectors/accept/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/agent-sig	batch-knock.tsv	08-domain	common/vectors/agent-sig/README.md: Who performs; ACC-VECTORS-CONNECT-03
@@ -91,6 +95,12 @@ common/instance	cases.tsv	06-console	common/vectors/instance/README.md: Who perf
 common/instance	cases.tsv	08-domain	common/vectors/instance/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/instance	cases.tsv	09-agent	common/vectors/instance/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/instance	cases.tsv	10-domain-console	common/vectors/instance/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	01-store	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	02-installer	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	03-worker	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	06-console	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	08-domain	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+common/jcs	canonical_json.tsv	09-agent	common/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
 common/journal	append.tsv	03-worker	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	append.tsv	04-controller	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/journal	append.tsv	05-resource	common/vectors/journal/README.md: Who performs; ACC-VECTORS-CONNECT-03
@@ -187,6 +197,7 @@ common/revoked	cases.tsv	06-console	common/vectors/revoked/README.md: Who perfor
 common/revoked	cases.tsv	08-domain	common/vectors/revoked/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/revoked	cases.tsv	09-agent	common/vectors/revoked/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/revoked	cases.tsv	10-domain-console	common/vectors/revoked/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/rights-evaluator	expect.tsv	01-store	common/vectors/rights-evaluator/README.md: Who executes; ACC-VECTORS-CONNECT-03
 common/row-check	cases.tsv	03-worker	common/vectors/row-check/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/row-check	cases.tsv	06-console	common/vectors/row-check/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/row-check	state.tsv	03-worker	common/vectors/row-check/README.md: Who performs; ACC-VECTORS-CONNECT-03
@@ -245,6 +256,7 @@ common/tombstone	cases.tsv	05-resource	common/vectors/tombstone/README.md: Who p
 common/tombstone	cases.tsv	06-console	common/vectors/tombstone/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/trust-set	cases.tsv	10-domain-console	common/vectors/trust-set/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/turn	cases.tsv	04-controller	common/vectors/turn/README.md: Who performs; ACC-VECTORS-CONNECT-03
+common/turn	cases.tsv	06-console	common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4
 common/turn	cases.tsv	08-domain	common/vectors/turn/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/turn	cases.tsv	09-agent	common/vectors/turn/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/values-by-type	cases.tsv	03-worker	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
@@ -253,13 +265,3 @@ common/values-by-type	cases.tsv	06-console	common/vectors/values-by-type/README.
 common/values-by-type	cases.tsv	08-domain	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/values-by-type	cases.tsv	09-agent	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/yaml-suite	expect.tsv	02-installer	P/02.1 N1.1; common/LAYERS.md; common/vectors/yaml-suite/README.md
-01-store/jcs	canonical_json.tsv	02-installer	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
-01-store/jcs	canonical_json.tsv	03-worker	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
-01-store/jcs	canonical_json.tsv	06-console	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
-01-store/jcs	canonical_json.tsv	08-domain	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
-01-store/jcs	canonical_json.tsv	09-agent	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
-06-console/rid	rid.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
-06-console/rid	template.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
-06-console/request-digest	digest.tsv	03-worker	06-console/vectors/request-digest/README.md: Run; ACC-VECTORS-CONNECT-03
-06-console/requests-body	requests_body.tsv	03-worker	06-console/vectors/requests-body/README.md: Run; ACC-VECTORS-CONNECT-03
-common/turn	cases.tsv	06-console	common/vectors/turn/README.md: own operations turn; ADR-0127 P06 C4

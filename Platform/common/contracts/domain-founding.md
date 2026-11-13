@@ -124,5 +124,5 @@ The package [`domain-founding`](../vectors/domain-founding/README.md): founding 
 
 The table `recovery.tsv`: the cell `input` is `{file, mode}` — the content of the recovery file JSON and its mode (octal, as a string); the native outcome is `{domain, root_pub, fingerprint}` of the read file or `@refuse` — the file is not read, nothing changes. The table `claim.tsv` (outside the wire form of the package): the cell `input` is `{issuing_key_secret, domain, holder, url, at}`; the native outcome is the object of the row `domain/holder` `{doc}`, where `doc` is the JCS text of the document of the term record 1 with `issuer`, `kid`, `sig` (Ed25519 is deterministic, RFC 8032).
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).

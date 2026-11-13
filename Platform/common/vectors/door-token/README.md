@@ -98,7 +98,7 @@ the signature covers the bytes of the claims part (the Architect's decision of 2
 The rows `key_small_order` and `sig_r_small_order` satisfy the equation [S]B = R + [k]A; the OpenSSL check (pyca cryptography) accepts them,
 the refusal is given only by the condition of the contract «A or R of small order — refusal» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
 
-The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../01-store/vectors/jcs/README.md))
+The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../jcs/README.md))
 by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Specification».
 
 ## Vector wire

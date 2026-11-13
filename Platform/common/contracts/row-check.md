@@ -310,5 +310,5 @@ The input of the single command `vectors` of the package `row-check`: `files` ar
 
 The cells of `state.tsv` are `name`, `unit`, `state`: `name` is the name of the state, a JSON string from `unit.state` of the manifest; `unit` is the unit row as read, an object of elements (`born`, `revision`; `deleted: "true"` — a tombstone) or `"@absent"` — there is no row; `state` is the row `<sub>/state/<name>/<id>` as read, an object of elements (`born`, `revision`, `epoch`, `value` — JSON text) or `"@absent"`. The native outcome is code 0 and the object `{acts, unreadable}`, for an acting state also `value`, the parsed value.
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).

@@ -264,7 +264,7 @@ The packages are at the owner (P/06.4); the other states and `kept` have no vect
 
 The vectors `deadline`: the cell `input` of `cases.tsv` is the text of the value `valid_until` from the request body — one JSON value, as sent. The native output is one JSON object: `{"written": <text>}` — the element of the request row by the time writer of P/01.1 N0 (an integer — without a fractional part), `written` is a string; or `{"status": 400, "error": "bad deadline"}` — the value is not a finite JSON number (the refusal of step 1, P/06.4 N4 RequestError).
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
 [Common finite budgets and acceptance limits](production-obligations.md) are required for the applicable phases of this contract.

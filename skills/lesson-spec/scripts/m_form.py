@@ -140,8 +140,6 @@ ADR_LATER = {
         "acceptance/1/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/2/README.md": "outside the norms; not cleaned by P01.177",
         "acceptance/3/README.md": "outside the norms; not cleaned by P01.177",
-        "vectors/jcs/README.md": "outside the norms; not cleaned by P01.177",
-        "vectors/rights-evaluator/README.md": "outside the norms; not cleaned by P01.177",
     },
     # the debugTip runtime string carries «ADR-0050» byte for byte in module/console.js WORDS, whose canonical bytes the
     # course pins (J-P07-01 SHA in the frozen Source tests); the number stays until the module is regenerated (P07.16)

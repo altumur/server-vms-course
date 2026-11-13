@@ -170,6 +170,6 @@ exit:      0 — computed; 2 — the input is out of form; exit codes follow the
 there is a consumer: following calls `record` (layout audit, V-49; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25). The package `resolve` of lesson P/06 does not call `record`
 (the input is a domain value `{term, rev, value}`) — it is not counted in «Vectors».
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 

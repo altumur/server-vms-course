@@ -22,7 +22,7 @@
           "variant": ""
         }
       ],
-      "package": "01-store/jcs"
+      "package": "common/jcs"
     },
     {
       "entrypoint": {
@@ -52,7 +52,7 @@
           "variant": ""
         }
       ],
-      "package": "01-store/rights-evaluator"
+      "package": "common/rights-evaluator"
     },
     {
       "entrypoint": {

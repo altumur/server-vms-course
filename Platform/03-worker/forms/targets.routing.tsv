@@ -21,7 +21,7 @@ P/03/vectors-rid	vector	["Platform/06-console/vectors/rid"]	all	[]	[]	-	-	[]	-
 P/03/vectors-request-digest	vector	["Platform/06-console/vectors/request-digest"]	all	[]	[]	-	-	[]	-
 P/03/vectors-slot-name	vector	["Platform/common/vectors/slot-name"]	all	[]	[]	-	-	[]	-
 P/03/vectors-slot	vector	["Platform/common/vectors/slot"]	all	[]	[]	-	-	[]	-
-P/03/vectors-jcs	vector	["Platform/01-store/vectors/jcs"]	all	[]	[]	-	-	[]	-
+P/03/vectors-jcs	vector	["Platform/common/vectors/jcs"]	all	[]	[]	-	-	[]	-
 P/03/vectors-crl	vector	["Platform/common/vectors/crl"]	all	[]	[]	-	-	[]	-
 P/03/vectors-revoked	vector	["Platform/common/vectors/revoked"]	all	[]	[]	-	-	[]	-
 P/03/vectors-requests-body	vector	["Platform/06-console/vectors/requests-body"]	all	[]	[]	-	-	[]	-

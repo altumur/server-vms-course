@@ -310,5 +310,5 @@ R3. ссылки по новым значениям, порядок P5
 
 Ячейки `state.tsv` — `name`, `unit`, `state`: `name` — имя состояния, строка JSON из `unit.state` манифеста; `unit` — строка единицы как прочитана, объект элементов (`born`, `revision`; `deleted: "true"` — надгробие) или `"@absent"` — строки нет; `state` — строка `<sub>/state/<name>/<id>` как прочитана, объект элементов (`born`, `revision`, `epoch`, `value` — текст JSON) или `"@absent"`. Родной исход — код 0 и объект `{acts, unreadable}`, у действующего состояния ещё `value` — разобранное значение.
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
-урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../vectors/jcs/README.md)
+общего договора JCS (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).

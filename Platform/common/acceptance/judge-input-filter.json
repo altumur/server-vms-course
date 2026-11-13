@@ -4837,6 +4837,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/common/contracts/jcs.md",
+      "disposition": "include",
+      "basis": "Shared algorithm contract used by the existing vector consumers."
+    },
+    {
       "path": "Platform/common/contracts/keys.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -4920,6 +4925,11 @@
       "path": "Platform/common/contracts/request-mark.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/common/contracts/rights-evaluator.md",
+      "disposition": "include",
+      "basis": "Shared algorithm contract used by the existing vector consumers."
     },
     {
       "path": "Platform/common/contracts/role-certificate.cases.md",
@@ -5262,6 +5272,11 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/contracts/jcs.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the inputs are English only."
+    },
+    {
       "path": "Platform/common/ru/contracts/keys.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -5345,6 +5360,11 @@
       "path": "Platform/common/ru/contracts/request-mark.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/contracts/rights-evaluator.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the inputs are English only."
     },
     {
       "path": "Platform/common/ru/contracts/role-certificate.cases.md",
@@ -5567,6 +5587,11 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/vectors/jcs/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
       "path": "Platform/common/ru/vectors/journal/README.cases.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -5663,6 +5688,16 @@
     },
     {
       "path": "Platform/common/ru/vectors/revoked/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/vectors/rights-evaluator/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/common/ru/vectors/rights-evaluator/README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
@@ -6142,6 +6177,16 @@
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
+      "path": "Platform/common/vectors/jcs/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/jcs/canonical_json.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
       "path": "Platform/common/vectors/journal/README.cases.md",
       "disposition": "include",
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
@@ -6370,6 +6415,26 @@
       "path": "Platform/common/vectors/revoked/cases.tsv",
       "disposition": "include",
       "basis": "Vector package routed to a P/01 target by forms/targets.routing.tsv."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/README.cases.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/README.md",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/expect.tsv",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/rights.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
     },
     {
       "path": "Platform/common/vectors/row-check/README.md",

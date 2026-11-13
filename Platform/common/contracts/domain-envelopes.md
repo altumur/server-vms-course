@@ -136,6 +136,6 @@ cases. An implementation passes them with its own function, without a stand. `ke
 
 The command `seal-member` takes `{seed, sealed}` and returns `{result: ok, plain}` or `{result: refused, reason}`. The command `seal-member-round` takes `{key, seed, plain}` and returns `{result: ok, sealed: [<m1>, <m1>], opened: [<plain>, <plain>], distinct}`.
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 

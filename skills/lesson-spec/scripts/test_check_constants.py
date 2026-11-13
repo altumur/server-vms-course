@@ -525,6 +525,11 @@ class StoreConstants(unittest.TestCase):
         # Platform/01-store exists, and then judges every P01 form; the hook fixture therefore holds the actual
         # lesson and the package with its common resources, not only the three carriers and the norms.
         shutil.copytree(ROOT / "Platform/01-store", self.root / "Platform/01-store", dirs_exist_ok=True)
+        for name in ("jcs", "rights-evaluator"):
+            rel = f"Platform/common/vectors/{name}"
+            shutil.copytree(ROOT / rel, self.root / rel)
+        rel = "Platform/common/vectors/consumers.tsv"
+        shutil.copyfile(ROOT / rel, self.root / rel)
         for rel in (frictionless_forms.PACKAGE,
                     *(f"Platform/{name}{suffix}" for name in frictionless_forms.RESOURCES.values()
                       for suffix in ("", ".schema.json"))):

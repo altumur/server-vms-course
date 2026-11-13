@@ -4837,6 +4837,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/contracts/jcs.md",
+      "disposition": "model_and_judge",
+      "basis": "Shared algorithm contract used by the existing vector consumers."
+    },
+    {
       "path": "Platform/common/contracts/keys.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
@@ -4920,6 +4925,11 @@
       "path": "Platform/common/contracts/request-mark.md",
       "disposition": "model_and_judge",
       "basis": "Root signed P01.10.14–16 exact whole public generic closure / native form / definition-link scope; actual afterblob matches accepted map. No case association admission or runtime receiver qualification."
+    },
+    {
+      "path": "Platform/common/contracts/rights-evaluator.md",
+      "disposition": "model_and_judge",
+      "basis": "Shared algorithm contract used by the existing vector consumers."
     },
     {
       "path": "Platform/common/contracts/role-certificate.cases.md",
@@ -5262,6 +5272,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/contracts/jcs.md",
+      "disposition": "judge_only",
+      "basis": "Russian mirror; the inputs are English only."
+    },
+    {
       "path": "Platform/common/ru/contracts/keys.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
@@ -5345,6 +5360,11 @@
       "path": "Platform/common/ru/contracts/request-mark.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
+    },
+    {
+      "path": "Platform/common/ru/contracts/rights-evaluator.md",
+      "disposition": "judge_only",
+      "basis": "Russian mirror; the inputs are English only."
     },
     {
       "path": "Platform/common/ru/contracts/role-certificate.cases.md",
@@ -5567,6 +5587,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/jcs/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
       "path": "Platform/common/ru/vectors/journal/README.cases.md",
       "disposition": "judge_only",
       "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
@@ -5663,6 +5688,16 @@
     },
     {
       "path": "Platform/common/ru/vectors/revoked/README.md",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/common/ru/vectors/rights-evaluator/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
@@ -6142,6 +6177,16 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/jcs/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/vectors/jcs/canonical_json.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
       "path": "Platform/common/vectors/journal/README.cases.md",
       "disposition": "judge_only",
       "basis": "Architect exact judge-only *.cases.* classification; expanded to this exact path."
@@ -6370,6 +6415,26 @@
       "path": "Platform/common/vectors/revoked/cases.tsv",
       "disposition": "judge_only",
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/vectors/rights-evaluator/rights.json",
+      "disposition": "judge_only",
+      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
       "path": "Platform/common/vectors/row-check/README.md",

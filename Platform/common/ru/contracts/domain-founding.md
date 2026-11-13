@@ -124,5 +124,5 @@ claim_1:     процесс domain держателя при первом ста
 
 Таблица `recovery.tsv`: ячейка `input` — `{file, mode}`, содержимое файла восстановления JSON и его режим (восьмеричный, строкой); родной исход — `{domain, root_pub, fingerprint}` прочитанного файла или `@refuse` — файл не читается, ничего не меняется. Таблица `claim.tsv` (вне формы провода пакета): ячейка `input` — `{issuing_key_secret, domain, holder, url, at}`; родной исход — объект строки `domain/holder` `{doc}`, где `doc` — текст JCS документа записи срока 1 с `issuer`, `kid`, `sig` (Ed25519 детерминирован, RFC 8032).
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
-урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../vectors/jcs/README.md)
+общего договора JCS (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).

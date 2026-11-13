@@ -17,7 +17,7 @@ The machine-readable consumer registry is [`consumers.tsv`](consumers.tsv): one 
 
 | Vector | Where now | Owner (stage A) | Norm |
 |---|---|---|---|
-| JCS | [`01-store/vectors/jcs/`](../../01-store/vectors/jcs/) | P/01 | ADR-0072, RFC 8785 |
+| JCS | [`common/vectors/jcs/`](jcs/) | P/01 | [JCS contract](../contracts/jcs.md), RFC 8785 |
 | the dictionary `fault` of door refusals | [`common/vectors/fault/`](fault/) | P/06.1 | the doors of P/06 (chapters 6.1, 6.5, 6.6) |
 | `cut_at: host` | [`common/vectors/group-of/`](group-of/) | P/04 | P/04 N1.3 `group_by` |
 | `rid` | [`06-console/vectors/rid/`](../../06-console/vectors/rid/) | P/06.4 | P/06.4 N1.5 |
@@ -27,7 +27,7 @@ The machine-readable consumer registry is [`consumers.tsv`](consumers.tsv): one 
 | log mask | [`common/vectors/log-mask/`](log-mask/) | P/06.2 | the log mask contract `log-mask` (P/06.2 N1.4; C06-LOG-MASK-33-01) |
 | secret rows of the platform | [`02-installer/vectors/platform-lists/`](../../02-installer/vectors/platform-lists/) | P/02.5 | P/02.5 N1.3, P/02.5 N1.4 |
 | the manifest corpus | [`02-installer/acceptance/1/`](../../02-installer/acceptance/1/) (`cases/`, `verdicts.tsv`, `classes.tsv`, `diagnostics.tsv`); the former `spec_verdicts.tsv` and `spec_verdicts/` are read by the frozen witness, not a vector | P/02.1 | P/02.1 N1, N4, N5 |
-| the rights evaluator (literal patterns, prefix, negation) | [`01-store/vectors/rights-evaluator/`](../../01-store/vectors/rights-evaluator/) | P/01.2 | P/01.2 N1.2 `pattern`, N1.3 |
+| the rights evaluator (literal patterns, prefix, negation) | [`common/vectors/rights-evaluator/`](rights-evaluator/) | P/01.2 | [rights-evaluator contract](../contracts/rights-evaluator.md) |
 | a copy of the store | [`01-store/acceptance/3/inputs/`](../../01-store/acceptance/3/inputs/) | P/01.3 | P/01.3 N1.3 `copy` |
 | derivation of rights from the manifest (by meaning) | [`02-installer/acceptance/5/variants/`](../../02-installer/acceptance/5/variants/) | P/02.5 | P/02.5 N1.4, N3 |
 | text forms of values (`values_by_type`) | [`common/vectors/values-by-type/`](values-by-type/) | P/06.1 | the row check contract «Unit row» (P/06.1 N1.2) |

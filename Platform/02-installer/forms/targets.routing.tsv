@@ -15,7 +15,7 @@ P/02/vectors-install-order	vector	["Platform/02-installer/vectors/install-order"
 P/02/vectors-platform-lists	vector	["Platform/02-installer/vectors/platform-lists"]	all	[]	[]	-	-	[]	-
 P/02/vectors-env-line	vector	["Platform/common/vectors/env-file"]	all	[]	[]	-	-	[]	-
 P/02/vectors-env-files	vector	["Platform/common/vectors/env-file"]	all	[]	[]	-	-	[]	-
-P/02/vectors-jcs	vector	["Platform/01-store/vectors/jcs"]	all	[]	[]	-	-	[]	-
+P/02/vectors-jcs	vector	["Platform/common/vectors/jcs"]	all	[]	[]	-	-	[]	-
 P/02/vectors-crl	vector	["Platform/common/vectors/crl"]	all	[]	[]	-	-	[]	-
 P/02/vectors-revoked	vector	["Platform/common/vectors/revoked"]	all	[]	[]	-	-	[]	-
 P/02/vectors-loopback	vector	["Platform/common/vectors/loopback"]	all	[]	[]	-	-	[]	-

@@ -17,6 +17,12 @@ ROOT = Path(__file__).resolve().parents[3]
 HOME = "Platform/01-store"
 JOURNAL = "decisions/journal/platform/01-store"
 COMMON_FILES = ("Platform/common/export-model-filter.json", "Platform/common/acceptance/judge-input-filter.json")
+COMMON_ALGORITHM_FILES = tuple(
+    f"Platform/common/{language}{rel}"
+    for language in ("", "ru/")
+    for name in ("jcs", "rights-evaluator")
+    for rel in (f"contracts/{name}.md", f"vectors/{name}/README.md")
+)
 
 # Defects of the form on main 2026-11-11 (P01.203 report) mended in the copy, so that the copy is the accepted form
 # by the rules of the skill. A replacement that is no longer needed (main mended it) is skipped.
@@ -31,9 +37,9 @@ MAIN_MENDS = [
      "[judge-only N5 coverage](01.3-store.n5.cases.md) (judge-only: the N5 cases of the chapter)."),
     ("ru/spec/01.3-store.norms.md", "[покрытии N5 только для судьи](01.3-store.n5.cases.md).",
      "[покрытии N5 только для судьи](01.3-store.n5.cases.md) (только для судьи: случаи N5 главы)."),
-    ("vectors/rights-evaluator/README.md", "with `rights.json` as `{rights}`",
+    ("../common/vectors/rights-evaluator/README.md", "with `rights.json` as `{rights}`",
      "with `rights.json` (judge-only: the file itself) as `{rights}`"),
-    ("ru/vectors/rights-evaluator/README.md", "с `rights.json` как `{rights}`",
+    ("../common/ru/vectors/rights-evaluator/README.md", "с `rights.json` как `{rights}`",
      "с `rights.json` (только для судьи: сам файл) как `{rights}`"),
     # the families block of 01.3 built before OBSH.42 (rebuilt after P01.233: python -m v7.sections …01.3-store.norms.md)
     ("spec/01.3-store.norms.md", "JSON Schema 2020-12 of the family (ADR-0092). An instance",
@@ -73,7 +79,7 @@ class AcceptedForm(unittest.TestCase):
         (root / JOURNAL).mkdir(parents=True)
         for path in (ROOT / JOURNAL).glob("*.tsv"):     # history files and the id map req-id-map.tsv (P01.283)
             shutil.copy(path, root / JOURNAL / path.name)
-        names = list(COMMON_FILES) + ["Platform/lessons.tsv", "Platform/module-design.md"]
+        names = list(COMMON_FILES + COMMON_ALGORITHM_FILES) + ["Platform/lessons.tsv", "Platform/module-design.md"]
         check = Check(ROOT, scope="platform")
         lesson = m_form.Lesson(check, "P/01", ROOT / HOME)
         for norms in lesson.chapters:
@@ -166,7 +172,8 @@ class AcceptedFormPasses(AcceptedForm):
         errors = "\n".join(self.run_checks().errors)
         for rel, before, _ in MAIN_MENDS:
             if before in (ROOT / HOME / rel).read_text(encoding="utf-8"):
-                self.assertIn(f"{HOME}/{rel}: line ", errors)
+                source = (ROOT / HOME / rel).resolve().relative_to(ROOT).as_posix()
+                self.assertIn(f"{source}: line ", errors)
 
 
 class HistoryPhrases(AcceptedForm):
@@ -231,12 +238,15 @@ class HistoryPhrases(AcceptedForm):
         self.assert_error(self.run_checks(), f"{HOME}/probes/README.md", 2, "an ADR number in M")
 
     def test_stale_adr_later_entry(self):
-        for rel in ("vectors/rights-evaluator/README.md", "ru/vectors/rights-evaluator/README.md"):
-            path = self.home / rel
+        rel = "probes/README.md"
+        later = dict(m_form.ADR_LATER["P/01"], **{rel: "synthetic test entry"})
+        for source in (rel, "ru/" + rel):
+            path = self.home / source
             path.write_text(re.sub(r" ?\(ADR-0[0-9]{3}[^)]*\)|ADR-0[0-9]{3}", "", path.read_text(encoding="utf-8")),
                             encoding="utf-8")
-        errors = self.run_checks().errors
-        self.assertTrue(any("vectors/rights-evaluator/README.md: stale ADR_LATER" in e for e in errors), errors)
+        with patch.dict(m_form.ADR_LATER, {"P/01": later}):
+            errors = self.run_checks().errors
+        self.assertTrue(any(f"{rel}: stale ADR_LATER" in e for e in errors), errors)
 
     def test_built_block_is_text_of_m(self):
         # OBSH.42: the block between its markers is read as any text of M, in the source and in the translation.

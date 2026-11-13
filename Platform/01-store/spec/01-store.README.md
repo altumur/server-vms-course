@@ -63,10 +63,12 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
 
 ## Shared vector packages
 
-Besides the packages of the lesson itself (`vectors/jcs`, `vectors/rights-evaluator`, `01-store/write-checks`), the targets of this lesson include the five shared packages of the table. Each is run by the entry of the profile section `vectors` with the key of the table and calls the implementation's own function; the input, the output and the comparison are the README of the package and [the vector wire form](../../common/vectors/wire.md), the command is [the profile format](../../common/acceptance/PROFILE.md). The rows of the lesson `01-store` in [`consumers.tsv`](../../common/vectors/consumers.tsv) are the complete list of the shared tables assigned to this lesson.
+Besides `01-store/write-checks` of the lesson itself, the targets of this lesson include the seven shared packages of the table. Each is run by the entry of the profile section `vectors` with the key of the table and calls the implementation's own function; the input, the output and the comparison are the README of the package and [the vector wire form](../../common/vectors/wire.md), the command is [the profile format](../../common/acceptance/PROFILE.md). The rows of the lesson `01-store` in [`consumers.tsv`](../../common/vectors/consumers.tsv) are the complete list of the shared tables assigned to this lesson.
 
 | Key in `vectors` | Target | Table | What runs in this lesson | Package |
 |---|---|---|---|---|
+| `common/jcs` | `P/01/vectors-jcs` | `canonical_json.tsv` | canonical JSON and its SHA-256 | [README](../../common/vectors/jcs/README.md) |
+| `common/rights-evaluator` | `P/01/vectors-rights-evaluator` | `expect.tsv` | the rights-file pattern evaluator of chapter 1.2 | [README](../../common/vectors/rights-evaluator/README.md) |
 | `common/revoked` | `P/01/vectors-revoked` | `cases.tsv` | the reader of the file `revoked` of the door that checks a TLS peer (chapter 1.3 N1.6) | [README](../../common/vectors/revoked/README.md) |
 | `common/log-mask` | `P/01/vectors-log-mask` | `cases.tsv` | the log mask of the store daemon and its CLI | [README](../../common/vectors/log-mask/README.md) |
 | `common/store-client` | `P/01/vectors-store-client` | `cases.tsv` | the parsing of a store answer by the CLI of the daemon (`admin_ops` through `admin.sock`, chapter 1.3 N1.3) | [README](../../common/vectors/store-client/README.md) |
@@ -155,7 +157,7 @@ Chapter 1.2:
 |---|---|---|
 | N1.1 | The role name was truncated or replaced with a common controller | Keep the manifest name and the suffix; the current limits are compatible |
 | N1.2 | An empty delete was replaced with write through a «falsiness» check | The default only when the field is absent |
-| N1.2/N1.3 | A common glob treats an asterisk in the middle as a pattern | Carry out only an exact name/a trailing prefix; `*` not in the last place is a literal character: `a*b` matches only the key `a*b` (vector `Platform/01-store/vectors/rights-evaluator`) |
+| N1.2/N1.3 | A common glob treats an asterisk in the middle as a pattern | Carry out only an exact name/a trailing prefix; `*` not in the last place is a literal character: `a*b` matches only the key `a*b` (vector `Platform/common/vectors/rights-evaluator`) |
 | N1.3 | The first permission ends the search before a denial | Denials take priority regardless of position |
 | N1.3/N3 | admin is absent from roles and therefore refuses, list requires read | Carry out the special rules explicitly after the identity check |
 | N2 | The file is wrapped in an extra object, values are returned in list | Check the whole body against the contract and the meaning of N2 |

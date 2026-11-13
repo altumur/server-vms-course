@@ -16,7 +16,7 @@ are reconciled by the vectors `door-token` (analysis of the review of stage B 6�
 of the answer), the signer `door/signer` and its envelope are in the owner's norms (P/06.5 N3, the family
 [`door-signer`](../../06-console/data/door-signer.schema.json)); the form of the keys row is the owner's family
 [`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
-[`jcs`](../../01-store/vectors/jcs/README.md) of lesson P/01).
+[`jcs`](../vectors/jcs/README.md) of the common JCS contract).
 
 Normative keywords follow [the course canon](../NORMATIVE-TERMS.md).
 
@@ -128,6 +128,6 @@ The stand command `door-token-verify` of the profile `03-worker` (P/03.4 N5) get
 
 The stand command `door-token-issue` of the profile `06-console` (P/06.5 N3) gets the path of a file with one JSON object of exactly `{seed_hex, kid, now, claims}` of a row of `issue.tsv`: `seed_hex` and `kid` are the strings of the row, `now` is a number, `claims` is the JSON text of the row as it is: the order of fields, `routes` and the notation of numbers are not re-derived, and the form of the checking side does not apply to issuing. The seed, `kid` and the time are from the row, not from the clock or the stand's own secrets. An input not of this form — not an object, a missing, extra or repeated field, a wrong type, or `seed_hex`, `kid`, `claims` not by the issuing contract — gets code 2 and an empty stdout; there is no refusal of issuing with code 0. Code 0 means computed: stdout is exactly one JSON object and LF, `{"claims_jcs": …, "token": …}`, both fields byte for byte with the columns of `issue.tsv`, without the envelope `result`; the first byte is `{`, after the object — LF and the end; formatting inside the object is allowed; extra fields, bytes, CRLF or whitespace around are a FAIL of the row; service output goes to stderr.
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 

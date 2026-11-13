@@ -677,21 +677,6 @@
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
     },
     {
-      "path": "Platform/01-store/ru/vectors/jcs/README.md",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
-    },
-    {
-      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
-      "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
-    },
-    {
-      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.md",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
-    },
-    {
       "path": "Platform/01-store/spec/01-store.README.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -735,36 +720,6 @@
       "path": "Platform/01-store/spec/production-acceptance.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
-    },
-    {
-      "path": "Platform/01-store/vectors/jcs/README.md",
-      "disposition": "model_and_judge",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
-    },
-    {
-      "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
-      "disposition": "judge_only",
-      "basis": "Exact newly committed private case companion under Architect *.cases.* rule; expanded path, no automatic directory drop."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
-      "disposition": "model_and_judge",
-      "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/rights.json",
-      "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     }
   ],
   "judge": [
@@ -1444,21 +1399,6 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
-      "path": "Platform/01-store/ru/vectors/jcs/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
-      "path": "Platform/01-store/ru/vectors/rights-evaluator/README.md",
-      "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
-    },
-    {
       "path": "Platform/01-store/spec/01-store.README.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
@@ -1502,36 +1442,6 @@
       "path": "Platform/01-store/spec/production-acceptance.md",
       "disposition": "include",
       "basis": "Groups, budgets and measurements of N6, named as an engine input by spec/acceptance.README.md."
-    },
-    {
-      "path": "Platform/01-store/vectors/jcs/README.md",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/01-store/vectors/jcs/canonical_json.tsv",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/README.cases.md",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/README.md",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/expect.tsv",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
-    },
-    {
-      "path": "Platform/01-store/vectors/rights-evaluator/rights.json",
-      "disposition": "include",
-      "basis": "Acceptance data of P/01."
     }
   ]
 }

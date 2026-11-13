@@ -133,6 +133,6 @@ of an input out of form (`audience_claim` empty, `keys` without `current`; cover
 of the kinds `keep` (`token-keep-*`, ADR-0110 addendum (10), addendum (12) item 1) — by the text of the contract.
 An implementation passes them with its own function, without a stand.
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
-of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
+The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../vectors/jcs/README.md)
+of the common JCS contract (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 

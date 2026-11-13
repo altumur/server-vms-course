@@ -133,6 +133,6 @@ name — a non-empty string, default aud> | {<kind>: <field name>}, keep?: [<kin
 видов `keep` (`token-keep-*`, ADR-0110 доп. (10), доп. (12) п. 1) — по тексту договора.
 Реализация проходит их своей функцией, без стенда.
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
-урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../vectors/jcs/README.md)
+общего договора JCS (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 
