@@ -9,6 +9,9 @@ require (
 	github.com/hashicorp/raft v1.7.3
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	go.yaml.in/yaml/v3 v3.0.5
+	servervms.local/common/json v0.0.0-20261113192059-b8b1a5bd1dad
+	servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5
+	servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5
 )
 
 require (
