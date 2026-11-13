@@ -68,10 +68,13 @@ Five existing output variants/capabilities
 
    Fields is - or comma-separated names matching [a-z][a-z_]* with optional ?;
    no repeated names or kind/error entries. Remove ? and retain its Boolean role.
-   Headers is - or semicolon-separated Name: value entries; names match
+   Headers is - or semicolon-separated Name: value entries or bare names; names match
    [A-Za-z][A-Za-z0-9-]*, values are nonempty, surrounding entry whitespace is
-   stripped. RetryAfter is true if any header name case-insensitively equals
-   Retry-After. Header values are copied, not interpreted as deadlines.
+   stripped. Bare names declare values chosen by the implementation and go into
+   DynamicHeaders, never into fixed Headers pairs. Repeated names involving a bare
+   entry refuse (ignoring case); legacy fixed-only repeats retain their order.
+   RetryAfter is true if either list has Retry-After (ignoring case).
+   Fixed header values are copied, not interpreted as deadlines.
    Non-HTTP log is - or comma-separated, trimmed items: «nonempty fragment» ->
    Words; otherwise an optional minus followed by letters/spaces starting with
    a letter -> Log. This parser splits commas even inside quoted fragments.
@@ -80,7 +83,7 @@ Five existing output variants/capabilities
      type Field struct { Name string; Optional bool }
      type Spec struct {
        Chapter string; Row int; Name, Surface string; Code int; Kind string
-       Fields []Field; Headers [][2]string; RetryAfter bool
+       Fields []Field; Headers [][2]string; RetryAfter bool; DynamicHeaders []string
        Log, Words []string; Norm string
      }
    Check(map[string]any) error applies only to http: require every nonoptional
@@ -244,13 +247,20 @@ class Table:
                     if not m or m[1] in ("kind", "error") or m[1] in [x for x, _ in r["field_list"]]:
                         raise GenError(f"{where}: field {f!r} — a name, ? for optional, not kind or error, no repeats")
                     r["field_list"].append((m[1], bool(m[2])))
-            r["header_list"] = []
+            r["header_list"], r["dynamic_header_list"] = [], []
+            header_names = {}
             if r["headers"] != "-":
                 for h in r["headers"].split(";"):
-                    m = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", h)
-                    if not m:
-                        raise GenError(f"{where}: header {h!r} — Name: value")
-                    r["header_list"].append((m[1], m[2]))
+                    fixed = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*): (\S.*?)\s*", h)
+                    dynamic = re.fullmatch(r"\s*([A-Za-z][A-Za-z0-9-]*)\s*", h)
+                    m = fixed or dynamic
+                    if not m or (m[1].lower() in header_names and (not fixed or header_names[m[1].lower()])):
+                        raise GenError(f"{where}: header {h!r} — Name or Name: value, no repeated dynamic name")
+                    header_names[m[1].lower()] = not bool(fixed)
+                    if fixed:
+                        r["header_list"].append((m[1], m[2]))
+                    else:
+                        r["dynamic_header_list"].append(m[1])
             r["log_names"], r["log_words"] = [], []
             if r["log"] != "-":
                 if s == "http":
@@ -270,7 +280,8 @@ class Table:
 def go_spec(r):
     fields = ", ".join(f"{{{go_str(n)}, {'true' if o else 'false'}}}" for n, o in r["field_list"])
     headers = ", ".join(f"{{{go_str(n)}, {go_str(v)}}}" for n, v in r["header_list"])
-    retry = any(n.lower() == "retry-after" for n, _ in r["header_list"])
+    retry = any(n.lower() == "retry-after" for n in
+                [n for n, _ in r["header_list"]] + r["dynamic_header_list"])
     lst = lambda xs: "[]string{" + ", ".join(go_str(x) for x in xs) + "}" if xs else "nil"  # noqa: E731
     return (f"// {r['var']} — {r['chapter']} row {r['row']}: {r['surface']} {r['code']}"
             f"{' ' + r['kind'] if r['kind'] != '-' else ''}; {r['norm']}\n"
@@ -279,6 +290,7 @@ def go_spec(r):
             f"Kind: {go_str(r['kind'] if r['kind'] != '-' else '')}, "
             f"Fields: {('[]Field{' + fields + '}') if fields else 'nil'}, "
             f"Headers: {('[][2]string{' + headers + '}') if headers else 'nil'}, RetryAfter: {'true' if retry else 'false'}, "
+            f"DynamicHeaders: {lst(r['dynamic_header_list'])}, "
             f"Log: {lst(r['log_names'])}, Words: {lst(r['log_words'])}, Norm: {go_str(r['norm'])}}}")
 
 
@@ -298,8 +310,9 @@ type Spec struct {
 	Code       int         // HTTP status or start/CLI exit code(2;!0 maps to1).
 	Kind       string      // HTTP kind token;empty on other surfaces.
 	Fields     []Field     // HTTP body fields besides kind/error.
-	Headers    [][2]string // HTTP response headers.
-	RetryAfter bool        // Headers includes Retry-After, for apidoor.Answer.RetryAfter.
+	Headers    [][2]string // Fixed HTTP response headers.
+	RetryAfter bool        // Headers or DynamicHeaders includes Retry-After.
+	DynamicHeaders []string // Header names whose values the implementation chooses.
 	Log        []string    // Start/CLI values named by the log.
 	Words      []string    // Start/CLI words carried literally by the log.
 	Norm       string
@@ -720,8 +733,9 @@ type Spec struct {
     Code int            // http — the HTTP status; start, cli — the exit code (2; «non-zero» — 1)
     Kind string         // http — the wire kind
     Fields []Field      // http — the fields besides kind and error; Field{Name string; Optional bool}
-    Headers [][2]string // http — the headers of the answer
-    RetryAfter bool     // Headers carry Retry-After
+    Headers [][2]string // http — fixed name/value pairs
+    RetryAfter bool     // Headers or DynamicHeaders carry Retry-After
+    DynamicHeaders []string // bare names; the implementation supplies the values
     Log, Words []string // start, cli — the values the log names, the words it carries literally
     Norm string
 }
@@ -732,7 +746,10 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 
 - An http refusal: pick the row by its condition (the names are the conditions of N4; the rows of the write command
   carry the names of `write-checks.tsv` checks), then with part `door`:
-  `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
+  `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`. For the fixed connection-limit header,
+  use `seconds := int64(1); a.RetryAfter = &seconds` according to the fixed `s.Headers` pair. For `replay_limit`,
+  `s.DynamicHeaders` declares Retry-After and the implementation computes its seconds until admission;
+  `s.RetryAfter` alone does not choose a value or compute this delay. `Check(values)` first if
   you want the catalogue to judge the fields; the door judges the body against the OpenAPI `*Fault`.
 - A start refusal: `os.Exit(refusals.StartFlags.Exit(log.Print, map[string]string{"flag": r.Flag}))` (with part
   `flags`: `r` is the `*flags.Refusal`).
