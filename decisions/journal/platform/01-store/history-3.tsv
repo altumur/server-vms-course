@@ -688,3 +688,6 @@ P/01.3-R420	spec/01.3-store.norms.md#N3	P01.347; ADR-0130 Addendum (24)	2026-11-
 P/01.3-R421	spec/01.3-store.norms.md#N3	P01.347; ADR-0130 Addendum (24)	2026-11-13	-
 P/01.3-R422	spec/01.3-store.norms.md#N3	P01.347; ADR-0130 Addendum (24)	2026-11-13	-
 P/01.3-R423	spec/01.3-store.norms.md#N3	P01.347; ADR-0130 Addendum (24)	2026-11-13	-
+-	acceptance/3/scenarios.tsv#row:scenario=37-recover-crash&step=14	P01.356; P01.343; ADR-0135 addendum (13)	2026-11-13	200 {"state":"Leader","leader_id":"s1","leader":"{api@s1}"}
+-	acceptance/3/README.md#deterministic-recovery-and-checkpoint-faults	P01.356; P01.343; ADR-0135 addendum (13)	2026-11-13	-
+-	acceptance/3/README.md#deterministic-recovery-and-checkpoint-faults	P01.356; P01.343; ADR-0135 addendum (13); derived Russian translation	2026-11-13	-

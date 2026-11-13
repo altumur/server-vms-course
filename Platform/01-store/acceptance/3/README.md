@@ -54,6 +54,8 @@ Only the acceptance of P/01 uses the words below; the [dictionary of the common 
 
 The [shared syscall directives](../../../common/acceptance/command-tables.md#deterministic-syscall-faults) operate on fresh trial stands. A forced state save is the required `stand.checkpoint` command or its explicit `none` branch; the latter faults ordinary journal writes. The command's substitutions and the `blocked` result for absence are the common contract. These tests do not require a checkpoint at SIGTERM and do not reproduce loss of dirty kernel pages.
 
+In sc. 37, recovery declares only `s1` in `-peers` and the other voters remain stopped: after restart the leader is `s1` (P/01.3-R021, P/01.3-R022). Step 14 waits for `state: Leader`, `leader_id: s1` and a nonempty `leader`, using the existing `@not("")` expectation marker; `{api@s1}` is a request substitution, not an expectation marker. Steps 15–18 check that both original rows and versions survive and that a new write gets a distinct version. The full status contract still applies.
+
 ## Batch and restart (sc. 30)
 
 The batch `op: batch` on the stand store (P/01.1 N3 «write batch», ADR-0094 B9): the rows and the `id` memory survive `@restart store`, a replay answers
