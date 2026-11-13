@@ -29,3 +29,8 @@ C21	complexity	copy_core	{"max_branches": 15, "max_lines": 80}	daemon_copy	P/01.
 C22	step_form	journal_step	{"core": "store_core"}	durable	P/01.1 N1; P/01.3 N1.3
 C23	property_tests	journal_step	{}	durable	P/01.1 N1; P/01.3 N1.3
 C24	requires_module	raft_group	{"module": "github.com/hashicorp/raft", "from": "Platform/common/versions/go.mod"}	group	P/01.3 N1.3; Platform/common/versions/README.md
+C25	requires_module	common_json	{"module": "servervms.local/common/json", "from": "Platform/common/versions/go.mod"}	model	Platform/common/modules.md; Platform/common/contracts/json.md
+C26	requires_module	common_rights_evaluator	{"module": "servervms.local/common/rights-evaluator", "from": "Platform/common/versions/go.mod"}	rights_eval	Platform/common/modules.md; Platform/common/contracts/rights-evaluator.md
+C27	requires_module	common_store_client	{"module": "servervms.local/common/store-client", "from": "Platform/common/versions/go.mod"}	launch	Platform/common/modules.md; Platform/common/contracts/store-client.md
+C28	requires_module	common_log_mask	{"module": "servervms.local/common/log-mask", "from": "Platform/common/versions/go.mod"}	launch	Platform/common/modules.md; Platform/common/contracts/log-mask.md
+C29	forbid_imports	common_json	{"forbid": ["encoding/json"]}	model	Platform/common/modules.md; Platform/common/contracts/json.md

@@ -627,6 +627,11 @@
       "basis": "Root final signed Source14 at9b0b7b68; actual mode/blob matches signed tuple. Whole named public document clean for original selected role; no global Source certificate."
     },
     {
+      "path": "Platform/05-resource/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/05-resource/forms/daemon-flags.tsv",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -1480,6 +1485,11 @@
       "path": "Platform/06-console/forms/README.md",
       "disposition": "model_and_judge",
       "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_M_ACCEPTED_OWNED_WHOLE_FILE_SPLIT. Whole public normative meaning must be retained; any listed mixed/current condition blocks publication until closed."
+    },
+    {
+      "path": "Platform/06-console/forms/code-rules.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
     },
     {
       "path": "Platform/06-console/forms/daemon-flags.tsv",
@@ -4842,6 +4852,11 @@
       "basis": "Shared algorithm contract used by the existing vector consumers."
     },
     {
+      "path": "Platform/common/contracts/json.md",
+      "disposition": "model_and_judge",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/contracts/keys.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
@@ -5062,6 +5077,11 @@
       "basis": "ONE authoritative Source filter file itself is delivered J-only, never M; no self-hash or C identity inside it."
     },
     {
+      "path": "Platform/common/modules.md",
+      "disposition": "model_and_judge",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/qualification-input-filter.json",
       "disposition": "judge_only",
       "basis": "Qualification input filter; administrative input of the trusted exporter, not for the product model."
@@ -5277,6 +5297,11 @@
       "basis": "Russian mirror; the inputs are English only."
     },
     {
+      "path": "Platform/common/ru/contracts/json.md",
+      "disposition": "judge_only",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
+    },
+    {
       "path": "Platform/common/ru/contracts/keys.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; same exact carrier, newer published Source; changed blob listed for Root role confirmation."
@@ -5440,6 +5465,11 @@
       "path": "Platform/common/ru/data/testsub/README.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/common/ru/modules.md",
+      "disposition": "judge_only",
+      "basis": "Shared code contracts and lesson use rules; Russian mirrors remain outside the export."
     },
     {
       "path": "Platform/common/ru/placeholders.tsv",
