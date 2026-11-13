@@ -54,7 +54,7 @@ class CodeGateCoverageControls(unittest.TestCase):
                 path.write_text(text, encoding="utf-8")
                 self.assertTrue(check_forms.check_stage_parts(path)[0])
 
-    def test_actual_published_source_rules_and_nine_gate_cells(self):
+    def test_actual_published_source_rules_and_eleven_gate_cells(self):
         lesson = Path(__file__).resolve().parents[3] / "Platform" / "01-store"
         errors, rules = check_forms.read(lesson / "forms" / "code-rules.tsv",
                                          ["id", "kind", "name", "args", "stage", "norm"])
@@ -63,7 +63,7 @@ class CodeGateCoverageControls(unittest.TestCase):
         lines = [line.split("\t") for line in (lesson / "forms" / "stages.tsv").read_text(
             encoding="utf-8").splitlines() if line and not line.startswith("#")]
         stages = [dict(zip(lines[0], line)) for line in lines[1:]]
-        self.assertEqual(sum("code:*" in row["gate"].split(";") for row in stages), 9)
+        self.assertEqual(sum("code:*" in row["gate"].split(";") for row in stages), 11)   # OBSH.70: rights, daemon_doors
         self.assertEqual(check_forms.check_stage_parts(lesson / "forms" / "stages.tsv")[0], [])
 
 

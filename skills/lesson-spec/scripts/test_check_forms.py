@@ -60,7 +60,7 @@ class Forms(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.lesson = self.tmp / "Platform/01-store"
-        for part in ("forms", "spec", "acceptance", "vectors"):
+        for part in ("forms", "spec", "acceptance"):       # the vectors of lesson 1 moved to common (P01.350)
             shutil.copytree(LESSON / part, self.lesson / part)
         for name in ("jcs", "rights-evaluator"):
             rel = f"Platform/common/vectors/{name}"
