@@ -13,6 +13,7 @@ No default is `-`. A missing bool is false; a supplied bool is true. These are c
 `operator-commands.tsv` columns are `command`, `process`, `prefix`, `positionals`, `norm`. `prefix` is a JSON array of fixed argv words;
 `positionals` is JSON Schema 2020-12 over the remaining positional words after option parsing. The form does not choose a shell lexer,
 an output format, an exit code on unspecified input, or a new interface for commands delegated to another lesson.
+Options out of `daemon-flags.tsv` are not unspecified input: they are the refusal `command_options` of the catalogue (P/02.4 «Command options»).
 
 ## Refusal catalogue
 

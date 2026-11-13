@@ -1,6 +1,6 @@
 # P/02 command/file and rollout-poll seams (ADR-0125 addendum (4) item 7). Grammar: forms/README.md. The runner executes this file through the seam adapter.
 # Owned temporary roots only. Exact return codes are tested only where normed; CALL command normalizes the specified zero/nonzero outcome.
-# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk, s15 walks an unreadable row (P/02.4 N1.9 «Walk»).
+# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk, s15 walks an unreadable row (P/02.4 N1.9 «Walk»). s16 refuses options out of daemon-flags.tsv before any file (P/02.4 «Command options»).
 # Layout directories of a scenario: forms/README.md. No real key, host install, service manager or deployment is used.
 # Poll inputs are events of the named source traces with all expectations removed; compare observations of the implementation's poll.
 # scenario	step	request	expect
@@ -27,3 +27,7 @@ s14-unit-role-socket-groups	1	CALL installer-role-unit-groups {"deployment":"w2c
 s12-secrets-walk-unknown	1	CALL secrets-walk {"argv":["w2cctl","secrets","status"],"rows":{"identity/x":{"note":"x"},"domain/testsub/ledger":{"n":"1"},"domain/testsub/badges/b1":{"n":"1"}}}	{"exit_code":1,"unknown":["identity/x"],"untouched":true}
 s13-secrets-walk-kept	1	CALL secrets-walk {"argv":["w2cctl","secrets","status","domain/"],"rows":{"domain/testsub/ledger":{"n":"1"},"domain/testsub/badges/b1":{"n":"1"}}}	{"exit_code":0,"unknown":[],"untouched":true}
 s15-secrets-walk-unreadable	1	CALL secrets-walk {"argv":["w2cctl","secrets","status","domain/"],"rows":{"domain/book-seal":{"n":"1"}}}	{"exit_code":1,"unknown":[],"untouched":true}
+s16-command-options	1	RUN w2cctl secrets new -bogus $data/opt.key	exit 2; stderr ~"-bogus"
+s16-command-options	2	@read $data/opt.key	@absent
+s16-command-options	3	RUN w2cctl secrets new -last $data/opt.key	exit 2; stderr ~"-last"
+s16-command-options	4	@read $data/opt.key	@absent
