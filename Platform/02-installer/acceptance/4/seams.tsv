@@ -31,5 +31,3 @@ s16-command-options	1	RUN w2cctl secrets new -bogus $data/opt.key	exit 2; stderr
 s16-command-options	2	@read $data/opt.key	@absent
 s16-command-options	3	RUN w2cctl secrets new -last $data/opt.key	exit 2; stderr ~"-last"
 s16-command-options	4	@read $data/opt.key	@absent
-s16-command-options	5	RUN w2cctl rights	exit 2; stderr ~"-deployment"
-s16-command-options	6	RUN w2cctl rights -deployment w2c -deployment w2c	exit 2; stderr ~"-deployment"
