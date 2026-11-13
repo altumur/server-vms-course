@@ -58,8 +58,8 @@ events:
 env:
 - One process, one manifest kind with keep:true and one ref. Handles/JTIs are opaque references to already parsed
   real tokens; trace handles contain no token bytes.
-- loaded reports the actual envelope/file read. day is the ordinal of the day by this worker clock, supplied by
-  the ordinary clock/calendar code; no timezone policy is chosen by this form.
+- loaded reports the actual envelope/file read. day is the UTC calendar-day ordinal by this worker wall clock
+  under P/03.7-R107, supplied by the ordinary clock/calendar code; TIMEZONE does not select this boundary.
 - accepted/unknown_key/expired/revoked are actual recipient outcomes for the named handle, not a decision based
   on the worker clock or on exp alone.
 - request, offer, wait and persist are effects of the ordinary code. The reference observes their selection; it
