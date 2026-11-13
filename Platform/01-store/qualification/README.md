@@ -99,6 +99,8 @@ The environment and the method are not budgets. The first budgets were set for a
 
 The [store probes](../probes/README.md) are eight public observation checkers over these groups. They cover partial slices and judge supplied observations only. They are no production result and no implementation input.
 
+The environment of the stand, the D7 providers on a virtual machine with their controls, the history check across faults and the procedures of `prod-disk-fd`, `prod-replay-limit` and `prod-admin-limit` are in [the stand procedures](stand-procedures.md).
+
 ### Probe debt
 
 The checks below have no executable probe yet. Until one exists, each stays checked by reading, and its group is blocked/NotExecuted for production qualification, not a success (ADR-0130 Addendum (13)). Runner writes the probes and their negative controls; this table names the debt and adds no route, flag or value. A capacity input comes from the environment (ADR-0130 Addendum (5) item 3). A clock input comes through the `clock` binding of [D7](../../common/acceptance/seams.md#d7-test-side-evidence-bindings) (ADR-0130 Addendum (11)); until that binding is supplied, the dependent case is `MissingBinding`/`NOTEXEC`.
