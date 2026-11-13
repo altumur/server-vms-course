@@ -33,7 +33,7 @@ prod-fault-stage	RUN-F04	fault	{"capability":"fault","phase":"barrier","model":"
 prod-fault-stage	RUN-F04	storage	{"capability":"storage","object":"store_directory","medium":"ext4","phases":["effect","barrier"],"states":["before","after","reopen"]}	qualification/README.md#case-groups RUN-F04: independent batch oracle
 prod-leader-loss	-	-	-	acceptance.norms.md#n63-probes prod-leader-loss: group stand and two_way_partition, means of the engine
 prod-import-interrupted	-	-	-	acceptance.norms.md#n63-probes prod-import-interrupted: group stand and writer_hold
-prod-recover-interrupted	-	fault	{"capability":"fault","phase":"recover_mark","model":"interrupt"}	acceptance.norms.md#n63-probes prod-recover-interrupted: fault at the phase mark of recover (P/01.3 R021)
+prod-recover-interrupted	-	fault	{"capability":"fault","phase":"recover_mark","model":"interrupt"}	acceptance.norms.md#n63-probes prod-recover-interrupted: fault at the phase mark of recover (P/01.3 R265)
 prod-disk-fd	-	-	-	acceptance.norms.md#n63-probes prod-disk-fd: volume, disk and descriptors of the input of N6.2
 prod-clock-group	-	clock	{"capability":"clock","mode":"control","domains":[{"member":"s1","clock":"wall","boundary":"admission_time"},{"member":"s2","clock":"wall","boundary":"admission_time"},{"member":"s3","clock":"wall","boundary":"admission_time"}]}	acceptance.norms.md#n63-probes prod-clock-group and qualification/README.md#clocks-in-a-group: one provider controls the listed domains of the voters (P01.135 decision 3)
 prod-reply-commit	-	-	-	acceptance.norms.md#n63-probes prod-reply-commit: slow reader of the judge, group stand

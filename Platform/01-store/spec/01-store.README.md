@@ -118,7 +118,7 @@ References «N…» are norms of chapter 1.3; rights are chapter 1.2.
 
 2. On a separate model check all phases of restore/import/recover: isolation, a reliable upper, the uint64 bounds, one raise of the floor, a partial transfer and continuation of the same attempt. Force does not allow a lowering or two operators (N3).
 
-3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–34 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input; they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.
+3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30, 36 on a fresh stand with schema 1 (08, 19, 30, 36 with a durable store; 20, 22, 36 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31–35 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable). These scenarios are outside the model input; they check the checklist items that name them: P/01.3-01…08 and P/01.3-11 of chapter 1.3, P/01.1-07, P/01.1-11, P/01.1-14, P/01.1-17, P/01.1-30, P/01.1-31 of chapter 1.1.
 
 ## Language-dependent pitfalls
 
@@ -167,8 +167,8 @@ Chapter 1.3:
 
 ## Done when
 
-- [ ] all 78 scenarios / 741 steps of the three chapters (judge-only: `scenarios.tsv` of the three chapters; they check the checklist items named below) (1.1 — 40, 1.2 — 11, 1.3 — 27; sc. 07, 17, 18, 25–29, 31–34 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
-  per the acceptance README of chapter 1.1; sc. 07, 17, 18, 25–29, 31–34 of chapter 1.3 on the store group stand (for the box build — not_applicable);
+- [ ] all 80 scenarios / 763 steps of the three chapters (judge-only: `scenarios.tsv` of the three chapters; they check the checklist items named below) (1.1 — 40, 1.2 — 11, 1.3 — 29; sc. 07, 17, 18, 25–29, 31–35 of chapter 1.3 on the store group stand) are green through the door, including the order of names in `keys`
+  per the acceptance README of chapter 1.1; sc. 07, 17, 18, 25–29, 31–35 of chapter 1.3 on the store group stand (for the box build — not_applicable);
 - [ ] (SHOULD) the same scenarios are green through the in-process API for each data store;
 - [ ] the implementation description answers all items of the section «Implementation decides»;
 - [ ] each item of the checklists P/01.1-01…32, P/01.2-01…09, P/01.3-01…13 is either closed by a scenario, or the description states the place in the

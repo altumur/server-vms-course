@@ -4,3 +4,4 @@ s7-loopback-api-no-tls	1	CALL store-start-flags {"api":"loopback","raft":"absent
 s8-loopback-join-needs-tls	1	CALL store-start-flags {"api":"loopback","raft":"loopback","join":"loopback","tls":false}	{"config_accepted":false,"exit":2,"network_setup_calls":0}
 s9-public-api-needs-tls	1	CALL store-start-flags {"api":"non_loopback","raft":"absent","join":"absent","tls":false}	{"config_accepted":false,"exit":2,"network_setup_calls":0}
 s10-import-floor-resume	1	CALL store-copy-floor {"input":"backup_of_restored_store","interrupt_after_target_rows":1}	{"first_write_is_new_floor":true,"new_floor_greater_than_input":true,"old_floor_transferred":false,"same_floor_row_after_resume":true,"other_rows_and_versions_equal":true,"complete":true}
+s11-import-held-reads	1	CALL store-import-held {"input":"backup_into_live_group","interrupt_after_target_rows":1}	{"leader_read_unavailable":true,"follower_read_unavailable":true,"write_unavailable":true,"complete":true}

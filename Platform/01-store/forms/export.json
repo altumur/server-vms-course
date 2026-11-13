@@ -222,6 +222,21 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/01-store/acceptance/3/inputs/member-join-other.json",
+      "disposition": "judge_only",
+      "basis": "Acceptance input of P/01: a probe of the store group stand."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/member-leave-other-follower.json",
+      "disposition": "judge_only",
+      "basis": "Acceptance input of P/01: a probe of the store group stand."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/member-leave-other.json",
+      "disposition": "judge_only",
+      "basis": "Acceptance input of P/01: a probe of the store group stand."
+    },
+    {
       "path": "Platform/01-store/acceptance/3/inputs/status-body-limits.json",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -960,6 +975,21 @@
     },
     {
       "path": "Platform/01-store/acceptance/3/inputs/group.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/member-join-other.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/member-leave-other-follower.json",
+      "disposition": "include",
+      "basis": "Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/acceptance/3/inputs/member-leave-other.json",
       "disposition": "include",
       "basis": "Acceptance data of P/01."
     },

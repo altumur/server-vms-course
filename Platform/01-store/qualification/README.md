@@ -110,14 +110,14 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 | RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted | P/01.3 R034 | qualified stop observer and actual manager configuration |
 | RUN-F01, RUN-F02, RUN-F04, executable | P/01.1 R144 | qualified fault-stage binding |
 | Loss of the leader after sending (the death of the leader; a held answer of a forwarded write); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |
-| Interrupted `import` in a group: start, holding writers, continuation through `admin.sock` of the leader, `recover` after the loss of a majority | P/01.3 N1.3 `import` | group stand with an interruption |
-| Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 N3 R021 | qualified interruption point |
-| Full disk and exhausted descriptors | P/01.3 R036 | capacity input from the environment |
-| Leader change and snapshot with different clocks; `admission_ahead` | P/01.3 N1.3 `admission`; P/01.1 R070 | D7 `clock` binding |
-| Response-write budget; commit wait under a live leader | P/01.3 R035 | slow reader and slow commit from the environment |
-| Door attempts against `-leader-wait`; all voters unreachable | P/01.3 R035 | group stand |
-| Replay-processing limit | P/01.3 R035 | overload input from the environment |
-| `admin.sock` limit when the ordinary limits are exhausted | P/01.3 R008 | connection exhaustion from the environment |
+| Interrupted `import` in a group: start, holding writers, reads answered as the store `file://`, continuation through `admin.sock` of the leader, `recover` after the loss of a majority | P/01.3 N1.3 `import`; P/01.3 R156, R159 | group stand with an interruption |
+| Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 R265, R267, R398 | qualified interruption point |
+| Full disk and exhausted descriptors | P/01.3 R036, R260 | capacity input from the environment |
+| Leader change and snapshot with different clocks; `admission_ahead` | P/01.3 N1.3 `admission`; P/01.1 R070 | D7 `clock` binding; not executable on the stand of one machine (below, «Clocks in a group») |
+| Response-write budget; commit wait under a live leader | P/01.3 R035, R326 | slow reader and slow commit from the environment |
+| Door attempts against `-leader-wait`; all voters unreachable | P/01.3 R252 | group stand |
+| Replay-processing limit | P/01.3 R329 | overload input from the environment |
+| `admin.sock` limit when the ordinary limits are exhausted | P/01.3 R008, R200 | connection exhaustion from the environment |
 | Temporary `backup` file after failure, cancellation and a killed run | P/01.3 R018 | qualified fault binding |
 | Age of the `id` memory from the first application on the admission-time clock | P/01.1 R141 | D7 `clock` binding |
 
@@ -128,6 +128,8 @@ ADR-0130 Addendum (15) item 8 and Addendum (11): this is the public scope of a D
 A node is addressed by its stable daemon `-id` in the topology of the case (P/01.3 N1.3). Leader and follower are observed changing roles (`leader_id` of `/v1/status`), not addresses. One `clock` provider controls the explicitly listed consuming wall-clock domains of the case, each named by the `-id` of its node; a domain that is not listed is not controlled. The independent monotonic baseline of the observer is not shifted. Offsets use the seconds of the wall stamps of the chapter, and no skew allowance is added.
 
 The checks of P/01.1 R013 are the actual spread between the clocks beyond `CLOCK_SKEW`, a common shift and return, and the non-decrease of admission time. The probes also need a leader change, a Raft snapshot, the equality of admission time, and a replay held after `not_after` before the first application. Writer and client clocks belong to the scope only when the selected workload actually uses them; live P/03, P/04 or new N−1 stands are not assumed. Until the public case payload and a qualified provider exist, a dependent check stays `MissingBinding`/`NOTEXEC`.
+
+The declared environment of the judge (P/AC N3.3) gives the processes of a run only the loopback, and the group stand puts all members on the loopback of one machine, which has one wall clock. The clocks of the members cannot differ there, so `prod-clock-group` is not executable on that stand and is `not_executed` with the reason `clock`; the environment of N3.3 is not widened for it.
 
 ## Evidence and outcomes
 
