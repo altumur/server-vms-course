@@ -2965,6 +2965,14 @@ class Check:
                 self.error(lesson, message)
             self.stats["req_anchors"] = self.stats.get("req_anchors", 0) + stats["req_anchors"]
 
+    def form_refs(self):
+        """ADR-0133 доп. (102): ссылки ячеек форм уроков и common (`Platform/*/forms/**/*.tsv`,
+        `Platform/common/**/forms/**/*.tsv`) — путь к файлу, строки `:N`/`:N–M`, якорь, раздел норм `P/NN.K Nx`, `«Заголовок»`,
+        пункт готовности `P/NN.K-MM` — существуют; ссылка из файла M на файл вне M висит в M (`form_refs`). Висячая
+        ссылка — ошибка без ведомости долга. Цели ворот этапов судит `check_forms.gate_errors`."""
+        import form_refs
+        form_refs.run(self)
+
     def check_cyrillic(self, debt_path=None):
         """All Platform bytes, independently of the selected lessons; tools/normgen is frozen
         (check_cyrillic.FROZEN_SOURCE, ADR-0125 доп. (14) п. 3) and not judged."""
@@ -3831,7 +3839,7 @@ def _platform_phase(args, names):
         check.lesson((check.root / name).resolve())
     for method in ("registered_shared_lessons", "vector_hashes", "outcome_readers", "family_read", "common_contracts", "stub_text",
                    "library_defects", "layer_words", "english_mirrors", "check_tables", "check_machines", "check_forms",
-                   "target_registry", "export_lists", "m_form"):
+                   "form_refs", "target_registry", "export_lists", "m_form"):
         getattr(check, method)()
     check.check_cyrillic(args.cyrillic_debt)
     return check

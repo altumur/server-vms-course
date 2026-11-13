@@ -20,6 +20,7 @@ MODULES = (
     "test_check_machines",
     "test_export_lists",
     "test_target_registry",
+    "test_form_refs",                                 # synthetic lessons of the form references (OBSH.56)
 )
 
 
