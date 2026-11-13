@@ -152,7 +152,7 @@ For a seam whose owner requires a store and installed manifests, the judge appli
 
 <!-- req: P/AC-R017 -->
 
-A stop signal goes to the whole process group of the command, and the judge waits up to 60 s for the exit of the whole group, not only of the shell that started it; after this term it sends SIGKILL to the group; the step has the class `implementation` for a process of the implementation and the class `stand` only for a process of the stand itself or a proxy of the judge. A process that had already exited by itself when a stop or restart step came is a mismatch of that step: the stand does not hide it by starting the process again.
+A stop signal goes to the whole process group of the command, and the judge waits up to 60 s for the exit of the whole group, not only of the shell that started it; after this term it sends SIGKILL to the group; the step has the class `implementation` for a process of the implementation and the class `stand` only for a process of the stand itself or a proxy of the judge. A process that had already exited by itself when a stop or restart step came is a mismatch of that step: the stand does not hide it by starting the process again. An exit already proved by an earlier explicit scenario stop or successful `@crash` is an expected stopped state: restart starts that instance directly with its retained state; it sends no stop signal to the dead command.
 
 <!-- req: P/AC-R018 -->
 
@@ -204,7 +204,7 @@ The budget of a target is finite and the report names it; the budget of a scenar
 
 <!-- req: P/AC-R055 -->
 
-The judge MUST parse `@crash` and `@io-error` by [their shared form](../command-tables.md#deterministic-syscall-faults), including the syscall families, positive bound, error number and strict trigger object, before starting the stand. A malformed nested request is a data error too. The engine MUST dispatch by those closed words, not by lesson, case, candidate or on-disk path literals.
+The judge MUST parse `@crash` and `@io-error` by [their shared form](../command-tables.md#deterministic-syscall-faults), including the syscall families, positive bound, error number, strict trigger object, selected-store door or operator identity and checkpoint write fallback, before starting the stand. A malformed nested request is a data error too, including a different store hidden in a valid directive or a read used as the checkpoint fallback; fallback validation applies even when a real checkpoint command is present. The engine MUST dispatch by those closed words, not by lesson, case, candidate or on-disk path literals.
 
 <!-- req: P/AC-R056 -->
 
@@ -212,11 +212,11 @@ A selected checkpoint trigger MUST require `stand.checkpoint`, command or explic
 
 <!-- req: P/AC-R057 -->
 
-The judge MUST enumerate the reachable syscall ordinals up to the scenario's K and replay the entire scenario on a fresh stand with fresh bindings for each fault tuple, as the shared form defines. It MUST preserve the source-step inventory and every tuple's observations. GREEN MUST require successful discovery and every required fault trial. A missing or unproven selected fault, zero matching calls or failed independent controls MUST be `stand`; a later successful trial MUST NOT replace an earlier failure.
+The judge MUST enumerate the reachable syscall ordinals up to the scenario’s K and replay the entire scenario on a fresh stand with fresh bindings for each fault tuple, as the shared form defines. It MUST preserve the source-step inventory and every discovery and trial run’s identity and observations. Discovery ends at its trigger; its intentionally absent suffix is not an unexecuted step. A source step is GREEN only when every required execution, including discovery, matched; every red result and required execution prevented by an abort MUST remain in the aggregate with its ordinary class or reason under R030 and R037. GREEN of the scenario MUST require successful discovery and every required fault trial. A missing or unproven selected fault, zero matching calls or failed independent controls MUST be `stand`; a later successful trial MUST NOT replace an earlier failure.
 
 <!-- req: P/AC-R058 -->
 
-The injector MUST observe the selected process group's storage syscalls independently, including all threads and operator descendants, and MUST qualify process/object identity, syscall normalization, ordinal and activation order before scoring. `@crash` MUST prove SIGKILL after the selected successful call and whole-group exit. `@io-error` MUST suppress the selected call and prove the selected EIO/ENOSPC return with no effect from that call. Expected injection overrides only that trigger's interrupted outcome; an unrelated crash or timeout remains `implementation`. Observation, injection, control or cleanup failure is `stand`; a malformed directive is `data`. A failed fault directive MUST abort dependent steps of that trial under R033. The judge MUST retain redacted syscall and kill/error evidence; an ACK, a log string or a helper's exit alone MUST NOT establish the fault. Process restart MUST NOT be reported as a physical power cut.
+The injector MUST observe the selected process group's storage syscalls independently, including all threads and operator descendants, and MUST qualify process/object identity, syscall normalization, ordinal and activation order before scoring. `@crash` MUST prove SIGKILL after the selected successful call and whole-group exit. `@io-error` MUST suppress the selected call and prove the selected EIO/ENOSPC return with no effect from that call. Expected injection overrides only that trigger's interrupted outcome; an unrelated crash or timeout remains `implementation`. Observation, injection, control or cleanup failure is `stand`; a malformed directive is `data`. A failed fault directive MUST abort dependent steps of that trial under R033. The judge MUST retain redacted syscall and kill/error evidence; an ACK, a log string or a helper's exit alone MUST NOT establish the fault. Process restart MUST NOT be reported as a physical power cut. The all-threads control MUST execute and observe storage calls on distinct native threads of a judge-owned process in the current invocation, including pre-existing and newly created threads; following descendants or citing prior unit tests alone MUST NOT qualify that capability.
 
 ### N3.5 Stand controls for qualification
 
@@ -402,6 +402,7 @@ An implementation is to name in its description:
 5. the means of the two-way partition and of a Raft snapshot of N6.3, and the instruments of N6;
 6. the syntax of the invocation that names the test-side inputs of N2.1.
 7. the invocation and evidence serialization of the separate form mutation step, preserving its inventory, cell results and controls of R061–R066; it introduces no profile field or scenario directive.
+8. the observation interval for a forbidden HTTP body within the step budget, the `@together` send scheduling, the storage-identity resolver, tracing and control-fixture mechanisms, and discovery/trial evidence names. These choices are not judged; the byte observations, complete-send order, selected objects, activated controls and preserved run outcomes required above are judged.
 
 ## Readiness checklist
 

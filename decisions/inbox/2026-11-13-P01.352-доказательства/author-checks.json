@@ -1,0 +1,24 @@
+{
+  "format": "P01.352-author-checks/1",
+  "base": "acf058a9280c08bae5dbfdb355e504abd10aeae5",
+  "source": "/home/pilot/owner-receipts/attempt8-review-inputs/engine-68ec79e7/GUESSES.md",
+  "source_sha256": "446c4b659e0c6d489764a7f0e789425a3e1263b167b2ce642baf2915ba599e2b",
+  "source_entries": [
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+  ],
+  "history_prefix_preserved": true,
+  "history_appended_rows": 35,
+  "corrections_rows": 10,
+  "diff_check_exit_code": 0,
+  "candidate_or_engine_runs": false,
+  "check_spec": "Полный прогон окончательного дерева выполняет основное окно; результат в квитанции."
+}

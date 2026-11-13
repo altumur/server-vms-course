@@ -15,9 +15,11 @@
 # every named field. error — an unnamed error is admitted with any value in the root object of the body and nowhere else. size — an unnamed size is admitted only in the root object of
 # the body of an answer whose expectation has the code 413 and the kind toolarge (the body refusal body_limit of the refusal catalogue forms/refusals.tsv of the lesson), and there it
 # is an integer JSON number, not a string and not a boolean, equal to the known full entity-body size in bytes; it is then excluded from the comparison. A valid, representable
-# Content-Length defines that full size even for an early answer after only a prefix has been sent. Transfer-Encoding: chunked ignores Content-Length: a completed chunked body has
-# the sum of decoded chunk-data bytes, excluding chunk framing and trailers; an incomplete chunked body has unknown full size and no size field. A refusal for an unrepresentable framing length has no
-# size field either. Absence remains admissible when the full size is known.
+# Content-Length defines that full size even for an early answer after only a prefix has been sent. Its value is decimal 1*DIGIT, with leading zeros admitted;
+# permitted normalization of repeated identical valid lengths to one value does not make that size unknown. Invalid or conflicting framing lengths do not define a full size.
+# Transfer-Encoding: chunked ignores Content-Length: a completed chunked body has the sum of decoded chunk-data bytes, excluding chunk framing and trailers;
+# an incomplete chunked body has unknown full size and no size field. Without either framing header a request has full body size 0. A refusal for an unrepresentable
+# framing length has no size field either; the judge does not impose its own integer ceiling on a candidate. Absence remains admissible when the full size is known.
 # Another unnamed field, in the root or deeper, is a mismatch of the mode whole. A nonempty array in a row whose body is not whole is a data error; a lesson or a chapter README admits no field.
 # rights: the rights file of the stand store, which the runner puts into {rights} before the store starts («Launch command» of the stand): a repository-relative path of a ready rights file;
 # derived:<deployment> — the file that the rights derivation command of the stand writes from the stand manifests of forms/stand-manifests.tsv with {deployment} = <deployment>; none — the
