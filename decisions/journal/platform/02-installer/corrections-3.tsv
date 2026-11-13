@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-31	calls_ok, calls_no_target, calls_bad_door	новые установки: door.pass.calls у подсистемы каталога (ADR-0094 B1)	all
 2026-11-01	puts.tsv shell_script_text, puts/pagedtext.shell.html	новый случай: что такое тег в запрете on…= (C02-SHELL-TAG-01); реализацией ещё не прогнан	all
 2026-11-06	ADR-0127 P06 C2 finite profile	Static profile after actual limits before writes/unchanged and at startup; own synthetic form/arithmetic witnesses are separate from actual installer and production completeness	all
+2026-11-13	P02.69 G06: независимой P/02 неясно происхождение полных дескрипторов удаления	Решение Архитектора P02.71 answered 2026-11-13T22:53:19Z: статическая таблица P/02 из договоров M, req-id каждого источника, полнота по всем процедурам семейств каталога; без привязки refused:form до записей	all
