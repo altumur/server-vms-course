@@ -35,4 +35,4 @@ SWEEP_LIMIT	64	count	P/06.1-R137	Maximum digests in sweep for both reader and wr
 SWEEP_GRACE	300	s	P/06.1-R139	Existing grace after batch mark, with the existing unreadable-at observation rule; no deletion outside maintenance window
 SWEEP_MARK_EVERY	60	s	P/06.1-R135	Period of the ordinary sweep marking pass; a nonempty batch is not refreshed
 DOOR_TOKEN_TTL	120	s	P/06.5-R436	Existing person door-token lifetime
-OPS_CONTROL_RETRIES	5	count	P/06.9-R017	Conflict retries after original control pass, at most6passes
+OPS_CONTROL_RETRIES	5	count	P/06.9-R017	Conflict retries after original control pass, at most 6 passes
