@@ -1,6 +1,6 @@
 # P/02 command/file and rollout-poll seams (ADR-0125 addendum (4) item 7). Grammar: forms/README.md. The runner executes this file through the seam adapter.
 # Owned temporary roots only. Exact return codes are tested only where normed; CALL command normalizes the specified zero/nonzero outcome.
-# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk (P/02.4 N1.9 «Walk»).
+# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk, s15 walks an unreadable row (P/02.4 N1.9 «Walk»).
 # Layout directories of a scenario: forms/README.md. No real key, host install, service manager or deployment is used.
 # Poll inputs are events of the named source traces with all expectations removed; compare observations of the implementation's poll.
 # scenario	step	request	expect
@@ -26,3 +26,4 @@ s11-poll-read-equality	1	CALL rollout-poll {"input":{"last":false,"self":"a","vo
 s14-unit-role-socket-groups	1	CALL installer-role-unit-groups {"deployment":"w2c","subsystem":"testsub","roles":["resource","console","testsubcontroller","domain","domainconsole","domainagent"]}	{"checked":6,"missing":[],"mismatched_socket_groups":[],"domainconsole_secrets":false}
 s12-secrets-walk-unknown	1	CALL secrets-walk {"argv":["w2cctl","secrets","status"],"rows":{"identity/x":{"note":"x"},"domain/testsub/ledger":{"n":"1"},"domain/testsub/badges/b1":{"n":"1"}}}	{"exit_code":1,"unknown":["identity/x"],"untouched":true}
 s13-secrets-walk-kept	1	CALL secrets-walk {"argv":["w2cctl","secrets","status","domain/"],"rows":{"domain/testsub/ledger":{"n":"1"},"domain/testsub/badges/b1":{"n":"1"}}}	{"exit_code":0,"unknown":[],"untouched":true}
+s15-secrets-walk-unreadable	1	CALL secrets-walk {"argv":["w2cctl","secrets","status","domain/"],"rows":{"domain/book-seal":{"n":"1"}}}	{"exit_code":1,"unknown":[],"untouched":true}

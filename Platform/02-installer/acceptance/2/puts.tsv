@@ -14,3 +14,4 @@ sugared	sugared	0 1	example-sugared
 # Gemini P/02 coverage audit (properties 13, 14; the Architect's forms): removed /rev mark — the no-change path completes it; malformed mark — refusal.
 rev_deleted	probe @rev-delete probe	0 1	example-sections
 rev_spoiled	probe @rev-spoil probe	2 1 @stderr ~platform/manifest/probe/rev	example-sections
+row_without_view	testsub @view-delete @rev-delete testsub	0 2	course-testsub

@@ -34,6 +34,7 @@ installers (the full catalogue read with rev 8, another installer writes rev 9 f
 | 07 | `sugared` | the sugar `tables`, `bound_to`, without `snapshot` and `display` — the installer's view equals the vector | P/02.2-02, P/02.2-03 |
 | 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row | P/02.3 N3 «Manifest change» («missing mark … → bring up to date»), P/02.3-03 |
 | 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one | P/02.3 N1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
+| 10 | `row_without_view` | `@view-delete` and `@rev-delete` leave the row rev 1 without the view and without the mark, as a first installation broken after the write of the row; the same file again — not «unchanged»: the row, the view and the mark rev 2, the mark with the `sha256` of the row; `manifest` — the vector `course-testsub` | P/02.3-R078, P/02.3-R080, P/02.3-R104, P/02.3-R123 |
 
 
 ### Original passage 3
