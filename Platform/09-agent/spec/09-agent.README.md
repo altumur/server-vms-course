@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/09-agent.READM
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/09-agent.md` (for people, not in the export).
 
+Scenario names (`sc. NN`), vector case names and seam names identify the judge's checking data; scenarios, fixtures and expected results are not provided to the model. All implementation obligations are stated in the visible norms and contracts.
+
 ## Task
 
 Implement the process `domainagent` in the language `<LANG>`: the agent of a member and the relay mode — by the two chapters of the lesson; pass
@@ -45,8 +47,8 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   family schema is self-contained).
 - The acceptance of the chapters checks the norms: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). The stand of several
   clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/domain-stand.md#domain-stand), the section «Domain stand».
-  The vectors of the lesson — [`follow`](../vectors/follow/README.md) (9.1); the common ones — [`agent-sig`](../../common/vectors/agent-sig/README.md),
-  [`peer`](../../common/vectors/peer/README.md) (9.1), [`accept`](../../common/vectors/accept/README.md) (9.2) (judge-only: the common vector packages; `agent-sig` checks P/09.1-R006, P/09.1-R077, P/09.1-R737, P/09.2-R044, P/09.2-R094, `peer` checks P/09.1-R444, P/09.1-R456, `accept` checks P/09.1-R004, P/09.1-R145, P/09.1-R149, P/09.1-R152, P/09.1-R189, P/09.1-R483, P/09.1-R508, P/09.1-R519, P/09.1-R527, P/09.1-R625, P/09.2-R108, P/09.2-R111). Flags,
+  The vectors of the lesson — [`follow`](../vectors/follow/README.md) (9.1); the common ones — `agent-sig`,
+  `peer` (9.1), `accept` (9.2). Flags,
   environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
 - The lecture (`ru/09-agent.md`, for people, not in the export) explains the mechanism and the examples.
 
@@ -129,33 +131,33 @@ relies on the agent pass.
 3. The home record only on a difference (N1.4); the freshness marks.
 4. The contribution in the report and the envelope of a secret: AAD — the member, the row key, item, JSON Pointer; the book row at a member, the secrets — by the ring
    ([P/06.2](../../06-console/spec/06.2-console.norms.md) N1.2), a write only on a change.
-5. The copies of placements at a member (sc. 01 of the acceptance of [chapter 8.6](../../08-domain/acceptance/6/README.md)); the application of edits
+5. The copies of placements at a member (sc. 01 of the acceptance of chapter 8.6); the application of edits
    by the agent and the outcomes (sc. 03 of the acceptance of chapter 8.6, sc. 04, 07, 08 of chapter 9.1); `If-Match` — [P/06.1](../../06-console/spec/06.1-console.norms.md),
-   sc. 14 of the acceptance of P/06.1 (judge-only: the scenario tables; by the N5 tables they check P/09.1-R008, P/09.1-R355, P/09.1-R369, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R395).
+   sc. 14 of the acceptance of P/06.1.
 6. The local door; the envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md), P/08.3 N1.5).
 7. A member behind a relay: `domain_age` → `domain/reached`.
 8. Following; the keeper's agent.
 9. The acceptance of the shared document; the alarm page and the front.
 10. The ceilings of the agent: `domain/agent`, `sign_failures`, `too_large`; the agent in the process.
 11. The stand: the scenarios of [the acceptance of the chapter](../acceptance/1/README.md) and the agent side in the scenarios of the chapters of lesson P/08
-    («Neighbours on the stand» of N5 of the chapter) (judge-only: the scenario tables; by the N5 table P/09.1-R714 the scenarios of the chapter check P/09.1-R008, P/09.1-R009, P/09.1-R012, P/09.1-R015, P/09.1-R016, P/09.1-R018, P/09.1-R020, P/09.1-R043, P/09.1-R054, P/09.1-R063, P/09.1-R077, P/09.1-R085, P/09.1-R088, P/09.1-R129, P/09.1-R172, P/09.1-R202, P/09.1-R229, P/09.1-R243, P/09.1-R250, P/09.1-R253, P/09.1-R276, P/09.1-R279, P/09.1-R294, P/09.1-R295, P/09.1-R296, P/09.1-R298, P/09.1-R306, P/09.1-R323, P/09.1-R327, P/09.1-R332, P/09.1-R341, P/09.1-R344, P/09.1-R355, P/09.1-R369, P/09.1-R371, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R395, P/09.1-R410, P/09.1-R470, P/09.1-R475, P/09.1-R476, P/09.1-R479, P/09.1-R530, P/09.1-R533, P/09.1-R537, P/09.1-R541, P/09.1-R543, P/09.1-R544, P/09.1-R548, P/09.1-R551, P/09.1-R560, P/09.1-R564, P/09.1-R573, P/09.1-R577, P/09.1-R581, P/09.1-R582, P/09.1-R586, P/09.1-R636, P/09.1-R685, P/09.1-R688, P/09.1-R691, P/09.1-R693, P/09.1-R712; by P/09.1-R729 the scenarios of lesson P/08 check P/09.1-R004, P/09.1-R008, P/09.1-R009, P/09.1-R011, P/09.1-R017, P/09.1-R019, P/09.1-R021, P/09.1-R023, P/09.1-R045, P/09.1-R060, P/09.1-R077, P/09.1-R085, P/09.1-R088, P/09.1-R166, P/09.1-R177, P/09.1-R182, P/09.1-R199, P/09.1-R204, P/09.1-R227, P/09.1-R245, P/09.1-R246, P/09.1-R253, P/09.1-R306, P/09.1-R309, P/09.1-R332, P/09.1-R337, P/09.1-R355, P/09.1-R369, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R461, P/09.1-R464, P/09.1-R466, P/09.1-R475, P/09.1-R546, P/09.1-R573, P/09.1-R597, P/09.1-R602, P/09.1-R605, P/09.1-R606, P/09.1-R618, P/09.1-R629, P/09.1-R634, P/09.1-R637, P/09.1-R638, P/09.1-R651, P/09.1-R661, P/09.1-R680, P/09.1-R695, P/09.1-R704).
+    («Neighbours on the stand» of N5 of the chapter).
 
 ### Chapter 9.2 — the relay mode
 
 1. The door and the relay pass of N3: its own copy and `rev` of each member (the function «accept» over its own memory — [the report
-   acceptance contract](../../common/contracts/accept.md), the vectors [`accept`](../../common/vectors/accept/README.md) (judge-only: a common vector package; it checks P/09.1-R004, P/09.1-R145, P/09.1-R149, P/09.1-R152, P/09.1-R189, P/09.1-R483, P/09.1-R508, P/09.1-R519, P/09.1-R527, P/09.1-R625, P/09.2-R108, P/09.2-R111)), the deltas
+   acceptance contract](../../common/contracts/accept.md), the vectors `accept` ), the deltas
    against the confirmed base, the packages, the return of the untaken publications into the memory (step 5).
 2. The check of the member signature at the door — [the agent signature contract](../../common/contracts/agent-signature.md), the key — from `keys`
-   of the package answer; the vectors [`agent-sig`](../../common/vectors/agent-sig/README.md) (judge-only: a common vector package; it checks P/09.1-R006, P/09.1-R077, P/09.1-R737, P/09.2-R044, P/09.2-R094).
+   of the package answer; the vectors `agent-sig`.
 3. `domain_age` in the answer to the member (N1.4).
 4. The server side of the door — [the role certificate contract](../../common/contracts/role-certificate.md#the-server-side-the-class-signed).
-5. The stand: the scenarios of [the acceptance of the chapter](../acceptance/2/README.md) (judge-only: the scenario table; by the N5 table P/09.2-R160 it checks P/09.1-R022, P/09.1-R419, P/09.1-R430, P/09.1-R443, P/09.1-R573, P/09.1-R574, P/09.1-R675, P/09.1-R677, P/09.1-R678, P/09.2-R005, P/09.2-R008, P/09.2-R017, P/09.2-R029, P/09.2-R031, P/09.2-R035, P/09.2-R036, P/09.2-R041, P/09.2-R044, P/09.2-R046–P/09.2-R048, P/09.2-R050, P/09.2-R056, P/09.2-R057, P/09.2-R064, P/09.2-R073, P/09.2-R075, P/09.2-R080, P/09.2-R083, P/09.2-R094, P/09.2-R111, P/09.2-R113, P/09.2-R121, P/09.2-R128, P/09.2-R138, P/09.2-R139, P/09.2-R144, P/09.2-R145).
+5. The stand: the scenarios of [the acceptance of the chapter](../acceptance/2/README.md).
 
 ### The whole lesson
 
 Run the vectors and the acceptance scenarios separately, with the preparation that the acceptance README of the chapter names: the lesson has
-27 scenarios / 314 stand steps in all — chapter 9.1 (`acceptance/1/`: 01, 03–08, 11, 13–25, 27; judge-only: the scenario table, by the N5 table P/09.1-R714 it checks P/09.1-R008, P/09.1-R009, P/09.1-R012, P/09.1-R015, P/09.1-R016, P/09.1-R018, P/09.1-R020, P/09.1-R043, P/09.1-R054, P/09.1-R063, P/09.1-R077, P/09.1-R085, P/09.1-R088, P/09.1-R129, P/09.1-R172, P/09.1-R202, P/09.1-R229, P/09.1-R243, P/09.1-R250, P/09.1-R253, P/09.1-R276, P/09.1-R279, P/09.1-R294, P/09.1-R295, P/09.1-R296, P/09.1-R298, P/09.1-R306, P/09.1-R323, P/09.1-R327, P/09.1-R332, P/09.1-R341, P/09.1-R344, P/09.1-R355, P/09.1-R369, P/09.1-R371, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R395, P/09.1-R410, P/09.1-R470, P/09.1-R475, P/09.1-R476, P/09.1-R479, P/09.1-R530, P/09.1-R533, P/09.1-R537, P/09.1-R541, P/09.1-R543, P/09.1-R544, P/09.1-R548, P/09.1-R551, P/09.1-R560, P/09.1-R564, P/09.1-R573, P/09.1-R577, P/09.1-R581, P/09.1-R582, P/09.1-R586, P/09.1-R636, P/09.1-R685, P/09.1-R688, P/09.1-R691, P/09.1-R693, P/09.1-R712), chapter 9.2 (`acceptance/2/`:
-02–06; judge-only: the scenario table, by the N5 table P/09.2-R160 it checks P/09.1-R022, P/09.1-R419, P/09.1-R430, P/09.1-R443, P/09.1-R573, P/09.1-R574, P/09.1-R675, P/09.1-R677, P/09.1-R678, P/09.2-R005, P/09.2-R008, P/09.2-R017, P/09.2-R029, P/09.2-R031, P/09.2-R035, P/09.2-R036, P/09.2-R041, P/09.2-R044, P/09.2-R046–P/09.2-R048, P/09.2-R050, P/09.2-R056, P/09.2-R057, P/09.2-R064, P/09.2-R073, P/09.2-R075, P/09.2-R080, P/09.2-R083, P/09.2-R094, P/09.2-R111, P/09.2-R113, P/09.2-R121, P/09.2-R128, P/09.2-R138, P/09.2-R139, P/09.2-R144, P/09.2-R145). Fill the checklists of the chapters with the evidence from N5 of the chapters.
+27 scenarios / 314 stand steps in all — chapter 9.1 (`acceptance/1/`: 01, 03–08, 11, 13–25, 27), chapter 9.2 (`acceptance/2/`:
+02–06). Fill the checklists of the chapters with the evidence from N5 of the chapters.
 
 ## Pitfalls of the language and the library
 
@@ -211,13 +213,13 @@ All the choices of the implementation are described (the items «Implementation 
 the ways of checking are recorded: for each id — a specific piece of evidence or an unchecked dependency. State the slice,
 the commands and the stand, the observations and the limitations. The data of past runs do not replace the preparation of a new one.
 
-- **9.1.** The acceptance scenarios of the chapter (`acceptance/1/`: 01, 03–08, 11, 13–25, 27; judge-only: the scenario table, by the N5 table P/09.1-R714 it checks P/09.1-R008, P/09.1-R009, P/09.1-R012, P/09.1-R015, P/09.1-R016, P/09.1-R018, P/09.1-R020, P/09.1-R043, P/09.1-R054, P/09.1-R063, P/09.1-R077, P/09.1-R085, P/09.1-R088, P/09.1-R129, P/09.1-R172, P/09.1-R202, P/09.1-R229, P/09.1-R243, P/09.1-R250, P/09.1-R253, P/09.1-R276, P/09.1-R279, P/09.1-R294, P/09.1-R295, P/09.1-R296, P/09.1-R298, P/09.1-R306, P/09.1-R323, P/09.1-R327, P/09.1-R332, P/09.1-R341, P/09.1-R344, P/09.1-R355, P/09.1-R369, P/09.1-R371, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R395, P/09.1-R410, P/09.1-R470, P/09.1-R475, P/09.1-R476, P/09.1-R479, P/09.1-R530, P/09.1-R533, P/09.1-R537, P/09.1-R541, P/09.1-R543, P/09.1-R544, P/09.1-R548, P/09.1-R551, P/09.1-R560, P/09.1-R564, P/09.1-R573, P/09.1-R577, P/09.1-R581, P/09.1-R582, P/09.1-R586, P/09.1-R636, P/09.1-R685, P/09.1-R688, P/09.1-R691, P/09.1-R693, P/09.1-R712) pass; the packages `agent-sig`, `peer`,
-  `follow` give their rows (judge-only: the vector tables; `agent-sig` checks P/09.1-R006, P/09.1-R077, P/09.1-R737, P/09.2-R044, P/09.2-R094, `peer` checks P/09.1-R444, P/09.1-R456, `follow` checks P/09.1-R461, P/09.1-R642, P/09.1-R651, P/09.1-R652, P/09.1-R655, P/09.1-R656, P/09.1-R659, P/09.1-R661, P/09.1-R663, P/09.1-R672, P/09.1-R673, P/09.1-R719, P/09.1-R720, P/09.1-R721, P/09.1-R722, P/09.1-R724, P/09.1-R725); the agent side in the scenarios of chapters 8.3–8.10 and 9.2 («Neighbours on the stand» of N5; judge-only: the scenario tables of those chapters, by P/09.1-R729 they check P/09.1-R004, P/09.1-R008, P/09.1-R009, P/09.1-R011, P/09.1-R017, P/09.1-R019, P/09.1-R021–P/09.1-R023, P/09.1-R045, P/09.1-R060, P/09.1-R077, P/09.1-R085, P/09.1-R088, P/09.1-R166, P/09.1-R177, P/09.1-R182, P/09.1-R199, P/09.1-R204, P/09.1-R227, P/09.1-R245, P/09.1-R246, P/09.1-R253, P/09.1-R306, P/09.1-R309, P/09.1-R332, P/09.1-R337, P/09.1-R355, P/09.1-R369, P/09.1-R372, P/09.1-R377, P/09.1-R380, P/09.1-R419, P/09.1-R430, P/09.1-R443, P/09.1-R461, P/09.1-R464, P/09.1-R466, P/09.1-R475, P/09.1-R546, P/09.1-R573, P/09.1-R574, P/09.1-R597, P/09.1-R602, P/09.1-R605, P/09.1-R606, P/09.1-R618, P/09.1-R629, P/09.1-R634, P/09.1-R637, P/09.1-R638, P/09.1-R651, P/09.1-R661, P/09.1-R675, P/09.1-R677, P/09.1-R678, P/09.1-R680, P/09.1-R695, P/09.1-R704) — too. The description of the
+- **9.1.** The acceptance scenarios of the chapter (`acceptance/1/`: 01, 03–08, 11, 13–25, 27) pass; the packages `agent-sig`, `peer`,
+  `follow` give their rows; the agent side in the scenarios of chapters 8.3–8.10 and 9.2 («Neighbours on the stand» of N5) — too. The description of the
   implementation names items 1–10 «Implementation decides» of the chapter: the commands `peer`, `follow`; `join` and the launch of the agent;
   `W2C_WALL_OFFSET`; the networks `domain/reaches`; the envelope memory; the holder's edits at itself; the assembly of the alarm page; the TLS client;
   the components of the process of a cluster of one; the writes to the medium per day. The checklist P/09.1-01…36 is closed; the items
   «checked by reading» are named separately.
-- **9.2.** The acceptance scenarios of the chapter 02–06 (judge-only: the scenario table; by the N5 table P/09.2-R160 it checks P/09.1-R022, P/09.1-R419, P/09.1-R430, P/09.1-R443, P/09.1-R573, P/09.1-R574, P/09.1-R675, P/09.1-R677, P/09.1-R678, P/09.2-R005, P/09.2-R008, P/09.2-R017, P/09.2-R029, P/09.2-R031, P/09.2-R035, P/09.2-R036, P/09.2-R041, P/09.2-R044, P/09.2-R046–P/09.2-R048, P/09.2-R050, P/09.2-R056, P/09.2-R057, P/09.2-R064, P/09.2-R073, P/09.2-R075, P/09.2-R080, P/09.2-R083, P/09.2-R094, P/09.2-R111, P/09.2-R113, P/09.2-R121, P/09.2-R128, P/09.2-R138, P/09.2-R139, P/09.2-R144, P/09.2-R145) pass. The description of the implementation names the relay door and the memory
+- **9.2.** The acceptance scenarios of the chapter 02–06 pass. The description of the implementation names the relay door and the memory
   («Implementation decides» of the chapter, item 1). The checklist P/09.2-01…09 is closed; the items «checked by reading» (P/09.2-04, -05, -07;
   the memory after a restart) are named separately.
 
