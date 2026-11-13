@@ -6,9 +6,9 @@
   "--scope",
   "platform"
  ],
- "cwd": "/home/pilot/P01.355-evidence/archive-C",
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "cwd": "/home/pilot/P01.355-evidence/r2/archive-C",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
  "exit": 0,
- "seconds": 75.68897154496517,
+ "seconds": 76.43011325504631,
  "roster_check": "filesystem roster checked on exact-C archive; OBSH.69 present at C"
 }

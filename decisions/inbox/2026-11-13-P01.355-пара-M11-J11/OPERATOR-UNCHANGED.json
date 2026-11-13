@@ -12,14 +12,14 @@
  "unchanged": true,
  "canonical_P02.52": {
   "b7_export_pair.py": {
-   "path": "decisions/inbox/2026-11-11-P02.52-операторы/operator/b7_export_pair.py",
-   "source_C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+   "path": "decisions/inbox/2026-11-11-P02.52-\u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u044b/operator/b7_export_pair.py",
+   "source_C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
    "sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
    "byte_equal": true
   },
   "judge_input_export.py": {
-   "path": "decisions/inbox/2026-11-11-P02.52-операторы/operator/judge_input_export.py",
-   "source_C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+   "path": "decisions/inbox/2026-11-11-P02.52-\u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440\u044b/operator/judge_input_export.py",
+   "source_C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
    "sha256": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
    "byte_equal": true
   }

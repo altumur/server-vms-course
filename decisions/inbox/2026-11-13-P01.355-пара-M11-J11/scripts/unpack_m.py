@@ -9,7 +9,7 @@ import sys
 B = Path(sys.argv[1]).resolve()
 I = json.loads((B / 'IDENTITIES.json').read_text())
 P = json.loads(Path(I['M_passport']).read_text())
-root = B / 'M11'
+root = Path(sys.argv[2]).resolve() if len(sys.argv) == 3 else B / 'M11'
 assert not root.exists(), 'never overwrite an earlier export'
 root.mkdir()
 producer = subprocess.Popen(['git', '--git-dir', I['M_git'], 'archive', I['M']],

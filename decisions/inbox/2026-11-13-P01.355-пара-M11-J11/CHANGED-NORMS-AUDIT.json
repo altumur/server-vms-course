@@ -1,8 +1,8 @@
 {
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
- "passport_sha256": "e893915e96ef563e03fd0cf0095fb5e8d8c01a983c0ad5e6a9a81ed9954386e0",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "passport_sha256": "907be7597990105e887f9dc943465347b1799880454c9557f3441f3b187daa71",
  "journal": "decisions/inbox/2026-11-13-P01.355-пара-M11-J11/CHANGED-NORMS.md",
- "journal_sha256": "d002dfe38d6a5e1a91d26ee899b7a389af2ca528f4f3dc079e4ff7a3b6367c68",
+ "journal_sha256": "462f7ee0b235d866020e044227de058b80de411d5a41209483c971511327d0b3",
  "baselines": {
   "M10": {
    "old_C": "431c32debbc1bb35e57e4dfa323f8f091335172a",
@@ -1036,6 +1036,22 @@
       "9925c20282feafe329936a56c0de9ea5c22b2bce"
      ],
      "diff_sha256": "169164fa8ac32a6e471de012a74bb9c454a55d8279639e33e9abaad85b8ce5b9"
+    },
+    "Platform/common/versions/go.mod": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "49fd2003f1b787803ca8111e919186e7ddccb049f513b37c7cc1ee910d9dd8a0"
+    },
+    "Platform/common/versions/go.sum": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "5d072ddeef05a5846d9995bb3eb733a7a945cc84deb5a10625785aecc4c97809"
     }
    },
    "files_without_own_added_English_history": [
@@ -1057,7 +1073,9 @@
     "Platform/common/contracts/vector-adapter.protocol.json",
     "Platform/common/vectors/README.md",
     "Platform/common/vectors/consumers.tsv",
-    "Platform/common/vectors/wire.tsv"
+    "Platform/common/vectors/wire.tsv",
+    "Platform/common/versions/go.mod",
+    "Platform/common/versions/go.sum"
    ],
    "listed_exactly_changed_paragraphs": true,
    "OK": true

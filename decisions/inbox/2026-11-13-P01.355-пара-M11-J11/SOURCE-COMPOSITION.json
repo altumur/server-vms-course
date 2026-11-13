@@ -1,5 +1,5 @@
 {
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
  "dependencies": [
   {
    "task": "P01.346",
@@ -53,9 +53,23 @@
    "commit": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
    "ancestor_C": true,
    "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.77",
+   "status": "on_origin_main",
+   "commit": "69345c64108cd0b1c874726bd7c0956e7bb31861",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.74",
+   "status": "on_origin_main",
+   "commit": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+   "ancestor_C": true,
+   "acceptance_receipt": null
   }
  ],
  "task_sha256": "1b16912e15ecdc77cfbed91630d1620e713f348e3615bf9753a2538a53c3029d",
- "latest_fetched_main_at_source": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "latest_fetched_main_at_source": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
  "OK": true
 }

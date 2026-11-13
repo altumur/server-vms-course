@@ -1,8 +1,8 @@
 {
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
  "M": {
-  "commit": "d3545d4117de412d4592023122c251aa30ae5564",
-  "tree": "6209ca57cde6e47037c946b1310f037d8c7a7b0c"
+  "commit": "50dd4d820176e230945f5642c68a8a2bf8b791ea",
+  "tree": "0bf8ae9114aebdaedf8c376a9a48751fbb28407f"
  },
  "count": 183,
  "files": [
@@ -385,7 +385,7 @@
    "size": 162559
   },
   {
-   "blob": "8e05da069369c4d5a679f2a5de7093be010f5eac",
+   "blob": "bcce790bdd3f320713ebc0ded0fcdc7fdb5fdb27",
    "mode": "100644",
    "path": "Platform/COURSE_COMMIT",
    "role": "model_input",
@@ -1260,18 +1260,18 @@
    "size": 4488
   },
   {
-   "blob": "6b0185980cbc44472a289e224b83c8552e3029ee",
+   "blob": "0173b4b92160ed4ec1176df982b23752d3abfc1f",
    "mode": "100644",
    "path": "Platform/common/versions/go.mod",
    "role": "model_input",
-   "size": 1183
+   "size": 1395
   },
   {
-   "blob": "32aba23e02b6e9eeb286dff293bd4e9be18adcfb",
+   "blob": "cf4073c79e3527232ffcf7d6da8f89c599284ea1",
    "mode": "100644",
    "path": "Platform/common/versions/go.sum",
    "role": "model_input",
-   "size": 19881
+   "size": 20608
   },
   {
    "blob": "0449340e5073c8467198907d02a9406a78ba4f35",
@@ -1288,7 +1288,7 @@
    "size": 1039
   }
  ],
- "files_sha256": "780ea1cdbb0f01783f2caf144f1c05d7cfbd079d9c70c9eb265e1bfeb3a346e8",
+ "files_sha256": "fddc79476a85e3b70caad4fb54ba8a3fc6c57b26b29db7125b8e5d68087bdf52",
  "format": "m-passport/1",
  "operator_sha256": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
  "role": "model_input"

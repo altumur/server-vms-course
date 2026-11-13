@@ -1,5 +1,5 @@
 {
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
  "source_roster_exact": true,
  "filter_equals_check_spec": true,
  "current_pair_m_exact": true,
@@ -40,7 +40,7 @@
  "object_checks": {
   "raw_M": {
    "refs": [
-    "refs/heads/model b5d4ee38ce37d828f95f1fef888ebaacc8733636"
+    "refs/heads/model fba11d77b78680c75987b059bdbf91a92e33b272"
    ],
    "parentless": true,
    "physical_eq_reachable": true,
@@ -49,7 +49,7 @@
   },
   "M": {
    "refs": [
-    "refs/heads/model d3545d4117de412d4592023122c251aa30ae5564"
+    "refs/heads/model 50dd4d820176e230945f5642c68a8a2bf8b791ea"
    ],
    "parentless": true,
    "physical_eq_reachable": true,
@@ -59,7 +59,7 @@
   },
   "J": {
    "refs": [
-    "refs/heads/judge 655e9385983b2cd556ee567d4ca294c8fa2a4dd4"
+    "refs/heads/judge 4cf5d19a625ebf2b99e82514c50c88d1461b4f40"
    ],
    "parentless": true,
    "physical_eq_reachable": true,
@@ -68,7 +68,7 @@
   },
   "JI": {
    "refs": [
-    "refs/heads/judge-input 711fc3f164237f8cf19c85f0c012010fea7e2a29"
+    "refs/heads/judge-input aabb79d999f3a0de7ba7a5b5e36091898eb7cffd"
    ],
    "parentless": true,
    "physical_eq_reachable": true,

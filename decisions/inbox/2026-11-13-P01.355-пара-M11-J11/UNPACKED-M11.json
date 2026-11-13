@@ -1,18 +1,18 @@
 {
- "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
- "M": "d3545d4117de412d4592023122c251aa30ae5564",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "M": "50dd4d820176e230945f5642c68a8a2bf8b791ea",
  "directory": "/home/pilot/P01.355-evidence/M11",
  "files_count": 183,
- "passport": "/home/pilot/P01.355-evidence/passport/PASSPORT-M-d3545d4117de.json",
- "passport_sha256": "e893915e96ef563e03fd0cf0095fb5e8d8c01a983c0ad5e6a9a81ed9954386e0",
+ "passport": "/home/pilot/P01.355-evidence/r2/passport/PASSPORT-M-50dd4d820176.json",
+ "passport_sha256": "907be7597990105e887f9dc943465347b1799880454c9557f3441f3b187daa71",
  "passport_check_argv": [
   "/home/pilot/venv-spec/bin/python",
   "-I",
   "-B",
-  "/home/pilot/P01.355-evidence/operator/check_m_passport.py",
-  "/home/pilot/P01.355-evidence/passport/PASSPORT-M-d3545d4117de.json",
+  "/home/pilot/P01.355-evidence/r2/operator/check_m_passport.py",
+  "/home/pilot/P01.355-evidence/r2/passport/PASSPORT-M-50dd4d820176.json",
   "/home/pilot/P01.355-evidence/M11",
-  "d3545d4117de412d4592023122c251aa30ae5564"
+  "50dd4d820176e230945f5642c68a8a2bf8b791ea"
  ],
  "passport_check_exit": 0,
  "all_write_bits_cleared": true,
@@ -453,8 +453,8 @@
   {
    "path": "Platform/COURSE_COMMIT",
    "git_mode": "100644",
-   "blob": "8e05da069369c4d5a679f2a5de7093be010f5eac",
-   "sha256": "308a754998e639656027426526342f5562f82a6b7527ca9cd20ede1c89986267",
+   "blob": "bcce790bdd3f320713ebc0ded0fcdc7fdb5fdb27",
+   "sha256": "114a7e2412a706b09c6dc19648783fe2cf0c8b7f4ba22ba80394504ce1bc9f6b",
    "bytes": 41,
    "filesystem_mode": "0o444"
   },
@@ -1453,17 +1453,17 @@
   {
    "path": "Platform/common/versions/go.mod",
    "git_mode": "100644",
-   "blob": "6b0185980cbc44472a289e224b83c8552e3029ee",
-   "sha256": "3c3ef9ce63e26c50b61523e0afcfaf65648b3b8bd51b4d79af7463a7b0c93e70",
-   "bytes": 1183,
+   "blob": "0173b4b92160ed4ec1176df982b23752d3abfc1f",
+   "sha256": "61e5ea888fd9058a0e0a440ba4a34c17fd971dcc24803e2911f59c2eceb8f79f",
+   "bytes": 1395,
    "filesystem_mode": "0o444"
   },
   {
    "path": "Platform/common/versions/go.sum",
    "git_mode": "100644",
-   "blob": "32aba23e02b6e9eeb286dff293bd4e9be18adcfb",
-   "sha256": "e07c2c4008f94f4d2437bb07a180ead019cb45b48d1f0a538424975724c22ba8",
-   "bytes": 19881,
+   "blob": "cf4073c79e3527232ffcf7d6da8f89c599284ea1",
+   "sha256": "a422df8a2b5bce2ce0812064aa62d12d4916547de86246be0d38d6eebbe39da7",
+   "bytes": 20608,
    "filesystem_mode": "0o444"
   },
   {

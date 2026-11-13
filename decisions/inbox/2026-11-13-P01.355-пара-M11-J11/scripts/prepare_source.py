@@ -64,6 +64,11 @@ for revision in ('28f4de46d', '55a672b89', '7e21f987d'):
     subprocess.run(['git', '-C', str(W), 'merge-base', '--is-ancestor', commit, C], check=True)
     rows.append({'task': 'OBSH.69', 'status': 'on_origin_main', 'commit': commit,
                  'ancestor_C': True, 'acceptance_receipt': None})
+for name, revision in (('OBSH.77', '69345c641'), ('OBSH.74', '69e14d0cd')):
+    commit = subprocess.check_output(['git', '-C', str(W), 'rev-parse', revision]).decode().strip()
+    subprocess.run(['git', '-C', str(W), 'merge-base', '--is-ancestor', commit, C], check=True)
+    rows.append({'task': name, 'status': 'on_origin_main', 'commit': commit,
+                 'ancestor_C': True, 'acceptance_receipt': None})
 (B / 'SOURCE-COMPOSITION.json').write_text(json.dumps({
     'C': C, 'dependencies': rows, 'task_sha256': hashlib.sha256(task).hexdigest(),
     'latest_fetched_main_at_source': C, 'OK': True}, ensure_ascii=False, indent=1) + '\n')
