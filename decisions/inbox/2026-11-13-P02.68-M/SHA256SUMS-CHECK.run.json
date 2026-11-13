@@ -1,0 +1,13 @@
+{
+ "argv": [
+  "sha256sum",
+  "--check",
+  "/home/pilot/P02.68-evidence/r2/SHA256SUMS"
+ ],
+ "cwd": "/home/pilot/P02.68-evidence/M",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "exit": 0,
+ "seconds": 0.019572452059946954,
+ "stdout_sha256": "4a48c89ef09807a8ac4917048919f6164c33992f50050e7e3b401553179e3705",
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

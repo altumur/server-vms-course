@@ -1,0 +1,21 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "/home/pilot/P02.68-evidence/r2/operator/b7_export_pair.py",
+  "--source-git-dir",
+  "/home/pilot/P02.68-evidence/r2/source.git",
+  "--course-commit",
+  "000fec9a4239d73bdf51505921c8f647e1865ef7",
+  "--output",
+  "/home/pilot/P02.68-evidence/r2/pair-000fec9a4239",
+  "--authorization-json",
+  "/home/pilot/P02.68-evidence/r2/AUTHORIZATION.json"
+ ],
+ "cwd": "/home/pilot/P02.68-evidence/r2",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "exit": 0,
+ "seconds": 25.80625750508625,
+ "stdout_sha256": "34d637ccd6c4a9ae3cd90d289aa5d890c738ef8c4dd9abb1fe42d2e1d420adb5",
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

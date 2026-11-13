@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "skills/lesson-spec/scripts/check_spec.py",
+  "--scope",
+  "platform"
+ ],
+ "cwd": "/home/pilot/P02.68-evidence/r2/archive-C",
+ "C": "000fec9a4239d73bdf51505921c8f647e1865ef7",
+ "exit": 0,
+ "seconds": 76.7955107849557,
+ "stdout_sha256": "1d5dae7117b0e49a81321fd165271397f740a7b65c41ed297f654c3f4fffd443",
+ "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
