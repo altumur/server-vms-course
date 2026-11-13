@@ -103,10 +103,9 @@ def step_blocker(chapter, step, seams, late, stage_n):
             raise GenError(f"step {st}: unknown or malformed CALL")
         held = m[1] == "store-import-held"
         args = strict_call_json(m[2], f"step {st} CALL input", exact_numbers=held)
-        expected = strict_call_json(exp, f"step {st} CALL expectation", exact_numbers=held)
-        if m[1] == "store-import-held":
-            held_call_shape(args, True, f"step {st} CALL input")
-            held_call_shape(expected, False, f"step {st} CALL expectation")
+        strict_call_json(exp, f"step {st} CALL expectation")
+        if held:
+            held_input_shape(args, f"step {st} CALL input")
         return None
     if chapter != "1.1":
         return f"step {st}: chapter {chapter} supports CALL seams only"
@@ -151,17 +150,13 @@ def strict_call_json(text, where, *, exact_numbers=False):
         raise GenError(f"{where}: invalid JSON: {exc}") from None
 
 
-def held_call_shape(value, is_input, where):
-    """Closed observation ABI from acceptance/3/README.md; no expected values synthesized."""
-    fields = {"input", "interrupt_after_target_rows"} if is_input else {
-        "leader_read_unavailable", "follower_read_unavailable", "write_unavailable", "complete"}
+def held_input_shape(value, where):
+    """Closed input ABI from acceptance/3/README.md; expectations keep CALL grammar."""
+    fields = {"input", "interrupt_after_target_rows"}
     if not isinstance(value, dict) or set(value) != fields:
         raise GenError(f"{where}: store-import-held requires exactly {sorted(fields)}")
-    if is_input:
-        valid = (value["input"] == "backup_into_live_group" and
-                 isinstance(value["interrupt_after_target_rows"], Decimal) and value["interrupt_after_target_rows"] == 1)
-    else:
-        valid = all(type(v) is bool for v in value.values())
+    valid = (value["input"] == "backup_into_live_group" and
+             isinstance(value["interrupt_after_target_rows"], Decimal) and value["interrupt_after_target_rows"] == 1)
     if not valid:
         raise GenError(f"{where}: invalid store-import-held field type or input value")
 
@@ -784,9 +779,6 @@ func (sc *scenario) runCall(st step) (errs []string) {
 	if name == "store-import-held" {
 		if err := heldCallShape(args, true); err != nil {
 			return []string{"CALL input: " + err.Error()}
-		}
-		if err := heldCallShape(exp, false); err != nil {
-			return []string{"CALL expectation: " + err.Error()}
 		}
 	}
 	actual, err := callSeam(sc.core, sc.cfg, name, json.RawMessage(input))

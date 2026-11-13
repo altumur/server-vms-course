@@ -265,6 +265,15 @@ func TestCALLHeldObservation(t *testing.T) {
     }}
     install()
     if errs:=sc.runStep(st);len(errs)!=0 || !called {t.Fatal("independent held positive failed",errs)}
+    // The port's actual result is closed, while expectations retain the common
+    // recursive subset grammar (common/acceptance/seams.md), including patterns.
+    partial:=st;partial.expect=`{"complete":true}`;called=false
+    if errs:=sc.runStep(partial);len(errs)!=0 || !called {t.Fatal("held partial expectation rejected",errs)}
+    bound:=st;bound.expect=`{"complete":"$flag"}`;called=false
+    if errs:=sc.runStep(bound);len(errs)==0 || !called || sc.env["$flag"]!=nil {t.Fatal("held changed existing string-binding type semantics",errs)}
+    value:=observation();value["leader_read_unavailable"]=false;actual=encode(value)
+    if errs:=sc.runStep(partial);len(errs)!=0 {t.Fatal("held subset checked an unmentioned boolean value",errs)}
+    actual=encode(observation())
     // JSON-schema integer semantics: equal mathematical integers may use an
     // exponent or fractional token. The untouched raw input still reaches YOURS.
     for _,number:=range []string{"1.0","1e0","1.000e+0"} {
@@ -277,14 +286,19 @@ func TestCALLHeldObservation(t *testing.T) {
         for _,bad:=range []any{false,nil,1,"true",[]any{true},map[string]any{}} {
             value:=observation();value[key]=bad;actual=encode(value)
             if errs:=sc.runStep(st);len(errs)==0 {t.Fatalf("held %s=%v passed",key,bad)}
+            if _,boolean:=bad.(bool);!boolean {
+                if errs:=sc.runStep(partial);len(errs)==0 {t.Fatalf("held invalid %s=%v passed with partial expectation",key,bad)}
+            }
         }
         value:=observation();delete(value,key);actual=encode(value)
         if errs:=sc.runStep(st);len(errs)==0 {t.Fatal("held missing field passed",key)}
+        if errs:=sc.runStep(partial);len(errs)==0 {t.Fatal("held missing field passed with partial expectation",key)}
     }
-    value:=observation();value["extra"]=true
+    value=observation();value["extra"]=true
     for _,raw:=range []json.RawMessage{encode(value),[]byte(`{}`),[]byte(`[]`),[]byte(`true`),nil,[]byte(`not JSON`),[]byte(`{"complete":true} {}`)} {
         actual=raw
         if errs:=sc.runStep(st);len(errs)==0 {t.Fatalf("held invalid/extra/empty actual passed: %q",raw)}
+        if errs:=sc.runStep(partial);len(errs)==0 {t.Fatalf("held invalid/extra/empty actual passed with partial expectation: %q",raw)}
     }
     actual=encode(observation())
     for _,raw:=range []string{
@@ -299,7 +313,7 @@ func TestCALLHeldObservation(t *testing.T) {
         called=false;bad:=st;bad.request="CALL store-import-held "+raw
         if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatal("held invalid input executed/passed",raw,errs)}
     }
-    for _,raw:=range []string{`{}`,`{"leader_read_unavailable":true,"follower_read_unavailable":true,"write_unavailable":true,"complete":1}`,string(encode(value))} {
+    for _,raw:=range []string{`{`,`{"complete":true,"complete":true}`,`{"complete":true} {}`,`{"complete":NaN}`} {
         called=false;bad:=st;bad.expect=raw
         if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatal("held invalid expectation executed/passed",raw,errs)}
     }
@@ -412,7 +426,7 @@ class StageTests(unittest.TestCase):
             with self.subTest(request=request, expect=expect), self.assertRaises(gen_stagetests.GenError):
                 gen_stagetests.step_blocker("1.3", ("1", request, expect, 1), True, {}, 9)
 
-    def test_held_closed_source_forms(self):
+    def test_held_source_input_and_meta_expectation_forms(self):
         args = {"input": "backup_into_live_group", "interrupt_after_target_rows": 1}
         result = {key: True for key in ("leader_read_unavailable", "follower_read_unavailable",
                                        "write_unavailable", "complete")}
@@ -430,22 +444,26 @@ class StageTests(unittest.TestCase):
         for value in invalid_inputs:
             with self.subTest(input=value), self.assertRaises(gen_stagetests.GenError):
                 check(json.dumps(value), json.dumps(result))
-        invalid_results = [[], {}, dict(result, extra=True)]
+        # Expectations are comparison patterns, not normalized port results.
+        # Closed actual results, including under partial expectations, are
+        # checked independently by the Go transport probes above.
+        patterns = [[], {}, dict(result, extra=True), {"complete": True}, {"complete": "$flag"}]
         for key in result:
-            invalid_results += [dict(result, **{key: value}) for value in (1, "true", None, {}, [])]
-            invalid_results.append({k: v for k, v in result.items() if k != key})
-            # Form validation must not synthesize a true observation: false is a
-            # valid boolean, whose value the runtime compares with the seam.
-            self.assertIsNone(check(json.dumps(args), json.dumps(dict(result, **{key: False}))))
-        for value in invalid_results:
-            with self.subTest(result=value), self.assertRaises(gen_stagetests.GenError):
-                check(json.dumps(args), json.dumps(value))
+            patterns += [dict(result, **{key: value}) for value in (False, 1, "true", None, {}, [])]
+            patterns.append({k: v for k, v in result.items() if k != key})
+        for value in patterns:
+            with self.subTest(expect=value):
+                self.assertIsNone(check(json.dumps(args), json.dumps(value)))
+        for text in ('{', '{"complete":NaN}', '{"complete":true,"complete":true}', '{} {}'):
+            with self.subTest(expect=text), self.assertRaises(gen_stagetests.GenError):
+                check(json.dumps(args), text)
         huge_exponent = '1e999999999999999999999999'
         for port in ('store-start-flags', 'store-copy-floor'):
             # The existing ports retain their strict-JSON parser and generic
             # matcher contract. Decimal is confined to the new held source ABI.
             request = 'CALL ' + port + ' {"number":' + huge_exponent + '}'
             self.assertIsNone(gen_stagetests.step_blocker("1.3", ("1", request, '{}', 1), True, {}, 11))
+        self.assertIsNone(check(json.dumps(args), '{"number":' + huge_exponent + '}'))
         with self.assertRaises(gen_stagetests.GenError):
             check('{"input":"backup_into_live_group","interrupt_after_target_rows":' + huge_exponent + '}',
                   json.dumps(result))
