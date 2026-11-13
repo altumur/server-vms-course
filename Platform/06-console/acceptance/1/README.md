@@ -94,12 +94,21 @@ owner form; the presence of a file does not prove the correctness of the referen
 
 ## Checks outside the sequential HTTP file
 
-The status of all the checks of the README outside `scenarios.tsv` (judge-only: checking material outside M) (this section, «Additional checks», additional examples) is
+The controlled machine checks use [seams.tsv](seams.tsv) (judge-only: controlled failure cases) through the existing ports of [the forms README](../../forms/README.md).
+The status of the other checks of the README outside `scenarios.tsv` (judge-only: checking material outside M) (this section, «Additional checks», additional examples) is
 «checked by reading»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
 with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.
 
 The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of chapter P/03.2.
+
+### Recovery observations
+
+For `console-next-id`, `row_listing`, `tombstones` and `live_claims` independently select the outcome of each required history read. Cases `s03-counter-history-unknown`, `s12-counter-tombstones-unknown` and `s13-counter-live-claims-unknown` leave exactly one read unconfirmed and the other two confirmed. Each must return 503 without issuing a number or rewriting the counter. This tests the existing full-history condition of P/06.1-R102 and the `next-id` family outcomes.
+
+For `console-repeat`, `s08-review127-plan-unknown` confirms the owned saved intent before the target call. Its negative pair `s14-post-plan-still-unknown` leaves the reread unconfirmed: the request returns 503 and makes no target write, including before confirmation. The pending claim remains subject to P/06.1-R381 and P/06.1-R388. An unreadable or unconfirmed planning result cannot be replaced with an invented successful intent.
+
+These cases inject dependency outcomes into ordinary console code. They do not demonstrate a disk failure, a power cut or storage durability.
 
 ## Additional checks
 

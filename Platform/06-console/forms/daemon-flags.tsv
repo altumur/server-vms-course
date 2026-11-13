@@ -28,6 +28,7 @@ $BUILD	string	dev	dev	false	console		common/contracts/env-file.md: Environment v
 $W2C_TLS_DIR	dir	-	Linux /etc/w2c/tls; macOS <W2C_BOX>/tls; use the common environment resolver; own kit console	false	console		common/contracts/env-file.md: Environment variables; P/02.4 N1.2
 $W2C_ENV	file	/etc/w2c/w2c.env	/etc/w2c/w2c.env; launcher parses it, never source	false	console		common/contracts/env-file.md: Files and reading order
 $LOGIN_URL	string	/api/login	/api/login if absent	false	console		common/contracts/gate-and-pass.md: login_url; P/06.3 N2
+$W2C_DEBUG_PERSON	string	-	absent or empty: ordinary identity; nonempty: loopback debug identity by the gate contract	false	console		common/contracts/env-file.md: Environment variables; common/contracts/gate-and-pass.md: The gate; P/06.3 N1.3
 $SIGNER_URL	string	-	absent: no signer here, 404 at the forwarding door, not a startup refusal	false	console		P/06.7 N1.8
 $CLUSTERS	string	-	absent or empty: an empty list; a malformed list stays an unreadable input of the operation	false	console		P/06.7 N1.4; common/contracts/env-file.md: CLUSTERS
 --writers-stopped	bool	false	required acknowledgement of the exclusive maintenance window	true	cleanup-window	f["--writers-stopped"] != true	P/06.1 N2 Sweep window command; lifecycle.md: The cleanup window command
