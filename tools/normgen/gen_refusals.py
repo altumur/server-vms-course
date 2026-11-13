@@ -299,7 +299,7 @@ type Spec struct {
 	Kind       string      // HTTP kind token;empty on other surfaces.
 	Fields     []Field     // HTTP body fields besides kind/error.
 	Headers    [][2]string // HTTP response headers.
-	RetryAfter bool        // Headers includes Retry-After, for apidoor.Answer.RetryAfter.
+	RetryAfter bool        // Headers includes Retry-After; its value is in Headers.
 	Log        []string    // Start/CLI values named by the log.
 	Words      []string    // Start/CLI words carried literally by the log.
 	Norm       string
@@ -732,7 +732,9 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 
 - An http refusal: pick the row by its condition (the names are the conditions of N4; the rows of the write command
   carry the names of `write-checks.tsv` checks), then with part `door`:
-  `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
+  `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`. For the fixed connection-limit header,
+  use `seconds := int64(1); a.RetryAfter = &seconds` when `s.RetryAfter` is true. For `replay_limit`, the implementation
+  computes the seconds until admission; a catalogue marker does not compute this delay. `Check(values)` first if
   you want the catalogue to judge the fields; the door judges the body against the OpenAPI `*Fault`.
 - A start refusal: `os.Exit(refusals.StartFlags.Exit(log.Print, map[string]string{"flag": r.Flag}))` (with part
   `flags`: `r` is the `*flags.Refusal`).

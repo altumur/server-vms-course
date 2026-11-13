@@ -847,7 +847,8 @@ type QueryError struct { Param string; Reason QueryReason; Schema string; Rule s
 // parameter; Schema — its components/schemas name, e.g. "Key"; Rule — "utf8", "minLength", "not", …).
 // Which refusal (kind) each gives, the OpenAPI does not say as a form: you decide by the norms.
 
-type Answer struct { Code int; Body Body; RetryAfter bool } // RetryAfter — the header Retry-After: 1 where declared
+type Answer struct { Code int; Body Body; RetryAfter *int64 } // nil: absent; otherwise seconds, checked by op schema
+// The implementation computes the replay-limit delay; connection-limit responses use exactly 1.
 // Encode — the answer on the wire; refuses a code, a schema or a header not declared for op, and a body out of its
 // schema (an error: nothing is sent — it is a bug of yours).
 func Encode(op Op, a Answer) (*Response, error)

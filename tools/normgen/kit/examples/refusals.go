@@ -14,7 +14,10 @@ func guardMismatch(key, index string) apidoor.Answer {
 	if err != nil {
 		return apidoor.Answer{Code: 500}
 	}
-	a.RetryAfter = s.RetryAfter
+	if s.RetryAfter {
+		seconds := int64(1)
+		a.RetryAfter = &seconds
+	}
 	return a
 }
 

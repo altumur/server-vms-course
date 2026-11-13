@@ -4,7 +4,7 @@ Read OpenAPI 3.1 with the standard-library YAML subset loader yamlsub.py. Emit a
 
 Do not generate N3 core logic, HTTP framing/N2.1 limits, identity or frame->route->identity->body ordering. Cmd/BatchCmd belong to write-checks.tsv and generator 1. description/summary prose is not interpreted.
 
-Form/HTTP rules: unknown paths use common 404 schemas or generation refuses; an unsupported method gives 405 if every operation of that path declares it, otherwise 404 (RFC 9110 15.5.6). Integers exclude fraction/exponent syntax, so 1.0 is not integer. minLength/maxLength/pattern require UTF-8; a bare query string accepts arbitrary bytes because OpenAPI declares no query encoding.
+Form/HTTP rules: unknown paths use common 404 schemas or generation refuses; an unsupported method gives 405 if every operation of that path declares it, otherwise 404 (RFC 9110 15.5.6). Response headers use optional typed values for string/integer schemas, with per-operation const and bounds checks; all-constant headers retain boolean switches. Integers exclude fraction/exponent syntax, so 1.0 is not integer. minLength/maxLength/pattern require UTF-8; a bare query string accepts arbitrary bytes because OpenAPI declares no query encoding.
 
   python tools/normgen/gen_door.py [openapi.yaml [output-directory]]"""
 import hashlib
@@ -235,8 +235,8 @@ class Spec:
             if "const" in base:
                 if isinstance(base["const"], (dict, list)) or base["const"] is None:
                     raise GenError(f"{where}: {code}: header {hname}: a scalar const value is required")
-            elif base.get("type") != "string":
-                raise GenError(f"{where}: {code}: header {hname}: a scalar const or string schema is required")
+            elif base.get("type") not in ("string", "integer"):
+                raise GenError(f"{where}: {code}: header {hname}: a scalar const, string or integer schema is required")
             if type(h.get("required", False)) is not bool:
                 raise GenError(f"{where}: {code}: header {hname}: required must be boolean")
             headers[hname] = base.get("const")
@@ -884,6 +884,13 @@ switch op {
                 if h not in header_names:
                     header_names.append(h)
     dynamic_headers = {h for op in spec.ops for r in op.responses.values() for h, v in r.headers.items() if v is None}
+    header_types = {}
+    for h in dynamic_headers:
+        kinds = {g.scalar_type(r.header_schemas[h], f"header {h}")
+                 for op in spec.ops for r in op.responses.values() if h in r.headers}
+        if len(kinds) != 1 or not kinds <= {"string", "int64", "uint64"}:
+            raise GenError(f"header {h}: incompatible scalar types across operations: {sorted(kinds)}")
+        header_types[h] = kinds.pop()
     typed_headers = bool(dynamic_headers or any(r.required_headers for op in spec.ops for r in op.responses.values()))
     answer = ['// Answer contains status, a generated body(nil for none) and headers declared by '
               r'''OpenAPI
@@ -891,9 +898,7 @@ switch op {
               "type Answer struct {", "Code int", "Body Body"]
     for h in header_names:
         if h in dynamic_headers:
-            if any(h in r.headers and r.headers[h] is not None for op in spec.ops for r in op.responses.values()):
-                raise GenError(f"header {h}: mixed constant and dynamic headers are not in the subset")
-            answer.append(f"{camel(h)} *string // {h}: nil when absent; checked by the operation's schema")
+            answer.append(f"{camel(h)} *{header_types[h]} // {h}: nil when absent; checked by the operation's schema")
             continue
         consts = sorted({str(op.responses[c].headers[h]) for op in spec.ops for c in op.responses
                          if h in op.responses[c].headers})
@@ -934,11 +939,14 @@ switch op {
                         for h in header_names if h not in dynamic_headers)
     for h in (name for name in header_names if name in dynamic_headers):
         field, quoted = camel(h), go_str(h)
+        value = f"*a.{field}"
+        wire = {"string": value, "int64": f"strconv.FormatInt({value}, 10)",
+                "uint64": f"strconv.FormatUint({value}, 10)"}[header_types[h]]
         hdr_lines += (f"if a.{field} != nil {{\nif !declared(spec.headers, {quoted}) {{\n"
                       f"return nil, fmt.Errorf(\"door: %v %d: header {h} is not declared\", op, a.Code)\n}}\n"
                       f"if check := spec.headerChecks[{quoted}]; check != nil {{\n"
                       f"if e := check(*a.{field}, \"\"); e != nil {{ return nil, fmt.Errorf(\"door: header {h}: %v\", e) }}\n}}\n"
-                      f"header = append(header, [2]string{{{quoted}, *a.{field}}})\n}}\n")
+                      f"header = append(header, [2]string{{{quoted}, {wire}}})\n}}\n")
     if typed_headers:
         for h in header_names:
             absent = f"a.{camel(h)} == nil" if h in dynamic_headers else f"!a.{camel(h)}"

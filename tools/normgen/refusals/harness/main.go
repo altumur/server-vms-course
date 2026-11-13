@@ -87,10 +87,13 @@ func try(s *refusals.Spec, set []string) probe {
 			if err != nil {
 				continue
 			}
-			a.RetryAfter = s.RetryAfter
+			if s.RetryAfter {
+				seconds := int64(1)
+				a.RetryAfter = &seconds
+			}
 			resp, err := apidoor.Encode(op.Op, a)
 			if err != nil {
-				a.RetryAfter = false
+				a.RetryAfter = nil
 				if resp, err = apidoor.Encode(op.Op, a); err != nil {
 					continue
 				}

@@ -1041,7 +1041,7 @@ class Mutations(unittest.TestCase):
             lambda d: d["paths"]["/v1/get"]["get"]["parameters"][0].update(schema={"type": "integer"}),
             lambda d: d["components"]["schemas"]["Key"].update(pattern=r"^\w+$"),
             lambda d: d["paths"]["/v1/get"]["get"]["responses"].pop("404"),
-            lambda d: d["paths"]["/v1/status"]["get"]["responses"]["503"]["headers"]["Retry-After"]["schema"].pop("const"),
+            lambda d: d["paths"]["/v1/status"]["get"]["responses"]["503"]["headers"]["Retry-After"].update(schema={"type": "object"}),
             lambda d: d["components"]["schemas"].pop("Cmd"),
         ]
         for k, change in enumerate(cases):
@@ -1089,7 +1089,7 @@ func TestZ21CopyObserver(t *testing.T) {
             var err error
             if p.NilBody {a=Answer{Code:p.Code}} else {a,err=AnswerOf(op,p.Code,p.Body)}
             if err==nil {
-                a.Allow=p.Allow;a.RetryAfter=p.Retry;a.ContentLength=p.CL;a.TransferEncoding=p.TE
+                a.Allow=p.Allow;if p.Retry {seconds:=int64(1);a.RetryAfter=&seconds};a.ContentLength=p.CL;a.TransferEncoding=p.TE
                 var response *Response
                 response,err=Encode(op,a)
                 if err==nil {row.OK=true;row.Code=response.Code;row.Body=base64.StdEncoding.EncodeToString(response.Body);row.Headers=append([][2]string{},response.Header...)}
