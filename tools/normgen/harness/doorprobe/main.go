@@ -31,6 +31,7 @@ type request struct {
 	ViaOp            string `json:"via_op"`
 	ViaCode          int    `json:"via_code"`
 	Retry            bool
+	RetryAfter       *int64 `json:"retry_after"`
 	Allow            bool
 	ContentLength    *string `json:"content_length"`
 	TransferEncoding *string `json:"transfer_encoding"`
@@ -39,6 +40,17 @@ type request struct {
 	Msg              string
 	Fields           json.RawMessage
 	Query            string
+}
+
+func retryAfter(req request) *int64 {
+	if req.RetryAfter != nil {
+		return req.RetryAfter
+	}
+	if req.Retry {
+		seconds := int64(1)
+		return &seconds
+	}
+	return nil
 }
 
 func decode(text string) (any, error) {
@@ -168,7 +180,7 @@ func run(req request) any {
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
-		a.Code, a.RetryAfter = req.Code, req.Retry
+		a.Code, a.RetryAfter = req.Code, retryAfter(req)
 		a.Allow, a.ContentLength, a.TransferEncoding = req.Allow, req.ContentLength, req.TransferEncoding
 		schema := ""
 		if a.Body != nil {
@@ -192,7 +204,7 @@ func run(req request) any {
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
-		a.RetryAfter, a.Allow = req.Retry, req.Allow
+		a.RetryAfter, a.Allow = retryAfter(req), req.Allow
 		a.ContentLength, a.TransferEncoding = req.ContentLength, req.TransferEncoding
 		r, err := apidoor.Encode(opByName(req.Op), a)
 		if err != nil {

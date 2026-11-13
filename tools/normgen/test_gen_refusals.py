@@ -220,10 +220,11 @@ class RefusalReportControls(unittest.TestCase):
     @staticmethod
     def row(name="fixture"):
         return {"Chapter": "1.1", "Row": 1, "Name": name, "Surface": "http", "Code": 400,
-                "Kind": "badrequest", "Fields": None, "Headers": None, "RetryAfter": False,
+                "Kind": "badrequest", "Fields": None, "Headers": None, "RetryAfter": False, "DynamicHeaders": None,
                 "Log": None, "Words": None, "Norm": "fixture",
                 "probes": [{"fields": None, "ints": [], "ops": ["Fixture"], "retry": False,
-                            "body": '{"kind":"badrequest","error":"é"}\n'}]}
+                            "body": '{"kind":"badrequest","error":"é"}\n',
+                            "wire": [{"op": "Fixture", "requested": [], "headers": []}]}]}
 
     @classmethod
     def frame(cls, rows=None):
