@@ -13,6 +13,7 @@ import yaml
 
 import check_spec
 from check_spec import chapter_key, Check, UniqueLoader, pointer, references
+from test_export_lists import cover
 
 
 def without_stage_adoption(test, key):
@@ -67,7 +68,8 @@ components:
         self.scenarios = self.acceptance / "scenarios.tsv"
         self.scenarios.write_text('# scenario\tstep\trequest\texpect\n01-example\t1\tGET /example\t200 {}\n')
         # The common registry header and the common filters M and J are required in every Platform source tree since
-        # 422023b41 (P02.50) and 58020e558 (P02.54), ADR-0135 addendum (14): the fixture keeps them empty of rows.
+        # 422023b41 (P02.50) and 58020e558 (P02.54), ADR-0135 addendum (14). Since OBSH.58 they classify the whole roster
+        # of Platform/ also in a tree without .git: a run of the CLI writes them over the files of the fixture (cover).
         forms = self.root / "Platform/common/acceptance/forms"
         forms.mkdir(parents=True)
         (forms / "targets.tsv").write_text("id\towner\n")
@@ -83,6 +85,7 @@ components:
     def cli(self):
         # The fixture is a Platform source tree without VMS/PLATFORM_PIN: since 1037a2290 the default scope all also runs
         # the canonical VMS phase, which needs the Owner pin; the lesson under test is judged by the Platform phase.
+        cover(self.root)
         return subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")),
                                "--root", str(self.root), "--cyrillic-debt", str(self.cyrillic_debt),
                                "--scope", "platform", str(self.lesson)], capture_output=True, text=True)
@@ -1002,6 +1005,7 @@ properties:
         self.api.unlink()
         registry = self.root / "exceptions.tsv"
         registry.write_text("М12A_Example/01\tno-openapi\t-\tADR\n")
+        cover(self.root)
         result = subprocess.run([sys.executable, str(Path(__file__).with_name("check_spec.py")), "--root",
                                  str(self.root), "--exceptions", str(registry),
                                  "--cyrillic-debt", str(self.cyrillic_debt), "--scope", "platform", str(self.lesson)],
