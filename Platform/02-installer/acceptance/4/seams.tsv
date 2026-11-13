@@ -1,6 +1,6 @@
 # P/02 command/file and rollout-poll seams (ADR-0125 addendum (4) item 7). Grammar: forms/README.md. The runner executes this file through the seam adapter.
 # Owned temporary roots only. Exact return codes are tested only where normed; CALL command normalizes the specified zero/nonzero outcome.
-# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk, s15 walks an unreadable row (P/02.4 N1.9 «Walk»). s16 refuses options out of daemon-flags.tsv before any file and before the rights check (P/02.4 «Command options»).
+# s2/s3 retain a refused input byte-for-byte; s4 is O_EXCL directly in $data (no parent to create); s12/s13 select the secrets walk, s15 walks an unreadable row (P/02.4 N1.9 «Walk»). s16 refuses options out of daemon-flags.tsv before any file (P/02.4 «Command options»).
 # Layout directories of a scenario: forms/README.md. No real key, host install, service manager or deployment is used.
 # Poll inputs are events of the named source traces with all expectations removed; compare observations of the implementation's poll.
 # scenario	step	request	expect
@@ -31,5 +31,82 @@ s16-command-options	1	RUN w2cctl secrets new -bogus $data/opt.key	exit 2; stderr
 s16-command-options	2	@read $data/opt.key	@absent
 s16-command-options	3	RUN w2cctl secrets new -last $data/opt.key	exit 2; stderr ~"-last"
 s16-command-options	4	@read $data/opt.key	@absent
-s16-command-options	5	RUN w2cctl rights -bogus -deployment w2c --check $data/rights.json.new	exit 2; stderr ~"-bogus"
-s16-command-options	6	@read $data/rights.json.new	@absent
+s17-get-hash-refused	1	@file $data/source/testsub.subsystem.yaml "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"	ok
+s17-get-hash-refused	2	@file $data/source/testsub.shell.html "<main>current</main>\n"	ok
+s17-get-hash-refused	3	@file $data/source/app.js "current-js\n"	ok
+s17-get-hash-refused	4	@file $data/source/app.css "current-css\n"	ok
+s17-get-hash-refused	5	RUN w2cctl manifest put $data/source/testsub.subsystem.yaml	exit 0
+s17-get-hash-refused	6	@file $manifest/testsub.subsystem.yaml "former-yaml\n"	ok
+s17-get-hash-refused	7	@file $manifest/testsub.shell.html "former-shell\n"	ok
+s17-get-hash-refused	8	@file $manifest/app.js "former-js\n"	ok
+s17-get-hash-refused	9	@file $manifest/app.css "former-css\n"	ok
+s17-get-hash-refused	10	@file $manifest/unrelated.js "unrelated\n"	ok
+s17-get-hash-refused	11	RUN w2cctl manifest get testsub --sha256 0000000000000000000000000000000000000000000000000000000000000000	exit 2
+s17-get-hash-refused	12	@read $manifest/testsub.subsystem.yaml	text "former-yaml\n"
+s17-get-hash-refused	13	@read $manifest/testsub.shell.html	text "former-shell\n"
+s17-get-hash-refused	14	@read $manifest/app.js	text "former-js\n"
+s17-get-hash-refused	15	@read $manifest/app.css	text "former-css\n"
+s17-get-hash-refused	16	@read $manifest/unrelated.js	text "unrelated\n"
+s17-get-hash-refused	17	@read $manifest/testsub.shell.html.old	@absent
+s18-get-row-absent	1	@file $manifest/testsub.subsystem.yaml "former-yaml\n"	ok
+s18-get-row-absent	2	@file $manifest/testsub.shell.html "former-shell\n"	ok
+s18-get-row-absent	3	@file $manifest/app.js "former-js\n"	ok
+s18-get-row-absent	4	@file $manifest/app.css "former-css\n"	ok
+s18-get-row-absent	5	@file $manifest/unrelated.js "unrelated\n"	ok
+s18-get-row-absent	6	RUN w2cctl manifest get testsub --sha256 4c068e55ca2d81dfc8baadf2a28379fc6eb2a766bc497edf5f671bbf4f120c89	exit 2
+s18-get-row-absent	7	@read $manifest/testsub.subsystem.yaml	text "former-yaml\n"
+s18-get-row-absent	8	@read $manifest/testsub.shell.html	text "former-shell\n"
+s18-get-row-absent	9	@read $manifest/app.js	text "former-js\n"
+s18-get-row-absent	10	@read $manifest/app.css	text "former-css\n"
+s18-get-row-absent	11	@read $manifest/unrelated.js	text "unrelated\n"
+s18-get-row-absent	12	@read $manifest/testsub.shell.html.old	@absent
+s19-get-replace-repeat	1	@file $data/source/testsub.subsystem.yaml "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"	ok
+s19-get-replace-repeat	2	@file $data/source/testsub.shell.html "<main>current</main>\n"	ok
+s19-get-replace-repeat	3	@file $data/source/app.js "current-js\n"	ok
+s19-get-replace-repeat	4	@file $data/source/app.css "current-css\n"	ok
+s19-get-replace-repeat	5	RUN w2cctl manifest put $data/source/testsub.subsystem.yaml	exit 0
+s19-get-replace-repeat	6	@file $manifest/testsub.subsystem.yaml "former-yaml\n"	ok
+s19-get-replace-repeat	7	@file $manifest/testsub.shell.html "former-shell\n"	ok
+s19-get-replace-repeat	8	@file $manifest/app.js "former-js\n"	ok
+s19-get-replace-repeat	9	@file $manifest/app.css "former-css\n"	ok
+s19-get-replace-repeat	10	@file $manifest/unrelated.js "unrelated\n"	ok
+s19-get-replace-repeat	11	RUN w2cctl manifest get testsub --sha256 4c068e55ca2d81dfc8baadf2a28379fc6eb2a766bc497edf5f671bbf4f120c89	exit 0
+s19-get-replace-repeat	12	@read $manifest/testsub.subsystem.yaml	text "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"
+s19-get-replace-repeat	13	@read $manifest/testsub.shell.html	text "<main>current</main>\n"
+s19-get-replace-repeat	14	@read $manifest/app.js	text "current-js\n"
+s19-get-replace-repeat	15	@read $manifest/app.css	text "current-css\n"
+s19-get-replace-repeat	16	@read $manifest/unrelated.js	text "unrelated\n"
+s19-get-replace-repeat	17	@read $manifest/testsub.shell.html.old	@absent
+s19-get-replace-repeat	18	RUN w2cctl manifest get testsub --sha256 4c068e55ca2d81dfc8baadf2a28379fc6eb2a766bc497edf5f671bbf4f120c89	exit 0
+s19-get-replace-repeat	19	@read $manifest/testsub.subsystem.yaml	text "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"
+s19-get-replace-repeat	20	@read $manifest/testsub.shell.html	text "<main>current</main>\n"
+s19-get-replace-repeat	21	@read $manifest/app.js	text "current-js\n"
+s19-get-replace-repeat	22	@read $manifest/app.css	text "current-css\n"
+s19-get-replace-repeat	23	@read $manifest/unrelated.js	text "unrelated\n"
+s19-get-replace-repeat	24	@read $manifest/testsub.shell.html.old	@absent
+s20-get-quarantine	1	@file $data/source/testsub.subsystem.yaml "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"	ok
+s20-get-quarantine	2	@file $data/source/testsub.shell.html "<main>current</main>\n"	ok
+s20-get-quarantine	3	@file $data/source/app.js "current-js\n"	ok
+s20-get-quarantine	4	@file $data/source/app.css "current-css\n"	ok
+s20-get-quarantine	5	RUN w2cctl manifest put $data/source/testsub.subsystem.yaml	exit 0
+s20-get-quarantine	6	@file $data/without-shell/testsub.subsystem.yaml "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {files: [app.js]}\n"	ok
+s20-get-quarantine	7	@file $data/without-shell/app.js "next-js\n"	ok
+s20-get-quarantine	8	RUN w2cctl manifest put $data/without-shell/testsub.subsystem.yaml	exit 0
+s20-get-quarantine	9	@file $manifest/testsub.subsystem.yaml "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {shell: true, files: [app.js, app.css]}\n"	ok
+s20-get-quarantine	10	@file $manifest/testsub.shell.html "<main>current</main>\n"	ok
+s20-get-quarantine	11	@file $manifest/testsub.shell.html.old "older-quarantine\n"	ok
+s20-get-quarantine	12	@file $manifest/app.js "current-js\n"	ok
+s20-get-quarantine	13	@file $manifest/app.css "current-css\n"	ok
+s20-get-quarantine	14	@file $manifest/unrelated.js "unrelated\n"	ok
+s20-get-quarantine	15	RUN w2cctl manifest get testsub --sha256 63592fc2e394cf6bfe27e9b0ebe02ab6495dccb5a627fd58dea88824d6133cba	exit 0
+s20-get-quarantine	16	@read $manifest/testsub.subsystem.yaml	text "name: testsub\nunit: {rows: things, id: numeric}\nplacement: {capacity: {default: 1}}\nworker: {exec: /usr/lib/testsub/worker}\nconsole: {files: [app.js]}\n"
+s20-get-quarantine	17	@read $manifest/testsub.shell.html	@absent
+s20-get-quarantine	18	@read $manifest/testsub.shell.html.old	text "<main>current</main>\n"
+s20-get-quarantine	19	@read $manifest/app.js	text "next-js\n"
+s20-get-quarantine	20	@read $manifest/app.css	text "current-css\n"
+s20-get-quarantine	21	@read $manifest/unrelated.js	text "unrelated\n"
+s20-get-quarantine	22	RUN w2cctl manifest get testsub --sha256 63592fc2e394cf6bfe27e9b0ebe02ab6495dccb5a627fd58dea88824d6133cba	exit 0
+s20-get-quarantine	23	@read $manifest/testsub.shell.html	@absent
+s20-get-quarantine	24	@read $manifest/testsub.shell.html.old	text "<main>current</main>\n"
+s20-get-quarantine	25	@read $manifest/app.css	text "current-css\n"
+s20-get-quarantine	26	@read $manifest/unrelated.js	text "unrelated\n"

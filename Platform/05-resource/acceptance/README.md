@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) N5.
 
-Doors and directives: `resource`, `console`, `store`, `admin` (sc. 17, 24–29, 37–41), `@start resource` (sc. 09-resource-door, 10-body-copy, 16-presence-lock, 17–28, 31, 37–41; the expectation `@exit 2` — sc. 17), `@start resource on srv-b`, `@sigterm resource`, `@sigkill resource#1` (sc. 31), `@start controller` (sc. 42), `@start worker` (sc. 16, 19, 20, 24–28, 42, 43), `@sigkill` (sc. 16-presence-lock, 43), `@spoil object` (sc. 43), `@put object` from `inputs/` (sc. 44, 45; the section «Inputs `inputs/`»), `@until`, `@append event`
+Doors and directives: `resource`, `console`, `store`, `admin` (sc. 17, 24–29, 37–41), `@start resource` (sc. 09-resource-door, 10-body-copy, 16-presence-lock, 17–28, 31, 33, 37–41; the expectation `@exit 2` — sc. 17), `@start resource on srv-b`, `@sigterm resource`, `@sigkill resource#1` (sc. 31), `@start controller` (sc. 42), `@start worker` (sc. 16, 19, 20, 24–28, 42, 43), `@sigkill` (sc. 16-presence-lock, 33, 43), `@spoil object` (sc. 43), `@put object` from `inputs/` (sc. 44, 45; the section «Inputs `inputs/`»), `@until`, `@append event`
 (sc. 08, 21, 22, 34–38), `@append event-raw` (sc. 22), `@cut role resource store` / `@mend role resource store` and `@sleep` (sc. 18; the sleeps — the section «Sleeps»), the request forms `@header` (`X-Written`, `X-Sum`, `Range`), `@raw`, `@big` (sc. 23), the method `HEAD` (sc. 35), `ASSERT`; the expectations `@oneof` (sc. 20), `@header <Name>: ~<text>` (sc. 31, 33, 36), `<code> ~text` (sc. 33, 36).
 
 ## Preparation of each scenario
@@ -44,7 +44,7 @@ these scenarios do not replace the check of the TLS refusals.
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-In total 35 scenarios / 292 steps; sc. 29–45 — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
+In total 35 scenarios / 297 steps; sc. 29–45 — 133 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 
 Parameter and path checks:
@@ -149,7 +149,7 @@ Each expectation is from the norm:
   there are no copies of the server — `/mirrored/srv-b` 404; a bucket whose end by its name is later than the clock of the receiver (`20990101T000000Z`) — 400; no
   `X-Sum`, not 64 lowercase hex (`bad-hex`, uppercase) — 400; the sum is wrong — 422, there is no copy; the closed bucket `20260101T000000Z` with the correct
   sum (SHA-256 of the bytes `foo`) — 204, the list `{copies: [{path, written, size, sum}]}`, a repeat of the same copy does not shift `written`
-  (`$w1`), the bytes of the copy — with `X-Sum`, of a foreign window — 404; the heartbeat of the resource — `mirrors: {srv-b: 1}` (the copies of the neighbour in `.mirror/`);
+  (`$w1`), the bytes of the copy — with `X-Sum`, of a foreign window — 404; the heartbeat of the resource — `mirrors: {srv-b: 1}` (the copies of the neighbour in `.mirror/`). After the completed 204, kill and restart the actual resource on the same roots: the full listing retains `$w1`, size and sum, and GET retains the body substring and `X-Sum`. The substring comparison alone does not prove a complete byte-for-byte body match. This observes process-crash recovery after an acknowledged copy, not a crash within publication or a power loss;
 - sc. 34-events-alarms-unit — a row of the tree `testsub.alarms/c1` (N1.2; N3 «query» step 4):
   `subsystem: testsub`, `unit: testsub/c1`, `class: alarm`; `unit=testsub.alarms/c1` is not normalized — 200 without matches;
 - sc. 35-events-cut-order — the resource query (N2 `HEAD` — 405; the event journal merge contract `cut`, `by`, `late`, `truncated`;
@@ -274,4 +274,4 @@ the answer before the drain, no key; exactly 64 MiB — 204 and the reading 200 
 
 ## Completed-call witnesses
 
-Seams s63–s67 in [seams.tsv](seams.tsv) supplement the 35 process scenarios / 292 steps and relieve 9+6 vectors. S63 awaits the real synchronous relieve return, then observes 0 writes / 0 deletes, exact contents and the previous own-request version in the band. S64/S65 observe actual candidate IO at 144/145 and calendar fallback, never a result cap. S66/S67 check separate restore/mirror failure-sequence boundaries and unchanged cumulative diagnostics. Setup and normalization are [forms/README](../forms/README.md). These are source obligations; declaration is not execution of an implementation, IO or acceptance. The ms support and actual port bindings are checked separately.
+Seams s63–s67 in [seams.tsv](seams.tsv) supplement the 35 process scenarios / 297 steps and relieve 9+6 vectors. S63 awaits the real synchronous relieve return, then observes 0 writes / 0 deletes, exact contents and the previous own-request version in the band. S64/S65 observe actual candidate IO at 144/145 and calendar fallback, never a result cap. S66/S67 check separate restore/mirror failure-sequence boundaries and unchanged cumulative diagnostics. Setup and normalization are [forms/README](../forms/README.md). These are source obligations; declaration is not execution of an implementation, IO or acceptance. The ms support and actual port bindings are checked separately.

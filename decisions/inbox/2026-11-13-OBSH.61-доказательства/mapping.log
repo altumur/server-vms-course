@@ -1,0 +1,30 @@
+OBSH.59 checker 42c76bbd4; form_refs SHA256=bd14d33863d90dcc86a60e4bec8fdc86bfe20fcf26826e437f24e060422de3a0
+Platform/01-store/forms/stages.tsv:26	P/01.1 N1 id	P/01.1 N1
+Platform/03-worker/forms/stages.tsv:23	P/03.2 N3 capture	P/03.2 «capture(name?) → slot | nobody»
+Platform/03-worker/forms/stages.tsv:24	P/03.2 N3 renew	P/03.2 «renew() → still mine | lost»
+Platform/03-worker/forms/stages.tsv:24	P/03.2 N3 take_epoch	P/03.2 «take_epoch(id) → epoch | refusal»
+Platform/03-worker/forms/stages.tsv:24	P/03.2 N3 confirm	P/03.2 «confirm(id) — a lease step»
+Platform/03-worker/forms/stages.tsv:24	P/03.2 N3 write_under_slot	P/03.2 «write_under_slot(key, items) → index | refusal»
+Platform/03-worker/forms/stages.tsv:26	P/03.2 N3 take_unit_epoch	P/03.2 «take_unit_epoch(unit) — the gates before a launch»
+Platform/03-worker/forms/stages.tsv:26	P/03.2 N3 lease_step	P/03.2 «lease_step()»
+Platform/03-worker/forms/stages.tsv:26	P/03.2 N3 place	P/03.2 «place: take, hold, let go»
+Platform/03-worker/forms/stages.tsv:26	P/03.2 N3 schema check by the worker	P/03.2 «schema check by the worker»
+Platform/03-worker/forms/stages.tsv:26	P/03.2 N3 nobody and getting the name back	P/03.2 «nobody and getting the name back»
+Platform/04-controller/forms/stages.tsv:18	P/04 Data families	P/04 «Data families (built from the standard files)»
+Platform/04-controller/forms/stages.tsv:19	P/04 N3 fate	P/04 «fate(slot) → fate — by the clock of the controller»
+Platform/04-controller/forms/stages.tsv:20	P/04 N3 get and hold the placement turn	P/04 «get and hold the placement turn»
+Platform/04-controller/forms/stages.tsv:20	P/04 N3 accept and complete a decision	P/04 «accept and complete a decision(members, target, reason)»
+Platform/04-controller/forms/stages.tsv:21	P/04 N3 choose	P/04 «choose(unit) → worker | none»
+Platform/04-controller/forms/stages.tsv:22	P/04 N3 pass step 8	P/04 N3
+Platform/04-controller/forms/stages.tsv:22	P/04 N3 pass step 8a	P/04 N3
+Platform/04-controller/forms/stages.tsv:22	P/04 N3 decommission_server(s)	P/04 «decommission_server(s) — a console request, executed by the controller»
+Platform/04-controller/forms/stages.tsv:23	P/04 N3 snapshot	P/04 «snapshot — after the control part, before the final report»
+Platform/04-controller/forms/stages.tsv:23	P/04 N3 table snapshot	P/04 «table snapshot — after the unit snapshot, before the final report»
+Platform/04-controller/forms/stages.tsv:24	P/04 N3 «shortage(), order(), withdraw the order, shrink()»	P/04 «shortage(), order(), withdraw the order, shrink() — with grows: true»
+Platform/04-controller/forms/stages.tsv:25	P/04 N3 pass (the steps other than 8 and 8a)	P/04 N3
+Platform/04-controller/forms/stages.tsv:25	P/04 N3 move	P/04 «move(unit, from, to) → ok | already moved»
+Platform/04-controller/forms/stages.tsv:25	P/04 N3 leaving	P/04 «leaving(worker) → reason | none»
+Platform/04-controller/forms/stages.tsv:25	P/04 N3 manifest_rev	P/04 «manifest_rev — the rule guard»
+Platform/04-controller/forms/stages.tsv:26	P/04 N3 controller start	P/04 «controller start — schema check»
+PASS: before=27 after=0 replacements=27 exact_headings=23 bare_sections=4; other columns and element counts unchanged
+{'Platform/01-store/forms/stages.tsv': 1, 'Platform/03-worker/forms/stages.tsv': 10, 'Platform/04-controller/forms/stages.tsv': 16}

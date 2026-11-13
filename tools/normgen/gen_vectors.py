@@ -14,6 +14,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import common_vectors  # noqa: E402
+import gate  # noqa: E402
 import vector_consumers  # noqa: E402
 import lesson  # noqa: E402
 from gen_checks import go_str, gofmt  # noqa: E402
@@ -123,11 +124,16 @@ def plan(root=ROOT):
     stages_path = Path(root) / L.rel / "forms/stages.kit.tsv"
     stages = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n")
               if ln and not ln.startswith("#")] if stages_path.is_file() else [[]]   # Historical P/06 sources before forms have no stages.
-    own = sorted({m for r in stages[1:] for m in re.findall(r"vectors:([a-z0-9-]+)", r[4])})
-    for pkg in own:
-        if not any(p == f"{L.key}/{pkg}" for p, _ in declared):
-            raise GenError(f"stages.kit.tsv gate vectors:{pkg}: no declaration of its wire")
     known = common_vectors.composition(L.key, root, known_only=True)
+    available = {p for p, _ in declared} | {f"common/{p}" for p, _ in known}
+    try:
+        packages = {p for row in stages[1:]
+                    for p in gate.vector_packages(row[stages[0].index("gate")], L.key)}
+    except gate.GateError as exc:
+        raise GenError(f"stages.kit.tsv: {exc}") from None
+    for pkg in sorted(packages):
+        if pkg not in available:
+            raise GenError(f"stages.kit.tsv gate vectors:{pkg}: no declaration of its wire")
     for pkg, table in lesson_consumers(root):
         if (pkg, table) in SKIP or (pkg, table) in SKIP_LESSON.get(L.key, {}) or (pkg, table) in declared \
                 or (pkg.startswith("common/") and (pkg[len("common/"):], table) in known):

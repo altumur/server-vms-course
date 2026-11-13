@@ -223,6 +223,11 @@ scenario	step	request	expect
 33-mirror-put-read	7	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
 33-mirror-put-read	8	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T001000Z.events.jsonl	404
 33-mirror-put-read	9	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"mirrors": {"srv-b": 1}}
+33-mirror-put-read	10	@sigkill resource	ok
+33-mirror-put-read	11	@start resource	ok
+33-mirror-put-read	12	@until 30 resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
+33-mirror-put-read	13	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 @header X-Sum: ~2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+33-mirror-put-read	14	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
 # 34-events-alarms-unit (G05 part 1; E32, C05-QUERY-UNIT-ALARMS-01): a line of the tree testsub.alarms/c1 — subsystem testsub, unit testsub/c1, class alarm; unit=testsub.alarms/c1 — the UnitRef form, not normalized: 200 without matches
 34-events-alarms-unit	1	@append event testsub.alarms/c1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "of": "testsub/c1", "class": "alarm"}	ok
 34-events-alarms-unit	2	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "class": "alarm", "subsystem": "testsub", "unit": "testsub/c1"}], "state": "live", "truncated": 0}
