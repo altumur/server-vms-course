@@ -1,0 +1,55 @@
+{
+  "id": "RUN-SOAK",
+  "duration": {
+    "value": 2,
+    "unit": "h"
+  },
+  "modes": {
+    "group": {
+      "faults": [
+        "sigkill_leader",
+        "sigkill_follower",
+        "sigkill_all",
+        "sigstop",
+        "isolation",
+        "reply_loss",
+        "sigterm",
+        "backup_under_fault"
+      ]
+    },
+    "box": {
+      "faults": [
+        "checkpoint_sigkill",
+        "unsynced_loss"
+      ],
+      "checkpoint_points": [
+        "temporary_file_write",
+        "file_fsync",
+        "rename",
+        "directory_fsync"
+      ]
+    }
+  },
+  "properties": [
+    "acknowledged_write_persistence",
+    "unique_applied_versions",
+    "linearizable_reads"
+  ],
+  "negative_controls": [
+    "lost_log_tail",
+    "read_without_fence"
+  ],
+  "executor": {
+    "repository": "court-tools",
+    "path": "soak/",
+    "revision": "6fd588df",
+    "before_qualifier": "executor",
+    "after_qualifier": "comparison_reference"
+  },
+  "environment": {
+    "preferred": "virtual_machine",
+    "fallback": "CT 103",
+    "load_gate_ref": "Platform/common/acceptance/spec/acceptance.norms.md#n33-declared-environment"
+  },
+  "procedure_ref": "qualification/stand-procedures.md#long-random-fault-run"
+}

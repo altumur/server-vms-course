@@ -2,7 +2,7 @@
 
 This English text is the canonical `qualification/stand-procedures.md`; the Russian text is a derived translation for people, not in the export.
 
-This file completes [the production qualification of the store](README.md) with three parts: the environment that the entries with D7 bindings need, the means and the qualification of the D7 providers on a virtual machine, and the procedures of the three probes that need only the input of [N6.2](../../common/acceptance/spec/acceptance.norms.md#n62-input-of-the-qualification): `prod-disk-fd`, `prod-replay-limit` and `prod-admin-limit`. The observed outcomes stay those of [N6.3](../../common/acceptance/spec/acceptance.norms.md#n63-probes) and of the [case groups](README.md#case-groups); the results stay those of [N6.5](../../common/acceptance/spec/acceptance.norms.md#n65-results-and-controls). The file adds no outcome, refusal, route, flag, profile field or numeric value of a norm.
+This file completes [the production qualification of the store](README.md) with the stand environment, the qualification of D7 providers on a virtual machine, the long random fault run and the procedures of the probes that need only the input of [N6.2](../../common/acceptance/spec/acceptance.norms.md#n62-input-of-the-qualification): `prod-disk-fd`, `prod-replay-limit` and `prod-admin-limit`. The observed outcomes stay those of [N6.3](../../common/acceptance/spec/acceptance.norms.md#n63-probes), the [case groups](README.md#case-groups) and the norms named by the long-run record; the results stay those of [N6.5](../../common/acceptance/spec/acceptance.norms.md#n65-results-and-controls). The file adds no outcome, refusal, route, flag, profile field or numeric value of a norm.
 
 It names no actual provider. The `identity`, `invoke`, `observer_ref` and `qualification_ref` of a provider are written by the stand that builds and qualifies it on its machine ([stand data](../forms/production/README.md)); until then an entry that needs the capability is `not_executed` with the capability as the reason.
 
@@ -72,6 +72,41 @@ An entry with a `fault` or `storage` binding keeps the history of the operations
 - an operation answered `unavailable` on a proven refusal before the effect is absent, and its `id` is not occupied (P/01.1 R295).
 
 The checker has its own negative controls: a history with a deleted acknowledged write, with a repeated version and with half a batch must each be detected.
+
+## Long random fault run
+
+The input is [`soak.json`](../forms/production/soak.json), checked against [`soak.schema.json`](../forms/production/soak.schema.json). It is a record of Q, separate from the input of N6.2 and from the functional scenarios of J. Its executor before the qualifier is ready is `court-tools`, `soak/`, revision `6fd588df`; afterwards the same executor is the comparison reference for the qualifier. Record the actual executor commit, invocation and artifact hashes with the result; the record does not supply a candidate pin.
+
+### Preparation and load
+
+Use a fresh store directory and an independently recorded initial state in each applicable mode of the record. Declare the workload and resource envelope as in [Qualified inputs](README.md#qualified-inputs), the random seed, the operation mix, the scheduling of fault kinds and the checkpoint policy before the run. These are recorded experimental inputs, not new universal rates, fault frequencies or deadlines. Drive concurrent writes, batches, replays, reads and backups; keep acknowledged writes to distinct keys as durable witnesses alongside keys that are overwritten. Replays retain their original request and `id`.
+
+The duration of random load with faults is 2 h for a run of the record in an applicable mode, measured by the independent monotonic clock. Preparation, controls and final checking do not replace that interval. Keep the actual fault schedule as well as the seed: scheduling and elections need not be reproduced by the seed alone. Every applicable fault kind in the record has an activation receipt; an unactivated kind is an incomplete measured scope, not success for that kind.
+
+Heavy runs use the virtual machine. Until the VM is available, run on CT 103 with the load gate and declared environment of [N3.3](../../common/acceptance/spec/acceptance.norms.md#n33-declared-environment); record the cgroup PSI observations and the gate result before starting the heavy load. An unsatisfied gate does not start a credited run. The gate thresholds retain their existing owner; this procedure adds none.
+
+### Faults and their observations
+
+| Mode | Faults | Independent evidence |
+|---|---|---|
+| Group | `kill -9` of the current leader, a follower and all members; `SIGSTOP` followed by `SIGCONT`; isolation of a member; loss of a response; `SIGTERM`; backup while a fault is active. | Record member identities and their roles at activation, signals and exits/resumption, proxy cuts and held or dropped responses, backup start/completion and recovery. Isolation reaches both directions of the member's traffic. A response cut is confirmed after its request was sent, so the client history retains the unknown outcome. |
+| Box | `kill -9` at checkpoint temporary-file write, file `fsync`, `rename` and directory `fsync`; loss of unsynchronised data. | System-call observation ties a kill to the checkpoint object and stage, including whether the call completed. The qualified medium observer records which writes and barriers completed before unsynchronised data were lost and the state on reopen. |
+
+Resume frozen members, heal partitions and reopen the store after faults so that acknowledged state and subsequent progress can be observed. A process kill alone tests a process crash: the kernel cache survives it. It cannot stand in for loss of unsynchronised data, a power reset or a qualified storage binding. Use the VM providers above for those slices; until they exist, list the slices as `not_executed` with the missing capability and reason. This VM-only debt does not hold promotion until the VM exists; the long random run on the available stand still holds it. Deterministic checkpoint/error cases of J retain their own execution and are not discharged by this random run.
+
+### History, properties and controls
+
+Keep an external history of each request and response with its exact bytes, operation identity, key, `id`, version, sending/receipt times and target member. Record pending requests and lost responses as unknown outcomes; do not turn them into definite refusals. After each recovery and at the final reopen apply the [history check](#history-check-across-faults) to the complete history and reconcile the state with a legal ordering of operations:
+
+- Every acknowledged write survives in that ordering and in the recovered state until a later legal write supersedes it. The distinct-key witnesses must still contain the acknowledged value and version. Check whole batches and their id records, not just a sampled last row.
+- A version is not reused by a distinct logical application after any restart, checkpoint or leader change. A lawful replay returns its original version; that is not a new application.
+- Completed reads, including reads through a follower and an isolated former leader, admit a linearization consistent with real-time precedence and the returned values and versions (P/01.1 R062). A lawful refusal during loss of a leader is not a stale successful read. Final-state equality alone does not establish linearizability.
+
+Before scoring a candidate, activate the negative controls of the record through the same executor and history checker. The `lost_log_tail` mutant drops an acknowledged log tail on recovery; a witness not superseded by another write must expose that loss. The `read_without_fence` mutant serves local reads without confirmation through the current leader; after isolation and a completed write in the live group a stale successful read must be detected. Record the mutants' identities, activation receipts and exact history counterexamples. A correct reference history must be accepted. A missed mutant or an inactive fault is an instrument error, red, class `stand`, and yields no candidate verdict. Naming the controls without executing them qualifies nothing.
+
+### Evidence and result
+
+The evidence includes the record and its hash, candidate and executor identities, declared inputs and load-gate receipt, seed and actual fault schedule, the full raw history, checkpoint/medium observations, backups, state after reopen, controls and any history counterexample. Report the measured duration, mode and fault coverage, normative mismatches, instrument errors and every unexecuted slice with its reason. Use the existing results of N6.5; successful execution of a signal or a clean final snapshot alone is no GREEN. Compare a qualifier with the reference executor on these properties and controls, retaining both results and any disagreement. Publication, a short run or a functional J result does not satisfy the long-run record.
 
 ## Probes on the input of N6.2
 

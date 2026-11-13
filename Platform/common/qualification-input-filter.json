@@ -37,6 +37,16 @@
       "basis": "Existing stand inputs and explicit D7 activations; no provider is supplied by publication."
     },
     {
+      "path": "Platform/01-store/forms/production/soak.json",
+      "disposition": "include",
+      "basis": "The machine record and closed schema of the long random fault run of P/01 qualification."
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.schema.json",
+      "disposition": "include",
+      "basis": "The machine record and closed schema of the long random fault run of P/01 qualification."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "include",
       "basis": "Existing outcome vocabulary and HTTP refusal forms referenced by the procedures."

@@ -372,6 +372,16 @@
       "basis": "P01.229: moved from Platform/common/acceptance/production/input.json to its lesson; P01.136: stand data of the target P/01/production; judge only."
     },
     {
+      "path": "Platform/01-store/forms/production/soak.json",
+      "disposition": "judge_only",
+      "basis": "The long random fault run is qualification data outside the implementation input M; full judge input retains it without a new functional scenario."
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.schema.json",
+      "disposition": "judge_only",
+      "basis": "The long random fault run is qualification data outside the implementation input M; full judge input retains it without a new functional scenario."
+    },
+    {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",
       "disposition": "judge_only",
       "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
@@ -1127,6 +1137,16 @@
       "path": "Platform/01-store/forms/production/input.json",
       "disposition": "include",
       "basis": "P01.229: moved from Platform/common/acceptance/production/input.json to its lesson; Acceptance data of P/01."
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.json",
+      "disposition": "include",
+      "basis": "The long random fault run is qualification data outside the implementation input M; full judge input retains it without a new functional scenario."
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.schema.json",
+      "disposition": "include",
+      "basis": "The long random fault run is qualification data outside the implementation input M; full judge input retains it without a new functional scenario."
     },
     {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",
