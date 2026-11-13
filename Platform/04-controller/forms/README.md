@@ -11,10 +11,13 @@ These forms express the existing controller norms; no controller HTTP door is in
 `number` is finite; the form adds no otherwise unspecified lexical/range refusal. `required`/`bad` are CEL over exact-key map `f` and `cmd`.
 Alias checks run before defaults. Empty `bad` does not remove imported validation. The launcher parses environment files, the process consumes them.
 
+The observable start refusals come from [lifecycle.md](../lifecycle.md#exit-codes) and the environment-file contract: malformed environment files or SERVER_NAME, a missing/mismatched W2C_ROLE, and unequal paired names refuse start with code 2; the log names the offending source or names as that contract specifies. Accepted inputs are observed through the store/object roots, the report field hung_move_after, snapshot cluster and the policy effects specified by their norms. A numeric setting with no normative refusal gains no rejection case from its type alone; NOTIFY_SOCKET is observed on the host under the system checklist.
+
 [refusals.tsv](refusals.tsv) has `chapter row name surface code kind fields headers log norm word cause outcome diagnostic caller`.
 The separator is literal TAB, without CSV quoting. Chapter is `4`; the final four cells define the cause, outcome, diagnostic and caller action.
 `start` is process start, `call` a controller procedure, `peer` an imported console door. A fixed code supplements the normative outcome;
 `-` adds no machine projection. `kind` is `-`: the console's error is not a controller HTTP Fault. N4 refers to the form, without a second table.
+For `call`, outcome names the observable report fields, stored rows or absence of a mutation; it is not an HTTP status or a process exit. A `peer` outcome is checked through the console, and a `start` outcome through process exit. The seam adapter records actual effects as described below; an internal return word alone does not replace those effects.
 
 ## Machines
 
