@@ -51,10 +51,10 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	10	join_parity	http	409	refused	-	-	-	P/01.3 N1.3 join
 1.3	11	join_left	http	403	forbidden	-	-	-	P/01.3 N1.3 leave
 1.3	12	join_role_socket	http	403	forbidden	-	-	-	P/01.3 N2
-1.3	13	backup_inside_dir	cli	exit !0	-	-	-	path,dir	P/01.3 N1.3 copy; B8
-1.3	14	import_repeated	cli	exit !0	-	-	-	phase	P/01.3 N3; B12
-1.3	15	recover_box	cli	exit 2	-	-	-	«this build has no raft»	P/01.3 N1.3 box; B15
-1.3	16	floor_not_integer	http	400	badrequest	-	-	-	P/01.3 N2; B5
+1.3	13	backup_inside_dir	cli	exit !0	-	-	-	path,dir	P/01.3-R121
+1.3	14	import_repeated	cli	exit !0	-	-	-	phase	P/01.3-R122
+1.3	15	recover_box	cli	exit 2	-	-	-	«this build has no raft»	P/01.3-R169
+1.3	16	floor_not_integer	http	400	badrequest	-	-	-	P/01.3-R134
 1.3	17	no_leader	http	503	unavailable	-	-	-	P/01.3 N1.3 leader_wait
 1.3	18	leader_lost	http	503	ambiguous	-	-	-	P/01.1 N3
 1.3	19	connection_limit	http	503	unavailable	-	Retry-After: 1	-	P/01.1 N4
@@ -72,10 +72,10 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.3	31	copy_snapshot_unavailable	http	503	unavailable	-	-	-	P/01.3 N2 HTTP copy
 1.3	32	start_data_dir_owned	start	exit 2	-	-	-	dir	P/01.3 N1.3 ownership
 1.3	33	local_data_dir_owned	cli	exit !0	-	-	-	dir	P/01.3 N1.3 ownership; local box import/restore and recover
-1.3	34	replay_limit	http	503	unavailable	-	Retry-After	-	P/01.3 R035
+1.3	34	replay_limit	http	503	unavailable	-	Retry-After	-	P/01.3-R329
 1.3	35	import_held	http	503	unavailable	-	-	-	P/01.3 N1.3 import
 1.3	36	admin_not_leader	http	503	unavailable	-	-	-	P/01.3 N1.3 admin_ops; P/01.3 N2
-1.3	36	admin_not_leader_cli	cli	exit !0	-	-	-	«not the leader»	P/01.3 N1.3 admin_ops; P/01.3 R018
+1.3	36	admin_not_leader_cli	cli	exit !0	-	-	-	«not the leader»	P/01.3-R118; P/01.3-R235
 1.3	37	import_other_input	cli	exit !0	-	-	-	phase	P/01.3 N1.3 import
 1.3	38	floor_unreadable	http	409	refused	-	-	-	P/01.3 N1.3 floor; P/01.3 N2
 1.3	39	disk_full	http	503	unavailable	-	-	-	P/01.3-R036; P/01.3-R036; P/01.1-R295

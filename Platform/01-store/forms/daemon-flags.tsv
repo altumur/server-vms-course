@@ -10,7 +10,7 @@
 # Writing (P/01.3 N1.3, P/01.3-R031): -name value | -name=value; bool — without a value; -- ends the flags; a repeated flag, a bool with a value,
 # a positional word of the daemon — a start refusal, code 2; positional words — only of admin_ops by its grammar (admit <id>, backup <file>, leave [id]).
 # Values: bytes, int — a decimal integer without a sign, a plus or leading zeros, bytes without a suffix (default_text is the writing of the prose);
-# duration — [1-9][0-9]*(ms|s|m|h); addr — a non-empty host (a name, IPv4 or [IPv6]) and a port 1–65535. $SERVER_NAME empty or absent — no default.
+# duration — [1-9][0-9]*(ms|s|m|h); addr — a non-empty host (a name, IPv4 or [IPv6]) and a port 1–65535. $SERVER_NAME empty or absent — no default. For -id, the default is used only when required is false; when required is true, the command must explicitly give -id. At daemon/recover startup an effective id must exist: an explicit -id or its allowed nonempty $SERVER_NAME default; otherwise start_flags, exit 2.
 # The CEL values of f: int — for int, bytes and an enum of integers; true — for bool; a string as given — for the rest.
 #var f map<string,dyn> — the flags parsed from the command line (a flag without a value — true)
 #var cmd string — the command: daemon or a subcommand of admin_ops
@@ -38,7 +38,7 @@ flag	type	default	default_text	required	commands	bad	norm
 -leader-wait	duration	5s	5s	false	daemon		P/01.3 N1.3 leader_wait
 -max-value	bytes:>0	524288	512KiB	false	daemon,import,restore		P/01.1 N4; P/01.3 N1.3 import
 -max-body	bytes:>0	1048576	1MiB	false	daemon		P/01.1 N2
--max-conns	int:1..	64	64	false	daemon		P/01.1 N4
+-max-conns	int:1..	64	64	false	daemon		P/01.3-R008: a separate limit per ordinary role socket; P/01.1 N4
 -api-conns	int:1..	32	32	false	daemon		P/01.1 N4
 -api-per-address	int:1..	8	8	false	daemon		P/01.1 N4
 -index-base	int:0..	0	0	false	import		P/01.3 N1.3 import

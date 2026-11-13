@@ -469,7 +469,7 @@ components:
       unevaluatedProperties: true
       required: [op, key]
       properties:
-        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on the admin socket of the leader (P/01.3 N2)"}
+        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on admin.sock of a running box or of the group leader (P/01.3-R215)"}
         key: {$ref: "#/components/schemas/Key"}
         cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # N1: null, empty or a version; strictly to the end of the string
         guard:

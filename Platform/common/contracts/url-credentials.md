@@ -164,7 +164,8 @@ and further up to the nearest `?`, `#` or the end of the value there is `;` or `
   the pair carries a password, its value is masked as a whole (`?user=admin%26pwd%3D…` → `?user=***`). A login is
   found — the pair carries a login.
 
-The name of a pair with `%` which, decoded, contains `=`, `&` or `;` (`?pass%3D…=1`), is read the same way.
+The name of a pair with `%` which, decoded to a fixed point, contains `=`, `&` or `;` (`?pass%3D…=1`),
+is joined in decoded form with `=` and the value of its own pair; the result is cut and read as in (b).
 The name is masked together with the value. The reason: the recipient will decode the value and see these pairs.
 
 **A8. A nested address.**

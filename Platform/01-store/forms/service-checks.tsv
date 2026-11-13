@@ -3,10 +3,10 @@
 # {method, path, query, size, role_header}. Rows in the order of n: the first row whose when is true gives the refusal code, kind and the fields fault;
 # none — the request goes on to the body form of its door (P/01.3 N2) and then to the membership and state checks of its procedure (P/01.3 N3).
 # The paths /v1/write, /v1/rights, /v1/get and /v1/list belong to chapters 1.1 and 1.2: of this table only the rows of the frame, the route and the method
-# of their owners apply to them (row 1 there is the refusal body_limit of chapter 1.1, R217 of P/01.1; service_body_limit — on the service paths);
+# of their owners apply to them (row 1 there is the refusal body_limit of chapter 1.1, P/01.1-R034; service_body_limit — on the service paths);
 # their identity, body and rights checks follow the order of their owners (P/01.1 N2.1, forms/write-checks.tsv, P/01.2 N3).
 # The table does not know the mode: on a box a role header on any socket, admin.sock included, and a forwarding from the role configstore-door on -api are 403
-# by P/01.2 N1.3 identity and P/01.3 N1.3 box, before the body; these rows are not in the table.
+# by P/01.2-R017 and P/01.3-R176, before the body; these rows are not in the table.
 # op — * for every row: the request object has no op. group and each are empty: the table has no lists.
 # when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
 #var body dyn — the request object: method — the HTTP method as sent (GET, POST, HEAD, …); path — the path of the request target, byte for byte; query — the string after ?, "" without one, no row reads it; size — the number of entity-body bytes, 0 without a body; role_header — the value of the role forwarding header, null without one
