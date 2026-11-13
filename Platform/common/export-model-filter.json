@@ -5052,6 +5052,11 @@
       "basis": "ONE authoritative Source filter file itself is delivered J-only, never M; no self-hash or C identity inside it."
     },
     {
+      "path": "Platform/common/qualification-input-filter.json",
+      "disposition": "judge_only",
+      "basis": "Qualification input filter; administrative input of the trusted exporter, not for the product model."
+    },
+    {
       "path": "Platform/common/ru/LAYERS.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
