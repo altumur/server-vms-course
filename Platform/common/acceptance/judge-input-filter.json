@@ -5052,6 +5052,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/common/qualification-input-filter.json",
+      "disposition": "exclude",
+      "basis": "Qualification input filter; administrative input of the trusted exporter, outside the judge input."
+    },
+    {
       "path": "Platform/common/ru/LAYERS.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
