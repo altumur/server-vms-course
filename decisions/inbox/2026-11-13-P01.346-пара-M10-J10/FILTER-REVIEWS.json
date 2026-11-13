@@ -1,0 +1,25 @@
+{
+ "C": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+ "baseline": "accepted P01.339 pair; unchanged semantic classifications inherited",
+ "delta_sha256": "043e8139d719474bb92d6f441a695c51c4dcd690bb52ae5c2266f76953ba6e95",
+ "deltas": [
+  {
+   "task": "P01.341",
+   "records": [
+    "Platform/01-store/forms/production/soak.json",
+    "Platform/01-store/forms/production/soak.schema.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "accepted.window equals actual architect Claude handle; accepted receipt is review record",
+   "accepted_receipt": "reviews/P01.341-accepted.json",
+   "review": "reviews/P01.341-accepted-review.json",
+   "review_sha256": "6f8dc49446c647d0321ff8aaee08e7188fd0f5c655050fd6e8d6999e6ab24d84"
+  }
+ ],
+ "filter_author_provider": "per-record actual provider in deltas",
+ "filter_reviewer_provider": "different actual provider per record in deltas",
+ "all_delta_records_covered": true,
+ "inherited_review": "reviews/P01.339-inherited-filter-reviews.json",
+ "inherited_review_sha256": "b24949934f9fcfa4a7bafa71649ccb1aabb51e864234187531619efb8559e9c3"
+}

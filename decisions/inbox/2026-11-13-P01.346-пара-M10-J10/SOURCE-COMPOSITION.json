@@ -1,0 +1,56 @@
+{
+ "C": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+ "dependencies": [
+  {
+   "task": "P01.339",
+   "status": "accepted",
+   "commit": "f1ae99191a4dc5c6e0c2921f0f4d126434a1c531",
+   "utc": "2026-11-13T14:28:45Z",
+   "accepted_sha256": "6811030a7d38e51ba37993055e4261c7ba47b28f1119d82aac1755a1a18a6882",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.341",
+   "status": "accepted",
+   "commit": "52eb88797fc9ff248cd39eca301d8d463d3ace86",
+   "utc": "2026-11-13T15:15:25Z",
+   "accepted_sha256": "6f8dc49446c647d0321ff8aaee08e7188fd0f5c655050fd6e8d6999e6ab24d84",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.342",
+   "status": "accepted",
+   "commit": "6e96c9d8cd1402ffbe474641447d908ed06d67e3",
+   "utc": "2026-11-13T15:31:10Z",
+   "accepted_sha256": "64730d9a1fc94dfe0b24e67ba883b7d37f388ecc19d540cfdb8a97f023653102",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.344",
+   "status": "accepted",
+   "commit": "7ecf46591b39413bfe5f04cc3bea2cc20a49354a",
+   "utc": "2026-11-13T16:00:37Z",
+   "accepted_sha256": "ea2edd3b2715dd29d88d2795d87b63c16141ac2787cd14d5d250f739878910fa",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.345",
+   "status": "accepted",
+   "commit": "02c1df29d74337b94502d616b4d6d05c5d0b59ef",
+   "utc": "2026-11-13T15:57:38Z",
+   "accepted_sha256": "2cefed139214f6737179fe3979ece5bf9257ae3edaeb848cf7445a4415e1b1af",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.58",
+   "status": "accepted",
+   "commit": "34e5dedba5a408bd85dbd5cc0ddfc4b43676f6f6",
+   "utc": "2026-11-13T12:41:14Z",
+   "accepted_sha256": "11d0fe9123d37b7478b5b6a278e782bc8887b20337c1351087d6a69eda11a3f4",
+   "ancestor_C": true
+  }
+ ],
+ "task_sha256": "c624b11b68f3521c28e822f1f3510e4ac8915d269d2a53af70df17c4d87588ac",
+ "latest_fetched_main_at_source": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+ "OK": true
+}
