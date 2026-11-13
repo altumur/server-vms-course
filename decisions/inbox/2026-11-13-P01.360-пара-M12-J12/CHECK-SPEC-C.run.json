@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "skills/lesson-spec/scripts/check_spec.py",
+  "--scope",
+  "platform"
+ ],
+ "cwd": "/home/pilot/P01.360-evidence/archive-C",
+ "C": "a494be12d54c2e596467c1508973da3031af2088",
+ "exit": 0,
+ "seconds": 75.6865741959773,
+ "roster_check": "filesystem roster checked on exact-C archive"
+}
