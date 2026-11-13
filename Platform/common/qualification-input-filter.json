@@ -2,6 +2,11 @@
   "version": 1,
   "files": [
     {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "disposition": "include",
+      "basis": "The existing store group stand referenced by qualification, retained as a whole file."
+    },
+    {
       "path": "Platform/01-store/forms/daemon-flags.tsv",
       "disposition": "include",
       "basis": "Existing workload row, connection, body and leader-wait limits referenced by the procedures."
@@ -107,6 +112,11 @@
       "basis": "The closed descriptor form of the D7 providers."
     },
     {
+      "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+      "disposition": "include",
+      "basis": "The existing command-specific profile substitutions referenced by qualification, retained as a whole file."
+    },
+    {
       "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
       "disposition": "include",
       "basis": "Descriptor form referenced by the whole shared seams contract."
@@ -120,6 +130,11 @@
       "path": "Platform/common/acceptance/spec/acceptance.norms.md",
       "disposition": "include",
       "basis": "The existing N6 procedure and result rules used by production forms; no other judge file is included implicitly."
+    },
+    {
+      "path": "Platform/common/acceptance/stand.md",
+      "disposition": "include",
+      "basis": "The existing stand environment and launch contract referenced by qualification, retained as a whole file."
     },
     {
       "path": "Platform/common/contracts/gate-and-pass.md",
