@@ -180,7 +180,7 @@ P/02.3 N3 шаг 4 — системная приёмка, сц. 08 `@manual`).
 | границы `gen`, эпохи и пола (2^53 − 1, за int64) | `s19`–`s30` |
 | полный ключ слота 1023, 1024 и 1025 байт (`testsub/slots/` и заданное имя) | `s31-capture-key-1023`, `s32-capture-key-1024`, `s33-capture-key-1025` |
 | `badkey` на первой и на последней записи захвата, на записи под слотом, на выдаче и на подтверждении эпохи (N3 «Full keys and store refusal») | `s34-capture-first-write-badkey`, `s35-capture-final-write-badkey`, `s36-slot-write-target-badkey`, `s38-issue-epoch-badkey`, `s43-confirm-badkey` |
-| страж после своего продления и после чужого (P/03.2-05) | `s18-guard-own-renewal`, `s37-guard-foreign-renewal` |
+| страж после своего продления, после чужого и после смены одного gen (P/03.2-05) | `s18-guard-own-renewal`, `s37-guard-foreign-renewal`, `s48-guard-gen-changed` |
 | первое окно аренды: ответ выдачи на 24, 25 и 30 с после отправки, пол, поднятый после выдачи, тот же такт | `s39-epoch-answer-before-window-end`, `s40-epoch-answer-at-window-end`, `s12-epoch-initial-late`, `s13-epoch-post-grant-floor`, `s14-epoch-same-tick` |
 | ворота вокруг локального принятия старта: отсечение до и после него, старый ответ после потери и возврата имени | `s41-gate-fence-before-accept`, `s15-gate-cancelled-late-start`, `s42-gate-old-answer-after-rejoin` |
 | окно аренды: проспанный запрос, монотонный `last`, молчание при `unconfirmed_max` off, 2 и forever на 26 с и достигнутый потолок 2 на 27 с (P/03.2-07, -08) | `s16-confirm-overslept`, `s17-confirm-last-monotonic`, `s44-confirm-silent-off`, `s45-confirm-silent-below-ceiling`, `s46-confirm-silent-forever`, `s47-confirm-silent-ceiling-reached` |

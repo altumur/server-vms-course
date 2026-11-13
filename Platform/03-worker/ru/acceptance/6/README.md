@@ -71,7 +71,7 @@ settle=30. Воркер `testsub2` несёт учебный обработчи�
 
 | Предмет | Швы |
 |---|---|
-| потерянный ответ `put_new` не даёт вызова; своя `begun` не повторяется; чужая `begun` ждёт таймаута чужого вызова | `s1-begun-unknown-no-call`, `s2-own-begun-no-repeat`, `s3-foreign-begun-before-expiry` |
+| потерянный ответ `put_new` не даёт вызова; своя `begun` не повторяется; чужая `begun` ждёт таймаута чужого вызова, а после него закрывается словом `unknown` без вызова | `s1-begun-unknown-no-call`, `s2-own-begun-no-repeat`, `s3-foreign-begun-before-expiry`, `s9-foreign-begun-after-expiry` |
 | две просьбы одной группы: не больше одного незавершённого вызова, таймаут не заменяет конец вызова | `s4-group-busy-after-timeout` |
 | две эпохи держателя и поздний возврат: фиксированное ожидание — не взаимное исключение держателей | `s6-two-holders-late-return` |
 | состояние из снимка старта под стражем эпохи; его повтор после `ambiguous` тем же id (P/03.4-07) | `s5-state-start-born`, `s8-state-write-ambiguous-replay` |
