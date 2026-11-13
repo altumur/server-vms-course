@@ -537,6 +537,11 @@
       "basis": "Qualification procedures are outside the implementation input M."
     },
     {
+      "path": "Platform/01-store/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures are outside the implementation input M."
+    },
+    {
       "path": "Platform/01-store/ru/01-store.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -598,6 +603,11 @@
     },
     {
       "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures are outside the implementation input M."
+    },
+    {
+      "path": "Platform/01-store/ru/qualification/stand-procedures.md",
       "disposition": "judge_only",
       "basis": "Qualification procedures are outside the implementation input M."
     },
@@ -1269,6 +1279,11 @@
       "basis": "The full judge input retains the qualification procedures; functional selection is unchanged."
     },
     {
+      "path": "Platform/01-store/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "The full judge input retains the qualification procedures; functional selection is unchanged."
+    },
+    {
       "path": "Platform/01-store/ru/01-store.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -1330,6 +1345,11 @@
     },
     {
       "path": "Platform/01-store/ru/qualification/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; qualification exports contain only the English source."
+    },
+    {
+      "path": "Platform/01-store/ru/qualification/stand-procedures.md",
       "disposition": "exclude",
       "basis": "Russian mirror; qualification exports contain only the English source."
     },

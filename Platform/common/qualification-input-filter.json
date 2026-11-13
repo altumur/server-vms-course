@@ -82,6 +82,11 @@
       "basis": "Qualification procedures of P/01: cases, budgets, measurements, probe debt, clocks and evidence."
     },
     {
+      "path": "Platform/01-store/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Qualification procedures of P/01: stand environment, D7 providers on a virtual machine with their controls, history check and the procedures of the probes on the input of N6.2."
+    },
+    {
       "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
       "disposition": "include",
       "basis": "The public HTTP contract referenced by the qualification procedures."
