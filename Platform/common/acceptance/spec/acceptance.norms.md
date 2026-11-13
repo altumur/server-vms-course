@@ -179,7 +179,7 @@ A directive of the dictionary applies on every stand of the dictionary unless it
 
 <!-- req: P/AC-R021 -->
 
-A credited run takes place in the declared environment. It holds the machine for the run, one target at a time. Its processes have no network except the loopback. Its open files limit is 65536 and its locale is `LANG=C.UTF-8`. The directories of the specification and of the inputs are read-only for every process it starts. A target that writes into them does not pass. Before the run the load gate requires `some avg60` of pressure stall information below 1 for cpu and memory and below 5 for io during 180 s; the thresholds are those of ADR-0083 addendum (49) item 1.
+A credited run takes place in the declared environment. It holds the machine for the run, one target at a time. Its processes have no network except the loopback. Its open files limit is 65536 and its locale is `LANG=C.UTF-8`. The directories of the specification and of the inputs are read-only for every process it starts. A target that writes into them does not pass. Before the run the load gate reads pressure stall information (PSI) from the cgroup of the stand's container or systemd unit: `cpu.pressure`, `memory.pressure` and `io.pressure`. It requires `some avg60` below 1 for cpu and memory and below 5 for io during 180 s. Values from `/proc/pressure/*` are recorded in the report only and do not decide the gate.
 
 <!-- req: P/AC-R022 -->
 
