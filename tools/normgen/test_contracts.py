@@ -280,7 +280,9 @@ func TestMixed(t *testing.T) {
     got := ReadWorker(key, []byte(element))
     rows, ok := got.Rows.(RowItems)
     if !ok || len(rows.Skip) != 1 || rows.Skip[0] != 0 || got.Others != "unreadable" || len(got.Fields) != 0 { t.Fatalf("element: %#v", got) }
-    resource := `{"ts":100,"url":"http://127.0.0.1:8090","schema":1,"build":5,"usage":0,"usage_at":100,"space":{"total":1000,"free":900,"used":100,"full":0.1},"volumes":{},"units":{},"mirrors":{},"short":0}`
+    resource := `{"ts":100,"url":"http://127.0.0.1:8090","schema":1,"build":5,"usage":0,"usage_at":100,"space":{"total":1000,"free":900,"used":100,"full":0.1},"volumes":{},"units":{},"mirrors":{},"short":0,"door":{"addr":"127.0.0.1:8090","mode":"loopback"},"waits":{"waiting":0,"held":0,"full":0,"replaced":0,"max":16},"restore":{},"mirror":{"skipped":0,"failed":0,"peer_errors":0,"lines_garbled":0}}`
+    validResource := strings.Replace(resource, `{`, `{"server":"srv-a",`, 1)
+    if got := ReadResource("platform/resources/srv-a/heartbeat", []byte(validResource)); !got.Readable || len(got.Fields) != 1 || got.Fields[0] != "build" { t.Fatalf("resource baseline: %#v", got) }
     if got := ReadResource("platform/resources/srv-a/heartbeat", []byte(resource)); got.Readable { t.Fatalf("resource without server: %#v", got) }
     var wg sync.WaitGroup
     for i := 0; i < 8; i++ { wg.Add(1); go func() { defer wg.Done(); for j := 0; j < 10; j++ { ReadWorker(key, []byte(worker)); ReadResource("platform/resources/srv-a/heartbeat", []byte(resource)) } }() }

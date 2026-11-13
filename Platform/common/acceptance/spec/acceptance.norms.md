@@ -20,7 +20,9 @@ Existing rules by topic; paths are from `common/`.
 | `command_failure` product commands, judge commands and abort | P/AC-R024, P/AC-R033, P/AC-R038 | `acceptance/seams.md`, `acceptance/stand.md` |
 | `until_form` read repetition and malformed directives | P/AC-R020, P/AC-R024 | `acceptance/README.md` |
 | `syscall_faults` syscall sweeps, checkpoint binding and independent evidence | P/AC-R055, P/AC-R056, P/AC-R057, P/AC-R058 | `acceptance/command-tables.md`, `acceptance/PROFILE.md`, `acceptance/forms/profile-substitutions.tsv` |
+| `qualification_controls` false-success barriers, publication loss and isolated reads | P/AC-R048, P/AC-R059, P/AC-R060 | `acceptance/command-tables.md`, `../01-store/qualification/stand-procedures.md` |
 | `object_spoil_order` explicit stop before object spoil | P/AC-R017, P/AC-R020 | `acceptance/README.md` |
+| `form_mutation` embedded forms, external observations, noise and findings | P/AC-R012, P/AC-R061, P/AC-R062, P/AC-R063, P/AC-R064, P/AC-R065, P/AC-R066 | `acceptance/command-tables.md`, `acceptance/PROFILE.md` |
 
 ## N0 Scope and normative words
 
@@ -114,7 +116,7 @@ The report does not give out response bodies, stdout, stderr or the values of se
 
 <!-- req: P/AC-R012 -->
 
-The judge receives a pinned export of this specification and an implementation repository with its profiles and an assembly ([files and scalar syntax](../PROFILE.md#files-and-scalar-syntax), [assembly](../PROFILE.md#assembly-and-input-identity)). It starts and addresses the implementation only through the interfaces named below; it does not read implementation code and does not import it.
+The judge receives a pinned export of this specification and an implementation repository with its profiles and an assembly ([files and scalar syntax](../PROFILE.md#files-and-scalar-syntax), [assembly](../PROFILE.md#assembly-and-input-identity)). It starts and addresses the implementation only through the interfaces named below; it does not read implementation code and does not import it. The separate form mutation step of R061 is the narrow exception for locating and changing an embedded data file; it does not call an internal API or infer behaviour from source code.
 
 <!-- req: P/AC-R013 -->
 
@@ -216,6 +218,38 @@ The judge MUST enumerate the reachable syscall ordinals up to the scenario's K a
 
 The injector MUST observe the selected process group's storage syscalls independently, including all threads and operator descendants, and MUST qualify process/object identity, syscall normalization, ordinal and activation order before scoring. `@crash` MUST prove SIGKILL after the selected successful call and whole-group exit. `@io-error` MUST suppress the selected call and prove the selected EIO/ENOSPC return with no effect from that call. Expected injection overrides only that trigger's interrupted outcome; an unrelated crash or timeout remains `implementation`. Observation, injection, control or cleanup failure is `stand`; a malformed directive is `data`. A failed fault directive MUST abort dependent steps of that trial under R033. The judge MUST retain redacted syscall and kill/error evidence; an ACK, a log string or a helper's exit alone MUST NOT establish the fault. Process restart MUST NOT be reported as a physical power cut.
 
+### N3.5 Stand controls for qualification
+
+<!-- req: P/AC-R059 -->
+
+The qualifier MUST execute the Q-only [stand controls](../command-tables.md#stand-controls-for-qualification) without reading or modifying candidate code. It MUST prove false-success barrier suppression and qualified loss of unsynchronised storage independently; directory-barrier controls MUST distinguish successful rename, honest file barriers and suppressed parent-directory barriers. A process kill alone MUST NOT establish power loss. These deliberate violations qualify instruments on stand-owned fixtures; they MUST NOT create a new candidate durability obligation.
+
+<!-- req: P/AC-R060 -->
+
+A read control MUST establish the named member's two-way peer partition while keeping its public read door available, without assuming a private wire format. The history checker MUST reject a stale successful read invoked after a newer write completed on the live group, and MUST accept a lawful refusal or a legal completed read. The qualifier MUST activate correct and deliberately defective stand fixtures through the same observers and checker. Isolation alone MUST NOT count as a negative witness. It MUST retain activation/removal evidence and the complete real-time history separately from the candidate's history; missing capabilities and control failures retain N6.5, and dependent steps MUST NOT be scored after a failed control.
+
+### N3.6 Form mutation step
+
+<!-- req: P/AC-R061 -->
+
+For each candidate the judge MUST perform a separate form mutation step by the [shared form](../command-tables.md#form-mutation-step). It discovers forms from the `table_driven` rows of the J input's `forms/code-rules.tsv` for the modules of the assembly, using `args.form`, the row's `name` and the profile's `code` mapping. It MAY read the mapped package's non-test embedding declarations solely to locate the embedded files whose bytes equal the pinned form. It MUST NOT branch on a literal lesson, target, package or form basename, import candidate code, or change the J input. Missing mappings, copies and observers MUST remain visible in the inventory, with their reasons; they MUST NOT be counted as tested cells.
+
+<!-- req: P/AC-R062 -->
+
+The step MUST work on an isolated writable copy of the candidate, build it through its profile and take the baseline observations twice without mutation. For each trial it MUST change one cell, rebuild the owning module, observe it from outside and restore the original bytes before the next trial; a duplicate trial changes only the corresponding cell of the other form. Stand state and processes MUST be fresh for each observation. On every exit path it MUST restore the changed files, stop their whole process groups and rebuild the original candidate; it MUST report an unsuccessful restoration or final build and MUST NOT reuse the trial's artifacts as the original candidate. The source candidate and sealed specification remain unchanged.
+
+<!-- req: P/AC-R063 -->
+
+The step MUST select cells and derive observers and expectations by the kind table of the shared form: every check-table row with its J inputs; flag `type` and `commands` mutations from their grammar; sampled refusal and numeric constant cells. It MUST record the deterministic selection, every skipped row or column and the limits of observation. A baseline that does not reach the changed cell, a missing J input, an unsupported grammar or an expectation not derivable from J MUST NOT be presented as an exact behavioural check.
+
+<!-- req: P/AC-R064 -->
+
+Before comparing launch observations the judge MUST normalize only the run-varying parts named in the shared form, including a leading RFC 3339 timestamp, pid and ephemeral port, and retain the raw and normalized evidence under R011. It MUST NOT normalize native vector answers or mask a configured whole-second duration, a low port, a flag name or the changed semantic value. Observations that still differ between the two unchanged baseline runs are unstable: their difference after mutation MUST be reported separately and MUST NOT establish a mutation effect. A difference only in raw noise is no behavioural change.
+
+<!-- req: P/AC-R065 -->
+
+Each selected cell MUST have a result of the shared form for each named observer and external surface, including exact change, unchanged with the class hardcoding or duplicate form, changed otherwise, unobservable, change without a J-derived expectation, or failed trial build. A duplicate classification MUST name the other form and row and be supported by its isolated mutation changing the same observation; without a valid observer an unchanged result is unobservable, not proof of hardcoding. Hardcoding and duplicate findings MUST be limited to the named surface: an unchanged vector does not prove that the original form is unused by a door or any other surface. The report MUST retain differing surface results and list relevant J surfaces not observed as unobservable, never infer a whole-cell or whole-form conclusion from a partial observer. These are findings of this separate step, not an automatic red of a functional target. The report MUST keep each cell's identity, mutation, observer, expectation or its absence, before/after evidence, controls, build and restoration results; it MUST preserve the raw-only and unstable differences separately. A failure of the judge or stand retains its N4 class and MUST NOT be relabelled as a candidate's hardcoding. R010 and R011 also apply to this report.
+
 ## N4 Failures
 
 <!-- req: P/AC-R024 -->
@@ -260,6 +294,10 @@ This lesson is checked mechanically over a stub of the protocols, not by a corpu
 <!-- req: P/AC-R028 -->
 
 The correctness of the verdicts is decided outside this mechanical check: by code review of another provider and by comparison of verdicts with an existing judge on named candidates of one specification slice, unit of comparison a case. A generated judge's verdict enters a product's result only by a separate decision of the owner.
+
+<!-- req: P/AC-R066 -->
+
+The form mutation step MUST qualify its observers with synthetic controls that know no lesson: a form-backed value changes exactly as the cell says, a hardcoded replacement remains detectable after normalization, a value read from another form is classified as a duplicate, and varying timestamps, durations, pids, ephemeral ports and temporary names alone do not establish a change. A control in which a vector reads a duplicate but a door reads the original form MUST keep both surface results and MUST NOT classify the original form as unused or globally duplicated. A control that reads only the second of two matching embedded copies MUST NOT be called hardcoded after mutating only the first. A control that exposes the changed semantic value amid that noise MUST still expose it; an unstable observation MUST not establish an effect. The evidence MUST name the activated controls and uncovered kinds. Passing these controls establishes the step's capability, not a product verdict or a production qualification result.
 
 ## N6 Production qualification of P/01
 
@@ -347,7 +385,7 @@ An entry ends in one of these results:
 
 <!-- req: P/AC-R048 -->
 
-Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../seams.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. Named mutants of a candidate belong to the comparison of R028 and are not an input of the engine.
+Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../seams.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. The stand controls of R059 and R060 use external effects and stand-owned fixtures; qualification MUST NOT require named code mutants of a candidate. The historical comparison of R028 does not supply those controls or prove their execution.
 
 <!-- req: P/AC-R049 -->
 
@@ -363,6 +401,7 @@ An implementation is to name in its description:
 4. the printing form of the dry listing;
 5. the means of the two-way partition and of a Raft snapshot of N6.3, and the instruments of N6;
 6. the syntax of the invocation that names the test-side inputs of N2.1.
+7. the invocation and evidence serialization of the separate form mutation step, preserving its inventory, cell results and controls of R061–R066; it introduces no profile field or scenario directive.
 
 ## Readiness checklist
 
@@ -379,3 +418,4 @@ An implementation conforms to the lesson when every norm holds; a norm id `P/AC-
 - [ ] **P/AC-09** the failure classes (N4) — by reading, and the comparison of verdicts
 - [ ] **P/AC-10** the checks of N5 are present and pass — N5
 - [ ] **P/AC-11** the production qualification of P/01: the inventory, the input, the probes, the results and the controls (N6) — stub of N5 for the calls, by reading and by the comparison of verdicts for the rest
+- [ ] **P/AC-12** the separate form mutation step: discovery, isolation, cells, external observations, normalization, finding classes and controls (R061–R066) — synthetic controls of N5, code review and comparison on the same pinned inputs

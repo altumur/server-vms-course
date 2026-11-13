@@ -1601,7 +1601,7 @@ def provenance():
     def entries(paths):
         return [entry(p) for p in dict.fromkeys(p for src in paths for p in
                 (tsv_input.source_files(src, root=ROOT) if src.suffix == ".tsv" else [src]))]
-    generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__))]
+    generators = [entry(Path(__file__).resolve()), entry(Path(tsv_input.__file__)), entry(Path(gate.__file__))]
     decls, known = plan(ROOT)
     turn_sources = ([ROOT / "Platform/common/vectors/turn/README.md", ROOT / "Platform/common/contracts/turn.md"]
                     if any(d["package"] == "common/turn" for d in decls) else [])
@@ -1627,6 +1627,9 @@ def provenance():
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
                 "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py", "test_wire_full.py", "wire_fakes.py")]}
     forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS] + turn_sources
+    stages = ROOT / L.rel / 'forms/stages.kit.tsv'
+    if stages.is_file():
+        forms.append(stages)
     if any(d.get("_form") for d in decls):
         import wire
         forms.extend(wire.form_paths(ROOT))

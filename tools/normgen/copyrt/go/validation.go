@@ -32,11 +32,11 @@ func copyRefuse(phase, format string, args ...any) error {
 	return &CopyRefusal{Phase: phase, Cause: fmt.Sprintf(format, args...)}
 }
 
-var copyTimeRE = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`)
+var copyTimeRE = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$`)
 
 // readCopyTime applies P/01.1 N0 reader grammar and the finite binary64 bound.
-// Exact rationals retain the arbitrary length fraction when comparing to the wall
-// clock. Only the writer's new generation_at is truncated to milliseconds.
+// Exact rationals retain the accepted millisecond precision when comparing to
+// the wall clock. The writer's new generation_at is truncated to milliseconds.
 func readCopyTime(s string) (*big.Rat, bool) {
 	if !copyTimeRE.MatchString(s) {
 		return nil, false

@@ -503,7 +503,7 @@ func loneSurrogate(lexeme string) bool {
 
 func parseTime(r json.RawMessage) (float64, bool) {
 	f, ok := rawNumber(r)
-	return f, ok && f >= 0
+	return f, ok && f >= 0 && readerTime.Match(r)
 }
 
 func validScope(scope string, roleLine bool) bool {

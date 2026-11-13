@@ -117,6 +117,16 @@
       "basis": "Source pin, invocation and role definitions used by the qualification inputs."
     },
     {
+      "path": "Platform/common/acceptance/README.md",
+      "disposition": "include",
+      "basis": "The shared directive dictionary and stand terms referenced by Q stand controls, retained as a whole file."
+    },
+    {
+      "path": "Platform/common/acceptance/command-tables.md",
+      "disposition": "include",
+      "basis": "Q-only stand controls: false-success barriers with qualified storage loss and two-way peer partition, including their trigger and evidence rules."
+    },
+    {
       "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
       "disposition": "include",
       "basis": "The public activation and observation payload forms of D7."

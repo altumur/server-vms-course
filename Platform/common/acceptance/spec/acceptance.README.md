@@ -16,13 +16,14 @@ Write one engine that executes the targets of the registry from the data of the 
 - The [vector wire form](../../vectors/wire.md) and `wire.tsv` give the vector rows; `consumers.tsv` gives their owners.
 - The [target registry](../forms/targets.README.md) gives the targets and their requirements; `forms/targets.routing.tsv` gives the engine family, the acceptance directories, the scenario selection, the body mode, the initial role, the admitted unnamed fields and the rights file of the stand store of each target.
 - The README of a chapter's acceptance gives its preparation and special comparison rules.
+- The [form mutation step](../command-tables.md#form-mutation-step) gives the separate trials over embedded form cells, external observers, normalization and finding classes.
 - [The production qualification of the store](../../../01-store/qualification/README.md) gives the groups, budgets and measurements of N6 of the norms.
 
 The generation input of the engine contains no code of products or of an existing judge, no inventory of its behaviour, no corpus of verdicts and no mutants.
 
 ## What to create
 
-One engine with these parts: the readers of the tables; the plan with the dry listing; the runner of the stand by the dictionary; the callers of the adapters and the vector command; the probes of the production qualification (N6 of the norms); the classification of results; the report.
+One engine with these parts: the readers of the tables; the plan with the dry listing; the runner of the stand by the dictionary; the callers of the adapters and the vector command; the separate form mutation step (N3.6 of the norms); the probes of the production qualification (N6 of the norms); the classification of results; the report.
 
 ## Order of work
 

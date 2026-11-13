@@ -38,7 +38,7 @@ class KitP02(unittest.TestCase):
         self.assertEqual(self.m["parts"], sorted(PARTS))
         self.assertIsNone(self.m["table"])
         own = sorted(Path(f["path"]).name for f in self.m["files"] if f.get("editable"))
-        self.assertEqual(own, ["catalogue.go", "command.go", "load.go", "poll.go"])
+        self.assertEqual(own, ["catalogue.go", "command.go", "installer_role_unit_groups.go", "load.go", "poll.go", "secrets_walk.go"])
         self.assertTrue(all(f["path"].startswith("02-installer/internal/") for f in self.m["files"]))
         for part in PARTS:
             self.assertIn(part, self.m["provenance"])

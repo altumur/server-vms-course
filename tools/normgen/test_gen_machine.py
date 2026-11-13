@@ -708,5 +708,44 @@ class CheckingControls(unittest.TestCase):
                 shadowed_source_refusal(done)
 
 
+class CurrentSettings(unittest.TestCase):
+    def test_current_controller_default_reaches_every_fate(self):
+        import gen_machine
+        from unittest.mock import patch
+        with patch.object(gen_machine, "L", output_lesson.get("04-controller")):
+            machine = gen_machine.read("slot-fate")
+            default_row = next(line.split("\t") for line in
+                               (ROOT / "Platform/04-controller/forms/daemon-flags.tsv").read_text().splitlines()
+                               if line.startswith("$HUNG_MOVE_AFTER\t"))
+            self.assertEqual(gen_machine.setting(machine, "HUNG_MOVE_AFTER"), float(default_row[2]))
+            generated = gen_machine.cases(machine)
+            self.assertEqual({c[2] for c in generated}, {r["n"] for r in machine.rows})
+
+    def test_integer_setting_keeps_int64_precision_and_refuses_overflow(self):
+        import gen_machine
+        from unittest.mock import patch
+        text = ('# states: start,done. Initial start, all others terminal.\n'
+                '#var LIMIT int — effective setting from daemon-flags.tsv.\n'
+                '#action result(int) — observed integer.\n'
+                'n\tstate\tcondition\taction\tnext\tnorm\n'
+                '1\tstart\ttrue\tresult(LIMIT)\tdone\tP/04-R041\n')
+        with tempfile.TemporaryDirectory() as tmp, patch.object(gen_machine, "L", output_lesson.get("04-controller")):
+            root = Path(tmp)
+            forms = root / "Platform/04-controller/forms"
+            forms.mkdir(parents=True)
+            (forms / "settings.tsv").write_text(text)
+            flag = forms / "daemon-flags.tsv"
+            for value in (2 ** 53 + 1, 2 ** 63 - 1):
+                flag.write_text(f"flag\tdefault\n$LIMIT\t{value}\n")
+                self.assertEqual(gen_machine.setting(gen_machine.read("settings", root), "LIMIT"), value)
+            for value in (str(2 ** 63), "1.5", "NaN"):
+                flag.write_text(f"flag\tdefault\n$LIMIT\t{value}\n")
+                with self.subTest(value=value), self.assertRaises(gen_machine.GenError):
+                    gen_machine.read("settings", root)
+            flag.unlink()
+            with self.assertRaises(gen_machine.GenError):
+                gen_machine.cases(gen_machine.read("settings", root))
+
+
 if __name__ == "__main__":
     unittest.main()

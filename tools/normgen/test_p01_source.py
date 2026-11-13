@@ -16,10 +16,10 @@ class P01Source(unittest.TestCase):
     def test_all_request_proofs_and_first_row(self):
         source = tsv_input.read(ROOT / SCENARIOS, names=stages.SCENARIO_COLUMNS, positional=True, root=ROOT)
         self.assertEqual(source.declared, ("request",))
-        self.assertEqual(len(source.rows), 345)
+        self.assertEqual(len(source.rows), 346)
         proofs = tsv_input.parse((ROOT / tsv_input._PROOF).read_bytes(), names=tsv_input._PROOF_COLUMNS)
         own = [r for _, r in proofs.rows if r["table"] == SCENARIOS]
-        self.assertEqual(len(own), 345)
+        self.assertEqual(len(own), 346)
         for (line, row), proof in zip(source.rows, own):
             self.assertEqual((proof["line"], proof["column"]), (str(line), "request"))
             self.assertEqual(hashlib.sha256(row["request"].encode()).hexdigest(), proof["before_sha256"])
@@ -27,7 +27,7 @@ class P01Source(unittest.TestCase):
         first_line, first = source.rows[0]
         self.assertEqual(got[first["scenario"]][0],
                          (first["step"], first["request"], first["expect"], first_line))
-        self.assertEqual(sum(map(len, got.values())), 345)
+        self.assertEqual(sum(map(len, got.values())), 346)
         self.assertEqual(rel, SCENARIOS)
         self.assertEqual(sha, source.sha256)
 

@@ -474,7 +474,7 @@ class BoxBindings(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.original_root = gen_box.ROOT
         sources = {name: getattr(gen_box, name) for name in
-                   ('NORMS_11', 'NORMS_13', 'FLAGS', 'OPENAPI', 'REFUSALS', 'KEYS_README')}
+                   ('NORMS_11', 'NORMS_13', 'FLAGS', 'OPENAPI', 'REFUSALS', 'KEYS_README', 'METRICS', 'STATUS_FIELDS')}
         changes = {'ROOT': self.root}
         for name, source in sources.items():
             target = self.root / source.relative_to(self.original_root)

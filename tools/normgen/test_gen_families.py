@@ -213,7 +213,7 @@ class Vectors(unittest.TestCase):
         # Equivalent on P/01 forms: common.uint53 maximum already enforces the writer's2^53-1 limit;
         # field unit at /generation_at is shadowed by the empty-path row's higher priority (1<2).
         mutants = {
-            "reader time as the writer": ("`^(0|[1-9][0-9]*)(\\.[0-9]+)?$`", "`^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`"),
+            "reader accepts excessive precision": ("Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\\.[0-9]{1,3})?$`)", "Reader: regexp.MustCompile(`^(0|[1-9][0-9]*)(\\.[0-9]+)?$`)"),
             "minimum ignored": ('p.Min != "" && cmp(v, p.Min) < 0', "false"),
             "whole ignored": ("if w || whole {", "if w {"),
             "closed ignored": ("if f.Closed {", "if false {"),

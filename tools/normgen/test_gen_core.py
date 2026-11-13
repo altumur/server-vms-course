@@ -154,7 +154,7 @@ class Core(unittest.TestCase):
             self.assertIn(f"req: {anchor} — ", doc)
             texts.setdefault(path, path.read_text(encoding="utf-8"))
             self.assertIn(f"<!-- req: {anchor} -->", texts[path])
-        for want in ("403 with the role of the socket", "return `403` before the body is parsed",
+        for want in ("naming the role of the socket", "before the body is parsed",
                      "«frame → route → identity → body»", "P/01.3-07", "X-Configstore-Role",
                      "1.2 row 7 role_header — 403 forbidden", "refusals.RoleHeader", "1.1 row 4 identity",
                      "QueryRefused too"):
@@ -179,11 +179,14 @@ class Core(unittest.TestCase):
                 self.assertIn(f" {r} — ", doc, name)
             self.assertIn("Identity first", doc)
         rights = re.search(r"((?://.*\n)+)func \(s \*Store\) Rights\(", self.core)[1]
-        for want in ("`404 badrequest`", "Access is checked by the identity admin", "refusals.RightsNotAdmin"):
+        for want in ("`404 badrequest`", "checked by the identity admin", "refusals.RightsNotAdmin"):
             self.assertIn(want, rights)
         leave = re.search(r"((?://.*\n)+)func \(s \*Store\) Leave\(", self.core)[1]
-        self.assertIn("«the last voter»", leave)
-        self.assertIn("identity (403) → body and membership (400, 409)", leave)
+        self.assertIn("last voter", leave)
+        self.assertIn("Visible refusal priority.", leave)
+        self.assertIn("service-checks.tsv", leave)
+        self.assertNotIn("req: P/01.3-R013", leave)
+        self.assertNotIn("req: P/01.3-R015", leave)
 
     def test_manifest_and_doc(self):
         m = __import__("json").loads((Path(self.tmp.name) / "kit.manifest.json").read_text(encoding="utf-8"))
