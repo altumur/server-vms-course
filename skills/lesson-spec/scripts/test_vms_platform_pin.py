@@ -1,11 +1,12 @@
 """Private Git-fixture controls for the Owner-only Platform pin binding.
 
 No course VMS lessons, implementation, schema corpus or candidate is executed.
-Fixture directories are retained for the task's evidence/release disposition.
+Fixture directories are removed after each test (OBSH.55).
 """
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -20,6 +21,7 @@ from pathlib import PurePosixPath
 class PlatformPinBinding(unittest.TestCase):
     def setUp(self):
         self.work = Path(tempfile.mkdtemp(prefix="check-spec-pin-control-"))
+        self.addCleanup(shutil.rmtree, self.work, ignore_errors=True)
         self.root = self.work / "course"
         self.root.mkdir()
         # This is the deliberately new fixture repository, not the shared course.
@@ -398,6 +400,7 @@ class VmsEvidencePaths(unittest.TestCase):
     """Filesystem-only report setup controls; no course lessons or VMS check run."""
     def setUp(self):
         self.work = Path(tempfile.mkdtemp(prefix="vms-evidence-path-control-")).resolve()
+        self.addCleanup(shutil.rmtree, self.work, ignore_errors=True)
         self.source = self.work / "source"
         self.source.mkdir()
         self.physical = self.work / "physical-temp"

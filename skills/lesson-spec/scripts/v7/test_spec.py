@@ -100,6 +100,7 @@ def setUpModule():
     """Копия Platform/, VMS/ и манифестов курса с пакетом перехода (если курс ещё на диалекте) — одна на модуль."""
     global TREE
     TREE = Path(tempfile.mkdtemp(prefix="v7-tree-"))
+    unittest.addModuleCleanup(shutil.rmtree, TREE, True)   # runs even if the rest of setUpModule fails (OBSH.55)
     for d in ("Platform", "VMS"):
         shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns("__pycache__", ".DS_Store"))
     if (TREE / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():     # курс ещё на диалекте
@@ -118,11 +119,6 @@ def keys(root):
     head = (root / spec.FAMILY_READ / "01.tsv").read_text(encoding="utf-8").split("\n", 1)[0].split("\t")
     if head != spec.FR_HEADER:
         transition.family_keys(root)
-
-
-def tearDownModule():
-    if TREE is not None:
-        shutil.rmtree(TREE, ignore_errors=True)
 
 
 def NEED_TREE(cls):                            # дерево строится всегда (стек — обязательная часть окружения)
@@ -305,6 +301,14 @@ class TestTree(unittest.TestCase):
         self.addCleanup(shutil.rmtree, d, True)
         shutil.copytree(TREE, d, dirs_exist_ok=True)
         return d
+
+    def child_env(self):
+        """Environment for a check_spec child: the default scope also runs the VMS phase, which fails on a copied
+        tree and keeps its evidence directory by design (OBSH.54); TMPDIR is a directory this test removes (OBSH.55)."""
+        import os
+        d = tempfile.mkdtemp(prefix="v7-child-tmp-")
+        self.addCleanup(shutil.rmtree, d, True)
+        return {**os.environ, "TMPDIR": d}
 
     def manifest(self, root):
         spec_dir = root / "Platform/02-installer/spec"
@@ -813,7 +817,7 @@ class TestTree(unittest.TestCase):
         reg = root / "exceptions.tsv"
         reg.write_text("P/02\timplied\t18:tables.$t.fields.name\tрешение\n", encoding="utf-8")
         out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
-                              "--exceptions", str(reg)], capture_output=True, text=True).stdout
+                              "--exceptions", str(reg)], capture_output=True, text=True, env=self.child_env()).stdout
         self.assertIn("lesson 07 has no file Platform/07-console-module/07-console-module.md (or ru/ by ADR-0124)", out)
         self.assertIn("02.1-installer.schema.json", out)
         self.assertNotIn("stale exception implied", out)
@@ -833,7 +837,7 @@ class TestTree(unittest.TestCase):
             "    S: {type: string, pattern: '^(?:\\d+)$'}\n", encoding="utf-8")
         out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
                               "--exceptions", str(ROOT / "skills/lesson-spec/exceptions.tsv")],
-                             capture_output=True, text=True).stdout
+                             capture_output=True, text=True, env=self.child_env()).stdout
         bad = [ln for ln in out.split("\n") if "OpenAPI: pattern at" in ln]
         self.assertTrue(any("01-store.api.openapi.yaml" in ln for ln in bad), out[-2000:])
         self.assertTrue(any("probe.api.openapi.yaml" in ln for ln in bad), out[-2000:])

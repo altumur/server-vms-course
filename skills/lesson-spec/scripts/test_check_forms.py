@@ -58,15 +58,13 @@ LEGACY_FLAG_PROSE = r'''**Daemon flags** — a closed set (the store pilot, A3, 
 class Forms(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.lesson = self.tmp / "Platform/01-store"
         for part in ("forms", "spec", "acceptance", "vectors"):
             shutil.copytree(LESSON / part, self.lesson / part)
         (self.tmp / JOURNAL).mkdir(parents=True)
         for path in (ROOT / JOURNAL).glob("*.tsv"):     # history files and the id map req-id-map.tsv (P01.283)
             shutil.copy(path, self.tmp / JOURNAL / path.name)
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def edit(self, rel, old, new):
         path = self.lesson / rel
@@ -374,11 +372,9 @@ class RefusalLinks(unittest.TestCase):
 class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.lesson = self.tmp / "Platform/02-installer"
         shutil.copytree(ROOT / "Platform/02-installer/acceptance", self.lesson / "acceptance")
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def gate(self, check):
         return check_forms.gate_errors(self.lesson, "s", check)
@@ -497,6 +493,7 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
 class Wire(unittest.TestCase):                     # провод векторов wire.tsv (wire.md): настоящая форма и мутации
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())          # Platform ссылками, копия — только wire.tsv
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         vectors = self.tmp / "Platform/common/vectors"
         vectors.mkdir(parents=True)
         for real, place in ((ROOT / "Platform", self.tmp / "Platform"), (ROOT / "Platform/common", self.tmp / "Platform/common"),
@@ -508,9 +505,6 @@ class Wire(unittest.TestCase):                     # провод векторо
         (self.tmp / "Source").symlink_to(ROOT / "Source")   # фикстуры canonical от корня выгрузки
         self.path = vectors / "wire.tsv"
         self.good = self.path.read_text(encoding="utf-8")
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def errors(self):
         """Ошибки сверх ошибок настоящей формы (номер строки снят: мутация может сдвинуть строки)."""
@@ -841,7 +835,7 @@ class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants
 
 
 class WireP06(unittest.TestCase):                  # расширения провода P/06 (wire.md «P/06 transport constructors»)
-    setUp, tearDown, errors, row, mutate = Wire.setUp, Wire.tearDown, Wire.errors, Wire.row, Wire.mutate
+    setUp, errors, row, mutate = Wire.setUp, Wire.errors, Wire.row, Wire.mutate
     norm = staticmethod(Wire.norm)
 
     def test_arg_file_json(self):
@@ -937,15 +931,13 @@ class WireP06(unittest.TestCase):                  # расширения про
 class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.tsv: настоящая форма и мутации
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.lesson = self.tmp / "Platform/08-domain"
         shutil.copytree(ROOT / "Platform/08-domain/spec", self.lesson / "spec")
         (self.lesson / "forms").mkdir()
         self.path = self.lesson / "forms/versioned-doors.tsv"
         self.good = (ROOT / "Platform/08-domain/forms/versioned-doors.tsv").read_text(encoding="utf-8")
         self.api = next((self.lesson / "spec").glob("*.api.openapi.yaml"))
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def errors(self, text):
         self.path.write_text(text, encoding="utf-8")
@@ -1060,6 +1052,7 @@ class RowWriteBindings(unittest.TestCase):              # P/03 row-write-binding
     def setUp(self):
         import json
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.lesson = self.tmp / "Platform/03-worker"
         for d in ("forms", "spec", "data"):
             (self.lesson / d).mkdir(parents=True)
@@ -1069,9 +1062,6 @@ class RowWriteBindings(unittest.TestCase):              # P/03 row-write-binding
         (self.lesson / "spec/03.6-worker.norms.md").write_text(
             "## Н1\n<!-- req: P/03.6-R018 -->\ntext\n<!-- req: P/03.6-R029 -->\ntext\n", encoding="utf-8")
         self.path = self.lesson / "forms/row-write-bindings.tsv"
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def errors(self, text):
         self.path.write_text(text, encoding="utf-8")
@@ -1186,9 +1176,6 @@ class WireTurn(unittest.TestCase):               # compare=turn — решени
                             if not ln.startswith("common/turn\tcases.tsv\tvectors\t"))
         self.path.write_text(self.good, encoding="utf-8")
 
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
-
     def check(self, row=TURN_WIRE_ROW, old=None, new=None):
         if old is not None:
             self.assertEqual(row.count(old), 1, old)
@@ -1298,6 +1285,7 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         for f in self.FILES:
             (self.tmp / f).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(ROOT / f, self.tmp / f)
@@ -1306,9 +1294,6 @@ class FiniteProfile(unittest.TestCase):          # конечный профил
         self.path = self.tmp / self.FILES[0]
         self.wpath = self.tmp / self.FILES[3]
         self.good = json.loads(FP_CASES.read_text(encoding="utf-8"))
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp)
 
     def errors(self, mutate):
         d = copy.deepcopy(self.good)

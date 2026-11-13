@@ -1,5 +1,6 @@
 """Regression tests for false-green risks in the document checker, not product tests."""
 
+import os
 import tempfile
 import unittest
 import re
@@ -1039,7 +1040,9 @@ class CyrillicIntegrationTests(unittest.TestCase):
             self.assertIn("cyrillic_export=1", result.stdout)
 
     def test_global_judge_in_check_spec_cli_even_with_explicit_lesson(self):
-        with tempfile.TemporaryDirectory() as directory:
+        # The default scope also runs the VMS phase; it fails here and keeps its evidence
+        # directory by design (OBSH.54), so the child's TMPDIR is a directory this test removes.
+        with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as scratch:
             root = Path(directory)
             source = root / "Platform/01-store/code/door.go"
             source.parent.mkdir(parents=True)
@@ -1051,7 +1054,7 @@ class CyrillicIntegrationTests(unittest.TestCase):
             debt.write_text("kind\tpath\tletters\n")
             result = subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("check_spec.py")),
                                      "--root", str(root), "--cyrillic-debt", str(debt), "missing.md"],
-                                    capture_output=True, text=True)
+                                    capture_output=True, text=True, env={**os.environ, "TMPDIR": scratch})
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
             self.assertIn("Platform/01-store/code/door.go: Cyrillic letters 1, debt 0", result.stdout)
             self.assertNotIn("tools/normgen", result.stdout)

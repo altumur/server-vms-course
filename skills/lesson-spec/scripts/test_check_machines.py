@@ -15,12 +15,10 @@ TRACES = MACHINE.with_name("rollout-poll.traces.tsv")
 class Machines(unittest.TestCase):
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
         self.machine = self.dir / MACHINE.name
         shutil.copy(MACHINE, self.machine)
         shutil.copy(TRACES, self.dir / TRACES.name)
-
-    def tearDown(self):
-        shutil.rmtree(self.dir)
 
     def mutate(self, old, new, needle):
         text = self.machine.read_text(encoding="utf-8")
@@ -102,6 +100,7 @@ class DeclaredMachines(unittest.TestCase):
         import yaml
         self.copy, self.yaml = copy.deepcopy, yaml
         self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
         self.path = self.dir / "counter.machine.yaml"
         self.doc = {
             "machine": "counter", "norm": "test fixture",
@@ -121,9 +120,6 @@ class DeclaredMachines(unittest.TestCase):
                 {"id": "finish", "event": "finish", "from": "active", "to": "done"},
             ],
         }
-
-    def tearDown(self):
-        shutil.rmtree(self.dir)
 
     def machine(self, doc=None):
         self.path.write_text(self.yaml.safe_dump(doc or self.doc, allow_unicode=True, sort_keys=False))

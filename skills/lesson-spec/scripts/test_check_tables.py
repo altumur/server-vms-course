@@ -14,12 +14,10 @@ PROBES = TABLE.with_name("write-checks.probes.tsv")
 class Checks(unittest.TestCase):
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
         self.table, self.probes = self.dir / TABLE.name, self.dir / PROBES.name
         shutil.copy(TABLE, self.table)
         shutil.copy(PROBES, self.probes)
-
-    def tearDown(self):
-        shutil.rmtree(self.dir)
 
     def edit(self, path, old, new):
         text = path.read_text(encoding="utf-8")
