@@ -1,0 +1,58 @@
+{
+  "format": "b7-pair-private-v1",
+  "created_utc": "2026-11-13T09:47:15.024373+00:00",
+  "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+  "M": {
+    "commit": "e77b0968d3273409c7c9096f949f9a7237c0eda1",
+    "tree": "7c661c39891ca7bdd4473d4d61bd041928f5a8c6",
+    "objects": 894,
+    "files": 788,
+    "branch": "model",
+    "commit_sha256": "1906fd95ff81be0cb3a1c54c727d8538b94dadd70cb21ac5b5a4b7b763a16897"
+  },
+  "J": {
+    "commit": "ff76875d0e5e44a0f6ed36bf9d66500ad1af3124",
+    "tree": "483ec597a4795c5fefb7a33ae2bd5594eeeb2fda",
+    "objects": 3898,
+    "files": 3571,
+    "branch": "judge",
+    "commit_sha256": "dd83c4c44d5bac8a157c7827d2a2133f42548fc92e7ca3856911f56f7e8387ef"
+  },
+  "filter_path": "Platform/common/export-model-filter.json",
+  "filter_blob": "d5fdc476e96be49c0292e72b2afc0f9d34032e34",
+  "filter_sha256": "9433706aaa32ac291d0dbef62f0cb92f7eab43d21f97e0bc4bd2c818887b16a2",
+  "filter_sources": {
+    "Platform/common/export-model-filter.json": "4d5c3c7c7b2d57956e0ff904a9322e4f24253802",
+    "Platform/01-store/forms/export.json": "a6278d10c8352f54dfea823fb10ff29e23ea7741",
+    "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+    "Platform/03-worker/forms/export.json": "34902d0b814d3934935b609c222d0e20607f284b"
+  },
+  "filter_file": "FILTER-M.json",
+  "authorization_sha256": "17977ab3771e24291f32aba74fce1abcb1baba58a04c638d87a84db5fe040551",
+  "trusted_authorization": {
+    "version": 1,
+    "authorization": "ROOT_AFTER_STEP6_GREEN_AND_FILTER_REVIEW",
+    "source_C": "30310352523e30aa7e7879d901e44d80e01b118d",
+    "filter_blob": "d5fdc476e96be49c0292e72b2afc0f9d34032e34",
+    "wire_blob": "49c29e0a04a36b94186b68b7862d9259e3d60165",
+    "derived_sha256": "69f739c4e4b9a1657800d738eee67a6decf7cdb2e0b62aa344d97aaef97d4aae",
+    "source_acceptance_sha256": "d02e4a74b647ec4b444221adc4828f87a4f3b3ecb4ed1e9a7023d79bb529950b",
+    "green_check_sha256": "9d2b0a1b2bbc800afdd874fd102be1028174766e8b26ef77b2fc5a2924a7bbbd",
+    "different_provider_filter_review_sha256": "926f0a4718224e95b659f6e09c526cc2503727fb93cb751afced3e777d7ebefe",
+    "filter_author_provider": "OpenAI (per-delta accepted task metadata)",
+    "filter_reviewer_provider": "Anthropic (actual reviews/window identity)"
+  },
+  "registered_cases_removed": 157,
+  "operator_sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+  "projection": "full_committed_Platform_J_one_assembled_filter_M",
+  "canonical_git_metadata": {
+    "actor": "B7 export operator <b7-export@invalid>",
+    "epoch": 0,
+    "epoch_is_execution_time": false,
+    "config_sha256": "dd548269913b6adbdfa7049170ea86850050cb762ea3b9c510a0b2986d2113e3"
+  },
+  "mechanical_pair_only": true,
+  "receipt_authenticity_verified": false,
+  "namespace_or_runtime_qualified": false,
+  "Owner_pin_or_launch_selected": false
+}

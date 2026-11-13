@@ -1,0 +1,185 @@
+{
+ "old_C": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "journal": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/CHANGED-NORMS.md",
+ "journal_sha256": "43dbdc087094d5a9ae36c0d8de119ab75c1b3466732034f30261bed035b71c70",
+ "changed_P01_paragraphs": {
+  "P/01.1-R081": "Platform/01-store/spec/01.1-store.norms.md",
+  "P/01.1-R108": "Platform/01-store/spec/01.1-store.norms.md",
+  "P/01.1-R147": "Platform/01-store/spec/01.1-store.norms.md",
+  "P/01.1-R234": "Platform/01-store/spec/01.1-store.norms.md",
+  "P/01.1-R302": "Platform/01-store/spec/01.1-store.norms.md",
+  "P/01.3-R008": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R016": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R018": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R029": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R114": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R115": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R132": "Platform/01-store/spec/01.3-store.norms.md",
+  "P/01.3-R215": "Platform/01-store/spec/01.3-store.norms.md"
+ },
+ "history_explicit_ids": [
+  "P/01.1-R081",
+  "P/01.1-R108",
+  "P/01.1-R147",
+  "P/01.1-R234",
+  "P/01.3-R008",
+  "P/01.3-R016",
+  "P/01.3-R018",
+  "P/01.3-R114",
+  "P/01.3-R115",
+  "P/01.3-R132",
+  "P/01.3-R215"
+ ],
+ "history_evidence": {
+  "P/01.1-R081": [
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 405,
+    "req_id": "P/01.1-R081",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 406,
+    "req_id": "P/01.1-R081",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 407,
+    "req_id": "P/01.1-R081",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 408,
+    "req_id": "P/01.1-R081",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 409,
+    "req_id": "P/01.1-R081",
+    "file": "spec/01.1-store.norms.md#N3"
+   }
+  ],
+  "P/01.1-R108": [
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 415,
+    "req_id": "P/01.1-R108",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 416,
+    "req_id": "P/01.1-R108",
+    "file": "spec/01.1-store.norms.md#N3"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 417,
+    "req_id": "P/01.1-R108",
+    "file": "spec/01.1-store.norms.md#N3"
+   }
+  ],
+  "P/01.1-R147": [
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 385,
+    "req_id": "-",
+    "file": "spec/01.1-store.norms.md#N2.1"
+   },
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 401,
+    "req_id": "P/01.1-R147",
+    "file": "spec/01.1-store.norms.md#N2.1"
+   }
+  ],
+  "P/01.1-R234": [
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 403,
+    "req_id": "P/01.1-R234",
+    "file": "spec/01.1-store.norms.md#N2.1"
+   }
+  ],
+  "P/01.1-R302": [
+   {
+    "history": "decisions/journal/platform/01-store/history-1.tsv",
+    "line": 384,
+    "req_id": "-",
+    "file": "spec/01.1-store.norms.md#N0"
+   }
+  ],
+  "P/01.3-R008": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 587,
+    "req_id": "P/01.3-R008",
+    "file": "spec/01.3-store.norms.md#N1.3"
+   }
+  ],
+  "P/01.3-R016": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 589,
+    "req_id": "P/01.3-R016",
+    "file": "spec/01.3-store.norms.md#N2"
+   }
+  ],
+  "P/01.3-R018": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 585,
+    "req_id": "P/01.3-R018",
+    "file": "spec/01.3-store.norms.md#N2"
+   }
+  ],
+  "P/01.3-R029": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 590,
+    "req_id": "-",
+    "file": "spec/01.3-store.norms.md#N4"
+   }
+  ],
+  "P/01.3-R114": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 577,
+    "req_id": "P/01.3-R114",
+    "file": "spec/01.3-store.norms.md#N1.3"
+   }
+  ],
+  "P/01.3-R115": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 579,
+    "req_id": "P/01.3-R115",
+    "file": "spec/01.3-store.norms.md#N1.3"
+   }
+  ],
+  "P/01.3-R132": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 583,
+    "req_id": "P/01.3-R132",
+    "file": "spec/01.3-store.norms.md#N1.3"
+   }
+  ],
+  "P/01.3-R215": [
+   {
+    "history": "decisions/journal/platform/01-store/history-3.tsv",
+    "line": 581,
+    "req_id": "P/01.3-R215",
+    "file": "spec/01.3-store.norms.md#N2"
+   }
+  ]
+ },
+ "listed_exactly_changed_P01_paragraphs": true,
+ "note": "Checks id/history coverage, not semantic equality of the summaries or external dependency rewrites.",
+ "OK": true
+}

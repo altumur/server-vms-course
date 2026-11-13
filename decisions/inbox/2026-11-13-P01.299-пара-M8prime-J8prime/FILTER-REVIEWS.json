@@ -1,0 +1,35 @@
+{
+ "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "baseline": "P01.277 accepted pair; unchanged semantic records inherited",
+ "delta_sha256": "478f1b263735f5e9b5fe0a5b4d057bdb666a07625954b726c44e94f16eb506e9",
+ "deltas": [
+  {
+   "task": "P01.294",
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "accepted Claude review of P01.294",
+   "records": [
+    "Platform/01-store/qualification/README.md",
+    "Platform/01-store/ru/qualification/README.md"
+   ],
+   "accepted_receipt": "reviews/P01.294-accepted.json",
+   "review": "reviews/P01.294-review.md",
+   "review_sha256": "5c4d8d126e6181dfca708aa45ce8d26b0c12bd53c589921f69f0691b32459cf2"
+  },
+  {
+   "task": "P01.323",
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "P01.323-reviewer.json linked to accepted.window",
+   "records": [
+    "Platform/common/qualification-input-filter.json"
+   ],
+   "accepted_receipt": "reviews/P01.323-accepted.json",
+   "review": "reviews/P01.323-review.md",
+   "review_sha256": "9ae94bf36c4449d845c15fd6fc30a34f04d0fe93e75b8d740d108ff41326e934"
+  }
+ ],
+ "filter_author_provider": "OpenAI (per-delta accepted task metadata)",
+ "filter_reviewer_provider": "Anthropic (actual reviews/window identity)",
+ "all_delta_records_covered": true
+}

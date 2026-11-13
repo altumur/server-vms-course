@@ -1,0 +1,174 @@
+{
+ "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "M": "bfa66fa76ecfb2c1d9b59c7ac7e2641722493942",
+ "J": "ff76875d0e5e44a0f6ed36bf9d66500ad1af3124",
+ "JI": "b4241b80947513de0afb1832dcacacc8569c5dcb",
+ "report_files": [
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/CHANGED-NORMS-AUDIT.json",
+   "bytes": 5176,
+   "sha256": "e25d0ee9a562abc11dd3691bd3f1ce7187f7f561bbbce2bbe68a12454cdee445"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/CHANGED-NORMS.md",
+   "bytes": 12343,
+   "sha256": "43dbdc087094d5a9ae36c0d8de119ab75c1b3466732034f30261bed035b71c70"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/CHECK-SPEC-C.run.json",
+   "bytes": 282,
+   "sha256": "c4ff78b00f539140d54e093e2d3d969251825a2eab67715dad4231350b8cf164"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/DELTA-FILES.tsv",
+   "bytes": 49255,
+   "sha256": "f98b306b663fa41f7e8795fac027d30f958c5da3e4b89faa9c8d376e61f9e4e7"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/DELTA-PAIR.md",
+   "bytes": 1456,
+   "sha256": "5c53a08e3fa5118e57f22ee5ed41954f4361a239923f18cd45eef712519a8717"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/FILTER-DELTA.json",
+   "bytes": 1344,
+   "sha256": "478f1b263735f5e9b5fe0a5b4d057bdb666a07625954b726c44e94f16eb506e9"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/FILTER-REVIEWS.json",
+   "bytes": 1317,
+   "sha256": "926f0a4718224e95b659f6e09c526cc2503727fb93cb751afced3e777d7ebefe"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/IDENTITIES.json",
+   "bytes": 992,
+   "sha256": "7686225409400943653f291d3796e9d46c9ba3531ac5adfa77f1554ccaadcd9c"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/NARROW-M.json",
+   "bytes": 43132,
+   "sha256": "49b79a580379462994441930d60476c3d0ea6fced3a50279574f8dcf87c4c669"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/OPERATOR-UNCHANGED.json",
+   "bytes": 659,
+   "sha256": "1e2dd02840b37af65f1d4743c3c8b55eca8f9e8aee83343dcc3cdaddb9a47da7"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PAIR-EVIDENCE-MANIFEST.json",
+   "bytes": 11406,
+   "sha256": "e596493ac894fcc469ad896fee10f3ef9a7a132c4c9ac4dd65c9d682f73eb442"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PAIR-RESULT.md",
+   "bytes": 6059,
+   "sha256": "bf4b4ab7d9cf89950ba0c5b434b7fc46066cc0dcbdb7da7e06ef8195c1417539"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PASSPORT-CONTROLS.json",
+   "bytes": 6375,
+   "sha256": "b08511dbf61ce7f939da44286067113adc1c1c2f2e11aeadf9647cacc7bea0e6"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PASSPORT-JI.json",
+   "bytes": 1080,
+   "sha256": "04673572c6ec843cb4a85a680bf672507c937767a1862eb44c640bc4502b13bd"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PASSPORT-M.json",
+   "bytes": 33293,
+   "sha256": "b0259e75b88ce5aa5b0a652624d733f42b0a5817d42da8fdfea950e45aa90330"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/PASSPORT-RAW-PAIR.json",
+   "bytes": 2852,
+   "sha256": "986e7b23d930a14cacbb0408b51bd217206da9ff7469716941f1873fb5728460"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/RECEIPT.md",
+   "bytes": 4509,
+   "sha256": "4aec13d01af196e4d0487d2e7b2ffb46c25013c99bcd543ffefd83375d13603c"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/SOURCE-COMPOSITION.json",
+   "bytes": 895,
+   "sha256": "2f16bc21334c04f584eec5128f5c33d77e439a116d8dfb5e92ecd46e98e69635"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/VERIFY-ALL.json",
+   "bytes": 466,
+   "sha256": "fec778e023a29dbb7e706467a8071048a9af17a1f9fbcf943ebe70ef790f063e"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/VERIFY-JI.json",
+   "bytes": 1274,
+   "sha256": "a768b7a758fc2c3690cf0031aaadaffdd830bccc71fb2f2523e3429e1f279032"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/VERIFY-PAIR.json",
+   "bytes": 2610,
+   "sha256": "4c479dd1848432c71b142a4c1f86321f8c193f337db7c9c5698cba9415dfdf09"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/README.md",
+   "bytes": 6770,
+   "sha256": "7f2896c3f426cb97230a4e1a612400cb79cdf9f0b32759159e057a98810d6e24"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/audit_changed_norms.py",
+   "bytes": 3932,
+   "sha256": "9bb8f8dff5c185055f6fc5367bdb85fa0acbe4749710f5b607e0581e5845bf24"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/bind_reviews.py",
+   "bytes": 2818,
+   "sha256": "1dc75dfbde61fa95b41f1291562cc8fd7f88733cbf6aeae62d2637c64f584d4e"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/delta_pair.py",
+   "bytes": 5810,
+   "sha256": "3f437479811bc4478e585689df3b30d34a6df1ceaad9c2f8870c21f085e8e600"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/filter_delta.py",
+   "bytes": 1649,
+   "sha256": "8d8942fcb14612545d8158f97d5754ed20c0dcc63f853f89a17fa3fd294a7cdd"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/passport_controls.py",
+   "bytes": 2727,
+   "sha256": "c76e13cde9d0db850f1494c1137664f62b50d1d1c56d265ec51950d54507fdd3"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/preflight.py",
+   "bytes": 1537,
+   "sha256": "632e9709dd81efd3b99409b49944f939706b1f95ec601be81653de6c0231eeb7"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/prepare_source.py",
+   "bytes": 3561,
+   "sha256": "788213dcf30346364a86a4c3f6240fc2ec511c6042aeb02f573827a7252b0e0e"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/release_pair.py",
+   "bytes": 7959,
+   "sha256": "0c9a0bf0e247cc3612e4dc924cee27487e02d60793371f2564eac011d6b1cfc7"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/snapshot_reviews.py",
+   "bytes": 1643,
+   "sha256": "5f5725aacdcd664fc49624992dceb907d9ae2b2d0566ce18e7209235befae02b"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/verify_exports.py",
+   "bytes": 9504,
+   "sha256": "6e60f4225959fc4955d8e5c816da9f6b7ebb350263de5bfa03b82347e5c755d1"
+  },
+  {
+   "path": "decisions/inbox/2026-11-13-P01.299-пара-M8prime-J8prime/scripts/verify_ji_raw.py",
+   "bytes": 5740,
+   "sha256": "9c3bffb774f659ad2b840869b088d3a9bf8e098f198498c5a8513dc060411aec"
+  }
+ ],
+ "OK": true
+}

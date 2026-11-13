@@ -1,0 +1,12 @@
+{
+ "source": "/home/pilot/P01.277-evidence/operator",
+ "files_sha256": {
+  "b7_export_pair.py": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+  "m_passport.py": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
+  "check_m_passport.py": "4c23afc9fe7d0b68ca10681c01b6beef38faa3d6e57bef37f381ae003f8e6d4c",
+  "judge_input_export.py": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+  "test_b7_export_pair.py": "3eee8c80c1fb67b595522f8bc041377393e7280410ece958e584ef9ecf228e00",
+  "test_judge_input_export.py": "3a5c42c31d99cea0f546fcd1e51a8b653557d666a1d61e096c48976fdc087b74"
+ },
+ "unchanged": true
+}

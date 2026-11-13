@@ -1,0 +1,42 @@
+{
+ "from": "70c969fe200a8d785a8b86f698f938d24310cf2c",
+ "to": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "4d5c3c7c7b2d57956e0ff904a9322e4f24253802",
+  "Platform/01-store/forms/export.json": "a6278d10c8352f54dfea823fb10ff29e23ea7741",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "34902d0b814d3934935b609c222d0e20607f284b"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "c908133c01ab19a5aec22d42ba8ea54d08135596",
+  "Platform/01-store/forms/export.json": "a6278d10c8352f54dfea823fb10ff29e23ea7741",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "34902d0b814d3934935b609c222d0e20607f284b"
+ },
+ "added": [
+  {
+   "path": "Platform/01-store/qualification/README.md",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/ru/qualification/README.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/qualification-input-filter.json",
+   "M": "judge_only",
+   "JI": "exclude"
+  }
+ ],
+ "removed": [],
+ "changed": [],
+ "counts": {
+  "added": 3,
+  "removed": 0,
+  "changed": 0,
+  "records_from": 3568,
+  "records_to": 3571
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "independent_scanner": "unchanged P01.254 verify_ji_p01254.py",
+ "scanner_sha256": "9c3bffb774f659ad2b840869b088d3a9bf8e098f198498c5a8513dc060411aec",
+ "raw_exit": 1,
+ "exception_basis": "exact lexical and routing exception paths accepted in P01.254; no new path permitted",
+ "baseline_report": "/home/pilot/run-p01254-pair-20261112-r3/VERIFY-JI-raw.json",
+ "baseline_sha256": "7faf4beb971176c5fc11c40dffa8dbff8f7a37c392fa6ee07dbe17629b192ed1",
+ "forbidden_hits": {
+  "code": [
+   "Platform/06-console/acceptance/5/inputs/testsub2/api.js",
+   "Platform/06-console/acceptance/5/inputs/testsub2/app.js",
+   "Platform/06-console/acceptance/5/inputs/testsub2/bundle.js",
+   "Platform/06-console/acceptance/5/inputs/testsub2/deep/er/Name_1-2.v3.js"
+  ],
+  "cyrillic": [],
+  "ru": [],
+  "runner_token": [],
+  "shebang_or_import": [],
+  "verdict_or_mutant_path": [
+   "Platform/02-installer/acceptance/1/verdicts.tsv"
+  ]
+ },
+ "all_boolean_checks_pass": true,
+ "no_new_exception": true,
+ "counts": {
+  "C_Platform": 3570,
+  "J": 3571,
+  "J_input": 2125,
+  "M": 179
+ },
+ "OK": true,
+ "excluded_routing_paths_count": 158,
+ "full_report": "/home/pilot/P01.299-evidence/r2/VERIFY-JI.json",
+ "full_report_sha256": "ee7429c41c86fe9d968e098f453ddc10587c3bd9b36fa07139c175d89ff1848c"
+}

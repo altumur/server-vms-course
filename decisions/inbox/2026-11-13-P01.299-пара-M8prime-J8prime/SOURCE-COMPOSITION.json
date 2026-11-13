@@ -1,0 +1,27 @@
+{
+ "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "dependencies": [
+  {
+   "task": "P01.298",
+   "commit": "29bbb9ea2bf06a286401664e3c47bd003b226e90",
+   "status": "accepted",
+   "utc": "2026-11-13T09:22:10Z",
+   "accepted_sha256": "355b57581b5c76c8b5e5c8cd04deaad8c3953635af07ef577726a51684ed2c73",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.323",
+   "commit": "ffe8e3e70daa3e25b8f2408d70b7b5933709efc8",
+   "status": "accepted",
+   "utc": "2026-11-13T09:41:40Z",
+   "accepted_sha256": "9ae94bf36c4449d845c15fd6fc30a34f04d0fe93e75b8d740d108ff41326e934",
+   "ancestor_C": true
+  }
+ ],
+ "task_sha256": "3938bcc08d9226b8507894c765d62faaa906c4adc3434805344d9515ce3b2b33",
+ "task_unchanged_since_source": true,
+ "latest_fetched_main": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "adr_0133_unchanged_since_C": true,
+ "adr_0133_blob": "2c9595b022ba3b769f0db30e2205e0322d5afde2",
+ "OK": true
+}

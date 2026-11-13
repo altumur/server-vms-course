@@ -1,0 +1,1267 @@
+{
+ "C": "30310352523e30aa7e7879d901e44d80e01b118d",
+ "M": {
+  "commit": "bfa66fa76ecfb2c1d9b59c7ac7e2641722493942",
+  "tree": "e37a37129f22b351760e7cfcf96cac96628c1202"
+ },
+ "count": 179,
+ "files": [
+  {
+   "blob": "2ac3df11a6b12c93e15766dccc66b6601c8270b3",
+   "mode": "100644",
+   "path": "Platform/01-store/README.md",
+   "role": "model_input",
+   "size": 15704
+  },
+  {
+   "blob": "a6fb7f1c14267e011c3778162444ebf98adda13c",
+   "mode": "100644",
+   "path": "Platform/01-store/acceptance/1/README.md",
+   "role": "model_input",
+   "size": 28126
+  },
+  {
+   "blob": "7aca026ebbee3a69184ef9e82b92a21ff064cc0f",
+   "mode": "100644",
+   "path": "Platform/01-store/acceptance/2/README.md",
+   "role": "model_input",
+   "size": 8305
+  },
+  {
+   "blob": "aa251fa1aa28bcf5eb5b7e5d39eb1ca6c6964eec",
+   "mode": "100644",
+   "path": "Platform/01-store/acceptance/3/README.md",
+   "role": "model_input",
+   "size": 44172
+  },
+  {
+   "blob": "6352e11aa51aa871d544b7fb1c9a19e479fac51e",
+   "mode": "100644",
+   "path": "Platform/01-store/data/configstore-doors.layers.tsv",
+   "role": "model_input",
+   "size": 794
+  },
+  {
+   "blob": "57cc3820a7d0f0af173405f14f996be7de2fb9c2",
+   "mode": "100644",
+   "path": "Platform/01-store/data/configstore-doors.outcomes.tsv",
+   "role": "model_input",
+   "size": 383
+  },
+  {
+   "blob": "12b78bcd6f3bd83184b0eb952933142e1e586a99",
+   "mode": "100644",
+   "path": "Platform/01-store/data/configstore-doors.schema.json",
+   "role": "model_input",
+   "size": 28343
+  },
+  {
+   "blob": "729636bb5aadc794ada9c964eccb7e6a98906e62",
+   "mode": "100644",
+   "path": "Platform/01-store/data/epoch_floor.layers.tsv",
+   "role": "model_input",
+   "size": 873
+  },
+  {
+   "blob": "2e5f280c58dfb50da4458aba9ae6749f9177dc1c",
+   "mode": "100644",
+   "path": "Platform/01-store/data/epoch_floor.outcomes.tsv",
+   "role": "model_input",
+   "size": 1172
+  },
+  {
+   "blob": "1ffa7fc214500a6bad6ab0b63efa93d5c9b96d94",
+   "mode": "100644",
+   "path": "Platform/01-store/data/epoch_floor.schema.json",
+   "role": "model_input",
+   "size": 28669
+  },
+  {
+   "blob": "d922bf7760ff1a202bd72956863a60da45fb552e",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/code-rules.tsv",
+   "role": "model_input",
+   "size": 3222
+  },
+  {
+   "blob": "f40f9fa1ddf1c38b1d6e3039f40f1d5337ac13ca",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/daemon-flags.tsv",
+   "role": "model_input",
+   "size": 5249
+  },
+  {
+   "blob": "591728e044b9357440873e3cd40d3e30ecce6d13",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/metrics.tsv",
+   "role": "model_input",
+   "size": 2492
+  },
+  {
+   "blob": "fc27fed775323838602deb6597469c934fce0082",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/read-checks.tsv",
+   "role": "model_input",
+   "size": 3637
+  },
+  {
+   "blob": "1a8ad193530e408690f84f8abe2ac62593e855b7",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/refusals.tsv",
+   "role": "model_input",
+   "size": 6693
+  },
+  {
+   "blob": "174051a788be19f0b9c834bf8acee4dde46d43fe",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/rights-checks.tsv",
+   "role": "model_input",
+   "size": 4533
+  },
+  {
+   "blob": "9fef8781a10a7eb827e0458900bab5b08fc26de4",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/runtime-constants.tsv",
+   "role": "model_input",
+   "size": 2029
+  },
+  {
+   "blob": "2be5830b2bfccced65a1ca62576144d8ea4a0ba4",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/service-checks.tsv",
+   "role": "model_input",
+   "size": 3902
+  },
+  {
+   "blob": "0bbae6e6dad3f8db4019da5d04886f4a128b3adf",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/stages.tsv",
+   "role": "model_input",
+   "size": 6868
+  },
+  {
+   "blob": "c60603a0f97bd41abd0f680ba60fdd52a0eaa948",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/status-fields.tsv",
+   "role": "model_input",
+   "size": 3795
+  },
+  {
+   "blob": "c2714fa54d68e858c114dc3dc5afbd5ab29bc154",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/targets.tsv",
+   "role": "model_input",
+   "size": 7259
+  },
+  {
+   "blob": "aea4dcaa72cc6522ecdd917545bb0e6b6d633ba5",
+   "mode": "100644",
+   "path": "Platform/01-store/forms/write-checks.tsv",
+   "role": "model_input",
+   "size": 8519
+  },
+  {
+   "blob": "a7850461238ea11a1c36fca6ff6121412200dfa5",
+   "mode": "100644",
+   "path": "Platform/01-store/lifecycle.md",
+   "role": "model_input",
+   "size": 9338
+  },
+  {
+   "blob": "9e2f6b731871d05fda18d3d6d6a560587c19a8e1",
+   "mode": "100644",
+   "path": "Platform/01-store/probes/README.md",
+   "role": "model_input",
+   "size": 2158
+  },
+  {
+   "blob": "260f74862997730a718ec9306a5c16eb550509eb",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/01-store.README.md",
+   "role": "model_input",
+   "size": 26967
+  },
+  {
+   "blob": "cbeb18d2ed47dc9af9b8f4e860a8628b4a01637b",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+   "role": "model_input",
+   "size": 37506
+  },
+  {
+   "blob": "c08c9116b911f8c9db45345756d7df5f65dec212",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/01.1-store.norms.md",
+   "role": "model_input",
+   "size": 100694
+  },
+  {
+   "blob": "ca1f0c611552a1b99d1033b27116f95c06e633cf",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/01.2-store.norms.md",
+   "role": "model_input",
+   "size": 32179
+  },
+  {
+   "blob": "97611b2b7d66dae7e3ce909f5b9de9534d9eb796",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/01.3-store.norms.md",
+   "role": "model_input",
+   "size": 106082
+  },
+  {
+   "blob": "3fee5608e4eb18dff268288ffd58a8c6c20c75d7",
+   "mode": "100644",
+   "path": "Platform/01-store/spec/production-acceptance.md",
+   "role": "model_input",
+   "size": 6680
+  },
+  {
+   "blob": "c1f923c73a1bc0dbff586fb0035c42f8487dbf07",
+   "mode": "100644",
+   "path": "Platform/01-store/vectors/jcs/README.md",
+   "role": "model_input",
+   "size": 2188
+  },
+  {
+   "blob": "5083f2aca8e0cacde8328642a0074f4e71e462d4",
+   "mode": "100644",
+   "path": "Platform/01-store/vectors/rights-evaluator/README.md",
+   "role": "model_input",
+   "size": 3431
+  },
+  {
+   "blob": "de227060981bfc3ea74f6ac21f0c38c5622d08b2",
+   "mode": "100644",
+   "path": "Platform/02-installer/acceptance/5/README.md",
+   "role": "model_input",
+   "size": 11418
+  },
+  {
+   "blob": "a76c385df5fa79a76535ed5c705a10249924e397",
+   "mode": "100644",
+   "path": "Platform/02-installer/forms/README.md",
+   "role": "model_input",
+   "size": 12115
+  },
+  {
+   "blob": "4c3912d9447328b0c0e893416e4ab7d423e2f955",
+   "mode": "100644",
+   "path": "Platform/02-installer/lifecycle.md",
+   "role": "model_input",
+   "size": 8751
+  },
+  {
+   "blob": "5c348ce12fc0e92adedf35306ac82c6096e28f4a",
+   "mode": "100644",
+   "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+   "role": "model_input",
+   "size": 172475
+  },
+  {
+   "blob": "27079bc64c381cb581dc6a9917525936d785f54f",
+   "mode": "100644",
+   "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+   "role": "model_input",
+   "size": 111347
+  },
+  {
+   "blob": "7f88d93392893d6dbc4de0f368d110cfe11e5a9c",
+   "mode": "100644",
+   "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+   "role": "model_input",
+   "size": 142685
+  },
+  {
+   "blob": "e5ebbfa0f52a099e2b1624e8d47d155e2b6edaa1",
+   "mode": "100644",
+   "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+   "role": "model_input",
+   "size": 51735
+  },
+  {
+   "blob": "bec2127fbb17f7d351ec87611b5de11d46e6947f",
+   "mode": "100644",
+   "path": "Platform/03-worker/data/epoch.layers.tsv",
+   "role": "model_input",
+   "size": 863
+  },
+  {
+   "blob": "fac4e1a64a04b0902ce1cfc5f2b10d88a9a4fe38",
+   "mode": "100644",
+   "path": "Platform/03-worker/data/epoch.outcomes.tsv",
+   "role": "model_input",
+   "size": 1956
+  },
+  {
+   "blob": "c62a243ed9e52b1d876548119ec932027f1c49a1",
+   "mode": "100644",
+   "path": "Platform/03-worker/data/epoch.schema.json",
+   "role": "model_input",
+   "size": 28772
+  },
+  {
+   "blob": "7125d16acbce38aebbe88ca05a9db0663db09be3",
+   "mode": "100644",
+   "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+   "role": "model_input",
+   "size": 106292
+  },
+  {
+   "blob": "2280bb9ca0233b52ece793e7e098ff09832c5e81",
+   "mode": "100644",
+   "path": "Platform/03-worker/spec/03.4-worker.norms.md",
+   "role": "model_input",
+   "size": 82845
+  },
+  {
+   "blob": "00460700494ddf45666f369df90f597b64741a9b",
+   "mode": "100644",
+   "path": "Platform/03-worker/spec/03.6-worker.norms.md",
+   "role": "model_input",
+   "size": 65841
+  },
+  {
+   "blob": "6eb54f790c14ddfcff801defaa78ee5d947cdb00",
+   "mode": "100644",
+   "path": "Platform/04-controller/spec/04-controller.norms.md",
+   "role": "model_input",
+   "size": 195850
+  },
+  {
+   "blob": "ff1ec69ae545aa302617620e276e597f068cf9e1",
+   "mode": "100644",
+   "path": "Platform/06-console/acceptance/5/README.md",
+   "role": "model_input",
+   "size": 8851
+  },
+  {
+   "blob": "a10be6ae57f84f81ea3c4c1b37e62e5892e2d2ab",
+   "mode": "100644",
+   "path": "Platform/06-console/spec/06.1-console.norms.md",
+   "role": "model_input",
+   "size": 192616
+  },
+  {
+   "blob": "8ffbd1fda774a76315f6d5f00a8e77348341050e",
+   "mode": "100644",
+   "path": "Platform/06-console/spec/06.2-console.norms.md",
+   "role": "model_input",
+   "size": 46113
+  },
+  {
+   "blob": "fc9296ff5eeaf0059c80c51116f387d4bc3adfbc",
+   "mode": "100644",
+   "path": "Platform/06-console/spec/06.3-console.norms.md",
+   "role": "model_input",
+   "size": 57080
+  },
+  {
+   "blob": "0e965198b2e6bfd3acace70f9d6854d69002ecc8",
+   "mode": "100644",
+   "path": "Platform/06-console/spec/06.4-console.norms.md",
+   "role": "model_input",
+   "size": 78350
+  },
+  {
+   "blob": "3eef650ce0bd311d4053cf88e9f24109609173a8",
+   "mode": "100644",
+   "path": "Platform/06-console/spec/06.5-console.norms.md",
+   "role": "model_input",
+   "size": 140176
+  },
+  {
+   "blob": "3fe6657cb791fafe690d7c7a8c0c86d3a87627da",
+   "mode": "100644",
+   "path": "Platform/08-domain/forms/runtime-constants.tsv",
+   "role": "model_input",
+   "size": 7085
+  },
+  {
+   "blob": "8a189c5c41619a7895776413368b5c64fd136c34",
+   "mode": "100644",
+   "path": "Platform/08-domain/spec/08.2-domain.norms.md",
+   "role": "model_input",
+   "size": 93643
+  },
+  {
+   "blob": "626a8285e780d17d92db657973b4c94cf97b4f47",
+   "mode": "100644",
+   "path": "Platform/08-domain/spec/08.4-domain.norms.md",
+   "role": "model_input",
+   "size": 174164
+  },
+  {
+   "blob": "7ce3d191838c7cd03d0ebe351b7b770e18fc7719",
+   "mode": "100644",
+   "path": "Platform/08-domain/spec/08.8-domain.norms.md",
+   "role": "model_input",
+   "size": 162559
+  },
+  {
+   "blob": "c40fc6270fefeef0200be7fb10c849ae483e4fe9",
+   "mode": "100644",
+   "path": "Platform/COURSE_COMMIT",
+   "role": "model_input",
+   "size": 41
+  },
+  {
+   "blob": "b67df76a469723f00869549a0eed45fdfa0fdf11",
+   "mode": "100644",
+   "path": "Platform/README.md",
+   "role": "model_input",
+   "size": 1477
+  },
+  {
+   "blob": "05beda180dabc0ebc59c76f65a4541c9134f6517",
+   "mode": "100644",
+   "path": "Platform/common/LAYERS.md",
+   "role": "model_input",
+   "size": 18900
+  },
+  {
+   "blob": "29b44fe96fa798f51dd1983f6ae46630905dc803",
+   "mode": "100644",
+   "path": "Platform/common/NORMATIVE-TERMS.md",
+   "role": "model_input",
+   "size": 1322
+  },
+  {
+   "blob": "9322b4145c693758df6c2ffb8683a806ebef644a",
+   "mode": "100644",
+   "path": "Platform/common/README.md",
+   "role": "model_input",
+   "size": 4680
+  },
+  {
+   "blob": "e937e06a9f3638101dd9b94c3ca9f73145831fff",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/PROFILE.md",
+   "role": "model_input",
+   "size": 36219
+  },
+  {
+   "blob": "08b1b369dce636201dadb484e648908569f9e4d4",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/README.md",
+   "role": "model_input",
+   "size": 36967
+  },
+  {
+   "blob": "f611e5ea74283701313f7b8fae804d455ed0adb9",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/command-tables.md",
+   "role": "model_input",
+   "size": 14329
+  },
+  {
+   "blob": "c76c9a8a9321e8a2148d41a5041b58c3a45368af",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/domain-stand.md",
+   "role": "model_input",
+   "size": 22654
+  },
+  {
+   "blob": "29f835fa93ba56d19b417ad57c9390e208a2787a",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/code-rules.tsv",
+   "role": "model_input",
+   "size": 6604
+  },
+  {
+   "blob": "5503468d038407f3412ddb53f505336fe4500e44",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+   "role": "model_input",
+   "size": 11060
+  },
+  {
+   "blob": "a23905769c3a12edfa25e7c1f6ea9fc0259c1fea",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/d7.schema.json",
+   "role": "model_input",
+   "size": 3480
+  },
+  {
+   "blob": "ce169eefb909c0a73897ccbf73364afa51320379",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/profile-keys.tsv",
+   "role": "model_input",
+   "size": 1295
+  },
+  {
+   "blob": "e157506b1f8e748e76ccdfd1059225a7496c9df8",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+   "role": "model_input",
+   "size": 7401
+  },
+  {
+   "blob": "0ea90d1980af4b852b03522e0edbd8cdccbf9173",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+   "role": "model_input",
+   "size": 2944
+  },
+  {
+   "blob": "0c4fcfe68ac48401c8ebd330d068a2cc7b9d0b8e",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/stand-environment.tsv",
+   "role": "model_input",
+   "size": 6646
+  },
+  {
+   "blob": "541a7c084331f9cb6aa176de5dc1b8237c91e182",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/targets.README.md",
+   "role": "model_input",
+   "size": 4185
+  },
+  {
+   "blob": "adaa0ee7e5fa828b772574f88d6a447c5e61295a",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/forms/targets.tsv",
+   "role": "model_input",
+   "size": 77
+  },
+  {
+   "blob": "89e01445e65bb7ee391a8a6d277ace043b816796",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/ops/README.md",
+   "role": "model_input",
+   "size": 5776
+  },
+  {
+   "blob": "7058dabf6d63e2c6b86be6fc9383fb713d2b87c1",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/pass/README.md",
+   "role": "model_input",
+   "size": 10109
+  },
+  {
+   "blob": "9b29f2cd828dbabe41a21a5232ce42e87ea26f7d",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/runner-targets.README.md",
+   "role": "model_input",
+   "size": 5150
+  },
+  {
+   "blob": "255dba78194da4f50e83d6698c2b04f4e9020020",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/runner-targets.tsv",
+   "role": "model_input",
+   "size": 106316
+  },
+  {
+   "blob": "1e9b14053f5d034dd14363acd02390cc0fc41d7d",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/seams.md",
+   "role": "model_input",
+   "size": 23625
+  },
+  {
+   "blob": "efa398a717ee72079f9c6d7711daebae9e3f21bb",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/stand.md",
+   "role": "model_input",
+   "size": 22645
+  },
+  {
+   "blob": "d2f59ac380fdb888c7f05af3cd5f8b5e5afddbd1",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/system/README.md",
+   "role": "model_input",
+   "size": 11753
+  },
+  {
+   "blob": "cd6b4541afa9f8371a671379bb8b9e8abe8cfbe8",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/tables.md",
+   "role": "model_input",
+   "size": 6209
+  },
+  {
+   "blob": "a0bd3184b146b581d3898c4a5b0f9376a72fddc6",
+   "mode": "100644",
+   "path": "Platform/common/acceptance/tls/README.md",
+   "role": "model_input",
+   "size": 23565
+  },
+  {
+   "blob": "20d0483c9f8714962236d0dd2a80256ce22228d8",
+   "mode": "100644",
+   "path": "Platform/common/contracts/accept.md",
+   "role": "model_input",
+   "size": 44054
+  },
+  {
+   "blob": "cb165077910ae4567c96fd17c428d51e588bd870",
+   "mode": "100644",
+   "path": "Platform/common/contracts/agent-signature.md",
+   "role": "model_input",
+   "size": 8048
+  },
+  {
+   "blob": "fbc69c363055d80b62f2de02d37d2c52ef39e524",
+   "mode": "100644",
+   "path": "Platform/common/contracts/alarm-history.md",
+   "role": "model_input",
+   "size": 6276
+  },
+  {
+   "blob": "f3a4e1c7304f1ccdbb4f098397c0eff8e5e5fe18",
+   "mode": "100644",
+   "path": "Platform/common/contracts/ask-sig.md",
+   "role": "model_input",
+   "size": 7201
+  },
+  {
+   "blob": "effdff8198e0656864923587cbd78a0274eb699b",
+   "mode": "100644",
+   "path": "Platform/common/contracts/domain-backup-key.md",
+   "role": "model_input",
+   "size": 2678
+  },
+  {
+   "blob": "8a64f4371a7482a163944c64561c096d20644d14",
+   "mode": "100644",
+   "path": "Platform/common/contracts/domain-envelopes.md",
+   "role": "model_input",
+   "size": 13737
+  },
+  {
+   "blob": "89da6bca46303f2d5e2a69148f3279345e47ca27",
+   "mode": "100644",
+   "path": "Platform/common/contracts/domain-founding.md",
+   "role": "model_input",
+   "size": 11953
+  },
+  {
+   "blob": "611e5f09d7773c3be4ed221739fff8b1e9ce9a12",
+   "mode": "100644",
+   "path": "Platform/common/contracts/domain-token.md",
+   "role": "model_input",
+   "size": 15391
+  },
+  {
+   "blob": "c5d7e6583f6e84998e118ae58e0b9687cf57e279",
+   "mode": "100644",
+   "path": "Platform/common/contracts/door-token.md",
+   "role": "model_input",
+   "size": 16473
+  },
+  {
+   "blob": "fe3fe5358ac7837b40e5624ae179cc53a42ac6b5",
+   "mode": "100644",
+   "path": "Platform/common/contracts/env-file.md",
+   "role": "model_input",
+   "size": 21363
+  },
+  {
+   "blob": "4313c9c97a497c93ea7e16aaf0072b59ddf4878e",
+   "mode": "100644",
+   "path": "Platform/common/contracts/event-journal.md",
+   "role": "model_input",
+   "size": 25513
+  },
+  {
+   "blob": "730d5a1777f58671dc9162c7f5d9f3f23e1dc701",
+   "mode": "100644",
+   "path": "Platform/common/contracts/events-merge.md",
+   "role": "model_input",
+   "size": 14773
+  },
+  {
+   "blob": "6ac0dc4cd186b8019882b4140e184cde29032ab9",
+   "mode": "100644",
+   "path": "Platform/common/contracts/forwarding.md",
+   "role": "model_input",
+   "size": 33996
+  },
+  {
+   "blob": "1b2a582ab87d8bb397e6c6021d7e5e443a4ddc9a",
+   "mode": "100644",
+   "path": "Platform/common/contracts/gate-and-pass.api.openapi.yaml",
+   "role": "model_input",
+   "size": 2260
+  },
+  {
+   "blob": "231ac57650f5f38ff3cde2807c249164371ef690",
+   "mode": "100644",
+   "path": "Platform/common/contracts/gate-and-pass.md",
+   "role": "model_input",
+   "size": 83576
+  },
+  {
+   "blob": "0b087356132bae9cc44ff8806d3ba67d2b7b5d5f",
+   "mode": "100644",
+   "path": "Platform/common/contracts/group-of.md",
+   "role": "model_input",
+   "size": 4226
+  },
+  {
+   "blob": "42557f80f6affa12b05cc997cfa0d135785baab7",
+   "mode": "100644",
+   "path": "Platform/common/contracts/holds.md",
+   "role": "model_input",
+   "size": 7347
+  },
+  {
+   "blob": "f3a7d3f006d2906c9cb987cbd2ae5a27e74f2c46",
+   "mode": "100644",
+   "path": "Platform/common/contracts/instance.md",
+   "role": "model_input",
+   "size": 5413
+  },
+  {
+   "blob": "a9861bd3fa44b3df63b1c4ccb7a2a0d9f207cbc2",
+   "mode": "100644",
+   "path": "Platform/common/contracts/keys.md",
+   "role": "model_input",
+   "size": 24142
+  },
+  {
+   "blob": "eddb80a9430522ce54f6f2023419e9c808fa18aa",
+   "mode": "100644",
+   "path": "Platform/common/contracts/labels.md",
+   "role": "model_input",
+   "size": 5327
+  },
+  {
+   "blob": "a5e43a6a1307fe076c662547beaaa0079af99424",
+   "mode": "100644",
+   "path": "Platform/common/contracts/local-token-door.md",
+   "role": "model_input",
+   "size": 14037
+  },
+  {
+   "blob": "ce11819a028e8c7f7622bdc092b93a08758ed8cf",
+   "mode": "100644",
+   "path": "Platform/common/contracts/log-mask.md",
+   "role": "model_input",
+   "size": 7666
+  },
+  {
+   "blob": "e1c697a6daaaf67962b7ad28e0758a5c7e11225b",
+   "mode": "100644",
+   "path": "Platform/common/contracts/may-input.md",
+   "role": "model_input",
+   "size": 5371
+  },
+  {
+   "blob": "08295298fe1eaf51b372242c86ec1f815de0ee93",
+   "mode": "100644",
+   "path": "Platform/common/contracts/may.md",
+   "role": "model_input",
+   "size": 21745
+  },
+  {
+   "blob": "c02bdd815413c16207025cb1f4dbd0b67cbc4e92",
+   "mode": "100644",
+   "path": "Platform/common/contracts/object-client.md",
+   "role": "model_input",
+   "size": 11254
+  },
+  {
+   "blob": "0108457b6f464a0b39c143704078fbbb83298647",
+   "mode": "100644",
+   "path": "Platform/common/contracts/observation.md",
+   "role": "model_input",
+   "size": 21904
+  },
+  {
+   "blob": "999d5f9e8311fe6e80912550313a4676bf1eaa8d",
+   "mode": "100644",
+   "path": "Platform/common/contracts/password-hash.md",
+   "role": "model_input",
+   "size": 2776
+  },
+  {
+   "blob": "a3b56d95c4b52f23605b3cf28620994cfd196b11",
+   "mode": "100644",
+   "path": "Platform/common/contracts/peer.md",
+   "role": "model_input",
+   "size": 10548
+  },
+  {
+   "blob": "5e0a8506c26ac472a00c76cff43f0d47d4db73ce",
+   "mode": "100644",
+   "path": "Platform/common/contracts/person-name.md",
+   "role": "model_input",
+   "size": 3148
+  },
+  {
+   "blob": "f908643b81eca8a1e47cdfcf36fbd26de1f769b8",
+   "mode": "100644",
+   "path": "Platform/common/contracts/pool.md",
+   "role": "model_input",
+   "size": 11585
+  },
+  {
+   "blob": "d62a5cb029ba1573af09eb0d6c10809a65165267",
+   "mode": "100644",
+   "path": "Platform/common/contracts/presence-lock.md",
+   "role": "model_input",
+   "size": 15029
+  },
+  {
+   "blob": "a98d718b62a98a26c323b432ac7e44bb90d75a66",
+   "mode": "100644",
+   "path": "Platform/common/contracts/production-obligations.md",
+   "role": "model_input",
+   "size": 3522
+  },
+  {
+   "blob": "a6fc77f25355138ba3a8f15d8cdc978eb056e1f8",
+   "mode": "100644",
+   "path": "Platform/common/contracts/record.md",
+   "role": "model_input",
+   "size": 18295
+  },
+  {
+   "blob": "d9b72e2d937fd056dc070de45e518207fac60433",
+   "mode": "100644",
+   "path": "Platform/common/contracts/request-mark.md",
+   "role": "model_input",
+   "size": 33025
+  },
+  {
+   "blob": "e13789564a5123d6f9e9a0495ad91fdf0c3b17e5",
+   "mode": "100644",
+   "path": "Platform/common/contracts/role-certificate.md",
+   "role": "model_input",
+   "size": 42804
+  },
+  {
+   "blob": "6f7b7be1491dcd057ccc02114161f94efad73df5",
+   "mode": "100644",
+   "path": "Platform/common/contracts/row-check.md",
+   "role": "model_input",
+   "size": 32297
+  },
+  {
+   "blob": "6a799918540ec3115a8ac722c0c94a62c1e6c019",
+   "mode": "100644",
+   "path": "Platform/common/contracts/schema.md",
+   "role": "model_input",
+   "size": 6470
+  },
+  {
+   "blob": "d10fa7af11350b83e631106470bcff40f543033a",
+   "mode": "100644",
+   "path": "Platform/common/contracts/sealing.md",
+   "role": "model_input",
+   "size": 12856
+  },
+  {
+   "blob": "aa2e2250a8eaf773aee7ef0fb67b07927fd08019",
+   "mode": "100644",
+   "path": "Platform/common/contracts/secret-files.md",
+   "role": "model_input",
+   "size": 5936
+  },
+  {
+   "blob": "e601129d314e4b025cd4836a6143ef8b9b7c367d",
+   "mode": "100644",
+   "path": "Platform/common/contracts/slot-name.md",
+   "role": "model_input",
+   "size": 4926
+  },
+  {
+   "blob": "39121cec80fa3c04ebcef32c7c4c046d9295a808",
+   "mode": "100644",
+   "path": "Platform/common/contracts/slot.md",
+   "role": "model_input",
+   "size": 4008
+  },
+  {
+   "blob": "67fdeb219b1f796f90e5c9a14134c8aeac291d7b",
+   "mode": "100644",
+   "path": "Platform/common/contracts/source-cells.md",
+   "role": "model_input",
+   "size": 4085
+  },
+  {
+   "blob": "11c89a0a3a8415c76479f9df7ad995973b3d4b13",
+   "mode": "100644",
+   "path": "Platform/common/contracts/store-client.md",
+   "role": "model_input",
+   "size": 10968
+  },
+  {
+   "blob": "4c684729e01733564e44cb5804156f20d1dafbd7",
+   "mode": "100644",
+   "path": "Platform/common/contracts/tombstone.md",
+   "role": "model_input",
+   "size": 9825
+  },
+  {
+   "blob": "0d9a5cd8d4b0141ef86208c6cb9bd399b6dd194f",
+   "mode": "100644",
+   "path": "Platform/common/contracts/turn.md",
+   "role": "model_input",
+   "size": 14099
+  },
+  {
+   "blob": "7cf23484b9a66d8da61d30e1177f6d5a9d77a887",
+   "mode": "100644",
+   "path": "Platform/common/contracts/url-credentials.md",
+   "role": "model_input",
+   "size": 25537
+  },
+  {
+   "blob": "512a743dc95fffc818dac682d396d9d45411b23b",
+   "mode": "100644",
+   "path": "Platform/common/contracts/vector-adapter.protocol.json",
+   "role": "model_input",
+   "size": 49689
+  },
+  {
+   "blob": "2432bae95a1856d7ef7823ca0f1967f2d72cf2ff",
+   "mode": "100644",
+   "path": "Platform/common/data/README.md",
+   "role": "model_input",
+   "size": 21751
+  },
+  {
+   "blob": "3826ef54df1d83d9bd54ee803ef600455dea924b",
+   "mode": "100644",
+   "path": "Platform/common/data/catalog.tsv",
+   "role": "model_input",
+   "size": 64942
+  },
+  {
+   "blob": "d5ab25b2e48f73655a55d2057cc48a2fdc75a19f",
+   "mode": "100644",
+   "path": "Platform/common/data/codec.tsv",
+   "role": "model_input",
+   "size": 2758
+  },
+  {
+   "blob": "999cbd6a44103240c50126b15b93089ed5cf5c9e",
+   "mode": "100644",
+   "path": "Platform/common/data/common.layers.tsv",
+   "role": "model_input",
+   "size": 755
+  },
+  {
+   "blob": "9ab4a4876924a5baad57db25f5358876d0afc737",
+   "mode": "100644",
+   "path": "Platform/common/data/common.schema.json",
+   "role": "model_input",
+   "size": 28148
+  },
+  {
+   "blob": "e7c58d4f0adbcd61ae5d10cc4c96683c75839879",
+   "mode": "100644",
+   "path": "Platform/common/data/key-placeholders.tsv",
+   "role": "model_input",
+   "size": 4549
+  },
+  {
+   "blob": "c4bec36b1dde288e62d3f3444724f0a37e302236",
+   "mode": "100644",
+   "path": "Platform/common/data/outcome-units.tsv",
+   "role": "model_input",
+   "size": 421
+  },
+  {
+   "blob": "2fd612aaf093fa492e75a84b2a0738cc2638b569",
+   "mode": "100644",
+   "path": "Platform/common/data/testsub/testsub.subsystem.yaml",
+   "role": "model_input",
+   "size": 4269
+  },
+  {
+   "blob": "9265528a0e7af1cec92afa1d02ab8d9f36ffbebc",
+   "mode": "100644",
+   "path": "Platform/common/data/testsub/testsub2.subsystem.yaml",
+   "role": "model_input",
+   "size": 15141
+  },
+  {
+   "blob": "1604fb314cbc0217c3a1f9755402837da13694aa",
+   "mode": "100644",
+   "path": "Platform/common/vectors/README.md",
+   "role": "model_input",
+   "size": 19956
+  },
+  {
+   "blob": "57525813e88619184206a66f226607c0f9d92755",
+   "mode": "100644",
+   "path": "Platform/common/vectors/alarm-history/README.md",
+   "role": "model_input",
+   "size": 2307
+  },
+  {
+   "blob": "7527e24530463fb6d7e8c3638f0143f57196e7eb",
+   "mode": "100644",
+   "path": "Platform/common/vectors/consumers.tsv",
+   "role": "model_input",
+   "size": 29374
+  },
+  {
+   "blob": "f280575b4f58996478af04a63f7030b9b2f95da4",
+   "mode": "100644",
+   "path": "Platform/common/vectors/crl/README.md",
+   "role": "model_input",
+   "size": 3477
+  },
+  {
+   "blob": "698b41d77408b6acc790a4dfbd456c5aa5307e92",
+   "mode": "100644",
+   "path": "Platform/common/vectors/domain-backup-key/README.md",
+   "role": "model_input",
+   "size": 2421
+  },
+  {
+   "blob": "92aa4d2a749c869ffb8ce7db4c69bbd8851d5b3e",
+   "mode": "100644",
+   "path": "Platform/common/vectors/env-file/README.md",
+   "role": "model_input",
+   "size": 4032
+  },
+  {
+   "blob": "9af6c310bc67538898328fe07a806fccc1f0ceb7",
+   "mode": "100644",
+   "path": "Platform/common/vectors/events-merge/README.md",
+   "role": "model_input",
+   "size": 6514
+  },
+  {
+   "blob": "ca65afcf95f5b7888786e78bf244a220f1aa2817",
+   "mode": "100644",
+   "path": "Platform/common/vectors/family-read/README.md",
+   "role": "model_input",
+   "size": 3651
+  },
+  {
+   "blob": "918dc893d752fccade9bbd06d7145ee6fc81a8c8",
+   "mode": "100644",
+   "path": "Platform/common/vectors/fault/README.md",
+   "role": "model_input",
+   "size": 5585
+  },
+  {
+   "blob": "2124360aaeda14da9c456f5ff99a20f744dbae53",
+   "mode": "100644",
+   "path": "Platform/common/vectors/fresh-age/README.md",
+   "role": "model_input",
+   "size": 6132
+  },
+  {
+   "blob": "57c127156da9f32e69a56afef240f43125d5d089",
+   "mode": "100644",
+   "path": "Platform/common/vectors/group-of/README.md",
+   "role": "model_input",
+   "size": 4260
+  },
+  {
+   "blob": "054af5b7ef7ecf3897911fc094a5db4505766d36",
+   "mode": "100644",
+   "path": "Platform/common/vectors/heartbeat-read/README.md",
+   "role": "model_input",
+   "size": 4334
+  },
+  {
+   "blob": "61147175bf2533167385d58fe6a14afc6d2e33c3",
+   "mode": "100644",
+   "path": "Platform/common/vectors/hold-state/README.md",
+   "role": "model_input",
+   "size": 2776
+  },
+  {
+   "blob": "499d3b7e0476a6570c17cededbe38eed660cd539",
+   "mode": "100644",
+   "path": "Platform/common/vectors/holds/README.md",
+   "role": "model_input",
+   "size": 3763
+  },
+  {
+   "blob": "cc84b02d9df5eb53542bd9cb6813c5062486a4dc",
+   "mode": "100644",
+   "path": "Platform/common/vectors/instance/README.md",
+   "role": "model_input",
+   "size": 3903
+  },
+  {
+   "blob": "b9210554dc88fcdfc2d862dd5b1814b8e6d4b1d9",
+   "mode": "100644",
+   "path": "Platform/common/vectors/journal/README.md",
+   "role": "model_input",
+   "size": 6752
+  },
+  {
+   "blob": "71ff475bc3dec77d60dfa7f30685c2fcc1ff47c2",
+   "mode": "100644",
+   "path": "Platform/common/vectors/labels/README.md",
+   "role": "model_input",
+   "size": 4124
+  },
+  {
+   "blob": "bd590331f2cad2362e825e51445cd4687d8afa21",
+   "mode": "100644",
+   "path": "Platform/common/vectors/log-mask/README.md",
+   "role": "model_input",
+   "size": 5733
+  },
+  {
+   "blob": "972af27918b316ade03b1fc27aad1f7f990d7f66",
+   "mode": "100644",
+   "path": "Platform/common/vectors/loopback/README.md",
+   "role": "model_input",
+   "size": 3500
+  },
+  {
+   "blob": "d08638ba527912a31c38317e6e923fa0f8bd356a",
+   "mode": "100644",
+   "path": "Platform/common/vectors/object-client/README.md",
+   "role": "model_input",
+   "size": 3949
+  },
+  {
+   "blob": "b03fcc6add1298456c0b0ca77ea468a0f57c5285",
+   "mode": "100644",
+   "path": "Platform/common/vectors/password-hash/README.md",
+   "role": "model_input",
+   "size": 2901
+  },
+  {
+   "blob": "afc23826e023e899b8b587fe614b0ece5207e18a",
+   "mode": "100644",
+   "path": "Platform/common/vectors/probe-tables.tsv",
+   "role": "model_input",
+   "size": 2451
+  },
+  {
+   "blob": "b479f5ef887abe91b5fca13a5ac76b80969293b2",
+   "mode": "100644",
+   "path": "Platform/common/vectors/production-obligations/README.md",
+   "role": "model_input",
+   "size": 7845
+  },
+  {
+   "blob": "685a3def22b698f667b5e0a7110c9460c941b1df",
+   "mode": "100644",
+   "path": "Platform/common/vectors/resource-state/README.md",
+   "role": "model_input",
+   "size": 3949
+  },
+  {
+   "blob": "aa0e9bf96e3ba99f13f4112d50b6705b76a45dc7",
+   "mode": "100644",
+   "path": "Platform/common/vectors/revoked/README.md",
+   "role": "model_input",
+   "size": 3202
+  },
+  {
+   "blob": "d3270ec8982509e59a3caf4a795296571f737cbc",
+   "mode": "100644",
+   "path": "Platform/common/vectors/said-id/README.md",
+   "role": "model_input",
+   "size": 5048
+  },
+  {
+   "blob": "2c73ee88e4b64eb71673408a3ffcecc4f154a80e",
+   "mode": "100644",
+   "path": "Platform/common/vectors/schema/README.md",
+   "role": "model_input",
+   "size": 3027
+  },
+  {
+   "blob": "43b79e9309a6882ec56ede8e11e23bc283003f1c",
+   "mode": "100644",
+   "path": "Platform/common/vectors/secret-in/README.md",
+   "role": "model_input",
+   "size": 7462
+  },
+  {
+   "blob": "e17bd04c80ec6593f9b5c6ca1812795e82bcf522",
+   "mode": "100644",
+   "path": "Platform/common/vectors/slot-name/README.md",
+   "role": "model_input",
+   "size": 2391
+  },
+  {
+   "blob": "e3b136df34a3ae0fc7a0f51c89a4ed0c63c030c9",
+   "mode": "100644",
+   "path": "Platform/common/vectors/store-client/README.md",
+   "role": "model_input",
+   "size": 3230
+  },
+  {
+   "blob": "d1e4a8e3f6ff76e40268eed7d6f3d84f7ed1b633",
+   "mode": "100644",
+   "path": "Platform/common/vectors/tombstone/README.md",
+   "role": "model_input",
+   "size": 3329
+  },
+  {
+   "blob": "ca3a924a1fb311460af55ea3b0a027646a926b18",
+   "mode": "100644",
+   "path": "Platform/common/vectors/values-by-type/README.md",
+   "role": "model_input",
+   "size": 9956
+  },
+  {
+   "blob": "05d2aa3b443bfdfd796ba6f3eb2f1ec23a4ee87f",
+   "mode": "100644",
+   "path": "Platform/common/vectors/wire.md",
+   "role": "model_input",
+   "size": 23781
+  },
+  {
+   "blob": "49c29e0a04a36b94186b68b7862d9259e3d60165",
+   "mode": "100644",
+   "path": "Platform/common/vectors/wire.tsv",
+   "role": "model_input",
+   "size": 48343
+  },
+  {
+   "blob": "3f313637dd9b23df96da62515d44690e78777564",
+   "mode": "100644",
+   "path": "Platform/common/versions/DEFECTS.md",
+   "role": "model_input",
+   "size": 7959
+  },
+  {
+   "blob": "d06d22f9e40b670764655a1ae654188cb39d9cd9",
+   "mode": "100644",
+   "path": "Platform/common/versions/README.md",
+   "role": "model_input",
+   "size": 4132
+  },
+  {
+   "blob": "6b0185980cbc44472a289e224b83c8552e3029ee",
+   "mode": "100644",
+   "path": "Platform/common/versions/go.mod",
+   "role": "model_input",
+   "size": 1183
+  },
+  {
+   "blob": "32aba23e02b6e9eeb286dff293bd4e9be18adcfb",
+   "mode": "100644",
+   "path": "Platform/common/versions/go.sum",
+   "role": "model_input",
+   "size": 19881
+  },
+  {
+   "blob": "0449340e5073c8467198907d02a9406a78ba4f35",
+   "mode": "100644",
+   "path": "Platform/common/versions/requirements.txt",
+   "role": "model_input",
+   "size": 1920
+  },
+  {
+   "blob": "d06bc55b21201ec750954db200b095f5cba2b8f0",
+   "mode": "100644",
+   "path": "Platform/lessons.tsv",
+   "role": "model_input",
+   "size": 1039
+  }
+ ],
+ "files_sha256": "9af224f54a6c14ec77c15c4b1afd7f5d4b7f8de0f9609100face5309ac6648ef",
+ "format": "m-passport/1",
+ "operator_sha256": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
+ "role": "model_input"
+}
