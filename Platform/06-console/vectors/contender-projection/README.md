@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/contender-p
 
 The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) N3 «/servers» «Contenders»). The participant is the cluster console (`/servers`
 `WorkerRow.name_conflict`, the series `<sub>_name_conflicts` of `/metrics`). The freshness of a mark is the [observation contract](../../../common/contracts/observation.md)
-«Freshness of a contender mark» (the boundary is the package [`contender-fresh`](../../../common/vectors/contender-fresh/README.md) (judge-only: checking material outside M)). The rows follow the text of the norm, the rule is there, not here.
+«Freshness of a contender mark» (the boundary is the package `contender-fresh`). The rows follow the text of the norm, the rule is there, not here.
 
 ## `cases.tsv`
 

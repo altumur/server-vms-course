@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand.
 
-A micromodule: the process console. What it norms and from where — the module design note `Platform/module-design.md` (judge-only: for people; outside M) (for people, not in the export), the table «Lessons».
+A micromodule: the process console. Its contracts are listed below.
 
 The layout of the catalogue (the English source on the canonical path, the Russian text for people in `ru/`). Chapter 6.7 describes the late layer of the cluster console. The console has no library contract — it is a process with an HTTP door:
 
@@ -34,7 +34,7 @@ ru/                                  for people, not in the export — the lectu
 
 ## What this lesson takes from common
 
-The files outside the lesson that the files of the model input of P/06 rely on (the norms of the chapters, the implementation instructions, the acceptance READMEs, the forms, [lifecycle](lifecycle.md), the OpenAPI contract, the vector READMEs), with the headings they use. All of them are in the model input except those marked judge-only. The norms of the chapters remain the canon; this list adds no requirement.
+The files outside the lesson that the files of the model input of P/06 rely on (the norms of the chapters, the implementation instructions, the acceptance READMEs, the forms, [lifecycle](lifecycle.md), the OpenAPI contract, the vector READMEs), with the headings they use. The narrow model input selects these public dependencies as whole files. The norms of the chapters remain the canon; this list adds no requirement.
 
 | File | Sections | Used for |
 |---|---|---|
@@ -73,6 +73,3 @@ The files outside the lesson that the files of the model input of P/06 rely on (
 | [`08-domain/acceptance/3/README.md`](../08-domain/acceptance/3/README.md), [`08-domain/acceptance/4/README.md`](../08-domain/acceptance/4/README.md), [`08-domain/acceptance/5/README.md`](../08-domain/acceptance/5/README.md), [`08-domain/acceptance/8/README.md`](../08-domain/acceptance/8/README.md), [`08-domain/acceptance/9/README.md`](../08-domain/acceptance/9/README.md) | the scenarios named by the norms and the acceptance READMEs of this lesson | the stand with grants and the domain stand of the late layer (chapters 6.1, 6.3, 6.7, 6.8) |
 | [`09-agent/README.md`](../09-agent/README.md), [`09-agent/spec/09.1-agent.norms.md`](../09-agent/spec/09.1-agent.norms.md), [`09-agent/data/member.outcomes.tsv`](../09-agent/data/member.outcomes.tsv) | [N1.4 The holder's answer and the write at home](../09-agent/spec/09.1-agent.norms.md#n14-the-holders-answer-and-the-write-at-home); [N1.5 Placement copies, applying edits and outcomes](../09-agent/spec/09.1-agent.norms.md#n15-placement-copies-applying-edits-and-outcomes); the row `console` of the outcome table | the agent of the member at the cluster console (chapters 6.7, 6.8); the refusal of an unreadable member row in [`forms/refusals.tsv`](forms/refusals.tsv) (chapter 6.7) |
 | [`10-domain-console/spec/10-domain-console.norms.md`](../10-domain-console/spec/10-domain-console.norms.md), [`10-domain-console/acceptance/README.md`](../10-domain-console/acceptance/README.md) | [N1.2 The read doors — it answers itself](../10-domain-console/spec/10-domain-console.norms.md#n12-the-read-doors--it-answers-itself); [Forwarding credential seams](../10-domain-console/acceptance/README.md#forwarding-credential-seams) | the doors of the domain console that the cluster console forwards (chapters 6.3, 6.7); `/session` of a proven identity (chapter 6.3) |
-| `common/vectors/sealing/README.md`, `common/vectors/may/README.md`, `common/vectors/peer/README.md`, `common/vectors/ask-sig/README.md`, `common/vectors/door-token/README.md`, `common/vectors/row-check/README.md`, `common/vectors/contender-fresh/README.md`, `common/vectors/family-read/06.tsv`, `common/vectors/secret-in/cases.tsv`, `common/vectors/secret-in/fields.yaml`, `common/vectors/log-mask/cases.tsv` (judge-only: checking vectors) | the named rows and scenarios | the vectors that the norms name for the requirements they check; no requirement is taken from them |
-| `03-worker/acceptance/2/README.md`, `03-worker/acceptance/4/README.md`, `03-worker/acceptance/6/README.md`, `04-controller/acceptance/README.md`, `05-resource/acceptance/README.md`, `02-installer/forms/finite-profile.cases.json` (judge-only: the acceptance of other lessons) | the named rows and scenarios | the scenarios and cases of other lessons that the acceptance READMEs of this lesson name; no requirement is taken from them |
-| `Platform/module-design.md` (judge-only: the module design note, for people) | «Lessons» | this page: what the lesson norms; no requirement is taken from it |

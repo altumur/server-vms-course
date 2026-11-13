@@ -2,7 +2,7 @@
 
 Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом.
 
-Микромодуль: процесс console. Что нормирует и откуда — записка модуля `Platform/module-design.md` (judge-only: для человека; вне M) (для человека, в выгрузку не входит), таблица «Уроки».
+Микромодуль: процесс console. Его договоры перечислены ниже.
 
 Раскладка каталога (английский источник — на каноническом пути, русский текст для человека — в `ru/`). Глава 6.7 описывает поздний слой консоли кластера. Договора библиотеки у консоли нет — это процесс с HTTP-дверью:
 
@@ -34,7 +34,7 @@ ru/                                  для человека, в выгрузк�
 
 ## Что урок берёт из common
 
-Файлы вне урока, на которые опираются файлы входа модели P/06 (нормы глав, инструкция реализации, README приёмки, формы, [жизненный цикл](lifecycle.md), контракт OpenAPI, README векторов), и их разделы. Все они входят во вход модели, кроме помеченных «только для судьи». Канон — нормы глав; этот перечень не добавляет требований.
+Файлы вне урока, на которые опираются файлы входа модели P/06 (нормы глав, инструкция реализации, README приёмки, формы, [жизненный цикл](lifecycle.md), контракт OpenAPI, README векторов), и их разделы. Узкий вход модели берёт эти публичные зависимости целыми файлами. Канон — нормы глав; этот перечень не добавляет требований.
 
 | Файл | Разделы | Для чего |
 |---|---|---|
@@ -73,6 +73,3 @@ ru/                                  для человека, в выгрузк�
 | [`08-domain/acceptance/3/README.md`](../../08-domain/ru/acceptance/3/README.md), [`08-domain/acceptance/4/README.md`](../../08-domain/ru/acceptance/4/README.md), [`08-domain/acceptance/5/README.md`](../../08-domain/ru/acceptance/5/README.md), [`08-domain/acceptance/8/README.md`](../../08-domain/ru/acceptance/8/README.md), [`08-domain/acceptance/9/README.md`](../../08-domain/ru/acceptance/9/README.md) | сценарии, которые называют нормы и README приёмки этого урока | стенд с грантами и стенд домена позднего слоя (главы 6.1, 6.3, 6.7, 6.8) |
 | [`09-agent/README.md`](../../09-agent/ru/README.md), [`09-agent/spec/09.1-agent.norms.md`](../../09-agent/ru/spec/09.1-agent.norms.md), [`09-agent/data/member.outcomes.tsv`](../../09-agent/data/member.outcomes.tsv) | [N1.4 Ответ держателя и запись дома](../../09-agent/ru/spec/09.1-agent.norms.md#n14-ответ-держателя-и-запись-дома); [N1.5 Копии назначений, применение правок и исходы](../../09-agent/ru/spec/09.1-agent.norms.md#n15-копии-назначений-применение-правок-и-исходы); строка `console` таблицы исходов | агент члена у консоли кластера (главы 6.7, 6.8); отказ по нечитаемой строке члена в [`forms/refusals.tsv`](../forms/refusals.tsv) (глава 6.7) |
 | [`10-domain-console/spec/10-domain-console.norms.md`](../../10-domain-console/ru/spec/10-domain-console.norms.md), [`10-domain-console/acceptance/README.md`](../../10-domain-console/ru/acceptance/README.md) | [N1.2 Двери чтения — отвечает сама](../../10-domain-console/ru/spec/10-domain-console.norms.md#n12-двери-чтения--отвечает-сама); [Швы удостоверения пересылки](../../10-domain-console/ru/acceptance/README.md#швы-удостоверения-пересылки) | двери консоли домена, которые пересылает консоль кластера (главы 6.3, 6.7); `/session` доказанной личности (глава 6.3) |
-| `common/vectors/sealing/README.md`, `common/vectors/may/README.md`, `common/vectors/peer/README.md`, `common/vectors/ask-sig/README.md`, `common/vectors/door-token/README.md`, `common/vectors/row-check/README.md`, `common/vectors/contender-fresh/README.md`, `common/vectors/family-read/06.tsv`, `common/vectors/secret-in/cases.tsv`, `common/vectors/secret-in/fields.yaml`, `common/vectors/log-mask/cases.tsv` (только для судьи: проверочные векторы) | названные строки и сценарии | векторы, которые нормы называют у проверяемых ими требований; требований из них не берётся |
-| `03-worker/acceptance/2/README.md`, `03-worker/acceptance/4/README.md`, `03-worker/acceptance/6/README.md`, `04-controller/acceptance/README.md`, `05-resource/acceptance/README.md`, `02-installer/forms/finite-profile.cases.json` (только для судьи: приёмка других уроков) | названные строки и сценарии | сценарии и случаи других уроков, которые называют README приёмки этого урока; требований из них не берётся |
-| `Platform/module-design.md` (только для судьи: записка модуля, для человека) | «Уроки» | эта страница: что нормирует урок; требований из неё не берётся |

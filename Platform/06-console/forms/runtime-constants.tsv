@@ -28,7 +28,7 @@ SWEEP_EVERY	30	s	P/06.4-R160	period/age of the request procedures; units seconds
 REAP_AFTER	60	s	P/06.4-R160	period/age of the request procedures; units seconds
 VERIFY_UNITS_MAX	256	count	P/06.7-R127	maximum units per second-person verification
 AT_ROUTE_WAIT	15	s	P/06.7-R074	worker route deadline at the target console for N1.6, replacing the common PASS_WAIT only on this route; a normative budget, not a measurement
-FORWARD_WAIT	20	s	P/06.7-R176	forwarding deadline only for N1.6 member reads; other forwarding keeps the common forwarding contract
+FORWARD_WAIT	20	s	P/06.7-R074	forwarding deadline only for N1.6 member reads; other forwarding keeps the common forwarding contract
 CLAIM_TAKEOVER_AFTER	30	s	P/06.1-R355	Minimum unchanged-pending observation before takeover; not a new total deadline
 DONE_ANSWER_KEEP	86400	s	P/06.1-R115	Minimum done-answer retention, independent of OPS_KEEP
 SWEEP_LIMIT	64	count	P/06.1-R137	Maximum digests in sweep for both reader and writer

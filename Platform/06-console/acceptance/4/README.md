@@ -54,8 +54,8 @@ with @any in the TSV is still bound to be a full mark of one of the three forms 
 ## Evidence outside TSV
 
 These are tasks for the implementation/stand, not checks already performed. Objects, events, the index, wait, streams, retention/holds and
-free space are in [the acceptance of P/05](../../../05-resource/acceptance/README.md) (judge-only: checking material outside M); the holder and the mark are in
-[the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md).
+free space are in the acceptance of P/05; the holder and the mark are in
+the acceptance of chapter 3.6.
 
 Reading of the branches and the schema confirm only the corresponding order/form. Timers,
 processes, file barriers, network breaks and the cryptographic identity require separate

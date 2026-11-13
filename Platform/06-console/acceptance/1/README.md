@@ -7,7 +7,7 @@ The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.nor
 
 The full forms of the answers are [the OpenAPI of the lesson](../../spec/06-console.api.openapi.yaml) (the paths `/{rows}`, `/{rows}/{id}`,
 `/{rows}/{id}/{blob_field}`, `/{table}`, `/{table}/{name}`). The state of the slot, the epoch and the lease is not checked here — that is
-the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (judge-only: checking material outside M).
+the acceptance of chapter P/03.2.
 
 ## Preparation and order: the units door
 
@@ -99,7 +99,7 @@ The status of all the checks of the README outside `scenarios.tsv` (judge-only: 
 with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.
 
-The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (judge-only: checking material outside M).
+The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of chapter P/03.2.
 
 ## Additional checks
 

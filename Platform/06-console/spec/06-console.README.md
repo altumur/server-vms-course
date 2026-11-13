@@ -4,6 +4,8 @@ This English text is the source; the Russian translation `ru/spec/06-console.REA
 
 This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/06-console.md` (for people, not in the export).
 
+Concrete scenarios, fixtures and expected answers are not supplied in M; the judge receives them separately. The public acceptance READMEs define their interfaces and scope; norms and public forms define the required behaviour.
+
 ## Task
 
 Implement the process of the cluster console in the language `<LANG>`: the units door, the write of secrets, the guard, requests and the merge
@@ -202,7 +204,7 @@ This is a suggested order, not a mandatory structure of the code.
 3. Implement the sealing by the sealing contract, the ring and the states of an absent/unreadable key per N1.2.
    An empty/damaged file does not turn on the development mode. The opening with a wrong
    key, kid, row and field — at the worker, chapter [P/03.5](../../03-worker/spec/03.5-worker.norms.md), and the vectors
-   [`common/vectors/sealing/`](../../common/vectors/sealing/README.md) (judge-only: checking material outside M); a visible prefix enc:v2 does not prove a successful encryption.
+   `sealing`; a visible prefix enc:v2 does not prove a successful encryption.
    Check the ring comments: # at the beginning of a kid is forbidden, inside it is admissible; a comment
    on a separate line, after a key entry — a refusal. In the diagnostics the actual kid is substituted.
 4. Embed the write into the existing POST/PUT of chapter 6.1. Before the POST claim check the constraint
