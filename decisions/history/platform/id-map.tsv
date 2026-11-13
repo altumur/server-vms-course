@@ -871,6 +871,8 @@ M11/11 sc. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows o
 - (new)	P/01.3-12	1.3	admin-only completed HTTP copy	ADR-0130 addendum (1)
 - (new)	P/01.3-13	1.3	immutable snapshot output and bounded orderly stop	ADR-0130 addendum (1)
 - (new)	P/01.3-14	1.3	interrupted import and recover, stop outcome, door waits and resources	ADR-0130 addendum (13)
+- (new)	P/01.3-15	1.3	ordinary read/write service after a crash within the declared-workload reopen goal	ADR-0130 addendum (24); P01.347
+- (new)	P/01.3-16	1.3	local catch-up and healthy return of a restarted group member within its goal	ADR-0130 addendum (24); P01.347
 - (new)	P/02.1-40	2.1	the paths of reading a manifest at a process go through load	split off P/02.1-12; ADR-0130 addendum (19) item 6
 - (new)	P/02.3-06	2.3	the life cycle of the cluster manifest	split off P/02.3-01; ADR-0130 addendum (19) item 6
 - (new)	P/02.3-07	2.3	a manifest change at a running process	split off P/02.3-03; ADR-0130 addendum (19) item 6

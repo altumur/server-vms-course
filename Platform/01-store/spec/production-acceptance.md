@@ -12,6 +12,29 @@ The implementation declares finite positive budgets for cache and eligible GC, o
 
 Scheduling uncertainty does not increase a protocol budget. Workload sizes and acceptance thresholds are not implementation constants, flags, profile fields or protocol values, and they set no lower bound on an interval. The implementation declares its own finite positive input-phase intervals under P/01.1-R147.
 
+## Performance goals
+
+The implementation MUST meet the goals below on its declared workload/resource envelope while preserving the durability and operation outcomes of the norms. The reference resource envelope for these goals is 12 usable CPU cores, 32 GiB RAM and ext4 storage; the declaration also identifies storage and workload characteristics. These are upper goals for observable work, not implementation constants, flags, profile fields, protocol timers or minimum waiting intervals.
+
+`WORKLOAD_ROWS` is 4096 rows. `WORKLOAD_ORDINARY` is 72 MiB of row `items` (mean row about 18 KiB); `WORKLOAD_WORST` is 2 GiB. Volume is the sum of canonical JCS byte lengths of the rows' `items` values; raw JSONL, request and storage bytes are separate. The largest row and connection limits use the defaults of [daemon-flags.tsv](../forms/daemon-flags.tsv). The sustained write rate is `REPORT_RATE` of the [P/08 form](../../08-domain/forms/runtime-constants.tsv), in writes per second. A fixed-size write keeps the same request body and operation mix when the stored volume changes.
+
+| Goal | Upper bound | Observable result |
+|---|---|---|
+| `BUDGET_WRITE_P99` | 250 ms | Write latency p99 at `REPORT_RATE`. |
+| `BUDGET_WRITE_GROWTH` | factor 2 | Fixed-size write persistence cost at `WORKLOAD_WORST` against `WORKLOAD_ORDINARY`, including foreground, background and checkpoint work. |
+| `BUDGET_WRITE_BYTES` | 5 body sizes | Store data/log/checkpoint bytes written per operation, including amortized checkpoint work. |
+| `BUDGET_IMPORT_ORDINARY` | 30 s | Complete import of `WORKLOAD_ORDINARY`. |
+| `BUDGET_IMPORT_WORST` | 15 min | Complete import of `WORKLOAD_WORST`. |
+| `BUDGET_IMPORT_GROWTH` | factor 13 | Complete import time for ten times the rows at the same row size. |
+| `BUDGET_BACKUP_ORDINARY` | 30 s | Complete backup of `WORKLOAD_ORDINARY`, including publication of the whole artifact. |
+| `BUDGET_BACKUP_WORST` | 10 min | Complete backup of `WORKLOAD_WORST`, including publication of the whole artifact. |
+| `BUDGET_BACKUP_STALL` | factor 2 | Read and write p99 with a stalled backup sink against the same load without a stalled sink. |
+| `BUDGET_STOP` | 15 s | Stop delivery through orderly exit and resource release. |
+| `BUDGET_REOPEN` | 30 s at `WORKLOAD_ORDINARY`; 15 min at `WORKLOAD_WORST` | Start after a crash through restored ordinary read/write service. |
+| `BUDGET_MEMBER_RETURN` | 60 s at `WORKLOAD_ORDINARY` | Start of a restarted group member through its healthy return. |
+
+Restored service preserves acknowledged rows, exact versions and required replay records and can complete ordinary reads and writes; a listening socket or successful status response alone is insufficient. A healthy returning member is again in its unchanged membership, has locally applied a confirmed group progress boundary fixed during its return, and can complete current reads and writes through that member while the group progresses beyond that boundary. Restart budgets assume readable current-format storage, a functioning medium and restored peer connectivity with a viable quorum for a group; they do not cover an active fault or an administrative `recover`/`import`/`restore` that is required by its own rules.
+
 ## Incremental write cost
 
 Persistence of a fixed-size ordinary write is incremental: it does not rewrite the unchanged full store per application. Foreground, background and checkpoint work all count towards persistence cost. Durability barriers remain enabled.

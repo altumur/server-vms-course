@@ -8,7 +8,7 @@ id	step	capability	binding	basis
 RUN-W01	-	storage	{"capability":"storage","object":"store_directory","medium":"ext4","phases":["effect","barrier"],"states":["before","after"]}	qualification/README.md#case-groups RUN-W01: storage-byte and syscall observer; barriers remain enabled
 RUN-W01	-	progress	{"capability":"progress","operation":"write","boundaries":[],"resources":["heap"],"latch":"none"}	qualification/README.md#case-groups RUN-W01: heap observer
 RUN-W02	-	storage	{"capability":"storage","object":"store_directory","medium":"ext4","phases":["effect","publication","barrier"],"states":["before","after","reopen"]}	qualification/README.md#case-groups RUN-W02: import and storage observer
-RUN-W03	-	clock	{"capability":"clock","mode":"observe","domains":[{"member":"srv-a","clock":"wall","boundary":"admission_time"}]}	qualification/README.md#case-groups RUN-W03: qualified clock; real waiting with an independent observer (P01.135 decision 3)
+RUN-W03	-	clock	{"capability":"clock","mode":"observe","domains":[{"member":"srv-a","clock":"wall","boundary":"admission_time"}]}	qualification/README.md#case-groups RUN-W03: qualified clock; real waiting with an independent observer (P01.135 decision 3); recovery slices use the judge-owned process-start, monotonic and public-state observer, and a group stand only for member return
 RUN-W04	-	progress	{"capability":"progress","operation":"write","boundaries":[],"resources":["memory"],"latch":"none"}	qualification/README.md#case-groups RUN-W04: independent memory, index and replay observation
 RUN-T01	-	-	-	qualification/README.md#case-groups RUN-T01: the duplex client and its observer are the judge's own
 RUN-T02	-	-	-	qualification/README.md#case-groups RUN-T02: the raw-stream observer is the judge's own
