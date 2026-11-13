@@ -20,6 +20,7 @@ Existing rules by topic; paths are from `common/`.
 | `command_failure` product commands, judge commands and abort | P/AC-R024, P/AC-R033, P/AC-R038 | `acceptance/seams.md`, `acceptance/stand.md` |
 | `until_form` read repetition and malformed directives | P/AC-R020, P/AC-R024 | `acceptance/README.md` |
 | `syscall_faults` syscall sweeps, checkpoint binding and independent evidence | P/AC-R055, P/AC-R056, P/AC-R057, P/AC-R058 | `acceptance/command-tables.md`, `acceptance/PROFILE.md`, `acceptance/forms/profile-substitutions.tsv` |
+| `qualification_controls` false-success barriers, publication loss and isolated reads | P/AC-R048, P/AC-R059, P/AC-R060 | `acceptance/command-tables.md`, `../01-store/qualification/stand-procedures.md` |
 | `object_spoil_order` explicit stop before object spoil | P/AC-R017, P/AC-R020 | `acceptance/README.md` |
 | `form_mutation` embedded forms, external observations, noise and findings | P/AC-R012, P/AC-R061, P/AC-R062, P/AC-R063, P/AC-R064, P/AC-R065, P/AC-R066 | `acceptance/command-tables.md`, `acceptance/PROFILE.md` |
 
@@ -217,6 +218,16 @@ The judge MUST enumerate the reachable syscall ordinals up to the scenario's K a
 
 The injector MUST observe the selected process group's storage syscalls independently, including all threads and operator descendants, and MUST qualify process/object identity, syscall normalization, ordinal and activation order before scoring. `@crash` MUST prove SIGKILL after the selected successful call and whole-group exit. `@io-error` MUST suppress the selected call and prove the selected EIO/ENOSPC return with no effect from that call. Expected injection overrides only that trigger's interrupted outcome; an unrelated crash or timeout remains `implementation`. Observation, injection, control or cleanup failure is `stand`; a malformed directive is `data`. A failed fault directive MUST abort dependent steps of that trial under R033. The judge MUST retain redacted syscall and kill/error evidence; an ACK, a log string or a helper's exit alone MUST NOT establish the fault. Process restart MUST NOT be reported as a physical power cut.
 
+### N3.5 Stand controls for qualification
+
+<!-- req: P/AC-R059 -->
+
+The qualifier MUST execute the Q-only [stand controls](../command-tables.md#stand-controls-for-qualification) without reading or modifying candidate code. It MUST prove false-success barrier suppression and qualified loss of unsynchronised storage independently; directory-barrier controls MUST distinguish successful rename, honest file barriers and suppressed parent-directory barriers. A process kill alone MUST NOT establish power loss. These deliberate violations qualify instruments on stand-owned fixtures; they MUST NOT create a new candidate durability obligation.
+
+<!-- req: P/AC-R060 -->
+
+A read control MUST establish the named member's two-way peer partition while keeping its public read door available, without assuming a private wire format. The history checker MUST reject a stale successful read invoked after a newer write completed on the live group, and MUST accept a lawful refusal or a legal completed read. The qualifier MUST activate correct and deliberately defective stand fixtures through the same observers and checker. Isolation alone MUST NOT count as a negative witness. It MUST retain activation/removal evidence and the complete real-time history separately from the candidate's history; missing capabilities and control failures retain N6.5, and dependent steps MUST NOT be scored after a failed control.
+
 ### N3.6 Form mutation step
 
 <!-- req: P/AC-R061 -->
@@ -374,7 +385,7 @@ An entry ends in one of these results:
 
 <!-- req: P/AC-R048 -->
 
-Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../seams.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. Named mutants of a candidate belong to the comparison of R028 and are not an input of the engine.
+Before it scores an entry the engine activates the controls of its own instruments: the negative controls of its capability in [the D7 bindings](../seams.md#d7-test-side-evidence-bindings) and those of the row of the group. A list of controls that were not activated qualifies nothing. The stand controls of R059 and R060 use external effects and stand-owned fixtures; qualification MUST NOT require named code mutants of a candidate. The historical comparison of R028 does not supply those controls or prove their execution.
 
 <!-- req: P/AC-R049 -->
 

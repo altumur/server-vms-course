@@ -99,8 +99,9 @@
     },
     "negative_controls": {
       "const": [
-        "lost_log_tail",
-        "read_without_fence"
+        "barrier_noop_power_loss",
+        "directory_barrier_noop_power_loss",
+        "isolated_read_stale_response"
       ]
     },
     "executor": {
@@ -111,7 +112,9 @@
         "path",
         "revision",
         "before_qualifier",
-        "after_qualifier"
+        "after_qualifier",
+        "scope",
+        "stand_controls"
       ],
       "properties": {
         "repository": {
@@ -128,6 +131,12 @@
         },
         "after_qualifier": {
           "const": "comparison_reference"
+        },
+        "scope": {
+          "const": "load_and_faults"
+        },
+        "stand_controls": {
+          "const": "requires_qualified_binding"
         }
       }
     },
