@@ -9,6 +9,7 @@ import hashlib
 import json
 import re
 import sys
+from decimal import Decimal, DecimalException
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -21,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 ENGINES = {"1.1": "runner/run.py", "1.3": "CALL seams"}
-CALLS = ("store-start-flags", "store-copy-floor")
+CALLS = ("store-start-flags", "store-copy-floor", "store-import-held")
 SCENARIO_COLUMNS = ("scenario", "step", "request", "expect")
 CALL = re.compile(r"CALL ([a-z][a-z0-9-]*) (.+)")
 # Transitional stage -> [(chapter, scenarios, seams)] only when that stage has no tests gates.
@@ -100,8 +101,12 @@ def step_blocker(chapter, step, seams, late, stage_n):
         m = CALL.fullmatch(req)
         if not m or m[1] not in CALLS:
             raise GenError(f"step {st}: unknown or malformed CALL")
-        strict_call_json(m[2], f"step {st} CALL input")
-        strict_call_json(exp, f"step {st} CALL expectation")
+        held = m[1] == "store-import-held"
+        args = strict_call_json(m[2], f"step {st} CALL input", exact_numbers=held)
+        expected = strict_call_json(exp, f"step {st} CALL expectation", exact_numbers=held)
+        if m[1] == "store-import-held":
+            held_call_shape(args, True, f"step {st} CALL input")
+            held_call_shape(expected, False, f"step {st} CALL expectation")
         return None
     if chapter != "1.1":
         return f"step {st}: chapter {chapter} supports CALL seams only"
@@ -126,7 +131,7 @@ def step_blocker(chapter, step, seams, late, stage_n):
     return None
 
 
-def strict_call_json(text, where):
+def strict_call_json(text, where, *, exact_numbers=False):
     def pairs(items):
         out = {}
         for key, value in items:
@@ -140,9 +145,25 @@ def strict_call_json(text, where):
 
     try:
         text.encode("utf-8")
-        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant, parse_int=str, parse_float=str)
-    except (ValueError, UnicodeError) as exc:
+        number = Decimal if exact_numbers else str
+        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant, parse_int=number, parse_float=number)
+    except (ValueError, UnicodeError, DecimalException) as exc:
         raise GenError(f"{where}: invalid JSON: {exc}") from None
+
+
+def held_call_shape(value, is_input, where):
+    """Closed observation ABI from acceptance/3/README.md; no expected values synthesized."""
+    fields = {"input", "interrupt_after_target_rows"} if is_input else {
+        "leader_read_unavailable", "follower_read_unavailable", "write_unavailable", "complete"}
+    if not isinstance(value, dict) or set(value) != fields:
+        raise GenError(f"{where}: store-import-held requires exactly {sorted(fields)}")
+    if is_input:
+        valid = (value["input"] == "backup_into_live_group" and
+                 isinstance(value["interrupt_after_target_rows"], Decimal) and value["interrupt_after_target_rows"] == 1)
+    else:
+        valid = all(type(v) is bool for v in value.values())
+    if not valid:
+        raise GenError(f"{where}: invalid store-import-held field type or input value")
 
 
 VALUE_MARK = re.compile(r"@[a-z]+")
@@ -492,6 +513,16 @@ import "encoding/json"
 // input/attempt. Observe the first new F1 items/index/generation_at and actual
 // writes/completeness. Never import over the live DataDir of c, never return a
 // prepared expected result. Use cfg.Now for the controlled wall clock.
+//
+// store-import-held: operate a real three-voter mTLS group with no business rows.
+// Back up at least two non-floor rows, import through the leader admin.sock, and
+// interrupt the operator after the first durable non-floor row before the next,
+// keeping the members running and the attempt unfinished. Observe ordinary role
+// socket reads on the leader AND follower and a leader write while held, then
+// continue the same input through the leader admin.sock. Report the four actual
+// booleans from acceptance/3/README.md: unavailable reads/writes while held and
+// complete backup rows/versions on both readers after continuation. Never derive
+// this observation from the expected seam result or use a test-only validator.
 func CallSeam(c Core, cfg Config, name string, args json.RawMessage) (json.RawMessage, error) {
     return nil, ErrNotImplemented
 }
@@ -739,15 +770,24 @@ func (sc *scenario) runCall(st step) (errs []string) {
 		}
 	}()
 	name, input, ok := strings.Cut(strings.TrimPrefix(st.request, "CALL "), " ")
-	if !ok || (name != "store-start-flags" && name != "store-copy-floor") {
+	if !ok || (name != "store-start-flags" && name != "store-copy-floor" && name != "store-import-held") {
 		return []string{"unknown or malformed CALL: " + name}
 	}
-	if _, err := decodeCall([]byte(input)); err != nil {
+	args, err := decodeCall([]byte(input))
+	if err != nil {
 		return []string{"CALL input is not strict JSON: " + err.Error()}
 	}
 	exp, err := decodeCall([]byte(st.expect))
 	if err != nil {
 		return []string{"CALL expectation is not strict JSON: " + err.Error()}
+	}
+	if name == "store-import-held" {
+		if err := heldCallShape(args, true); err != nil {
+			return []string{"CALL input: " + err.Error()}
+		}
+		if err := heldCallShape(exp, false); err != nil {
+			return []string{"CALL expectation: " + err.Error()}
+		}
 	}
 	actual, err := callSeam(sc.core, sc.cfg, name, json.RawMessage(input))
 	if err != nil {
@@ -756,6 +796,11 @@ func (sc *scenario) runCall(st step) (errs []string) {
 	act, err := decodeCall(actual)
 	if err != nil {
 		return []string{"CALL actual is not strict JSON: " + err.Error()}
+	}
+	if name == "store-import-held" {
+		if err := heldCallShape(act, false); err != nil {
+			return []string{"CALL actual: " + err.Error()}
+		}
 	}
 	trial := copyEnv(sc.env)
 	matchCall(exp, act, trial, "CALL", &errs)
@@ -772,6 +817,36 @@ func decodeCall(raw []byte) (any, error) {
 		return nil, fmt.Errorf("invalid JSON")
 	}
 	return decode(raw) // rejects duplicate keys and non-UTF8; keeps exact number lexemes
+}
+
+// The held port has a closed input/result ABI. This validates observations only;
+// matchCall still compares their values with the independently read seam.
+func heldCallShape(value any, input bool) error {
+	o, ok := value.(*object)
+	keys := []string{"leader_read_unavailable", "follower_read_unavailable", "write_unavailable", "complete"}
+	if input {
+		keys = []string{"input", "interrupt_after_target_rows"}
+	}
+	if !ok || len(o.keys) != len(keys) {
+		return fmt.Errorf("store-import-held requires exactly %v", keys)
+	}
+	for _, key := range keys {
+		if !o.has(key) {
+			return fmt.Errorf("store-import-held missing %s", key)
+		}
+		if !input {
+			if _, ok := o.get(key).(bool); !ok {
+				return fmt.Errorf("store-import-held %s must be boolean", key)
+			}
+		}
+	}
+	if input {
+		n, ok := o.get("interrupt_after_target_rows").(*number)
+		if o.get("input") != "backup_into_live_group" || !ok || n.rat() == nil || n.rat().Cmp(big.NewRat(1, 1)) != 0 {
+			return fmt.Errorf("invalid store-import-held input value or type")
+		}
+	}
+	return nil
 }
 
 func matchCall(exp, act any, env map[string]any, path string, out *[]string) {

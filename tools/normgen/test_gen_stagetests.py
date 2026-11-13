@@ -241,6 +241,78 @@ func TestCALLFailurePaths(t *testing.T) {
         if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatalf("non-strict expectation executed/passed: %q",raw)}
     }
 }
+
+func TestCALLHeldObservation(t *testing.T) {
+    prior:=callSeam
+    defer func(){callSeam=prior}()
+    sc:=&scenario{core:fakeCore{},cfg:coreadapter.Config{DataDir:t.TempDir()},env:map[string]any{}}
+    // Exercise the declared seam. Fixture observations are authored independently
+    // of its expectation, never copied from that expectation into the adapter.
+    st:=seams1_3["s11-import-held-reads"][0]
+    input:=`{"input":"backup_into_live_group","interrupt_after_target_rows":1}`
+    fields:=[]string{"leader_read_unavailable","follower_read_unavailable","write_unavailable","complete"}
+    observation:=func()map[string]any{return map[string]any{
+        "leader_read_unavailable":true,"follower_read_unavailable":true,
+        "write_unavailable":true,"complete":true,
+    }}
+    encode:=func(value any)json.RawMessage{raw,err:=json.Marshal(value);if err!=nil{t.Fatal(err)};return raw}
+    actual:=encode(observation())
+    called:=false
+    install:=func(){callSeam=func(c coreadapter.Core,cfg coreadapter.Config,name string,args json.RawMessage)(json.RawMessage,error){
+        called=true
+        if c!=sc.core || cfg.DataDir!=sc.cfg.DataDir || name!="store-import-held" || string(args)!=input {t.Fatal("held ABI/context/raw input changed")}
+        return actual,nil
+    }}
+    install()
+    if errs:=sc.runStep(st);len(errs)!=0 || !called {t.Fatal("independent held positive failed",errs)}
+    // JSON-schema integer semantics: equal mathematical integers may use an
+    // exponent or fractional token. The untouched raw input still reaches YOURS.
+    for _,number:=range []string{"1.0","1e0","1.000e+0"} {
+        input=`{"input":"backup_into_live_group","interrupt_after_target_rows":`+number+`}`
+        alt:=st;alt.request="CALL store-import-held "+input
+        if errs:=sc.runStep(alt);len(errs)!=0 {t.Fatal(number,errs)}
+    }
+    input=`{"input":"backup_into_live_group","interrupt_after_target_rows":1}`
+    for _,key:=range fields {
+        for _,bad:=range []any{false,nil,1,"true",[]any{true},map[string]any{}} {
+            value:=observation();value[key]=bad;actual=encode(value)
+            if errs:=sc.runStep(st);len(errs)==0 {t.Fatalf("held %s=%v passed",key,bad)}
+        }
+        value:=observation();delete(value,key);actual=encode(value)
+        if errs:=sc.runStep(st);len(errs)==0 {t.Fatal("held missing field passed",key)}
+    }
+    value:=observation();value["extra"]=true
+    for _,raw:=range []json.RawMessage{encode(value),[]byte(`{}`),[]byte(`[]`),[]byte(`true`),nil,[]byte(`not JSON`),[]byte(`{"complete":true} {}`)} {
+        actual=raw
+        if errs:=sc.runStep(st);len(errs)==0 {t.Fatalf("held invalid/extra/empty actual passed: %q",raw)}
+    }
+    actual=encode(observation())
+    for _,raw:=range []string{
+        `{}`,`[]`,`{"input":"other","interrupt_after_target_rows":1}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":true}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":"1"}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":1.5}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":0}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":2}`,
+        `{"input":"backup_into_live_group","interrupt_after_target_rows":1,"extra":true}`,
+    } {
+        called=false;bad:=st;bad.request="CALL store-import-held "+raw
+        if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatal("held invalid input executed/passed",raw,errs)}
+    }
+    for _,raw:=range []string{`{}`,`{"leader_read_unavailable":true,"follower_read_unavailable":true,"write_unavailable":true,"complete":1}`,string(encode(value))} {
+        called=false;bad:=st;bad.expect=raw
+        if errs:=sc.runStep(bad);len(errs)==0 || called {t.Fatal("held invalid expectation executed/passed",raw,errs)}
+    }
+    for name,fn:=range map[string]func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){
+        "stub":coreadapter.CallSeam,
+        "error":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){return actual,errors.New("held I/O failed")},
+        "panic":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){panic("held I/O panic")},
+        "notexecuted":func(coreadapter.Core,coreadapter.Config,string,json.RawMessage)(json.RawMessage,error){return nil,nil},
+    } {
+        callSeam=fn
+        if errs:=sc.runStep(st);len(errs)==0 {t.Fatal("held",name,"passed")}
+    }
+}
 '''
 
 
@@ -304,11 +376,7 @@ class StageTests(unittest.TestCase):
             selected = [r for r in inventory if r[0].startswith(chapter + "/seams.tsv/")]
             listed = {r[0].split("/")[2] for r in selected}
             if seams:                                    # Every declared seam scenario appears step-for-step in inventory.
-                selected_names = set()
-                for stage in STAGES.split("\n"):
-                    for match in re.finditer(r"tests:" + re.escape(chapter) + r":([^;:]+):seams", stage):
-                        selected_names.update(seams if match[1] == "*" else match[1].split(","))
-                self.assertEqual(listed, selected_names)
+                self.assertEqual(listed, set(seams))
                 self.assertEqual(len(selected), sum(len(seams[n]) for n in listed))
         stages = {r[1] for r in inventory}
         for line in STAGES.split("\n"):
@@ -332,16 +400,55 @@ class StageTests(unittest.TestCase):
 
     def test_required_call_seams_and_strict_form(self):
         _, inventory = gen_stagetests.build(ROOT)
-        required = {"s7-loopback-api-no-tls", "s8-loopback-join-needs-tls", "s9-public-api-needs-tls", "s10-import-floor-resume"}
+        required = {"s7-loopback-api-no-tls", "s8-loopback-join-needs-tls", "s9-public-api-needs-tls",
+                    "s10-import-floor-resume", "s11-import-held-reads"}
         calls = [r for r in inventory if r[0].startswith("1.3/seams.tsv/")]
         self.assertEqual({r[0].split("/")[2] for r in calls}, required)
-        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(calls), 5)       # OBSH.67 makes the declared held seam part of kit stage 11.
         self.assertTrue(all(r[3] == "translated" and r[2] != "-" for r in calls), calls)
         for request, expect in (("CALL unknown-port {}", "{}"), ('CALL store-copy-floor {"x":1,"x":2}', "{}"),
                                 ("CALL store-copy-floor NaN", "{}"), ("CALL store-copy-floor {} {}", "{}"),
                                 ("CALL store-copy-floor {}", '{"x":1,"x":2}'), ("CALL store-copy-floor {}", "{} }")):
             with self.subTest(request=request, expect=expect), self.assertRaises(gen_stagetests.GenError):
                 gen_stagetests.step_blocker("1.3", ("1", request, expect, 1), True, {}, 9)
+
+    def test_held_closed_source_forms(self):
+        args = {"input": "backup_into_live_group", "interrupt_after_target_rows": 1}
+        result = {key: True for key in ("leader_read_unavailable", "follower_read_unavailable",
+                                       "write_unavailable", "complete")}
+
+        def check(input_text, expect):
+            return gen_stagetests.step_blocker("1.3", ("1", "CALL store-import-held " + input_text, expect, 1),
+                                              True, {}, 11)
+
+        for number in ("1", "1.0", "1e0"):
+            self.assertIsNone(check('{"input":"backup_into_live_group","interrupt_after_target_rows":' + number + '}',
+                                    json.dumps(result)))
+        invalid_inputs = [[], {}, dict(args, extra=True), dict(args, input="other")]
+        invalid_inputs += [dict(args, interrupt_after_target_rows=value) for value in (True, "1", 0, 2, 1.5, None)]
+        invalid_inputs += [{key: value for key, value in args.items() if key != missing} for missing in args]
+        for value in invalid_inputs:
+            with self.subTest(input=value), self.assertRaises(gen_stagetests.GenError):
+                check(json.dumps(value), json.dumps(result))
+        invalid_results = [[], {}, dict(result, extra=True)]
+        for key in result:
+            invalid_results += [dict(result, **{key: value}) for value in (1, "true", None, {}, [])]
+            invalid_results.append({k: v for k, v in result.items() if k != key})
+            # Form validation must not synthesize a true observation: false is a
+            # valid boolean, whose value the runtime compares with the seam.
+            self.assertIsNone(check(json.dumps(args), json.dumps(dict(result, **{key: False}))))
+        for value in invalid_results:
+            with self.subTest(result=value), self.assertRaises(gen_stagetests.GenError):
+                check(json.dumps(args), json.dumps(value))
+        huge_exponent = '1e999999999999999999999999'
+        for port in ('store-start-flags', 'store-copy-floor'):
+            # The existing ports retain their strict-JSON parser and generic
+            # matcher contract. Decimal is confined to the new held source ABI.
+            request = 'CALL ' + port + ' {"number":' + huge_exponent + '}'
+            self.assertIsNone(gen_stagetests.step_blocker("1.3", ("1", request, '{}', 1), True, {}, 11))
+        with self.assertRaises(gen_stagetests.GenError):
+            check('{"input":"backup_into_live_group","interrupt_after_target_rows":' + huge_exponent + '}',
+                  json.dumps(result))
 
     def test_call_engine_contract_and_default_stub_failure(self):
         output_lesson.ready_outputs(profiles=output_lesson.PROFILES)
@@ -352,7 +459,7 @@ class StageTests(unittest.TestCase):
         done = subprocess.run(["go", "test", "-count=1", "-race", "-run", "^TestCALL", "./stagetests"],
                               cwd=mod, capture_output=True, text=True)
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
-        done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^TestDaemon(Doors|Copy)_", "./stagetests"],
+        done = subprocess.run(["go", "test", "-count=1", "-json", "-run", "^(TestDaemon(Doors|Copy)_|TestGroup_S11ImportHeldReads$)", "./stagetests"],
                               cwd=mod, capture_output=True, text=True)
         roots = {}
         for raw in done.stdout.splitlines():
@@ -360,7 +467,9 @@ class StageTests(unittest.TestCase):
             name = event.get("Test", "")
             if name and "/" not in name and event.get("Action") in ("pass", "fail", "skip"):
                 roots[name] = event["Action"]
-        self.assertEqual(len(roots), 4, done.stdout + done.stderr)
+        self.assertEqual(set(roots), {"TestDaemonDoors_S7LoopbackApiNoTls", "TestDaemonDoors_S8LoopbackJoinNeedsTls",
+                                     "TestDaemonDoors_S9PublicApiNeedsTls", "TestDaemonCopy_S10ImportFloorResume",
+                                     "TestGroup_S11ImportHeldReads"}, done.stdout + done.stderr)
         self.assertEqual(set(roots.values()), {"fail"}, done.stdout + done.stderr)
         self.assertIn("not implemented", done.stdout)
 
