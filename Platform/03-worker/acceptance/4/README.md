@@ -5,14 +5,14 @@ This English text is the source; the Russian translation `ru/acceptance/4/README
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.4-worker.norms.md`](../../spec/03.4-worker.norms.md) N5. The scenario was moved from the acceptance of
 M10/05 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Four scenarios / 36 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «heartbeat and a garbled row»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini).
+behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Five scenarios / 42 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «heartbeat and a garbled row»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini). Scenario 38-door-per-address has 6 steps.
 
-The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the steps of the scenario start. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24). Observation — rows through the store door P/01.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
+The scenario runs on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the steps of the scenario start. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Stand» of the common acceptance README (reconciliation of python and go M10/3–5, item 24). Observation — rows through the store door P/01.1 and the named heartbeat fields through the resource door. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, V2): step 8 sees that the placement is removed by the controller with a reason.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 37 — the shelf), the directives `@start`, `@sigterm`,
-`@sigkill`, `@spoil object` (sc. 36), `@until`; the body of an answer is compared by the mode `body` of the routing row of the target («Expectation» of the dictionary).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `store` (a role with read rights on `testsub/`), `console`, `resource`, `worker <name>` (sc. 38) and `admin` (sc. 37 — the shelf), the directives `@start`, `@sigterm`,
+`@sigkill`, `@hold` (sc. 38), `@spoil object` (sc. 36), `@until`; the body of an answer is compared by the mode `body` of the routing row of the target («Expectation» of the dictionary).
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 N1.2) — with full rights on `testsub/` and `testsub2/`.
@@ -32,6 +32,12 @@ analysis by the Specification):
   N3 «place» `release` — before the release of the slot; the order of the two writes is the edge `let-go-place` → `release-slot` of the seams
   `s1-stop-order` and `s3-stop-slow-unit` of [chapter 3.1](../1/seams.tsv)).
 
+## Door connection limit
+
+Scenario `38-door-per-address` (6 steps) starts the resource and worker `testsub2 t-1` with its declared `read/play` door; there is no controller or unit. The `worker t-1` door is the `url` of this process heartbeat, not the console door or a stand-in worker. `@hold worker t-1 8` confirms eight accepted sockets of that process group alive together. The next two HTTP requests from the same source address check `503 {"error":"busy"}` and the exact `Retry-After: 1` value.
+
+The [shared `@hold` rules](../../../common/acceptance/command-tables.md#held-connections) apply before and during both requests: loss of a held socket or independent observation gives `stand`, not an implementation mismatch. The 5 s header deadline remains in force; the stand does not extend it. The 32-connection limit is not checked by this scenario: the format has no source-address facility for several addresses, and from one address the limit of 8 acts first. The limit of 32 is checked by reading.
+
 ## Stand and steps of the chapter
 
 The boundaries of each scenario are those of the [testsub process stand](../../../common/acceptance/testsub-stand.md#testsub-process-stand), including the
@@ -43,7 +49,7 @@ stop of `@sigterm` and `@sigkill`: the step matches only after the whole process
 - `@start` confirms the start of the process, not its life; the readiness of the slot is checked by the following `@until`.
 
 The comparison is «Expectation» of the [dictionary](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) with the full form by
-door. The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes of a unit.
+door. The scenarios observe rows, HTTP answers and the named heartbeat fields through the resource door; sc. 38 also observes accepted worker sockets. They do not observe the actual external writes of a unit.
 
 ## SDK seams of the chapter
 

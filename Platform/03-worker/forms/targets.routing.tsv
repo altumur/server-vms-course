@@ -12,6 +12,7 @@ P/03.6/seams	seams	["Platform/03-worker/acceptance/6","Platform/common/data/test
 P/03.6/stand	run	["Platform/03-worker/acceptance/6","Platform/common/data/testsub"]	all	[]	[{"key":"store","owner":"01-store"},{"key":"manifest-put","owner":"02-installer"},{"key":"rights","owner":"02-installer"},{"key":"ring","owner":"02-installer"},{"key":"controller","owner":"04-controller"},{"key":"resource","owner":"05-resource"},{"key":"console","owner":"06-console"}]	subset	testsubworker	[]	derived:dep
 P/03.7/seams	run	["Platform/03-worker/acceptance/7","Platform/common/data/testsub"]	all	[]	[]	subset	-	[]	-
 P/03/vectors-creates-key	vector	["Platform/03-worker/vectors/creates-key"]	all	[]	[]	-	-	[]	-
+P/03/vectors-fetched	vector	["Platform/03-worker/vectors/fetched"]	all	[]	[]	-	-	[]	-
 P/03/vectors-door-token	vector	["Platform/common/vectors/door-token"]	all	[]	[]	-	-	[]	-
 P/03/vectors-group-of	vector	["Platform/common/vectors/group-of"]	all	[]	[]	-	-	[]	-
 P/03/vectors-said-id	vector	["Platform/common/vectors/said-id"]	all	[]	[]	-	-	[]	-
