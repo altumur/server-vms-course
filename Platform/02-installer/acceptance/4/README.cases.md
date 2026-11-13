@@ -23,4 +23,15 @@ Generic rules remain in [README.md](README.md). The following original passages 
 
 after the call. In `s12` (the default D) `identity/x` matches no row family: it is listed, code 1; the kept rows
 `domain/testsub/ledger` and `domain/testsub/badges/b1` (testsub `domain.kept: [ledger, badges/]`) are not listed. In `s13` (the given
-prefix `domain/`, only kept rows) nothing is walked: code 0. `s15` walks one row `domain/book-seal` of its family without the required `seed_secret`: unreadable by the outcome of the reader `admin`, code 1, `unknown` empty. The three seams are excluded from the judgement (README, «Secrets walk selection»).
+prefix `domain/`, only kept rows) nothing is walked: code 0. `s15` walks one row `domain/book-seal` of its family without the required `seed_secret`: unreadable by the outcome of the reader `admin`, code 1, `unknown` empty. The three seams are selected by stage 8 (README, «Secrets walk selection»).
+
+## Manifest get cases
+
+| Scenarios | Subject | Norm |
+|---|---|---|
+| `s17-get-hash-refused` | an installed row with shell and two static files; a wrong operator hash refuses with code 2, all former files and the absence of quarantine stay intact | P/02.4-R286, P/02.4-R292 |
+| `s18-get-row-absent` | an empty store; a missing manifest row refuses with code 2 without moving former YAML, shell or static files | P/02.4-R286, P/02.4-R292 |
+| `s19-get-replace-repeat` | replace former YAML, shell and two static files from the installed row, preserve an unrelated file, repeat with the same hash | P/02.4-R287, P/02.4-R292 |
+| `s20-get-quarantine` | install a revision with shell and two files, then one without shell and with one file; replace the former `.old` by the quarantined shell, preserve the removed and unrelated files, repeat | P/02.4-R287, P/02.4-R292 |
+
+The manifests and their neighbouring files are literal owned `@file` inputs. Their hashes are computed from the exact YAML bytes of those inputs. No fixture is read from the installed row to choose the operator hash. These cases cover the branches listed in README, not the remaining refusal, interruption or file-touch branches.
