@@ -1,0 +1,17 @@
+{
+  "b7_export_pair.py": {
+    "source": "530bf39aaf916e2fcfb2f9be16f32faaf01ae83d:decisions/inbox/2026-11-11-P02.52-операторы/operator/b7_export_pair.py",
+    "sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+    "byte_equal": true
+  },
+  "m_passport.py": {
+    "source": "/home/pilot/P01.360-evidence/operator/m_passport.py",
+    "sha256": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
+    "byte_equal": true
+  },
+  "check_m_passport.py": {
+    "source": "/home/pilot/P01.360-evidence/operator/check_m_passport.py",
+    "sha256": "4c23afc9fe7d0b68ca10681c01b6beef38faa3d6e57bef37f381ae003f8e6d4c",
+    "byte_equal": true
+  }
+}
