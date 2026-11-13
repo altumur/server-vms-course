@@ -1,0 +1,84 @@
+{
+  "task": "OBSH.57",
+  "source": {
+    "task_file": "/home/pilot/cammeta-sessions/tasks/OBSH.57.yaml",
+    "decision": "ADR-0133 addendum (102)",
+    "finding": "OBSH.56",
+    "base_commit": "6fca461e0cadf3eaeb89ee82bf9c4b12c9a1b92b",
+    "base_tree": "0b772ac68d2da32ae45f1711474d5c82e287913b"
+  },
+  "scope": "Только данные ссылок форм P/04, P/05, P/06, P/08 и происхождение правки в их журналах. Поведение, нормы, идентификаторы, коды, порядок и условия не менялись.",
+  "provenance": {
+    "classification": "была раньше",
+    "confirmed_snapshot": "6fca461e0cadf3eaeb89ee82bf9c4b12c9a1b92b",
+    "evidence": "form-refs-before.json: 32 ошибки по четырём урокам до любых правок",
+    "introducing_commit": "не установлено; история возникновения ошибки не исследовалась в этой механической задаче"
+  },
+  "change": {
+    "form_files": 4,
+    "rows": 27,
+    "cells": 32,
+    "judge_only_markers": 2,
+    "markdown_path_prefixes": 30,
+    "details": "changes.json",
+    "history": "32 строки в decisions/journal/platform/{04-controller,05-resource,06-console,08-domain}/history.tsv; адреса #row:9 и #row:name=<уникальное имя>, старые ячейки сохранены дословно"
+  },
+  "class_audit": {
+    "rule": "Относительная Markdown-ссылка открывается от каталога forms/. Ссылка формы из M на файл вне M требует явной пометки judge-only:.",
+    "coverage": "Все 91 исходная TSV-форма Platform/common и уроков, включая все 27 форм четырёх уроков: полный перечень в form-refs-after.json. Проверены все ячейки поддерживаемых проверяющим грамматик.",
+    "result": "32 ошибки четырёх уроков исправлены; число проверенных ссылок осталось 2030. Три прежние ошибки P/01 не входят в задачу и сохранены в all_errors без подавления."
+  },
+  "related_change_map": [
+    {
+      "item": "Перенос, переименование, ссылка или копия схемы",
+      "status": "изменено",
+      "evidence": "Исправлены лишь цели Markdown-ссылок и две пометки закрытых ссылок; канонические файлы, id и содержимое целей сохранены."
+    },
+    {
+      "item": "Русское зеркало",
+      "status": "согласовано",
+      "evidence": "У четырёх машинных TSV нет ru/forms/*.tsv. Формы читаются источником; новых зеркал не создано. en_mirror входит в обязательный check_spec."
+    },
+    {
+      "item": "Нормы, HTTP-контракт, приёмка, схемы и данные продукта",
+      "status": "не относится",
+      "evidence": "Ни правило поведения, ни схема, ни входы/ожидания приёмки не менялись; меняются только адреса уже названных норм и явная граница M."
+    },
+    {
+      "item": "Происхождение",
+      "status": "изменено",
+      "evidence": "Старые ячейки — в history.tsv с источником ADR/задач; тексты M новых вставок происхождения не получили."
+    },
+    {
+      "item": "Списки и счёты норм/сценариев",
+      "status": "согласовано",
+      "evidence": "Строки, столбцы, id и число норм/сценариев сохранены; обратная замена только ../spec/ и judge-only: восстанавливает исходные четыре формы побайтно."
+    }
+  ],
+  "validation": {
+    "form_refs_checker": {
+      "commit": "8e7457483660d3339beab46ccdbf38a7a204f03b",
+      "path": "skills/lesson-spec/scripts/form_refs.py",
+      "sha256": "9e08220c90aebc36c41497e06867b107275e509f324196946a79b61c0fece49a",
+      "method": "git show точного коммита во временный каталог с автоматическим удалением; run(Check(root, scope=\"platform\")); выполнены все формы, отбор четырёх уроков только для критерия выхода",
+      "command": "/home/pilot/venv-spec/bin/python decisions/inbox/2026-11-13-OBSH.57-доказательства/form-refs.py --output <файл.json>",
+      "before_selected_errors": 32,
+      "after_selected_errors": 0,
+      "other_errors_before_and_after": 3,
+      "exit_code": 0
+    },
+    "check_spec": {
+      "command": "/home/pilot/venv-spec/bin/python skills/lesson-spec/scripts/check_spec.py --scope platform",
+      "source_sha256": "bf8c34faf66a59caeb9f37b33f3be4f10d326e6132d93d5bd5522c15b28d1e5d",
+      "result_file": "check-spec-platform-result.json",
+      "log": "check-spec-platform.log",
+      "state": "Результат на рабочем дереве до фиксации; родитель отдельно выполнит проверку на чистом точном HEAD сдачи.",
+      "exit_code": 0,
+      "outcome": "PASS structural checks only; semantic review and implementation acceptance remain separate"
+    },
+    "diff_check": "git diff --check: 0",
+    "limits": "Механическая проверка адресов, согласованности форм и зеркал. Она не доказывает полноту норм и поведение реализации. Пробы, генерации и кандидаты не запускались.",
+    "history_addresses": "Все 32 адреса истории проверены _tsv_problem; все 4 журнала строго дописаны к байтам исходного HEAD."
+  },
+  "open": "В этом участке открытых нарушений проверяемого класса не осталось. P/01 — отдельная задача P01.298 по note исходного задания."
+}

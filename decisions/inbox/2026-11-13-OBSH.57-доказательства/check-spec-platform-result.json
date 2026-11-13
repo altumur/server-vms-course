@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/home/pilot/venv-spec/bin/python",
+    "skills/lesson-spec/scripts/check_spec.py",
+    "--scope",
+    "platform"
+  ],
+  "cwd": "/home/pilot/wt-task-OBSH.57",
+  "exit_code": 0
+}
