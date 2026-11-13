@@ -52,3 +52,64 @@ P/09.2-R010	spec/09.2-agent.norms.md#N5	ADR-0083 addendum (9)	2026-10-20	 (ADR-0
 -	spec/09.2-agent.norms.md#readiness-checklist	review of lesson P09 under ADR-0127 (decisions/journal/platform/09-agent/2026-11-06-review-p09.md), finding M1	2026-11-06	M1
 P/09.2-R154	spec/09.2-agent.norms.md#N4	ADR-0125 addendum (5) item 5	2026-11-05	preserves
 P/09.2-R154	spec/09.2-agent.norms.md#N4	ADR-0125 addendum (5) item 5	2026-11-05	original 
+P/09.2-R014	spec/09.2-agent.norms.md#N1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Numeric literals are [runtime-constants.tsv](../forms/runtime-constants.tsv).
+P/09.2-R015	spec/09.2-agent.norms.md#N1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The scope of `daemon-flags.tsv` and `runtime-constants.tsv` and the inherited setting contracts are [the forms grammar](../forms/README.md).
+P/09.2-R016	spec/09.2-agent.norms.md#N1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	**Time.** The chapter writes no rows and no objects with time.
+P/09.2-R022	spec/09.2-agent.norms.md#N1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The relay door is the class `signed` by TLS with the server certificate of the role `domainagent` (N1.6).
+P/09.2-R030	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`relay` — a relay is admitted as any member (P/08.3), with its own key and its own report.
+P/09.2-R032	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`door` — the variable `RELAY` is absent or empty — there is no door.
+P/09.2-R033	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`door` — `RELAY` has another value — the agent does not start, exit code 2 — a refusal of the setting, P/02.4 N1.1\ncommon.
+P/09.2-R034	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`door` — the relay's agent opens the door with `RELAY_HOST` (default 0.0.0.0) and `RELAY_PORT` (default 8446).
+P/09.2-R037	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`door` — a member behind a relay uses the addresses of `RELAY_URL` in order: a connection refusal or 503 standby — the next one.
+P/09.2-R038	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`door` — a member behind a relay gets `RELAY_MEMBER` — one, the name of the relay member.
+P/09.2-R040	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`not_author` — the secret part of the holder's answer (the envelope `m1`, P/08.3 N1.5) the relay cannot open.
+P/09.2-R043	spec/09.2-agent.norms.md#N1.1	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`one_hop` — the holder is nobody's relay.
+P/09.2-R049	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`knocks` — the holder checks the signature of a knock by the key that the body presented (chapter 9.1 N1.2 key), over\n`POST /api/member/<name>` and the body.
+P/09.2-R051	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`knocks` — a knock with an invalid signature or of a member, except an entry without key with revoked_keys (P/08.3 N3 «admit a member» step 1), is a skip.
+P/09.2-R054	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`collecting` — while the relay keeps the word `collecting`, the relay door answers a stranger with a valid signature 403 with `send_row: true`.
+P/09.2-R055	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`collecting` — while the relay keeps the word `collecting`, a body with `row` goes as a knock.
+P/09.2-R058	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`relayed` of the answer — `rev` is for the road of this relay.
+P/09.2-R061	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`refused` — `{reason: send_row}` — the gathering goes on, and the member is not in the list or has another key.
+P/09.2-R062	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`refused` — on `{reason: send_row}` the relay door answers the member 403 with `send_row: true`.
+P/09.2-R063	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`refused` — knocks are not here, in `refused`.
+P/09.2-R065	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`keys` — a revoked key of a member of `relay_for` is an empty string.
+P/09.2-R067	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`hold` — the answer of the batch did not make it within a pass plus FORWARD_WAIT — an answer from memory to the POST of the accepted member.
+P/09.2-R068	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`hold` — the answer of the batch did not make it and there is no answer to this member in memory — 503 «`the relay has nothing from the domain for <member> yet`»: N2, N3 — the second case of this text, an accepted member with a new body before its first answer.
+P/09.2-R070	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`rows` — the row of the holder's answer to `GET /api/members/<member>/<part>` is signed and is put into memory.
+P/09.2-R071	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`rows` — the holder did not answer `GET /api/members/<member>/<part>` — the row from memory.
+P/09.2-R072	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`rows` — the holder did not answer and there is no row in memory — the same 503 as in `hold`.
+P/09.2-R074	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`domain_age` — a new carry for another member or an empty batch does not reset the `domain_age` of a cached carry.
+P/09.2-R076	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Every response of a cached carry computes `domain_age` from the origin of that cached carry, including GET and the POST hold fallback.
+P/09.2-R077	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	A successful empty batch, a carry for another member, retries and `heard` do not refresh the origin of a cached carry.
+P/09.2-R078	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	A new carry of the same member replaces both the content and the origin of its cached carry, even if its content compares equal; it is a genuinely new confirmed holder response.
+P/09.2-R081	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	An old cache cannot renew expired grants.
+P/09.2-R085	spec/09.2-agent.norms.md#N1.4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The holder on the batch is [P/08.3](../../08-domain/spec/08.3-domain.norms.md) N3 «the holder on `POST /api/relay/<relay>`».
+P/09.2-R087	spec/09.2-agent.norms.md#N1.6	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The client of a member behind a relay expects from the relay door the server role `domainagent` (the role certificate contract `peer_role`).
+P/09.2-R088	spec/09.2-agent.norms.md#N1.6	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The relay door does not request a client certificate (the role\ncertificate contract `unasked`).
+P/09.2-R095	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The relay door does not request a client certificate.
+P/09.2-R096	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	At the relay door the identity is the member's signature.
+P/09.2-R098	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`BackupPartRevision` remains a required query `rev` on GET `/api/backup-part/{member}/{part}` as at the owner; no revision or default is inferred.
+P/09.2-R101	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	In the body of a refusal of the relay door normative are the status and `reason`.
+P/09.2-R102	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	In the body of a refusal of the relay door `detail` is required and is the words of the implementation, except two texts, 403 «… does not reach the domain through this relay …» and\n503 «the relay has nothing from the domain for \<member> yet», which the norm names.
+P/09.2-R104	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`reason` of a refusal of the relay door is, for 401, a word of the agent signature contract.
+P/09.2-R105	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	`reason` of a refusal of the relay door — for the early 400 of a chunked body and the early 413 of the body (both before «accept»), for 405\nand for both 403 there is none.
+P/09.2-R109	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	At the relay door the mark of the member gets the hash of the body (`request_sha256`) at\nevery write — both of a generation and of `heard` (the report reception contract, steps 2 and 6).
+P/09.2-R110	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	At the relay door an exact repeat of the last body by the same road is\n`same`, the answer is a copy (item 3).
+P/09.2-R114	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The holder's codes of the token door are carried by the OpenAPI of the process `domain` (the operation\n`holderToken`).
+P/09.2-R115	spec/09.2-agent.norms.md#N2	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The OpenAPI of the lesson carries only the own codes of the relay door.
+P/09.2-R117	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 2, for each member: the base of the delta is the one confirmed by this road (chapter 9.1 N1.2 change).
+P/09.2-R118	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 2, for each member: all the fields of the publication outside the delta (`stale`,\n`key`, `keys_rev`, `pinned` and the fields of later lessons: `outcomes`, `tls_ca`, `tls_ca_certs`, `members_rev`, `sign_failures`, any\nfollowing ones) — from the last publication of the member as they are: a rule, not a list.
+P/09.2-R120	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 3: the knocks — in the first one of the batches.
+P/09.2-R124	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 4, on an answer: `refused` with `reason: busy` — `up` is not forgotten.
+P/09.2-R125	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 4, on an answer: `refused` with `reason: busy` — a repeat after `retry_in`.
+P/09.2-R126	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 4, on an answer: `refused` with `reason: busy` — a new arrival replaces the publication.
+P/09.2-R129	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 4, on an answer: `relay_for` at a change — the row `domain/relay-for` `{rev, members}`: the relay's workers see whom it leads.
+P/09.2-R134	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 5, no answer: the knocks — drop.
+P/09.2-R135	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	Step 5, no answer: do not change `heard`.
+P/09.2-R140	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	While `relay_for` does not name a member, its report at the relay door with a valid\nsignature by its own key — a knock in memory and 403 (N2).
+P/09.2-R141	spec/09.2-agent.norms.md#N3	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	While `relay_for` does not name a member, its report at the relay door with an invalid signature — 401.
+P/09.2-R155	spec/09.2-agent.norms.md#N4	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The closed metadata of `forms/refusals.tsv` does not turn peer or stored-edit outcomes into new HTTP responses.
+P/09.2-R159	spec/09.2-agent.norms.md#N5	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	There are no inputs in `acceptance/2/`.
+P/09.2-R167	spec/09.2-agent.norms.md#N5	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The TLS stand ([`common/acceptance/tls/`](../../common/acceptance/tls/README.md)) has no row of the relay door —\nthe chapter gets scenarios when the stand names the relay door.
+P/09.2-R169	spec/09.2-agent.norms.md#N5	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The port/fixture contract of the machine-readable kit assistance is in [forms/README.md](../forms/README.md).
+P/09.2-R170	spec/09.2-agent.norms.md#N5	ADR-0133 (93), (94), (98); P09.F1	2026-11-13	The machine-readable kit assistance does not replace the ordinary scenarios, vectors, neighbours or reading of N5.
