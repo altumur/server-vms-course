@@ -16,7 +16,7 @@ Existing rules by topic; paths are from `common/`.
 | `source_binding` Source seam normalization and missing dispatch | P/AC-R030, P/AC-R050 | `acceptance/seams.md` |
 | `scope_and_directives` selected targets and known directive support | P/AC-R020, P/AC-R024, P/AC-R029 | `acceptance/README.md`, `acceptance/domain-stand.md`, `acceptance/pass/README.md` |
 | `production_binding` missing qualification inputs and instrument failures | P/AC-R024, P/AC-R047, P/AC-R050 | `acceptance/seams.md`, `../01-store/forms/production.tsv` |
-| `preflight_and_abort` scenario preflight and preparation abort | P/AC-R015, P/AC-R030, P/AC-R033 | `acceptance/PROFILE.md` |
+| `preflight_and_abort` scenario preflight and preparation abort | P/AC-R015, P/AC-R030, P/AC-R033, P/AC-R054 | `acceptance/PROFILE.md`, `acceptance/seams.md` |
 | `command_failure` product commands, judge commands and abort | P/AC-R024, P/AC-R033, P/AC-R038 | `acceptance/seams.md`, `acceptance/stand.md` |
 | `until_form` read repetition and malformed directives | P/AC-R020, P/AC-R024 | `acceptance/README.md` |
 | `object_spoil_order` explicit stop before object spoil | P/AC-R017, P/AC-R020 | `acceptance/README.md` |
@@ -142,6 +142,10 @@ Before it starts any process the judge lists the plan: all selected targets, for
 <!-- req: P/AC-R016 -->
 
 The judge starts stand processes as the [layout by processes](../stand.md#layout-by-processes-stage-c), the [stand without root](../stand.md#stand-without-root) and the rows of the dictionary say. The readiness of a store is the single rule of «Role sockets» in that section; a directive that waits for a store applies this rule. Its term is in the table «Terms of the stand» of that section.
+
+<!-- req: P/AC-R054 -->
+
+For a seam whose owner requires a store and installed manifests, the judge applies [store and installed manifest preparation](../seams.md#store-and-installed-manifest-preparation): a fresh P/01 store with the full-rights door, only the owner's declared manifests installed by the ordinary `manifest put`, and exactly the supplied raw rows written with `cas ""`. It keeps one store for the scenario and removes its state and processes at the boundary. Preparation is not the tested call and its failure cannot satisfy that call; dependent unrun steps are `not_executed` under the preparation failure rules. Missing test-side bindings retain R030 and R050.
 
 <!-- req: P/AC-R017 -->
 
@@ -351,7 +355,7 @@ An implementation conforms to the lesson when every norm holds; a norm id `P/AC-
 - [ ] **P/AC-04** the report and the secrets (N1.5) — by reading and the comparison of reports
 - [ ] **P/AC-05** the inputs and the interfaces (N2) — by reading, and the stub of N5
 - [ ] **P/AC-06** the dry listing (N3.1) — N5
-- [ ] **P/AC-07** the life cycle: readiness, stop of a whole group, teardown, cleanup (N3.2) — stub of N5 for the calls, by reading for the rest
+- [ ] **P/AC-07** the life cycle: readiness, source-declared seam store and manifest preparation, stop of a whole group, teardown, cleanup (N3.2) — stub of N5 for the calls, by reading for the rest
 - [ ] **P/AC-08** the declared environment (N3.3) — by reading of the run record
 - [ ] **P/AC-09** the failure classes (N4) — by reading, and the comparison of verdicts
 - [ ] **P/AC-10** the checks of N5 are present and pass — N5
