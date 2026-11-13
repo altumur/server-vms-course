@@ -1,0 +1,352 @@
+{
+  "base": "6fca461e0cadf3eaeb89ee82bf9c4b12c9a1b92b",
+  "base_tree": "0b772ac68d2da32ae45f1711474d5c82e287913b",
+  "files": [
+    {
+      "file": "Platform/04-controller/forms/stages.tsv",
+      "changed_rows": [
+        26
+      ],
+      "sha256_before": "a06b14367c7f09abc711af87d151ca002bd359db8fb22af139f9170b4d5afa7f",
+      "sha256_after": "79153beeccb9fb8f28cf4b5584bf551ee7ed8890d75048de4359f5bca8adfb92"
+    },
+    {
+      "file": "Platform/05-resource/forms/stages.tsv",
+      "changed_rows": [
+        14
+      ],
+      "sha256_before": "aeeb0b4ed812e8bb273a67c0a352abe7252b43089a40852a92bce5be4471447b",
+      "sha256_after": "bd36907beca321a914ac13b5af3424afc08713469d86ac5b530bd0e69eab3ab8"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "changed_rows": [
+        156,
+        157,
+        158,
+        159,
+        235,
+        236,
+        237,
+        238,
+        239
+      ],
+      "sha256_before": "d4ab604b4a9e6d205c00ee91ba2cc69b6695cb99f0690069539a1142a2801fec",
+      "sha256_after": "e9bf2b05ddef679f16a24b23903e57970568e10fac60aa7365620e33e7c74aed"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "changed_rows": [
+        54,
+        55,
+        96,
+        97,
+        98,
+        99,
+        100,
+        123,
+        156,
+        157,
+        159,
+        160,
+        176,
+        177,
+        178,
+        183
+      ],
+      "sha256_before": "f51e231e903e6710b62090bf7cb9ead1974e4be799c1701ea9c041546139374f",
+      "sha256_after": "53d9c5d77e00705cc77e3b8a8eb0c150e936047e61c204af2d81605948939c2c"
+    }
+  ],
+  "changed_cells": [
+    {
+      "file": "Platform/04-controller/forms/stages.tsv",
+      "line_before": 26,
+      "column": "norms",
+      "row": "9",
+      "address": "forms/stages.tsv#row:9",
+      "before": "P/04 N5; P/04 N3 controller start; acceptance/README.md; common/acceptance/README.md; P/04-02; P/04-23",
+      "after": "P/04 N5; P/04 N3 controller start; (judge-only: acceptance/README.md); common/acceptance/README.md; P/04-02; P/04-23"
+    },
+    {
+      "file": "Platform/05-resource/forms/stages.tsv",
+      "line_before": 14,
+      "column": "norms",
+      "row": "9",
+      "address": "forms/stages.tsv#row:9",
+      "before": "P/05 N5; acceptance/README.md; common/vectors/consumers.tsv",
+      "after": "P/05 N5; (judge-only: acceptance/README.md); common/vectors/consumers.tsv"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 156,
+      "column": "diagnostic",
+      "row": "name=c65_013_404_1",
+      "address": "forms/refusals.tsv#row:name=c65_013_404_1",
+      "before": "[chapter 6.7](06.7-console.norms.md) N4 `{error, detail}`",
+      "after": "[chapter 6.7](../spec/06.7-console.norms.md) N4 `{error, detail}`"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 157,
+      "column": "diagnostic",
+      "row": "name=c65_013_400_1",
+      "address": "forms/refusals.tsv#row:name=c65_013_400_1",
+      "before": "[chapter 6.7](06.7-console.norms.md) N4 `{error, detail}`",
+      "after": "[chapter 6.7](../spec/06.7-console.norms.md) N4 `{error, detail}`"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 158,
+      "column": "diagnostic",
+      "row": "name=c65_013_502_1",
+      "address": "forms/refusals.tsv#row:name=c65_013_502_1",
+      "before": "[chapter 6.7](06.7-console.norms.md) N4 `{error, detail}`",
+      "after": "[chapter 6.7](../spec/06.7-console.norms.md) N4 `{error, detail}`"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 159,
+      "column": "diagnostic",
+      "row": "name=c65_013_503_1",
+      "address": "forms/refusals.tsv#row:name=c65_013_503_1",
+      "before": "[chapter 6.7](06.7-console.norms.md) N4 `{error, detail}`",
+      "after": "[chapter 6.7](../spec/06.7-console.norms.md) N4 `{error, detail}`"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 235,
+      "column": "word",
+      "row": "name=c67_017_413_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_413_1",
+      "before": "([chapter 6.5](06.5-console.norms.md) N4)",
+      "after": "([chapter 6.5](../spec/06.5-console.norms.md) N4)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 235,
+      "column": "cause",
+      "row": "name=c67_017_413_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_413_1",
+      "before": "the body of the forwarding — the limits of the console of [chapter 6.3](06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)",
+      "after": "the body of the forwarding — the limits of the console of [chapter 6.3](../spec/06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 236,
+      "column": "word",
+      "row": "name=c67_017_400_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_400_1",
+      "before": "([chapter 6.5](06.5-console.norms.md) N4)",
+      "after": "([chapter 6.5](../spec/06.5-console.norms.md) N4)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 236,
+      "column": "cause",
+      "row": "name=c67_017_400_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_400_1",
+      "before": "the body of the forwarding — the limits of the console of [chapter 6.3](06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)",
+      "after": "the body of the forwarding — the limits of the console of [chapter 6.3](../spec/06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 237,
+      "column": "word",
+      "row": "name=c67_017_408_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_408_1",
+      "before": "([chapter 6.5](06.5-console.norms.md) N4)",
+      "after": "([chapter 6.5](../spec/06.5-console.norms.md) N4)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 237,
+      "column": "cause",
+      "row": "name=c67_017_408_1",
+      "address": "forms/refusals.tsv#row:name=c67_017_408_1",
+      "before": "the body of the forwarding — the limits of the console of [chapter 6.3](06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)",
+      "after": "the body of the forwarding — the limits of the console of [chapter 6.3](../spec/06.3-console.norms.md) N1.3 `body` (step 2 of «forward»)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 238,
+      "column": "cause",
+      "row": "name=c67_018_401_1",
+      "address": "forms/refusals.tsv#row:name=c67_018_401_1",
+      "before": "at the cluster console (the form of [chapter 6.3](06.3-console.norms.md)): no token or it did not pass; `may` — deny; the break-glass password did not match (401); no emergency account (403, `detail` — «no emergency account: …»)",
+      "after": "at the cluster console (the form of [chapter 6.3](../spec/06.3-console.norms.md)): no token or it did not pass; `may` — deny; the break-glass password did not match (401); no emergency account (403, `detail` — «no emergency account: …»)"
+    },
+    {
+      "file": "Platform/06-console/forms/refusals.tsv",
+      "line_before": 239,
+      "column": "cause",
+      "row": "name=c67_018_403_1",
+      "address": "forms/refusals.tsv#row:name=c67_018_403_1",
+      "before": "at the cluster console (the form of [chapter 6.3](06.3-console.norms.md)): no token or it did not pass; `may` — deny; the break-glass password did not match (401); no emergency account (403, `detail` — «no emergency account: …»)",
+      "after": "at the cluster console (the form of [chapter 6.3](../spec/06.3-console.norms.md)): no token or it did not pass; `may` — deny; the break-glass password did not match (401); no emergency account (403, `detail` — «no emergency account: …»)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 54,
+      "column": "outcome",
+      "row": "name=c83_017_409_1",
+      "address": "forms/refusals.tsv#row:name=c83_017_409_1",
+      "before": "409 `deposed` with `holder`, 503 `standby` — [P/08.0 N4](08.0-domain.norms.md)",
+      "after": "409 `deposed` with `holder`, 503 `standby` — [P/08.0 N4](../spec/08.0-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 54,
+      "column": "caller",
+      "row": "name=c83_017_409_1",
+      "address": "forms/refusals.tsv#row:name=c83_017_409_1",
+      "before": "[P/08.0 N4](08.0-domain.norms.md)",
+      "after": "[P/08.0 N4](../spec/08.0-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 55,
+      "column": "outcome",
+      "row": "name=c83_017_503_1",
+      "address": "forms/refusals.tsv#row:name=c83_017_503_1",
+      "before": "409 `deposed` with `holder`, 503 `standby` — [P/08.0 N4](08.0-domain.norms.md)",
+      "after": "409 `deposed` with `holder`, 503 `standby` — [P/08.0 N4](../spec/08.0-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 55,
+      "column": "caller",
+      "row": "name=c83_017_503_1",
+      "address": "forms/refusals.tsv#row:name=c83_017_503_1",
+      "before": "[P/08.0 N4](08.0-domain.norms.md)",
+      "after": "[P/08.0 N4](../spec/08.0-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 96,
+      "column": "cause",
+      "row": "name=c84_023_400_1",
+      "address": "forms/refusals.tsv#row:name=c84_023_400_1",
+      "before": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](08.0-domain.norms.md) N1.9, N4)",
+      "after": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](../spec/08.0-domain.norms.md) N1.9, N4)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 97,
+      "column": "cause",
+      "row": "name=c84_023_412_1",
+      "address": "forms/refusals.tsv#row:name=c84_023_412_1",
+      "before": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](08.0-domain.norms.md) N1.9, N4)",
+      "after": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](../spec/08.0-domain.norms.md) N1.9, N4)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 98,
+      "column": "cause",
+      "row": "name=c84_023_409_1",
+      "address": "forms/refusals.tsv#row:name=c84_023_409_1",
+      "before": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](08.0-domain.norms.md) N1.9, N4)",
+      "after": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](../spec/08.0-domain.norms.md) N1.9, N4)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 99,
+      "column": "cause",
+      "row": "name=c84_023_422_1",
+      "address": "forms/refusals.tsv#row:name=c84_023_422_1",
+      "before": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](08.0-domain.norms.md) N1.9, N4)",
+      "after": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](../spec/08.0-domain.norms.md) N1.9, N4)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 100,
+      "column": "cause",
+      "row": "name=c84_023_413_1",
+      "address": "forms/refusals.tsv#row:name=c84_023_413_1",
+      "before": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](08.0-domain.norms.md) N1.9, N4)",
+      "after": "the headers, the condition and the repeat memory of the write doors ([chapter 8.0](../spec/08.0-domain.norms.md) N1.9, N4)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 123,
+      "column": "caller",
+      "row": "name=c86_003_409_1",
+      "address": "forms/refusals.tsv#row:name=c86_003_409_1",
+      "before": "admit the member ([chapter 8.3](08.3-domain.norms.md))",
+      "after": "admit the member ([chapter 8.3](../spec/08.3-domain.norms.md))"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 156,
+      "column": "cause",
+      "row": "name=c87_015_409_1",
+      "address": "forms/refusals.tsv#row:name=c87_015_409_1",
+      "before": "the process is deposed ([P/08.8 N1.6](08.8-domain.norms.md)), the body with `holder`",
+      "after": "the process is deposed ([P/08.8 N1.6](../spec/08.8-domain.norms.md)), the body with `holder`"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 157,
+      "column": "cause",
+      "row": "name=c87_016_503_1",
+      "address": "forms/refusals.tsv#row:name=c87_016_503_1",
+      "before": "the process `domain` is a standby ([P/08.10 N1.7](08.10-domain.norms.md))",
+      "after": "the process `domain` is a standby ([P/08.10 N1.7](../spec/08.10-domain.norms.md))"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 159,
+      "column": "cause",
+      "row": "name=c87_018_503_1",
+      "address": "forms/refusals.tsv#row:name=c87_018_503_1",
+      "before": "a kind with `keep`, a planned handover is in progress ([P/08.8 N1.7](08.8-domain.norms.md); N3 «issue» step 6a)",
+      "after": "a kind with `keep`, a planned handover is in progress ([P/08.8 N1.7](../spec/08.8-domain.norms.md); N3 «issue» step 6a)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 160,
+      "column": "cause",
+      "row": "name=c87_019_413_1",
+      "address": "forms/refusals.tsv#row:name=c87_019_413_1",
+      "before": "[local token door contract](../../common/contracts/local-token-door.md) `refusal_413` (a body more than TOKEN_BODY at the local door of the agent, more than TOKEN_HOLDER_BODY at the holder's door — before the signature and the parsing); the refusal body — the common form of [P/08.3 N4](08.3-domain.norms.md)",
+      "after": "[local token door contract](../../common/contracts/local-token-door.md) `refusal_413` (a body more than TOKEN_BODY at the local door of the agent, more than TOKEN_HOLDER_BODY at the holder's door — before the signature and the parsing); the refusal body — the common form of [P/08.3 N4](../spec/08.3-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 176,
+      "column": "cause",
+      "row": "name=c89_003_503_1",
+      "address": "forms/refusals.tsv#row:name=c89_003_503_1",
+      "before": "the process `domain` is a standby ([P/08.10 N1.7](08.10-domain.norms.md))",
+      "after": "the process `domain` is a standby ([P/08.10 N1.7](../spec/08.10-domain.norms.md))"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 177,
+      "column": "cause",
+      "row": "name=c89_004_503_1",
+      "address": "forms/refusals.tsv#row:name=c89_004_503_1",
+      "before": "[P/08.8](08.8-domain.norms.md)",
+      "after": "[P/08.8](../spec/08.8-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 178,
+      "column": "cause",
+      "row": "name=c89_004_409_1",
+      "address": "forms/refusals.tsv#row:name=c89_004_409_1",
+      "before": "[P/08.8](08.8-domain.norms.md)",
+      "after": "[P/08.8](../spec/08.8-domain.norms.md)"
+    },
+    {
+      "file": "Platform/08-domain/forms/refusals.tsv",
+      "line_before": 183,
+      "column": "outcome",
+      "row": "name=c810_005_503_1",
+      "address": "forms/refusals.tsv#row:name=c810_005_503_1",
+      "before": "like the barrier of [the writer turn contract](../../common/contracts/turn.md) «Barrier»: re-read the turn, decide anew; the door whose write it was — 503 `unavailable` (the agent doors — [chapter 8.3](08.3-domain.norms.md) N3)",
+      "after": "like the barrier of [the writer turn contract](../../common/contracts/turn.md) «Barrier»: re-read the turn, decide anew; the door whose write it was — 503 `unavailable` (the agent doors — [chapter 8.3](../spec/08.3-domain.norms.md) N3)"
+    }
+  ],
+  "unchanged_after_inverting_link_prefix_and_judge_only_marker": true
+}
