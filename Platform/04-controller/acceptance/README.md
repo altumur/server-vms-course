@@ -87,6 +87,7 @@ a scenario. One scenario takes no longer than 3 minutes.
 - sc. 20 — a restart of the controller (N3 «Races»): after `@sigterm controller` and a new `@start controller` the placement row
   of `c20` is the same (the version `index` and `rev` did not change: the decision is read, not revised), epoch 1; the new instance
   works — it places `c21` (within 90 s: the turn of the former holder may wait TURN_TERM 45 s);
+  sc. 47 repeats the same observations after `@sigkill controller`, with confirmed termination before restart;
 - sc. 21 — the write `release` (N3 «fate», «write release»; the table below, the last row): three workers without units
   are killed by `@sigkill`, the resource is alive; the slot `w-1` (readable) is released with the former `holder`, `until`, `gen`, `server`, the name `w-1` is in
   `names_given` (the fate `release`, not `move`: there are no assigned units); `w-2` — a row bypassing the writer with a torn `until` and
@@ -179,6 +180,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 N
 - Sc. 42 — the fate `wait` (N3 «fate»; the table «Release transitions»): an occupied slot `w-9` without a process, the resource is alive — the resource knows nothing about
   the worker (`unlisted`); before the margin SLOT_TERM + LOST_AFTER — `alive`, then `wait`: `names_given` is empty
   (the effective HUNG_MOVE_AFTER), the slot row is the same. `wait` beyond HUNG_MOVE_AFTER — by reading (beyond the ceiling of the scenario).
+  After forced controller termination and restart, the new observer reports alive again without rewriting the slot; the 60 s wait allows the former turn term and stays below the 90 s slot margin.
 
 ### Home at the place holder (sc. 43, 44)
 
@@ -200,6 +202,10 @@ Scenarios 43 and 44 check the home at the holder of a place.
   sc. 38); without a home on an empty server field the unit would have stayed on `t-srv-a-1`.
 
 The controller executes a server decommission request that the console writes only for a silent server (P/06.6 N3); the witness holds that request standing, and `DELETE /servers/{server}/decommission` returns `{}`. This acceptance stand has no `@put object` directive for a heartbeat. The reason `deleted` is checked by scenario 06 of the acceptance of P/03.3.
+
+### Recovery and corrupted turn (sc. 45–47)
+
+Sc. 45 begins with a valid persisted want=2/retiring=t-srv-a-2 row and an empty assignment of that live victim. The stand confirms both published worker heartbeats and the unchanged seeded want version before starting the controller. A new controller completes want=1 and clears retiring within 30 s, without waiting a new default SHRINK_AFTER. The stand has no worker script running here and does not claim an OS stop. Sc. 46 varies the sc. 30 background by corrupting placement_turn.manifest_rev instead of intent: failed pass, absent placement and unchanged turn version; after a CAS repair of the turn, placement progresses. Sc. 47 checks forced controller restart as described with sc. 20.
 
 ## Scenario boundaries
 
@@ -249,9 +255,9 @@ The generic meanings of `@sleep` and `@until` are defined in the [common stand p
 
 ## Count
 
-In total 37 scenarios / 533 steps: 03 — 4, 07 — 9, 08 — 6, 11 — 12, 12 — 12, 13 — 15, 14 — 28, 15 — 38, 16 — 32, 17 — 23, 18 — 19, 19 — 6,
+In total 40 scenarios / 575 steps: 03 — 4, 07 — 9, 08 — 6, 11 — 12, 12 — 12, 13 — 15, 14 — 28, 15 — 38, 16 — 32, 17 — 23, 18 — 19, 19 — 6,
 20 — 13, 21 — 20, 22 — 23, 23 — 9, 24 — 21, 25 — 7, 26 — 17, 27 — 11, 28 — 13, 29 — 11, 30 — 12, 31 — 12, 32 — 11, 33 — 13,
-34 — 14, 35 — 7, 36 — 15, 37 — 15, 38 — 12, 39 — 13, 40 — 12, 41 — 12, 42 — 6, 43 — 18, 44 — 12.
+34 — 14, 35 — 7, 36 — 15, 37 — 15, 38 — 12, 39 — 13, 40 — 12, 41 — 12, 42 — 10, 43 — 18, 44 — 12, 45 — 13, 46 — 12, 47 — 13.
 Sc. 18, 19 — with the resource P/05: the rows of the units and of the states of `testsub2` are put by the runner bypassing the writer (`@as console store`,
 `@as testsub2worker store`); the time `1000000000` (2001) — a past deadline of `ends` and `made.keep` with any clock of the stand;
 there are no workers — the units are in the shard `unplaced`. After

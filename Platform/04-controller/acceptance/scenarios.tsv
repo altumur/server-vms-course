@@ -528,6 +528,10 @@ scenario	step	request	expect
 42-fate-wait-unlisted	4	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-9": {"fate": "alive"}}}
 42-fate-wait-unlisted	5	@until 110 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-9": {"fate": "wait"}}, "names_given": {}}
 42-fate-wait-unlisted	6	store GET /v1/get?key=testsub/slots/w-9	200 {"index": "$vs", "items": {"released": "false", "holder": "acc:1:111111"}}
+42-fate-wait-unlisted	7	@sigkill controller	ok
+42-fate-wait-unlisted	8	@start controller	ok
+42-fate-wait-unlisted	9	@until 60 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-9": {"fate": "alive"}}, "names_given": {}}
+42-fate-wait-unlisted	10	store GET /v1/get?key=testsub/slots/w-9	200 {"index": "$vs", "items": {"released": "false", "holder": "acc:1:111111"}}
 # 43-home-place-holder (C04-HOME-PLACE-HOLDER-01): two shelves on srv-a, s-a2 created after t-1 took s-a1, — t-2 takes it; h1 with the home s-a2 on t-1, a holder appeared — goes to t-2 (step 7, HOME_BUDGET); the load of t-1 is 2, of t-2 is 1 — h2 with the home s-a1 goes to t-1, although t-2 has more free
 43-home-place-holder	1	@start resource	ok
 43-home-place-holder	2	@start controller testsub2	ok
@@ -560,3 +564,45 @@ scenario	step	request	expect
 44-home-place-no-server	10	@start worker testsub2 t-srv-b-1 on srv-b	ok
 44-home-place-no-server	11	@until 30 store GET /v1/get?key=testsub2/holds/s-n	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
 44-home-place-no-server	12	@until 90 console2 GET /where/h1	200 {"worker": "t-srv-b-1"}
+
+# 45-retiring-recovery: a new controller completes persisted retiring with an empty assignment, without choosing a victim or starting a new hold term.
+45-retiring-recovery	1	@start resource	ok
+45-retiring-recovery	2	@as testsub2controller store POST /v1/write {"id":"e45a","op":"put","key":"testsub2/want/srv-a","items":{"want":"2","at":"1700000000","by":"acc:1:111111","why":"role shrinks on srv-a","retiring":"t-srv-a-2"},"cas":""}	200 {"index": "$v45"}
+45-retiring-recovery	3	@start worker testsub2 t-srv-a-1 on srv-a	ok
+45-retiring-recovery	4	@start worker testsub2 t-srv-a-2 on srv-a	ok
+45-retiring-recovery	5	@until 20 store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
+45-retiring-recovery	6	@until 20 store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
+45-retiring-recovery	7	@as testsub2controller store POST /v1/write {"id":"e45b","op":"put","key":"testsub2/workers/t-srv-a-2","items":{"units":"","rev":"1"},"cas":""}	200
+45-retiring-recovery	8	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-srv-a-1?scope=local	200 {"server": "srv-a"}
+45-retiring-recovery	9	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-srv-a-2?scope=local	200 {"server": "srv-a"}
+45-retiring-recovery	10	store GET /v1/get?key=testsub2/want/srv-a	200 {"index": "$v45", "items": {"want": "2", "retiring": "t-srv-a-2"}}
+45-retiring-recovery	11	@start controller testsub2	ok
+45-retiring-recovery	12	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1", "retiring": "@absent"}}
+45-retiring-recovery	13	store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "false"}}
+# 46-turn-unreadable: malformed turn is preserved and prevents admission; a confirmed repair permits placement.
+46-turn-unreadable	1	@start resource	ok
+46-turn-unreadable	2	@start worker w-1	ok
+46-turn-unreadable	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+46-turn-unreadable	4	console POST /counters {"name": "c1", "start": 1}	201
+46-turn-unreadable	5	@as testsubcontroller store POST /v1/write {"id":"e46a","op":"put","key":"testsub/controller/placement_turn","items":{"holder":"","manifest_rev":"x"},"cas":""}	200 {"index": "$vt"}
+46-turn-unreadable	6	@start controller	ok
+46-turn-unreadable	7	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"ok": false}
+46-turn-unreadable	8	@sleep 12	ok
+46-turn-unreadable	9	store GET /v1/get?key=testsub/placement/c1	200 {"items": null}
+46-turn-unreadable	10	store GET /v1/get?key=testsub/controller/placement_turn	200 {"index": "$vt", "items": {"holder": "", "manifest_rev": "x"}}
+46-turn-unreadable	11	store POST /v1/write {"id":"e46b","op":"put","key":"testsub/controller/placement_turn","items":{"holder":"","manifest_rev":"1"},"cas":"$vt"}	200
+46-turn-unreadable	12	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+# 47-controller-sigkill: confirmed placement versions and epoch survive forced process death; a new controller places another unit.
+47-controller-sigkill	1	@start resource	ok
+47-controller-sigkill	2	@start controller	ok
+47-controller-sigkill	3	@start worker w-1	ok
+47-controller-sigkill	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+47-controller-sigkill	5	console POST /counters {"name": "c20", "start": 1}	201
+47-controller-sigkill	6	@until 30 store GET /v1/get?key=testsub/placement/c20	200 {"index": "$v1", "items": {"worker": "w-1", "rev": "$r1"}}
+47-controller-sigkill	7	@until 30 store GET /v1/get?key=testsub/epoch/c20	200 {"items": {"epoch": "1"}}
+47-controller-sigkill	8	@sigkill controller	ok
+47-controller-sigkill	9	@start controller	ok
+47-controller-sigkill	10	console POST /counters {"name": "c21", "start": 1}	201
+47-controller-sigkill	11	@until 90 store GET /v1/get?key=testsub/placement/c21	200 {"items": {"worker": "w-1"}}
+47-controller-sigkill	12	store GET /v1/get?key=testsub/placement/c20	200 {"index": "$v1", "items": {"worker": "w-1", "rev": "$r1"}}
+47-controller-sigkill	13	store GET /v1/get?key=testsub/epoch/c20	200 {"items": {"epoch": "1"}}

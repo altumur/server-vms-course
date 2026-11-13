@@ -1,0 +1,108 @@
+{
+  "base": "aa97ec132ed83ef577d50f0aba0104a265b0f32e",
+  "scenarios": 40,
+  "steps": 575,
+  "call_seams": 63,
+  "new_or_extended": {
+    "42-fate-wait-unlisted": 10,
+    "45-retiring-recovery": 13,
+    "46-turn-unreadable": 12,
+    "47-controller-sigkill": 13
+  },
+  "old_steps_unchanged": 533,
+  "sigkill_scenario_is_sigterm_copy": true,
+  "readiness_items": {
+    "P/04-01": [
+      "placement_admission"
+    ],
+    "P/04-02": [
+      "placement_admission"
+    ],
+    "P/04-03": [
+      "pass_report"
+    ],
+    "P/04-04": [
+      "slot_fates"
+    ],
+    "P/04-05": [
+      "choice"
+    ],
+    "P/04-06": [
+      "choice"
+    ],
+    "P/04-07": [
+      "choice"
+    ],
+    "P/04-08": [
+      "choice"
+    ],
+    "P/04-09": [
+      "choice"
+    ],
+    "P/04-10": [
+      "slot_fates"
+    ],
+    "P/04-11": [
+      "slot_fates"
+    ],
+    "P/04-12": [
+      "placement_admission"
+    ],
+    "P/04-13": [
+      "pass_report"
+    ],
+    "P/04-14": [
+      "growth_shrink"
+    ],
+    "P/04-15": [
+      "cleanup"
+    ],
+    "P/04-16": [
+      "pass_report"
+    ],
+    "P/04-17": [
+      "pass_report"
+    ],
+    "P/04-18": [
+      "choice"
+    ],
+    "P/04-19": [
+      "placement_admission"
+    ],
+    "P/04-20": [
+      "placement_admission"
+    ],
+    "P/04-21": [
+      "snapshots"
+    ],
+    "P/04-23": [
+      "controller_stand"
+    ],
+    "P/04-24": [
+      "cleanup"
+    ],
+    "P/04-25": [
+      "cleanup"
+    ],
+    "P/04-26": [
+      "snapshots"
+    ],
+    "P/04-27": [
+      "choice"
+    ],
+    "P/04-28": [
+      "growth_shrink"
+    ],
+    "P/04-29": [
+      "cleanup"
+    ]
+  },
+  "system_items": [
+    "P/04-22",
+    "P/04-30",
+    "P/04-31",
+    "P/04-32"
+  ],
+  "refusal_rows_with_outcome": 17,
+  "limits": "Read-only document/data audit; no candidate, stand, generation, Q or pin selection executed."
+}
