@@ -1,0 +1,61 @@
+{
+  "base": "bc58640f0cf3c6188af598f967104b0b5345c4a8",
+  "checklist_items": 146,
+  "placements": 146,
+  "per_stage": {
+    "model": 0,
+    "unit_rows": 29,
+    "secrets": 11,
+    "gate": 11,
+    "requests_events": 12,
+    "observations": 20,
+    "control": 8,
+    "late_domain": 19,
+    "folders": 18,
+    "operations": 18,
+    "complete_console": 0
+  },
+  "seams_by_chapter": {
+    "1": 14,
+    "2": 3,
+    "3": 4,
+    "4": 4,
+    "5": 4,
+    "6": 4,
+    "7": 22,
+    "8": 8,
+    "9": 4
+  },
+  "seam_rows": 67,
+  "stage_columns_shared": true,
+  "gate_changes": false,
+  "files_sha256": {
+    "Platform/06-console/acceptance/1/README.md": "1bc83fc00e144eb14ebf14a1e1f4a52db45b342a3f4e2cd0a5685b98a5d36211",
+    "Platform/06-console/acceptance/1/seams.tsv": "21946d4de924c253d66aa1ffe4e3e736cd86ee33dc3d8cc5d80ed6793bae2d65",
+    "Platform/06-console/forms/README.md": "754b302541b3645ed7ef3207d177a9dccd660357b803743df73b53a13eac2750",
+    "Platform/06-console/forms/daemon-flags.tsv": "baf88470b10ce7531a6170076158d4699855c2674e59452789e46e4efb15466c",
+    "Platform/06-console/forms/stages.kit.tsv": "21a0b70ace49bdfb068690769b4d4c5a4eb18898274bc5d4104260d084cf6579",
+    "Platform/06-console/forms/stages.tsv": "c525293bf01a88b78a13989108caf4ae62d81af2b88e1f2bad2720418ed424a9",
+    "Platform/06-console/ru/acceptance/1/README.md": "c3894a8f3931d2069a242c0babd58e0327dbf7af72ebef60f259257f85a3e93f",
+    "Platform/06-console/ru/forms/README.md": "79715055eeba39e74a17495c7c97ae97d44bcf6fa3e4bb25b782320e7a2d8623",
+    "Platform/06-console/ru/spec/06.4-console.norms.md": "3bd43575c3369b7c9c5f1dcb01acf15f169cf1ef8b47a7e6cc95830683f85d37",
+    "Platform/06-console/ru/spec/06.5-console.norms.md": "4dc78f54ef2453abbe7ea7703f1d3855dfda855b02304764574b81d5c14d5ab8",
+    "Platform/06-console/spec/06.4-console.norms.md": "b55ad6cd7ab1e6e477621d3a475ce02bebcd30465b03650cb3f61de59b81bd57",
+    "Platform/06-console/spec/06.5-console.norms.md": "2e71052d64eff5424ca5c4f4a3d7f5d376d362946fdb680d0025bd5afd35a12e",
+    "decisions/journal/platform/06-console/corrections-1.tsv": "9b031ed6220ff88d465c177f5a924c784b9bc859bafd85205e5c954c3dc9c935",
+    "decisions/journal/platform/06-console/history-1.tsv": "bcf9bb08586b784e5b35618bd4b5ba62267469014f71c3a00c77b8d055487306",
+    "decisions/journal/platform/06-console/history-4.tsv": "e6a76293ad38b0ffec27eb8a8712a9759e661843fce2882907b9456f20efa7d1",
+    "decisions/journal/platform/06-console/history-5.tsv": "caaef75d443b7dcdf247cbe3a763d1b528b80844becc77e0af1c3c30273109ac",
+    "decisions/journal/platform/06-console/history.tsv": "9450824cb82efc26d1ab5f76a422eeb1f18bce434b57c76a8c875f2941292885"
+  },
+  "validation": {
+    "command": "/home/pilot/venv-spec/bin/python skills/lesson-spec/scripts/check_spec.py --scope platform",
+    "exit_code": 0,
+    "result": "PASS structural checks only",
+    "log_sha256": "74bd4c27151f060f1126e1fffabc5884f053155eee1fc672d2daa258c53a8e3f",
+    "form_refs": 2467,
+    "export_roster_files": 3575,
+    "export_unlisted": 0
+  },
+  "origin_main_after_fetch": "ae4060cdef73995dfabff299dd89ac3e7a83ac6c"
+}
