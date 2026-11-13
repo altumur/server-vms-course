@@ -91,7 +91,7 @@ Full disk:
 6. The stand removes its file without restarting the daemon (the same process, observed). Writes with fresh `id` succeed; a repeat of an `id` answered before follows the replay rules of P/01.1.
 7. The daemon is stopped and reopened; on the virtual machine also after a reset of the guest. The history check above runs over the whole load.
 
-The norm (P/01.3 R036) says that the implementation declares a finite disk budget but not which observed result it bounds. The `threshold_ref` of `disk` names that result; without it the threshold is not approved, and the probe is `not_executed` with the reason `disk`. The observations of the steps above are still recorded as measured scope and make no GREEN.
+The disk budget bounds the largest size of the store directory (`-dir`) under the declared workload (P/01.3 R036). The `threshold_ref` of `disk` names the record that approved the threshold for that result; without it the threshold is not approved, and the probe is `not_executed` with the reason `disk`. The observations of the steps above are still recorded as measured scope and make no GREEN.
 
 Exhausted descriptors:
 

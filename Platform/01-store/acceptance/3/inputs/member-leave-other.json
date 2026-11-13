@@ -1,0 +1,5 @@
+{
+  "door": "api@s1",
+  "client": "s2",
+  "request": "POST /v1/leave {\"id\":\"s3\"}"
+}
