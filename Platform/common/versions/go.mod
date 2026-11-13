@@ -9,7 +9,9 @@ require (
 	github.com/hashicorp/raft v1.7.3
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	go.yaml.in/yaml/v3 v3.0.5
+	golang.org/x/text v0.22.0
 	servervms.local/common/json v0.0.0-20261113192059-b8b1a5bd1dad
+	servervms.local/common/log-mask v0.0.0-20261113215911-e19621128ad8
 	servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5
 	servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5
 )
@@ -29,7 +31,6 @@ require (
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
 	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240826202546-f6391c0de4c7 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
