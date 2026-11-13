@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "skills/lesson-spec/scripts/check_spec.py",
+  "--scope",
+  "platform"
+ ],
+ "cwd": "/home/pilot/P01.329-evidence/archive-C",
+ "C": "dc0645fa329eaf7d52203dac5d4e69eb63cbd989",
+ "exit": 0,
+ "seconds": 77.07437436201144,
+ "roster_limitation": "OBSH.58 rejected: archive has no .git; unchanged export operator preflight checks exact roster per answered"
+}
