@@ -47,6 +47,16 @@
       "basis": "The machine long-run record and its closed schema, including recovery-budget observations shared with RUN-W03."
     },
     {
+      "path": "Platform/01-store/forms/production/threshold-approvals.json",
+      "disposition": "include",
+      "basis": "Published approval records and their schema for resolving N6.2 threshold_ref; accessible ADR or budget approval text must confirm the measurement tuple."
+    },
+    {
+      "path": "Platform/01-store/forms/production/threshold-approvals.schema.json",
+      "disposition": "include",
+      "basis": "Published approval records and their schema for resolving N6.2 threshold_ref; accessible ADR or budget approval text must confirm the measurement tuple."
+    },
+    {
       "path": "Platform/01-store/forms/refusals.tsv",
       "disposition": "include",
       "basis": "Existing outcome vocabulary and HTTP refusal forms referenced by the procedures."

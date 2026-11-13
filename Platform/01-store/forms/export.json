@@ -382,6 +382,16 @@
       "basis": "The long random fault record and recovery-budget observations are qualification data outside M; the full judge inventory retains them without a new functional scenario."
     },
     {
+      "path": "Platform/01-store/forms/production/threshold-approvals.json",
+      "disposition": "judge_only",
+      "basis": "Published Q approval records and their form for the existing N6.2 budget keys; no threshold is approved by the empty registry."
+    },
+    {
+      "path": "Platform/01-store/forms/production/threshold-approvals.schema.json",
+      "disposition": "judge_only",
+      "basis": "Published Q approval records and their form for the existing N6.2 budget keys; no threshold is approved by the empty registry."
+    },
+    {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",
       "disposition": "judge_only",
       "basis": "Inputs of a check table of the lesson, as write-checks.probes.tsv: judged by check_spec, not a model input."
@@ -1102,6 +1112,16 @@
       "path": "Platform/01-store/forms/production/soak.schema.json",
       "disposition": "include",
       "basis": "The long random fault record and recovery-budget observations are qualification data outside M; the full judge inventory retains them without a new functional scenario."
+    },
+    {
+      "path": "Platform/01-store/forms/production/threshold-approvals.json",
+      "disposition": "include",
+      "basis": "Published Q approval records and their form for the existing N6.2 budget keys; no threshold is approved by the empty registry."
+    },
+    {
+      "path": "Platform/01-store/forms/production/threshold-approvals.schema.json",
+      "disposition": "include",
+      "basis": "Published Q approval records and their form for the existing N6.2 budget keys; no threshold is approved by the empty registry."
     },
     {
       "path": "Platform/01-store/forms/read-checks.probes.tsv",

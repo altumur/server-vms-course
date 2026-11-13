@@ -4,7 +4,8 @@
 # executed_by: the probe that executes a group as its initial state or stage, - when the entry is executed by itself; the result is shown under both names (P/AC-R040).
 # inputs: JSON array of what the entry needs, closed words: a D7 capability (clock, storage, progress, fault), a field of the input of N6.2 (manager, volume),
 # a key of its budgets, group (the store group stand) or a means of the engine (two_way_partition, raft_snapshot); [] — the entry needs no input of these words. The D7 capabilities of an entry are those of its rows in forms/production/bindings.tsv.
-# An absent need gives not_executed with that word as the reason (N6.5); group on keys.store_build: box gives not_applicable.
+# A missing or unapproved need gives not_executed with its specific word as the reason (N6.5); inspect non-group inputs first, then budget terms, and use group only as the fallback for a missing runnable group stand. group on keys.store_build: box gives not_applicable; unknown build mode gives store_build. Record all missing inputs, not a claim that a present README is absent.
+# prod-clock-group on shared wall clocks has reason clock before group; prod-disk-fd full-disk needs an external system-call observer (missing: storage), its FD slice needs active exhaustion evidence. replay_limit measures replay processing in its declared unit; admin_connections counts admitted open admin.sock connections. Their independent transport/FD limits must not mask the tested boundary.
 # term: JSON array of the budget names of its row (first approved budgets), the keys of N6.2, the constants of the runtime-constants form or leader_wait (the effective -leader-wait); [] — the outcome is judged.
 id	kind	source	executed_by	inputs	term
 RUN-W01	group	Platform/01-store/qualification/README.md#case-groups	-	["storage","progress"]	["BUDGET_WRITE_P99","BUDGET_WRITE_GROWTH","BUDGET_WRITE_BYTES"]
@@ -26,13 +27,13 @@ RUN-H02	group	Platform/01-store/qualification/README.md#case-groups	-	[]	[]
 RUN-H03	group	Platform/01-store/qualification/README.md#case-groups	-	["fault","progress"]	[]
 prod-stop	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["progress","manager"]	["BUDGET_STOP"]
 prod-fault-stage	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault","storage"]	[]
-prod-leader-loss	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","two_way_partition"]	["leader_wait"]
-prod-import-interrupted	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","writer_hold"]	["writer_hold"]
+prod-leader-loss	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["two_way_partition","group"]	["leader_wait"]
+prod-import-interrupted	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["writer_hold","group"]	["writer_hold"]
 prod-recover-interrupted	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault"]	[]
 prod-disk-fd	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["volume","disk","descriptors"]	["disk","descriptors"]
-prod-clock-group	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","clock","raft_snapshot"]	["CLOCK_SKEW"]
-prod-reply-commit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","response_write","commit_wait"]	["response_write","commit_wait"]
-prod-door-attempts	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["group","door_attempts"]	["leader_wait","door_attempts"]
+prod-clock-group	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["clock","raft_snapshot","group"]	["CLOCK_SKEW"]
+prod-reply-commit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["response_write","commit_wait","group"]	["response_write","commit_wait"]
+prod-door-attempts	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["door_attempts","group"]	["leader_wait","door_attempts"]
 prod-replay-limit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["replay_limit"]	["replay_limit"]
 prod-admin-limit	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["admin_connections"]	["admin_connections"]
 prod-backup-temp	probe	Platform/common/acceptance/spec/acceptance.norms.md#n63-probes	-	["fault","cancellation"]	["cancellation"]
