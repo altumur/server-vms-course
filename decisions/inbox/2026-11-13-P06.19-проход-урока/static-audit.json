@@ -38,24 +38,34 @@
     "Platform/06-console/forms/stages.tsv": "c525293bf01a88b78a13989108caf4ae62d81af2b88e1f2bad2720418ed424a9",
     "Platform/06-console/ru/acceptance/1/README.md": "c3894a8f3931d2069a242c0babd58e0327dbf7af72ebef60f259257f85a3e93f",
     "Platform/06-console/ru/forms/README.md": "79715055eeba39e74a17495c7c97ae97d44bcf6fa3e4bb25b782320e7a2d8623",
+    "Platform/06-console/ru/spec/06.3-console.norms.md": "3ff9d056dfee9c71bed6cb72536cb38ab6cd8f20eaf316e6f5b8d63a41adcb0f",
     "Platform/06-console/ru/spec/06.4-console.norms.md": "3bd43575c3369b7c9c5f1dcb01acf15f169cf1ef8b47a7e6cc95830683f85d37",
-    "Platform/06-console/ru/spec/06.5-console.norms.md": "4dc78f54ef2453abbe7ea7703f1d3855dfda855b02304764574b81d5c14d5ab8",
+    "Platform/06-console/ru/spec/06.5-console.norms.md": "3708c2f6e7105a18534071b6bb063c6a475a57983f2b03dfb5e1b4db9cfcee27",
+    "Platform/06-console/spec/06.3-console.norms.md": "d4df5ef66faa9481ca6b6ae6cf52cc5883efab705095cd06c0b4a4a010851ab1",
     "Platform/06-console/spec/06.4-console.norms.md": "b55ad6cd7ab1e6e477621d3a475ce02bebcd30465b03650cb3f61de59b81bd57",
-    "Platform/06-console/spec/06.5-console.norms.md": "2e71052d64eff5424ca5c4f4a3d7f5d376d362946fdb680d0025bd5afd35a12e",
+    "Platform/06-console/spec/06.5-console.norms.md": "6a5726bdc0da3ba4a495af2a86b748e9df6d1200af6b30c8a597571678e7db65",
     "decisions/journal/platform/06-console/corrections-1.tsv": "9b031ed6220ff88d465c177f5a924c784b9bc859bafd85205e5c954c3dc9c935",
     "decisions/journal/platform/06-console/history-1.tsv": "bcf9bb08586b784e5b35618bd4b5ba62267469014f71c3a00c77b8d055487306",
+    "decisions/journal/platform/06-console/history-3.tsv": "e9ce9cce114b3c610fc263f7514bbe743ead1d90ad9e72badb10860e05c984b2",
     "decisions/journal/platform/06-console/history-4.tsv": "e6a76293ad38b0ffec27eb8a8712a9759e661843fce2882907b9456f20efa7d1",
-    "decisions/journal/platform/06-console/history-5.tsv": "caaef75d443b7dcdf247cbe3a763d1b528b80844becc77e0af1c3c30273109ac",
+    "decisions/journal/platform/06-console/history-5.tsv": "4bc6660f0f3110317ed18e4b035fc06e69e75d07c919d9b88b769278e9ffe344",
     "decisions/journal/platform/06-console/history.tsv": "9450824cb82efc26d1ab5f76a422eeb1f18bce434b57c76a8c875f2941292885"
   },
   "validation": {
     "command": "/home/pilot/venv-spec/bin/python skills/lesson-spec/scripts/check_spec.py --scope platform",
     "exit_code": 0,
     "result": "PASS structural checks only",
-    "log_sha256": "74bd4c27151f060f1126e1fffabc5884f053155eee1fc672d2daa258c53a8e3f",
+    "log_sha256": "e28b4a9f8107fa6158488177aaae7e34f4499aa8d269b6397e3b73e11f258ac1",
     "form_refs": 2467,
     "export_roster_files": 3575,
-    "export_unlisted": 0
+    "export_unlisted": 0,
+    "after_answered": "2026-11-13T11:03:40Z"
   },
-  "origin_main_after_fetch": "ae4060cdef73995dfabff299dd89ac3e7a83ac6c"
+  "origin_main_after_fetch": "32ebde9c1e3beba6a3c1701f3396565130c0275a",
+  "decisions": {
+    "Q1": "remove undefined debug attempt limit; keep login and break-glass limits",
+    "Q2": "remove undefined session 16 KiB limit and its dependent reference",
+    "Q3": "no P/06 Q or filter changes; report remainder is input to OBSH.51"
+  },
+  "task_sha256": "24038305afa3827d846b90ffbb594276b7e2aade313246ba9641b8eb5668ac2e"
 }
