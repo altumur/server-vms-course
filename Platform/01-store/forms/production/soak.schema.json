@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The long random fault run of P/01 qualification",
+  "description": "The closed form of the Q record RUN-SOAK. This is qualification data, not an input of N6.2, a functional judge directive or a candidate setting. Duration is the only numeric qualification value introduced by this record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "duration",
+    "modes",
+    "properties",
+    "negative_controls",
+    "executor",
+    "environment",
+    "procedure_ref"
+  ],
+  "properties": {
+    "id": {
+      "const": "RUN-SOAK"
+    },
+    "duration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "const": 2
+        },
+        "unit": {
+          "const": "h"
+        }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "box"
+      ],
+      "properties": {
+        "group": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "faults"
+          ],
+          "properties": {
+            "faults": {
+              "const": [
+                "sigkill_leader",
+                "sigkill_follower",
+                "sigkill_all",
+                "sigstop",
+                "isolation",
+                "reply_loss",
+                "sigterm",
+                "backup_under_fault"
+              ]
+            }
+          }
+        },
+        "box": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "faults",
+            "checkpoint_points"
+          ],
+          "properties": {
+            "faults": {
+              "const": [
+                "checkpoint_sigkill",
+                "unsynced_loss"
+              ]
+            },
+            "checkpoint_points": {
+              "const": [
+                "temporary_file_write",
+                "file_fsync",
+                "rename",
+                "directory_fsync"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "properties": {
+      "const": [
+        "acknowledged_write_persistence",
+        "unique_applied_versions",
+        "linearizable_reads"
+      ]
+    },
+    "negative_controls": {
+      "const": [
+        "lost_log_tail",
+        "read_without_fence"
+      ]
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "path",
+        "revision",
+        "before_qualifier",
+        "after_qualifier"
+      ],
+      "properties": {
+        "repository": {
+          "const": "court-tools"
+        },
+        "path": {
+          "const": "soak/"
+        },
+        "revision": {
+          "const": "6fd588df"
+        },
+        "before_qualifier": {
+          "const": "executor"
+        },
+        "after_qualifier": {
+          "const": "comparison_reference"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferred",
+        "fallback",
+        "load_gate_ref"
+      ],
+      "properties": {
+        "preferred": {
+          "const": "virtual_machine"
+        },
+        "fallback": {
+          "const": "CT 103"
+        },
+        "load_gate_ref": {
+          "const": "Platform/common/acceptance/spec/acceptance.norms.md#n33-declared-environment"
+        }
+      }
+    },
+    "procedure_ref": {
+      "const": "qualification/stand-procedures.md#long-random-fault-run"
+    }
+  }
+}

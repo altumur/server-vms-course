@@ -79,6 +79,14 @@ The environment and the method are not budgets. The first budgets were set for a
 | RUN-H02 | Independent raw HTTP GET /v1/copy on admin and ordinary role sockets; fragmented CL/chunked success, concurrent atomic pairs, wrong method/path and framing precedence. | One 200 application/x-ndjson with complete framing/consistent artifact; exact role 403 before snapshot; 405/Allow GET, HEAD bodyless; other path 404. No private prelude or EOF-only success. | Independent HTTP+JSONL oracle; no producer client as its own judge, no list-plus-GET snapshot or 403 or 404 widening. |
 | RUN-H03 | Previous published copy; pre-header snapshot refusal and failures after 200: short CL, missing terminal chunk, EOF, cancel, stalled sink and shutdown. | Before headers use owned failures incl 503 UnavailableFault; after 200 only incomplete close, no second fault/final success. CLI validates full artifact/framing and preserves previous file on any incomplete result. | Independent stream/file/cancellation evidence; false 200 success, second JSON fault and partial-file publication controls. |
 
+## Long random fault run
+
+[`soak.json`](../forms/production/soak.json) is the Q record of the long random fault run. Its duration is 2 h; its group and box fault inventories, observed properties and negative controls are data, not parameters hidden in a task. The [stand procedure](stand-procedures.md#long-random-fault-run) defines the history, controls and evidence. This record complements the case groups and the probes of N6.2; it is not a functional scenario or a new directive of J.
+
+The record checks the existing persistence and version guarantees of P/01.1 and the linearizable reads of P/01.1 R062. Until the qualifier is ready, `court-tools`, `soak/`, revision `6fd588df`, executes it; afterwards that executor is the comparison reference for the qualifier. The publication of the record does not execute it or select a candidate.
+
+Heavy runs use the virtual machine. Until it is available, the run uses CT 103 under the load gate of [N3.3](../../common/acceptance/spec/acceptance.norms.md#n33-declared-environment). VM-only fault/storage slices without qualified bindings remain `not_executed` with their reasons and do not hold promotion until the VM exists. The long run itself remains required for promotion; its absence, a shortened run or an instrument failure does not count as a clean Q result.
+
 ## Measurement definitions
 
 | Name | Definition |

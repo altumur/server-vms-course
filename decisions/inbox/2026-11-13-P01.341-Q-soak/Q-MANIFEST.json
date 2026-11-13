@@ -1,0 +1,247 @@
+{
+  "result": "PASS",
+  "base": "89eceb87596288e1a1e879e3af06d7236580a124",
+  "base_q_input_tree": "78338c92f9848c54677bf48a63c58bd8eb570c92",
+  "filter_sha256": "d855bd136abe9ae8ed505474ec45aeff2371d3258c8f8a732a3857804bd82b81",
+  "q_input_tree": "5075048175fd26276251b0da702ca507a2961f66",
+  "files": [
+    {
+      "path": "Platform/01-store/acceptance/3/README.md",
+      "mode": "100644",
+      "blob": "0fcdfc2f971493205adef6d9d295a9b34bef0ca1",
+      "sha256": "46c436f3d7d973466fbfcf4f283d8554d5cb6b9e619a19233bb9f550a9696d5f",
+      "bytes": 47382
+    },
+    {
+      "path": "Platform/01-store/forms/daemon-flags.tsv",
+      "mode": "100644",
+      "blob": "f40f9fa1ddf1c38b1d6e3039f40f1d5337ac13ca",
+      "sha256": "80ee90555f55ab07fae4a970915897facc8f70ad886dc5f270d7e348d3bad295",
+      "bytes": 5249
+    },
+    {
+      "path": "Platform/01-store/forms/production-input.schema.json",
+      "mode": "100644",
+      "blob": "f4d168322d6e24060c583a4ba061135041a02271",
+      "sha256": "274774ddf4621d838d68ca808519e36f53867fbff4aef18628ce029010a5517d",
+      "bytes": 2450
+    },
+    {
+      "path": "Platform/01-store/forms/production.tsv",
+      "mode": "100644",
+      "blob": "48e58d5d6ecec6bb6c538eb4fc45882c98499fbc",
+      "sha256": "97ffd412614a39bffb323ba7d211db29f91e6ec96bc6d0bc584b9d31e3f4af6c",
+      "bytes": 4985
+    },
+    {
+      "path": "Platform/01-store/forms/production/README.md",
+      "mode": "100644",
+      "blob": "c849c576709c0a6492bbc6307871d0526e1703d0",
+      "sha256": "56ee15c3e7d4ee8e49a284a7268db34a1200908c1a51cfe02a8197346a3e6c45",
+      "bytes": 4518
+    },
+    {
+      "path": "Platform/01-store/forms/production/bindings.tsv",
+      "mode": "100644",
+      "blob": "afe0d853066333cb4f91a87f499e43de6aba8b2f",
+      "sha256": "f7582cae39bcc10a7dcb1e0accef1cfe7183c5c668555b8f75729e3fd1b58b0e",
+      "bytes": 7924
+    },
+    {
+      "path": "Platform/01-store/forms/production/input.json",
+      "mode": "100644",
+      "blob": "00517d70de6db1e19725caa81a52566a6f9011a8",
+      "sha256": "4ae3f0c00241cb6269312ab8e0c5a39ef219ff0c9df43821a958cb78ea5d5287",
+      "bytes": 18
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.json",
+      "mode": "100644",
+      "blob": "9953ed03d109d94ec0bbf831ad18966f29622839",
+      "sha256": "05e5cce32a9254d352c5e5af737ea28b5248fb83abfccb15ab38a2dd11d895c5",
+      "bytes": 1206
+    },
+    {
+      "path": "Platform/01-store/forms/production/soak.schema.json",
+      "mode": "100644",
+      "blob": "d50c24ab755ec0af8e528969f62c6ab1b5ed62c9",
+      "sha256": "0a142f2779132c3aafe3584c77634c5cd2047e6cb4c1e1aff82e140d3fc94cdc",
+      "bytes": 3696
+    },
+    {
+      "path": "Platform/01-store/forms/refusals.tsv",
+      "mode": "100644",
+      "blob": "15ebb01c66e146665bba9f0062ad4c2c4229a368",
+      "sha256": "8c26d5851294ff6a9bc0f7c9a6f468604a5bb24b7b86ab0252232775a8925b8b",
+      "bytes": 6756
+    },
+    {
+      "path": "Platform/01-store/forms/runtime-constants.tsv",
+      "mode": "100644",
+      "blob": "9fef8781a10a7eb827e0458900bab5b08fc26de4",
+      "sha256": "c2bcbfa9b382b17480c569cb91baba85d5b9c31e01b4a1177b0daf0e6abff913",
+      "bytes": 2029
+    },
+    {
+      "path": "Platform/01-store/probes/README.cases.md",
+      "mode": "100644",
+      "blob": "2690cf3dcdfc33dd3b64d1b73b6a8fac6e64517a",
+      "sha256": "22b25f3f376af143609fa26c257317a2da6cfde37f893f0a6ef82604e847f874",
+      "bytes": 1967
+    },
+    {
+      "path": "Platform/01-store/probes/README.md",
+      "mode": "100644",
+      "blob": "9e2f6b731871d05fda18d3d6d6a560587c19a8e1",
+      "sha256": "baacfdcb30cf375f5539071f43f6f0f13f7a535802329b921b19d852584d1802",
+      "bytes": 2158
+    },
+    {
+      "path": "Platform/01-store/probes/copy_stream.py",
+      "mode": "100644",
+      "blob": "4f053c0b323fd29f443d0ff4bd46f3715fec2f92",
+      "sha256": "c041e7468f2d8e0432783876095edb489482f7c129402034b6e31081e9e5f45e",
+      "bytes": 11373
+    },
+    {
+      "path": "Platform/01-store/probes/store_fitness.py",
+      "mode": "100644",
+      "blob": "332a6364714e882f45348c8d38211fc496ded274",
+      "sha256": "f507960ef50ecd09c1aa61633263d627ccebd5c04743f93caff4ecbeb8a9f1c5",
+      "bytes": 18300
+    },
+    {
+      "path": "Platform/01-store/probes/store_probe_http.py",
+      "mode": "100644",
+      "blob": "0bfb9da11c4bb18af59ee77271f67fae663ce6b7",
+      "sha256": "b4cf8cb36496c7bdb9c83ac3f7e7272ce8df46a93337573ead7a3c28d5c9f438",
+      "bytes": 8680
+    },
+    {
+      "path": "Platform/01-store/probes/store_probes.py",
+      "mode": "100644",
+      "blob": "bdccfb5efee3118cc20b6216fda8b67bcfb782ad",
+      "sha256": "953996fe5ff5a3dad2f3c5f437b8416a607991f1ce6b70c60732a45919078571",
+      "bytes": 48145
+    },
+    {
+      "path": "Platform/01-store/qualification/README.md",
+      "mode": "100644",
+      "blob": "bc631b605cd150e01069151fbc7b931aaf56b950",
+      "sha256": "9b40d38575c88cd96bdf74c79b36cfcc81c28efcac3a7625300e7fb467e388d7",
+      "bytes": 25132
+    },
+    {
+      "path": "Platform/01-store/qualification/stand-procedures.md",
+      "mode": "100644",
+      "blob": "6b239082b31062fd1a9d4e7824d10c96c33fa7e9",
+      "sha256": "4254c77eedfb9636fb1dafb33a5e306d561ad3bdc498242f593e9450e195e5a9",
+      "bytes": 27308
+    },
+    {
+      "path": "Platform/01-store/spec/01-store.api.openapi.yaml",
+      "mode": "100644",
+      "blob": "cbeb18d2ed47dc9af9b8f4e860a8628b4a01637b",
+      "sha256": "bb2a438fe5a4fbd1ddb457bf49dc63eed5a371e8aa8290879afd378d6c1f13bd",
+      "bytes": 37506
+    },
+    {
+      "path": "Platform/01-store/spec/01.1-store.norms.md",
+      "mode": "100644",
+      "blob": "d0a480ae858df5dbc0da3e4dd626aea4c7e7b05b",
+      "sha256": "1ada50f03891d8e45d1cd234a6f74464044d4d36ae0b69440d9577af2b6135d4",
+      "bytes": 100904
+    },
+    {
+      "path": "Platform/08-domain/forms/runtime-constants.tsv",
+      "mode": "100644",
+      "blob": "3fe6657cb791fafe690d7c7a8c0c86d3a87627da",
+      "sha256": "3d141a97cf73c7bf754915c3aba1e09d1e7f75e37ea492044b5c2b456049097c",
+      "bytes": 7085
+    },
+    {
+      "path": "Platform/common/acceptance/PROFILE.md",
+      "mode": "100644",
+      "blob": "e937e06a9f3638101dd9b94c3ca9f73145831fff",
+      "sha256": "b11a4ee6be8c1f340e61779aed4a8b2ac83bf32e3b0ac559ac51464df5f18e26",
+      "bytes": 36219
+    },
+    {
+      "path": "Platform/common/acceptance/forms/d7-payload.schema.json",
+      "mode": "100644",
+      "blob": "5503468d038407f3412ddb53f505336fe4500e44",
+      "sha256": "ba25d5120e6196bd51050fc1489c66b006691cde359d1f4a19f0747b3e2d9bcf",
+      "bytes": 11060
+    },
+    {
+      "path": "Platform/common/acceptance/forms/d7.schema.json",
+      "mode": "100644",
+      "blob": "a23905769c3a12edfa25e7c1f6ea9fc0259c1fea",
+      "sha256": "e1e69a630114dfe28a1169188562259265f4dbe21eac2409c2c3ec8ba5e9d641",
+      "bytes": 3480
+    },
+    {
+      "path": "Platform/common/acceptance/forms/profile-substitutions.tsv",
+      "mode": "100644",
+      "blob": "e157506b1f8e748e76ccdfd1059225a7496c9df8",
+      "sha256": "c2159e93b211d6abea235d7b0f68677cc0f8433f09f631eaa909fdc57ddc4daa",
+      "bytes": 7401
+    },
+    {
+      "path": "Platform/common/acceptance/forms/seam-bridge.schema.json",
+      "mode": "100644",
+      "blob": "0ea90d1980af4b852b03522e0edbd8cdccbf9173",
+      "sha256": "7e1939644d38fb14d581ccbe4936b8b13083b506007522b50ec46a5628a56f40",
+      "bytes": 2944
+    },
+    {
+      "path": "Platform/common/acceptance/seams.md",
+      "mode": "100644",
+      "blob": "04b048d25894588ada10629aa9b74a585c8c25cc",
+      "sha256": "9d2e86df6bbb67e2f4252c48252d1785eeed22eb061964cd4556ae6dae290979",
+      "bytes": 25723
+    },
+    {
+      "path": "Platform/common/acceptance/spec/acceptance.norms.md",
+      "mode": "100644",
+      "blob": "25ee4491111a5fea9e1b3b9f78b0b0521e420500",
+      "sha256": "0dcd40a1b6d4f79453bf92c07be97b57b9acae5cdec09eb9f8ab343f09672d49",
+      "bytes": 41611
+    },
+    {
+      "path": "Platform/common/acceptance/stand.md",
+      "mode": "100644",
+      "blob": "efa398a717ee72079f9c6d7711daebae9e3f21bb",
+      "sha256": "f7409ca1abb0b4868b6f55555304379114eb289e0d1b1552e7d184a45cdf69aa",
+      "bytes": 22645
+    },
+    {
+      "path": "Platform/common/contracts/gate-and-pass.md",
+      "mode": "100644",
+      "blob": "231ac57650f5f38ff3cde2807c249164371ef690",
+      "sha256": "eeca1da110705505399c2d557241ffd90e57707ba51c6bc78be480fbb1dd5bd7",
+      "bytes": 83576
+    },
+    {
+      "path": "Platform/common/contracts/production-obligations.md",
+      "mode": "100644",
+      "blob": "a98d718b62a98a26c323b432ac7e44bb90d75a66",
+      "sha256": "29284f4e8d9ca58f0526d7b6d75b841baa5d14b7c70d7b57f8104bbeb37ec247",
+      "bytes": 3522
+    },
+    {
+      "path": "Platform/common/vectors/production-obligations/README.md",
+      "mode": "100644",
+      "blob": "b479f5ef887abe91b5fca13a5ac76b80969293b2",
+      "sha256": "7118252cc4757f7ca8dabdd8fed3325797c87c277cf0b2ac3400169248e2949d",
+      "bytes": 7845
+    }
+  ],
+  "checks": [
+    "RUN-SOAK schema and record",
+    "outside M; classified in J",
+    "Q paths unique and sorted; whole files with Git modes",
+    "Q inventory includes record and schema; input tree changed"
+  ],
+  "execution": "Documents and Git objects only; no candidate, probe or qualifier run."
+}
