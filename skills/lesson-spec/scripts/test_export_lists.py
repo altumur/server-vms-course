@@ -1,6 +1,7 @@
 """ADR-0135 addendum (14): the export filters M and J assembled from the common filters and the lists of the lessons."""
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -193,6 +194,102 @@ class QualificationInput(Tree):
         self.with_q()
         self.dump(el.QUALIFICATION, {"version": 2, "files": [q]})
         self.assert_one([m for _, m in el.assemble(self.root)[1]], "exactly version (1) and files")
+
+
+class Roster(Tree):
+    """OBSH.58: in a git tree the assembled M and J classify exactly the roster of the export pair operator — the files
+    under Platform/ in git's index and the marker Platform/COURSE_COMMIT (b7_export_pair._classification)."""
+
+    COMMON_M = {el.MARKER: "model_and_judge", "Platform/common/README.md": "model_and_judge",
+                el.COMMON["judge"].as_posix(): "judge_only", el.COMMON["model"].as_posix(): "judge_only"}
+    COMMON_J = {el.MARKER: "include", "Platform/common/README.md": "include",
+                el.COMMON["judge"].as_posix(): "exclude", el.COMMON["model"].as_posix(): "exclude"}
+
+    def setUp(self):
+        super().setUp()
+        self.common(self.COMMON_M, self.COMMON_J)
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True, capture_output=True)
+        self.add("Platform")
+
+    def add(self, *paths):
+        subprocess.run(["git", "-C", str(self.root), "add", "--", *paths], check=True, capture_output=True)
+
+    def common(self, model, judge):
+        def records(table):
+            return sorted((rec(k, v) for k, v in table.items()), key=lambda r: r["path"].encode())
+        self.dump(el.COMMON["model"], {"version": 1, "files": records(model), "own_export_markers": []})
+        self.dump(el.COMMON["judge"], {"version": 1, "files": records(judge)})
+
+    def errors(self):
+        self.add("Platform")
+        return [m for _, m in el.assemble(self.root)[1]]
+
+    def test_full_roster_passes(self):
+        filters, errors, stats = el.assemble(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["export_roster_files"], 3 + len(FILES))  # README and the two filters of common, the lesson
+        self.assertEqual({r["path"] for r in filters["model"]}, set(el.platform_roster(self.root)) | {el.MARKER})
+
+    def test_common_file_without_a_record_in_one_filter(self):
+        """aba38d58b: qualification-input-filter.json in neither or one of the filters passed check_spec."""
+        q = el.QUALIFICATION.as_posix()
+        self.dump(el.QUALIFICATION, {"version": 1, "files": [rec("Platform/common/README.md", "include")]})
+        self.common({**self.COMMON_M, q: "judge_only"}, self.COMMON_J)
+        errors = self.errors()
+        self.assertEqual(errors, [f"judge: the file {q} of Platform has no record in {el.COMMON['judge'].as_posix()} — "
+                                  "the export operator refuses a filter that does not cover the exact roster"])
+
+    def test_common_file_without_a_record_in_both_filters(self):
+        q = el.QUALIFICATION.as_posix()
+        self.dump(el.QUALIFICATION, {"version": 1, "files": [rec("Platform/common/README.md", "include")]})
+        errors = self.errors()
+        self.assertEqual(len(errors), 2, errors)
+        for side in ("model", "judge"):
+            self.assertTrue(any(m.startswith(f"{side}: the file {q} of Platform has no record in "
+                                             f"{el.COMMON[side].as_posix()}") for m in errors), errors)
+
+    def test_untracked_file_is_outside_the_roster(self):
+        self.write("Platform/common/draft.md", "not added")
+        self.assertEqual([m for _, m in el.assemble(self.root)[1]], [])
+        self.add("Platform/common/draft.md")
+        self.assertEqual(len([m for _, m in el.assemble(self.root)[1]]), 2)
+
+    def test_record_without_a_file_is_an_error(self):
+        self.common({**self.COMMON_M, "Platform/common/ghost.md": "model_and_judge"},
+                    {**self.COMMON_J, "Platform/common/ghost.md": "include"})
+        errors = self.errors()
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(all("Platform/common/ghost.md has a record and is no file of Platform" in m for m in errors))
+
+    def test_without_the_marker_record(self):
+        model = dict(self.COMMON_M)
+        del model[el.MARKER]
+        self.common(model, self.COMMON_J)
+        self.assertEqual(self.errors(), [f"model: the file {el.MARKER} of Platform has no record in "
+                                         f"{el.COMMON['model'].as_posix()} — the export operator refuses a filter "
+                                         "that does not cover the exact roster"])
+
+    def test_tracked_marker_and_link_are_errors(self):
+        self.write(el.MARKER, "abc\n")
+        self.assertTrue(any("COURSE_COMMIT is tracked" in m for m in self.errors()))
+        (self.root / el.MARKER).unlink()
+        subprocess.run(["git", "-C", str(self.root), "rm", "-q", "--cached", "--", el.MARKER], check=True)
+        (self.root / "Platform/common/link.md").symlink_to("README.md")
+        self.common({**self.COMMON_M, "Platform/common/link.md": "model_and_judge"},
+                    {**self.COMMON_J, "Platform/common/link.md": "include"})
+        self.assertTrue(any("link.md is a tracked entry of mode 120000" in m for m in self.errors()))
+
+    def test_unmoved_lesson_file_is_an_error_in_a_git_tree(self):
+        self.write("Platform/02-installer/README.md", "x")
+        errors = self.errors()
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(all("Platform/02-installer/README.md of Platform has no record" in m for m in errors))
+
+    def test_lesson_with_list_reported_once(self):
+        self.write(f"Platform/{LESSON}/spec/extra.md", "x")
+        errors = self.errors()
+        self.assertTrue(errors)
+        self.assertFalse(any("of Platform has no record" in m for m in errors), errors)
 
 
 if __name__ == "__main__":
