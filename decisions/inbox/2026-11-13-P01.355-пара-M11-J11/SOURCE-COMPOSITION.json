@@ -1,0 +1,75 @@
+{
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "dependencies": [
+  {
+   "task": "P01.346",
+   "status": "accepted",
+   "commit": "2dca4c1b20c948ab5d777e65fac6739b0beac789",
+   "utc": "2026-11-13T16:20:34Z",
+   "accepted_sha256": "3ea713f20517bc609523abbfc3ac60d34fc201054ed28c234c53a3ae97789867",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.347",
+   "status": "accepted",
+   "commit": "e69f33954e41e534bfb27d6dff4aa582f71f4310",
+   "utc": "2026-11-13T16:30:08Z",
+   "accepted_sha256": "ab63e586ed322209444a7c1a80d98ce31be39d2842b09ee015766ad4aa2668ff",
+   "ancestor_C": true
+  },
+  {
+   "task": "P01.350",
+   "status": "accepted",
+   "commit": "88631f3131a48ad32241d43ed06815e03096b5cc",
+   "utc": "2026-11-13T17:25:48Z",
+   "accepted_sha256": "c936573d89b13881ca06cf1ed49648ec5dea341119d41e89c470d7312c62735d",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.70",
+   "status": "accepted",
+   "commit": "9925c20282feafe329936a56c0de9ea5c22b2bce",
+   "utc": "2026-11-13T18:17:38Z",
+   "accepted_sha256": "2120ecaf00c96068e4a3cf07349d89e4fb8a813fb9ac70988632f60b348c82af",
+   "ancestor_C": true
+  },
+  {
+   "task": "OBSH.69",
+   "status": "on_origin_main",
+   "commit": "28f4de46d420efe7c4c63f4dcddea51405a9e46a",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.69",
+   "status": "on_origin_main",
+   "commit": "55a672b89e3d6d261733e15738dcab5eba04ff69",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.69",
+   "status": "on_origin_main",
+   "commit": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.77",
+   "status": "on_origin_main",
+   "commit": "69345c64108cd0b1c874726bd7c0956e7bb31861",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  },
+  {
+   "task": "OBSH.74",
+   "status": "on_origin_main",
+   "commit": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+   "ancestor_C": true,
+   "acceptance_receipt": null
+  }
+ ],
+ "task_sha256": "1b16912e15ecdc77cfbed91630d1620e713f348e3615bf9753a2538a53c3029d",
+ "latest_fetched_main_at_source": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "OK": true
+}

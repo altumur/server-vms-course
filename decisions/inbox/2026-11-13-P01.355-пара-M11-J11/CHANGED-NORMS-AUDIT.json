@@ -1,0 +1,1086 @@
+{
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "passport_sha256": "907be7597990105e887f9dc943465347b1799880454c9557f3441f3b187daa71",
+ "journal": "decisions/inbox/2026-11-13-P01.355-пара-M11-J11/CHANGED-NORMS.md",
+ "journal_sha256": "462f7ee0b235d866020e044227de058b80de411d5a41209483c971511327d0b3",
+ "baselines": {
+  "M10": {
+   "old_C": "431c32debbc1bb35e57e4dfa323f8f091335172a",
+   "old_passport_sha256": "8c056298cbbf51e9bec6b46936b802164f09a3e0547fb07ddae0cc7115769e50",
+   "changed_paragraphs": {
+    "P/01.1-R148": {
+     "file": "Platform/01-store/spec/01.1-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.1-R371": {
+     "file": "Platform/01-store/spec/01.1-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R008": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R010": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R054": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R055": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R420": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R421": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R422": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R423": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/04-R164": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R437": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R452": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    }
+   },
+   "history_evidence": {
+    "P/01.1-R148": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 433,
+      "req_id": "P/01.1-R148",
+      "file": "spec/01.1-store.norms.md#N3"
+     }
+    ],
+    "P/01.1-R371": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 434,
+      "req_id": "P/01.1-R371",
+      "file": "spec/01.1-store.norms.md#N3"
+     }
+    ],
+    "P/01.2-R008": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 129,
+      "req_id": "P/01.2-R008",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.2-R010": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 132,
+      "req_id": "P/01.2-R010",
+      "file": "spec/01.2-store.norms.md#N1.3"
+     }
+    ],
+    "P/01.2-R054": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 130,
+      "req_id": "P/01.2-R054",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.2-R055": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 131,
+      "req_id": "P/01.2-R055",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.3-R420": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 687,
+      "req_id": "P/01.3-R420",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R421": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 688,
+      "req_id": "P/01.3-R421",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R422": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 689,
+      "req_id": "P/01.3-R422",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R423": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 690,
+      "req_id": "P/01.3-R423",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/04-R164": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 781,
+      "req_id": "P/04-R164",
+      "file": "spec/04-controller.norms.md#N1.3"
+     }
+    ],
+    "P/04-R437": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 766,
+      "req_id": "P/04-R437",
+      "file": "spec/04-controller.norms.md#N5"
+     }
+    ],
+    "P/04-R452": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 767,
+      "req_id": "P/04-R452",
+      "file": "spec/04-controller.norms.md#N5"
+     }
+    ]
+   },
+   "changed_checklist_items": {
+    "P/01.1-32": "Platform/01-store/spec/01.1-store.norms.md",
+    "P/01.3-12": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-13": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-15": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-16": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/04-02": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-10": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-14": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-19": "Platform/04-controller/spec/04-controller.norms.md"
+   },
+   "checklist_history_evidence": {
+    "P/01.1-32": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 441,
+      "req_id": "P/01.1-R151",
+      "file": "spec/01.1-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-12": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 681,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-13": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 682,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-15": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 685,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "new_item_insertion_at_checklist_heading"
+     }
+    ],
+    "P/01.3-16": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 685,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "new_item_insertion_at_checklist_heading"
+     }
+    ],
+    "P/04-02": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 769,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-10": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 770,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-14": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 771,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-19": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 772,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ]
+   },
+   "changed_M_files_evidence": {
+    "Platform/01-store/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 688,
+       "req_id": "-",
+       "file": "README.md#what-this-lesson-takes-from-common"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 748,
+       "req_id": "-",
+       "file": "README.md#what-this-lesson-takes-from-common"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce",
+      "2fd1ac98efff18cb3904fdea87c841efa9d48ba2",
+      "88631f3131a48ad32241d43ed06815e03096b5cc",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "a8348f732e9fb027a1754c122b5e398fbf65471443a341bfa1fecbb12d1e1a24"
+    },
+    "Platform/01-store/acceptance/1/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 431,
+       "req_id": "-",
+       "file": "acceptance/1/README.md#scenariostsv"
+      }
+     ],
+     "change_commits": [
+      "e39c085b96d9a8d93c58a5b41dcabaed1eee1360"
+     ],
+     "diff_sha256": "f9ce8b18c3c2743a8432ce44a99d4e3c67740d13e3e9bc74c5b4f11aeb52e0ab"
+    },
+    "Platform/01-store/acceptance/3/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 669,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 670,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#the-store-group-sc-07-17-18-2529-31"
+      }
+     ],
+     "change_commits": [
+      "1bebb233749e6fa1ad1a6f917732021a33118e07"
+     ],
+     "diff_sha256": "06e5bbe8963458c5a2b0b244220cff160979065e92117643b2b09f5d88329305"
+    },
+    "Platform/01-store/forms/code-rules.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 749,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C25"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 750,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C26"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 751,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C27"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 752,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C28"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 753,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C29"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "2d5b5f60ddd1a842d0d8d3414432367ab3a83970e6e7bc30954b6142bbf9ae4c"
+    },
+    "Platform/01-store/forms/stages.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 702,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:9"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 703,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:10"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 704,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:11"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 754,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:7"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 755,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:8"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce",
+      "2fd1ac98efff18cb3904fdea87c841efa9d48ba2",
+      "88631f3131a48ad32241d43ed06815e03096b5cc",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "bf2db43f3d713c05e5e43bb4841c8e8a5269bc78e2af515ff7ddc7024cb96b37"
+    },
+    "Platform/01-store/forms/targets.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "969963645f5b9c8bb95bd5265d267ed621154131fe9d48a33e552390b4ea6ee7"
+    },
+    "Platform/01-store/spec/01-store.README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 674,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#order-of-work"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 675,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#order-of-work"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 676,
+       "req_id": "-",
+       "file": "spec/01-store.README.md#order-of-work"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc",
+      "24d5e2d6cad0748ad917d1813852e3d9ae628388"
+     ],
+     "diff_sha256": "d6d4cff327e68a4932cae788951e98ef777f1c2711c5d9b171a0b7f717233349"
+    },
+    "Platform/01-store/spec/01.1-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 433,
+       "req_id": "P/01.1-R148",
+       "file": "spec/01.1-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 434,
+       "req_id": "P/01.1-R371",
+       "file": "spec/01.1-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 437,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 438,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 441,
+       "req_id": "P/01.1-R151",
+       "file": "spec/01.1-store.norms.md#readiness-checklist"
+      }
+     ],
+     "change_commits": [
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "cb4b921f9bd75b565414a5b0e4a4b4c6c4360c2f793b84c42c6adb77c9cab465"
+    },
+    "Platform/01-store/spec/01.2-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 129,
+       "req_id": "P/01.2-R008",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 130,
+       "req_id": "P/01.2-R054",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 131,
+       "req_id": "P/01.2-R055",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 132,
+       "req_id": "P/01.2-R010",
+       "file": "spec/01.2-store.norms.md#N1.3"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "36f7c05ff5a04ad57aaf2769d8c138ba67520a3db5798c9180e8cdd98cfe63eb"
+    },
+    "Platform/01-store/spec/01.3-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 673,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 675,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 676,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 677,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 681,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 682,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 685,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 687,
+       "req_id": "P/01.3-R420",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 688,
+       "req_id": "P/01.3-R421",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 689,
+       "req_id": "P/01.3-R422",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 690,
+       "req_id": "P/01.3-R423",
+       "file": "spec/01.3-store.norms.md#N3"
+      }
+     ],
+     "change_commits": [
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "5e9dfd7a9ceefe136cb12f4707e098d053bfff164e543c8ae6ec89de062a5ca8"
+    },
+    "Platform/01-store/spec/production-acceptance.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 686,
+       "req_id": "-",
+       "file": "spec/production-acceptance.md#performance-goals"
+      }
+     ],
+     "change_commits": [
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "e705932ab796e7fde6743bcbf31b0d0b9a3d8334de1b919f783aa6a330c74c75"
+    },
+    "Platform/01-store/vectors/jcs/README.md": {
+     "kind": "removed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "02b6128b1b35d7e928a377656ee816065b1b149c51f9c888eec4692e2b955fe6"
+    },
+    "Platform/01-store/vectors/rights-evaluator/README.md": {
+     "kind": "removed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "d3a8cab05cbcb576b50bfb59fa2c89417ed28103752bb0290fafb3e58bd05830"
+    },
+    "Platform/04-controller/spec/04-controller.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 766,
+       "req_id": "P/04-R437",
+       "file": "spec/04-controller.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 767,
+       "req_id": "P/04-R452",
+       "file": "spec/04-controller.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 768,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 769,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 770,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 771,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 772,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 773,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#evidence-outside-tsv"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 781,
+       "req_id": "P/04-R164",
+       "file": "spec/04-controller.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 782,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "e5d503349c61125410e1319a86049b954ff2dca2",
+      "ae9407724d7c90d51febe3a28e5b56c1bf687bd7"
+     ],
+     "diff_sha256": "63b95cb48a55fc7d2524688941fe390b4c26888e4d2b3c462020833b72abdf49"
+    },
+    "Platform/common/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 520,
+       "req_id": "-",
+       "file": "README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "22e3b53f6e55b961055d2f7e3f30f2d34355b6534d5a8c2a91395a1eff93acb1"
+    },
+    "Platform/common/acceptance/PROFILE.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 521,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#requirements-of-the-course-to-code"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "52ea1508d9cc4566e18a1eedcf97b472694f80aec43642a7c0b0b3072a839df4"
+    },
+    "Platform/common/acceptance/forms/code-rules.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 522,
+       "req_id": "-",
+       "file": "acceptance/forms/code-rules.tsv#row:forbid_imports"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "28c36c418db6940fe556ae45976c2bf5f40f4b617802363431a6ce48b0134483"
+    },
+    "Platform/common/acceptance/runner-targets.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "94e363721c8650b0d5b7186613cae7e3bdbb0136851fc4a068ba992b6e34531d"
+    },
+    "Platform/common/contracts/accept.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "3e42daf2954a196cdfcbd4ec7ef2937abd1b40edb1926a700a78595e822977fe"
+    },
+    "Platform/common/contracts/domain-envelopes.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "b8bdfa72fdbc9eb44e78b9e04d362bd146aa5ca779a46f8f32313e3629fd709b"
+    },
+    "Platform/common/contracts/domain-founding.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "004daad49537947805790cb9aaf7107209ddfa2d64741399158aebf6e0b5a555"
+    },
+    "Platform/common/contracts/domain-token.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "dc8199fe02de1ad8ac40ba21150d8dc98196f3f3571338730b729d350d08ffda"
+    },
+    "Platform/common/contracts/door-token.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "1305d9ed16d07e22eb71996b1d47bbfb8c1236a91952e3207898a6638919778b"
+    },
+    "Platform/common/contracts/jcs.md": {
+     "kind": "added",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "faaff4979ba390a5800d04c0fd8ed3f7c9b1895840a6896437272a3ccce6b932"
+    },
+    "Platform/common/contracts/json.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 524,
+       "req_id": "-",
+       "file": "contracts/json.md#caller-rules"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "3ed1b4f643d59884e5964ec9a786638ad6fc5d2fd312cc62afc148a9ad24a459"
+    },
+    "Platform/common/contracts/keys.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "bac79cbaf1998e2c0b551f0bc0e6ee16b505e74a9a4bab9a56f7c7ce98108f81"
+    },
+    "Platform/common/contracts/record.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "2d604aeb543d8306aee6f4d3559b57ef61a6932b94499565761bd8c72136c51d"
+    },
+    "Platform/common/contracts/request-mark.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "54bb64949a4378d1895a1668237f5c02f14506ce0ebbfda1512049cc9205fe94"
+    },
+    "Platform/common/contracts/rights-evaluator.md": {
+     "kind": "added",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "a7cef2ef079c2f04a59337480eaf2caa19013aa32ddf8acf52e96a607b8a4eb3"
+    },
+    "Platform/common/contracts/row-check.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "94af799dc77d25be7a2a1cdae40b8c1a26b7438a2bd1f37f92a09d770ac3a3c6"
+    },
+    "Platform/common/contracts/vector-adapter.protocol.json": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "b82c65679ebcffe36c1eb9c683cca11a35065e767ce6773950b56e0ffa85096e"
+    },
+    "Platform/common/modules.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 526,
+       "req_id": "-",
+       "file": "modules.md#module-inventory"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "781b27bafba984c7f45a36fbff34babfb3a66e7cf7cfe8ef77eeeab4550ef5aa"
+    },
+    "Platform/common/vectors/README.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "50fcd8ca1e15b3bd62f5802b28322028ee15eaaa7541f28c60e09c326479cb24"
+    },
+    "Platform/common/vectors/consumers.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "ceac74030d8f072a515640d499a34123b81f6b63d2262d501b81a0b4acc92d60"
+    },
+    "Platform/common/vectors/jcs/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 501,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#jcs-rfc-8785--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 502,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#canonical_jsontsv"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 503,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 504,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 511,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 512,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 517,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 518,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#canonical_jsontsv"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "9c643b9074e95df8502c6e717afb17c7b34fcc4239996abb9158d6376028753f"
+    },
+    "Platform/common/vectors/rights-evaluator/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 505,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 506,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 507,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 508,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 509,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 510,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 513,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 514,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 515,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 516,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 519,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "835905df3f4e841aa89c363310b48262e819124bc7fecbf6e30e173b210c2eb5"
+    },
+    "Platform/common/vectors/wire.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "8214b996fd1672c0b295db2a2c122e4436d6be8b489becc6aa9a62f646773288"
+    },
+    "Platform/common/versions/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 527,
+       "req_id": "-",
+       "file": "versions/README.md#shared-code-module-pins"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "169164fa8ac32a6e471de012a74bb9c454a55d8279639e33e9abaad85b8ce5b9"
+    },
+    "Platform/common/versions/go.mod": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "49fd2003f1b787803ca8111e919186e7ddccb049f513b37c7cc1ee910d9dd8a0"
+    },
+    "Platform/common/versions/go.sum": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "5d072ddeef05a5846d9995bb3eb733a7a945cc84deb5a10625785aecc4c97809"
+    }
+   },
+   "files_without_own_added_English_history": [
+    "Platform/01-store/forms/targets.tsv",
+    "Platform/01-store/vectors/jcs/README.md",
+    "Platform/01-store/vectors/rights-evaluator/README.md",
+    "Platform/common/acceptance/runner-targets.tsv",
+    "Platform/common/contracts/accept.md",
+    "Platform/common/contracts/domain-envelopes.md",
+    "Platform/common/contracts/domain-founding.md",
+    "Platform/common/contracts/domain-token.md",
+    "Platform/common/contracts/door-token.md",
+    "Platform/common/contracts/jcs.md",
+    "Platform/common/contracts/keys.md",
+    "Platform/common/contracts/record.md",
+    "Platform/common/contracts/request-mark.md",
+    "Platform/common/contracts/rights-evaluator.md",
+    "Platform/common/contracts/row-check.md",
+    "Platform/common/contracts/vector-adapter.protocol.json",
+    "Platform/common/vectors/README.md",
+    "Platform/common/vectors/consumers.tsv",
+    "Platform/common/vectors/wire.tsv",
+    "Platform/common/versions/go.mod",
+    "Platform/common/versions/go.sum"
+   ],
+   "listed_exactly_changed_paragraphs": true,
+   "OK": true
+  }
+ },
+ "note": "Exact paragraph/checklist/file coverage and added history evidence; summary meaning and unanchored changes reviewed by reading. The transport marker is excluded.",
+ "OK": true
+}

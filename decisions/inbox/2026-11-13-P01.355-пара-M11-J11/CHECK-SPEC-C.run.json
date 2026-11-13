@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "/home/pilot/venv-spec/bin/python",
+  "-B",
+  "skills/lesson-spec/scripts/check_spec.py",
+  "--scope",
+  "platform"
+ ],
+ "cwd": "/home/pilot/P01.355-evidence/r2/archive-C",
+ "C": "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30",
+ "exit": 0,
+ "seconds": 76.43011325504631,
+ "roster_check": "filesystem roster checked on exact-C archive; OBSH.69 present at C"
+}
