@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Published approval records for N6.2 budget thresholds",
+  "description": "Q-owned records of existing ADR or budget approvals, not candidate declarations or new approvals. Empty records means none of the 11 input-budget thresholds is approved here; the first BUDGET_* thresholds retain their separate source. Structural validity alone establishes no approval: the qualifier must read and confirm the accessible approval text and compare the intended measurement tuple.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "records"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "records": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/record"
+      }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "budget_key",
+        "value",
+        "unit",
+        "observed_result",
+        "scope",
+        "approval"
+      ],
+      "properties": {
+        "budget_key": {
+          "enum": [
+            "output",
+            "cancellation",
+            "response_write",
+            "commit_wait",
+            "door_attempts",
+            "replay_limit",
+            "admin_connections",
+            "writer_hold",
+            "disk",
+            "descriptors",
+            "id_collection"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entries",
+            "workload",
+            "environment"
+          ],
+          "properties": {
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "workload": {
+              "type": "string",
+              "minLength": 1
+            },
+            "environment": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source_ref",
+            "approved_by",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "adr",
+                "budget"
+              ]
+            },
+            "source_ref": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Exact location in the original ADR or budget decision of the approval and the threshold/envelope clauses copied into text."
+            },
+            "approved_by": {
+              "type": "string",
+              "minLength": 1
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Accessible faithful self-contained approval text, including the authority and the approved value, unit, measured result and scope. The qualifier confirms its content; a nonempty string is not approval."
+            }
+          }
+        }
+      }
+    }
+  }
+}
