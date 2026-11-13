@@ -66,6 +66,10 @@ So `answered` with `@any` in the TSV is still a full mark of one of the three fo
 `@rid $rid` of the dictionary before it is sent (testsub has no `requests.key`): the branch 202 compares `queued` with this rid, the branch
 200 is `answered` by the full form; another 2xx is not permitted by the contract.
 
+## Fetched retention vectors
+
+The package [`vectors/fetched`](../../vectors/fetched/README.md) tests P/03.6-R227 and P/03.6-R228 through the existing unified vector command of the `03-worker` profile, package `03-worker/fetched`. It tests confirmed absence separately from a present row and an unknown read, exact count and byte boundaries, and oldest-first eviction under either limit. The byte checks count the UTF-8 `SaidID` names with comma separators. These function cases do not change the 11 process scenarios or their 149 steps; the process scenarios remain below the implementation's chosen limits.
+
 ## SDK seams of the chapter
 
 The cases of the holder that need a scripted clock, a store reply or the order of calls are rows of [seams.tsv](seams.tsv) through the ports of

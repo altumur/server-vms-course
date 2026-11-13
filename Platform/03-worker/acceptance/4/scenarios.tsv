@@ -37,3 +37,9 @@ scenario	step	request	expect
 37-place-released-on-sigterm	4	@sigterm t-1	ok
 37-place-released-on-sigterm	5	@until 25 store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"by": "t-1", "released": "true", "gen": "1"}}
 37-place-released-on-sigterm	6	@until 25 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "true", "gen": "1"}}
+38-door-per-address	1	@start resource	ok
+38-door-per-address	2	@start worker testsub2 t-1	ok
+38-door-per-address	3	@until 20 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"worker":"t-1","url":"$worker_url"}
+38-door-per-address	4	@hold worker t-1 8	ok
+38-door-per-address	5	worker t-1 GET /read	503 {"error":"busy"}
+38-door-per-address	6	worker t-1 GET /read	503 @header Retry-After: =1

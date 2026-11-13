@@ -151,6 +151,32 @@ class FormRefs(unittest.TestCase):
         self.stages("P/01.1 N1; P/01.1-99")
         self.assertEqual(self.run_check().errors, [])
 
+    def test_free_words_after_a_section_of_stages_name_the_exact_form(self):
+        # OBSH.59, ADR-0133 addendum (104) item 1: the cycle cuts the norms packet by the element; free words are
+        # read by nobody. Bare numbers, lists, ranges and «Title» stay whole sections.
+        self.stages("P/01.1 N1; P/01.1 N1,N4; P/01.1 N1–N4; P/01.1-01; P/01.1 «Races»; P/02 N3; P/01.1-02",
+                    "P/01.1 N1 Races",                      # a title of the norms: the exact form
+                    "P/01.1 N1.2 the keys of a write",      # no such title: the generic hint and the bare section
+                    "P/01.1 N1,N4 forms",                   # a list with words
+                    "P/01.1 N4 «Races»",                    # a title after a number
+                    "P/01.1 Data families")                 # words without a number resolve to nothing
+        check = self.run_check()
+        self.assert_dangling(check, "line 3, column norms: «P/01.1 N1 Races»", "the free words (Races)",
+                             "the whole section P/01.1 N1: write P/01.1 «Races»")
+        self.assert_dangling(check, "line 4,", "(the keys of a write)", "as P/01.1 «Title», or keep the bare P/01.1 N1.2")
+        self.assert_dangling(check, "line 5,", "the whole sections P/01.1 N1,N4", "keep the bare P/01.1 N1,N4")
+        self.assert_dangling(check, "line 6,", "(«Races»)", "write P/01.1 «Races»")
+        self.assert_dangling(check, "line 7,", "resolves to no section: write P/01.1 «Data families»")
+        self.assertEqual(len(check.errors), 5, check.errors)
+        self.assertEqual(check.stats["form_refs_stage_words"], 5)
+
+    def test_free_words_are_judged_only_in_the_norms_of_stages(self):
+        # The frozen kit (stages.kit.tsv) and other forms keep their prose after a section reference.
+        self.write("Platform/01-store/forms/stages.kit.tsv", "n\tstage\tnorms\tgate\n1\ts\tP/01.1 N1 Races\tbuild\n")
+        self.refusals("P/01.1 N1 the keys", "P/01.1 N4; see P/01.1 N1 Races")
+        self.write("Platform/01-store/forms/stages.tsv", "n\tstage\tgoal\tnorms\tgate\n1\ts\tP/01.1 N1 words\tP/01.1-01\n")
+        self.assertEqual(self.run_check().errors, [])
+
     def test_file_of_m_naming_a_judge_only_file_dangles_in_m(self):
         stages = self.stages("P/01.1 N1; forms/judge.tsv", "P/01.1 N4; forms/input.tsv",
                              "P/01.1 N4; forms/judge.tsv (judge-only: the stand)")

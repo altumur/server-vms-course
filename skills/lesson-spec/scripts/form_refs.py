@@ -23,6 +23,12 @@ grammars below, never by guessing at prose:
 - `P/NN[.K]-MM` — an item of the readiness checklist or of the system checklist of that chapter (`outline`, as
   `Check.stage_norms` reads them); the column `norms` of the lesson's own `stages.tsv` is judged by `stage_norms`.
 
+An element of the column `norms` of `stages.tsv` that names norms is a whole section (`P/NN[.K] Nx`, also a list or a
+range `N1,N3`, `N1–N5`, `P/06.1–P/06.9 N5`) or one heading `P/NN[.K] «Title»`: the generation cycle cuts the norms
+packet of the stage by it (ADR-0133 addendum (104) item 1). Free words after the address (`P/02.3 N3 Manifest change`,
+`P/04 N3 «choose»`, `P/04 Data families`) are read by nobody, and the element resolves to the whole section or to
+nothing: an error with the exact form (`stage_words_problem`, OBSH.59). The frozen `stages.kit.tsv` is not judged so.
+
 A file of the model export M (`model_and_judge` in the assembled filters, export_lists) names only files of M: a
 reference from it to a file outside M dangles in M (the case of P01.309 M1: `stages.tsv` → `forms/group.tsv`, judge-only),
 unless the cell says so — «judge-only:» in the same cell, as `m_form.judge_only_refs` asks of prose.
@@ -62,6 +68,9 @@ HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$")
 RUN_IN = re.compile(r"^\*\*([^*\n]+?)\.?\*\*")         # a paragraph that opens with its bold title: **N1.2a The view.**
 SECTION_HEAD = re.compile(r"(" + NUMBER + r")(?:\s+(.*))?$")
 CHECKLISTS = ("Readiness checklist", "System checklist")
+ADDRESSED = re.compile(r"(P/([0-9]{2})(?:\.([0-9]+))?(?:–P/[0-9]{2}(?:\.[0-9]+)?)?) (.+)")   # an element of norms of stages
+NUMBERS = re.compile(NUMBER + r"(?:\s*[,–]\s*" + NUMBER + r")*")
+TITLE = re.compile(r"«[^»\n]+»")
 
 
 def forms(root):
@@ -290,6 +299,12 @@ def run(check):
                     if problem:
                         check.stats["form_refs_dangling"] += 1
                         check.error(form, f"{where}: dangling reference: {problem}")
+                if column == "norms" and form.name == "stages.tsv":
+                    for element in cell.split(";"):
+                        problem = stage_words_problem(index, element.strip())
+                        if problem:
+                            check.stats["form_refs_stage_words"] += 1
+                            check.error(form, f"line {n}, column norms: «{element.strip()}»: {problem}")
 
 
 def path_problem(index, form, token, link, first, last, fragment, from_m):
@@ -331,6 +346,30 @@ def section_problem(index, number, chapter, name):
         if name in (numbers if re.fullmatch(r"N[0-9](?:\.[0-9]+[a-z]?)*", name) else titles):
             return None
     return f"no section «{name}» in the norms of {address} (a heading «{name} …» or «N… {name}»)"
+
+
+def stage_words_problem(index, element):
+    """None, or why an element `P/NN[.K] …` of the column norms of stages.tsv is no exact section: free words after
+    the address or the section numbers (ADR-0133 addendum (104) item 1)."""
+    m = ADDRESSED.fullmatch(element)
+    if not m:
+        return None
+    address, number, chapter, rest = m[1], m[2], m[3], m[4].strip()
+    if TITLE.fullmatch(rest):
+        return None
+    numbers = NUMBERS.match(rest)
+    words = rest[numbers.end():].strip() if numbers else rest
+    if not words:
+        return None
+    title = words[1:-1] if TITLE.fullmatch(words) else words
+    whole = f"{address} {numbers[0]}" if numbers else None
+    several = whole and re.search(r"[,–]", whole)
+    resolved = f"the whole section{'s' if several else ''} {whole}" if whole else "no section"
+    head = f"the free words ({words}) are read by nobody, the element resolves to {resolved}"
+    if any(title in index.outline(path)[1] for path in index.norms(number, chapter) or []):
+        return f"{head}: write {address} «{title}»"
+    return (f"{head}: name a heading or a bold paragraph title of the norms as {address} «Title»"
+            + (f", or keep the bare {whole} for the whole section{'s' if several else ''}" if whole else ""))
 
 
 def item_problem(index, number, chapter, token):
