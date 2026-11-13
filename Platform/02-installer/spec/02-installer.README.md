@@ -120,8 +120,8 @@ Chapter 2.5:
 
 For all chapters:
 
-8. **The implementation description** with answers to the 24 items of «Implementation decides» (2.1 — four, 2.2 — two, 2.3 — six, 2.4 — eight, 2.5 —
-   four; the struck-out items are already normed — the answer is a reference) and with pointers for those checklist items which
+8. **The implementation description** with answers to the 25 items of «Implementation decides» (2.1 — four, 2.2 — two, 2.3 — six, 2.4 — eight, 2.5 —
+   five; the struck-out items are already normed — the answer is a reference) and with pointers for those checklist items which
    are checked by reading.
 
 ## Order of work
@@ -205,7 +205,7 @@ For all chapters: complete the implementation description and the checklists; do
 - [ ] *(2.4)* Reading the units does not prove the real OS permissions: the structural tests of the units, the runner, the workers script and the centre
   are named in the description as separate results of the implementation or of the operator stand.
 - [ ] *(all)* All items of the normative checklists of the chapters are closed by the checks stated in them; the checks by reading are named separately.
-- [ ] *(all)* The implementation description answers all 24 items of «Implementation decides».
+- [ ] *(all)* The implementation description answers all 25 items of «Implementation decides».
 - [ ] *(all)* The questions to the norms are passed to their author; one's own assumptions are not presented as the canon.
 
 ## On a divergence of the code and the norms
