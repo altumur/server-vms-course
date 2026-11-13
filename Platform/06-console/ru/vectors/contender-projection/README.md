@@ -4,7 +4,7 @@
 
 Владелец — глава P/06.5 ([нормы](../../spec/06.5-console.norms.md) N3 «/servers» «Соперники»). Участник — консоль кластера (`/servers`
 `WorkerRow.name_conflict`, ряд `<sub>_name_conflicts` `/metrics`). Свежесть метки — [договор наблюдения](../../../../common/ru/contracts/observation.md)
-«Свежесть метки соперника» (граница — пакет [`contender-fresh`](../../../../common/ru/vectors/contender-fresh/README.md) (judge-only: проверочные данные вне M)). Строки — по тексту нормы, правило — там, не здесь.
+«Свежесть метки соперника» (граница — пакет `contender-fresh`). Строки — по тексту нормы, правило — там, не здесь.
 
 ## `cases.tsv`
 
