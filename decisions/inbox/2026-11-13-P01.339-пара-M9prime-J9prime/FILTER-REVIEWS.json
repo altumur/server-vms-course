@@ -1,0 +1,13 @@
+{
+ "C": "bacf1dd2171aa69b49d4bc5cdd6a2c7a9a4fac30",
+ "baseline": "accepted P01.329 pair; all semantic classifications unchanged",
+ "delta_sha256": "66a9672d1e841d329efc5044f59b1091e8c4e026adcd019a3a8ddbc06a804fa5",
+ "deltas": [],
+ "all_delta_records_covered": true,
+ "filter_author_provider": "inherited per-record actual providers from accepted P01.329",
+ "filter_reviewer_provider": "inherited different actual provider per record from accepted P01.329",
+ "inherited_review": "reviews/P01.329-inherited-filter-reviews.json",
+ "inherited_review_sha256": "d1207e5e3b627a6ccf29b8bc4576ea4820ba8013ea19dc54201c9cba05c8fa73",
+ "accepted_receipt": "reviews/P01.329-accepted.json",
+ "no_new_classification": true
+}
