@@ -2,15 +2,15 @@
 name	value	unit	norm	meaning
 REPORT_EVERY	5	s	P/09.1-R019	Default regular agent pass; carry.every remains clamped to 1..3600 by the owning contract
 BODY_LIMIT	16777216	bytes	P/09.1-R208	Imported 16 MiB report/whole limit; a delta and a whole retain their distinct rules
-TABLES_RETRY	600	s	P/09.1-R161	Retry real table snapshots after whole-too-large stubs
+TABLES_RETRY	600	s	P/09.1-R159	Retry real table snapshots after whole-too-large stubs
 SAY_EVERY	600	s	P/09.1-R203	Maximum frequency of repeating one agent reason; follow alarms use their stated pair keys
-FRESH_EVERY	60	s	P/09.1-R297	Refresh unchanged freshness content, at grants as_of in agent memory
-AS_OF_STORE_EVERY	3600	s	P/09.1-R299	Refresh unchanged grants as_of on the medium; changed doc writes immediately
-BOOK_PARTS_PASS	8	count	P/09.1-R263	Maximum requested book parts per pass
-MEMBER_WANT_PASS	8	count	P/09.1-R270	Maximum oldest part asks processed per pass
+FRESH_EVERY	60	s	P/09.1-R296	Refresh unchanged freshness content, at grants as_of in agent memory
+AS_OF_STORE_EVERY	3600	s	P/09.1-R298	Refresh unchanged grants as_of on the medium; changed doc writes immediately
+BOOK_PARTS_PASS	8	count	P/09.1-R262	Maximum requested book parts per pass
+MEMBER_WANT_PASS	8	count	P/09.1-R268	Maximum oldest part asks processed per pass
 OUTCOME_HOLD	604800	s	P/09.1-R385	Hold after a trusted answer stopped naming an edit; restart begins the period anew
 OUTCOMES_KEEP	500	count	P/09.1-R387	Maximum stored outcomes, also limited by the row ceiling
-ALARM_WINDOW	86400	s	P/09.1-R489	Page from = once-computed to minus this window
+ALARM_WINDOW	86400	s	P/09.1-R487	Page from = once-computed to minus this window
 ALARM_PAGE	100	count	P/09.1-R487	Newest alarm rows in one regular page
-URGENT_GAP	1	s	P/09.1-R495	Minimum gap between urgent reports
-GONE_CHECK_EVERY	600	s	P/09.1-R405	Minimum period of the confirmed read check of memberof-gone rows and removed memberof copy units
+URGENT_GAP	1	s	P/09.1-R494	Minimum gap between urgent reports
+GONE_CHECK_EVERY	600	s	P/09.1-R404	Minimum period of the confirmed read check of memberof-gone rows and removed memberof copy units
