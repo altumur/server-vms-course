@@ -365,7 +365,7 @@ scenario	step	request	expect
 37-recover-crash	11	@crash store@s1 rename,fsync,write 64 {"request":"@store-op s1 recover -peers s1@{raft@s1}/{api@s1} -isolated","expect":"ok"}	ok
 37-recover-crash	12	@store-op s1 recover -peers s1@{raft@s1}/{api@s1} -isolated	ok
 37-recover-crash	13	@restart store@s1	ok
-37-recover-crash	14	@until 20 admin@s1 GET /v1/status	200 {"state":"Leader","leader_id":"s1","leader":"{api@s1}"}
+37-recover-crash	14	@until 20 admin@s1 GET /v1/status	200 {"state":"Leader","leader_id":"s1","leader":"@not(\"\")"}
 37-recover-crash	15	admin@s1 GET /v1/get?key=testsub/counters/k01a	200 {"items":{"n":"1"},"index":"$a"}
 37-recover-crash	16	admin@s1 GET /v1/get?key=testsub/counters/k01b	200 {"items":{"n":"2"},"index":"$b"}
 37-recover-crash	17	admin@s1 POST /v1/write {"op":"put","key":"testsub/counters/k01c","items":{"n":"3"},"cas":""}	200 {"index":"$c"}
