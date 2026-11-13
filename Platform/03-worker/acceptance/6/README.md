@@ -73,7 +73,7 @@ The cases of the holder that need a scripted clock, a store reply or the order o
 
 | Subject | Seams |
 |---|---|
-| a lost answer of `put_new` gives no call; an own `begun` is not repeated; a foreign `begun` waits until the timeout of the foreign call | `s1-begun-unknown-no-call`, `s2-own-begun-no-repeat`, `s3-foreign-begun-before-expiry` |
+| a lost answer of `put_new` gives no call; an own `begun` is not repeated; a foreign `begun` waits until the timeout of the foreign call and after it is closed with `unknown` without a call | `s1-begun-unknown-no-call`, `s2-own-begun-no-repeat`, `s3-foreign-begun-before-expiry`, `s9-foreign-begun-after-expiry` |
 | two requests of one group: at most one unfinished call, the timeout does not stand in for the end of the call | `s4-group-busy-after-timeout` |
 | two holder epochs and a late return: the fixed wait is not cross-holder exclusion | `s6-two-holders-late-return` |
 | the state from the start snapshot under the epoch guard; its repeat after `ambiguous` with the same id (P/03.4-07) | `s5-state-start-born`, `s8-state-write-ambiguous-replay` |
