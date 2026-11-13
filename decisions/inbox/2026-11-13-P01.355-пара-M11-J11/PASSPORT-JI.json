@@ -1,0 +1,21 @@
+{
+  "files_in_j": 3591,
+  "files_in_j_input": 2139,
+  "j_commit": "655e9385983b2cd556ee567d4ca294c8fa2a4dd4",
+  "j_input_commit": "711fc3f164237f8cf19c85f0c012010fea7e2a29",
+  "j_input_tree": "46aedb2540430af8ee42bad6dbaa8f58d4cbef42",
+  "j_tree": "305ae0decb2fabbcf5fe7fccc9e528c718994e5e",
+  "operator_sha256": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+  "ref": "refs/heads/judge-input",
+  "second_filter_blob": "efc209169b7014c592fbfe0dc2f1a10f65cc0f76",
+  "second_filter_file": "FILTER-JI.json",
+  "second_filter_path": "Platform/common/acceptance/judge-input-filter.json",
+  "second_filter_sources": {
+    "Platform/01-store/forms/export.json": "022a4ba97e4108e7ac57032bcbea7ca4c7ee25d1",
+    "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+    "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b",
+    "Platform/common/acceptance/judge-input-filter.json": "f30ca4cc2b3dab4aa38379383f00559a03acb092"
+  },
+  "source_C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+  "version": 1
+}

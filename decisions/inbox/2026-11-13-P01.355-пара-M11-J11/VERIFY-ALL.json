@@ -1,0 +1,17 @@
+{
+ "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "M": "d3545d4117de412d4592023122c251aa30ae5564",
+ "J": "655e9385983b2cd556ee567d4ca294c8fa2a4dd4",
+ "JI": "711fc3f164237f8cf19c85f0c012010fea7e2a29",
+ "pair_invariants": true,
+ "M_subset_J": {
+  "M_files": 183,
+  "J_files": 3591,
+  "matched": 183
+ },
+ "assembled_filters_equal_check_spec": true,
+ "narrow_selection_exact": true,
+ "J_input_classified_checks": true,
+ "passport_separate_controls": 9,
+ "OK": true
+}

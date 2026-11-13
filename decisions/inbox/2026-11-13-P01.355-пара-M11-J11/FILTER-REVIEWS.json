@@ -1,0 +1,66 @@
+{
+ "C": "7e21f987dcbe0ac7bc668c626630b4ffa42b2d60",
+ "baseline": "accepted P01.346 pair; unchanged semantic classifications inherited",
+ "delta_sha256": "ba3c4f9c7bca60df341c621c150c4a4060664eedff32f5892518593fd4399fce",
+ "deltas": [
+  {
+   "task": "P01.350",
+   "records": [
+    "Platform/01-store/ru/vectors/jcs/README.md",
+    "Platform/01-store/ru/vectors/rights-evaluator/README.cases.md",
+    "Platform/01-store/ru/vectors/rights-evaluator/README.md",
+    "Platform/01-store/vectors/jcs/README.md",
+    "Platform/01-store/vectors/jcs/canonical_json.tsv",
+    "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+    "Platform/01-store/vectors/rights-evaluator/README.md",
+    "Platform/01-store/vectors/rights-evaluator/expect.tsv",
+    "Platform/01-store/vectors/rights-evaluator/rights.json",
+    "Platform/common/contracts/jcs.md",
+    "Platform/common/contracts/rights-evaluator.md",
+    "Platform/common/ru/contracts/jcs.md",
+    "Platform/common/ru/contracts/rights-evaluator.md",
+    "Platform/common/ru/vectors/jcs/README.md",
+    "Platform/common/ru/vectors/rights-evaluator/README.cases.md",
+    "Platform/common/ru/vectors/rights-evaluator/README.md",
+    "Platform/common/vectors/jcs/README.md",
+    "Platform/common/vectors/jcs/canonical_json.tsv",
+    "Platform/common/vectors/rights-evaluator/README.cases.md",
+    "Platform/common/vectors/rights-evaluator/README.md",
+    "Platform/common/vectors/rights-evaluator/expect.tsv",
+    "Platform/common/vectors/rights-evaluator/rights.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "accepted.window equals actual architect Claude handle; accepted receipt is review record",
+   "accepted_receipt": "reviews/P01.350-accepted.json",
+   "review": "reviews/P01.350-accepted-review.json",
+   "review_sha256": "c936573d89b13881ca06cf1ed49648ec5dea341119d41e89c470d7312c62735d",
+   "roles_equal_accepted_commit": true,
+   "paths_changed_by_accepted_task": true
+  },
+  {
+   "task": "OBSH.70",
+   "records": [
+    "Platform/05-resource/forms/code-rules.tsv",
+    "Platform/06-console/forms/code-rules.tsv",
+    "Platform/common/contracts/json.md",
+    "Platform/common/modules.md",
+    "Platform/common/ru/contracts/json.md",
+    "Platform/common/ru/modules.md"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": "accepted.window equals actual architect Claude handle; accepted receipt is review record",
+   "accepted_receipt": "reviews/OBSH.70-accepted.json",
+   "review": "reviews/OBSH.70-accepted-review.json",
+   "review_sha256": "2120ecaf00c96068e4a3cf07349d89e4fb8a813fb9ac70988632f60b348c82af",
+   "roles_equal_accepted_commit": true,
+   "paths_changed_by_accepted_task": true
+  }
+ ],
+ "filter_author_provider": "per-record actual provider in deltas",
+ "filter_reviewer_provider": "different actual provider per record in deltas",
+ "all_delta_records_covered": true,
+ "inherited_review": "reviews/P01.346-inherited-filter-reviews.json",
+ "inherited_review_sha256": "0647ad88b8a0769fb5e2721d167d47436590d78ed8b0c1038682c849cad6b630"
+}
