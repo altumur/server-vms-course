@@ -21,6 +21,7 @@ MODULES = (
     "test_export_lists",
     "test_target_registry",
     "test_form_refs",                                 # synthetic lessons of the form references (OBSH.56)
+    "test_code_rules_modules",                        # synthetic code rules and shared modules (OBSH.69)
 )
 
 

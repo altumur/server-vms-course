@@ -14,7 +14,7 @@ import hashlib
 import json
 import os
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import yaml
 
@@ -946,6 +946,283 @@ def code_stage_errors(lesson, stages):
         elif last_gate is None or last_gate < positions[stage]:
             errors.append(f"{where} has no code:* gate in its own or a later stage")
     return errors
+
+
+# The rows of `forms/code-rules.tsv` of a lesson by the closed dictionary of the kinds of code checks, and the shared code
+# modules of Platform/common/modules.md (ADR-0133 addenda (39), (115); OBSH.69). The stage of a row and its gate are
+# `code_stage_errors`; the references of the cells (the column norm and a norm inside args) are `form_refs`.
+CODE_DICTIONARY = "Platform/common/acceptance/forms/code-rules.tsv"
+CODE_COLUMNS = ["id", "kind", "name", "args", "stage", "norm"]
+MODULES = "Platform/common/modules.md"
+IMPORT_PATH = re.compile(r"[A-Za-z0-9_.~+-]+(?:/[A-Za-z0-9_.~+-]+)*")
+LESSON_DIR = re.compile(r"[0-9]{2}-[a-z0-9-]+")
+TEMPLATE_TOKEN = re.compile(r'[{}\[\]]|"([^"]*)"\s*:|\sor\s')
+MODULES_FROM = re.compile(r"`from`\s+equal\s+to\s+`([^`]+)`")
+MODULES_FORBID = re.compile(r"`forbid_imports`\s+row\s+excludes\s+direct\s+`([^`]+)`\s+imports"
+                            r".*?the\s+shared\s+`([^`]+)`\s+module", re.S)
+
+
+def code_rule_forms(root):
+    return sorted(p for p in Path(root).glob("Platform/*/forms/code-rules.tsv") if p.parent.parent.name != "common")
+
+
+def template_fields(text):
+    """The alternatives of the args of a kind of the dictionary (`{} or {"core": <name>}`) → [frozenset of the fields of
+    the outer object of each]; a field of a nested object (the entries of `allow`) is not a field of the kind."""
+    out, current, depth = [], set(), 0
+    for m in TEMPLATE_TOKEN.finditer(text):
+        if m[0] in "{[":
+            depth += 1
+        elif m[0] in "}]":
+            depth -= 1
+        elif m[1] is not None:
+            if depth == 1:
+                current.add(m[1])
+        elif depth == 0:
+            out.append(frozenset(current))
+            current = set()
+    out.append(frozenset(current))
+    return out
+
+
+def code_kinds(root):
+    """(errors, {kind: [fields of each alternative]}) of the common dictionary of the kinds of code checks."""
+    path = Path(root) / CODE_DICTIONARY
+    if not path.is_file() or path.is_symlink():
+        return [f"no dictionary of the kinds of code checks {CODE_DICTIONARY}"], {}
+    errors, rows = read(path, ["kind", "name", "args", "check"])
+    return errors, {row["kind"]: template_fields(row["args"]) for row in rows}
+
+
+def _strict_object(text):
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise ValueError(f"duplicate key {key!r}")
+            out[key] = value
+        return out
+
+    return json.loads(text, object_pairs_hook=pairs)
+
+
+def _import_paths(value, what):
+    if not isinstance(value, list) or not value:
+        return [f"{what} is not a nonempty list of import paths"]
+    bad = [v for v in value if not isinstance(v, str) or not IMPORT_PATH.fullmatch(v)]
+    if bad:
+        return [f"{what}: {bad!r} — not an import path"]
+    if len(set(value)) != len(value):
+        return [f"{what}: an import path repeats"]
+    return []
+
+
+def forbid_imports_args(args, root):
+    """The args of a `forbid_imports` row by the dictionary: `forbid` — a nonempty list of import paths; `allow`, when
+    present, — a nonempty list of objects of exactly `name`, `imports`, `norm`: a name of the profile code mapping, the
+    exact exempted imports, each matching an entry of `forbid` (equal, or that entry followed by `/`), and a norm that
+    names at least one reference `form_refs` reads in the cell (a section `P/NN[.K] Nx`, «Title», a path of the course):
+    `form_refs` judges that it is live."""
+    import form_refs
+    errors = _import_paths(args["forbid"], "forbid")
+    forbid = args["forbid"] if not errors else []
+    if "allow" not in args:
+        return errors
+    allow = args["allow"]
+    if not isinstance(allow, list) or not allow:
+        return errors + ["allow is not a nonempty list of objects name, imports, norm"]
+    for i, entry in enumerate(allow):
+        what = f"allow[{i}]"
+        if not isinstance(entry, dict) or set(entry) != {"name", "imports", "norm"}:
+            errors.append(f"{what} is not an object of exactly name, imports, norm")
+            continue
+        if not isinstance(entry["name"], str) or not re.fullmatch(r"\S+", entry["name"]):
+            errors.append(f"{what}: name {entry['name']!r} is not a name of the profile code mapping")
+        problems = _import_paths(entry["imports"], f"{what}.imports")
+        errors += problems
+        if not problems:
+            stray = [p for p in entry["imports"] if not any(p == f or p.startswith(f + "/") for f in forbid)]
+            if stray:
+                errors.append(f"{what}.imports: {stray} match no entry of forbid")
+        norm = entry["norm"]
+        if not isinstance(norm, str) or not norm.strip():
+            errors.append(f"{what}: norm is empty — an exception is justified by an existing lesson rule")
+        elif not form_refs.cell_refs(norm, "args"):
+            errors.append(f"{what}: norm {norm!r} names no reference (P/NN[.K] Nx, P/NN[.K] «Title», a path of the "
+                          "course) that the check of the form references can judge live")
+    return errors
+
+
+def requires_module_args(args, root):
+    """The args of a `requires_module` row: `module` — a module path; `from` — a `go.mod` file of the export, from its
+    root (the directory that holds Platform/)."""
+    errors = []
+    if not isinstance(args["module"], str) or not IMPORT_PATH.fullmatch(args["module"]):
+        errors.append(f"module {args['module']!r} is not a module path")
+    origin = args["from"]
+    if not isinstance(origin, str) or PurePosixPath(origin).name != "go.mod" or \
+            ".." in PurePosixPath(origin).parts or PurePosixPath(origin).is_absolute() or \
+            not (Path(root) / origin).is_file():
+        errors.append(f"from {origin!r} is not a go.mod file of the export (a path from the root that holds Platform/)")
+    return errors
+
+
+KIND_ARGS = {"forbid_imports": forbid_imports_args, "requires_module": requires_module_args}
+
+
+def check_code_rules(path):
+    """The rows of `forms/code-rules.tsv` of a lesson by the dictionary (its header: «A kind outside this dictionary,
+    args outside the fields of the kind, a path that is not a file of the export … is a data error of the lesson»): the
+    kind is in the dictionary; args is one JSON object without repeated keys whose fields are exactly those of one
+    alternative of the kind; the args of `forbid_imports` and `requires_module` by their definitions."""
+    path = Path(path)
+    root = path.parent.parent.parent.parent
+    errors, kinds = code_kinds(root)
+    if errors:
+        return [f"code-rules.tsv: {e}" for e in errors], {}
+    errors, rows = read(path, CODE_COLUMNS)
+    for row in rows:
+        where = f"code-rules.tsv: {row['id']}"
+        kind = row["kind"]
+        if kind not in kinds:
+            errors.append(f"{where}: kind {kind!r} is not in the dictionary {CODE_DICTIONARY}")
+            continue
+        try:
+            args = _strict_object(row["args"])
+        except ValueError as exc:
+            errors.append(f"{where}: args is not one JSON object: {exc}")
+            continue
+        if not isinstance(args, dict):
+            errors.append(f"{where}: args is not one JSON object")
+            continue
+        if frozenset(args) not in kinds[kind]:
+            shapes = " or ".join("{" + ", ".join(sorted(f)) + "}" for f in kinds[kind])
+            errors.append(f"{where}: args fields {sorted(args)} are not the fields of {kind}: {shapes}")
+            continue
+        errors += [f"{where}: {kind}: {m}" for m in KIND_ARGS.get(kind, lambda a, r: [])(args, root)]
+    return errors, {"code_rule_rows": len(rows)}
+
+
+def module_inventory(text, platform):
+    """(errors, [{name, module, consumers}]) of the table «Module inventory» of Platform/common/modules.md: the module
+    name, the Go module path, the consumer lessons — the backquoted lesson directories of the column «Consumers…»."""
+    lines = text.split("\n")
+    start = next((i for i, line in enumerate(lines) if line.strip() == "## Module inventory"), None)
+    if start is None:
+        return ["no section «## Module inventory»"], []
+    table = []
+    for line in lines[start + 1:]:
+        if line.startswith("## "):
+            break
+        if line.startswith("|"):
+            table.append(cells(line))
+        elif table:
+            break
+    if len(table) < 3:
+        return ["«Module inventory» has no table"], []
+    head = table[0]
+    consumers = next((i for i, c in enumerate(head) if c.startswith("Consumers")), None)
+    if "Name" not in head or "Go module" not in head or consumers is None:
+        return ["the table «Module inventory» has no columns Name, Go module, Consumers…"], []
+    errors, out = [], []
+    for row in table[2:]:
+        if len(row) != len(head):
+            errors.append(f"«Module inventory»: row {row[0]!r}: {len(row)} cells, expected {len(head)}")
+            continue
+        name = re.fullmatch(r"`([^`]+)`", row[head.index("Name")])
+        module = re.fullmatch(r"`([^`]+)`", row[head.index("Go module")])
+        if not name or not module or not IMPORT_PATH.fullmatch(module[1]):
+            errors.append(f"«Module inventory»: row {row[0]!r}: Name and Go module are not one `name` and one `module path`")
+            continue
+        lessons = set()
+        for token in re.findall(r"`([^`]+)`", row[consumers]):
+            if LESSON_DIR.fullmatch(token):
+                if not (platform / token).is_dir():
+                    errors.append(f"«Module inventory»: {name[1]}: consumer {token} is no lesson of Platform/")
+                lessons.add(token)
+        if not lessons:
+            errors.append(f"«Module inventory»: {name[1]}: no consumer lesson")
+        out.append({"name": name[1], "module": module[1], "consumers": lessons})
+    for key in ("name", "module"):
+        seen = [m[key] for m in out]
+        for value in sorted({v for v in seen if seen.count(v) > 1}):
+            errors.append(f"«Module inventory»: {key} {value} repeats")
+    return errors, out
+
+
+def module_consumer_errors(root):
+    """[(path, message)]: the code rows of the lessons agree with the shared code modules of Platform/common/modules.md
+    (ADR-0133 addendum (115) item 3; OBSH.70). A consumer lesson of a module of the inventory has a `requires_module` row
+    with the exact module path and `from` the pin location the text names («`from` equal to `…`»); a lesson that is no
+    consumer of it has no such row; a module under the common prefix of the inventory paths that the inventory does not
+    name is refused; a consumer of the module of the rule «the lesson's `forbid_imports` row excludes direct `X`
+    imports … the shared `N` module» has a `forbid_imports` row whose `forbid` names X. Without modules.md nothing is
+    read. The shape of the args is `check_code_rules`; a row whose args do not parse is skipped here."""
+    root = Path(root)
+    path = root / MODULES
+    if not path.is_file():
+        return []
+    platform = root / "Platform"
+    text = path.read_text(encoding="utf-8")
+    problems, inventory = module_inventory(text, platform)
+    out = [(path, p) for p in problems]
+    origin = MODULES_FROM.search(text)
+    forbid_rule = MODULES_FORBID.search(text)
+    if not origin:
+        out.append((path, "the pin location of a requires_module row is not readable («`from` equal to `…`»)"))
+    if not forbid_rule:
+        out.append((path, "the rule of the forbid_imports row is not readable («the lesson's `forbid_imports` row "
+                          "excludes direct `…` imports … the shared `…` module»)"))
+    if not inventory or not origin:
+        return out
+    by_module = {m["module"]: m for m in inventory}
+    if forbid_rule and forbid_rule[2] not in {m["name"] for m in inventory}:
+        out.append((path, f"the forbid_imports rule names the module {forbid_rule[2]}, which is not in the inventory"))
+    prefix = os.path.commonpath([m["module"] for m in inventory]) + "/" if len(inventory) > 1 else None
+    rows = {}
+    for form in code_rule_forms(root):
+        _, parsed = read(form, CODE_COLUMNS)
+        rows[form.parent.parent.name] = (form, parsed)
+    lessons = sorted(set(rows) | {c for m in inventory for c in m["consumers"]})
+    for lesson in lessons:
+        form, parsed = rows.get(lesson, (platform / lesson / "forms" / "code-rules.tsv", []))
+        required, forbidden = {}, set()
+        for row in parsed:
+            try:
+                args = _strict_object(row["args"])
+            except ValueError:
+                continue
+            if not isinstance(args, dict):
+                continue
+            if row["kind"] == "requires_module" and isinstance(args.get("module"), str):
+                required.setdefault(args["module"], []).append((row["id"], args.get("from")))
+            elif row["kind"] == "forbid_imports" and isinstance(args.get("forbid"), list):
+                forbidden.update(f for f in args["forbid"] if isinstance(f, str))
+        for module in inventory:
+            have = required.get(module["module"], [])
+            if lesson in module["consumers"]:
+                if not any(src == origin[1] for _, src in have):
+                    out.append((form, f"{lesson} is a consumer of the shared module {module['name']} in {MODULES}, "
+                                      f"and has no requires_module row with module {module['module']} and from "
+                                      f"{origin[1]}"))
+                for rid, src in have:
+                    if src != origin[1]:
+                        out.append((form, f"{rid}: requires_module {module['module']} from {src!r} — a shared module "
+                                          f"is pinned in {origin[1]} ({MODULES})"))
+            else:
+                for rid, _ in have:
+                    out.append((form, f"{rid}: requires_module {module['module']}, and {lesson} is not a consumer of "
+                                      f"{module['name']} in the inventory of {MODULES}"))
+        if prefix:
+            for module in sorted(m for m in required if m.startswith(prefix) and m not in by_module):
+                out.append((form, f"{required[module][0][0]}: requires_module {module} — a shared module path that "
+                                  f"the inventory of {MODULES} does not name"))
+        if forbid_rule:
+            imported, owner = forbid_rule[1], forbid_rule[2]
+            if any(m["name"] == owner and lesson in m["consumers"] for m in inventory) and imported not in forbidden:
+                out.append((form, f"{lesson} is a consumer of the shared module {owner} in {MODULES}, and no "
+                                  f"forbid_imports row forbids {imported}"))
+    return out
 
 
 ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)

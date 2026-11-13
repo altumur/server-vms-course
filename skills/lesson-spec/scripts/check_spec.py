@@ -2959,6 +2959,14 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        # The rows of code-rules.tsv by the dictionary of kinds, and the shared code modules (ADR-0133 addendum (115)).
+        for path in check_forms.code_rule_forms(self.root):
+            errors, stats = check_forms.check_code_rules(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats["code_rule_rows"] = self.stats.get("code_rule_rows", 0) + stats.get("code_rule_rows", 0)
+        for path, message in check_forms.module_consumer_errors(self.root):
+            self.error(path, message)
         for lesson in check_forms.req_lessons(self.root):
             errors, stats = check_forms.check_req_anchors(lesson)
             for message in errors:
