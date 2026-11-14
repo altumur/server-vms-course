@@ -92,5 +92,5 @@ From M11/8 N4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `ex
 
 ## Vectors
 
-The package [`peer`](../vectors/peer/README.md) contains 31 rows, including 25 inputs of the former M11/8 acceptance (sc. 06). Its later cases cover certificate path order and the address, name and input-form boundaries. The function steps and refusal vocabulary above govern the result; detailed case inputs and answer associations remain judge-only in the package.
+The package [`peer`](../vectors/peer/README.cases.md) (judge-only: `README.cases.md`) contains 31 rows, including 25 inputs of the former M11/8 acceptance (sc. 06). Its later cases cover certificate path order and the address, name and input-form boundaries. The function steps and refusal vocabulary above govern the result; detailed case inputs and answer associations remain judge-only in the package.
 

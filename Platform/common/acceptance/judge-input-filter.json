@@ -4927,6 +4927,11 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/vectors/peer/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
       "path": "Platform/common/ru/vectors/peer/README.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -5622,9 +5627,14 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
-      "path": "Platform/common/vectors/peer/README.md",
+      "path": "Platform/common/vectors/peer/README.cases.md",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/common/vectors/peer/README.md",
+      "disposition": "include",
+      "basis": "Public peer function interface shared with the model; no concrete cases."
     },
     {
       "path": "Platform/common/vectors/peer/cases.tsv",
