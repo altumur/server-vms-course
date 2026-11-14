@@ -307,6 +307,16 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/03-worker/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Operational qualification procedures are outside the implementation input; the Russian translation is for people."
+    },
+    {
+      "path": "Platform/03-worker/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "Operational qualification procedures are outside the implementation input; the Russian translation is for people."
+    },
+    {
       "path": "Platform/03-worker/ru/03-worker.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -385,6 +395,16 @@
       "path": "Platform/03-worker/ru/lifecycle.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/03-worker/ru/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Operational qualification procedures are outside the implementation input; the Russian translation is for people."
+    },
+    {
+      "path": "Platform/03-worker/ru/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "Operational qualification procedures are outside the implementation input; the Russian translation is for people."
     },
     {
       "path": "Platform/03-worker/ru/spec/03-worker.README.md",
@@ -844,6 +864,16 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/03-worker/qualification/README.md",
+      "disposition": "include",
+      "basis": "Operational qualification inventory and procedures retained outside model input."
+    },
+    {
+      "path": "Platform/03-worker/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Operational qualification inventory and procedures retained outside model input."
+    },
+    {
       "path": "Platform/03-worker/ru/03-worker.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -922,6 +952,16 @@
       "path": "Platform/03-worker/ru/lifecycle.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/03-worker/ru/qualification/README.md",
+      "disposition": "exclude",
+      "basis": "Russian qualification translation is not judge input."
+    },
+    {
+      "path": "Platform/03-worker/ru/qualification/stand-procedures.md",
+      "disposition": "exclude",
+      "basis": "Russian qualification translation is not judge input."
     },
     {
       "path": "Platform/03-worker/ru/spec/03-worker.README.md",

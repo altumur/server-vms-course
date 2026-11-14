@@ -679,3 +679,4 @@ P/AC-R047	acceptance/spec/acceptance.norms.md#N6.5	P01.365; P01.363 sections 2â€
 -	qualification-input-filter.json#/files	P02.75; ADR-0133 addendum (112); Q inventory of P/02 procedures and explicit dependencies	2026-11-14	-
 -	acceptance/forms/targets.README.md#intro	P04.42; ADR-0135 addendum (14)	2026-11-14	; the targets of the other lessons are only in that table for now.
 -	qualification-input-filter.json#/files	P04.44; P04.41; ADR-0133 (112)	2026-11-14	-
+-	qualification-input-filter.json#/files	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-
