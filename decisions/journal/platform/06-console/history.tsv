@@ -668,4 +668,3 @@ P/06.9-R017	forms/runtime-constants.tsv#row:OPS_CONTROL_RETRIES	ADR-0129 (17) п
 -	spec/06-console.README.md#order-of-work	P06.25; Architect answered 2026-11-14T02:12:09Z; ADR-0133 addendum (118) item 2	2026-11-14	4. First put the blob durably, then the CAS of the row. Marks are allowed in the background; deletion only after all\n   writers/copying are stopped, a repeated full traversal and by the phases of N3. Do not use an idempotent put as a proof of a change\n   of the index.
 -	acceptance/1/README.md#checks-outside-the-sequential-http-file	P06.25; Architect answered 2026-11-14T02:12:09Z; ADR-0133 addendum (118) item 2	2026-11-14	-
 -	spec/06-console.api.openapi.yaml#/paths/~1{rows}~1{id}~1{blob_field}/put/description	P06.25; Architect answered 2026-11-14T02:12:09Z; ADR-0133 addendum (118) item 2	2026-11-14	-
--	ru/06-console.md#потолки-не-растут-под-задачу	P06.25; Architect answered 2026-11-14T02:12:09Z; ADR-0133 addendum (118) item 2	2026-11-14	-
