@@ -157,6 +157,16 @@
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
+      "path": "Platform/02-installer/spec/02.1-installer.relations.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
       "path": "Platform/02-installer/spec/02.3-installer.norms.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
@@ -170,6 +180,231 @@
       "path": "Platform/02-installer/spec/02.5-installer.norms.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/contenders.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/heartbeats.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/holds.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/holds.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/state.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/03-worker/data/state.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/README.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/controller-pass.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/decommission-pending.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/placement-intent.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/placement.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/placement.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-tables.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot-unplaced.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/snapshot.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/want.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/want.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/workers.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/data/workers.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/README.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/daemon-flags.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/runtime-constants.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/slot-fate.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/slot-release.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/forms/targets.routing.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/lifecycle.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/spec/04-controller.norms.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/vectors/near-of/README.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-allowed/README.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/04-controller/vectors/shrink-victim/README.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/05-resource/data/doors.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/05-resource/data/resource-heartbeat.schema.json",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/05-resource/spec/05-resource.api.openapi.yaml",
+      "disposition": "include",
+      "basis": "Public resource door and object-version observation contract used by controller qualification."
+    },
+    {
+      "path": "Platform/06-console/spec/06.1-console.norms.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
     },
     {
       "path": "Platform/08-domain/data/users.outcomes.tsv",
@@ -237,14 +472,39 @@
       "basis": "The existing stand environment and launch contract referenced by qualification, retained as a whole file."
     },
     {
+      "path": "Platform/common/contracts/env-file.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
       "path": "Platform/common/contracts/gate-and-pass.md",
       "disposition": "include",
       "basis": "The parsing owner named by the related-scope boundary of the procedures."
     },
     {
+      "path": "Platform/common/contracts/log-mask.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/object-client.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/observation.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
       "path": "Platform/common/contracts/peer.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/pool.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
     },
     {
       "path": "Platform/common/contracts/production-obligations.md",
@@ -257,6 +517,11 @@
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
+      "path": "Platform/common/contracts/row-check.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
       "path": "Platform/common/contracts/sealing.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
@@ -265,6 +530,16 @@
       "path": "Platform/common/contracts/secret-files.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/turn.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/url-credentials.md",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
     },
     {
       "path": "Platform/common/data/catalog.tsv",
@@ -277,9 +552,19 @@
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
+      "path": "Platform/common/vectors/consumers.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
+    },
+    {
       "path": "Platform/common/vectors/production-obligations/README.md",
       "disposition": "include",
       "basis": "Public production sequences referenced by the common production obligations."
+    },
+    {
+      "path": "Platform/common/vectors/wire.tsv",
+      "disposition": "include",
+      "basis": "Explicit controller obligation, input form, observation contract or procedure dependency for P/04 external qualification."
     }
   ]
 }

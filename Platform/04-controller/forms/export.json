@@ -262,6 +262,11 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/04-controller/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "External qualification procedure is outside M."
+    },
+    {
       "path": "Platform/04-controller/ru/04-controller.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -295,6 +300,11 @@
       "path": "Platform/04-controller/ru/lifecycle.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/04-controller/ru/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "External qualification procedure is outside M."
     },
     {
       "path": "Platform/04-controller/ru/spec/04-controller.README.md",
@@ -679,6 +689,11 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/04-controller/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "External qualification procedure; functional target selection is unchanged."
+    },
+    {
       "path": "Platform/04-controller/ru/04-controller.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -712,6 +727,11 @@
       "path": "Platform/04-controller/ru/lifecycle.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/04-controller/ru/qualification/stand-procedures.md",
+      "disposition": "exclude",
+      "basis": "Russian translation is outside the judge export."
     },
     {
       "path": "Platform/04-controller/ru/spec/04-controller.README.md",

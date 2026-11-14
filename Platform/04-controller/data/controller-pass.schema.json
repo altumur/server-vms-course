@@ -98,7 +98,7 @@
      },
      "since": {
       "$ref": "#/$defs/common.time",
-      "description": "the moment the slot entered this fate by the controller's clock"
+      "description": "the observed fate transition time on this controller clock; 0 means unknown before the first observed transition or after restart"
      }
     },
     "additionalProperties": false,
@@ -150,7 +150,8 @@
    "$ref": "#/$defs/count"
   },
   "name_conflicts": {
-   "$ref": "#/$defs/count"
+   "$ref": "#/$defs/count",
+   "description": "distinct names with a currently fresh contender mark seen by this controller in this pass, including unreadable fresh marks, excluding \"-\""
   },
   "unplaceable": {
    "type": "object",

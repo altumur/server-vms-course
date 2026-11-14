@@ -25,11 +25,11 @@
 | `near_preference` | P/04-R034, P/04-R133, P/04-R157, P/04-R262 | `vectors/near-of/README.md`, `Platform/common/contracts/pool.md` |
 | `affinity_places` | P/04-R159, P/04-R288, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531 | `Platform/common/contracts/pool.md` |
 | `choice_ranks` | P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292, P/04-R566 | `Platform/common/contracts/pool.md`, `data/placement.schema.json` |
-| `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R046, P/04-R196, P/04-R197, P/04-R208, P/04-R313 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
+| `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R046, P/04-R128, P/04-R196, P/04-R197, P/04-R208, P/04-R313, P/04-R491 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
 | `release_permission` | P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R310, P/04-R311, P/04-R318 | `forms/slot-fate.tsv`, `forms/slot-release.tsv`, `data/controller-pass.schema.json` |
 | `leaving` | P/04-R035, P/04-R047, P/04-R048, P/04-R267, P/04-R287, P/04-R322 | `forms/README.md`, `Platform/common/contracts/pool.md` |
 | `placeable_set` | P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R479, P/04-R481, P/04-R563, P/04-R566 | `vectors/order/README.md`, `vectors/shrink-allowed/README.md` |
-| `unit_cleanup` | P/04-R025, P/04-R120, P/04-R124, P/04-R134, P/04-R269, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
+| `unit_cleanup` | P/04-R025, P/04-R120, P/04-R124, P/04-R134, P/04-R269, P/04-R275, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
 | `order_absolute` | P/04-R050, P/04-R052, P/04-R107, P/04-R339, P/04-R355, P/04-R356, P/04-R494, P/04-R541 | `vectors/order/README.md`, `data/want.schema.json` |
 | `growth_room` | P/04-R085, P/04-R330, P/04-R332, P/04-R333, P/04-R337, P/04-R357 | `vectors/order/README.md`, `Platform/common/contracts/presence-lock.md` |
 | `shortage_estimate` | P/04-R053, P/04-R130, P/04-R139, P/04-R149, P/04-R325, P/04-R327, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531, P/04-R532 | `vectors/order/README.md`, `data/controller-pass.schema.json` |
@@ -42,7 +42,7 @@
 | `snapshot_fields` | P/04-R011, P/04-R064, P/04-R137, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R417, P/04-R498, P/04-R548, P/04-R549, P/04-R561, P/04-R564 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
 | `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R421, P/04-R560, P/04-R564 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
 | `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R181, P/04-R182, P/04-R183, P/04-R411, P/04-R412, P/04-R555, P/04-R556, P/04-R560, P/04-R564 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
-| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279, P/04-R560, P/04-R562, P/04-R565 | `data/controller-pass.schema.json`, `forms/README.md` |
+| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R128, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279, P/04-R491, P/04-R560, P/04-R562, P/04-R565 | `data/controller-pass.schema.json`, `forms/README.md` |
 | `startup_schema` | P/04-R059, P/04-R060 | `forms/daemon-flags.tsv`, `lifecycle.md`, `Platform/common/contracts/schema.md` |
 | `power_pull` | P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R430, P/04-R431 | `Platform/common/contracts/observation.md`, `lifecycle.md` |
 | `refusals` | P/04-R067, P/04-R068, P/04-R564 | `forms/refusals.tsv` |
@@ -114,7 +114,7 @@
 
 Отчёт прохода использует все поля и значения полей, заданные ниже.
 
-**`pass — at`**: \<момент конца управляющей части, до публикации снимков\>. **`pass — ok`** — boolean: true означает, что управляющая часть дошла до конца, все её входы прочитаны и ни в одной управляющей записи не отказано; иначе false. **`pass — error`** — текст последней ошибки или "". **`pass — failures`** — число ошибок. **`pass — last_success`** — момент последнего успешного завершения управляющей части. **`pass — seconds`**: \<длительность управляющей части, без последующей публикации снимков и отчёта\>
+**`pass — at`**: \<момент конца управляющей части, до публикации снимков\>. **`pass — ok`** — boolean: true означает, что управляющая часть дошла до конца, все её входы прочитаны и ни в одной управляющей записи не отказано; иначе false. **`pass — error`** — текст последней ошибки или "". **`pass — failures`** — число ошибок. **`pass — last_success`** — момент последнего успешного завершения управляющей части. **`pass — seconds`**: \<длительность управляющей части, без последующей публикации снимков и отчёта\>. Обязательный вход управления, оставшийся unknown, в том числе при недоступном своём ресурсе, не считается прочитанным: pass.ok — false. Нового кода отказа это не вводит.
 
 **`pass — manifest_rev`** — ревизия манифеста этого контроллера. **`pass — manifest_behind`** считает строки, запись которых нынешний проход откладывает из-за отставшего манифеста; строку считают один раз за проход.
 
@@ -124,13 +124,13 @@
 
 **`pass — hung_move_after`**: \<секунды предела зависания, действующего у этого контроллера\>
 
-**`pass — fates`** — `{<name>: {fate, server, why, rev, since}}` только занятых неотданных слотов: holder непуст, released — false, не true и не taking (договор слота, States). У каждого элемента `pass.fates` значение `since` — момент входа слота в эту судьбу по часам контроллера: смена судьбы меняет since; первая встреча слота не является этим моментом.
+**`pass — fates`** — `{<name>: {fate, server, why, rev, since}}` только занятых неотданных слотов: holder непуст, released — false, не true и не taking (договор слота, States). У каждого элемента `pass.fates` значение `since` — момент входа слота в эту судьбу по часам контроллера. Пока контроллер не наблюдал переход судьбы, since — 0 (неизвестен); первая встреча слота не является переходом. Наблюдённая смена судьбы меняет since на момент смены, неизменная судьба сохраняет его. Перезапуск контроллера сбрасывает это знание: since снова 0 до наблюдённого перехода.
 
 **`pass — diverged`**: \<назначений, исправленных sync\>. **`pass — unplaced`**: \<единиц без воркера, кроме снятых с эксплуатации\>. **`pass — garbled`**: \<строк единиц, которые не читаются\>. **`pass — expired_kept`**: \<ручных строк с прошедшим сроком, которые срок снял, но не удалил: адресат с fixed-полями или about не по id (N3 «проход()» шаг 8)\>
 
 **`pass — snapshot_state_garbled`**: \<состояний единиц, не вошедших в шард снимка нынешнего цикла: строка состояния не читается своим типом (N1.3a; P/03.6 N1.7 unreadable)\>. **`pass — state_swept_total`**: \<строк состояния, снятых уборкой осиротевшего и после удаления строки единицы (N3 шаг 8a)\>. **`pass — snapshot_tables_refused`**: \<таблиц N1.3b, которые нынешний цикл заменил заглушкой: объект больше SNAPSHOT_TABLE_MAX\>. **`pass — snapshot_rows_garbled`**: \<строк единиц, не вошедших в шард снимка нынешнего цикла: поле snapshot: не читается своим типом (N1.3a garbled)\> — P/01.1 N0 «Stability of output»
 
-**`pass — reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total, workers_hung, workers_hung_moved_total, workers_unsure_moved_total, name_conflicts`**: \<числа\>
+**`pass — reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total, workers_hung, workers_hung_moved_total, workers_unsure_moved_total, name_conflicts`**: \<числа\>. name_conflicts — число различных имён слотов хотя бы с одной текущей свежей отметкой претендента по договору наблюдения, включая нечитаемую свежую отметку и исключая поисковое имя "-". Наблюдатель — этот контроллер; счёт вычисляют для нынешнего прохода, без накопления. Несколько отметок одного имени считают один раз, независимо от наличия пульса этого имени.
 
 **`pass — unplaceable`**: {`<id>`: `<why>`} — единицы без места этого прохода и непустая причина; из него консоль берёт why /unplaceable и reason 404 /where/`<id>` у неразмещённой (N2.2)
 
@@ -220,7 +220,7 @@
 
 Вид домена показывает единицы с `domain.ref`; прочие строки единиц и таблицы консоли чужого кластера домену без этого объекта не видны. Манифест без `domain.ref` и единица без значения `ref` здесь видны.
 
-Объекты снимков таблиц используют оболочку, состав и правила публикации ниже. **`<sub>/snapshot-tables/<table>`**: — объект; писатель — контроллер; \<таблица\> — ключ domain.view_tables манифеста (P/02.1, P/08.1 N1.4a): таблица tables или unit.rows {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, worker?, server?, phase?, status?}]}. **`<sub>/snapshot-tables/<table> — cluster`**: как у шарда, N1.3a
+Объекты снимков таблиц используют оболочку, состав и правила публикации ниже. **`<sub>/snapshot-tables/<table>`**: — объект; писатель — контроллер; \<таблица\> — ключ domain.view_tables манифеста (P/02.1, P/08.1 N1.4a): таблица tables или unit.rows {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, held_by?, worker?, server?, phase?, status?}]}. **`<sub>/snapshot-tables/<table> — cluster`**: как у шарда, N1.3a
 
 **`<sub>/snapshot-tables/<table> — ts`**: момент записи объекта. Объект-кандидат сравнивают с последним подтверждённо опубликованным объектом без ts: должны совпасть cluster, refused и rows, включая наличие или отсутствие refused. При совпадении объект не пишут и сохраняют прежний ts; один новый ts записи не вызывает. Смена CLUSTER или переход между заглушкой too_large и обычным объектом требует публикации даже при одинаковом rows. Живость — не ts, а members[].state вида.
 
@@ -525,7 +525,7 @@ Active intent — принятое общее решение для members, п�
 | `fates.<имя>.server` | строка | обязателен |  |  |
 | `fates.<имя>.why` | строка | обязателен |  |  |
 | `fates.<имя>.rev` | строка или целое | обязателен |  | the version of the judgment about the slot |
-| `fates.<имя>.since` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment the slot entered this fate by the controller's clock |
+| `fates.<имя>.since` | время (P/01.1 N0 «Время в строке») | обязателен |  | the observed fate transition time on this controller clock; 0 means unknown before the first observed transition or after restart |
 | `diverged` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `unplaced` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
@@ -538,7 +538,7 @@ Active intent — принятое общее решение для members, п�
 | `workers_hung` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `workers_hung_moved_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `workers_unsure_moved_total` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `name_conflicts` | по определению `count` | обязателен |  | a counter ≥ 0 |
+| `name_conflicts` | по определению `count` | обязателен |  | distinct names with a currently fresh contender mark seen by this controller in this pass, including unreadable fresh marks, excluding "-" |
 | `unplaceable` | отображение имена автора: имя — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+`, значение — строка; не из: `""` | обязателен |  |  |
 | `unplaceable.<имя>` | строка; не из: `""` | необязателен |  | a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>` |
 | `short` | список, элемент — отображение `{labels, units, workers, groups, ordered, withheld?}` и прочие имена автора: имя — строка, значение — по определению `count` | необязателен |  | only when placement.grows true |
@@ -669,8 +669,8 @@ Active intent — принятое общее решение для members, п�
 | `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 N1.2), not set — local |
 | `ts` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the object write; unchanged cluster, refused and rows retain the former ts (P/04-R174) |
 | `refused` | строка; одно из: `too_large`, `whole_too_large` | необязателен |  | a stub instead of rows: the table did not fit (P/04 N1.3b ceiling, P/09.1 N1.2 tables_budget) |
-| `rows` | список, элемент — отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | обязателен |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
-| `rows[]` | отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | необязателен |  |  |
+| `rows` | список, элемент — отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?, held_by?}` | обязателен |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
+| `rows[]` | отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?, held_by?}` | необязателен |  |  |
 | `rows[].key` | строка; не из: `""` | обязателен |  | the row name (P/06.1 N1.6) |
 | `rows[].revision` | целое; ≥ 1; ≤ 9007199254740991 | обязателен |  | the row version |
 | `rows[].fields` | отображение, opaque | обязателен |  | fields of the list domain.view_tables of the manifest; values of their own type; no secrets |
@@ -683,6 +683,7 @@ Active intent — принятое общее решение для members, п�
 | `rows[].labels` | список, элемент — строка | необязателен |  | for unit rows — the field labels |
 | `rows[].labels[]` | строка | необязателен |  |  |
 | `rows[].about` | строка | необязателен |  | for unit rows — the id of the about unit |
+| `rows[].held_by` | строка или null | необязателен |  | for a places table, required by the manifest: the acting holder name or null (P/04-R555; P/06.1-R174) |
 
 Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
 
@@ -753,7 +754,7 @@ delete_after применяется только к named id: numeric вмест
 
 Если проход длится дольше PASS_EVERY, реализация выбирает пропуск занятых тиков или запуск следующего прохода после завершения; выбор расписания не судится. Без превышения длительности период PASS_EVERY остаётся в силе. Изменяющие проходы и публикации циклов не перекрываются, а P/04-R142 по-прежнему отделяет каждый цикл и его счётчики.
 
-0. Память наблюдаемых пульсов, слотов и ресурсов обновляют по собственным часам контроллера; первая встреча версии означает, что она только что изменилась. Объекты кластера (пульсы воркеров/ресурсов и отчёты) читают через ресурс своего сервера. Без своего ресурса `cluster://` даёт unknown, а не отсутствие ([клиент объектов](../../../common/ru/contracts/object-client.md), door).
+0. Память наблюдаемых пульсов, слотов и ресурсов обновляют по собственным часам контроллера; первая встреча версии означает, что она только что изменилась. Объекты кластера (пульсы воркеров/ресурсов и отчёты) читают через ресурс своего сервера. Без своего ресурса `cluster://` даёт unknown, а не отсутствие ([клиент объектов](../../../common/ru/contracts/object-client.md), door). При недоступном своём ресурсе сохранять unknown; это не доказательство отсутствия. Обязательные непрочитанные входы управления дают pass.ok — false по P/04-R113.
 
 До изменяющего прохода получают очередь размещения: busy означает отсутствие изменяющего прохода и повтор через TURN_BUSY_RETRY; при своей очереди сначала доводят active intent.
 
@@ -781,9 +782,9 @@ delete_after применяется только к named id: numeric вмест
 
 У таблицы с fixed-полями или about не по id удаляется только строка с made; ручная строка не удаляется — expired_kept + 1 (N1.3 unplaced). Строка с made удаляется по договор проверки строки «Customer row: made» `delete` (строго позже made.keep, not_before = max(0, made.keep − 60)): 409 early — не удалено, без барьера и журнала, следующим проходом; keep предотвращает только заведомо раннюю попытку удаления; поздно пришедшее удаление по-прежнему удерживает not_before при приёме хранилищем. Проверка made.keep никогда не разрешает удаление раньше keep.
 
-Строка удаляется физически, без надгробия (P/01.1 удалить): строка первой, с cas прочитанной версии и guard своей версии placement_turn; правка или продление между чтением и удалением — conflict: удаление отменено, состояние не трогается; только после подтверждённого удаления строки — её состояния (шаг 8a); журнал unit.unplaced_deleted {reason: unplaced | retired | ends}
+Строка удаляется физически, без надгробия (P/01.1 удалить): строка первой, с cas прочитанной версии и guard своей версии placement_turn; правка или продление между чтением и удалением — conflict: удаление отменено, состояние не трогается; только после подтверждённого удаления строки — её состояния (шаг 8a); журнал unit.unplaced_deleted {reason: unplaced | retired | ends}. Уборка состояния после подтверждённого удаления единицы использует свежие упорядоченные чтения и условное удаление шага 8a; прежнее удаление не разрешает вслепую удалить нынешнее состояние того же id.
 
-8a. уборка состояния (unit.state объявлен): перечислить `<sub>`/state/; для каждой строки состояния прочитать строку единицы: нет её, надгробие или её born ≠ born состояния → осиротевшее: удалить одной операцией с cas версии состояния и guard {key: строка единицы, index: прочитанная версия — у надгробия его версия, "" — строки нет}; строка, созданная или изменённая после чтения, уборку отменяет (412 — оставить до следующего прохода); действующее и прочее неосиротевшее (born совпал, revision другой) не трогать; state_swept_total + 1 за каждую снятую
+8a. Уборка состояния (unit.state объявлен): перечислить `<sub>`/state/. Для каждой строки сначала прочитать состояние и сохранить его версию для cas; только затем свежо прочитать строку единицы и её born. Состояние осиротело, если единицы нет, она — надгробие или её born отличается. Удалять по cas только прочитанную версию состояния. Если строка единицы или надгробие есть, дополнительно защитить удаление точным guard прочитанной версии: изменение строки отказывает уборке (412 — оставить до следующего прохода). Если единицы нет, guard единицы не применять: index "" не является guard отсутствия. Запись состояния новой жизни меняет версию состояния и отказывает удалению по старому cas, сохраняя новое состояние. Действующие и другие неосиротевшие состояния (born совпал, revision отличается) не трогать; state_swept_total + 1 за каждое подтверждённое удаление.
 
 9. нехватка и заказ (grows: true): строки заказа, ёмкость в пути, short, заказать, снять по сроку
 
