@@ -465,7 +465,7 @@ paths:
         schema:
           type: string
           pattern: "^(?:(?:0|[1-9][0-9]*))$"
-          description: A decimal uint64, 0 by default. The range check is mandatory.
+          description: A decimal uint64, 0 by default. The range check is mandatory. An unknown nonzero value returns WaitQuiet immediately before queue admission.
       - name: client
         in: query
         required: false
@@ -535,7 +535,7 @@ paths:
       summary: 'Resource: the stream of a bucket file'
       responses:
         '200':
-          description: The full file up to the fixed size
+          description: The whole bucket up to the size fixed for this read; the object/mirror reception byte ceiling does not cap this GET
           content:
             application/octet-stream:
               schema:
@@ -586,7 +586,10 @@ paths:
         schema:
           type: string
           pattern: "^(?:bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*))$"
-        description: In the lesson profile there is one range; multiple/conditional requests are outside the profile.
+        description: >-
+          One range: clamp end to size-1; start >= size or start > end gives 416 with bytes */size.
+          A positive suffix longer than a nonempty file gives the whole file as 206; a suffix of an empty file gives 416.
+          Malformed/multiple Range and conditional requests are outside the profile; their handling is not judged.
   /mirror/{server}/{path}:
     x-route-priority: 100
     parameters:
@@ -636,6 +639,7 @@ paths:
         schema:
           $ref: '#/components/schemas/Sha256'
       requestBody:
+        description: A correctly framed chunked body without Content-Length is accepted with the same full-body, checksum, receive-term and actual byte-limit checks; no 411 is assigned.
         required: true
         content:
           application/octet-stream:
@@ -785,6 +789,7 @@ components:
       type: string
       pattern: "^(?:[0-9a-f]{64})$"
     ObjectEntry:
+      description: For a tombstone, written is its object-write stamp, server holds the selected copy, and size is the returned body size; read the deletion stamp from the body.
       type: object
       required:
       - written
@@ -800,6 +805,7 @@ components:
           type: integer
           minimum: 0
     ObjectListing:
+      description: Cluster scope polls the local server and every confirmed foreign door without a live filter; known non-answers appear in missing. An unconfirmed poll set or failed local listing gives 503.
       type: object
       required:
       - server
@@ -949,7 +955,7 @@ components:
       type: string
       minLength: 3
       description: 'A comma-separated list: <sub>/<kind>[/<unit>]. Each part is WaitPart; empty elements and spaces
-        are not allowed.'
+        are not allowed. Matching uses the logical manifest subsystem without .alarms; that suffix is not normalized and matches no subsystem.'
       pattern: "^(?:[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?(?:,[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?)*)$"
     Touched:
       type: string
@@ -966,7 +972,7 @@ components:
           const: true
         seq:
           type: integer
-          minimum: 0
+          minimum: 1
           maximum: 18446744073709551615
         touched:
           type: array
@@ -975,6 +981,7 @@ components:
           minItems: 1
           uniqueItems: true
     WaitQuiet:
+      description: Quiet hint; immediate for an unknown nonzero since, without queue admission or replacement.
       type: object
       required:
       - changed
@@ -985,7 +992,7 @@ components:
           const: false
         seq:
           type: integer
-          minimum: 0
+          minimum: 1
           maximum: 18446744073709551615
     WaitFull:
       type: object
@@ -999,7 +1006,7 @@ components:
           const: false
         seq:
           type: integer
-          minimum: 0
+          minimum: 1
           maximum: 18446744073709551615
         full:
           const: true
@@ -1015,7 +1022,7 @@ components:
           const: false
         seq:
           type: integer
-          minimum: 0
+          minimum: 1
           maximum: 18446744073709551615
         replaced:
           const: true
@@ -1078,6 +1085,7 @@ components:
         sum:
           $ref: '#/components/schemas/Sha256'
     MirroredListing:
+      description: A readable existing empty copies directory returns 200 with copies empty; an absent directory returns 404.
       type: object
       required:
       - copies
