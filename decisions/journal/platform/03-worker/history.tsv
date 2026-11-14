@@ -196,3 +196,7 @@ req_id	file	source	date	removed
 -	README.md#what-this-lesson-takes-from-common	P03.40; Architect answer 2026-11-13T23:19:04Z; ADR-0133 addendum (118) item 2; derived Russian translation; ADDED console rid/request-digest interfaces and secret-files dependency	2026-11-13	-
 -	forms/token-cache.machine.yaml#/env	P03.40; Architect answer 2026-11-13T23:19:04Z; ADR-0133 addendum (118) item 2	2026-11-13	- loaded reports the actual envelope/file read. day is the ordinal of the day by this worker clock, supplied by
 -	forms/token-cache.machine.yaml#/env	P03.40; Architect answer 2026-11-13T23:19:04Z; ADR-0133 addendum (118) item 2	2026-11-13	  the ordinary clock/calendar code; no timezone policy is chosen by this form.
+-	qualification/README.md#intro	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-
+-	qualification/stand-procedures.md#intro	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-
+-	forms/export.json#/model	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-
+-	forms/export.json#/judge	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-

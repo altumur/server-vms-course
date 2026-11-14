@@ -172,6 +172,111 @@
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
+      "path": "Platform/03-worker/acceptance/1/seams.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/acceptance/2/seams.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/acceptance/3/seams.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/acceptance/6/seams.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/README.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/contender-writer.machine.yaml",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/contender-writer.traces.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/daemon-flags.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/refusals.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/runtime-constants.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.machine.yaml",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/forms/token-cache.traces.tsv",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/lifecycle.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/qualification/README.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.2-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.3-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.4-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.5-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.6-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/03-worker/spec/03.7-worker.norms.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
       "path": "Platform/08-domain/data/users.outcomes.tsv",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
@@ -237,9 +342,34 @@
       "basis": "The existing stand environment and launch contract referenced by qualification, retained as a whole file."
     },
     {
+      "path": "Platform/common/contracts/domain-token.md",
+      "disposition": "include",
+      "basis": "Existing group, journal and token boundary contracts used explicitly by the worker qualification procedures."
+    },
+    {
+      "path": "Platform/common/contracts/event-journal.md",
+      "disposition": "include",
+      "basis": "Existing group, journal and token boundary contracts used explicitly by the worker qualification procedures."
+    },
+    {
       "path": "Platform/common/contracts/gate-and-pass.md",
       "disposition": "include",
       "basis": "The parsing owner named by the related-scope boundary of the procedures."
+    },
+    {
+      "path": "Platform/common/contracts/group-of.md",
+      "disposition": "include",
+      "basis": "Existing group, journal and token boundary contracts used explicitly by the worker qualification procedures."
+    },
+    {
+      "path": "Platform/common/contracts/local-token-door.md",
+      "disposition": "include",
+      "basis": "Existing group, journal and token boundary contracts used explicitly by the worker qualification procedures."
+    },
+    {
+      "path": "Platform/common/contracts/log-mask.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
     },
     {
       "path": "Platform/common/contracts/peer.md",
@@ -257,6 +387,11 @@
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
+      "path": "Platform/common/contracts/row-check.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
       "path": "Platform/common/contracts/sealing.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
@@ -265,6 +400,16 @@
       "path": "Platform/common/contracts/secret-files.md",
       "disposition": "include",
       "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/store-client.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
+    },
+    {
+      "path": "Platform/common/contracts/url-credentials.md",
+      "disposition": "include",
+      "basis": "Existing normative source or explicit operational qualification dependency for the worker procedures."
     },
     {
       "path": "Platform/common/data/catalog.tsv",

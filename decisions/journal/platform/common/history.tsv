@@ -678,3 +678,4 @@ P/AC-R047	acceptance/spec/acceptance.norms.md#N6.5	P01.365; P01.363 sections 2â€
 -	acceptance/judge-input-filter.json#/files/896	OBSH.97; OBSH.92; ADR-0133 addendum (112); Architect task and answered 2026-11-14T08:37:36Z	2026-11-14	-
 -	qualification-input-filter.json#/files	P02.75; ADR-0133 addendum (112); Q inventory of P/02 procedures and explicit dependencies	2026-11-14	-
 -	acceptance/forms/targets.README.md#intro	P04.42; ADR-0135 addendum (14)	2026-11-14	; the targets of the other lessons are only in that table for now.
+-	qualification-input-filter.json#/files	P03.46; P03.45; ADR-0133 addendum (112); operational qualification without new obligations	2026-11-14	-
