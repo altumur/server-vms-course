@@ -1,0 +1,436 @@
+{
+  "task": "P04.43",
+  "working_directory": "/home/pilot/wt-task-P04.43",
+  "branch": "task/P04.43",
+  "source_C": "d633e917d622f2938d6919f7552689fcac593287",
+  "evidence_directory": "/home/pilot/P04.43-evidence",
+  "pair": {
+    "format": "P04.43-pair-with-JI/1",
+    "C": "d633e917d622f2938d6919f7552689fcac593287",
+    "M": "35ca93d54fe6fd98f6cca51b94df37bb8ffc2b56",
+    "J": "1a76cb0c7f58f70925cf4fa509322c96cf43ba2a",
+    "SPEC_VERSION": "35ca93d54fe6fd98f6cca51b94df37bb8ffc2b56",
+    "M_tree": "5d066d30f4bc54daef0dc8bb7e17f70d02c16872",
+    "J_tree": "e9370eb3c6ebf4a3af799732d7f81a92b933ce38",
+    "M_count": 308,
+    "J_count": 3622,
+    "raw_M": "0e7b25ec58bf1f4136b2fae3aeb7e37fc947a3e0",
+    "M_directory": "/home/pilot/P04.43-evidence/M",
+    "J_directory": "/home/pilot/P04.43-evidence/J",
+    "M_git": "/home/pilot/P04.43-evidence/narrow/M.git",
+    "J_git": "/home/pilot/P04.43-evidence/pair-d633e917d622/J.git",
+    "raw_pair_passport": "/home/pilot/P04.43-evidence/pair-d633e917d622/PASSPORT-TRUSTED-ONLY.json",
+    "raw_pair_passport_sha256": "dc157e768556b9ea5e6580aabf3c234c068f2634ef5edb065d1b89746fc492cb",
+    "M_passport": "/home/pilot/P04.43-evidence/PASSPORT-M.json",
+    "M_passport_sha256": "6f41b1384e0fdd349eb8ef1000fd80105ca3ae2c8e4590951db548b8561b0a7e",
+    "assembled_filter_blob": "2889e2f5e824a0106755cba68d45972d95e2f65e",
+    "narrow_selection_sha256": "6cd837e1cd27ae3f757a424266da76842c25b3905c6210f9f9126bafa484b60a",
+    "object_checks": {
+      "M": {
+        "root_commit": true,
+        "single_ref": true,
+        "physical_equals_reachable": true,
+        "object_count": 412,
+        "fsck_exit": 0
+      },
+      "J": {
+        "root_commit": true,
+        "single_ref": true,
+        "physical_equals_reachable": true,
+        "object_count": 3954,
+        "fsck_exit": 0
+      }
+    },
+    "M_subset_J_paths_modes_blobs": true,
+    "J_equals_full_Platform_C_plus_marker": true,
+    "module_pins_verified": true,
+    "read_only_unpacked_directories": true,
+    "publication": {
+      "operator_result": "published_pair_needs_Root_acceptance",
+      "local_pair": "/home/pilot/P04.43-evidence/pair-d633e917d622",
+      "operator_has_remote_publication": false
+    },
+    "OK": true,
+    "JI": "8e17e977b18a2fe21c6f22b7af4b471e51cb01dc",
+    "JI_tree": "cf41751c26992bd4d69c5386585a1494423341c4",
+    "JI_directory": "/home/pilot/P04.43-evidence/JI",
+    "JI_git": "/home/pilot/P04.43-evidence/judge-input/JI.git",
+    "JI_count": 2160,
+    "JI_passport": "/home/pilot/P04.43-evidence/judge-input/PASSPORT-JI.json",
+    "JI_passport_sha256": "049be685857a889c571280e07f640ee12874a58c1c392fb3e3ffb5a196ec7d8d",
+    "JI_filter_blob": "b0ae0a0f4843f91dfcea7b9fd6b1b4fa036f646c",
+    "JI_projection_exact": true,
+    "JI_objects": 2262,
+    "JI_fsck_exit": 0,
+    "read_only_directories": {
+      "M": true,
+      "J": true,
+      "JI": true
+    },
+    "P04_targets_in_M_J_JI": 27,
+    "P04_routing_only_J_JI": true,
+    "M_comparison": "/home/pilot/P04.43-evidence/M-COMPARISON.json",
+    "candidate": {
+      "task": "P04.39",
+      "generated_from_M": "ef05129fdbca00fcfafaaddbcd1ce68271eac018",
+      "generated_from_pair": "P04.37",
+      "court_uses_J": "1a76cb0c7f58f70925cf4fa509322c96cf43ba2a",
+      "court_uses_JI": "8e17e977b18a2fe21c6f22b7af4b471e51cb01dc",
+      "generation_repeated": false,
+      "court_executed_by_this_task": false
+    }
+  },
+  "M_comparison": {
+    "baseline_C": "a713df571d8b86ce23efb18d24d20e4bd8fe6bc0",
+    "baseline_M": "ef05129fdbca00fcfafaaddbcd1ce68271eac018",
+    "C": "d633e917d622f2938d6919f7552689fcac593287",
+    "M": "35ca93d54fe6fd98f6cca51b94df37bb8ffc2b56",
+    "baseline_files": 307,
+    "files": 308,
+    "added": [
+      "Platform/04-controller/forms/targets.tsv"
+    ],
+    "removed": [],
+    "changes": [
+      {
+        "path": "Platform/02-installer/acceptance/5/README.md",
+        "kind": "changed",
+        "cause": "P02.75",
+        "before_mode_blob": [
+          "100644",
+          "de227060981bfc3ea74f6ac21f0c38c5622d08b2"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "99c1467082b385fed5ae7c9574760c5aada3dcab"
+        ],
+        "before_sha256": "58a450e851b4424267b87bdc7ef24e684cc0ab905b0824b8e9ca79a2d1f97329",
+        "after_sha256": "b534b0fca168606609c9b17264ca025a2000bb818358d761f4874d40c9537366"
+      },
+      {
+        "path": "Platform/02-installer/forms/refusals.tsv",
+        "kind": "changed",
+        "cause": "P02.75",
+        "before_mode_blob": [
+          "100644",
+          "159b034711feea7cdc5b9748db5330d76430d571"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "6b8429087088af5803c96ffa68b3cef6c44e4683"
+        ],
+        "before_sha256": "5348b87e52b6113ae5f0f48ee9fe5760cb36ef322617baf283f01bb7c99c7434",
+        "after_sha256": "690af48e9b15dd3f1544fa1ea048f9a2092e36d847c40b49784169bea363c882"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+        "kind": "changed",
+        "cause": "P02.75",
+        "before_mode_blob": [
+          "100644",
+          "31e231917615680b780c6bb8ecdde278427dbb31"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "c9905a3322d3bef55022e63efb52add577d5cbdd"
+        ],
+        "before_sha256": "65c24e6f5b69067cea657f48e249ea01241c7d675e30a5c0c929e01695915e11",
+        "after_sha256": "d687f9cd0fd464e55d2d11635ac1f30d2ee8982ad6b2ae17c062215a3f92aca5"
+      },
+      {
+        "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+        "kind": "changed",
+        "cause": "P02.75",
+        "before_mode_blob": [
+          "100644",
+          "6e6ea4eb13956308cb96299bfcd87c2794b44f01"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "f5c0e89a8d6a67f7b1863087e8d2cbb6cb0e0ad1"
+        ],
+        "before_sha256": "70b674d4cd81d531ccf6b13394034e4a527bfdb2fa0ffa87a0cf9214d814284a",
+        "after_sha256": "ca3466bbabcb45f4252f0f33b6a89f2fb005ca452aad4ed5b3bd5a79ab38c2e2"
+      },
+      {
+        "path": "Platform/04-controller/forms/targets.tsv",
+        "kind": "added",
+        "cause": "P04.42",
+        "before_mode_blob": null,
+        "after_mode_blob": [
+          "100644",
+          "776a3e401653d4a3e8c1b97bd589679722b0ced2"
+        ],
+        "before_sha256": null,
+        "after_sha256": "001ab0a0dda668df151eb5443dee505eb43f1e10cdbe30b9cc900325e24e6fc7"
+      },
+      {
+        "path": "Platform/COURSE_COMMIT",
+        "kind": "changed",
+        "cause": "new source C (delivery marker)",
+        "before_mode_blob": [
+          "100644",
+          "536747b5920f93ec88406240568f95e29099624e"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "6e4610968c917dae78e12c44693d6cc8038594e5"
+        ],
+        "before_sha256": "e0484605dd3d50aa3948fcd836defcfe6d9abf4d70b81389a6c6d55d5193c25e",
+        "after_sha256": "2b1a5b9191f51193693fe8e51ff81cf64d74b0812d88c5f72267a987ad379274"
+      },
+      {
+        "path": "Platform/common/acceptance/forms/targets.README.md",
+        "kind": "changed",
+        "cause": "P04.42",
+        "before_mode_blob": [
+          "100644",
+          "541a7c084331f9cb6aa176de5dc1b8237c91e182"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "b4206d65f5bafb9a8a0739ac9620120fede53be8"
+        ],
+        "before_sha256": "be28cb245ac6ad86e63ac2c1e259714abe6ed5c40924db9b8b3baa2e7bcd23cc",
+        "after_sha256": "4b434073232fcc138b78f1a49262c85dcdeea32aaab18c1f6b3383bc9580bd7d"
+      },
+      {
+        "path": "Platform/common/acceptance/runner-targets.tsv",
+        "kind": "changed",
+        "cause": "P04.42",
+        "before_mode_blob": [
+          "100644",
+          "a13d1f5caac0c4b6052c9847b9530cb67a77bd06"
+        ],
+        "after_mode_blob": [
+          "100644",
+          "ce16f611a8c595a64167e8b1da0474cd977f87e8"
+        ],
+        "before_sha256": "66bb7abb451527c5ea1ae0475ea45ccb26c66601f0c929d19409cfa7cfc9866c",
+        "after_sha256": "1f6c5a4465d1409fb0a4c077d7da7f12608aa2b16fa1c42afd1744fca026a2db"
+      }
+    ],
+    "unchanged_files": 300,
+    "unchanged_files_byte_equal": true,
+    "other_P04_lesson_files_byte_equal": true,
+    "authority": "P04.43 answered 2026-11-14T12:13:42Z: P02.75 dependency changes permitted",
+    "OK": true
+  },
+  "verify": {
+    "C": "d633e917d622f2938d6919f7552689fcac593287",
+    "M": "35ca93d54fe6fd98f6cca51b94df37bb8ffc2b56",
+    "J": "1a76cb0c7f58f70925cf4fa509322c96cf43ba2a",
+    "JI": "8e17e977b18a2fe21c6f22b7af4b471e51cb01dc",
+    "sha256_records_verified": 6105,
+    "SHA256SUMS_sha256": "7e07f3d388f026036e5ade0ed66805a93e86729a3f04708fcc229c85d73e18dd",
+    "read_only": {
+      "M": true,
+      "J": true,
+      "JI": true
+    },
+    "payload_rosters_blobs_modes_and_sha256_verified": true,
+    "M_comparison_sha256": "54b535e8984c38cb8dd9ab77dd80dadb49a878590e34bf4ea5ba61f699eca6e5",
+    "OK": true
+  },
+  "operators": {
+    "source": "/home/pilot/P04.37-evidence/operator",
+    "files_sha256": {
+      "b7_export_pair.py": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+      "judge_input_export.py": "c046b5ac1abbb8a82b14595f72c340b76e3e8ca6d2953557b93daa02e8b96641",
+      "m_passport.py": "c19d8f35fc431904f021be8618a70bbde0714c18c9d54b9a7f6e48058f827cdc",
+      "check_m_passport.py": "4c23afc9fe7d0b68ca10681c01b6beef38faa3d6e57bef37f381ae003f8e6d4c"
+    },
+    "canonical_P02.52_byte_equal": true,
+    "unchanged": true
+  },
+  "check_spec_C": {
+    "argv": [
+      "/home/pilot/venv-spec/bin/python",
+      "-B",
+      "skills/lesson-spec/scripts/check_spec.py",
+      "--scope",
+      "platform"
+    ],
+    "cwd": "/home/pilot/P04.43-evidence/archive-C",
+    "C": "d633e917d622f2938d6919f7552689fcac593287",
+    "exit": 0,
+    "seconds": 78.03427509905305,
+    "stdout_sha256": "98cf3af95ac8cdc319810f0b29b6cc3af9ede01fc818bf83e8a3769f1b27fb9f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "SHA256SUMS_external_check_exit": 0,
+  "files": [
+    {
+      "path": "/home/pilot/P04.43-evidence/FINAL-PASSPORT.json",
+      "sha256": "dc99db8a8a9ed6ffa83fc9198041bd15f945b5ab241404f3ee1bb7938ccc834f",
+      "bytes": 3033
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/PAIR-PASSPORT.json",
+      "sha256": "8a2c7ad574265c6b191939656c46bd3c76d9e7c1f986d9bb99dfede664a4fa21",
+      "bytes": 1912
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/PASSPORT-M.json",
+      "sha256": "6f41b1384e0fdd349eb8ef1000fd80105ca3ae2c8e4590951db548b8561b0a7e",
+      "bytes": 57710
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/M-COMPARISON.json",
+      "sha256": "54b535e8984c38cb8dd9ab77dd80dadb49a878590e34bf4ea5ba61f699eca6e5",
+      "bytes": 4585
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/VERIFY-FINAL.json",
+      "sha256": "8b48891000472a6445bf6f20dcc1a319e1892296d6a8f4bce1eb5ceb05f6b3cb",
+      "bytes": 567
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/SHA256SUMS",
+      "sha256": "7e07f3d388f026036e5ade0ed66805a93e86729a3f04708fcc229c85d73e18dd",
+      "bytes": 797148
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/SPEC_VERSION",
+      "sha256": "1453ebce4e1f97359717978538fd479f91ab0a180e58985179c9ac33b3ee3a09",
+      "bytes": 41
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/NARROW-M.json",
+      "sha256": "6cd837e1cd27ae3f757a424266da76842c25b3905c6210f9f9126bafa484b60a",
+      "bytes": 24392
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/MODULE-PINS.json",
+      "sha256": "278e5c7d463f3bc295d42caf215077c4c13728582bd882ed798d2ad30ddd13a3",
+      "bytes": 2104
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/OPERATOR-UNCHANGED.json",
+      "sha256": "685d6683cce54e1380bad292834a8ef3768b3ce9da9d07630a4bcf9d6194405a",
+      "bytes": 513
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/FILTER-DELTA.json",
+      "sha256": "8f6cc17926792d13a4e83c1e740d120dfdf3c45fd8e4a4fbe5e0f667a8fe43e0",
+      "bytes": 3877
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/FILTER-REVIEWS.json",
+      "sha256": "b15b86ccad660aaccc9f54e7e745df1e5363394ec8024127020c8cf88e37b3f9",
+      "bytes": 3396
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/SOURCE-COMPOSITION.json",
+      "sha256": "29437aab2d50a1a3f550452b0aa0ec2323e9ddfc3943c2835296d7295f03685d",
+      "bytes": 1112
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/SOURCE-CLOSURE.json",
+      "sha256": "0a06174e8cafb7f2e46491c138d5c6d9ed98f23896194a3071b20449e69e4ccc",
+      "bytes": 485
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/TASK-at-source.yaml",
+      "sha256": "d95bf1dba8e47f2eab696ed22f0d8d1c1b7ef1f98547f91e05d3b4579afb5c68",
+      "bytes": 2353
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/CHECK-SPEC-C.out",
+      "sha256": "98cf3af95ac8cdc319810f0b29b6cc3af9ede01fc818bf83e8a3769f1b27fb9f",
+      "bytes": 21997
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/CHECK-SPEC-C.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/CHECK-SPEC-C.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/CHECK-SPEC-C.run.json",
+      "sha256": "98abc21f0b89dc5b922f45c0f5ad2e56d99694d793690fe87fe7806d65d92717",
+      "bytes": 468
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/FSCK-M.run.json",
+      "sha256": "d47061de8101d4a70c90b9462f65e5264327a3728cf6ee59f12c553a3c8bc80a",
+      "bytes": 359
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/FSCK-J.run.json",
+      "sha256": "4ab8587711fc701c4ce6950d72c1c7ee3100274730377c91a3ed6fff1c0b3970",
+      "bytes": 368
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/FSCK-JI.run.json",
+      "sha256": "525d74c69547cab9ab997789aa1594c55f47c5ced958f1611a59a209d34d80de",
+      "bytes": 363
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/UNPACKED-M-PASSPORT.run.json",
+      "sha256": "d66b29390a5e4d1b467e7cab9bd836b18a78711d2ac266745a2f8334e6ca19a3",
+      "bytes": 501
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/judge-input/PASSPORT-JI.json",
+      "sha256": "049be685857a889c571280e07f640ee12874a58c1c392fb3e3ffb5a196ec7d8d",
+      "bytes": 1351
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/judge-input/FILTER-JI.json",
+      "sha256": "5bf97d997f4cf549929da93239006bb64eeac32782b6f0691e04f05fe1830f92",
+      "bytes": 700654
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/SHA256SUMS-CHECK.log",
+      "sha256": "8ae5c2b271f18a8e8d08e533f722deb027f8e1a3a13d44333ee39391470fcaf5",
+      "bytes": 418638
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/reviews/P04.42-accepted.json",
+      "sha256": "a032d03fb2f4896eb9eaccf17f8bf59d238230ad1b001fc4d1747e949bd5a179",
+      "bytes": 721
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/reviews/P02.75-accepted.json",
+      "sha256": "be5d8b39b461e9aa3c657d721cad1d585d0fb2dcacff6017f35eab6e865e0e2b",
+      "bytes": 752
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/reviews/P04.39-task.yaml",
+      "sha256": "9e47a2b209474d582e8444dc652b5aae264d66bac38a30ff30616fe798b3b0b1",
+      "bytes": 1290
+    },
+    {
+      "path": "/home/pilot/P04.43-evidence/reviews/P04.39-handed.json",
+      "sha256": "bb76318db5b545b158f26c096213857ac03115ad9e1b4632c3c8f388c00302e0",
+      "bytes": 1068
+    }
+  ],
+  "scripts": [
+    {
+      "path": "decisions/inbox/2026-11-14-P04.43-пара/build_pair.py",
+      "sha256": "67ce7e2c21d62de6e55ec00ed4efb46ef01c7ffa2e77d0c0a87d4da967931aa0"
+    },
+    {
+      "path": "decisions/inbox/2026-11-14-P04.43-пара/filter_delta.py",
+      "sha256": "8d8942fcb14612545d8158f97d5754ed20c0dcc63f853f89a17fa3fd294a7cdd"
+    },
+    {
+      "path": "decisions/inbox/2026-11-14-P04.43-пара/finish_pair.py",
+      "sha256": "2a7a57a7bb4bdc764f832b0867be61c52c74a9cf590f18995e849f722d9f44cd"
+    },
+    {
+      "path": "decisions/inbox/2026-11-14-P04.43-пара/preflight.py",
+      "sha256": "fa7a5a905ffc5bca46237788d67597655ce0aab1d6051705c064d9d5e4b6d44f"
+    },
+    {
+      "path": "decisions/inbox/2026-11-14-P04.43-пара/prepare_pair.py",
+      "sha256": "f1346426f26fbccd056ebf123a8679667f4e6ff92a74079881ec614922103308"
+    }
+  ]
+}
