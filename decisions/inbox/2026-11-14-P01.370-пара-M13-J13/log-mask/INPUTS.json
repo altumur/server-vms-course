@@ -1,0 +1,17 @@
+{
+ "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "course_pin_commit": "1b60bf7ad6141e5d5cc49d185a16ee30fcf8c66c",
+ "module_commit": "e19621128ad83f7e50267d58cfe1a2f029e70a28",
+ "module": "servervms.local/common/log-mask",
+ "version": "v0.0.0-20261113215911-e19621128ad8",
+ "zip_sha256": "29b52c538fca20a31edd8ff9b55a05b2f4dbcea3871125d6e97bfaf43ca6cf52",
+ "inputs": {
+  "Platform/common/vectors/wire.tsv": "53bbc0eeea36de638f645db0183d7bd43d275867f9c8dd7bef87eb8091565395",
+  "Platform/common/vectors/log-mask/cases.tsv": "d8deb09165fc959600fdb98e3a71643fe1721fdee89fc583f94a941bb0cf6155",
+  "Platform/common/vectors/secret-in/fields.yaml": "14eb6001cabee982085a91c8af31984745c67e0327c1699dd82eadc21ca2677c"
+ },
+ "consumer_pins": {
+  "go.mod": "856f76b1bf20e71a71b78d4ade053c572b0f0de0a6627f8b6d737a85a872a0cb",
+  "go.sum": "b6b039d84b8e6319c6fbc3593f2bc1b95e0fcbc755af4c0dba41a615dd7dd717"
+ }
+}

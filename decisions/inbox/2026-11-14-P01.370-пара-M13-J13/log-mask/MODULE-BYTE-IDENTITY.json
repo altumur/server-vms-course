@@ -1,0 +1,43 @@
+{
+ "module_commit": "e19621128ad83f7e50267d58cfe1a2f029e70a28",
+ "module_directory": "/home/pilot/P01.370-evidence/log-mask/cache/mod/servervms.local/common/log-mask@v0.0.0-20261113215911-e19621128ad8",
+ "files": [
+  {
+   "path": "README.md",
+   "blob": "56bb2452cb1056899738ab5235c562188d7d622d",
+   "sha256": "882325910ada16d4b4445c38ebeca07cbacaafd8c6b6f74a9567cd5f9ce8e26e",
+   "OK": true
+  },
+  {
+   "path": "cmd/vectors/main.go",
+   "blob": "e83d62c029a69247ece2cd2c464feea6e7bc3c0b",
+   "sha256": "785cdf794acb46c8f024ffa11b624592a4d71ce34e45195e61b769363a99de09",
+   "OK": true
+  },
+  {
+   "path": "go.mod",
+   "blob": "8df519f7479f9044e3181de87f2f733b7821b333",
+   "sha256": "bccdbdf1d4d1f4cd3accf45cb863c33d2dbb17fdfb63141dbb98093204a4a1b0",
+   "OK": true
+  },
+  {
+   "path": "go.sum",
+   "blob": "bbd6f85f7c54c6b451cf4ea79267f6f9b0bbb0dc",
+   "sha256": "e8403182cda4473ea46d853cc72bb1e8f12f844db2e7a0c24bd804356a2a6a42",
+   "OK": true
+  },
+  {
+   "path": "logmask_test.go",
+   "blob": "4f7cb17253fe0ee68c49bdaea3a3519c2bb95fc6",
+   "sha256": "45de37570c452c1adebae47e5489a6bc8751dc80f01837cc3e31c08ef904df45",
+   "OK": true
+  },
+  {
+   "path": "mask.go",
+   "blob": "e8747da78f918ef7669800dd10b69b24c0febeb6",
+   "sha256": "8ed46c7ffe54db6e29061e55ca7e2f24ba3c71d94ab2db56345e04d106a98104",
+   "OK": true
+  }
+ ],
+ "OK": true
+}

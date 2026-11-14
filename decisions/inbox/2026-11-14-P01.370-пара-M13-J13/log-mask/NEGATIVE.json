@@ -1,0 +1,309 @@
+{
+ "package": "common/log-mask",
+ "table": "cases.tsv",
+ "rows": 50,
+ "green": 0,
+ "red": [
+  {
+   "line": 14,
+   "case": "line-14",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 15,
+   "case": "line-15",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 16,
+   "case": "line-16",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 17,
+   "case": "line-17",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 18,
+   "case": "line-18",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 19,
+   "case": "line-19",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 20,
+   "case": "line-20",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 21,
+   "case": "line-21",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 22,
+   "case": "line-22",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 23,
+   "case": "line-23",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 24,
+   "case": "line-24",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 25,
+   "case": "line-25",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 26,
+   "case": "line-26",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 27,
+   "case": "line-27",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 28,
+   "case": "line-28",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 29,
+   "case": "line-29",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 30,
+   "case": "line-30",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 31,
+   "case": "line-31",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 32,
+   "case": "line-32",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 33,
+   "case": "line-33",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 34,
+   "case": "line-34",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 35,
+   "case": "line-35",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 36,
+   "case": "line-36",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 37,
+   "case": "line-37",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 39,
+   "case": "line-39",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 40,
+   "case": "line-40",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 41,
+   "case": "line-41",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 42,
+   "case": "line-42",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 43,
+   "case": "line-43",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 44,
+   "case": "line-44",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 45,
+   "case": "line-45",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 50,
+   "case": "line-50",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 51,
+   "case": "line-51",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 52,
+   "case": "line-52",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 53,
+   "case": "line-53",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 54,
+   "case": "line-54",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 55,
+   "case": "line-55",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 56,
+   "case": "line-56",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 57,
+   "case": "line-57",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 58,
+   "case": "line-58",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 59,
+   "case": "line-59",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 60,
+   "case": "line-60",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 61,
+   "case": "line-61",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 62,
+   "case": "line-62",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 63,
+   "case": "line-63",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 64,
+   "case": "line-64",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 65,
+   "case": "line-65",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 66,
+   "case": "line-66",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 67,
+   "case": "line-67",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 68,
+   "case": "line-68",
+   "ok": false,
+   "why": "native value differs"
+  }
+ ],
+ "wire_norm": "common/vectors/log-mask/README.md#vector-wire"
+}

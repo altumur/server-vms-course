@@ -1,0 +1,25 @@
+{
+ "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "M": "4450cb9843cf6081cc81dae93e6e089a6c8cb4a6",
+ "J": "d3ba9fbd1cf1c2bca4a915e9e4132f8a2be66f40",
+ "JI": "26c149f6f77cfbd4373f88a5ec86d7af9209802c",
+ "J_exact_Platform_C": true,
+ "M_subset_J_mode_blob": true,
+ "JI_exact_filter_include": true,
+ "new_log_mask_vectors_in_JI": true,
+ "unpacked": {
+  "M": {
+   "count": 188,
+   "physical_blobs_match": true,
+   "readonly_modes_match": true,
+   "manifest_sha256": "6df25f6429d58185817ddb87ba69fcf23e67f1f9d1414c529931420b224f855a"
+  },
+  "JI": {
+   "count": 2146,
+   "physical_blobs_match": true,
+   "readonly_modes_match": true,
+   "manifest_sha256": "cba5d65b662f83c662416d659793ed102e9bb53b3ca6888344e64c28d4c378ef"
+  }
+ },
+ "OK": true
+}

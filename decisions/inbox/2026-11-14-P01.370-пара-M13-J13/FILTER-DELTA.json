@@ -1,0 +1,164 @@
+{
+ "from": "a494be12d54c2e596467c1508973da3031af2088",
+ "to": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "M_sources_to": {
+  "Platform/common/export-model-filter.json": "0f70ba561c316298d61b1fc993b584ff54363993",
+  "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b",
+  "Platform/04-controller/forms/export.json": "4aee33bf6126fa9041ce3c2f01e285e2373fda43",
+  "Platform/05-resource/forms/export.json": "aaf4289dd4e1a33a93487c6fcf7c4bd7959fe130",
+  "Platform/06-console/forms/export.json": "ee5cdc98c56fb64a7a4db5736db6c23c085e6df1"
+ },
+ "JI_sources_to": {
+  "Platform/common/acceptance/judge-input-filter.json": "91cc4d83982dddba536b54aeb5303c335b596797",
+  "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+  "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+  "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b",
+  "Platform/04-controller/forms/export.json": "4aee33bf6126fa9041ce3c2f01e285e2373fda43",
+  "Platform/05-resource/forms/export.json": "aaf4289dd4e1a33a93487c6fcf7c4bd7959fe130",
+  "Platform/06-console/forms/export.json": "ee5cdc98c56fb64a7a4db5736db6c23c085e6df1"
+ },
+ "added": [
+  {
+   "path": "Platform/01-store/forms/production/threshold-approvals.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/01-store/forms/production/threshold-approvals.schema.json",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/04-controller/forms/export.json",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/05-resource/forms/export.json",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/06-console/forms/export.json",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/ru/vectors/domain-token/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/ru/vectors/door-token/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/ru/vectors/peer/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/ru/vectors/row-check/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/ru/vectors/sealing/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/vectors/domain-token/README.cases.md",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/common/vectors/door-token/README.cases.md",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/common/vectors/peer/README.cases.md",
+   "M": "judge_only",
+   "JI": "exclude"
+  },
+  {
+   "path": "Platform/common/vectors/row-check/README.cases.md",
+   "M": "judge_only",
+   "JI": "include"
+  },
+  {
+   "path": "Platform/common/vectors/sealing/README.cases.md",
+   "M": "judge_only",
+   "JI": "include"
+  }
+ ],
+ "removed": [],
+ "changed": [
+  {
+   "path": "Platform/common/vectors/domain-token/README.md",
+   "M": [
+    "judge_only",
+    "model_and_judge"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/vectors/door-token/README.md",
+   "M": [
+    "judge_only",
+    "model_and_judge"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/vectors/peer/README.md",
+   "M": [
+    "judge_only",
+    "model_and_judge"
+   ],
+   "JI": [
+    "exclude",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/vectors/row-check/README.md",
+   "M": [
+    "judge_only",
+    "model_and_judge"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  },
+  {
+   "path": "Platform/common/vectors/sealing/README.md",
+   "M": [
+    "judge_only",
+    "model_and_judge"
+   ],
+   "JI": [
+    "include",
+    "include"
+   ]
+  }
+ ],
+ "counts": {
+  "added": 15,
+  "removed": 0,
+  "changed": 5,
+  "records_from": 3591,
+  "records_to": 3606
+ }
+}

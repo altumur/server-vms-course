@@ -1,0 +1,69 @@
+{
+ "package": "common/log-mask",
+ "table": "cases.tsv",
+ "rows": 50,
+ "green": 40,
+ "red": [
+  {
+   "line": 58,
+   "case": "line-58",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 59,
+   "case": "line-59",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 60,
+   "case": "line-60",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 61,
+   "case": "line-61",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 62,
+   "case": "line-62",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 63,
+   "case": "line-63",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 64,
+   "case": "line-64",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 65,
+   "case": "line-65",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 66,
+   "case": "line-66",
+   "ok": false,
+   "why": "native value differs"
+  },
+  {
+   "line": 67,
+   "case": "line-67",
+   "ok": false,
+   "why": "native value differs"
+  }
+ ],
+ "wire_norm": "common/vectors/log-mask/README.md#vector-wire"
+}

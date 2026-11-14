@@ -1,0 +1,61 @@
+{
+  "format": "b7-pair-private-v1",
+  "created_utc": "2026-11-14T07:57:53.884759+00:00",
+  "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+  "M": {
+    "commit": "575fce583dbc8cd1cc72427708c4a330e46df4d8",
+    "tree": "eb9948cd01340fc38f80df7858d16a400e4d79c5",
+    "objects": 911,
+    "files": 800,
+    "branch": "model",
+    "commit_sha256": "7150df1da85790f44a32add4c19d8f33bf16f720313ad436a3e2c67635a8ca6e"
+  },
+  "J": {
+    "commit": "d3ba9fbd1cf1c2bca4a915e9e4132f8a2be66f40",
+    "tree": "053099d831feb5d701395353594260660effa325",
+    "objects": 3933,
+    "files": 3606,
+    "branch": "judge",
+    "commit_sha256": "fa952c0ca365a4da4a1e9fed1aefbb84291838f506112e47bb7d4971d5ae1a41"
+  },
+  "filter_path": "Platform/common/export-model-filter.json",
+  "filter_blob": "63a7ccf3279aa66dfb275933224bca144b0519d6",
+  "filter_sha256": "c6e218de0390b03ff58ad55a05bd0614f7bebee059bd6c8bf8bb77900460b628",
+  "filter_sources": {
+    "Platform/common/export-model-filter.json": "0f70ba561c316298d61b1fc993b584ff54363993",
+    "Platform/01-store/forms/export.json": "d8c35679f86ed22c0fc08eb9f14e1f59979eeb06",
+    "Platform/02-installer/forms/export.json": "8566de78c2b6085c59a9f58eed2bc48c77f07c07",
+    "Platform/03-worker/forms/export.json": "89e9e3c3504152eb92740a1fd0a1355aea6edf4b",
+    "Platform/04-controller/forms/export.json": "4aee33bf6126fa9041ce3c2f01e285e2373fda43",
+    "Platform/05-resource/forms/export.json": "aaf4289dd4e1a33a93487c6fcf7c4bd7959fe130",
+    "Platform/06-console/forms/export.json": "ee5cdc98c56fb64a7a4db5736db6c23c085e6df1"
+  },
+  "filter_file": "FILTER-M.json",
+  "authorization_sha256": "e41ec68c931e624a2def043f418b1d8967c7736c49f6333ee8d353202590586c",
+  "trusted_authorization": {
+    "version": 1,
+    "authorization": "ROOT_AFTER_STEP6_GREEN_AND_FILTER_REVIEW",
+    "source_C": "cde92cf79905c18a064732cde7917f52068c2cca",
+    "filter_blob": "63a7ccf3279aa66dfb275933224bca144b0519d6",
+    "wire_blob": "b8367cffbd6cd7c5c62308ff202a9cd5a1f43a34",
+    "derived_sha256": "d27284387d5753e1d5f6e2ec24ae14cf90613ac739dc7996e7fbef3d0453bbd4",
+    "source_acceptance_sha256": "6b426c6be136b621b9ef0347864632fb823eee9cc144e8c77d3623ac1e911474",
+    "green_check_sha256": "99d4bbd4e0133147b94ab29680f8920f8aeb8359d50de35d363998cb11108641",
+    "different_provider_filter_review_sha256": "d54bad2a1701c567709afa164f83f6f8d52c037fa8bdc7d4492e8c5676567c45",
+    "filter_author_provider": "OpenAI; unchanged accepted baseline classifications inherited",
+    "filter_reviewer_provider": "Anthropic; accepted Architect filter reviews and receipts"
+  },
+  "registered_cases_removed": 158,
+  "operator_sha256": "326726720e4a1da93acb14f4500b4263913c326af68e1997fb2d9dd41c41482f",
+  "projection": "full_committed_Platform_J_one_assembled_filter_M",
+  "canonical_git_metadata": {
+    "actor": "B7 export operator <b7-export@invalid>",
+    "epoch": 0,
+    "epoch_is_execution_time": false,
+    "config_sha256": "dd548269913b6adbdfa7049170ea86850050cb762ea3b9c510a0b2986d2113e3"
+  },
+  "mechanical_pair_only": true,
+  "receipt_authenticity_verified": false,
+  "namespace_or_runtime_qualified": false,
+  "Owner_pin_or_launch_selected": false
+}

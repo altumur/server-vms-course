@@ -1,0 +1,10 @@
+{
+	"Path": "servervms.local/common/log-mask",
+	"Version": "v0.0.0-20261113215911-e19621128ad8",
+	"Info": "/home/pilot/P01.370-evidence/log-mask/cache/mod/cache/download/servervms.local/common/log-mask/@v/v0.0.0-20261113215911-e19621128ad8.info",
+	"GoMod": "/home/pilot/P01.370-evidence/log-mask/cache/mod/cache/download/servervms.local/common/log-mask/@v/v0.0.0-20261113215911-e19621128ad8.mod",
+	"Zip": "/home/pilot/P01.370-evidence/log-mask/cache/mod/cache/download/servervms.local/common/log-mask/@v/v0.0.0-20261113215911-e19621128ad8.zip",
+	"Dir": "/home/pilot/P01.370-evidence/log-mask/cache/mod/servervms.local/common/log-mask@v0.0.0-20261113215911-e19621128ad8",
+	"Sum": "h1:+1LNxwz/zTP7SfgJp/FbbPLYD4kKoSJpKfzxCHUokJo=",
+	"GoModSum": "h1:wt0Pf/IFK4PxgHVsw1ryIbsRiKduB+Hh/Ii24mzRajE="
+}

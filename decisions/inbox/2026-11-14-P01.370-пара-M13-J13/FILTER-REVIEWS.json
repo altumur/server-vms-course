@@ -1,0 +1,175 @@
+{
+ "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "baseline": "accepted P01.360 M12/J12; exact same classifications and filter source blobs as accepted P02.72",
+ "delta_sha256": "b654e365309c5ded18ae1e524e5a3e2b83a636230dc841540181e28f37c79713",
+ "deltas": [
+  {
+   "task": "OBSH.90",
+   "source_commit": "82e7620a8e06c430370bb005e68267e47d7a2d91",
+   "accepted_commit": "82e7620a8e06c430370bb005e68267e47d7a2d91",
+   "records": [
+    "Platform/common/ru/vectors/domain-token/README.cases.md",
+    "Platform/common/ru/vectors/door-token/README.cases.md",
+    "Platform/common/ru/vectors/row-check/README.cases.md",
+    "Platform/common/ru/vectors/sealing/README.cases.md",
+    "Platform/common/vectors/domain-token/README.cases.md",
+    "Platform/common/vectors/domain-token/README.md",
+    "Platform/common/vectors/door-token/README.cases.md",
+    "Platform/common/vectors/door-token/README.md",
+    "Platform/common/vectors/row-check/README.cases.md",
+    "Platform/common/vectors/row-check/README.md",
+    "Platform/common/vectors/sealing/README.cases.md",
+    "Platform/common/vectors/sealing/README.md"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/OBSH.90-accepted.json",
+   "review": "reviews/OBSH.90-review.md",
+   "review_sha256": "3ec5b70dc1a597766a1b4f06ae68f3245cbe6cb3a32f1ac6d82bf7dbad0cefcd",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "explicit filter review"
+  },
+  {
+   "task": "OBSH.91",
+   "source_commit": "9e5faea64995a5c02d059555bf5149d1f8e4f926",
+   "accepted_commit": "9e5faea64995a5c02d059555bf5149d1f8e4f926",
+   "records": [
+    "Platform/common/ru/vectors/peer/README.cases.md",
+    "Platform/common/vectors/peer/README.cases.md",
+    "Platform/common/vectors/peer/README.md"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/OBSH.91-accepted.json",
+   "review": "reviews/OBSH.91-review.md",
+   "review_sha256": "ef4f4baa4c17f79de287507cecb2b3b064936f9fe1c4367e7bc7c85a0ce77eb0",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "explicit filter review"
+  },
+  {
+   "task": "P01.365",
+   "source_commit": "1d2cbbcbc6e35dcef33fd619e74fda3890dcae53",
+   "accepted_commit": "1d2cbbcbc6e35dcef33fd619e74fda3890dcae53",
+   "records": [
+    "Platform/01-store/forms/production/threshold-approvals.json",
+    "Platform/01-store/forms/production/threshold-approvals.schema.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/P01.365-accepted.json",
+   "review": "reviews/P01.365-review.md",
+   "review_sha256": "4483abf9fa178da0d5346f890c988a3c32835ff58563667fb6c63a898052b3e0",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "explicit filter review"
+  },
+  {
+   "task": "P04.32",
+   "source_commit": "c918412aaa8c849fc84092ebc8f121ab762c9adf",
+   "accepted_commit": "fc4ff185af44e3b2931af9417a25240212b5c138",
+   "records": [
+    "Platform/04-controller/forms/export.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/P04.32-accepted.json",
+   "review": "reviews/P04.32-review.json",
+   "review_sha256": "b06b4736eb3b2ac58396c24a03c70b440dee26ae5146c157ba8bc1dfde78bb8a",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "accepted architect receipt, as accepted P01.355 binding procedure"
+  },
+  {
+   "task": "P05.12",
+   "source_commit": "802a43255d890ffdb093602cb6170384c1a408fe",
+   "accepted_commit": "802a43255d890ffdb093602cb6170384c1a408fe",
+   "records": [
+    "Platform/05-resource/forms/export.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/P05.12-accepted.json",
+   "review": "reviews/P05.12-review.json",
+   "review_sha256": "27c21bcd9831bb540bd664c0a55ee9b6927dc161695e81e4f83ed5281068a5d7",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "accepted architect receipt, as accepted P01.355 binding procedure"
+  },
+  {
+   "task": "P06.21",
+   "source_commit": "45b5422272caa9865a038a09f0c16775894b1485",
+   "accepted_commit": "94130b70abaaa07b1479efa4f86e16ebe3c839a9",
+   "records": [
+    "Platform/06-console/forms/export.json"
+   ],
+   "author_provider": "OpenAI",
+   "reviewer_provider": "Anthropic",
+   "provider_evidence": {
+    "registry": "/home/pilot/cammeta-sessions/sessions.tsv",
+    "architect": [
+     "architect",
+     "term_a7b4a64c-6bce-4945-a1d5-7e132f904899",
+     "Claude"
+    ],
+    "accepted_window_matches": true
+   },
+   "accepted_receipt": "reviews/P06.21-accepted.json",
+   "review": "reviews/P06.21-review.json",
+   "review_sha256": "204881859a046f65d8fbe4c05f1f648f0781d6e9f3e0959179a5f4544d61f0a9",
+   "roles_equal_accepted_commit": true,
+   "review_kind": "accepted architect receipt, as accepted P01.355 binding procedure"
+  }
+ ],
+ "filter_author_provider": "OpenAI; unchanged accepted baseline classifications inherited",
+ "filter_reviewer_provider": "Anthropic; accepted Architect filter reviews and receipts",
+ "all_delta_records_covered": true,
+ "inherited_review": "reviews/P02.72-filter-reviews.json",
+ "inherited_review_sha256": "6a355ec0496dcadfaaebfcedb6cb0abfe69d84c4c9950d22dda40926a91ec5d7",
+ "inherited_acceptance": "reviews/P02.72-accepted.json",
+ "inherited_acceptance_sha256": "e9f8dc103cf13a332f1b6ed124b5042713c9e1dcdde76062b926114c2a70427e",
+ "inherited_delta": "reviews/P02.72-filter-delta.json",
+ "inherited_delta_sha256": "1cbaffcd50ef106ecd8dd78b47550db636f99acf6d4479484a8ed9e780b45c7c",
+ "exact_delta_and_filter_source_blobs_equal": true
+}
