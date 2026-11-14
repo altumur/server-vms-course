@@ -324,3 +324,7 @@ of the author are not a performed stand test.
 [seams.tsv](seams.tsv) adds kit witnesses at controller function seams; [forms/README.md](../forms/README.md) defines their normalization. They do not change the process scenario/step counts above and do not close a witness they do not execute.
 
 21/17 checks zero Time using four existing full @oneof 200 branches (0/0.0/0.00/0.000); all other fields remain. 31/5 binds the damaged row index and 31/10 checks no repair; requests and other neighbors stay. s51-s63 and their real fixture/observation contracts are declared in forms/README; none is a SUT execution claim.
+
+## External qualification
+
+The [external procedures](../qualification/stand-procedures.md) (judge-only: qualification preparation and observations) supplement these process scenarios, seams and reading checks. They test ordinary controller/launcher behaviour using an independently qualified stand; their publication does not execute them or change the scenario/step counts. A missing binding or unactivated intervention leaves the dependent slice NotExecuted.

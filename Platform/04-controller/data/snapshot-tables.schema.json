@@ -889,6 +889,13 @@
     "about": {
      "description": "for unit rows — the id of the about unit",
      "type": "string"
+    },
+    "held_by": {
+     "description": "for a places table, required by the manifest: the acting holder name or null (P/04-R555; P/06.1-R174)",
+     "type": [
+      "string",
+      "null"
+     ]
     }
    },
    "additionalProperties": false,

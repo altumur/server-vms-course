@@ -25,11 +25,11 @@ which the operator talks to the controller are the doors of the console ([P/06.6
 | `near_preference` | P/04-R034, P/04-R133, P/04-R157, P/04-R262 | `vectors/near-of/README.md`, `Platform/common/contracts/pool.md` |
 | `affinity_places` | P/04-R159, P/04-R288, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531 | `Platform/common/contracts/pool.md` |
 | `choice_ranks` | P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292, P/04-R566 | `Platform/common/contracts/pool.md`, `data/placement.schema.json` |
-| `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R046, P/04-R196, P/04-R197, P/04-R208, P/04-R313 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
+| `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R046, P/04-R128, P/04-R196, P/04-R197, P/04-R208, P/04-R313, P/04-R491 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
 | `release_permission` | P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R310, P/04-R311, P/04-R318 | `forms/slot-fate.tsv`, `forms/slot-release.tsv`, `data/controller-pass.schema.json` |
 | `leaving` | P/04-R035, P/04-R047, P/04-R048, P/04-R267, P/04-R287, P/04-R322 | `forms/README.md`, `Platform/common/contracts/pool.md` |
 | `placeable_set` | P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R479, P/04-R481, P/04-R563, P/04-R566 | `vectors/order/README.md`, `vectors/shrink-allowed/README.md` |
-| `unit_cleanup` | P/04-R025, P/04-R120, P/04-R124, P/04-R134, P/04-R269, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
+| `unit_cleanup` | P/04-R025, P/04-R120, P/04-R124, P/04-R134, P/04-R269, P/04-R275, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
 | `order_absolute` | P/04-R050, P/04-R052, P/04-R107, P/04-R339, P/04-R355, P/04-R356, P/04-R494, P/04-R541 | `vectors/order/README.md`, `data/want.schema.json` |
 | `growth_room` | P/04-R085, P/04-R330, P/04-R332, P/04-R333, P/04-R337, P/04-R357 | `vectors/order/README.md`, `Platform/common/contracts/presence-lock.md` |
 | `shortage_estimate` | P/04-R053, P/04-R130, P/04-R139, P/04-R149, P/04-R325, P/04-R327, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531, P/04-R532 | `vectors/order/README.md`, `data/controller-pass.schema.json` |
@@ -42,7 +42,7 @@ which the operator talks to the controller are the doors of the console ([P/06.6
 | `snapshot_fields` | P/04-R011, P/04-R064, P/04-R137, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R417, P/04-R498, P/04-R548, P/04-R549, P/04-R561, P/04-R564 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
 | `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R421, P/04-R560, P/04-R564 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
 | `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R181, P/04-R182, P/04-R183, P/04-R411, P/04-R412, P/04-R555, P/04-R556, P/04-R560, P/04-R564 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
-| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279, P/04-R560, P/04-R562, P/04-R565 | `data/controller-pass.schema.json`, `forms/README.md` |
+| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R128, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279, P/04-R491, P/04-R560, P/04-R562, P/04-R565 | `data/controller-pass.schema.json`, `forms/README.md` |
 | `startup_schema` | P/04-R059, P/04-R060 | `forms/daemon-flags.tsv`, `lifecycle.md`, `Platform/common/contracts/schema.md` |
 | `power_pull` | P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R430, P/04-R431 | `Platform/common/contracts/observation.md`, `lifecycle.md` |
 | `refusals` | P/04-R067, P/04-R068, P/04-R564 | `forms/refusals.tsv` |
@@ -170,7 +170,7 @@ The pass report uses all fields and field meanings specified below.
 
 <!-- req: P/04-R113 -->
 
-**`pass — at`**: \<moment the control part ends, before snapshot publication\>. **`pass — ok`** is boolean: true means the control part reached its end, all control inputs were read and no control write was refused; otherwise false. **`pass — error`** is the text of the last error or "". **`pass — failures`** is the number of failures. **`pass — last_success`** is the moment of the last successful control part. **`pass — seconds`**: \<duration of the control part, excluding later snapshot/report publication\>
+**`pass — at`**: \<moment the control part ends, before snapshot publication\>. **`pass — ok`** is boolean: true means the control part reached its end, all control inputs were read and no control write was refused; otherwise false. **`pass — error`** is the text of the last error or "". **`pass — failures`** is the number of failures. **`pass — last_success`** is the moment of the last successful control part. **`pass — seconds`**: \<duration of the control part, excluding later snapshot/report publication\>. A required control input that remains unknown, including when the own resource is unavailable, has not been read: pass.ok is false. This does not introduce a new refusal code.
 
 <!-- req: P/04-R116 -->
 
@@ -190,7 +190,7 @@ For the JSON objects of this lesson, the implementation chooses whitespace and o
 
 <!-- req: P/04-R119 -->
 
-**`pass — fates`** is `{<name>: {fate, server, why, rev, since}}` for occupied, unreleased slots only: holder is nonempty and released is false, neither true nor taking (slot contract, States). In each `pass.fates` entry, `since` is the moment the slot entered this fate on this controller’s clock: fate change resets since; first sight of the slot is not this moment.
+**`pass — fates`** is `{<name>: {fate, server, why, rev, since}}` for occupied, unreleased slots only: holder is nonempty and released is false, neither true nor taking (slot contract, States). In each `pass.fates` entry, `since` is the moment the slot entered this fate on this controller’s clock. Until this controller observes a fate transition, since is 0 (unknown); first sight of the slot is not a transition. An observed fate change resets since to the moment of that change, and an unchanged fate retains it. Restarting the controller clears this knowledge: since is 0 again until an observed transition.
 
 <!-- req: P/04-R120 -->
 
@@ -202,7 +202,7 @@ For the JSON objects of this lesson, the implementation chooses whitespace and o
 
 <!-- req: P/04-R128 -->
 
-**`pass — reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total, workers_hung, workers_hung_moved_total, workers_unsure_moved_total, name_conflicts`**: `<numbers>`
+**`pass — reach_moves_total, slots_released_total, unplaced_deleted_total, servers_decommissioned_total, workers_hung, workers_hung_moved_total, workers_unsure_moved_total, name_conflicts`**: `<numbers>`. name_conflicts is the number of distinct slot names with at least one currently fresh contender mark by the observation contract, including an unreadable fresh mark and excluding the search name "-". The observer is this controller; recompute the count for this pass, not cumulatively. Multiple marks for one name count once, whether that name has a heartbeat or not.
 
 <!-- req: P/04-R129 -->
 
@@ -378,7 +378,7 @@ The domain view shows the units with `domain.ref`; the other unit rows and the c
 
 <!-- req: P/04-R013 -->
 
-Table snapshot objects use the envelope, content and publication rules below. **`<sub>/snapshot-tables/<table>`**: — an object; the writer is the controller; `<table>` — a key of domain.view_tables of the manifest (P/02.1, P/08.1 N1.4a): a table of tables or unit.rows {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, worker?, server?, phase?, status?}]}. **`<sub>/snapshot-tables/<table> — cluster`**: as for a shard, N1.3a
+Table snapshot objects use the envelope, content and publication rules below. **`<sub>/snapshot-tables/<table>`**: — an object; the writer is the controller; `<table>` — a key of domain.view_tables of the manifest (P/02.1, P/08.1 N1.4a): a table of tables or unit.rows {cluster, ts, refused?, rows: [{key, revision, fields, secrets?, labels?, about?, held_by?, worker?, server?, phase?, status?}]}. **`<sub>/snapshot-tables/<table> — cluster`**: as for a shard, N1.3a
 
 <!-- req: P/04-R174 -->
 
@@ -771,7 +771,7 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 | `fates.<name>.server` | string | required |  |  |
 | `fates.<name>.why` | string | required |  |  |
 | `fates.<name>.rev` | string or integer | required |  | the version of the judgment about the slot |
-| `fates.<name>.since` | time (P/01.1 N0 «Time in a row») | required |  | the moment the slot entered this fate by the controller's clock |
+| `fates.<name>.since` | time (P/01.1 N0 «Time in a row») | required |  | the observed fate transition time on this controller clock; 0 means unknown before the first observed transition or after restart |
 | `diverged` | by the definition `count` | required |  | a counter ≥ 0 |
 | `unplaced` | by the definition `count` | required |  | a counter ≥ 0 |
 | `garbled` | by the definition `count` | required |  | a counter ≥ 0 |
@@ -784,7 +784,7 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 | `workers_hung` | by the definition `count` | required |  | a counter ≥ 0 |
 | `workers_hung_moved_total` | by the definition `count` | required |  | a counter ≥ 0 |
 | `workers_unsure_moved_total` | by the definition `count` | required |  | a counter ≥ 0 |
-| `name_conflicts` | by the definition `count` | required |  | a counter ≥ 0 |
+| `name_conflicts` | by the definition `count` | required |  | distinct names with a currently fresh contender mark seen by this controller in this pass, including unreadable fresh marks, excluding "-" |
 | `unplaceable` | map author names: name — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full, value — string; not one of: `""` | required |  |  |
 | `unplaceable.<name>` | string; not one of: `""` | optional |  | a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>` |
 | `short` | list, element — map `{labels, units, workers, groups, ordered, withheld?}` and other author names: name — string, value — by the definition `count` | optional |  | only when placement.grows true |
@@ -915,8 +915,8 @@ Schema — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json),
 | `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 N1.2), not set — local |
 | `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the object write; unchanged cluster, refused and rows retain the former ts (P/04-R174) |
 | `refused` | string; one of: `too_large`, `whole_too_large` | optional |  | a stub instead of rows: the table did not fit (P/04 N1.3b ceiling, P/09.1 N1.2 tables_budget) |
-| `rows` | list, element — map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | required |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
-| `rows[]` | map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | optional |  |  |
+| `rows` | list, element — map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?, held_by?}` | required |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
+| `rows[]` | map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?, held_by?}` | optional |  |  |
 | `rows[].key` | string; not one of: `""` | required |  | the row name (P/06.1 N1.6) |
 | `rows[].revision` | integer; ≥ 1; ≤ 9007199254740991 | required |  | the row version |
 | `rows[].fields` | map, opaque | required |  | fields of the list domain.view_tables of the manifest; values of their own type; no secrets |
@@ -929,6 +929,7 @@ Schema — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json),
 | `rows[].labels` | list, element — string | optional |  | for unit rows — the field labels |
 | `rows[].labels[]` | string | optional |  |  |
 | `rows[].about` | string | optional |  | for unit rows — the id of the about unit |
+| `rows[].held_by` | string or null | optional |  | for a places table, required by the manifest: the acting holder name or null (P/04-R555; P/06.1-R174) |
 
 Outcomes of an unreadable object (the reader is a role; `*` — all readers of the family):
 
@@ -1049,7 +1050,7 @@ If a pass lasts longer than PASS_EVERY, the implementation chooses whether to sk
 
 <!-- req: P/04-R491 -->
 
-0. Update the memory of observed heartbeats, slots and resources on this controller’s own clock; first sight of a version means it has just changed. Read cluster objects (worker/resource heartbeats and reports) through the resource of this server. Without its resource, `cluster://` gives unknown, not absent ([object client](../../common/contracts/object-client.md), door).
+0. Update the memory of observed heartbeats, slots and resources on this controller’s own clock; first sight of a version means it has just changed. Read cluster objects (worker/resource heartbeats and reports) through the resource of this server. Without its resource, `cluster://` gives unknown, not absent ([object client](../../common/contracts/object-client.md), door). Preserve unknown while the own resource is unavailable; it is not evidence of absence. Required unknown control inputs make pass.ok false by P/04-R113.
 
 <!-- req: P/04-R523 -->
 
@@ -1105,11 +1106,11 @@ For a table with fixed fields or about not by id only a row with made is deleted
 
 <!-- req: P/04-R275 -->
 
-The row is deleted physically, without a tombstone (P/01.1 delete): the row first, with cas of the read version and guard of the own version of placement_turn; an edit or a prolongation between the read and the delete — conflict: the delete is cancelled, the state is not touched; only after a confirmed delete of the row — its states (step 8a); the journal unit.unplaced_deleted {reason: unplaced | retired | ends}
+The row is deleted physically, without a tombstone (P/01.1 delete): the row first, with cas of the read version and guard of the own version of placement_turn; an edit or a prolongation between the read and the delete — conflict: the delete is cancelled, the state is not touched; only after a confirmed delete of the row — its states (step 8a); the journal unit.unplaced_deleted {reason: unplaced | retired | ends}. State cleanup after a confirmed unit deletion uses the fresh ordered reads and conditional deletion of step 8a; the earlier deletion never authorizes blindly deleting the current state of the same id.
 
 <!-- req: P/04-R276 -->
 
-8a. state sweep (unit.state declared): list `<sub>`/state/; for each state row read the unit row: it is absent, a tombstone or its born ≠ born of the state → orphaned: delete by one operation with cas of the version of the state and guard {key: the unit row, index: the read version — for a tombstone its version, "" — no row}; a row created or changed after the read cancels the sweep (412 — leave it until the next pass); the acting and other non-orphaned ones (born matched, revision differs) — do not touch; state_swept_total + 1 for each removed one
+8a. State sweep (unit.state declared): list `<sub>`/state/. For each state row, first read the state and retain its version for cas; only then freshly read the unit row and its born. The state is orphaned if the unit is absent, a tombstone or has a different born. Delete only that read state version by cas. If the unit row or tombstone exists, also guard the deletion by its exact read version: a change of that row refuses the sweep (412 — leave it until the next pass). If the unit is absent, use no unit guard: index "" is not an absence guard. A state write of a new life changes the state version and refuses the old-cas deletion, preserving the new state. Acting and other non-orphaned states (born matched, revision differs) are not touched; state_swept_total + 1 for each confirmed removal.
 
 <!-- req: P/04-R277 -->
 
