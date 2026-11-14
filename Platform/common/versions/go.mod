@@ -11,7 +11,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/text v0.22.0
 	servervms.local/common/json v0.0.0-20261113192059-b8b1a5bd1dad
-	servervms.local/common/log-mask v0.0.0-20261113215911-e19621128ad8
+	servervms.local/common/log-mask v0.0.0-20261114081904-9c64a5210bd8
 	servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5
 	servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5
 )
