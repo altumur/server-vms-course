@@ -11,7 +11,7 @@
 M11/2 (`inputs/seal-*.json`, сц. 08–11), `m1-*` — из
 M11/3 (`inputs/seal-member-*.json`, сц. 11–12); `case` —
 имя файла входа. Сценарии M11/02 сц. 08–11 и M11/03 сц. 11, 12 и их входы сняты переносом урока 8 (ADR-0083 доп. (14)
-п. 17; журналы — [README пакета `domain-token`](../domain-token/README.md#журнал-источника) (M11/02), приёмка главы P/08.3 (`corrections-3.tsv` (historical correction record), журнал, в выгрузку не входит)): таблицы — единственный источник этих случаев.
+п. 17; журналы — [README пакета `domain-token`](../domain-token/README.cases.md#журнал-источника) (M11/02), приёмка главы P/08.3 (`corrections-3.tsv` (historical correction record), журнал, в выгрузку не входит)): таблицы — единственный источник этих случаев.
 
 ## Прогон
 

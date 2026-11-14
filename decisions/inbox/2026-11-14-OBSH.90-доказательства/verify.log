@@ -1,0 +1,11 @@
+PRESERVED Platform/common/vectors/sealing/README.md: old semantic body sha256=4ad2ca10ee356156990dd74e5dae5dc68bf9a6b0839154d5e727140f0fa84d83; exact contiguous body and metadata in Platform/common/vectors/sealing/README.cases.md
+PRESERVED Platform/common/ru/vectors/sealing/README.md: old semantic body sha256=18ffb0b5354a35c85402e09bf00723ed31137676107ec605702197ec57dcadd4; exact contiguous body and metadata in Platform/common/ru/vectors/sealing/README.cases.md
+PRESERVED Platform/common/vectors/row-check/README.md: old semantic body sha256=39565887b2402537433f4b739d5d0486f0f3a55f1664671d76edc4e75fd3b713; exact contiguous body and metadata in Platform/common/vectors/row-check/README.cases.md
+PRESERVED Platform/common/ru/vectors/row-check/README.md: old semantic body sha256=4b46502bc230125fbbc1f97da31cd2b5f8e26e8fd91aa3535854bbeb24ea0b52; exact contiguous body and metadata in Platform/common/ru/vectors/row-check/README.cases.md
+PRESERVED Platform/common/vectors/door-token/README.md: old semantic body sha256=2f80ae041a6edc1c3346b7e1d7335c8c9372fc8a316adb28cb3fe9ba7b55de59; exact contiguous body and metadata in Platform/common/vectors/door-token/README.cases.md
+PRESERVED Platform/common/ru/vectors/door-token/README.md: old semantic body sha256=7b02672fd36080252a5371dd5d271bf6b2f23ced470cebd673b896a122ab12ee; exact contiguous body and metadata in Platform/common/ru/vectors/door-token/README.cases.md
+PRESERVED Platform/common/vectors/domain-token/README.md: old semantic body sha256=5178162b4d56eb0fb2c2e74b528663c894d705999f449267042cb22a5628e09e; exact contiguous body and metadata in Platform/common/vectors/domain-token/README.cases.md
+PRESERVED Platform/common/ru/vectors/domain-token/README.md: old semantic body sha256=109c4f8cfb3fe5ce8cb6fa2e974bc2555781c79b24b92cfd5d6ceb3a77c79b76; exact contiguous body and metadata in Platform/common/ru/vectors/domain-token/README.cases.md
+FILTER Platform/common/export-model-filter.json: only 8 README records and 8 companion records; M/J and ru dispositions correct
+FILTER Platform/common/acceptance/judge-input-filter.json: only 8 README records and 8 companion records; M/J and ru dispositions correct
+PASS: 8 original semantic bodies and metadata retained byte for byte; all 4 English originals retained in J; 4 public English interfaces in M; vector TSV bytes unchanged.

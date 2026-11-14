@@ -4772,14 +4772,24 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/vectors/domain-token/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/domain-token/README.md",
       "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
+      "path": "Platform/common/ru/vectors/door-token/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/door-token/README.md",
       "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/env-file/README.md",
@@ -4967,9 +4977,14 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/vectors/row-check/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/row-check/README.md",
       "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/said-id/README.cases.md",
@@ -4992,9 +5007,14 @@
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
     },
     {
+      "path": "Platform/common/ru/vectors/sealing/README.cases.md",
+      "disposition": "exclude",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/sealing/README.md",
       "disposition": "exclude",
-      "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/secret-in/README.md",
@@ -5237,9 +5257,14 @@
       "basis": "Vector package routed to a P/02 target by forms/targets.routing.tsv."
     },
     {
+      "path": "Platform/common/vectors/domain-token/README.cases.md",
+      "disposition": "include",
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/domain-token/README.md",
       "disposition": "include",
-      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/domain-token/cases.tsv",
@@ -5247,9 +5272,14 @@
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
+      "path": "Platform/common/vectors/door-token/README.cases.md",
+      "disposition": "include",
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/door-token/README.md",
       "disposition": "include",
-      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/door-token/issue.tsv",
@@ -5702,9 +5732,14 @@
       "basis": "Acceptance data of P/01."
     },
     {
+      "path": "Platform/common/vectors/row-check/README.cases.md",
+      "disposition": "include",
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/row-check/README.md",
       "disposition": "include",
-      "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/row-check/cases.tsv",
@@ -5752,9 +5787,14 @@
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
+      "path": "Platform/common/vectors/sealing/README.cases.md",
+      "disposition": "include",
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/sealing/README.md",
       "disposition": "include",
-      "basis": "Vector package routed to a P/02 target by forms/targets.routing.tsv."
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/sealing/aad.tsv",

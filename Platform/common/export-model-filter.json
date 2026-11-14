@@ -4772,14 +4772,24 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/domain-token/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/domain-token/README.md",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
+      "path": "Platform/common/ru/vectors/door-token/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/door-token/README.md",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/env-file/README.md",
@@ -4967,9 +4977,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/row-check/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/row-check/README.md",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/said-id/README.cases.md",
@@ -4992,9 +5007,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/common/ru/vectors/sealing/README.cases.md",
+      "disposition": "judge_only",
+      "basis": "Russian translation for people, outside the model and judge inputs."
+    },
+    {
       "path": "Platform/common/ru/vectors/sealing/README.md",
       "disposition": "judge_only",
-      "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+      "basis": "Russian translation for people, outside the model and judge inputs."
     },
     {
       "path": "Platform/common/ru/vectors/secret-in/README.md",
@@ -5237,9 +5257,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
-      "path": "Platform/common/vectors/domain-token/README.md",
+      "path": "Platform/common/vectors/domain-token/README.cases.md",
       "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
+      "path": "Platform/common/vectors/domain-token/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/domain-token/cases.tsv",
@@ -5247,9 +5272,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
-      "path": "Platform/common/vectors/door-token/README.md",
+      "path": "Platform/common/vectors/door-token/README.cases.md",
       "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
+      "path": "Platform/common/vectors/door-token/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/door-token/issue.tsv",
@@ -5702,9 +5732,14 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
-      "path": "Platform/common/vectors/row-check/README.md",
+      "path": "Platform/common/vectors/row-check/README.cases.md",
       "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
+      "path": "Platform/common/vectors/row-check/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/row-check/cases.tsv",
@@ -5752,9 +5787,14 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
-      "path": "Platform/common/vectors/sealing/README.md",
+      "path": "Platform/common/vectors/sealing/README.cases.md",
       "disposition": "judge_only",
-      "basis": "P01.10.7.2 finite-role review proposal: PROPOSE_J_WITH_ACCEPTED_PUBLIC_DEFINITION_CLOSURE. Existing accepted public generic definitions retained."
+      "basis": "Concrete vector cases, fixtures, branch-to-case mappings, expected answers and coverage; judge input only."
+    },
+    {
+      "path": "Platform/common/vectors/sealing/README.md",
+      "disposition": "model_and_judge",
+      "basis": "Public vector input/output interface and consumer duties; concrete cases and expected answers are in README.cases.md."
     },
     {
       "path": "Platform/common/vectors/sealing/aad.tsv",
