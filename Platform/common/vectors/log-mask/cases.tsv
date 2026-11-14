@@ -55,3 +55,14 @@ Authorization: Bearer abc x	Authorization: Bearer *** x	a no-break space (U+00
 k=v;apikey=zznext	k=v;apikey=***next	a line tabulation (U+000B) ends a pair's value
 rtsp://h/x?pwd=a b	rtsp://h/x?pwd=*** b	a no-break space (U+00A0) ends an address and its pair
 rtsp://h/x?pwd=a　b	rtsp://h/x?pwd=***　b	an ideographic space (U+3000) ends an address and its pair
+http://h/password/é	http://h/password/***	utf8-regex-2-literal: A13 secret group ends in a two-byte UTF-8 character
+http://h/password/%C3%A9	http://h/password/***	utf8-regex-2-percent: A13 masks the whole percent-encoded character
+http://h/password/%25C3%25A9	http://h/password/***	utf8-regex-2-fixed-point: A13 decodes repeated escaping to a fixed point
+http://h/password/€	http://h/password/***	utf8-regex-3-literal: A13 secret group ends in a three-byte UTF-8 character
+http://h/password/%E2%82%AC	http://h/password/***	utf8-regex-3-percent: A13 masks the whole percent-encoded character
+http://h/password/%25E2%2582%25AC	http://h/password/***	utf8-regex-3-fixed-point: A13 decodes repeated escaping to a fixed point
+http://h/password/😀	http://h/password/***	utf8-regex-4-literal: A13 secret group ends in a four-byte UTF-8 character
+http://h/password/%F0%9F%98%80	http://h/password/***	utf8-regex-4-percent: A13 masks the whole percent-encoded character
+http://h/password/%25F0%259F%2598%2580	http://h/password/***	utf8-regex-4-fixed-point: A13 decodes repeated escaping to a fixed point
+trace http://h/password/aé/live?channel=1 done	trace http://h/password/***/live?channel=1 done	utf8-regex-mixed: A13 masks the whole mixed secret; A14 and the log contract preserve the surrounding text
+http://h/live/é/€/😀?channel=1	http://h/live/é/€/😀?channel=1	utf8-regex-nonsecret: Unicode outside a secret is unchanged

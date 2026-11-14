@@ -586,3 +586,16 @@ P/AC-R047	acceptance/spec/acceptance.norms.md#N6.5	P01.365; P01.363 sections 2�
 -	ru/contracts/peer.md#векторы	OBSH.91; peer case coverage link follows README.cases.md	2026-11-14	Пакет [`peer`](../vectors/peer/README.md) содержит 31 строку, включая 25 входов прежней приёмки M11/8 (сц. 06). Последующие случаи проверяют порядок пути сертификатов и границы адреса, имени и формы входа. Результат определяют шаги функции и словарь отказов выше; подробные входы случаев и привязки ответов остаются в пакете только для судьи.\n\n
 -	contracts/event-journal.md#bucket-write-time	P05.16; Architect answered 2026-11-14T01:02:02Z; decisions/inbox/2026-11-14-P05.16-сведение-догадок.md	2026-11-14	A bucket's own `written` is its logical wall-clock write stamp in seconds of common.time, recorded on a successful append of its bytes by the writer. It is not the start/end of its ten-minute window, a line's optional `occurred`, nor filesystem `mtime`. It is retained with the bucket across restarts and reindexing; reads, cache eviction and touching a file do not refresh it. The implementation chooses the local persistence representation of this metadata, not a new event field or public HTTP field. An unreadable stamp is unknown: retain keeps that bucket and reports the read failure rather than inferring a stamp from the path or `mtime`.
 -	contracts/object-client.md#reading-cluster-objects	P05.16; Architect answered 2026-11-14T01:02:02Z; decisions/inbox/2026-11-14-P05.16-сведение-догадок.md	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/é	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%C3%A9	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%25C3%25A9	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/€	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%E2%82%AC	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%25E2%2582%25AC	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/😀	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%F0%9F%98%80	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/password/%25F0%259F%2598%2580	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:trace http://h/password/aé/live?channel=1 done	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/cases.tsv#row:http://h/live/é/€/😀?channel=1	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/README.cases.md#utf-8-at-the-end-of-a-regex-secret	P01.369; P01.338 B03; ADR-0133 addendum (112)	2026-11-14	-
+-	vectors/log-mask/README.cases.md#utf-8-at-the-end-of-a-regex-secret	P01.369; P01.338 B03; ADR-0133 addendum (112); derived Russian translation	2026-11-14	-

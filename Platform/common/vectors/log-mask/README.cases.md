@@ -18,4 +18,12 @@ the head of the file is English, as it was: `M10/7 N1.4` in it is the former add
 
 of the contract. 33 rows: 21 masks, 12 values (fewer than three characters, a character outside the set or inside, a non-White_Space at the edge).
 
+## UTF-8 at the end of a regex secret
+
+The `utf8-regex-*` notes in `cases.tsv` identify cases using the existing `cam.source` path regex for `/password/<secret>` from the supplied `fields.yaml`. No field declaration or consumer route changes. These rows check [A13 and A14](../../contracts/url-credentials.md#the-address-where-the-login-and-the-password-are-in-it) through the [log mask function](../../contracts/log-mask.md#function).
+
+The synthetic secrets `é`, `€` and `😀` end in UTF-8 characters of two, three and four bytes. Each appears literally, percent-encoded and with each percent sign escaped once more. In every spelling the whole secret becomes `***`; decoding to a fixed point does not leave a partial character or its escaping. A mixed `aé` secret followed by `/live?channel=1` also checks the last character of a longer match and byte-for-byte preservation of the surrounding log text. A path with the same Unicode characters outside a secret stays unchanged.
+
+These are function vectors with the supplied catalogue, including at the P/01 consumer. They do not claim that the store daemon loads that catalogue or that a daemon log leak has been reproduced. Adding the rows does not execute a candidate or qualify its vector adapter.
+
 End of judge-only case data.

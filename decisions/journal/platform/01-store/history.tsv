@@ -795,3 +795,10 @@ P/01.1-R156	spec/01-store.api.openapi.yaml#/components/schemas/Key/description	P
 -	forms/production/threshold-approvals.json#/records	P01.365; P01.363 sections 2–6; ADR-0130 addenda (14), (15)	2026-11-13	-
 -	forms/production/threshold-approvals.schema.json#/$defs/record	P01.365; P01.363 sections 2–6; ADR-0130 addenda (14), (15)	2026-11-13	-
 -	forms/export.json#/model	P01.365; P01.363 sections 2–6; ADR-0130 addenda (14), (15)	2026-11-13	-
+-	qualification/README.md#journal-integrity-and-recover-completion-records	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z	2026-11-14	-
+-	qualification/stand-procedures.md#journal-integrity-and-recover-completion	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z	2026-11-14	-
+-	qualification/README.md#journal-integrity-and-recover-completion-records	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z; derived Russian translation	2026-11-14	-
+-	qualification/stand-procedures.md#journal-integrity-and-recover-completion	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z; derived Russian translation	2026-11-14	-
+-	qualification/README.md#probe-debt	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z	2026-11-14	-
+-	qualification/README.md#probe-debt	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z; derived Russian translation	2026-11-14	-
+P/01.3-R424	forms/refusals.tsv#row:name=start_journal_corrupt	P01.369; P01.338 B01/B02/C01; ADR-0133 addendum (112); Architect answered 2026-11-14T07:37:26Z	2026-11-14	-

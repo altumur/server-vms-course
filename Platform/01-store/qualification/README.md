@@ -89,6 +89,16 @@ RUN-F05 is an additional Q record for the Go Raft adapter. It complements the cl
 |---|---|---|---|
 | RUN-F05 | A Go group under P/01.3-R180 with three voters and confirmed seed rows; a former leader has a proven uncommitted suffix, the majority commits a conflicting suffix during two-way isolation, then communication resumes. | The former leader replaces the conflict and continues serving without an unexpected command exit or signal (P/01.3-R180); reads return the confirmed rows and versions. | The [conflicting-suffix procedure](stand-procedures.md#former-leader-with-a-conflicting-suffix) requires independent activation evidence and controls; an unproved conflict is blocked/NotExecuted, never PASS. |
 
+## Journal integrity and recover completion records
+
+These additional Q records use the [journal and recover procedures](stand-procedures.md#journal-integrity-and-recover-completion). They complement the existing inventory, including `prod-recover-interrupted`, without adding a group/probe row, J directive, D7 payload or candidate interface. They require qualified stand observers and controls; publication does not execute them.
+
+| Id | Initial state and load/fault | Required observation | Binding and negative controls |
+|---|---|---|---|
+| RUN-F06 | A stopped durable box and, separately, a voter with complete acknowledged journal records; corrupt one full record with an intact later record, including in the last segment. | P/01.3-R424: startup exits 2 without truncation or any input change. R028/R212 of P/01.1 forbid presenting lost rows/versions as absent. | Independently qualified record/segment decoder, offline mutator, startup and input-state observers; intact-input and torn-final-append classification controls; reject silent tail truncation. |
+| RUN-F07 | Stopped group input with known rows; interrupt `recover` where its saved input is published and where old input can be replaced; discard unbarriered namespace effects on a qualified medium. | P/01.3-R021/R266/R267: a complete original input remains recoverable; a repeat preserves its rows and completes recovery. File barriers and a durable top-level name alone do not prove a complete saved tree. | Existing storage/recover interruption observations, including every actual nested directory; correct durable-tree versus missing-nested-name controls. A process kill alone cannot score physical durability. |
+| RUN-F08 | Stopped group input; observe the full successful `recover` and interrupt every changing boundary of its final cleanup and phase-mark removal. | P/01.3-R265/R267/R398: result barriers and obsolete-input cleanup precede phase-mark removal; it is the last changing step. A marked interruption refuses daemon startup with code 2 and repeat remains safe. | Independent object-role, syscall/order and startup observers; reject cleanup after the mark and the unsafe early deletion of the only complete input. |
+
 ## Recovery budget checks
 
 These are separate slices of RUN-W03 and observations in RUN-SOAK, not new groups or directives of J. They check P/01.3-R422 and P/01.3-R423 and the [performance goals](../spec/production-acceptance.md#performance-goals). The machine record `recovery_checks` of [soak.json](../forms/production/soak.json) binds the same goals and observations to the long run.
@@ -143,6 +153,8 @@ The checks below have no executable probe yet. Until one exists, each stays chec
 | RUN-W03 and RUN-SOAK recovery-budget observations/controls | P/01.3 R422, R423 | independent process start, monotonic/public-state and local catch-up observations; group stand for member return |
 | RUN-L03, executable, with added initial states: an admitted write, a door forwarding, a connection in an input phase, a request read but not admitted | P/01.3 R034 | qualified stop observer and actual manager configuration |
 | RUN-F01, RUN-F02, RUN-F04, executable | P/01.1 R144 | qualified fault-stage binding |
+| RUN-F06, executable | P/01.3 R424; P/01.1 R028, R212 | qualified journal record/segment decoder, offline damage and unchanged-input/startup observers |
+| RUN-F07/RUN-F08, executable; full saved input and final cleanup order | P/01.3 R021, R265, R266, R267, R398 | qualified recover interruption, object-role and namespace/storage observers; VM for loss of unbarriered names |
 | Loss of the leader after sending (the death of the leader; a held answer of a forwarded write); a two-way partition of a member | P/01.3 N1.3 `leader_wait`; P/01.1 N4 `ambiguous_leader` | group stand with held or cut answers |
 | Interrupted `import` in a group: start, holding writers, reads answered as the store `file://`, continuation through `admin.sock` of the leader, `recover` after the loss of a majority | P/01.3 N1.3 `import`; P/01.3 R156, R159 | group stand with an interruption |
 | Interrupted `recover`: phase mark, start refusal with code 2, repeat from the start | P/01.3 R265, R267, R398 | qualified interruption point |
