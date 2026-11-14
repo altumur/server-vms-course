@@ -1,0 +1,22 @@
+# Isolated row-check fixture; selected only through the manifest input column.
+name: testsub2
+worker: {exec: /usr/lib/testsub2/worker}
+unit:
+  rows: tallies
+  id: name
+  fields:
+    name: {type: string, required: true, inherit: unnamed}
+    of: {type: string, required: true, inherit: c1}
+    weight: {type: int}
+    zone: {type: string}
+    link: {type: string, ref: testsub2/tallies, must_match: {zone: zone}}
+tables:
+  shelves:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      zone: {type: string}
+      link: {type: string, ref: testsub2/tallies, must_match: {zone: zone}}
+placement:
+  capacity: {default: 8}
+  weight: {field: weight}

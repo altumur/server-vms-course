@@ -10,6 +10,12 @@ The store's [JSON body rules](../../01-store/spec/01.1-store.norms.md#n21-reques
 
 Other callers apply their own schemas, field forms and refusal outcomes. A signed document's I-JSON constraints and the JCS canonical form remain those of the document's contract; the store's treatment of extra fields does not relax a signed document. Parsing a record that is already out of its family form uses that family's existing unreadable outcome. Encoding follows the writer's form and uses JCS only when that contract calls for it.
 
+When a caller reads a JSON numeric value, its numeric result must be finite binary64. A numeric lexeme with no finite
+binary64 result, including `1e400`, is a parsing failure at any depth of that value; preserving its lexeme does not make it
+admissible. The caller decides which values it reads and how it maps the failure; this does not change the store's treatment
+of ignored extra values. In particular, the unit-state reader returns `unreadable` for such a number
+inside `value`, even where the state schema permits `number`. Reader mode does not require JCS spelling.
+
 ## Acceptance inputs
 
 The package `common/jcs` checks canonical bytes and their digest by its existing [JCS contract](jcs.md). The existing JSON body cases of P/01.1 N5 check the store-specific parsing decisions through its door (judge-only: JSON cases of `Platform/01-store/acceptance/1/scenarios.tsv`). They are caller tests, not a new generic outcome mapping. The module's tests exercise the parser used by these callers; passing JCS vectors alone does not establish strict parsing.

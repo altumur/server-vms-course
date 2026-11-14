@@ -4482,6 +4482,11 @@
       "basis": "Declared concrete scenario/vector/seam data or canonical Tools-maintenance stage-kit table; exact path expansion."
     },
     {
+      "path": "Platform/common/vectors/row-check/fixtures/testsub2.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Isolated row-check fixture for required inheritance, weight presence and reverse-reference checks; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/row-check/state.tsv",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
