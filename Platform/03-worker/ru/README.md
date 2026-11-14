@@ -61,6 +61,9 @@ ru/                              для человека, в выгрузку н
 | [Общие определения схем](../../common/data/common.schema.json) | `$defs` семей урока — общие формы скаляров и объектов |
 | [Потребители векторов](../../common/vectors/consumers.tsv), [таблица wire](../../common/vectors/wire.tsv) | Назначенные общие пакеты потребителя `03-worker` и их привязки входа и выхода |
 | [Проверка строки](../../common/ru/contracts/row-check.md) | Строка единицы; Строка заказчика: `made`; Состояние единицы; Подготовка полей; Идентификатор и ограничения полей — типы строк, id жизни, заказанные строки и стражи состояния |
+| [Platform/06-console/vectors/rid/README.md](../../06-console/ru/vectors/rid/README.md) | Публичный интерфейс назначенных векторов; файлы случаев и ожидаемые ответы не входят в M. |
+| [Platform/06-console/vectors/request-digest/README.md](../../06-console/ru/vectors/request-digest/README.md) | Публичный интерфейс назначенных векторов; файлы случаев и ожидаемые ответы не входят в M. |
+| [Platform/common/contracts/secret-files.md](../../common/ru/contracts/secret-files.md) | Атомарная публикация и барьеры сохранённого файла токена. |
 | [Пул](../../common/ru/contracts/pool.md) | Живой воркер; Пул; Хранитель места при `distinct`; Пригодность сервера: `placeable`, `why` — ёмкость, вес, остаток и допуск мест |
 | [Пересылка](../../common/ru/contracts/forwarding.md) | Адрес клиента; Политика hop передачи доменному воркеру — `X-W2C-Client` и граница пересылки доменного воркера |
 | [Доменные конверты](../../common/ru/contracts/domain-envelopes.md) | Вклад; Содержимое `sealed` — вход `entry` и конверт вклада |
