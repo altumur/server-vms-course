@@ -277,6 +277,16 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/05-resource/forms/targets.routing.tsv",
+      "disposition": "judge_only",
+      "basis": "Routing of the lesson acceptance targets; outside the model input."
+    },
+    {
+      "path": "Platform/05-resource/forms/targets.tsv",
+      "disposition": "model_and_judge",
+      "basis": "Public acceptance targets of the lesson, with the common target registry header."
+    },
+    {
       "path": "Platform/05-resource/lifecycle.md",
       "disposition": "model_and_judge",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -647,6 +657,16 @@
       "path": "Platform/05-resource/forms/stages.tsv",
       "disposition": "exclude",
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
+    },
+    {
+      "path": "Platform/05-resource/forms/targets.routing.tsv",
+      "disposition": "include",
+      "basis": "Routing of the lesson acceptance targets."
+    },
+    {
+      "path": "Platform/05-resource/forms/targets.tsv",
+      "disposition": "include",
+      "basis": "Public acceptance targets of the lesson."
     },
     {
       "path": "Platform/05-resource/lifecycle.md",

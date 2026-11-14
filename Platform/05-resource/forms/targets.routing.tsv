@@ -1,0 +1,17 @@
+# Acceptance target routing of P/05, judge-only. The header and the meaning of the columns are those of Platform/common/acceptance/forms/targets.routing.tsv.
+id	engine	acceptance	scenarios	tables	parts	body	role	free	rights
+P/05/stand	run	["Platform/05-resource/acceptance","Platform/common/data/testsub"]	all	[]	[{"key":"store","owner":"01-store"},{"key":"manifest-put","owner":"02-installer"},{"key":"rights","owner":"02-installer"},{"key":"ring","owner":"02-installer"},{"key":"worker","owner":"03-worker"},{"key":"controller","owner":"04-controller"},{"key":"console","owner":"06-console"}]	subset	console	[]	derived:dep
+P/05/vectors-presence-room	vector	["Platform/common/vectors/presence-room"]	all	[]	[]	-	-	[]	-
+P/05/vectors-crl	vector	["Platform/common/vectors/crl"]	all	[]	[]	-	-	[]	-
+P/05/vectors-revoked	vector	["Platform/common/vectors/revoked"]	all	[]	[]	-	-	[]	-
+P/05/vectors-loopback	vector	["Platform/common/vectors/loopback"]	all	[]	[]	-	-	[]	-
+P/05/vectors-relieve	vector	["Platform/05-resource/vectors/relieve"]	all	[]	[]	-	-	[]	-
+P/05/vectors-instance	vector	["Platform/common/vectors/instance"]	all	[]	[]	-	-	[]	-
+P/05/vectors-journal	vector	["Platform/common/vectors/journal"]	all	[]	[]	-	-	[]	-
+P/05/vectors-log-mask	vector	["Platform/common/vectors/log-mask"]	all	[]	[]	-	-	[]	-
+P/05/vectors-object-client	vector	["Platform/common/vectors/object-client"]	all	[]	[]	-	-	[]	-
+P/05/vectors-schema	vector	["Platform/common/vectors/schema"]	all	[]	[]	-	-	[]	-
+P/05/vectors-store-client	vector	["Platform/common/vectors/store-client"]	all	[]	[]	-	-	[]	-
+P/05/vectors-tombstone	vector	["Platform/common/vectors/tombstone"]	all	[]	[]	-	-	[]	-
+P/05/vectors-family-read	vector	["Platform/common/vectors/family-read"]	all	[]	[]	-	-	[]	-
+P/05/vectors-holds	vector	["Platform/common/vectors/holds"]	all	[]	[]	-	-	[]	-
