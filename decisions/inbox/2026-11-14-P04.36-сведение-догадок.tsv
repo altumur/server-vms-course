@@ -1,0 +1,36 @@
+probe	id	group	proposal	basis	closure	approval
+P04.34	V07	shared-decommission-order	implementation	P/04-R094,R363,R369,R376,R388; forms/README.md Resumable decommission witnesses	Q1: порядок выбирает реализация и суд не сравнивает; frozen plan сохраняется; чанк не обязан быть полным	pending
+P04.35	Г-05	shared-decommission-order	implementation	P/04-R369,R376	Q1: единая сортировка исходных слотов не требуется; сохранённый порядок плана обязателен	pending
+P04.35	Г-34	shared-decommission-order	implementation	P/04-R091,R105,R395	Q1: сортировка метаданных свободна; состав не свободен; slots из confirmed released	pending
+P04.35	Г-45	shared-decommission-order	implementation	P/04-R094,R363,R388	Q1: порядок from выбирает реализация до acceptance, после acceptance не меняет	pending
+P04.34	V03	shared-guard-retry	existing	Implementation decides 1; P/04-R026; common/contracts/store-client.md; common/contracts/turn.md	Устройство повторов не судится; бюджет и barrier обязательны	pending
+P04.35	Г-11	shared-guard-retry	existing	P/04-R107,R269,R276,R371,R381,R507,R395,R142	Guard определяется операцией; ни краткая таблица, ни правило всех записей не заменяют её норму	pending
+P04.34	V02	shared-fate-memory	existing	Implementation decides 2; P/04-R119,R311,R524	Кэш свободен при точных версиях, fresh look и раздельной памяти fate/age	pending
+P04.35	Г-13	shared-fate-memory	existing	P/04-R119,R311; forms/README.md Machines	fates.rev — версия наблюдённого слота; release после CAS — отдельно в names_given	pending
+P04.34	V06	shared-representation	implementation	common/contracts/json.md; P/04-R171	Q1: разрешённый JSON encoding не судится, предел считается по фактическим полным байтам	pending
+P04.35	Г-08	shared-representation	implementation	P/04-R116; data/controller-pass.schema.json /properties/manifest_rev	Q1: string или integer по схеме выбирает писатель, точная ревизия сохраняется	pending
+P04.35	Г-16	shared-representation	decision	P/04-R013,R174,R175	Q7: сравнение table snapshot без ts включает cluster/refused/rows; решение требуется	pending
+P04.35	Г-31	shared-representation	implementation	P/04-R169,R498	Q1: порядок юнитов unit-shard выбирает реализация; порядок table rows остаётся UTF-8	pending
+P04.34	G01	metadata-source	decision	P/04-R091,R105,R369,R504; P04.34 G01 counterexample	Q2: unique union assignments/effective decisions исходных slots; holds по hold.by; не authority очистки	pending
+P04.35	Г-03	reachability	decision	P/04-R150,R266,R327	Q3: перенос по меткам только labels-subset; none не создаёт shortage из несовпадения меток	pending
+P04.35	Г-04	shrink-timer	decision	P/04-R327,R348; forms/README.md Shrink checks	Q4: no-shortage таймер один на роль, waiting любого набора его сбрасывает	pending
+P04.35	Г-06	wants-state	decision	P/04-R131,R330,R340	Q4: no_base затем активный raise_failed затем pending>0 raising иначе ok	pending
+P04.35	Г-07	no-candidate	decision	P/04-R292,R129,R322	Q5: failed choose не пишет placement; обязательные отдельные снятия сохраняются	pending
+P04.35	Г-10	log-series	implementation	P/04-R413; Implementation decides 10	Q6: группировку серий объявляет реализация, точное число не судится; once-per-series сохраняется	pending
+P04.35	Г-23	pass-schedule	implementation	P/04-R030,R142; common/contracts/turn.md Barrier	Q6: стратегия тиков при overrun свободна; PASS_EVERY и отсутствие перекрытия сохраняются	pending
+P04.35	Г-01	writer-schema	existing	P/04 families intro; common/LAYERS.md	Писатель проверяет схему и defs.writer независимо от наличия allOf	pending
+P04.35	Г-02	outcome-priority	existing	common/LAYERS.md §7 Choice of the outcome 4	Минимальное число priority; все равные в порядке файла; вариант Kimi с максимальным числом неверен	pending
+P04.35	Г-09	fate-alarms	existing	P/04-R459,R264	Обязательные тревоги hung/unsure; moved не добавляется к этому перечню по догадке	pending
+P04.35	Г-14	unplaced-count	existing	P/04-R120,R265,R325	Removed deleted/ends/retire_when не входят обратно в unplaced из-за сохранённой строки	pending
+P04.35	Г-15	guard-reference	existing	P/04-R269,R523; common/contracts/turn.md Get and hold the turn 5	Исправить адрес guard на admission R523 и шаг 5 turn, не шаг reachability	pending
+P04.35	Г-17	heard-server	existing	P/04-R504,R055; common/contracts/observation.md Freshness; P/06.6-R125	Heard по ресурсу или воркеру или слоту; равенство LOST_AFTER свежее; unknown не silence	pending
+P04.35	Г-18	exclusive-capacity	existing	P/04-R159,R528,R051; forms/README.md Shrink checks	Чужие units не используют exclusive holder; для собственных bound units запрет не расширяется	pending
+P04.34	V01	packages	existing	spec/04-controller.README.md Inputs and their priority; forms/code-rules.tsv	Внутренние пакеты выбирает реализация при соблюдении code rules и реальных seams	pending
+P04.34	V04	exact-arithmetic	existing	P/04-R139; common/contracts/pool.md	Способ точной арифметики внутренний; округление и saturation не разрешаются	pending
+P04.34	V05	turn-holder	existing	P/04-R209; common/contracts/turn.md	Генератор holder внутренний; новая уникальная метка каждой попытки обязательна	pending
+P04.34	V08	rebalance	existing	P/04-R164; Implementation decides 5	Частный channel/caller/budget объявляет реализация; требования rebalance сохраняются	pending
+P04.34	V09	extra-counters	existing	P/04-R007; Implementation decides 6	Добавочные counters свободны, обязательные поля и fixed metrics не заменяют	pending
+P04.34	V10	reason-text	existing	P/04-R035; Implementation decides 7	Дополнительные слова свободны при nonempty MUST и SHOULD grammar	pending
+P04.34	V11	report-command	existing	Implementation decides 9; lifecycle.md	Частная команда выбирается реализацией и печатает тот же N1.2 объект	pending
+P04.34	B01	missing-module-pin	prerequisite	common/modules.md Pins and use; common/versions/go.mod	Q8: row-check pin остаётся отдельной предпосылкой; P04.36 не выбирает pin и не объявляет generation ready	pending
+P04.34	B02	missing-contract-input	prerequisite	P/04-R171; P/05-R014; 05-resource.api.openapi.yaml Content-Length.maximum	Q8: добавить полный P05 OpenAPI в зависимости README P04; наличие следующего M проверит оператор	pending
