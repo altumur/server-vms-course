@@ -1,0 +1,119 @@
+{
+  "task": "P03.41",
+  "C": "a713df571d8b86ce23efb18d24d20e4bd8fe6bc0",
+  "M": "c6d4ba22e4734c9f752cd579e035f032f91e4bac",
+  "J": "dea8a8623f87f890545082ee6b0832b751e9b3fb",
+  "SPEC_VERSION": "c6d4ba22e4734c9f752cd579e035f032f91e4bac",
+  "evidence_directory": "/home/pilot/P03.41-evidence",
+  "worktree": "/home/pilot/wt-task-P03.41",
+  "M_directory": "/home/pilot/P03.41-evidence/M",
+  "J_directory": "/home/pilot/P03.41-evidence/J",
+  "files": {
+    "PAIR-PASSPORT.json": {
+      "path": "/home/pilot/P03.41-evidence/PAIR-PASSPORT.json",
+      "sha256": "92e8c30f08baeb26f4fcc00cb12aa448bc583acb392e0ae3e4deba6f8f793c2b"
+    },
+    "PASSPORT-M.json": {
+      "path": "/home/pilot/P03.41-evidence/PASSPORT-M.json",
+      "sha256": "6138f16d6ebc8a25caa5a407cc60ec9239bca82188da066117995e05fd6be7e2"
+    },
+    "SHA256SUMS": {
+      "path": "/home/pilot/P03.41-evidence/SHA256SUMS",
+      "sha256": "e2aec5c50128531d0d8cf5f96f5c733bc5411c8f5bd845ef467e414b741f1886"
+    },
+    "SPEC_VERSION": {
+      "path": "/home/pilot/P03.41-evidence/SPEC_VERSION",
+      "sha256": "0119de200410592d92e31cedf0fcafcabd605d153ffa81b6ad0a86124202464b"
+    },
+    "MODULE-PINS.json": {
+      "path": "/home/pilot/P03.41-evidence/MODULE-PINS.json",
+      "sha256": "d5cb3956dbc179918a16d7342b89ab8298c0ccf880dcda55441f0dbc99b1c8e3"
+    },
+    "NARROW-M.json": {
+      "path": "/home/pilot/P03.41-evidence/NARROW-M.json",
+      "sha256": "0b0e1f8c05792078e0f99819a7492599fb8eeff58e1b60cbabbbb056534ef966"
+    },
+    "UNPACKED-M.json": {
+      "path": "/home/pilot/P03.41-evidence/UNPACKED-M.json",
+      "sha256": "51ea49e6aa7ec359bb46d63c458b2e5c04f9317ba60dc8bf683e400ed6ac4071"
+    },
+    "UNPACKED-J.json": {
+      "path": "/home/pilot/P03.41-evidence/UNPACKED-J.json",
+      "sha256": "68d8b16d2854dd50a7806c89eb424feeaa3e48048638dda8b3b64a197fe869f7"
+    },
+    "BOUNDARY-CONTROLS.json": {
+      "path": "/home/pilot/P03.41-evidence/BOUNDARY-CONTROLS.json",
+      "sha256": "0d299ac3ed99f23b93978b4dc94a4d07e4b9724923b4d82e77ee1f5a188a3e64"
+    },
+    "CHECK-SPEC-C.run.json": {
+      "path": "/home/pilot/P03.41-evidence/CHECK-SPEC-C.run.json",
+      "sha256": "14f97ba46d77fa925653955390ee8d2d0736db3efb56470784969345fe4bee83"
+    },
+    "CHECK-SPEC-C.out": {
+      "path": "/home/pilot/P03.41-evidence/CHECK-SPEC-C.out",
+      "sha256": "8aaa440940ffc3d05d09d165d927d1990e56085ff147b4fea1f230872be0f6f8"
+    },
+    "CHECK-SPEC-C.err": {
+      "path": "/home/pilot/P03.41-evidence/CHECK-SPEC-C.err",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "OPERATOR-UNCHANGED.json": {
+      "path": "/home/pilot/P03.41-evidence/OPERATOR-UNCHANGED.json",
+      "sha256": "d69b4000f46de220915253f72c1019d5108c18d3cffc2b9c96e27f90b8786f51"
+    },
+    "PREFLIGHT.json": {
+      "path": "/home/pilot/P03.41-evidence/PREFLIGHT.json",
+      "sha256": "de788152c710675530fe31d916dfdd6763623833d663102e023f99b82bec4921"
+    },
+    "FILTER-DELTA.json": {
+      "path": "/home/pilot/P03.41-evidence/FILTER-DELTA.json",
+      "sha256": "8a961e33d73b56b5f3dc0dd3943d8215439db18bccacf436c3be5ed489e23096"
+    },
+    "FILTER-REVIEWS.json": {
+      "path": "/home/pilot/P03.41-evidence/FILTER-REVIEWS.json",
+      "sha256": "e21424a9911b51f497758237c946968b4bdc0760866e3c007f339d3646b31763"
+    },
+    "SOURCE-COMPOSITION.json": {
+      "path": "/home/pilot/P03.41-evidence/SOURCE-COMPOSITION.json",
+      "sha256": "9d863e22600d7a7a768d403b4c3d6e53d1c263560f12c26a99466b8af7b9a117"
+    },
+    "SOURCE-CLOSURE.json": {
+      "path": "/home/pilot/P03.41-evidence/SOURCE-CLOSURE.json",
+      "sha256": "52be354e2e2623927f5d90b7c715b6c801a08dccf0afc1a9dfabfea53c4305d3"
+    },
+    "AUTHORIZATION.json": {
+      "path": "/home/pilot/P03.41-evidence/AUTHORIZATION.json",
+      "sha256": "2885e2394b9de406fd19bea5423a96fcb20c8f77a3717eda16c00d167295eec0"
+    },
+    "PAIR.run.json": {
+      "path": "/home/pilot/P03.41-evidence/PAIR.run.json",
+      "sha256": "a2481d73e4e03fca4e858c4569ae24d9284dd6cb112ffc41a99167e55fd5fd0c"
+    },
+    "PAIR.out": {
+      "path": "/home/pilot/P03.41-evidence/PAIR.out",
+      "sha256": "3899677ea9aaa4f475cab141f9467c6e5af6ef453a353b16b44af1ef200d1182"
+    },
+    "FSCK-M.run.json": {
+      "path": "/home/pilot/P03.41-evidence/FSCK-M.run.json",
+      "sha256": "b6f902d2487641d1aba8d4694c79a62f431af6a0c64be5f4027329759542bfd8"
+    },
+    "FSCK-J.run.json": {
+      "path": "/home/pilot/P03.41-evidence/FSCK-J.run.json",
+      "sha256": "2450be7b5d9f714297fa598d9b3c5353c434a268f0123df787cca26c77e9724d"
+    },
+    "UNPACKED-M-PASSPORT.run.json": {
+      "path": "/home/pilot/P03.41-evidence/UNPACKED-M-PASSPORT.run.json",
+      "sha256": "5ab0ba0206edfc697a873c0bbd6e69425ab76850e00e4dc6a0159a069241aa4a"
+    },
+    "SHA256SUMS-CHECK.json": {
+      "path": "/home/pilot/P03.41-evidence/SHA256SUMS-CHECK.json",
+      "sha256": "95e38e884b07be6ac062f1a2c987ec1ff88bbe340fdbdd659429babeeafe4b65"
+    },
+    "PRE-HANDOFF.json": {
+      "path": "/home/pilot/P03.41-evidence/PRE-HANDOFF.json",
+      "sha256": "d3f5773cbdf5f9cf00694660e5f353026ffc99bceea62066afeaedf5115c7c05"
+    }
+  },
+  "submission_receipt": "/home/pilot/P03.41-evidence/RECEIPT.json",
+  "OK": true
+}
