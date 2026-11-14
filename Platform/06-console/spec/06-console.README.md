@@ -89,8 +89,16 @@ P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, 
 The unit fields need a loaded manifest per [P/02.1](../../02-installer/spec/02.1-installer.norms.md).
 The static HTTP schema does not know an arbitrary set of `unit.fields`: perform the check of the names, types, obligatoriness,
 references and constraints of a field by the manifest and N3. Conformance to the common schema alone does not mean an admissible request.
-The internal interfaces, types, error classes, functions, libraries, the way the handlers are placed and the split into
-components are chosen by the implementation.
+The language, internal interfaces, types, error classes, functions, libraries, the way the handlers are placed and the split into
+components are chosen by the implementation and are not judged as a prescribed design. The required shared modules and their contracts
+remain mandatory; a choice of language does not permit replacing a required module with a private copy.
+
+The store client's answer-size limit and wait term follow the [store client contract](../../common/contracts/store-client.md#outcomes-and-what-the-client-does):
+the implementation declares them, rather than adopting a fixed lesson-wide value. The size limit must accommodate the permitted row and listing
+answers of its store; a listing has no fixed row-count ceiling. Exceeding the limit or term is `no_reply`: `unavailable` for get/list,
+`ambiguous` for write/delete/batch, not a damaged row. Environment capacities and applicable budgets follow
+[finite budgets and observable completion](../../common/contracts/production-obligations.md#finite-budgets-and-observable-completion);
+missing factual bindings remain unqualified, not PASS.
 
 **On a discrepancy.** Name the norm id, the input, the initial state, the expected and the obtained outcome. First check which
 chapter or lesson the rule belongs to: the units door and the claim — chapter 6.1, the loader — P/02.1, the rights generator — P/02.5,
@@ -153,6 +161,10 @@ Some words of the norms have more than one meaning; the place of the word tells 
 
 This is a suggested order, not a mandatory structure of the code.
 
+The dependencies in `forms/stages.tsv` retain the full stage chain. Finishing the ordinary slice described under «The whole lesson»
+does not complete `late_domain` or `complete_console`: unavailable domain neighbours and their positive checks remain unchecked
+dependencies. Independent work can continue without marking those stages PASS.
+
 ### Chapter 6.1 — the units door, bodies, tables
 
 1. Write out the key families, their writers and the row forms from N1. Check which fields are taken from the manifest
@@ -175,7 +187,8 @@ This is a suggested order, not a mandatory structure of the code.
    The placement controller does not promise a background detection of a violation; check a race with this boundary of N3.
 4. First put the blob durably, then the CAS of the row. Marks are allowed in the background; deletion only after all
    writers/copying are stopped, a repeated full traversal and by the phases of N3. Do not use an idempotent put as a proof of a change
-   of the index.
+   of the index. Apply P/06.1-R120 to the entire console instance: two admitted unfinished blob PUT requests across all subsystems,
+   doors and connections; admission precedes body reading, and a place remains occupied until the full response or request termination.
 5. Implement the tables as a full replacement by the manifest with CAS; `Idempotency-Key` is optional, with it — the replay memory of N3. Do not output secrets;
    a spoiled row differs from a read failure (N1.6, N2).
 6. Prepare the instances by the acceptance README. Then separate probes of the maintenance window and of the full answer; the copy
