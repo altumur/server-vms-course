@@ -10,7 +10,7 @@ the conformance of the product is by its acceptance against this table (ADR-0080
 
 The rows were transferred from the inputs of the command `keys` of the acceptance of M11/2
 (`inputs/keys-*.json`, sc. 01–03) without a change of bytes; `case` is the name of the input file. The scenarios M11/02 sc. 01–03 and their inputs
-were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is [the README of the package `domain-token`](../domain-token/README.md#source-log)): the table is the only source
+were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is [the README of the package `domain-token`](../domain-token/README.cases.md#source-log)): the table is the only source
 of these cases.
 
 ## Run
@@ -21,7 +21,7 @@ Who performs: `cases.tsv` — the member's agent (`09-agent`), the cluster conso
 
 ## Keys
 
-The seeds are `sha256("w2c test <word>")`, the words are [the README of the package `domain-token`](../domain-token/README.md#keys) «Keys» (`root 1` — the root of the domain `acme`, `root 2` —
+The seeds are `sha256("w2c test <word>")`, the words are [the README of the package `domain-token`](../domain-token/README.cases.md#keys) «Keys» (`root 1` — the root of the domain `acme`, `root 2` —
 a foreign root, `token key 1…3`, `book seal 1`, `book seal 2`); the bytes of the keys are in the inputs themselves (`pinned.pub`, `doc`).
 The public root of `acme` is `34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684`.
 
