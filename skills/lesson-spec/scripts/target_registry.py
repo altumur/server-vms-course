@@ -2,11 +2,11 @@
 
 The registry is two tables: `targets.tsv` (M) and `targets.routing.tsv` (J). Their header — the first row outside `#` comments —
 is the one of `Platform/common/acceptance/forms/`. Rows live in the common files (the former layout) or in
-`Platform/NN-<process>/forms/targets.tsv` and `targets.routing.tsv` of their lesson, with the same header. During the transition
+`Platform/NN-<process>/forms/targets.tsv` and `targets.routing.tsv` of their lesson, with the required common columns; routing may omit the optional execution column. During the transition
 both layouts are accepted at once; one id in two places is an error.
 
 Checked here, by data only:
-- every source has the common header, cells as many as its columns, a nonempty `id`;
+- every source has the required common columns, cells as many as its columns, a nonempty `id`;
 - an `id` of targets is unique across all sources, the same for routing;
 - a row in a lesson's file has the `owner` of that lesson (its directory name);
 - every target has exactly one routing row and the other way round, both in the same place (common, or the same lesson).
@@ -24,6 +24,8 @@ from pathlib import Path
 
 COMMON = Path("Platform/common/acceptance/forms")
 TARGETS, ROUTING = "targets.tsv", "targets.routing.tsv"
+EXECUTION_SCHEMA = "targets.execution.schema.json"
+OPTIONAL_ROUTING = {"execution": "{}"}
 LESSON_DIR = re.compile(r"^\d\d-[a-z0-9-]+$")
 # A stand directory of a lesson: `Platform/NN-<process>/acceptance/<name>`, <name> not a chapter number; the element of the
 # column `acceptance` may name the directory itself or a path in it.
@@ -77,14 +79,23 @@ def _table(root, name, errors):
     rows = []
     for path, lesson in sources(root, name):
         got, body = read_table(path)
-        if lesson is not None and got != header:
+        if not got or len(got) != len(set(got)):
+            errors.append((path, "missing header or duplicate column name"))
+            continue
+        if name == ROUTING:
+            missing = set(header) - set(OPTIONAL_ROUTING) - set(got)
+            if missing:
+                errors.append((path, f"the header differs from the common header: missing required columns {sorted(missing)}"))
+                continue
+        elif lesson is not None and got != header:
             errors.append((path, f"the header differs from the common header of {COMMON / name}: {got} != {header}"))
             continue
         for line, cells in body:
-            if len(cells) != len(header):
-                errors.append((path, f"line {line}: {len(cells)} cells, the header names {len(header)}"))
+            if len(cells) != len(got):
+                errors.append((path, f"line {line}: {len(cells)} cells, the header names {len(got)}"))
                 continue
-            row = dict(zip(header, cells))
+            supplied = dict(zip(got, cells))
+            row = {key: supplied.get(key, OPTIONAL_ROUTING.get(key, "")) for key in header}
             if not row.get("id"):
                 errors.append((path, f"line {line}: empty id"))
                 continue
@@ -111,7 +122,7 @@ def assemble(root):
     root = Path(root)
     errors = []
     _, targets = _table(root, TARGETS, errors)
-    _, routing = _table(root, ROUTING, errors)
+    routing_header, routing = _table(root, ROUTING, errors)
     t_ids = _unique(targets, TARGETS, errors)
     r_ids = _unique(routing, ROUTING, errors)
     for tid, (path, line, place) in t_ids.items():
@@ -123,10 +134,143 @@ def assemble(root):
     for rid, (path, line, _) in r_ids.items():
         if rid not in t_ids:
             errors.append((path, f"line {line}: routing row {rid} has no target in {TARGETS}"))
+    execution_count = 0
+    if routing_header and "execution" in routing_header:
+        execution_count = _check_execution(root, targets, routing, errors)
     places = {place for *_, place in targets + routing}
     stats = {"registry_targets": len(t_ids), "registry_routing": len(r_ids),
-             "registry_lessons_with_rows": len(places - {"common"})}
+             "registry_lessons_with_rows": len(places - {"common"}), "registry_execution_rows": execution_count}
     return ([(p, n, r) for p, n, r, _ in targets], [(p, n, r) for p, n, r, _ in routing], errors, stats)
+
+
+def _json(cell):
+    """Strict JSON: duplicate keys and non-finite extensions are data errors."""
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise ValueError(f"duplicate JSON key {key}")
+            out[key] = value
+        return out
+
+    def constant(word):
+        raise ValueError(f"non-finite JSON value {word}")
+
+    return json.loads(cell, object_pairs_hook=pairs, parse_constant=constant)
+
+
+def selected_scenarios(path, selector, exclude=()):
+    """Read scenario identities/first requests only; never execute a step or read its expectation."""
+    import source_cells
+    text = path.read_text(encoding="utf-8")
+    # Scenario tables allow a comment header and whitespace-only empty lines.
+    text = "\n".join(raw if raw.strip() else "" for raw in text.split("\n"))
+    header = ["scenario", "step", "request", "expect"]
+    first_line = next((raw for raw in text.split("\n") if raw and not raw.startswith("#")), "")
+    declared, decoded, problems = source_cells.table(text, columns=header,
+                                                   positional=first_line.split("\t") != header)
+    if problems:
+        raise ValueError("; ".join(problems))
+    if declared:
+        rows = [(row["scenario"], row["request"]) for _, row in decoded]
+    else:
+        rows = []
+        for number, raw in enumerate(text.split("\n"), 1):
+            if not raw or raw.startswith("#"):
+                continue
+            cells = raw.split("\t")
+            if cells == ["scenario", "step", "request", "expect"]:
+                continue
+            if len(cells) != 4:
+                raise ValueError(f"line {number}: expected four scenario cells")
+            rows.append((cells[0], cells[2]))
+    first = {}
+    previous = None
+    for name, request in rows:
+        if name != previous and name in first:
+            raise ValueError(f"scenario {name} is not contiguous")
+        first.setdefault(name, request)
+        previous = name
+    if selector == "all":
+        selected = list(first)
+    elif selector == "none":
+        selected = []
+    elif selector.startswith(("first-step:", "not-first-step:")):
+        word, directive = selector.split(":", 1)
+        if not directive or not directive.startswith("@") or any(c.isspace() for c in directive):
+            raise ValueError("invalid first-step directive selector")
+        selected = [name for name, request in first.items()
+                    if (request == directive or request.startswith(directive + " ")) == (word == "first-step")]
+    else:
+        match = re.fullmatch(r"range:([0-9]+)-([0-9]+)", selector)
+        if not match or int(match[1]) > int(match[2]):
+            raise ValueError("invalid scenarios selector")
+        lower, upper = int(match[1]), int(match[2])
+        selected = [name for name in first if (number := re.match(r"[0-9]+", name))
+                    and lower <= int(number[0]) <= upper]
+    missing = set(exclude) - set(selected)
+    if missing:
+        raise ValueError(f"execution.exclude names unselected or absent scenarios: {sorted(missing)}")
+    return [name for name in selected if name not in exclude]
+
+
+def _check_execution(root, targets, routing, errors):
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import SchemaError
+    schema_path = root / COMMON / EXECUTION_SCHEMA
+    try:
+        schema = _json(schema_path.read_text(encoding="utf-8"))
+        Draft202012Validator.check_schema(schema)
+        validator = Draft202012Validator(schema)
+    except (OSError, ValueError, UnicodeError, SchemaError) as exc:
+        errors.append((schema_path, f"invalid execution schema: {exc}"))
+        return 0
+    by_id = {row["id"]: row for _, _, row, _ in targets}
+    count = 0
+    for path, line, row, _ in routing:
+        try:
+            execution = _json(row["execution"])
+            problems = list(validator.iter_errors(execution))
+            if problems:
+                raise ValueError("; ".join(f"execution/{'/'.join(map(str, e.path))}: {e.message}" for e in problems))
+            if not execution:
+                continue
+            count += 1
+            if row.get("engine") not in {"run", "l06", "l11", "store_group", "power_stand"}:
+                raise ValueError("execution applies only to a scenario table, not this engine word")
+            directories = _json(row.get("acceptance", "[]"))
+            if not isinstance(directories, list) or not directories or not isinstance(directories[0], str):
+                raise ValueError("execution requires a first acceptance directory")
+            relative = Path(directories[0])
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError("execution requires a repository-relative acceptance directory")
+            selected = selected_scenarios(root / relative / "scenarios.tsv", row.get("scenarios", ""),
+                                          execution.get("exclude", []))
+            positions = {name: number for number, name in enumerate(selected)}
+            ids, boundaries = set(), set()
+            last_position = -1
+            for action in execution.get("between", []):
+                if type(action["timeout_s"]) is not int:
+                    raise ValueError("execution.between timeout_s must be a JSON integer token")
+                aid = action["id"]
+                boundary = (action["after"], action["before"])
+                if aid in ids or boundary in boundaries:
+                    raise ValueError("execution.between repeats an id or boundary")
+                ids.add(aid)
+                boundaries.add(boundary)
+                after, before = boundary
+                if after not in positions or before not in positions or positions[before] != positions[after] + 1:
+                    raise ValueError(f"execution.between {aid}: after/before must be adjacent selected scenarios")
+                if positions[after] < last_position:
+                    raise ValueError("execution.between must follow the selected scenario order")
+                last_position = positions[after]
+                target = by_id.get(row["id"], {})
+                commands = _json(target.get("stand_commands", "[]"))
+                if not isinstance(commands, list) or action["command"] not in commands:
+                    raise ValueError(f"execution.between {aid}: command is not declared in target stand_commands")
+        except (OSError, ValueError, UnicodeError, KeyError) as exc:
+            errors.append((path, f"line {line}: {exc}"))
+    return count
 
 
 def stands(root):

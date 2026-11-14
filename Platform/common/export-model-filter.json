@@ -2567,6 +2567,11 @@
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 generic public target form/flags/profile semantics, wholefile."
     },
     {
+      "path": "Platform/common/acceptance/forms/targets.execution.schema.json",
+      "disposition": "judge_only",
+      "basis": "Routing execution cell schema for the judge; no model input."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.routing.tsv",
       "disposition": "judge_only",
       "basis": "Owner exact P01.46.5 role; accepted SourceP01.26 R2 private engine/acceptance routing companion, wholefile. Opaque metadata only; no model delivery."

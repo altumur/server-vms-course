@@ -2567,6 +2567,11 @@
       "basis": "Common acceptance: the judge lesson."
     },
     {
+      "path": "Platform/common/acceptance/forms/targets.execution.schema.json",
+      "disposition": "include",
+      "basis": "Common routing execution cell schema."
+    },
+    {
       "path": "Platform/common/acceptance/forms/targets.routing.tsv",
       "disposition": "include",
       "basis": "Common acceptance: the judge lesson."

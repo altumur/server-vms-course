@@ -25,4 +25,7 @@
 # derived:<deployment> — the file that the rights derivation command of the stand writes from the stand manifests of forms/stand-manifests.tsv with {deployment} = <deployment>; none — the
 # store starts without a rights file (the command template without its occurrence of -rights {rights}; the rows puts among them); - — the target has no stand store (vector, verdicts and
 # the seams of an adapter among them) or every variant of its form derives its own file (variants). A directive @rights store replaces the file for its scenario only; a README sets no file.
-id	engine	acceptance	scenarios	tables	parts	body	role	free	rights
+# execution: optional compact JSON object by targets.execution.schema.json and targets.README.md «Routing execution»; an omitted column supplies {}.
+# stand: shared — one fresh instance for all selected scenarios of the first directory, scenario — one fresh instance per selected scenario; absent — the engine family's existing lifecycle.
+# exclude: exact scenario ids removed after scenarios selects; between: ordered preparations at adjacent selected scenario boundaries, only with stand shared. Neither applies to tables.
+id	engine	acceptance	scenarios	tables	parts	body	role	free	rights	execution

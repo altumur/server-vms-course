@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Optional execution cell of the acceptance target routing",
+  "description": "The execution column of targets.routing.tsv. An omitted column supplies {}: no override of the engine family's existing lifecycle or selection. Cross-row references, selection membership, adjacent boundaries and declared commands are checked against the assembled registry and the selected scenario table.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "stand": {
+      "type": "string",
+      "enum": ["shared", "scenario"]
+    },
+    "exclude": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "between": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/between"}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"required": ["between"], "properties": {"between": {"minItems": 1}}},
+      "then": {"required": ["stand"], "properties": {"stand": {"const": "shared"}}}
+    }
+  ],
+  "$defs": {
+    "between": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "after", "before", "action", "command", "sub", "timeout_s"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "after": {"type": "string", "minLength": 1},
+        "before": {"type": "string", "minLength": 1},
+        "action": {"const": "controller-pass"},
+        "command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["owner", "section", "key"],
+          "properties": {
+            "owner": {"type": "string", "minLength": 1},
+            "section": {"const": "stand"},
+            "key": {"type": "string", "minLength": 1}
+          }
+        },
+        "sub": {"type": "string", "minLength": 1},
+        "timeout_s": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
