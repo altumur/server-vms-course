@@ -102,6 +102,12 @@ of the common acceptance README does not execute them: it has no controlled cloc
 
 The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of chapter P/03.2.
 
+The blob admission interval of P/06.1-R120 is checked by reading the implementation: the sequential HTTP file cannot keep two
+PUT requests unfinished while issuing a third. Trace two admitted unfinished blob PUT requests on different connections and subsystem
+doors of one console instance. A third request receives the existing 503 with Retry-After before body reading; a place remains
+occupied until its admitted request has sent the full response or terminated, including after its body has been read.
+The internal admission mechanism is not prescribed or judged.
+
 ### Recovery observations
 
 For `console-next-id`, `row_listing`, `tombstones` and `live_claims` independently select the outcome of each required history read. Cases `s03-counter-history-unknown`, `s12-counter-tombstones-unknown` and `s13-counter-live-claims-unknown` leave exactly one read unconfirmed and the other two confirmed. Each must return 503 without issuing a number or rewriting the counter. This tests the existing full-history condition of P/06.1-R102 and the `next-id` family outcomes.

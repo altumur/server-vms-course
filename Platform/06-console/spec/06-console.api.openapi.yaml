@@ -72,6 +72,11 @@ paths:
         description: The name of an existing unit blob field; an unrepresentable manifest is rejected by the loader per N1.5.
     put:
       summary: Write the blob bytes and then the row reference
+      description: >-
+        P/06.1-R120 admits two unfinished blob PUT requests per console instance, across all subsystems,
+        doors and connections. Admission precedes body reading; an admitted place remains occupied until
+        the full response has been sent or the request terminates. A third request in that interval receives
+        the existing 503 with Retry-After before body reading. The blob body ceiling is 32 MiB.
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
