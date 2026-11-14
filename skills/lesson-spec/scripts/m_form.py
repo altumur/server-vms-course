@@ -322,6 +322,8 @@ def run(check, lessons=None):
         checked.append(lesson)
         history_phrases(check, lesson, files, STAGE_A_OUTSIDE if stage_a else ())
         judge_only_refs(check, lesson, files, model)
+        if key in M_NARROW:
+            earlier_contracts(check, lesson, model)
         history_rows(check, lesson)
         req_map(check, lesson)
         if stage_a:
@@ -707,12 +709,22 @@ def pair_m(check, lesson, model):
         p.startswith(lesson.rel + "/") or p.startswith("Platform/common/") or p in PAIR_ALWAYS or p in named)}
 
 
-def judge_only_refs(check, lesson, files, model):
+def judge_only_refs(check, lesson, files, model, consumer=None):
+    """`files` of `lesson`; with `consumer` (a lesson of M_NARROW, `earlier_contracts`) — the files of an earlier
+    lesson in the narrow M of the consumer: only their sources are read, and only a reference to a file of a lesson
+    earlier than the consumer outside its narrow M is an error (the judge-only references are the lesson's own run)."""
     # The files of Q are outside M too; their references are judged by qualification_refs over every file of M.
     judge = {p for p, d in model.items() if d == "judge_only" and "/ru/" not in p and not q_kind(p)}
     seen_model = {p for p, d in model.items() if d == "model_and_judge" and not q_kind(p)}
     outside = set()                                     # model_and_judge of the course, outside M of the pair
-    if lesson.key in M_NARROW:
+    if consumer is not None:
+        pair = pair_m(check, consumer, model)
+        if pair is None:
+            return                                      # the consumer's own run names the missing table
+        outside = {p for p in seen_model - pair if "/ru/" not in p}
+        seen_model = pair
+        judge |= outside
+    elif lesson.key in M_NARROW:
         pair = pair_m(check, lesson, model)
         if pair is None:
             check.error(lesson.home / "README.md", f"{lesson.key} is in m_form.M_NARROW, and its README.md has no "
@@ -759,7 +771,7 @@ def judge_only_refs(check, lesson, files, model):
     for source in files:
         if source.suffix != ".md":
             continue
-        for path in (source, lesson.translation(source)):
+        for path in (source,) if consumer is not None else (source, lesson.translation(source)):
             if not path.is_file():
                 continue
             base_dir = (path.parent if path == source else source.parent).resolve()
@@ -776,6 +788,16 @@ def judge_only_refs(check, lesson, files, model):
                     if marked:
                         continue
                     n = first + sentence.count("\n", 0, at)
+                    if consumer is not None:
+                        if target in outside and earlier_file(check, target, consumer):
+                            check.error(consumer.home / "README.md",
+                                        f"{rel(path.relative_to(root))}: line {n}: a reference to {target}, a contract "
+                                        f"of a lesson earlier than {consumer.key}, outside M of the pair "
+                                        f"{consumer.key}: the file that names it enters that M through the table "
+                                        f"«{DEPENDENCIES['en'][3:]}», and the files it relies on enter with it "
+                                        "(Platform/common/modules.md «Lesson contract input»): add the file to that "
+                                        "table or mark the reference «(judge-only: …)»")
+                        continue
                     if target in outside or "*" in target and any(fnmatch.fnmatchcase(o, target) for o in outside):
                         check.error(path, f"line {n}: a reference to {target}, a file of another lesson outside M of "
                                           f"the pair {lesson.key} (the export filters cut whole files; the table "
@@ -785,6 +807,38 @@ def judge_only_refs(check, lesson, files, model):
                     else:
                         check.error(path, f"line {n}: a reference to the judge-only file {target} without "
                                           "«(judge-only: …)» in the same sentence (the file is not in M)")
+
+
+def lesson_number(check, path):
+    """The number `NN` of the lesson of a repository path `Platform/<dir>/…` of Platform/lessons.tsv; None — none."""
+    parts = path.split("/")
+    if len(parts) < 3 or parts[0] != "Platform":
+        return None
+    return next((row.get("lesson") for _, row in check.lessons_table()[1] if row.get("dir") == parts[1]), None)
+
+
+def earlier_file(check, path, consumer):
+    number = lesson_number(check, path)
+    return number is not None and number.isdigit() and int(number) < int(consumer.number)
+
+
+def earlier_contracts(check, lesson, model):
+    """ADR-0133 addendum (115) item 1; Platform/common/modules.md «Lesson contract input»: the earlier lesson contracts
+    in M of a lesson of M_NARROW come with their dependencies. A Markdown file of a lesson earlier than `lesson` in the
+    narrow M of its pair (named by the table «What this lesson takes from common») that refers to a file of an earlier
+    lesson outside that M is an error at the README of `lesson`; a reference to a later lesson or common is not judged
+    here (common is in M; a later lesson is no earlier contract)."""
+    pair = pair_m(check, lesson, model)
+    if pair is None:
+        return
+    for _, row in check.lessons_table()[1]:
+        number, home = row.get("lesson"), row.get("dir")
+        if not number or not home or not number.isdigit() or int(number) >= int(lesson.number):
+            continue
+        earlier = Lesson(check, f"P/{number}", check.root / "Platform" / home)
+        files = [check.root / p for p in sorted(pair) if p.startswith(earlier.rel + "/") and p.endswith(".md")]
+        if files:
+            judge_only_refs(check, earlier, files, model, consumer=lesson)
 
 
 # --- qualification_refs --------------------------------------------------------------------------------------------

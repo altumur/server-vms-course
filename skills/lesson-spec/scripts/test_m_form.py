@@ -902,6 +902,51 @@ class JudgeOnlyByReference(AcceptedForm):
         self.assertTrue(any("is in m_form.M_NARROW, and its README.md has no" in e for e in errors), errors)
 
 
+class EarlierContracts(AcceptedForm):
+    """A file of an earlier lesson in the narrow M of a later lesson of M_NARROW brings the files it relies on: a
+    reference from it to a file of a lesson earlier than the consumer outside that M is an error at the consumer's
+    README (Platform/common/modules.md «Lesson contract input»). The consumer P/02 is synthetic: its narrow M is set
+    by the test, P/01 is the copy."""
+    REL = "acceptance/1/README.md"
+    CONSUMER = "Platform/02-installer"
+
+    def closure(self, drop):
+        """Runs earlier_contracts for P/02 whose narrow M is common and every file of P/01 except `drop`."""
+        check = Check(self.root, scope="platform")
+        model = m_form.export_model(check)
+        pair = {p for p, d in model.items() if d == "model_and_judge" and "/ru/" not in p and not m_form.q_kind(p) and
+                (p.startswith(HOME + "/") or p.startswith("Platform/common/")) and p not in drop}
+        consumer = m_form.Lesson(check, "P/02", self.root / self.CONSUMER)
+        with patch.object(m_form, "pair_m", lambda check, lesson, model: pair):
+            m_form.earlier_contracts(check, consumer, model)
+        return check
+
+    def earlier_file(self):
+        """A file of P/01 in M that no file of the copy names: dropping it from the narrow M of P/02 is clean until
+        the test names it."""
+        check = Check(self.root, scope="platform")
+        model = m_form.export_model(check)
+        return next(p for p, d in sorted(model.items()) if d == "model_and_judge" and p.startswith(HOME + "/") and
+                    "/ru/" not in p and p != f"{HOME}/{self.REL}" and not m_form.q_kind(p) and
+                    (self.root / p).is_file() and not self.closure({p}).errors)
+
+    def test_reference_to_an_earlier_file_outside_the_narrow_m_fails(self):
+        other = self.earlier_file()
+        line = self.add_sentence(self.REL, f"The other side is in `{other}`.")
+        errors = self.closure({other}).errors
+        wanted = f"{self.CONSUMER}/README.md: {HOME}/{self.REL}: line {line}: a reference to {other}, a contract of a " \
+                 "lesson earlier than P/02, outside M of the pair P/02"
+        self.assertTrue(any(e.startswith(wanted) for e in errors), errors)
+
+    def test_reference_inside_the_narrow_m_or_marked_passes(self):
+        other = self.earlier_file()
+        self.add_sentence(self.REL, f"The other side is in `{other}`.")
+        self.assertEqual(self.closure(set()).errors, [])
+        self.setUp()
+        self.add_sentence(self.REL, f"The other side is in `{other}` (judge-only: the other side).")
+        self.assertEqual(self.closure({other}).errors, [])
+
+
 class QualificationRefs(AcceptedForm):
     """The input Q (ADR-0130 addendum (20) item 1): a reference from M to a file `qualification/…` is a reference
     outside M — «(judge-only: …)» in the same sentence; Q never enters the files of M or the narrow M of the pair; a
