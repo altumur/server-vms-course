@@ -1,0 +1,18 @@
+{
+  "C": "12275aeee318882439b0493849f751c72a858a21",
+  "M": "ded7404966b9526cf6bfb7119ce656c427a599fb",
+  "files": 646,
+  "directory": "/home/pilot/P06.22-evidence/M",
+  "passport": "/home/pilot/P06.22-evidence/PASSPORT-M.json",
+  "passport_sha256": "db2ad25ddacc25e47eceaf3179fd639185e67ec32d31f3314d5b030c653af946",
+  "files_sha256": "d635194f4b591b594e024e2ae1ca03c0345c48a07640356d1d511ee1e0a9ba05",
+  "SHA256SUMS": "/home/pilot/P06.22-evidence/SHA256SUMS",
+  "SHA256SUMS_sha256": "695943824e21ee2297f820c2e722e125222496278991d90c175356aff1fe2262",
+  "source_bytes_exact": true,
+  "paths_and_modes_exact": true,
+  "all_write_bits_cleared": true,
+  "passport_check_exit": 0,
+  "sha256sum_check_exit": 0,
+  "fsck_exit": 0,
+  "OK": true
+}
