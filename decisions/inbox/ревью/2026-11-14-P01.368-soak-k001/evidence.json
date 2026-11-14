@@ -1,0 +1,743 @@
+{
+  "task": "P01.368",
+  "conclusion": "кандидат",
+  "source": "/home/pilot/owner-receipts/P01.334-full82-20261113T2133Z/out/soak/long",
+  "history_lines": 2240060,
+  "key_ops": 157132,
+  "first_key_operation": {
+    "id": 14,
+    "c": 3,
+    "k": "soak/k001",
+    "f": "read",
+    "t0": 62070912983,
+    "t1": 62082140478,
+    "res": "ok",
+    "out": "",
+    "att": [
+      {
+        "node": "s1",
+        "t0": 62070915247,
+        "t1": 62082140478,
+        "st": 200,
+        "sent": true
+      }
+    ]
+  },
+  "only_writer_of_A": [
+    92414
+  ],
+  "witness": [
+    {
+      "id": 92414,
+      "c": 7,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c7.11548",
+      "wid": "4203b93600070000002d1c",
+      "t0": 578830910260,
+      "t1": 589464436992,
+      "res": "ok",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 578830924677,
+          "t1": 589464436992,
+          "st": 200,
+          "sent": true,
+          "idx": "39481"
+        }
+      ]
+    },
+    {
+      "id": 92421,
+      "c": 6,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 578867100001,
+      "t1": 580070328105,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 578867101823,
+          "t1": 580070328105,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92445,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c5.11547",
+      "wid": "4203b93600050000002d1b",
+      "t0": 581126919612,
+      "t1": 581138432920,
+      "res": "ok",
+      "idx": "39488",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 581126924796,
+          "t1": 581138432920,
+          "st": 200,
+          "sent": true,
+          "idx": "39488"
+        }
+      ]
+    },
+    {
+      "id": 92447,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 581150721898,
+      "t1": 589464323664,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s1",
+          "t0": 581150764216,
+          "t1": 589464323664,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    }
+  ],
+  "exhaustive_check": {
+    "orders_total": 24,
+    "orders_preserving_real_time": 4,
+    "legal_orders": []
+  },
+  "controls": {
+    "omit_92421": {
+      "orders_total": 6,
+      "orders_preserving_real_time": 3,
+      "legal_orders": [
+        [
+          92445,
+          92414,
+          92447
+        ]
+      ]
+    },
+    "omit_92445": {
+      "orders_total": 6,
+      "orders_preserving_real_time": 3,
+      "legal_orders": [
+        [
+          92414,
+          92421,
+          92447
+        ]
+      ]
+    },
+    "omit_92447": {
+      "orders_total": 6,
+      "orders_preserving_real_time": 3,
+      "legal_orders": [
+        [
+          92414,
+          92421,
+          92445
+        ]
+      ]
+    },
+    "read_current_value": {
+      "orders_total": 24,
+      "orders_preserving_real_time": 4,
+      "legal_orders": [
+        [
+          92414,
+          92421,
+          92445,
+          92447
+        ]
+      ]
+    }
+  },
+  "window": [
+    {
+      "id": 92410,
+      "c": 6,
+      "k": "soak/k001",
+      "f": "cas",
+      "v": "lc82.c6.11573",
+      "exp": "lc82.c2.11497",
+      "ei": "39331",
+      "wid": "4203b93600060000002d35",
+      "t0": 578801238578,
+      "t1": 578838096933,
+      "res": "fail",
+      "why": "cas_mismatch",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 578801249461,
+          "t1": 578838096933,
+          "st": 409,
+          "kind": "conflict",
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92414,
+      "c": 7,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c7.11548",
+      "wid": "4203b93600070000002d1c",
+      "t0": 578830910260,
+      "t1": 589464436992,
+      "res": "ok",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 578830924677,
+          "t1": 589464436992,
+          "st": 200,
+          "sent": true,
+          "idx": "39481"
+        }
+      ]
+    },
+    {
+      "id": 92421,
+      "c": 6,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 578867100001,
+      "t1": 580070328105,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 578867101823,
+          "t1": 580070328105,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92426,
+      "c": 6,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c6.11576",
+      "wid": "4203b93600060000002d38",
+      "t0": 580083603543,
+      "t1": 589672549471,
+      "res": "ok",
+      "idx": "39497",
+      "att": [
+        {
+          "node": "s1",
+          "t0": 580083619773,
+          "t1": 589471705366,
+          "st": 503,
+          "kind": "ambiguous",
+          "sent": true
+        },
+        {
+          "node": "s3",
+          "t0": 589632633911,
+          "t1": 589672549471,
+          "st": 200,
+          "sent": true,
+          "idx": "39497"
+        }
+      ]
+    },
+    {
+      "id": 92428,
+      "c": 2,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 580971980559,
+      "t1": 580992551458,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 580971990676,
+          "t1": 580992551458,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92429,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 580988253766,
+      "t1": 580998029594,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 580988255772,
+          "t1": 580998029594,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92430,
+      "c": 2,
+      "k": "soak/k001",
+      "f": "cas",
+      "v": "lc82.c2.11550",
+      "exp": "lc82.c7.11548",
+      "ei": "39481",
+      "wid": "4203b93600020000002d1e",
+      "t0": 580994841675,
+      "t1": 589683125663,
+      "res": "info",
+      "why": "conflict_after_unknown",
+      "att": [
+        {
+          "node": "s1",
+          "t0": 580994863660,
+          "t1": 589471667716,
+          "st": 503,
+          "kind": "ambiguous",
+          "sent": true
+        },
+        {
+          "node": "s3",
+          "t0": 589640767270,
+          "t1": 589683125663,
+          "st": 409,
+          "kind": "conflict",
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92433,
+      "c": 0,
+      "k": "soak/k001",
+      "f": "cas",
+      "v": "lc82.c0.11551",
+      "exp": "lc82.c0.11543",
+      "ei": "39462",
+      "wid": "4203b93600000000002d1f",
+      "t0": 581019880880,
+      "t1": 581047333111,
+      "res": "fail",
+      "why": "cas_mismatch",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 581019904659,
+          "t1": 581047333111,
+          "st": 409,
+          "kind": "conflict",
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92445,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c5.11547",
+      "wid": "4203b93600050000002d1b",
+      "t0": 581126919612,
+      "t1": 581138432920,
+      "res": "ok",
+      "idx": "39488",
+      "att": [
+        {
+          "node": "s2",
+          "t0": 581126924796,
+          "t1": 581138432920,
+          "st": 200,
+          "sent": true,
+          "idx": "39488"
+        }
+      ]
+    },
+    {
+      "id": 92447,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 581150721898,
+      "t1": 589464323664,
+      "res": "ok",
+      "out": "lc82.c7.11548",
+      "idx": "39481",
+      "att": [
+        {
+          "node": "s1",
+          "t0": 581150764216,
+          "t1": 589464323664,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92448,
+      "c": 4,
+      "k": "soak/k001",
+      "f": "put",
+      "v": "lc82.c4.11555",
+      "wid": "4203b93600040000002d23",
+      "t0": 589464380794,
+      "t1": 589517331968,
+      "res": "ok",
+      "idx": "39489",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 589464414012,
+          "t1": 589517331968,
+          "st": 200,
+          "sent": true,
+          "idx": "39489"
+        }
+      ]
+    },
+    {
+      "id": 92452,
+      "c": 7,
+      "k": "soak/k001",
+      "f": "read",
+      "t0": 589478401238,
+      "t1": 589542615883,
+      "res": "ok",
+      "out": "lc82.c4.11555",
+      "idx": "39489",
+      "att": [
+        {
+          "node": "s1",
+          "t0": 589478405564,
+          "t1": 589542615883,
+          "st": 200,
+          "sent": true
+        }
+      ]
+    },
+    {
+      "id": 92483,
+      "c": 5,
+      "k": "soak/k001",
+      "f": "del",
+      "wid": "4203b93600050000002d23",
+      "t0": 589702997539,
+      "t1": 589735659463,
+      "res": "ok",
+      "idx": "39505",
+      "att": [
+        {
+          "node": "s3",
+          "t0": 589703016364,
+          "t1": 589735659463,
+          "st": 200,
+          "sent": true,
+          "idx": "39505"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "detail": {
+        "down_s": 4.812879494,
+        "what": "kill9-follower"
+      },
+      "kind": "fault",
+      "t": 543785885594,
+      "target": "s3",
+      "wall": "2026-11-13T22:11:10.866889895Z"
+    },
+    {
+      "detail": {
+        "code": 0,
+        "pid": 431465,
+        "signal": "killed"
+      },
+      "kind": "exit",
+      "t": 543802081559,
+      "target": "s3",
+      "wall": "2026-11-13T22:11:10.883085863Z"
+    },
+    {
+      "detail": {
+        "n": 3,
+        "pid": 453418
+      },
+      "kind": "start",
+      "t": 548615774919,
+      "target": "s3",
+      "wall": "2026-11-13T22:11:15.696779169Z"
+    },
+    {
+      "detail": {
+        "down_s": 4.812879494,
+        "heal_s": 0.403202291,
+        "healthy": true,
+        "member": "s3",
+        "restart_err": "<nil>"
+      },
+      "kind": "fault_done",
+      "t": 549018989816,
+      "target": "kill9-follower",
+      "wall": "2026-11-13T22:11:16.099994073Z"
+    },
+    {
+      "detail": {
+        "pause_s": 10.588893271,
+        "what": "pause-leader"
+      },
+      "kind": "fault",
+      "t": 578874768706,
+      "target": "s1",
+      "wall": "2026-11-13T22:11:45.955772943Z"
+    },
+    {
+      "detail": {
+        "heal_s": 0.202724665,
+        "healthy": true,
+        "member": "s1",
+        "pause_s": 10.588893271
+      },
+      "kind": "fault_done",
+      "t": 589667302904,
+      "target": "pause-leader",
+      "wall": "2026-11-13T22:11:56.748307109Z"
+    },
+    {
+      "detail": {
+        "cut_s": 10.18323696,
+        "what": "isolate-follower"
+      },
+      "kind": "fault",
+      "t": 638620247286,
+      "target": "s3",
+      "wall": "2026-11-13T22:12:45.701251576Z"
+    },
+    {
+      "detail": {
+        "cut_s": 10.18323696,
+        "heal_s": 0.200618903,
+        "healthy": true,
+        "member": "s3"
+      },
+      "kind": "fault_done",
+      "t": 649004353078,
+      "target": "isolate-follower",
+      "wall": "2026-11-13T22:12:56.085357294Z"
+    }
+  ],
+  "window_initial_observation": {
+    "id": 92397,
+    "c": 3,
+    "k": "soak/k001",
+    "f": "read",
+    "t0": 578726536972,
+    "t1": 578781881240,
+    "res": "ok",
+    "out": "lc82.c0.11543",
+    "idx": "39462",
+    "att": [
+      {
+        "node": "s3",
+        "t0": 578726538784,
+        "t1": 578781881240,
+        "st": 200,
+        "sent": true
+      }
+    ]
+  },
+  "window_check": {
+    "linearizable": false,
+    "legal_order": null,
+    "search_states": 26
+  },
+  "window_control_read_current_value": {
+    "linearizable": true,
+    "legal_order": [
+      92410,
+      92414,
+      92421,
+      92428,
+      92429,
+      92426,
+      92433,
+      92445,
+      92447,
+      92448,
+      92452,
+      92483
+    ],
+    "search_states": 15
+  },
+  "norm_M8doubleprime": {
+    "course_source": "0fbe6e55ceb0b07e4a70727e813934a2f06edb1b",
+    "path": "Platform/01-store/spec/01.1-store.norms.md",
+    "R062": "The read MUST be linearizable: it returns a state not older than the last completed write seen by any caller. In a group this means that a read goes through the leader of the current term (a lease renewal is a read, and a follower cut off from the group must not confirm an epoch that the others have already moved; [P/03.2 N3 «renew()» and «confirm(id)»](../../03-worker/spec/03.2-worker.norms.md)). The same guarantee applies to `GET /v1/get` and `GET /v1/list` on a follower's `admin.sock`: they are permitted, without forwarding the admin request (P/01.3-R083). Without confirmation through the current leader within the leader wait, they return `no_leader_wait`, not stale local data; `admin_not_leader` does not apply to these reads. The mechanism — the implementation decides.",
+    "R062_unchanged_in_worktree": true
+  },
+  "member_logs": {
+    "stand__logs__s1.log.gz": [
+      "2026-11-13T22:11:56Z configstore: raft: 2026-11-13T22:11:56.552Z [WARN]  raft: rejecting pre-vote request since our last index is greater: candidate=127.0.0.1:21031 last-index=49825 last-candidate-index=49823",
+      "2026-11-13T22:11:56Z configstore: raft: 2026-11-13T22:11:56.552Z [WARN]  raft: rejecting pre-vote request since our last index is greater: candidate=127.0.0.1:21021 last-index=49825 last-candidate-index=49823",
+      "2026-11-13T22:11:56Z configstore: raft: 2026-11-13T22:11:56.587Z [WARN]  raft: rejecting vote request since our last index is greater: candidate=127.0.0.1:21021 last-index=49825 last-candidate-index=49823",
+      "2026-11-13T22:11:56Z configstore: raft: 2026-11-13T22:11:56.598Z [WARN]  raft: clearing log suffix: from=49824 to=49825"
+    ],
+    "stand__logs__s2.log.gz": [
+      "2026-11-13T22:11:46Z configstore: raft: 2026-11-13T22:11:46.848Z [WARN]  raft: rejecting pre-vote request since we have a leader: from=127.0.0.1:21031 leader=127.0.0.1:21011 leader-id=s1",
+      "2026-11-13T22:11:47Z configstore: raft: 2026-11-13T22:11:47.038Z [WARN]  raft: heartbeat timeout reached, starting election: last-leader-addr=127.0.0.1:21011 last-leader-id=s1",
+      "2026-11-13T22:11:47Z configstore: raft: 2026-11-13T22:11:47.370Z [WARN]  raft: failed to contact: server-id=s1 time=255.726261ms",
+      "2026-11-13T22:11:47Z configstore: raft: 2026-11-13T22:11:47.582Z [WARN]  raft: failed to contact: server-id=s1 time=468.231702ms",
+      "2026-11-13T22:11:47Z configstore: raft: 2026-11-13T22:11:47.814Z [WARN]  raft: failed to contact: server-id=s1 time=700.65046ms"
+    ],
+    "stand__logs__s3.log.gz": [
+      "2026-11-13T22:11:46Z configstore: raft: 2026-11-13T22:11:46.844Z [WARN]  raft: heartbeat timeout reached, starting election: last-leader-addr=127.0.0.1:21011 last-leader-id=s1"
+    ]
+  },
+  "input_hashes": {
+    "ops-0001.jsonl.gz": {
+      "sha256": "b81c5b9f602ab2440d31298b356a2f91e557a7c2a57072f2b22e99b23fab49dd",
+      "original_sha256": "dbcac4548794990d95cadc568b7d33f872e05b44c529ee9f0aa2a0fd521883c4",
+      "original_bytes": 35526430
+    },
+    "ops-0002.jsonl.gz": {
+      "sha256": "5b380f1b01c1d4deaeda21e154c99c3b071164e576d0d6d2e986155db001e349",
+      "original_sha256": "24ffd0d367a061c742573b96374f288d073454dfca12d1f3b727d03b13a6762b",
+      "original_bytes": 38920748
+    },
+    "ops-0003.jsonl.gz": {
+      "sha256": "9ef590c0a094f82e91df9a16bf1c7b371ad9961a7140b466dc32f596db5ff1d4",
+      "original_sha256": "490ead049c9cc8ec1c57376219daf09d6ff254492c7c47db7307570e411c911d",
+      "original_bytes": 38464657
+    },
+    "ops-0004.jsonl.gz": {
+      "sha256": "e0238670d7efde0c3f9c24f22ac1e24f67e019ab2aa09b914ba9b4244b612bb3",
+      "original_sha256": "a8210fcc4bc8715b19383bdbefecbbb956a9a7eb7046156ddbef94a9c235a507",
+      "original_bytes": 37417278
+    },
+    "ops-0005.jsonl.gz": {
+      "sha256": "6ab705f11c2df7144e688701cbb058e4717876ad62b637f157f034fcce10633e",
+      "original_sha256": "fe6a00f222d0a868f65e684306dfa0f4d14c6ec83a8e9c030af03a07e89aa1b0",
+      "original_bytes": 38412206
+    },
+    "ops-0006.jsonl.gz": {
+      "sha256": "498ff9354c2c043331db8e5af9de1244992596a2f06b0744d868b1b428c4fb0a",
+      "original_sha256": "6cd1356ccd1a64b1e6715c302099f87e86681d9ad185e13c4926d9032e22a9c0",
+      "original_bytes": 39621016
+    },
+    "ops-0007.jsonl.gz": {
+      "sha256": "4306a4265cbb4026327d6085d2900eb86646480c2e2da14d762e6f3cde519a63",
+      "original_sha256": "bfe8d67d39351688c4e814c34461aa96b5e1a948cef2dfd1add914619bf01cae",
+      "original_bytes": 37900174
+    },
+    "ops-0008.jsonl.gz": {
+      "sha256": "441358543796ecb3701840d0de62a3c8dead154c0b77351d4d584411f51699fc",
+      "original_sha256": "a5c19366d523ca46738e0db55ad4ec04bcd8affd7b2c2c83f42d0f957fe83d4c",
+      "original_bytes": 38728590
+    },
+    "ops-0009.jsonl.gz": {
+      "sha256": "bc95dccfb65857a08b33faf7708dee9c4c353f680945c1bc6b7a59b4ad1df84e",
+      "original_sha256": "1ef5dc42f9d5ebf06bca5b8f6f039e02552ce2deeeb500a64ad296051d7603fb",
+      "original_bytes": 40723833
+    },
+    "ops-0010.jsonl.gz": {
+      "sha256": "ec11e336c8c3efd9c066eb5a5396b15815d44f18be19a199c33d7fd823b42648",
+      "original_sha256": "90d6998e37d30f928b60bdef508f0844c79cd255010d13687958932d1f229f69",
+      "original_bytes": 36908481
+    },
+    "ops-0011.jsonl.gz": {
+      "sha256": "6976f2d0c81fdac9e4256af9db06339c21d1894985d15d9b0bbfcfed6cb1ea67",
+      "original_sha256": "2c7fdf15c1c4f679151da85ac1328b27a72026029220bff8189cffb623b168d4",
+      "original_bytes": 38377489
+    },
+    "ops-0012.jsonl.gz": {
+      "sha256": "2d34b3cfd9ba0fb49d323fe3c1d1d4565386656241a06ec39c3cd0e504241c43",
+      "original_sha256": "0fa8185a6cf69e6c36c06c9cd43a69a97ba8de3054d878d3912726d05386427a",
+      "original_bytes": 40089438
+    },
+    "ops-0013.jsonl.gz": {
+      "sha256": "f5e33cf952ee9c5a78d9998f8724771eb94299b407af5f36efdc643d91026b5b",
+      "original_sha256": "195e9b5dc59e08efa70e049d37635eff91f886a8ac81f396ff591124ed01711d",
+      "original_bytes": 39731721
+    },
+    "ops-0014.jsonl.gz": {
+      "sha256": "d7dd4c189c467fda488b7ca9ff5e3e9673a0591825676c61f3c58eb5ca297329",
+      "original_sha256": "f9325dbe9c013062b566162153a547f870909dca61c9dac80b07ebe32a6f968f",
+      "original_bytes": 39326067
+    },
+    "stand__logs__s1.log.gz": {
+      "sha256": "7ac1c132f47cf67579a492f46f05ebe685fc11a4b21f27d3fb90a83b48a090c4",
+      "original_sha256": "a0ca1116e05133c37f4d05a54e88dcc6010e9667684d68c240fe1ab7f96730c8"
+    },
+    "stand__logs__s2.log.gz": {
+      "sha256": "157af6724139fe45b25f00d69a17ce546096dedb6992806e2f464aeb89ef09e2",
+      "original_sha256": "d0f7499ebc355e498ffec56bad00835aa332ab06337e6be2c108045eb5c116c3"
+    },
+    "stand__logs__s3.log.gz": {
+      "sha256": "75d173e2d7e19308ccb1645f00bddeb60854f84f71a83a3b58ecca57e42b9817",
+      "original_sha256": "c7997c1b6b9678c17df32f7ba0516384e34c893a0f54efef845cff92b7751275"
+    },
+    "SOURCE-LOG-MANIFEST.json": {
+      "sha256": "db19bc65741a7498862e46457aa6bef7cafecb15cd7c7325b48a5fa829508277"
+    },
+    "events.jsonl": {
+      "sha256": "c107f3d8b2a73f7b43954d054a0bcfcade4c6e8c8633f7621b4ad03054685c6a"
+    },
+    "check.json": {
+      "sha256": "ef80ecb061be80740106952fddd016721c5c56b8de0089ef5607f5c4484e8779"
+    },
+    "run.json": {
+      "sha256": "a48c812c6a94aff3f33e63a5aa20a1573fc1e4016709a28cbd6d5f687a9462a5"
+    }
+  },
+  "code_hashes": {
+    "court-tools.git:440f611:soak/cmd/soak/run.go": "7340dd413e81865de53587d6032734a87c3be99b675b50edfb0a09dffb953afc",
+    "court-tools.git:440f611:soak/internal/stand/stand.go": "e54c152ac3a631f798eaaf2c24d043b4fe9b161893eb5debc80468e0de56efb4",
+    "court-tools.git:440f611:soak/internal/load/load.go": "86309c200f2b419bcaac8b269ddd0690aeaa15d2631b4fc15680f64f9a598421",
+    "court-tools.git:440f611:soak/internal/stand/http.go": "c4d4c0916b677349a9b7e012161d6aaddab90666074a00e3ea1582130dde1d1e",
+    "court-tools.git:440f611:soak/internal/hist/hist.go": "71c69f1754699195389df57d965a0a7f72de69c870d1a88dbc978ae315d19800",
+    "court-tools.git:440f611:soak/internal/linz/linz.go": "1088c6653466553e398054e6758646b362b262c0f36afb89dc873ef2327805f1",
+    "01-store/internal/group/backend.go": {
+      "claude82_sha256": "9cde414ab251ef3b337550e77931a467e124b54c7ecbaafa38ace61273e2a882",
+      "claude8_sha256": "9cde414ab251ef3b337550e77931a467e124b54c7ecbaafa38ace61273e2a882",
+      "unchanged_since_claude8": true
+    },
+    "01-store/internal/group/frames.go": {
+      "claude82_sha256": "7b92ce5cb630453934fb73fc2e721def0e11216693b43862daf3f27f170b0ae8",
+      "claude8_sha256": "ea1b3b86a9790d81e975a8332841f78364b1401a5d1ddbff814eaebd06d968c3",
+      "unchanged_since_claude8": false
+    },
+    "01-store/internal/group/node.go": {
+      "claude82_sha256": "fe5be76eab5f90f75f898a7bf4242ed839527c7b89e60ed4586da185df55c8e7",
+      "claude8_sha256": "fe5be76eab5f90f75f898a7bf4242ed839527c7b89e60ed4586da185df55c8e7",
+      "unchanged_since_claude8": true
+    }
+  },
+  "method": "Полный перебор четырёх операций + единственность писателя A во всей истории ключа; без исходного checker, CAS-модели и отсечения неизвестных записей."
+}
