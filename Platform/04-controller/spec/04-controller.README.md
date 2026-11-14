@@ -53,7 +53,7 @@ These terms point to their governing requirements; this table adds no rules.
 - The pass of N3 with separate attempts of the steps, the choice of candidates and the write of decisions through cas.
 - The reconciliation of assignments, the move, the departure, the order of workers by servers and the shrinking, the decommission of a server and the protection of manifest_rev.
 - The report of N1.2, the snapshot of N1.3a after the pass and the evidence of the fulfilment of the 28 checklist items, including the admission of N1.5.
-- The description of all eleven choices of the implementation. Internal functions, types and libraries are chosen by the implementation.
+- The description of the choices listed under «Implementation decides». Internal functions, types and libraries are chosen by the implementation.
 
 ## Order of work
 
