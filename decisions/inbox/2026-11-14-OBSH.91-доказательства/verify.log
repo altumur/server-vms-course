@@ -1,0 +1,6 @@
+PRESERVED Platform/common/vectors/peer/README.md: body_bytes=4948, body_sha256=bd612cfd343ad1cc36a56adfd8c06a96be28c6348f2359efbaeba78345cfd1f3; metadata_bytes=218, metadata_sha256=de742eac41d6bb751d8c30190e1e44a81242021d85314e1bab6561ba1b56dfba; оба блока побайтно и целиком в Platform/common/vectors/peer/README.cases.md
+PRESERVED Platform/common/ru/vectors/peer/README.md: body_bytes=6243, body_sha256=5a67f4979e22a3dfc14008430ce20c0b6a2d7ac729b91a9a1f2749fae0884677; metadata_bytes=341, metadata_sha256=e89b24efb7cc22e4b664234e76e2dead15a3c0388da625a5a275d3fd028e34f9; оба блока побайтно и целиком в Platform/common/ru/vectors/peer/README.cases.md
+FILTER Platform/common/export-model-filter.json: изменения только записей peer README и спутника; остальные записи и поля фильтра неизменны; порядок UTF-8 и M/J верны
+FILTER Platform/common/acceptance/judge-input-filter.json: изменения только записей peer README и спутника; остальные записи и поля фильтра неизменны; порядок UTF-8 и M/J верны
+UNCHANGED Platform/common/vectors/peer/cases.tsv: bytes=41234, sha256=80e69d001cdd3959208d2470548174e07057ddc4f67bfa519549c64d7a4e3ab9
+PASS: прежние en/ru тела и metadata сохранены побайтно; публичная en-форма в M/J; случаи en по прежнему exclude в J, judge_only в M; ru вне M/J; TSV не менялись.
